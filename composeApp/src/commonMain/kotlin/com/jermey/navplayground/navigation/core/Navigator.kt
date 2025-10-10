@@ -78,6 +78,11 @@ interface Navigator {
      * Set the start destination.
      */
     fun setStartDestination(destination: Destination)
+
+    /**
+     * Get the deep link handler to register patterns.
+     */
+    fun getDeepLinkHandler(): DeepLinkHandler
 }
 
 /**
@@ -144,4 +149,6 @@ class DefaultNavigator(
         _backStack.clear()
         _backStack.push(destination)
     }
+
+    override fun getDeepLinkHandler(): DeepLinkHandler = deepLinkHandler
 }

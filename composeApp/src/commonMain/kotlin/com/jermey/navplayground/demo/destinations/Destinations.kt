@@ -10,6 +10,7 @@ sealed class MainDestination(override val route: String) : Destination {
     object Explore : MainDestination("explore")
     object Profile : MainDestination("profile")
     object Settings : MainDestination("settings")
+    object DeepLinkDemo : MainDestination("deeplink_demo")
 }
 
 /**
@@ -94,4 +95,3 @@ sealed class ModalDestination : Destination {
         override val arguments = mapOf("message" to message)
     }
 }
-

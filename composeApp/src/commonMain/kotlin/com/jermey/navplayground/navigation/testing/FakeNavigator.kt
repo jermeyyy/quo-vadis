@@ -67,6 +67,12 @@ class FakeNavigator : Navigator {
         _backStack.push(destination)
     }
 
+    private val fakeDeepLinkHandler = DefaultDeepLinkHandler()
+
+    override fun getDeepLinkHandler(): DeepLinkHandler {
+        return fakeDeepLinkHandler
+    }
+
     /**
      * Clear all recorded navigation calls.
      */
@@ -161,4 +167,3 @@ class NavigationTestBuilder {
 fun navigationTest(block: NavigationTestBuilder.() -> Unit): FakeNavigator {
     return NavigationTestBuilder().apply(block).build()
 }
-

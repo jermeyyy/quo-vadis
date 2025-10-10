@@ -46,6 +46,15 @@ fun mainBottomNavGraph() = navigationGraph("main") {
         )
     }
 
+    destination(MainDestination.DeepLinkDemo) { _, navigator ->
+        DeepLinkDemoScreen(
+            onBack = { navigator.navigateBack() },
+            onNavigateViaDeepLink = { deepLinkUri ->
+                navigator.handleDeepLink(DeepLink.parse(deepLinkUri))
+            }
+        )
+    }
+
     // Include other graphs as nested destinations
     include(masterDetailGraph())
     include(tabsGraph())
@@ -211,4 +220,3 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 }
-
