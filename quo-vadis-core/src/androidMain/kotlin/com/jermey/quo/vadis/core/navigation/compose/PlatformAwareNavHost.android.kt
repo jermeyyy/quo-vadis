@@ -24,7 +24,8 @@ actual fun PlatformAwareNavHost(
         PredictiveBackNavigation(
             navigator = navigator,
             enabled = true,
-            modifier = modifier
+            modifier = modifier,
+            graph = graph
         ) {
             GraphNavHost(
                 graph = graph,

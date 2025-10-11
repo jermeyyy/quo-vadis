@@ -16,6 +16,9 @@ class FakeNavigator : Navigator {
     override val currentDestination: StateFlow<Destination?>
         get() = MutableStateFlow(_backStack.current.value?.destination)
 
+    override val previousDestination: StateFlow<Destination?>
+        get() = MutableStateFlow(_backStack.previous.value?.destination)
+
     // Track navigation calls for verification
     val navigationCalls = mutableListOf<NavigationCall>()
 

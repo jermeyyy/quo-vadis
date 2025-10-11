@@ -21,6 +21,11 @@ interface BackStack {
     val current: StateFlow<BackStackEntry?>
 
     /**
+     * Previous entry in the stack (if any).
+     */
+    val previous: StateFlow<BackStackEntry?>
+
+    /**
      * Whether we can navigate back.
      */
     val canGoBack: StateFlow<Boolean>
@@ -98,6 +103,9 @@ class MutableBackStack : BackStack {
     private val _current = MutableStateFlow<BackStackEntry?>(null)
     override val current: StateFlow<BackStackEntry?> = _current
 
+    private val _previous = MutableStateFlow<BackStackEntry?>(null)
+    override val previous: StateFlow<BackStackEntry?> = _previous
+
     private val _canGoBack = MutableStateFlow(false)
     override val canGoBack: StateFlow<Boolean> = _canGoBack
 
@@ -160,6 +168,7 @@ class MutableBackStack : BackStack {
     private fun updateStack(newStack: List<BackStackEntry>) {
         _stack.value = newStack
         _current.value = newStack.lastOrNull()
+        _previous.value = if (newStack.size > 1) newStack[newStack.lastIndex - 1] else null
         _canGoBack.value = newStack.size > 1
     }
 }

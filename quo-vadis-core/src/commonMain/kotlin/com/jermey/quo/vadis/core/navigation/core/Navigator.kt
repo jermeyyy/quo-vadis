@@ -27,6 +27,11 @@ interface Navigator {
     val currentDestination: StateFlow<Destination?>
 
     /**
+     * Previous destination (if any).
+     */
+    val previousDestination: StateFlow<Destination?>
+
+    /**
      * Navigate to a destination with optional transition.
      */
     fun navigate(
@@ -103,6 +108,13 @@ class DefaultNavigator(
                 initialValue = null
             )
 
+    override val previousDestination: StateFlow<Destination?> =
+        _backStack.previous.map { it?.destination }
+            .stateIn(
+                scope = CoroutineScope(Dispatchers.Default),
+                started = SharingStarted.Eagerly,
+                initialValue = null
+            )
     private val graphs = mutableMapOf<String, NavigationGraph>()
 
     override fun navigate(destination: Destination, transition: NavigationTransition?) {

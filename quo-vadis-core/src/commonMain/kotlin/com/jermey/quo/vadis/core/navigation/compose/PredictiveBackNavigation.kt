@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.PredictiveBackHandler
@@ -11,39 +12,49 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.jermey.navplayground.navigation.core.NavigationGraph
 import com.jermey.navplayground.navigation.core.Navigator
 
 /**
- * Multiplatform predictive back gesture handler.
+ * Multiplatform predictive back gesture handler with automatic screen caching.
  * Provides visual feedback during back gestures on both Android 13+ and iOS.
  *
  * This composable integrates with the multiplatform predictive back gesture system
- * to show preview animations when users swipe back, including revealing the
- * previous screen beneath with a dimming scrim.
+ * to show preview animations when users swipe back. It automatically renders both
+ * the current and previous screens during the gesture by leveraging composable caching.
  *
  * @param navigator The navigation controller to handle back navigation
+ * @param graph The navigation graph containing screen definitions
  * @param enabled Whether predictive back is enabled
  * @param modifier Modifier to apply to the container
  * @param animationType Type of animation to use during the back gesture
  * @param sensitivity Multiplier for gesture progress (default 1.0)
  * @param customAnimation Optional custom animation function
- * @param content The content to display (current screen)
+ * @param content The content to display (current screen with NavHost or GraphNavHost)
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PredictiveBackNavigation(
     navigator: Navigator,
+    graph: NavigationGraph,
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
     animationType: PredictiveBackAnimationType = PredictiveBackAnimationType.Material3,
     sensitivity: Float = 1f,
+    maxCacheSize: Int = 3,
     customAnimation: (@Composable (progress: Float, content: @Composable () -> Unit) -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     var backProgress by remember { mutableStateOf(0f) }
     var isBackGestureInProgress by remember { mutableStateOf(false) }
     val backStackState by navigator.backStack.stack.collectAsState()
+    val currentEntry by navigator.backStack.current.collectAsState()
+    val previousEntry by navigator.backStack.previous.collectAsState()
     val canGoBack = backStackState.size > 1
+
+    // Composable cache for keeping screens alive
+    val composableCache = remember { ComposableCache(maxCacheSize) }
+    val saveableStateHolder = rememberSaveableStateHolder()
 
     // Handle predictive back gesture using multiplatform API
     // Only intercept if we can go back, otherwise let the system handle it
@@ -70,13 +81,52 @@ fun PredictiveBackNavigation(
         return
     }
 
-    // Default animation with scrim layer
+    // Default animation with previous screen peeking from behind
     Box(modifier = modifier.fillMaxSize()) {
-        // Current screen with predictive animation (no scrim on top)
+        // Capture entries locally to avoid smart cast issues
+        val currentEntryValue = currentEntry
+        val previousEntryValue = previousEntry
+
+        // Previous screen (if available) - rendered beneath with scale animation
+        if (isBackGestureInProgress && previousEntryValue != null) {
+            val destConfig = graph.destinations.find {
+                it.destination.route == previousEntryValue.destination.route
+            }
+
+            destConfig?.let { config ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .zIndex(0f) // Bottom layer
+                ) {
+                    // Render cached previous screen
+                    val cachedPreviousComposable = composableCache.getOrCreate(
+                        entry = previousEntryValue,
+                        saveableStateHolder = saveableStateHolder
+                    ) { entry ->
+                        config.content(entry.destination, navigator)
+                    }
+                    cachedPreviousComposable()
+                }
+            }
+        }
+
+        // Scrim layer between current and previous screens
+        // Animates from semi-opaque to transparent as gesture progresses
+        if (isBackGestureInProgress && backProgress > 0f && previousEntryValue != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(0.5f) // Between previous and current screens
+                    .background(Color.Black.copy(alpha = 0.3f * (1f - backProgress)))
+            )
+        }
+
+        // Current screen with predictive animation on top
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .zIndex(if (isBackGestureInProgress) 1f else 0f)
+                .zIndex(1f) // Top layer
                 .then(
                     if (isBackGestureInProgress) {
                         when (animationType) {
@@ -89,18 +139,24 @@ fun PredictiveBackNavigation(
                     }
                 )
         ) {
-            content()
-        }
+            // Render cached current screen or provided content
+            if (currentEntryValue != null) {
+                val destConfig = graph.destinations.find {
+                    it.destination.route == currentEntryValue.destination.route
+                }
 
-        // Scrim layer between current and previous screens
-        // Animates from almost opaque to almost transparent
-        if (isBackGestureInProgress && backProgress > 0f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(0.5f) // Below current screen, above previous
-                    .background(Color.Black.copy(alpha = 0.5f * (1f - backProgress)))
-            )
+                destConfig?.let { config ->
+                    val cachedCurrentComposable = composableCache.getOrCreate(
+                        entry = currentEntryValue,
+                        saveableStateHolder = saveableStateHolder
+                    ) { entry ->
+                        config.content(entry.destination, navigator)
+                    }
+                    cachedCurrentComposable()
+                } ?: content()
+            } else {
+                content()
+            }
         }
     }
 }
