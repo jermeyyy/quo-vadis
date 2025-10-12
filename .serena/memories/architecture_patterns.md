@@ -1,117 +1,95 @@
-# Architecture Patterns and Design Guidelines
+# Navigation Library - Complete Architecture & Implementation
+
+## Overview
+**Quo Vadis** (Latin for "Where are you going?") - A comprehensive, type-safe navigation library for Kotlin Multiplatform with Compose Multiplatform UI.
 
 ## Core Architecture Principles
 
-### 1. Modularization First
-The library is designed with a **gray box pattern** for feature modules:
-- Modules expose **entry points** but hide internal navigation
-- Each feature defines its own navigation graph
-- Internal screens remain private to the module
-- Promotes loose coupling and high cohesion
+### 1. Type Safety First
+- Compile-time safe navigation with sealed classes
+- NO string-based routing in application code
+- Typed argument passing with validation
 
-### 2. Type Safety
-- All navigation is compile-time safe
-- **No string-based routing** in application code
-- Sealed classes for destination hierarchies
-- Type-safe argument passing
+### 2. Modularization (Gray Box Pattern)
+- Feature modules expose entry points
+- Internal navigation stays private
+- Clear module boundaries
+- Easy refactoring within modules
 
 ### 3. Reactive State Management
-- **StateFlow** for observable state
-- **SharedFlow** for one-time events
+- StateFlow for observable state
+- SharedFlow for one-time events
 - All navigation state is reactive
-- UI observes state changes automatically
+- Automatic UI updates
 
-### 4. MVI Architecture Support
-The library provides first-class MVI support:
+### 4. Direct Backstack Access
+- Full control over navigation stack
+- Observable state via StateFlow
+- Advanced operations (popUntil, popTo, etc.)
+- Complex navigation patterns supported
+
+### 5. MVI Architecture Integration
+- First-class support for MVI pattern
+- NavigationIntent for actions
+- NavigationEffect for side effects
+- NavigationState for UI
+
+### 6. Predictive Back Navigation
+- Smooth gesture-based navigation
+- Two-phase animation system
+- Automatic screen caching
+- Works on both Android and iOS
+- Prevents premature screen destruction
+
+## Package Structure
+
 ```
-ViewModel → NavigationIntent → Navigator → BackStack → State
-                                              ↓
-                                      NavigationEffect
+com.jermey.quo.vadis.core.navigation/
+├── core/
+│   ├── Destination.kt              - Navigation targets (type-safe)
+│   ├── BackStack.kt                - Stack manipulation & state
+│   ├── Navigator.kt                - Central controller
+│   ├── NavigationGraph.kt          - Modular graph definitions
+│   ├── NavigationTransition.kt     - Animation support
+│   └── DeepLink.kt                 - URI-based navigation
+├── compose/
+│   ├── NavHost.kt                  - Basic navigation host
+│   ├── GraphNavHost.kt             - Graph-based host
+│   ├── PredictiveBackNavigation.kt - Gesture navigation
+│   └── ComposableCache.kt          - Screen caching
+├── mvi/
+│   ├── NavigationIntent.kt         - MVI intents
+│   ├── NavigationEffect.kt         - Side effects
+│   └── NavigationViewModel.kt      - Base ViewModel
+├── integration/
+│   └── KoinIntegration.kt          - DI support
+├── utils/
+│   └── NavigationExtensions.kt     - Utility functions
+├── testing/
+│   └── FakeNavigator.kt            - Testing utilities
+└── serialization/
+    └── StateSerializer.kt          - State persistence
 ```
 
-### 5. Testability
-- Interface-based design for easy mocking
-- `FakeNavigator` for unit testing
-- No dependency on UI framework for core logic
-- Separation of concerns enables isolated testing
-
-## Layer Architecture
-
-```
-┌─────────────────────────────────────────┐
-│        Application Layer                │
-│  (Screens, ViewModels, Features)        │
-└─────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────┐
-│       Integration Layer                 │
-│  (MVI, DI, Testing Support)             │
-└─────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────┐
-│         Compose Layer                   │
-│  (NavHost, GraphNavHost, Rendering)     │
-└─────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────┐
-│          Core Layer                     │
-│  (Navigator, BackStack, Destination)    │
-└─────────────────────────────────────────┘
-```
-
-## Core Components
-
-### Destination
-**Purpose**: Represents a navigation target
-- Simple data class with route and optional arguments
-- Can be typed for compile-time safety
-- Serializable for deep links and state restoration
-
-**Pattern**:
-```kotlin
-sealed class AppDestination : Destination {
-    object Home : AppDestination() {
-        override val route = "home"
-    }
-    
-    data class Details(val id: String) : AppDestination() {
-        override val route = "details"
-        override val arguments = mapOf("id" to id)
-    }
-}
-```
+## Key Components
 
 ### Navigator
-**Purpose**: Central navigation controller
-- Manages backstack operations
-- Handles deep links
-- Coordinates with navigation graphs
-- Provides observable state
-
-**Responsibilities**:
-- Execute navigation commands
-- Manage the backstack
-- Handle transitions
-- Provide reactive state
+Central navigation controller with reactive state:
+- `navigate(destination, transition)` - Navigate to destination
+- `navigateBack()` - Go back
+- `navigateAndClearTo()` - Navigate and clear stack
+- `backStack` - Direct backstack access
+- `currentDestination` - Observable current destination
 
 ### BackStack
-**Purpose**: Direct access to navigation stack
-- Observable via StateFlow
-- Direct manipulation (push, pop, replace, clear)
-- Advanced operations (popUntil, popToRoot)
-- Supports complex navigation patterns
+Direct stack manipulation with StateFlow:
+- `push()`, `pop()`, `replace()`, `clear()`
+- `popUntil()`, `popTo()`, `popToRoot()`
+- `current`, `previous`, `canGoBack` - Observable state
+- `stack` - Full stack as StateFlow
 
 ### NavigationGraph
-**Purpose**: Modular navigation structure
-- Defines destinations and their composables
-- Can be nested and composed
-- Start destination configuration
-- Deep link registration
-
-## Design Patterns Used
-
-### 1. Builder Pattern (DSL)
-Navigation graphs use Kotlin DSL for configuration:
+Modular graph definitions with DSL:
 ```kotlin
 navigationGraph("feature") {
     startDestination(Screen1)
@@ -120,28 +98,63 @@ navigationGraph("feature") {
 }
 ```
 
-### 2. Observer Pattern
-All state is observable through StateFlow:
+### PredictiveBackNavigation
+Gesture-based navigation with smooth animations:
+
+**Two-Phase Animation System:**
+1. **Gesture Phase**: User dragging, real-time animation
+2. **Exit Phase**: After release, smooth completion
+
+**Animation Coordinator Pattern:**
+- Captures entries at animation start
+- Freezes previous screen for rendering
+- Current screen uses live entry for updates
+- Locks cache entries during animation
+- Defers navigation until animation completes
+
+**Three Animation Types:**
+- Material3: Scale + translate + corners + shadow
+- Scale: Simple scale with fade
+- Slide: Slide right with fade
+
+Each type has matching gesture and exit animations.
+
+**Key Classes:**
+- `PredictiveBackAnimationCoordinator` - Manages animation state
+- `ComposableCache` - Caches screens with locking
+- Animation modifiers: `material3BackAnimation()`, etc.
+
+## Design Patterns Used
+
+### 1. Builder Pattern (DSL)
+Navigation graphs use Kotlin DSL:
 ```kotlin
-navigator.currentDestination.collectAsState()
-backStack.canGoBack.collectAsState()
+navigationGraph("app") {
+    startDestination(Home)
+    destination(Home) { _, nav -> HomeUI(nav) }
+}
+```
+
+### 2. Observer Pattern
+All state observable via StateFlow:
+```kotlin
+val current by navigator.backStack.current.collectAsState()
 ```
 
 ### 3. Strategy Pattern
-Navigation transitions are strategies that can be swapped:
+Transitions are swappable strategies:
 ```kotlin
-navigator.navigate(dest, NavigationTransitions.SlideHorizontal)
+navigator.navigate(dest, NavigationTransitions.Slide)
 ```
 
-### 4. Facade Pattern
-Navigator acts as a facade for complex navigation operations
+### 4. Coordinator Pattern
+PredictiveBackAnimationCoordinator separates logical and visual state
 
-### 5. Factory Pattern
-Used for creating destinations and graphs
+### 5. Facade Pattern
+Navigator acts as facade for complex operations
 
-## State Management
+## State Management Flow
 
-### Unidirectional Data Flow
 ```
 User Action → Intent → Navigator → BackStack Update
                                          ↓
@@ -150,168 +163,121 @@ User Action → Intent → Navigator → BackStack Update
                                    UI Recomposition
 ```
 
-### State Holders
-- **Navigator**: Holds current destination
-- **BackStack**: Holds stack of entries
-- All state exposed as **StateFlow** (immutable from outside)
-
-### Side Effects
-- Navigation effects emitted via **SharedFlow**
-- Collected in UI layer for one-time events
-- Examples: show error, navigate to external app
-
-## Dependency Management
-
-### No External Navigation Dependencies
-- Independent from Jetpack Navigation
-- Independent from Voyager
-- Independent from Decompose
-- Only depends on Compose and Kotlin stdlib
-
-### DI Framework Support
-- Interfaces for all core components
-- Factory patterns for creation
-- Support for Koin, Kodein, etc.
-
-## Navigation Patterns
-
-### 1. Simple Navigation
-```kotlin
-navigator.navigate(DetailsDestination("123"))
+For MVI:
+```
+User Action → NavigationIntent → ViewModel → Navigator
+                                                  ↓
+                                             BackStack
+                                                  ↓
+                                         NavigationState
+                                                  ↓
+                                         NavigationEffect
 ```
 
-### 2. Navigation with Transitions
-```kotlin
-navigator.navigate(
-    destination = Details,
-    transition = NavigationTransitions.SlideHorizontal
-)
+## Predictive Back Animation Flow
+
+```
+User Gesture Start
+    ↓
+Coordinator captures entries (current + previous)
+    ↓
+Lock cache entries (prevent destruction)
+    ↓
+Gesture Phase: Real-time animation (gestureProgress)
+    ↓
+User releases → Exit Phase starts
+    ↓
+Exit animation plays to completion (exitProgress)
+    ↓
+Animation completes → navigator.navigateBack()
+    ↓
+Coordinator finishes → Unlock cache
+    ↓
+New screen renders smoothly
 ```
 
-### 3. Stack Clearing
-```kotlin
-// Clear to specific destination
-navigator.navigateAndClearTo(Home, "login", inclusive = true)
+## Platform Support
 
-// Clear all and navigate
-navigator.navigateAndClearAll(Home)
-```
-
-### 4. Conditional Navigation
-```kotlin
-if (backStack.contains("details")) {
-    navigator.navigateBack()
-} else {
-    navigator.navigate(DetailsDestination())
-}
-```
-
-### 5. Deep Linking
-```kotlin
-val handler = DefaultDeepLinkHandler()
-handler.register("app://product/{id}") { params ->
-    ProductDestination(params["id"]!!)
-}
-navigator.handleDeepLink(DeepLink.parse(uri))
-```
-
-## Compose Integration
-
-### NavHost
-- Renders current destination
-- Handles transitions
-- Manages composition lifecycle
-
-### State Hoisting
-- Navigation state managed by Navigator
-- Composables observe state
-- Actions passed down as callbacks
-
-### Lifecycle Awareness
-- LaunchedEffect for side effects
-- DisposableEffect for cleanup
-- rememberNavigator for scoped instances
-
-## Multiplatform Considerations
-
-### Common Code (commonMain)
-- All core navigation logic
+### Common (commonMain)
+- All core logic
 - Compose UI integration
 - Platform-agnostic abstractions
 
-### Platform-Specific (androidMain/iosMain)
-- System back button handling (Android)
-- Navigation bar integration (iOS)
-- Deep link intent handling (Android)
-- Universal link handling (iOS)
+### Android (androidMain)
+- System back button handling
+- Deep link intent handling
+- Activity integration
+- Predictive back (API 33+)
 
-### Expect/Actual
-- Platform-specific back handling
-- Platform-specific deep link parsing
-- Platform-specific transitions (if needed)
+### iOS (iosMain)
+- Navigation bar integration
+- Universal link handling
+- iOS gesture support
+- Native back gesture
 
 ## Testing Strategy
 
 ### Unit Testing
-- Use `FakeNavigator` for ViewModel tests
-- Test navigation logic in isolation
-- Verify navigation calls
+```kotlin
+val fakeNavigator = FakeNavigator()
+viewModel.navigate(destination)
+assertTrue(fakeNavigator.verifyNavigateTo("details"))
+```
 
 ### Integration Testing
-- Test graph configurations
-- Test deep link handling
-- Test backstack operations
+- Graph configurations
+- Deep link handling
+- Backstack operations
 
 ### UI Testing
-- Test screen transitions
-- Test user flows
-- Test back button behavior
-
-## Performance Optimization
-
-### Lazy Graph Registration
-Graphs created lazily to avoid upfront cost
-
-### State Flow Efficiency
-- State updates are batched
-- Only changed values trigger recomposition
-
-### Minimal Allocations
-- Reuse data structures where possible
-- Avoid creating new flows unnecessarily
-
-### No Reflection
-All operations are compile-time safe (no runtime reflection)
-
-## Extension Points
-
-The library is designed to be extended:
-
-1. **Custom Transitions**: Implement NavigationTransition
-2. **Custom Serializers**: Implement NavigationStateSerializer
-3. **Custom Deep Link Handlers**: Implement DeepLinkHandler
-4. **Custom Destinations**: Extend Destination interface
+- Screen transitions
+- Back button behavior
+- Gesture animations
 
 ## Best Practices
 
-1. ✅ Keep Destinations simple (data only, no logic)
-2. ✅ Use sealed classes for related destinations
-3. ✅ One graph per feature module
-4. ✅ Test navigation with FakeNavigator
-5. ✅ Handle deep links early in app lifecycle
-6. ✅ Use transitions sparingly (default fade is often enough)
-7. ✅ Observe state reactively (don't poll)
-8. ✅ Clear backstack judiciously (users expect back to work)
-9. ✅ Document public APIs with KDoc
-10. ✅ Keep platform-specific code minimal
+### DO ✅
+- Use sealed classes for destinations
+- Keep destinations simple (data only)
+- One graph per feature module
+- Test with FakeNavigator
+- Observe state reactively
+- Use type-safe navigation
+- Document public APIs
+- Handle deep links early
+- Lock cache during animations
 
-## Anti-Patterns to Avoid
+### DON'T ❌
+- String-based navigation
+- Circular dependencies
+- Store UI state in Navigator
+- Blocking operations in navigation
+- Expose mutable state
+- Create StateFlows in Composables
+- Use global navigation singletons
+- Mix navigation and business logic
 
-1. ❌ String-based navigation in application code
-2. ❌ Circular navigation dependencies
-3. ❌ Storing UI state in Navigator
-4. ❌ Blocking operations in navigation callbacks
-5. ❌ Exposing mutable state from Navigator
-6. ❌ Creating new StateFlows in Composables
-7. ❌ Using global singletons for navigation state
-8. ❌ Mixing navigation and business logic
+## Performance Optimizations
+
+1. **Lazy Graph Registration**: Graphs created on-demand
+2. **Efficient StateFlows**: Batched updates
+3. **No Reflection**: Compile-time safety
+4. **Smart Caching**: Only necessary screens
+5. **GPU Animations**: graphicsLayer for performance
+6. **Cache Locking**: Prevents unnecessary recreation
+
+## Extension Points
+
+Extendable via:
+1. Custom transitions (implement NavigationTransition)
+2. Custom serializers (implement StateSerializer)
+3. Custom deep link handlers (implement DeepLinkHandler)
+4. Custom destinations (extend Destination)
+5. Custom animation types (add to PredictiveBackAnimationType)
+
+## Related Documentation
+
+- `API_REFERENCE.md` - Complete API documentation
+- `ARCHITECTURE.md` - Detailed architecture
+- `MULTIPLATFORM_PREDICTIVE_BACK.md` - Predictive back details
+- `NAVIGATION_IMPLEMENTATION.md` - Implementation summary

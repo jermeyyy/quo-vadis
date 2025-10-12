@@ -113,6 +113,41 @@ URI-based navigation with pattern matching.
 - Integration with navigation graphs
 - Universal link support
 
+### 7. Predictive Back Navigation
+Provides smooth, animated back gestures on both iOS and Android with automatic screen caching.
+
+**Key Features:**
+- **Gesture Tracking**: Real-time progress during user drag
+- **Separate Animation Phases**: Gesture animation vs exit animation
+- **Screen Caching**: Keeps screens alive during animations
+- **Cache Locking**: Prevents premature destruction
+- **Deferred Navigation**: Navigation happens after animation completes
+
+**Animation Coordinator Pattern:**
+```
+User Gesture → Capture Entries → Lock Cache
+     ↓                                ↓
+Gesture Animation         Exit Animation (after release)
+     ↓                                ↓
+Previous Screen Rendered    Current Screen Animates Out
+     ↓                                ↓
+                      Navigation After Animation
+                               ↓
+                      Unlock Cache → Show New Screen
+```
+
+**Three Animation Types:**
+1. **Material3**: Scale + translate + rounded corners + shadow
+2. **Scale**: Simple scale down with fade
+3. **Slide**: Slide right with fade
+
+Each type has matching gesture and exit animations for consistency.
+
+**Implementation:**
+- `PredictiveBackAnimationCoordinator`: Manages animation state
+- `ComposableCache`: Caches screens with locking mechanism
+- Type-specific animations: `material3BackAnimation()`, `material3ExitAnimation()`, etc.
+
 ## Modularization Strategy
 
 ### Feature Module Structure
@@ -262,4 +297,3 @@ Potential additions:
 - [ ] Nested navigation graphs
 - [ ] Conditional navigation
 - [ ] Navigation analytics hooks
-

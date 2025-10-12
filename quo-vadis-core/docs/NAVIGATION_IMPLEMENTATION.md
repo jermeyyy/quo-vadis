@@ -66,19 +66,28 @@ Documentation:
 - **Shared Elements**: Framework ready (SharedElementConfig, SharedElementDestination)
 - **Bidirectional**: Separate enter/exit for forward and back navigation
 
-### ✅ 5. Independent Implementation
+### ✅ 5. Predictive Back Navigation (Multiplatform)
+- **Gesture Tracking**: Real-time animation during back gesture
+- **Two-Phase Animation**: Separate gesture and exit animations
+- **Animation Types**: Material3, Scale, Slide (with matching exit animations)
+- **Screen Caching**: Automatic composable caching with locking
+- **Platform Support**: Android 13+ and iOS with same animations
+- **Deferred Navigation**: Navigation happens after animation completes
+- **Cache Management**: Smart locking prevents premature screen destruction
+
+### ✅ 6. Independent Implementation
 - **No External Nav Libraries**: Built from scratch
 - **Clean APIs**: Inspired by best practices but independent
 - **Minimal Dependencies**: Only Compose and Kotlin stdlib
 
-### ✅ 6. MVI Architecture Integration
+### ✅ 7. MVI Architecture Integration
 - **NavigationIntent**: Type-safe navigation actions
 - **NavigationViewModel**: Base ViewModel with navigation support
 - **NavigationEffect**: Side effects for navigation events
 - **NavigationState**: Observable state for UI
 - **Effect Collection**: Composable helper for collecting effects
 
-### ✅ 7. DI Framework Support (Koin)
+### ✅ 8. DI Framework Support (Koin)
 - **NavigationFactory**: Factory interface for DI
 - **DIContainer**: Abstract DI integration
 - **Composable Helpers**: rememberFromDI for easy injection

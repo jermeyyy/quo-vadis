@@ -176,6 +176,87 @@ fun GraphNavHost(
 )
 ```
 
+### PredictiveBackNavigation
+
+**Multiplatform predictive back gesture handler with automatic screen caching.**
+
+```kotlin
+@Composable
+fun PredictiveBackNavigation(
+    navigator: Navigator,
+    graph: NavigationGraph,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+    animationType: PredictiveBackAnimationType = PredictiveBackAnimationType.Material3,
+    sensitivity: Float = 1f,
+    maxCacheSize: Int = 3
+)
+```
+
+#### PredictiveBackAnimationType
+
+```kotlin
+enum class PredictiveBackAnimationType {
+    Material3,  // Scale + translate + rounded corners + shadow
+    Scale,      // Simple scale down with fade
+    Slide       // Slide right with fade
+}
+```
+
+#### Features
+- **Automatic Caching**: Keeps screens alive during gestures for smooth animations
+- **Separate Animations**: Different animations for gesture phase vs exit phase
+- **Cache Locking**: Prevents premature screen destruction during animations
+- **Platform Support**: Works on both Android 13+ and iOS
+- **Configurable**: Adjust animation type, sensitivity, and cache size
+
+#### Animation Phases
+
+**Gesture Phase** (user dragging):
+- Applies selected animation type (Material3/Scale/Slide)
+- Shows screen transforming as user drags
+- Previous screen visible underneath
+- Scrim layer between screens
+
+**Exit Phase** (after gesture completes):
+- Continues with same animation type for consistency
+- Smoothly completes the animation (scale down + fade out)
+- Defers navigation until animation completes
+- Prevents premature screen destruction
+
+#### Example
+
+```kotlin
+PredictiveBackNavigation(
+    navigator = navigator,
+    graph = appGraph,
+    enabled = true,
+    animationType = PredictiveBackAnimationType.Material3,
+    sensitivity = 1f
+)
+```
+
+### ComposableCache
+
+**Internal caching system for predictive back navigation.**
+
+```kotlin
+class ComposableCache(maxCacheSize: Int = 3) {
+    fun lockEntry(entryId: String)
+    fun unlockEntry(entryId: String)
+    
+    @Composable
+    fun Entry(
+        entry: BackStackEntry,
+        saveableStateHolder: SaveableStateHolder,
+        content: @Composable (BackStackEntry) -> Unit
+    )
+}
+
+@Composable
+fun rememberComposableCache(maxCacheSize: Int = 3): ComposableCache
+```
+
 ### Factory
 
 ```kotlin
@@ -288,6 +369,24 @@ navigationTest {
 
 ```kotlin
 interface NavigationFactory {
+### Pattern 6: Predictive Back Navigation
+```kotlin
+// With default Material3 animation
+PredictiveBackNavigation(
+    navigator = navigator,
+    graph = graph,
+    enabled = true
+)
+
+// With custom animation type
+PredictiveBackNavigation(
+    navigator = navigator,
+    graph = graph,
+    animationType = PredictiveBackAnimationType.Scale,
+    sensitivity = 1.2f  // More sensitive gesture
+)
+```
+
     fun createNavigator(): Navigator
     fun createDeepLinkHandler(): DeepLinkHandler
 }

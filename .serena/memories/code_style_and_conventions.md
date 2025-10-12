@@ -1,162 +1,388 @@
-# Code Style and Conventions
-
-## General Style
-- **Code Style**: Official Kotlin code style (set in `gradle.properties`)
-- **File Encoding**: UTF-8
+# Code Style and Conventions - Quo Vadis Navigation Library
 
 ## Naming Conventions
 
-### Packages
-- **Reverse domain notation**: `com.jermey.<module>.<feature>`
-- **Demo app**: `com.jermey.navplayground`
-- **Core library**: `com.jermey.quo.vadis.core.navigation`
-- **Subpackages**: organized by functionality (core, compose, mvi, integration, testing, utils, serialization)
+### Classes & Interfaces
+**PascalCase** - First letter of each word capitalized
+- `Navigator`, `BackStack`, `Destination`
+- `PredictiveBackNavigation`, `ComposableCache`
+- `NavigationGraph`, `DeepLinkHandler`
 
-### Classes and Interfaces
-- **PascalCase** for class/interface names
-- **Descriptive names**: `Navigator`, `BackStack`, `Destination`, `NavigationGraph`
-- **Interface prefix**: No "I" prefix (use plain names like `Navigator`)
-- **Implementation suffix**: `Default` prefix for default implementations (e.g., `DefaultNavigator`)
-- **Fake prefix**: For test implementations (e.g., `FakeNavigator`)
+### Functions & Methods
+**camelCase** - First word lowercase, subsequent words capitalized
+- `navigate()`, `navigateBack()`, `navigateAndClearTo()`
+- `lockEntry()`, `unlockEntry()`
+- `startAnimation()`, `finishAnimation()`, `cancelAnimation()`
 
-### Destinations
-- **Sealed classes/objects**: Used for grouping related destinations
-- **Suffix pattern**: `Destination` suffix (e.g., `HomeDestination`, `DetailDestination`)
-- **Data classes**: For destinations with parameters
-
-### Functions
-- **camelCase** for function names
-- **Descriptive verbs**: `navigate()`, `navigateBack()`, `registerGraph()`, `handleDeepLink()`
-
-### Properties
-- **camelCase** for properties
-- **Private backing fields**: Use underscore prefix for mutable backing fields (e.g., `_backStack`)
+### Properties & Variables
+**camelCase**
+- `currentDestination`, `backStack`, `canGoBack`
+- `gestureProgress`, `exitProgress`, `isAnimating`
+- `displayedCurrentEntry`, `displayedPreviousEntry`
 
 ### Constants
-- **PascalCase** for object declarations used as constants
-- **ALL_CAPS** not commonly used in this codebase
+**SCREAMING_SNAKE_CASE** - All uppercase with underscores
+- `DEFAULT_MAX_CACHE_SIZE`
+- `ANIMATION_DURATION_MS`
 
-## Documentation
+### Destinations
+**PascalCase** with `Destination` suffix
+- `HomeDestination`, `DetailsDestination`
+- `ProfileDestination`, `SettingsDestination`
 
-### KDoc Comments
-- **All public APIs** should have KDoc documentation
-- **Format**:
-  ```kotlin
-  /**
-   * Brief description of the function/class.
-   * 
-   * More detailed explanation if needed.
-   * 
-   * @param paramName description
-   * @return description
-   */
-  ```
-- **Architecture docs**: Comprehensive markdown files in `docs/` directory
+### Test Fakes
+**`Fake` prefix**
+- `FakeNavigator`, `FakeBackStack`
+- `FakeDeepLinkHandler`
 
-### Code Comments
-- Minimal inline comments (code should be self-documenting)
-- Comments used for clarifying complex logic or architectural decisions
-- Section headers for grouping related methods in large classes
+### Default Implementations
+**`Default` prefix**
+- `DefaultNavigator`, `DefaultDeepLinkHandler`
+- `DefaultStateSerializer`
 
-## Kotlin Language Features
+### Animation Modifiers
+**camelCase** with descriptive suffix
+- `material3BackAnimation()`, `material3ExitAnimation()`
+- `scaleBackAnimation()`, `scaleExitAnimation()`
+- `slideBackAnimation()`, `slideExitAnimation()`
 
-### Type Safety
-- **Explicit types** when it improves readability
-- **Type inference** used when obvious from context
-- **Null safety**: Full use of Kotlin's null-safety features
-- **No nullable types** in public APIs unless necessary
+## Package Structure
 
-### Sealed Classes
-- Used extensively for destination definitions
-- Used for intent patterns in MVI
+### Core Library (quo-vadis-core)
+```
+com.jermey.quo.vadis.core.navigation/
+├── core/          - Core navigation components
+├── compose/       - Compose UI integration
+├── mvi/           - MVI pattern support
+├── integration/   - DI framework integration
+├── testing/       - Testing utilities
+├── utils/         - Extension functions
+└── serialization/ - State save/restore
+```
 
-### Data Classes
-- Preferred for simple data holders (destinations with arguments)
-- Override `arguments` property to expose data
+### Demo App (composeApp)
+```
+com.jermey.navplayground/
+├── demo/          - Demo application
+│   ├── destinations/  - All destination definitions
+│   ├── graphs/        - Navigation graph definitions
+│   └── ui/screens/    - Demo screens
+└── App.kt         - Main entry point
+```
 
-### Extension Functions
-- Used extensively in utils package
-- Organized in dedicated files (e.g., `NavigationExtensions.kt`)
+## Documentation Standards
 
-### DSL Builders
-- Used for navigation graph construction
-- Lambda with receiver pattern for configuration
+### KDoc Format
+All public APIs MUST have KDoc documentation:
 
-### Coroutines & Flow
-- **StateFlow** for reactive state management
-- **SharedFlow** for one-time events (effects)
-- **CoroutineScope** for scoped operations
-- **Dispatchers.Default** for background work
+```kotlin
+/**
+ * Brief one-line description.
+ *
+ * More detailed explanation if needed. Can span multiple
+ * paragraphs and include examples.
+ *
+ * @param navigator The navigation controller
+ * @param graph The navigation graph containing screen definitions
+ * @return The navigation state
+ * @throws NavigationException if navigation fails
+ */
+```
+
+### File Headers
+No file headers required, but package declarations must be first:
+```kotlin
+package com.jermey.quo.vadis.core.navigation.compose
+
+import ...
+```
+
+### Inline Comments
+Use inline comments for complex logic:
+```kotlin
+// Gesture completed - animate exit
+isGesturing = false
+
+// Lock cache entries to prevent premature destruction
+coordinator.startAnimation(currentEntry, previousEntry)
+```
+
+## Kotlin Features & Idioms
+
+### Sealed Classes for Destination Hierarchies
+```kotlin
+sealed class FeatureDestination : Destination {
+    object Home : FeatureDestination()
+    data class Details(val id: String) : FeatureDestination()
+}
+```
+
+### Data Classes for Destinations with Arguments
+```kotlin
+data class UserDestination(val userId: String) : Destination {
+    override val route = "user"
+    override val arguments = mapOf("userId" to userId)
+}
+```
+
+### Extension Functions in Utils
+```kotlin
+fun Navigator.navigateIfNotCurrent(destination: Destination) {
+    if (currentDestination.value?.route != destination.route) {
+        navigate(destination)
+    }
+}
+```
+
+### DSL Builders with Lambda Receivers
+```kotlin
+fun navigationGraph(
+    route: String,
+    builder: NavigationGraphBuilder.() -> Unit
+): NavigationGraph
+```
+
+### StateFlow over Callbacks
+```kotlin
+// ✅ Good - reactive state
+val currentDestination: StateFlow<Destination?>
+
+// ❌ Bad - callbacks
+fun setNavigationListener(listener: (Destination) -> Unit)
+```
+
+### Explicit Null Safety
+```kotlin
+// ✅ Good - explicit handling
+val entry: BackStackEntry? = backStack.current.value
+entry?.let { handleEntry(it) }
+
+// ❌ Bad - nullable in public API when not needed
+fun navigate(destination: Destination?) // Should not be nullable
+```
 
 ## Compose Conventions
 
-### Composable Functions
-- **PascalCase** naming (like React components)
-- **@Composable** annotation required
-- **Modifier parameter**: Always include as last parameter with default value
-- **State hoisting**: State managed at appropriate level
-- **remember**: Used for state that should survive recomposition
-- **LaunchedEffect**: For side effects tied to composition lifecycle
+### Composable Naming
+**PascalCase** for composables:
+```kotlin
+@Composable
+fun NavHost(navigator: Navigator) { }
 
-### Composable Organization
-- Screen-level composables in separate files
-- Reusable components in shared files
-- UI logic separated from business logic
+@Composable
+fun PredictiveBackNavigation(navigator: Navigator) { }
+```
 
-## Architecture Patterns
+### Modifier Parameter
+**Last parameter** with default value:
+```kotlin
+@Composable
+fun NavHost(
+    navigator: Navigator,
+    graph: NavigationGraph,
+    modifier: Modifier = Modifier  // Last, with default
+)
+```
 
-### Interfaces First
-- Define interfaces for core components
-- Provide default implementations
-- Enables testing with fakes
+### State Hoisting
+Hoist state at appropriate level:
+```kotlin
+// State in calling composable
+var selectedTab by remember { mutableStateOf(0) }
+TabRow(selectedTab) { ... }
 
-### Immutability
-- Prefer `val` over `var`
-- Immutable data structures when possible
-- Mutable backing fields kept private
+// State in ViewModel for business logic
+val uiState by viewModel.state.collectAsState()
+```
 
-### Reactive Programming
-- StateFlow for observable state
-- Avoid callbacks in favor of flows
-- Collect state in composables with `collectAsState()`
+### Remember for Recomposition Stability
+```kotlin
+val coordinator = remember { PredictiveBackAnimationCoordinator() }
+val cache = rememberComposableCache(maxCacheSize)
+val navigator = rememberNavigator()
+```
 
-### Separation of Concerns
-- Core logic independent of UI framework
-- Compose layer separate from core
-- Platform-specific code in respective source sets
+### LaunchedEffect for Side Effects
+```kotlin
+LaunchedEffect(coordinator.isAnimating) {
+    if (coordinator.isAnimating) {
+        cache.lockEntry(entryId)
+    }
+}
+```
 
-## File Organization
+## Animation & Graphics
 
-### File Names
-- Match primary class name
-- One primary class per file (except related sealed class hierarchies)
+### graphicsLayer for Performance
+```kotlin
+Modifier.graphicsLayer {
+    scaleX = scale
+    scaleY = scale
+    alpha = alphaValue
+    translationX = offsetX
+}
+```
 
-### File Structure
+### Z-Index Layering
+```kotlin
+Box(Modifier.zIndex(1f)) { /* Current screen */ }
+Box(Modifier.zIndex(0.5f)) { /* Scrim */ }
+Box(Modifier.zIndex(0f)) { /* Previous screen */ }
+```
+
+## State Management
+
+### Private Mutable, Public Immutable
+```kotlin
+class Navigator {
+    private val _currentDestination = MutableStateFlow<Destination?>(null)
+    val currentDestination: StateFlow<Destination?> = _currentDestination.asStateFlow()
+}
+```
+
+### StateFlow for State, SharedFlow for Events
+```kotlin
+// State - has current value
+val navigationState: StateFlow<NavigationState>
+
+// Events - one-time occurrences
+val navigationEffects: SharedFlow<NavigationEffect>
+```
+
+## Error Handling
+
+### Nullable Returns for Failure
+```kotlin
+fun navigateBack(): Boolean  // Returns false if can't go back
+fun pop(): Boolean  // Returns false if stack empty
+```
+
+### Exceptions for Critical Errors
+```kotlin
+class NavigationException(message: String) : Exception(message)
+
+throw NavigationException("Cannot navigate to null destination")
+```
+
+## Testing Conventions
+
+### Test Naming
+```kotlin
+@Test
+fun `navigate to details screen adds to backstack`() { }
+
+@Test
+fun `back navigation removes from backstack`() { }
+
+@Test
+fun `predictive back animation completes before navigation`() { }
+```
+
+### Use FakeNavigator
+```kotlin
+val navigator = FakeNavigator()
+viewModel.onItemClick("123")
+assertTrue(navigator.verifyNavigateTo("details"))
+```
+
+## Code Organization
+
+### File Structure Order
 1. Package declaration
-2. Imports (organized automatically by IDE)
-3. File-level documentation (if applicable)
-4. Class/interface declarations
-5. Companion objects (if any)
+2. Imports (organized)
+3. File-level documentation
+4. Constants
+5. Interfaces/sealed classes
+6. Main classes/functions
+7. Private helper classes/functions
+8. Extension functions
 
-## Best Practices Observed
+### Class Member Order
+1. Companion object
+2. Properties (public then private)
+3. Constructor
+4. Public methods
+5. Internal methods
+6. Private methods
+7. Nested classes/interfaces
 
-1. **No reflection**: All navigation is compile-time safe
-2. **Thread safety**: Using thread-safe primitives (StateFlow, etc.)
-3. **Testability**: FakeNavigator for unit testing
-4. **Modularity**: Feature modules can define their own graphs
-5. **Documentation**: Comprehensive docs in dedicated files
-6. **Minimal dependencies**: Library has no external nav dependencies
-7. **Progressive disclosure**: Simple cases are simple, complex cases possible
-8. **Compose-first**: Designed for Compose UI paradigm
+## Anti-Patterns to Avoid
 
-## Android-Specific
+### ❌ String-Based Navigation
+```kotlin
+// Bad
+navigator.navigate("details")
 
-- **AndroidX**: All Android dependencies use AndroidX
-- **Non-transitive R class**: Enabled for better build performance
-- **Resource excludes**: META-INF files excluded from packaging
+// Good
+navigator.navigate(DetailsDestination)
+```
 
-## iOS-Specific
+### ❌ Mutable State in Public API
+```kotlin
+// Bad
+val currentDestination: MutableStateFlow<Destination?>
 
-- **Static frameworks**: iOS binaries are static frameworks
-- **Framework naming**: Descriptive names (ComposeApp, quo-vadis-coreKit)
-- **SwiftUI integration**: UIViewControllerRepresentable for Compose integration
+// Good
+val currentDestination: StateFlow<Destination?>
+```
+
+### ❌ Blocking Operations
+```kotlin
+// Bad
+fun navigate(destination: Destination) {
+    Thread.sleep(100)  // Never block
+}
+
+// Good
+suspend fun navigate(destination: Destination) {
+    delay(100)  // Use coroutines
+}
+```
+
+### ❌ Creating StateFlows in Composables
+```kotlin
+// Bad
+@Composable
+fun MyScreen() {
+    val state = MutableStateFlow(0)  // Recreated on recomposition!
+}
+
+// Good
+@Composable
+fun MyScreen() {
+    val state = remember { MutableStateFlow(0) }
+}
+```
+
+## Markdown Documentation Style
+
+### Headers
+```markdown
+# Main Title (H1) - Only one per file
+## Section (H2) - Major sections
+### Subsection (H3) - Minor sections
+```
+
+### Code Blocks
+Use language-specific code fencing:
+```markdown
+```kotlin
+fun example() { }
+```
+```
+
+### Lists
+```markdown
+- Unordered list
+- Another item
+
+1. Ordered list
+2. Another item
+```
+
+### Emphasis
+```markdown
+**Bold** for important terms
+*Italic* for emphasis
+`code` for inline code
+```
