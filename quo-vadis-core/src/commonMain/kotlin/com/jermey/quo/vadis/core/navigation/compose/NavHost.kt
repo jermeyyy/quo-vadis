@@ -1,136 +1,48 @@
-package com.jermey.navplayground.navigation.compose
+package com.jermey.quo.vadis.core.navigation.compose
 
-import androidx.compose.animation.*
-import androidx.compose.foundation.layout.Box
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.jermey.navplayground.navigation.core.*
+import com.jermey.navplayground.navigation.compose.GraphNavHost
+import com.jermey.navplayground.navigation.compose.PredictiveBackNavigation
+import com.jermey.navplayground.navigation.core.Navigator
+import com.jermey.navplayground.navigation.core.NavigationGraph
+import com.jermey.navplayground.navigation.core.NavigationTransition
 
 /**
- * Main navigation host composable that renders the current destination.
- * Supports animations and manages the navigation state.
+ * Platform-aware NavHost that supports predictive back navigation on all platforms.
+ *
+ * This composable automatically switches between [PredictiveBackNavigation] and [GraphNavHost]
+ * based on the [enablePredictiveBack] parameter.
+ *
+ * @param graph The navigation graph containing destination definitions and composables
+ * @param navigator The navigator instance managing navigation state
+ * @param modifier Optional modifier for the NavHost
+ * @param defaultTransition Default transition to use when navigating between destinations
+ * @param enablePredictiveBack Whether to enable predictive back gesture support (default: true)
  */
 @Composable
 fun NavHost(
-    navigator: Navigator,
-    modifier: Modifier = Modifier,
-    defaultTransition: NavigationTransition = NavigationTransitions.Fade
-) {
-    val backStackEntry by navigator.backStack.current.collectAsState()
-    val previousEntry = remember { mutableStateOf<BackStackEntry?>(null) }
-
-    // Track navigation direction for proper animations
-    val isNavigatingForward = remember { mutableStateOf(true) }
-
-    LaunchedEffect(backStackEntry) {
-        val current = backStackEntry
-        val previous = previousEntry.value
-
-        if (current != null && previous != null) {
-            isNavigatingForward.value = current != previous
-        }
-
-        previousEntry.value = current
-    }
-
-    Box(modifier = modifier) {
-        backStackEntry?.let { entry ->
-            AnimatedContent(
-                targetState = entry,
-                transitionSpec = {
-                    if (isNavigatingForward.value) {
-                        defaultTransition.enter togetherWith defaultTransition.exit
-                    } else {
-                        defaultTransition.popEnter togetherWith defaultTransition.popExit
-                    }
-                },
-                label = "navigation_animation"
-            ) { currentEntry ->
-                // Find and render the appropriate content
-                RenderDestination(
-                    destination = currentEntry.destination,
-                    navigator = navigator
-                )
-            }
-        }
-    }
-}
-
-/**
- * Navigation host that works with a specific navigation graph.
- * Uses composable caching to keep screens alive for smooth transitions and predictive back gestures.
- */
-@Composable
-fun GraphNavHost(
     graph: NavigationGraph,
     navigator: Navigator,
     modifier: Modifier = Modifier,
-    defaultTransition: NavigationTransition = NavigationTransitions.Fade,
-    enableComposableCache: Boolean = true,
-    maxCacheSize: Int = 3
+    defaultTransition: NavigationTransition,
+    enablePredictiveBack: Boolean = true
 ) {
-    val backStackEntry by navigator.backStack.current.collectAsState()
-    val saveableStateHolder = rememberSaveableStateHolder()
-    val composableCache = remember { ComposableCache(maxCacheSize) }
-
-    Box(modifier = modifier) {
-        backStackEntry?.let { entry ->
-            val destConfig = graph.destinations.find {
-                it.destination.route == entry.destination.route
-            }
-
-            destConfig?.let { config ->
-                AnimatedContent(
-                    targetState = entry,
-                    transitionSpec = {
-                        defaultTransition.enter togetherWith defaultTransition.exit
-                    },
-                    label = "graph_navigation"
-                ) { currentEntry ->
-                    if (enableComposableCache) {
-                        // Use cached composable for better performance
-                        key(currentEntry.id) {
-                            composableCache.Entry(
-                                entry = currentEntry,
-                                saveableStateHolder = saveableStateHolder
-                            ) { stackEntry ->
-                                config.content(stackEntry.destination, navigator)
-                            }
-                        }
-                    } else {
-                        // Direct rendering without cache
-                        config.content(currentEntry.destination, navigator)
-                    }
-                }
-            }
-        }
+    if (enablePredictiveBack) {
+        // PredictiveBackNavigation handles all rendering
+        PredictiveBackNavigation(
+            navigator = navigator,
+            graph = graph,
+            enabled = true,
+            modifier = modifier
+        )
+    } else {
+        GraphNavHost(
+            graph = graph,
+            navigator = navigator,
+            modifier = modifier,
+            defaultTransition = defaultTransition
+        )
     }
 }
 
-/**
- * Renders the content for a given destination.
- */
-@Composable
-private fun RenderDestination(
-    destination: Destination,
-    navigator: Navigator
-) {
-    // This will look up the destination in registered graphs
-    // For now, provide a placeholder
-    Box {
-        // Content will be provided by the registered navigation graphs
-    }
-}
-
-/**
- * Remember a Navigator instance with DI support.
- */
-@Composable
-fun rememberNavigator(
-    deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler()
-): Navigator {
-    return remember {
-        DefaultNavigator(deepLinkHandler)
-    }
-}

@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.jermey.navplayground.navigation.compose.rememberNavigator
-import com.jermey.quo.vadis.core.navigation.compose.PlatformAwareNavHost
+import com.jermey.quo.vadis.core.navigation.compose.NavHost
 import com.jermey.navplayground.navigation.core.*
 import com.jermey.navplayground.demo.destinations.*
 import com.jermey.navplayground.demo.graphs.*
@@ -73,7 +73,7 @@ fun DemoApp() {
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             // Use PlatformAwareNavHost for Android predictive back support
-            PlatformAwareNavHost(
+            NavHost(
                 graph = mainBottomNavGraph(),
                 navigator = navigator,
                 modifier = Modifier,
