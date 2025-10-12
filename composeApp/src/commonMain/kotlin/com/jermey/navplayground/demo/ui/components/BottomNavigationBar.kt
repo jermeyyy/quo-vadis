@@ -1,4 +1,4 @@
-package com.jermey.navplayground.demo.ui
+package com.jermey.navplayground.demo.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore

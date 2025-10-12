@@ -1,0 +1,34 @@
+{
+	"servers": {
+		"serena": {
+			"type": "stdio",
+			"command": "uv",
+			"args": [
+				"run",
+				"--directory",
+				"/Users/jermey/Projects/serena",
+				"serena",
+				"start-mcp-server",
+				"--log-level",
+				"ERROR",
+				"--context",
+				"ide-assistant"
+			]
+		},
+		"docs-mcp": {
+			"url": "http://localhost:6280/mcp",
+			"type": "http"
+		},
+		"javadoc-mcp": {
+      		"type": "stdio",
+      		"command": "uv",
+      		"args": [
+      			"run",
+      			"--directory",
+      			"/Users/jermey/Projects/javadoc-mcp",
+      			"main.py"
+      		]
+		}
+	},
+	"inputs": []
+}

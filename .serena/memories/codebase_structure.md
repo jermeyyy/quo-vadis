@@ -49,7 +49,7 @@ composeApp/
     │               ├── BottomNavigationBar.kt  # Bottom nav component
     │               └── screens/
     │                   ├── MainScreens.kt      # Home, Explore, etc.
-    │                   ├── MasterDetailScreens.kt  # List/Detail pattern
+    │                   ├── Item.kt  # List/Detail pattern
     │                   ├── TabsScreens.kt      # Nested tabs pattern
     │                   ├── ProcessScreens.kt   # Wizard/process pattern
     │                   └── DeepLinkDemoScreen.kt  # Deep link demos

@@ -24,7 +24,7 @@ NavigationBar {
 ```
 
 ### 2. **Master-Detail Navigation**
-- **Location**: `MasterDetailScreens.kt`, `MasterDetailDestination`
+- **Location**: `Item.kt`, `MasterDetailDestination`
 - **Features**:
   - List of 50 items with categories
   - Detail view with specifications
@@ -273,7 +273,7 @@ demo/
     ├── BottomNavigationBar.kt    # Bottom nav component
     └── screens/
         ├── MainScreens.kt        # Home, Explore, Profile, Settings
-        ├── MasterDetailScreens.kt # Master list & detail views
+        ├── Item.kt # Master list & detail views
         ├── TabsScreens.kt        # Tabs & sub-items
         └── ProcessScreens.kt     # Wizard steps (6 screens)
 ```

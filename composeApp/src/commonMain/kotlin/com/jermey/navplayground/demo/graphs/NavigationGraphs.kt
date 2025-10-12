@@ -1,28 +1,38 @@
 package com.jermey.navplayground.demo.graphs
 
+import com.jermey.navplayground.demo.destinations.DemoDestination
 import com.jermey.navplayground.demo.destinations.MainDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.TabsDestination
 import com.jermey.navplayground.demo.ui.screens.DeepLinkDemoScreen
-import com.jermey.navplayground.demo.ui.screens.DetailScreen
+import com.jermey.navplayground.demo.ui.screens.masterdetail.DetailScreen
 import com.jermey.navplayground.demo.ui.screens.ExploreScreen
 import com.jermey.navplayground.demo.ui.screens.HomeScreen
-import com.jermey.navplayground.demo.ui.screens.MasterListScreen
-import com.jermey.navplayground.demo.ui.screens.ProcessCompleteScreen
-import com.jermey.navplayground.demo.ui.screens.ProcessStartScreen
-import com.jermey.navplayground.demo.ui.screens.ProcessStep1Screen
-import com.jermey.navplayground.demo.ui.screens.ProcessStep2AScreen
-import com.jermey.navplayground.demo.ui.screens.ProcessStep2BScreen
-import com.jermey.navplayground.demo.ui.screens.ProcessStep3Screen
+import com.jermey.navplayground.demo.ui.screens.masterdetail.MasterListScreen
+import com.jermey.navplayground.demo.ui.screens.process.ProcessCompleteScreen
+import com.jermey.navplayground.demo.ui.screens.process.ProcessStartScreen
+import com.jermey.navplayground.demo.ui.screens.process.ProcessStep1Screen
+import com.jermey.navplayground.demo.ui.screens.process.ProcessStep2AScreen
+import com.jermey.navplayground.demo.ui.screens.process.ProcessStep2BScreen
+import com.jermey.navplayground.demo.ui.screens.process.ProcessStep3Screen
 import com.jermey.navplayground.demo.ui.screens.ProfileScreen
 import com.jermey.navplayground.demo.ui.screens.SettingsScreen
-import com.jermey.navplayground.demo.ui.screens.TabSubItemScreen
-import com.jermey.navplayground.demo.ui.screens.TabsMainScreen
+import com.jermey.navplayground.demo.ui.screens.tabs.TabSubItemScreen
+import com.jermey.navplayground.demo.ui.screens.tabs.TabsMainScreen
+import com.jermey.navplayground.demo.destinations.RootScreen
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
 import com.jermey.quo.vadis.core.navigation.core.navigationGraph
+
+fun demoRootGraph() = navigationGraph("demo_root_graph") {
+    startDestination(DemoDestination.Root)
+
+    destination(DemoDestination.Root) { _, _ ->
+        RootScreen()
+    }
+}
 
 /**
  * Main bottom navigation graph

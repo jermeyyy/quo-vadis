@@ -3,6 +3,15 @@ package com.jermey.navplayground.demo.destinations
 import com.jermey.quo.vadis.core.navigation.core.Destination
 
 /**
+ * Top-level destinations exposed by the demo application.
+ */
+sealed class DemoDestination : Destination {
+    object Root : DemoDestination() {
+        override val route = "demo_root"
+    }
+}
+
+/**
  * Main bottom navigation destinations
  */
 sealed class MainDestination(override val route: String) : Destination {
@@ -79,19 +88,5 @@ sealed class ProcessDestination : Destination {
 
     object Complete : ProcessDestination() {
         override val route = "process_complete"
-    }
-}
-
-/**
- * Modal/Dialog destinations (can be shown over other screens)
- */
-sealed class ModalDestination : Destination {
-    object Info : ModalDestination() {
-        override val route = "modal_info"
-    }
-
-    data class Confirmation(val message: String) : ModalDestination() {
-        override val route = "modal_confirmation"
-        override val arguments = mapOf("message" to message)
     }
 }
