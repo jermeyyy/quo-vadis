@@ -1,9 +1,11 @@
 package com.jermey.navplayground.navigation.compose
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -12,25 +14,75 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.jermey.navplayground.navigation.core.BackStackEntry
 import com.jermey.navplayground.navigation.core.NavigationGraph
 import com.jermey.navplayground.navigation.core.Navigator
+import kotlinx.coroutines.launch
+
+/**
+ * Coordinates animation state and display entries during predictive back gestures.
+ * Separates logical backstack state from visual rendering state to prevent
+ * premature composable destruction during exit animations.
+ */
+@Stable
+private class PredictiveBackAnimationCoordinator {
+    /**
+     * Stable entries for rendering during animation.
+     * These remain fixed while animation is in progress.
+     */
+    var displayedCurrentEntry by mutableStateOf<BackStackEntry?>(null)
+        private set
+    var displayedPreviousEntry by mutableStateOf<BackStackEntry?>(null)
+        private set
+
+    /**
+     * Whether animation is currently in progress.
+     */
+    var isAnimating by mutableStateOf(false)
+        private set
+
+    /**
+     * Start animation with captured entries.
+     * Freezes the displayed entries until animation completes.
+     */
+    fun startAnimation(current: BackStackEntry?, previous: BackStackEntry?) {
+        displayedCurrentEntry = current
+        displayedPreviousEntry = previous
+        isAnimating = true
+    }
+
+    /**
+     * Finish animation and allow normal rendering to resume.
+     */
+    fun finishAnimation() {
+        isAnimating = false
+        // Entries will be updated on next frame from backstack state
+    }
+
+    /**
+     * Cancel animation and reset state.
+     */
+    fun cancelAnimation() {
+        isAnimating = false
+        displayedCurrentEntry = null
+        displayedPreviousEntry = null
+    }
+}
 
 /**
  * Multiplatform predictive back gesture handler with automatic screen caching.
+ *
  * Provides visual feedback during back gestures on both Android 13+ and iOS.
+ * Automatically renders both the current and previous screens during the gesture
+ * using composable caching for smooth animations.
  *
- * This composable integrates with the multiplatform predictive back gesture system
- * to show preview animations when users swipe back. It automatically renders both
- * the current and previous screens during the gesture by leveraging composable caching.
- *
- * @param navigator The navigation controller to handle back navigation
+ * @param navigator The navigation controller
  * @param graph The navigation graph containing screen definitions
  * @param enabled Whether predictive back is enabled
  * @param modifier Modifier to apply to the container
- * @param animationType Type of animation to use during the back gesture
+ * @param animationType Type of animation during the back gesture
  * @param sensitivity Multiplier for gesture progress (default 1.0)
- * @param customAnimation Optional custom animation function
- * @param content The content to display (current screen with NavHost or GraphNavHost)
+ * @param maxCacheSize Maximum number of cached screens (default 3)
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -41,121 +93,275 @@ fun PredictiveBackNavigation(
     modifier: Modifier = Modifier,
     animationType: PredictiveBackAnimationType = PredictiveBackAnimationType.Material3,
     sensitivity: Float = 1f,
-    maxCacheSize: Int = 3,
-    customAnimation: (@Composable (progress: Float, content: @Composable () -> Unit) -> Unit)? = null,
-    content: @Composable () -> Unit
+    maxCacheSize: Int = 3
 ) {
-    var backProgress by remember { mutableStateOf(0f) }
-    var isBackGestureInProgress by remember { mutableStateOf(false) }
+    // State management
+    var gestureProgress by remember { mutableFloatStateOf(0f) }
+    val exitAnimProgress = remember { Animatable(0f) }
+    var isGesturing by remember { mutableStateOf(false) }
+    var isExitAnimating by remember { mutableStateOf(false) }
+
+    // Animation coordinator for stable rendering during animations
+    val coordinator = remember { PredictiveBackAnimationCoordinator() }
+
+    // Navigation state
     val backStackState by navigator.backStack.stack.collectAsState()
     val currentEntry by navigator.backStack.current.collectAsState()
     val previousEntry by navigator.backStack.previous.collectAsState()
-    val canGoBack = backStackState.size > 1
+    val canGoBack by remember { derivedStateOf { backStackState.size > 1 } }
 
-    // Composable cache for keeping screens alive
-    val composableCache = remember { ComposableCache(maxCacheSize) }
+    // Determine what to display
+    // Current screen always uses live entry for proper animation updates
+    val displayedCurrent = currentEntry
+
+    // Previous screen uses coordinator entry during animation to keep it rendered
+    val displayedPrevious = if (coordinator.isAnimating) {
+        coordinator.displayedPreviousEntry
+    } else {
+        null // Don't render previous screen when not animating
+    }
+
+    // Resources
+    val composableCache = rememberComposableCache(maxCacheSize)
     val saveableStateHolder = rememberSaveableStateHolder()
+    val scope = rememberCoroutineScope()
 
-    // Handle predictive back gesture using multiplatform API
-    // Only intercept if we can go back, otherwise let the system handle it
-    PredictiveBackHandler(enabled = enabled && canGoBack) { backEvent ->
-        isBackGestureInProgress = true
+    // Lock cache entries during animation to prevent premature eviction
+    LaunchedEffect(coordinator.isAnimating, currentEntry?.id, coordinator.displayedPreviousEntry?.id) {
+        if (coordinator.isAnimating) {
+            currentEntry?.let { composableCache.lockEntry(it.id) }
+            coordinator.displayedPreviousEntry?.let { composableCache.lockEntry(it.id) }
+        } else {
+            currentEntry?.let { composableCache.unlockEntry(it.id) }
+            coordinator.displayedPreviousEntry?.let { composableCache.unlockEntry(it.id) }
+        }
+    }
+
+    // Predictive back gesture handler
+    PredictiveBackHandler(enabled = enabled && canGoBack && !isExitAnimating) { backEvent ->
+        // Capture entries BEFORE any state changes
+        coordinator.startAnimation(currentEntry, previousEntry)
+        isGesturing = true
 
         try {
-            // Collect back events and update progress
             backEvent.collect { event ->
-                backProgress = event.progress * sensitivity
+                gestureProgress = event.progress * sensitivity
             }
 
-            // Gesture completed - perform actual navigation
-            navigator.navigateBack()
-        } finally {
-            isBackGestureInProgress = false
-            backProgress = 0f
+            // Gesture completed - animate exit
+            isGesturing = false
+            isExitAnimating = true
+
+            scope.launch {
+                exitAnimProgress.snapTo(gestureProgress)
+                exitAnimProgress.animateTo(
+                    targetValue = 1f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                )
+
+                // Animation complete - NOW navigate and cleanup
+                navigator.navigateBack()
+
+                // End animation immediately - the new screen will render
+                isExitAnimating = false
+                coordinator.finishAnimation()
+                exitAnimProgress.snapTo(0f)
+                gestureProgress = 0f
+            }
+        } catch (_: Exception) {
+            // Gesture cancelled
+            isGesturing = false
+            scope.launch {
+                exitAnimProgress.snapTo(gestureProgress)
+                exitAnimProgress.animateTo(
+                    targetValue = 0f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessHigh
+                    )
+                )
+
+                // Reset state after cancellation animation
+                coordinator.cancelAnimation()
+                gestureProgress = 0f
+            }
         }
     }
 
-    // Use custom animation if provided
-    if (customAnimation != null) {
-        customAnimation(backProgress, content)
-        return
-    }
+    // Rendering
+    PredictiveBackContent(
+        modifier = modifier,
+        isGesturing = isGesturing,
+        isExitAnimating = isExitAnimating,
+        gestureProgress = gestureProgress,
+        exitProgress = exitAnimProgress.value,
+        animationType = animationType,
+        currentEntry = displayedCurrent,
+        previousEntry = displayedPrevious,
+        graph = graph,
+        navigator = navigator,
+        composableCache = composableCache,
+        saveableStateHolder = saveableStateHolder
+    )
+}
 
-    // Default animation with previous screen peeking from behind
+/**
+ * Renders the content for predictive back animation.
+ */
+@Composable
+private fun PredictiveBackContent(
+    modifier: Modifier,
+    isGesturing: Boolean,
+    isExitAnimating: Boolean,
+    gestureProgress: Float,
+    exitProgress: Float,
+    animationType: PredictiveBackAnimationType,
+    currentEntry: BackStackEntry?,
+    previousEntry: BackStackEntry?,
+    graph: NavigationGraph,
+    navigator: Navigator,
+    composableCache: ComposableCache,
+    saveableStateHolder: SaveableStateHolder
+) {
+    val isAnimating = isGesturing || isExitAnimating
+
     Box(modifier = modifier.fillMaxSize()) {
-        // Capture entries locally to avoid smart cast issues
-        val currentEntryValue = currentEntry
-        val previousEntryValue = previousEntry
-
-        // Previous screen (if available) - rendered beneath with scale animation
-        if (isBackGestureInProgress && previousEntryValue != null) {
-            val destConfig = graph.destinations.find {
-                it.destination.route == previousEntryValue.destination.route
-            }
-
-            destConfig?.let { config ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .zIndex(0f) // Bottom layer
-                ) {
-                    // Render cached previous screen
-                    val cachedPreviousComposable = composableCache.getOrCreate(
-                        entry = previousEntryValue,
-                        saveableStateHolder = saveableStateHolder
-                    ) { entry ->
-                        config.content(entry.destination, navigator)
-                    }
-                    cachedPreviousComposable()
-                }
-            }
-        }
-
-        // Scrim layer between current and previous screens
-        // Animates from semi-opaque to transparent as gesture progresses
-        if (isBackGestureInProgress && backProgress > 0f && previousEntryValue != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(0.5f) // Between previous and current screens
-                    .background(Color.Black.copy(alpha = 0.3f * (1f - backProgress)))
+        // Previous screen layer
+        if (isAnimating && previousEntry != null) {
+            PreviousScreenLayer(
+                entry = previousEntry,
+                graph = graph,
+                navigator = navigator,
+                composableCache = composableCache,
+                saveableStateHolder = saveableStateHolder
             )
         }
 
-        // Current screen with predictive animation on top
+        // Scrim layer - only during gesture, not during exit
+        if (isGesturing && gestureProgress > 0f && previousEntry != null) {
+            ScrimLayer(gestureProgress)
+        }
+
+        // Current screen layer
+        if (currentEntry != null) {
+            CurrentScreenLayer(
+                entry = currentEntry,
+                isGesturing = isGesturing,
+                isExitAnimating = isExitAnimating,
+                gestureProgress = gestureProgress,
+                exitProgress = exitProgress,
+                animationType = animationType,
+                graph = graph,
+                navigator = navigator,
+                composableCache = composableCache,
+                saveableStateHolder = saveableStateHolder
+            )
+        }
+    }
+}
+
+/**
+ * Renders the previous screen layer.
+ */
+@Composable
+private fun PreviousScreenLayer(
+    entry: BackStackEntry,
+    graph: NavigationGraph,
+    navigator: Navigator,
+    composableCache: ComposableCache,
+    saveableStateHolder: SaveableStateHolder
+) {
+    val destConfig = remember(entry.destination.route) {
+        graph.destinations.find { it.destination.route == entry.destination.route }
+    }
+
+    destConfig?.let { config ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .zIndex(1f) // Top layer
+                .zIndex(0f)
+        ) {
+            key(entry.id) {
+                composableCache.Entry(
+                    entry = entry,
+                    saveableStateHolder = saveableStateHolder
+                ) { stackEntry ->
+                    config.content(stackEntry.destination, navigator)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Renders the scrim layer.
+ */
+@Composable
+private fun ScrimLayer(progress: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(0.5f)
+            .background(Color.Black.copy(alpha = 0.3f * (1f - progress)))
+    )
+}
+
+/**
+ * Renders the current screen layer with animation.
+ */
+@Composable
+private fun CurrentScreenLayer(
+    entry: BackStackEntry,
+    isGesturing: Boolean,
+    isExitAnimating: Boolean,
+    gestureProgress: Float,
+    exitProgress: Float,
+    animationType: PredictiveBackAnimationType,
+    graph: NavigationGraph,
+    navigator: Navigator,
+    composableCache: ComposableCache,
+    saveableStateHolder: SaveableStateHolder
+) {
+    val destConfig = remember(entry.destination.route) {
+        graph.destinations.find { it.destination.route == entry.destination.route }
+    }
+
+    destConfig?.let { config ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(1f)
                 .then(
-                    if (isBackGestureInProgress) {
-                        when (animationType) {
-                            PredictiveBackAnimationType.Material3 -> Modifier.material3BackAnimation(backProgress)
-                            PredictiveBackAnimationType.Scale -> Modifier.scaleBackAnimation(backProgress)
-                            PredictiveBackAnimationType.Slide -> Modifier.slideBackAnimation(backProgress)
+                    when {
+                        isGesturing -> {
+                            // Gesture animation: user is dragging back
+                            when (animationType) {
+                                PredictiveBackAnimationType.Material3 ->
+                                    Modifier.material3BackAnimation(gestureProgress)
+                                PredictiveBackAnimationType.Scale ->
+                                    Modifier.scaleBackAnimation(gestureProgress)
+                                PredictiveBackAnimationType.Slide ->
+                                    Modifier.slideBackAnimation(gestureProgress)
+                            }
                         }
-                    } else {
-                        Modifier
+                        isExitAnimating -> {
+                            // Exit animation: screen is leaving after gesture completed
+                            Modifier.exitAnimation(exitProgress)
+                        }
+                        else -> Modifier
                     }
                 )
         ) {
-            // Render cached current screen or provided content
-            if (currentEntryValue != null) {
-                val destConfig = graph.destinations.find {
-                    it.destination.route == currentEntryValue.destination.route
+            key(entry.id) {
+                composableCache.Entry(
+                    entry = entry,
+                    saveableStateHolder = saveableStateHolder
+                ) { stackEntry ->
+                    config.content(stackEntry.destination, navigator)
                 }
-
-                destConfig?.let { config ->
-                    val cachedCurrentComposable = composableCache.getOrCreate(
-                        entry = currentEntryValue,
-                        saveableStateHolder = saveableStateHolder
-                    ) { entry ->
-                        config.content(entry.destination, navigator)
-                    }
-                    cachedCurrentComposable()
-                } ?: content()
-            } else {
-                content()
             }
         }
     }
@@ -222,6 +428,24 @@ private fun Modifier.slideBackAnimation(progress: Float): Modifier {
     return this.graphicsLayer {
         translationX = offsetX
         alpha = lerp(1f, 0.7f, progress)
+    }
+}
+
+/**
+ * Exit animation for when gesture is completed.
+ * Smoothly scales down and fades out the screen.
+ */
+private fun Modifier.exitAnimation(progress: Float): Modifier {
+    // Start from gesture end state (scale ~0.9) and animate to invisible
+    val scale = lerp(0.9f, 0.7f, progress)
+    val alpha = lerp(1f, 0f, progress)
+    val offsetX = lerp(80f, 200f, progress)
+
+    return this.graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+        this.alpha = alpha
+        translationX = offsetX
     }
 }
 

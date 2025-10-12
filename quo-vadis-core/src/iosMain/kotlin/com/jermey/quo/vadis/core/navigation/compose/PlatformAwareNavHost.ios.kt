@@ -20,19 +20,13 @@ actual fun PlatformAwareNavHost(
     enablePredictiveBack: Boolean
 ) {
     if (enablePredictiveBack) {
-        // Wrap with multiplatform predictive back handler
+        // PredictiveBackNavigation handles all rendering
         PredictiveBackNavigation(
             navigator = navigator,
+            graph = graph,
             enabled = true,
             modifier = modifier
-        ) {
-            GraphNavHost(
-                graph = graph,
-                navigator = navigator,
-                modifier = Modifier,
-                defaultTransition = defaultTransition
-            )
-        }
+        )
     } else {
         GraphNavHost(
             graph = graph,

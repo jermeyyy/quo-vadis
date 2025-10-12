@@ -14,88 +14,69 @@ import com.jermey.navplayground.navigation.core.BackStackEntry
 class ComposableCache(
     private val maxCacheSize: Int = 3
 ) {
-    private val cache = mutableStateMapOf<String, CachedComposable>()
+    private val accessTimeMap = mutableStateMapOf<String, Long>()
+    private val lockedEntries = mutableStateSetOf<String>()
+    private var counter = 0L
 
     /**
-     * Get or create a cached composable for the given entry.
+     * Lock an entry to prevent it from being evicted during animations.
+     * Locked entries are protected from cache cleanup.
+     */
+    fun lockEntry(entryId: String) {
+        lockedEntries.add(entryId)
+    }
+    
+    /**
+     * Unlock an entry, allowing it to be evicted if needed.
+     */
+    fun unlockEntry(entryId: String) {
+        lockedEntries.remove(entryId)
+    }
+
+    /**
+     * Renders a cached composable for the given entry.
      *
      * @param entry The backstack entry
      * @param saveableStateHolder State holder for saveable state
      * @param content The composable content provider
-     * @return A composable that wraps the content with state preservation
      */
     @Composable
-    fun getOrCreate(
+    fun Entry(
         entry: BackStackEntry,
         saveableStateHolder: SaveableStateHolder,
         content: @Composable (BackStackEntry) -> Unit
-    ): @Composable () -> Unit {
-        // Update or create cache entry
-        if (!cache.containsKey(entry.id)) {
-            cache[entry.id] = CachedComposable(
-                entry = entry,
-                lastAccessTime = System.currentTimeMillis()
-            )
+    ) {
+        // Track access
+        val entryId = entry.id
+
+        DisposableEffect(entryId) {
+            // Update access time on composition
+            accessTimeMap[entryId] = counter++
 
             // Cleanup old entries if cache is full
-            if (cache.size > maxCacheSize) {
-                val oldestKey = cache.entries
-                    .minByOrNull { it.value.lastAccessTime }
-                    ?.key
-
-                oldestKey?.let {
-                    cache.remove(it)
-                    saveableStateHolder.removeState(it)
+            if (accessTimeMap.size > maxCacheSize) {
+                val oldestEntry = accessTimeMap.entries
+                    .filter { it.key !in lockedEntries } // Don't evict locked entries
+                    .minByOrNull { it.value }
+                oldestEntry?.let { (oldId, _) ->
+                    if (oldId != entryId) {
+                        accessTimeMap.remove(oldId)
+                        saveableStateHolder.removeState(oldId)
+                    }
                 }
             }
-        } else {
-            // Update access time
-            cache[entry.id] = cache[entry.id]!!.copy(
-                lastAccessTime = System.currentTimeMillis()
-            )
-        }
 
-        // Return composable that preserves state
-        return {
-            saveableStateHolder.SaveableStateProvider(entry.id) {
-                content(entry)
+            onDispose {
+                // Don't remove on dispose - keep in cache
             }
         }
+
+        // Render with state preservation
+        saveableStateHolder.SaveableStateProvider(entryId) {
+            content(entry)
+        }
     }
-
-    /**
-     * Check if an entry is cached.
-     */
-    fun isCached(entryId: String): Boolean = cache.containsKey(entryId)
-
-    /**
-     * Remove an entry from cache.
-     */
-    fun remove(entryId: String) {
-        cache.remove(entryId)
-    }
-
-    /**
-     * Clear all cached entries.
-     */
-    fun clear() {
-        cache.clear()
-    }
-
-    /**
-     * Get all cached entry IDs.
-     */
-    fun getCachedIds(): Set<String> = cache.keys.toSet()
 }
-
-/**
- * Cached composable metadata.
- */
-@Stable
-private data class CachedComposable(
-    val entry: BackStackEntry,
-    val lastAccessTime: Long
-)
 
 /**
  * Remember a composable cache across recompositions.
@@ -105,15 +86,4 @@ fun rememberComposableCache(maxCacheSize: Int = 3): ComposableCache {
     return remember { ComposableCache(maxCacheSize) }
 }
 
-/**
- * System time provider for testing purposes.
- */
-internal object System {
-    private var counter = 0L
-
-    fun currentTimeMillis(): Long {
-        // Simple counter-based timestamp for cache ordering
-        return counter++
-    }
-}
 

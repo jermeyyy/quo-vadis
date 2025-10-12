@@ -90,13 +90,14 @@ fun GraphNavHost(
                 ) { currentEntry ->
                     if (enableComposableCache) {
                         // Use cached composable for better performance
-                        val cachedComposable = composableCache.getOrCreate(
-                            entry = currentEntry,
-                            saveableStateHolder = saveableStateHolder
-                        ) { stackEntry ->
-                            config.content(stackEntry.destination, navigator)
+                        key(currentEntry.id) {
+                            composableCache.Entry(
+                                entry = currentEntry,
+                                saveableStateHolder = saveableStateHolder
+                            ) { stackEntry ->
+                                config.content(stackEntry.destination, navigator)
+                            }
                         }
-                        cachedComposable()
                     } else {
                         // Direct rendering without cache
                         config.content(currentEntry.destination, navigator)
