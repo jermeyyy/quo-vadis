@@ -111,7 +111,6 @@ abstract class BaseModuleNavigation : ModuleNavigation {
 
     override fun provideGraph(): NavigationGraph = graph
 
-    override fun entryPoints(): List<Destination> {
-        return graph.destinations.map { it.destination }
-    }
+    override fun entryPoints(): List<Destination> =
+        graph.destinations.map(DestinationConfig::destination)
 }

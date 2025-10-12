@@ -52,6 +52,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
+private const val DATA_INDEX_NAME = 0
+private const val DATA_INDEX_SECOND_FIELD = 1
+private const val DATA_INDEX_THIRD_FIELD = 2
+private const val DATA_INDEX_INDUSTRY = 3
+
 /**
  * Process Start Screen - Entry point for the wizard/process flow
  */
@@ -250,7 +255,7 @@ fun ProcessStep1Screen(
 
 @Composable
 private fun AccountTypeOption(
-    type: String,
+    @Suppress("UNUSED_PARAMETER") type: String,
     title: String,
     description: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -554,15 +559,15 @@ fun ProcessStep3Screen(
                         Divider()
 
                         if (dataParts.isNotEmpty()) {
-                            ReviewRow("Name", dataParts.getOrNull(0) ?: "")
+                            ReviewRow("Name", dataParts.getOrNull(DATA_INDEX_NAME) ?: "")
 
                             if (branch == "personal") {
-                                ReviewRow("Email", dataParts.getOrNull(1) ?: "")
-                                ReviewRow("Birth Date", dataParts.getOrNull(2) ?: "")
+                                ReviewRow("Email", dataParts.getOrNull(DATA_INDEX_SECOND_FIELD) ?: "")
+                                ReviewRow("Birth Date", dataParts.getOrNull(DATA_INDEX_THIRD_FIELD) ?: "")
                             } else {
-                                ReviewRow("Company", dataParts.getOrNull(1) ?: "")
-                                ReviewRow("Tax ID", dataParts.getOrNull(2) ?: "")
-                                ReviewRow("Industry", dataParts.getOrNull(3) ?: "")
+                                ReviewRow("Company", dataParts.getOrNull(DATA_INDEX_SECOND_FIELD) ?: "")
+                                ReviewRow("Tax ID", dataParts.getOrNull(DATA_INDEX_THIRD_FIELD) ?: "")
+                                ReviewRow("Industry", dataParts.getOrNull(DATA_INDEX_INDUSTRY) ?: "")
                             }
                         }
                     }

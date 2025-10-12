@@ -38,6 +38,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+private const val EXPLORE_ITEMS_COUNT = 20
+
 /**
  * Home Screen - Main entry point with navigation to all patterns
  */
@@ -143,7 +145,7 @@ fun ExploreScreen(
     onItemClick: (String) -> Unit
 ) {
     val items = remember {
-        (1..20).map { "Item $it" }
+        (1..EXPLORE_ITEMS_COUNT).map { "Item $it" }
     }
 
     LazyColumn(

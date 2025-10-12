@@ -13,15 +13,10 @@
     <ID>LongMethod:ProcessScreens.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProcessStep2BScreen( previousData: String, onNext: (data: String) -&gt; Unit, onBack: () -&gt; Unit )</ID>
     <ID>LongMethod:ProcessScreens.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProcessStep3Screen( previousData: String, branch: String, onComplete: () -&gt; Unit, onBack: () -&gt; Unit )</ID>
     <ID>LongMethod:TabsScreens.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun TabSubItemScreen( tabId: String, itemId: String, onBack: () -&gt; Unit )</ID>
-    <ID>MagicNumber:MainScreens.kt:20</ID>
-    <ID>MagicNumber:MasterDetailScreens.kt:5</ID>
-    <ID>MagicNumber:MasterDetailScreens.kt:50</ID>
-    <ID>MagicNumber:ProcessScreens.kt:3</ID>
     <ID>MatchingDeclarationName:Platform.android.kt:AndroidPlatform : Platform</ID>
     <ID>MatchingDeclarationName:Platform.ios.kt:IOSPlatform : Platform</ID>
     <ID>UnusedParameter:MVIExample.kt:itemCount: Int</ID>
     <ID>UnusedParameter:MVIExample.kt:productId: String</ID>
     <ID>UnusedParameter:MVIExample.kt:viewModel: ProductViewModel</ID>
-    <ID>UnusedParameter:ProcessScreens.kt:type: String</ID>
   </CurrentIssues>
 </SmellBaseline>

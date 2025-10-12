@@ -35,6 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+private const val MASTER_LIST_ITEMS_COUNT = 50
+private const val RELATED_ITEMS_COUNT = 5
+
 /**
  * Master List Screen - Shows list of items (Master view)
  */
@@ -45,7 +48,7 @@ fun MasterListScreen(
     onBack: () -> Unit
 ) {
     val items = remember {
-        (1..50).map {
+        (1..MASTER_LIST_ITEMS_COUNT).map {
             Item(
                 id = "item_$it",
                 title = "Item $it",
@@ -147,7 +150,7 @@ fun DetailScreen(
     onNavigateToRelated: (String) -> Unit
 ) {
     val relatedItems = remember(itemId) {
-        (1..5).map { "Related item $it" }
+        (1..RELATED_ITEMS_COUNT).map { "Related item $it" }
     }
 
     Scaffold(
