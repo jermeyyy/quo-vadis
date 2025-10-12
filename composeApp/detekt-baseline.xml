@@ -5,13 +5,16 @@
     <ID>FunctionNaming:MainViewController.kt:fun MainViewController()</ID>
     <ID>LongMethod:DeepLinkDemoScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun DeepLinkDemoScreen( onBack: () -&gt; Unit, onNavigateViaDeepLink: (String) -&gt; Unit )</ID>
     <ID>LongMethod:DetailScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun DetailScreen( itemId: String, onBack: () -&gt; Unit, onNavigateToRelated: (String) -&gt; Unit )</ID>
+    <ID>LongMethod:ExploreScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ExploreScreen( onItemClick: (String) -&gt; Unit, navigator: Navigator, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:HomeScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun HomeScreen( onNavigateToMasterDetail: () -&gt; Unit, onNavigateToTabs: () -&gt; Unit, onNavigateToProcess: () -&gt; Unit, navigator: Navigator, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:NavigationGraphs.kt:fun processGraph()</ID>
     <ID>LongMethod:ProcessStartScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProcessStartScreen( onStart: () -&gt; Unit, onCancel: () -&gt; Unit )</ID>
     <ID>LongMethod:ProcessStep1Screen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProcessStep1Screen( initialUserType: String?, onNext: (userType: String, data: String) -&gt; Unit, onBack: () -&gt; Unit )</ID>
     <ID>LongMethod:ProcessStep2AScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProcessStep2AScreen( previousData: String, onNext: (data: String) -&gt; Unit, onBack: () -&gt; Unit )</ID>
     <ID>LongMethod:ProcessStep2BScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProcessStep2BScreen( previousData: String, onNext: (data: String) -&gt; Unit, onBack: () -&gt; Unit )</ID>
     <ID>LongMethod:ProcessStep3Screen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProcessStep3Screen( previousData: String, branch: String, onComplete: () -&gt; Unit, onBack: () -&gt; Unit )</ID>
-    <ID>LongMethod:RootScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun RootScreen()</ID>
+    <ID>LongMethod:ProfileScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen( onEditProfile: () -&gt; Unit, navigator: Navigator, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SettingsScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun SettingsScreen( navigator: Navigator, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:TabsScreens.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun TabSubItemScreen( tabId: String, itemId: String, onBack: () -&gt; Unit )</ID>
     <ID>MatchingDeclarationName:Platform.android.kt:AndroidPlatform : Platform</ID>
     <ID>MatchingDeclarationName:Platform.ios.kt:IOSPlatform : Platform</ID>

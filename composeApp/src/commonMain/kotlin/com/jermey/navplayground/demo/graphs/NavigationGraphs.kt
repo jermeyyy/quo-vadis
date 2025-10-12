@@ -1,14 +1,15 @@
 package com.jermey.navplayground.demo.graphs
 
-import com.jermey.navplayground.demo.destinations.DemoDestination
 import com.jermey.navplayground.demo.destinations.MainDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.TabsDestination
 import com.jermey.navplayground.demo.ui.screens.DeepLinkDemoScreen
-import com.jermey.navplayground.demo.ui.screens.masterdetail.DetailScreen
 import com.jermey.navplayground.demo.ui.screens.ExploreScreen
 import com.jermey.navplayground.demo.ui.screens.HomeScreen
+import com.jermey.navplayground.demo.ui.screens.ProfileScreen
+import com.jermey.navplayground.demo.ui.screens.SettingsScreen
+import com.jermey.navplayground.demo.ui.screens.masterdetail.DetailScreen
 import com.jermey.navplayground.demo.ui.screens.masterdetail.MasterListScreen
 import com.jermey.navplayground.demo.ui.screens.process.ProcessCompleteScreen
 import com.jermey.navplayground.demo.ui.screens.process.ProcessStartScreen
@@ -16,28 +17,23 @@ import com.jermey.navplayground.demo.ui.screens.process.ProcessStep1Screen
 import com.jermey.navplayground.demo.ui.screens.process.ProcessStep2AScreen
 import com.jermey.navplayground.demo.ui.screens.process.ProcessStep2BScreen
 import com.jermey.navplayground.demo.ui.screens.process.ProcessStep3Screen
-import com.jermey.navplayground.demo.ui.screens.ProfileScreen
-import com.jermey.navplayground.demo.ui.screens.SettingsScreen
 import com.jermey.navplayground.demo.ui.screens.tabs.TabSubItemScreen
 import com.jermey.navplayground.demo.ui.screens.tabs.TabsMainScreen
-import com.jermey.navplayground.demo.destinations.RootScreen
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
 import com.jermey.quo.vadis.core.navigation.core.navigationGraph
 
-fun demoRootGraph() = navigationGraph("demo_root_graph") {
-    startDestination(DemoDestination.Root)
-
-    destination(DemoDestination.Root) { _, _ ->
-        RootScreen()
-    }
-}
-
 /**
- * Main bottom navigation graph
+ * Root application navigation graph.
+ *
+ * This graph contains all main bottom navigation destinations wrapped in [ScreenWithScaffold]
+ * to ensure the complete screen structure (TopAppBar + BottomNav + content) is cached together,
+ * preventing visual glitches during predictive back animations.
+ *
+ * Nested graphs (master-detail, tabs, process) are included as full-screen destinations.
  */
-fun mainBottomNavGraph() = navigationGraph("main") {
+fun appRootGraph() = navigationGraph("app_root") {
     startDestination(MainDestination.Home)
 
     destination(MainDestination.Home) { _, navigator ->
@@ -50,7 +46,8 @@ fun mainBottomNavGraph() = navigationGraph("main") {
             },
             onNavigateToProcess = {
                 navigator.navigate(ProcessDestination.Start)
-            }
+            },
+            navigator = navigator
         )
     }
 
@@ -58,7 +55,8 @@ fun mainBottomNavGraph() = navigationGraph("main") {
         ExploreScreen(
             onItemClick = { itemId ->
                 navigator.navigate(MasterDetailDestination.Detail(itemId))
-            }
+            },
+            navigator = navigator
         )
     }
 
@@ -66,12 +64,14 @@ fun mainBottomNavGraph() = navigationGraph("main") {
         ProfileScreen(
             onEditProfile = {
                 // Could navigate to edit screen
-            }
+            },
+            navigator = navigator
         )
     }
 
     destination(MainDestination.Settings) { _, navigator ->
         SettingsScreen(
+            navigator = navigator
         )
     }
 
@@ -249,3 +249,4 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 }
+

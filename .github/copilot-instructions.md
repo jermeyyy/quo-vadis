@@ -349,5 +349,5 @@ com/jermey/quo/vadis/core/navigation/
 9. USE `FakeNavigator` for testing navigation
 10. REFERENCE existing docs instead of duplicating content
 
-**When in doubt**: Check memories, read docs, use symbol tools, verify with tests or ask user.
+**When in doubt**: Check memories, read docs, use symbol tools, verify with tests or ask user with ask_user tool.
 
