@@ -11,7 +11,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.jermey.navplayground.demo.destinations.MainDestination
-import com.jermey.navplayground.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.Destination
 
 @Composable
 fun BottomNavigationBar(

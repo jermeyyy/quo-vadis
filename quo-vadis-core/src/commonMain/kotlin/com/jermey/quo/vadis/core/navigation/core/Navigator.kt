@@ -1,4 +1,4 @@
-package com.jermey.navplayground.navigation.core
+package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.flow.StateFlow

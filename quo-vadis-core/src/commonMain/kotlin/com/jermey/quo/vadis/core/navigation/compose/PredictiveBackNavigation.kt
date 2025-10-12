@@ -1,12 +1,26 @@
-package com.jermey.navplayground.navigation.compose
+package com.jermey.quo.vadis.core.navigation.compose
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.PredictiveBackHandler
@@ -14,9 +28,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.jermey.navplayground.navigation.core.BackStackEntry
-import com.jermey.navplayground.navigation.core.NavigationGraph
-import com.jermey.navplayground.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 import kotlinx.coroutines.launch
 
 /**
@@ -127,7 +141,11 @@ fun PredictiveBackNavigation(
     val scope = rememberCoroutineScope()
 
     // Lock cache entries during animation to prevent premature eviction
-    LaunchedEffect(coordinator.isAnimating, currentEntry?.id, coordinator.displayedPreviousEntry?.id) {
+    LaunchedEffect(
+        coordinator.isAnimating,
+        currentEntry?.id,
+        coordinator.displayedPreviousEntry?.id
+    ) {
         if (coordinator.isAnimating) {
             currentEntry?.let { composableCache.lockEntry(it.id) }
             coordinator.displayedPreviousEntry?.let { composableCache.lockEntry(it.id) }
@@ -299,6 +317,7 @@ private fun PreviousScreenLayer(
 /**
  * Renders the scrim layer.
  */
+@Suppress("MagicNumber")
 @Composable
 private fun ScrimLayer(progress: Float) {
     Box(
@@ -341,24 +360,30 @@ private fun CurrentScreenLayer(
                             when (animationType) {
                                 PredictiveBackAnimationType.Material3 ->
                                     Modifier.material3BackAnimation(gestureProgress)
+
                                 PredictiveBackAnimationType.Scale ->
                                     Modifier.scaleBackAnimation(gestureProgress)
+
                                 PredictiveBackAnimationType.Slide ->
                                     Modifier.slideBackAnimation(gestureProgress)
                             }
                         }
+
                         isExitAnimating -> {
                             // Exit animation: screen is leaving after gesture completed
                             // Use same animation type as gesture for consistency
                             when (animationType) {
                                 PredictiveBackAnimationType.Material3 ->
                                     Modifier.material3ExitAnimation(exitProgress)
+
                                 PredictiveBackAnimationType.Scale ->
                                     Modifier.scaleExitAnimation(exitProgress)
+
                                 PredictiveBackAnimationType.Slide ->
                                     Modifier.slideExitAnimation(exitProgress)
                             }
                         }
+
                         else -> Modifier
                     }
                 )
@@ -399,6 +424,7 @@ enum class PredictiveBackAnimationType {
  * Material 3 style back animation.
  * Scales down, translates right, adds rounded corners and shadow.
  */
+@Suppress("MagicNumber")
 private fun Modifier.material3BackAnimation(progress: Float): Modifier {
     val scale = lerp(1f, 0.9f, progress)
     val offsetX = lerp(0f, 80f, progress)
@@ -408,7 +434,7 @@ private fun Modifier.material3BackAnimation(progress: Float): Modifier {
         scaleX = scale
         scaleY = scale
         translationX = offsetX
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(cornerRadius.dp)
+        shape = RoundedCornerShape(cornerRadius.dp)
         clip = true
         shadowElevation = lerp(0f, 16f, progress)
     }
@@ -418,6 +444,7 @@ private fun Modifier.material3BackAnimation(progress: Float): Modifier {
  * Scale-based back animation.
  * Simple scale down with fade.
  */
+@Suppress("MagicNumber")
 private fun Modifier.scaleBackAnimation(progress: Float): Modifier {
     val scale = lerp(1f, 0.9f, progress)
     return this.graphicsLayer {
@@ -431,6 +458,7 @@ private fun Modifier.scaleBackAnimation(progress: Float): Modifier {
  * Slide-based back animation.
  * Slides right with fade.
  */
+@Suppress("MagicNumber")
 private fun Modifier.slideBackAnimation(progress: Float): Modifier {
     val offsetX = lerp(0f, 100f, progress)
     return this.graphicsLayer {
@@ -442,6 +470,7 @@ private fun Modifier.slideBackAnimation(progress: Float): Modifier {
  * Material 3 style exit animation.
  * Continues from gesture end state with scale, translation, rounded corners, and fade out.
  */
+@Suppress("MagicNumber")
 private fun Modifier.material3ExitAnimation(progress: Float): Modifier {
     // Continue from gesture end state (scale 0.9, offset 80px, corners 16dp)
     val scale = lerp(0.9f, 0.7f, progress)
@@ -464,6 +493,7 @@ private fun Modifier.material3ExitAnimation(progress: Float): Modifier {
  * Scale-based exit animation.
  * Continues scaling down with fade out.
  */
+@Suppress("MagicNumber")
 private fun Modifier.scaleExitAnimation(progress: Float): Modifier {
     // Continue from gesture end state (scale 0.9, alpha 0.8)
     val scale = lerp(0.9f, 0.6f, progress)
@@ -480,6 +510,7 @@ private fun Modifier.scaleExitAnimation(progress: Float): Modifier {
  * Slide-based exit animation.
  * Continues sliding right with fade out.
  */
+@Suppress("MagicNumber")
 private fun Modifier.slideExitAnimation(progress: Float): Modifier {
     // Continue from gesture end state (offset 100px)
     val offsetX = lerp(100f, 300f, progress)

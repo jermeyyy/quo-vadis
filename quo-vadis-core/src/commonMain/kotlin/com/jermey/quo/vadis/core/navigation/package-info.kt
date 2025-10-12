@@ -1,4 +1,4 @@
-package com.jermey.navplayground.navigation
+package com.jermey.quo.vadis.core.navigation
 
 /**
  * Navigation Library for Kotlin Multiplatform & Compose Multiplatform

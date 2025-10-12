@@ -1,8 +1,28 @@
 package com.jermey.navplayground.demo.graphs
 
-import com.jermey.navplayground.navigation.core.*
-import com.jermey.navplayground.demo.destinations.*
-import com.jermey.navplayground.demo.ui.screens.*
+import com.jermey.navplayground.demo.destinations.MainDestination
+import com.jermey.navplayground.demo.destinations.MasterDetailDestination
+import com.jermey.navplayground.demo.destinations.ProcessDestination
+import com.jermey.navplayground.demo.destinations.TabsDestination
+import com.jermey.navplayground.demo.ui.screens.DeepLinkDemoScreen
+import com.jermey.navplayground.demo.ui.screens.DetailScreen
+import com.jermey.navplayground.demo.ui.screens.ExploreScreen
+import com.jermey.navplayground.demo.ui.screens.HomeScreen
+import com.jermey.navplayground.demo.ui.screens.MasterListScreen
+import com.jermey.navplayground.demo.ui.screens.ProcessCompleteScreen
+import com.jermey.navplayground.demo.ui.screens.ProcessStartScreen
+import com.jermey.navplayground.demo.ui.screens.ProcessStep1Screen
+import com.jermey.navplayground.demo.ui.screens.ProcessStep2AScreen
+import com.jermey.navplayground.demo.ui.screens.ProcessStep2BScreen
+import com.jermey.navplayground.demo.ui.screens.ProcessStep3Screen
+import com.jermey.navplayground.demo.ui.screens.ProfileScreen
+import com.jermey.navplayground.demo.ui.screens.SettingsScreen
+import com.jermey.navplayground.demo.ui.screens.TabSubItemScreen
+import com.jermey.navplayground.demo.ui.screens.TabsMainScreen
+import com.jermey.quo.vadis.core.navigation.core.DeepLink
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
+import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
+import com.jermey.quo.vadis.core.navigation.core.navigationGraph
 
 /**
  * Main bottom navigation graph
@@ -42,7 +62,6 @@ fun mainBottomNavGraph() = navigationGraph("main") {
 
     destination(MainDestination.Settings) { _, navigator ->
         SettingsScreen(
-            onBack = { navigator.navigateBack() }
         )
     }
 

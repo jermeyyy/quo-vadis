@@ -1,8 +1,12 @@
-package com.jermey.navplayground.navigation.integration
+package com.jermey.quo.vadis.core.navigation.integration
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.jermey.navplayground.navigation.core.*
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.DefaultNavigator
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import kotlin.reflect.KClass
 
 /**
  * Integration helpers for Koin dependency injection.
@@ -52,7 +56,7 @@ class DefaultNavigationFactory(
  * ```
  */
 interface DIContainer {
-    fun <T : Any> get(clazz: kotlin.reflect.KClass<T>): T
+    fun <T : Any> get(clazz: KClass<T>): T
 }
 
 inline fun <reified T : Any> DIContainer.get(): T = get(T::class)

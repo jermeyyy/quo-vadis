@@ -2,11 +2,9 @@ package com.jermey.quo.vadis.core.navigation.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.jermey.navplayground.navigation.compose.GraphNavHost
-import com.jermey.navplayground.navigation.compose.PredictiveBackNavigation
-import com.jermey.navplayground.navigation.core.Navigator
-import com.jermey.navplayground.navigation.core.NavigationGraph
-import com.jermey.navplayground.navigation.core.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 
 /**
  * Platform-aware NavHost that supports predictive back navigation on all platforms.

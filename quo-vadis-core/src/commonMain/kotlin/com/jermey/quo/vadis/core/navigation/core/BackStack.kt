@@ -1,8 +1,10 @@
-package com.jermey.navplayground.navigation.core
+package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.runtime.Stable
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents the navigation backstack with direct access and modification capabilities.
@@ -82,14 +84,11 @@ data class BackStackEntry(
             )
         }
 
+        @OptIn(ExperimentalUuidApi::class)
         private fun generateId(): String {
-            return "${currentTimeMillis()}-${(0..999999).random()}"
+            return Uuid.random().toString()
         }
 
-        private fun currentTimeMillis(): Long {
-            // Platform-agnostic time (simplified)
-            return (0..Long.MAX_VALUE).random()
-        }
     }
 }
 

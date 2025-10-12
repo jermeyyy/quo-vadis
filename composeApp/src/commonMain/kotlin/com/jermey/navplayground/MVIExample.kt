@@ -1,8 +1,15 @@
-package com.jermey.navplayground.navigation.example
+package com.jermey.navplayground
 
 import androidx.compose.runtime.Composable
-import com.jermey.navplayground.navigation.core.*
-import com.jermey.navplayground.navigation.mvi.*
+import com.jermey.quo.vadis.core.navigation.core.BaseModuleNavigation
+import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
+import com.jermey.quo.vadis.core.navigation.core.navigationGraph
+import com.jermey.quo.vadis.core.navigation.mvi.NavigationIntent
+import com.jermey.quo.vadis.core.navigation.mvi.NavigationViewModel
 
 /**
  * Example of using the navigation library with MVI architecture.

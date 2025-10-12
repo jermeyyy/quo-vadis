@@ -1,7 +1,7 @@
-package com.jermey.navplayground.navigation.mvi
+package com.jermey.quo.vadis.core.navigation.mvi
 
-import com.jermey.navplayground.navigation.core.Destination
-import com.jermey.navplayground.navigation.core.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 
 /**
  * MVI integration for navigation.

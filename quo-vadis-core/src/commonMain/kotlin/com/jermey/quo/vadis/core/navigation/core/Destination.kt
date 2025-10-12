@@ -1,6 +1,4 @@
-package com.jermey.navplayground.navigation.core
-
-import kotlin.reflect.KClass
+package com.jermey.quo.vadis.core.navigation.core
 
 /**
  * Base interface for all navigation destinations.

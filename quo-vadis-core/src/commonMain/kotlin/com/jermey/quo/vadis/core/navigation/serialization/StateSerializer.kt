@@ -1,7 +1,9 @@
-package com.jermey.navplayground.navigation.serialization
+package com.jermey.quo.vadis.core.navigation.serialization
 
-import com.jermey.navplayground.navigation.core.BackStackEntry
-import com.jermey.navplayground.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
+import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.BackStack
+import com.jermey.quo.vadis.core.navigation.core.MutableBackStack
 
 /**
  * State restoration support for navigation.
@@ -96,7 +98,7 @@ class SimpleNavigationStateSerializer : NavigationStateSerializer {
 /**
  * Extension function to save navigation state.
  */
-fun com.jermey.navplayground.navigation.core.BackStack.saveState(
+fun BackStack.saveState(
     serializer: NavigationStateSerializer = SimpleNavigationStateSerializer()
 ): String {
     return serializer.serializeBackStack(stack.value)
@@ -105,7 +107,7 @@ fun com.jermey.navplayground.navigation.core.BackStack.saveState(
 /**
  * Extension function to restore navigation state.
  */
-fun com.jermey.navplayground.navigation.core.MutableBackStack.restoreState(
+fun MutableBackStack.restoreState(
     savedState: String,
     serializer: NavigationStateSerializer = SimpleNavigationStateSerializer()
 ) {

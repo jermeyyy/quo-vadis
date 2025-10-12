@@ -1,6 +1,14 @@
-package com.jermey.navplayground.navigation.testing
+package com.jermey.quo.vadis.core.navigation.testing
 
-import com.jermey.navplayground.navigation.core.*
+import com.jermey.quo.vadis.core.navigation.core.BackStack
+import com.jermey.quo.vadis.core.navigation.core.DeepLink
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.MutableBackStack
+import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -33,7 +41,11 @@ class FakeNavigator : Navigator {
         return result
     }
 
-    override fun navigateAndClearTo(destination: Destination, clearRoute: String?, inclusive: Boolean) {
+    override fun navigateAndClearTo(
+        destination: Destination,
+        clearRoute: String?,
+        inclusive: Boolean
+    ) {
         navigationCalls.add(NavigationCall.NavigateAndClearTo(destination, clearRoute, inclusive))
         if (clearRoute != null) {
             _backStack.popUntil { it.route == clearRoute }
@@ -143,6 +155,7 @@ sealed class NavigationCall {
 /**
  * Test builder for creating test navigation scenarios.
  */
+@Suppress("FunctionNaming")
 class NavigationTestBuilder {
     private val navigator = FakeNavigator()
 

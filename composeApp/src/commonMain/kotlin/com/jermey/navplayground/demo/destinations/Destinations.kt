@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo.destinations
 
-import com.jermey.navplayground.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.Destination
 
 /**
  * Main bottom navigation destinations

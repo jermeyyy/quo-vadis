@@ -1,8 +1,10 @@
-package com.jermey.navplayground.navigation.utils
+package com.jermey.quo.vadis.core.navigation.utils
 
-import com.jermey.navplayground.navigation.core.BackStack
-import com.jermey.navplayground.navigation.core.BackStackEntry
-import com.jermey.navplayground.navigation.core.*
+import com.jermey.quo.vadis.core.navigation.core.BackStack
+import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
+import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
  * Extension functions and utilities for the navigation library.

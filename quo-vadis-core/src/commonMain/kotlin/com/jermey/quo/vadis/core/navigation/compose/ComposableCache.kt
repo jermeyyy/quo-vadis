@@ -1,8 +1,13 @@
-package com.jermey.navplayground.navigation.compose
+package com.jermey.quo.vadis.core.navigation.compose
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateSetOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.SaveableStateHolder
-import com.jermey.navplayground.navigation.core.BackStackEntry
+import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 
 /**
  * Cache for composables associated with backstack entries.
@@ -25,7 +30,7 @@ class ComposableCache(
     fun lockEntry(entryId: String) {
         lockedEntries.add(entryId)
     }
-    
+
     /**
      * Unlock an entry, allowing it to be evicted if needed.
      */

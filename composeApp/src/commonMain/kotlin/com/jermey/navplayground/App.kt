@@ -1,11 +1,10 @@
 package com.jermey.navplayground
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
-import org.jetbrains.compose.ui.tooling.preview.Preview
-
 // Import the comprehensive demo app
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import com.jermey.navplayground.demo.DemoApp
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview

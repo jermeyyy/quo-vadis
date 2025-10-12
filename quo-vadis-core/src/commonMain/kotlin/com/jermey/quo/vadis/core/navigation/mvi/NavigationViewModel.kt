@@ -1,10 +1,18 @@
-package com.jermey.navplayground.navigation.mvi
+package com.jermey.quo.vadis.core.navigation.mvi
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jermey.navplayground.navigation.core.DeepLink
-import com.jermey.navplayground.navigation.core.Navigator
-import kotlinx.coroutines.flow.*
+import com.jermey.quo.vadis.core.navigation.core.DeepLink
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -34,6 +42,7 @@ abstract class NavigationViewModel(
                 is NavigationIntent.Navigate -> {
                     navigator.navigate(intent.destination, intent.transition)
                 }
+
                 is NavigationIntent.NavigateBack -> {
                     val success = navigator.navigateBack()
                     if (!success) {
@@ -42,12 +51,15 @@ abstract class NavigationViewModel(
                         )
                     }
                 }
+
                 is NavigationIntent.NavigateUp -> {
                     navigator.navigateUp()
                 }
+
                 is NavigationIntent.NavigateAndClearAll -> {
                     navigator.navigateAndClearAll(intent.destination)
                 }
+
                 is NavigationIntent.NavigateAndClearTo -> {
                     navigator.navigateAndClearTo(
                         intent.destination,
@@ -55,9 +67,11 @@ abstract class NavigationViewModel(
                         intent.inclusive
                     )
                 }
+
                 is NavigationIntent.NavigateAndReplace -> {
                     navigator.navigateAndReplace(intent.destination, intent.transition)
                 }
+
                 is NavigationIntent.HandleDeepLink -> {
                     try {
                         val deepLink = DeepLink.parse(intent.uri)
@@ -88,12 +102,12 @@ abstract class NavigationViewModel(
 /**
  * Extension function to easily collect navigation effects in composables.
  */
-@androidx.compose.runtime.Composable
+@Composable
 fun <T : NavigationEffect> SharedFlow<T>.collectAsEffect(
     onEffect: suspend (T) -> Unit
 ) {
     val flow = this
-    androidx.compose.runtime.LaunchedEffect(flow) {
+    LaunchedEffect(flow) {
         flow.collect { effect ->
             onEffect(effect)
         }

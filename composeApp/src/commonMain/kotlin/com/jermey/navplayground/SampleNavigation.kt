@@ -1,13 +1,30 @@
-package com.jermey.navplayground.navigation.example
+package com.jermey.navplayground
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.navigation.core.*
-import com.jermey.navplayground.navigation.compose.*
+import com.jermey.quo.vadis.core.navigation.compose.GraphNavHost
+import com.jermey.quo.vadis.core.navigation.compose.rememberNavigator
+import com.jermey.quo.vadis.core.navigation.core.BaseModuleNavigation
+import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
+import com.jermey.quo.vadis.core.navigation.core.navigationGraph
 
 /**
  * Example destinations for the sample app.

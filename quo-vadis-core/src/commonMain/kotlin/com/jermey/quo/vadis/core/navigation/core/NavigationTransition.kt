@@ -1,7 +1,19 @@
-package com.jermey.navplayground.navigation.core
+package com.jermey.quo.vadis.core.navigation.core
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
@@ -36,6 +48,8 @@ interface NavigationTransition {
  */
 object NavigationTransitions {
 
+    const val ANIMATION_DURATION = 300
+
     val None = object : NavigationTransition {
         override val enter = EnterTransition.None
         override val exit = ExitTransition.None
@@ -44,76 +58,76 @@ object NavigationTransitions {
     }
 
     val Fade = object : NavigationTransition {
-        override val enter = fadeIn(animationSpec = tween(300))
-        override val exit = fadeOut(animationSpec = tween(300))
-        override val popEnter = fadeIn(animationSpec = tween(300))
-        override val popExit = fadeOut(animationSpec = tween(300))
+        override val enter = fadeIn(animationSpec = tween(ANIMATION_DURATION))
+        override val exit = fadeOut(animationSpec = tween(ANIMATION_DURATION))
+        override val popEnter = fadeIn(animationSpec = tween(ANIMATION_DURATION))
+        override val popExit = fadeOut(animationSpec = tween(ANIMATION_DURATION))
     }
 
     val SlideHorizontal = object : NavigationTransition {
         override val enter = slideInHorizontally(
             initialOffsetX = { it },
-            animationSpec = tween(300)
-        ) + fadeIn(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
         override val exit = slideOutHorizontally(
             targetOffsetX = { -it / 3 },
-            animationSpec = tween(300)
-        ) + fadeOut(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeOut(animationSpec = tween(ANIMATION_DURATION))
 
         override val popEnter = slideInHorizontally(
             initialOffsetX = { -it / 3 },
-            animationSpec = tween(300)
-        ) + fadeIn(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
         override val popExit = slideOutHorizontally(
             targetOffsetX = { it },
-            animationSpec = tween(300)
-        ) + fadeOut(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeOut(animationSpec = tween(ANIMATION_DURATION))
     }
 
     val SlideVertical = object : NavigationTransition {
         override val enter = slideInVertically(
             initialOffsetY = { it },
-            animationSpec = tween(300)
-        ) + fadeIn(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
         override val exit = slideOutVertically(
             targetOffsetY = { -it / 3 },
-            animationSpec = tween(300)
-        ) + fadeOut(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeOut(animationSpec = tween(ANIMATION_DURATION))
 
         override val popEnter = slideInVertically(
             initialOffsetY = { -it / 3 },
-            animationSpec = tween(300)
-        ) + fadeIn(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
         override val popExit = slideOutVertically(
             targetOffsetY = { it },
-            animationSpec = tween(300)
-        ) + fadeOut(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeOut(animationSpec = tween(ANIMATION_DURATION))
     }
 
     val ScaleIn = object : NavigationTransition {
         override val enter = scaleIn(
             initialScale = 0.8f,
-            animationSpec = tween(300)
-        ) + fadeIn(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
         override val exit = scaleOut(
             targetScale = 0.95f,
-            animationSpec = tween(300)
-        ) + fadeOut(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeOut(animationSpec = tween(ANIMATION_DURATION))
 
         override val popEnter = scaleIn(
             initialScale = 0.95f,
-            animationSpec = tween(300)
-        ) + fadeIn(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
         override val popExit = scaleOut(
             targetScale = 0.8f,
-            animationSpec = tween(300)
-        ) + fadeOut(animationSpec = tween(300))
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeOut(animationSpec = tween(ANIMATION_DURATION))
     }
 }
 

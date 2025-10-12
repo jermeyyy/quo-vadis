@@ -1,11 +1,22 @@
-package com.jermey.navplayground.navigation.compose
+package com.jermey.quo.vadis.core.navigation.compose
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
-import com.jermey.navplayground.navigation.core.*
+import com.jermey.quo.vadis.core.navigation.core.DefaultNavigator
+import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 
 /**
  * Navigation host that works with a specific navigation graph.
