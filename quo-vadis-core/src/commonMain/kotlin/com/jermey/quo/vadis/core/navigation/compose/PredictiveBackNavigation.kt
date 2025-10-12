@@ -91,7 +91,7 @@ fun PredictiveBackNavigation(
     graph: NavigationGraph,
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
-    animationType: PredictiveBackAnimationType = PredictiveBackAnimationType.Material3,
+    animationType: PredictiveBackAnimationType = PredictiveBackAnimationType.Slide,
     sensitivity: Float = 1f,
     maxCacheSize: Int = 3
 ) {
@@ -349,7 +349,15 @@ private fun CurrentScreenLayer(
                         }
                         isExitAnimating -> {
                             // Exit animation: screen is leaving after gesture completed
-                            Modifier.exitAnimation(exitProgress)
+                            // Use same animation type as gesture for consistency
+                            when (animationType) {
+                                PredictiveBackAnimationType.Material3 ->
+                                    Modifier.material3ExitAnimation(exitProgress)
+                                PredictiveBackAnimationType.Scale ->
+                                    Modifier.scaleExitAnimation(exitProgress)
+                                PredictiveBackAnimationType.Slide ->
+                                    Modifier.slideExitAnimation(exitProgress)
+                            }
                         }
                         else -> Modifier
                     }
@@ -427,25 +435,59 @@ private fun Modifier.slideBackAnimation(progress: Float): Modifier {
     val offsetX = lerp(0f, 100f, progress)
     return this.graphicsLayer {
         translationX = offsetX
-        alpha = lerp(1f, 0.7f, progress)
     }
 }
 
 /**
- * Exit animation for when gesture is completed.
- * Smoothly scales down and fades out the screen.
+ * Material 3 style exit animation.
+ * Continues from gesture end state with scale, translation, rounded corners, and fade out.
  */
-private fun Modifier.exitAnimation(progress: Float): Modifier {
-    // Start from gesture end state (scale ~0.9) and animate to invisible
+private fun Modifier.material3ExitAnimation(progress: Float): Modifier {
+    // Continue from gesture end state (scale 0.9, offset 80px, corners 16dp)
     val scale = lerp(0.9f, 0.7f, progress)
+    val offsetX = lerp(80f, 250f, progress)
+    val cornerRadius = lerp(16f, 24f, progress)
     val alpha = lerp(1f, 0f, progress)
-    val offsetX = lerp(80f, 200f, progress)
+
+    return this.graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+        translationX = offsetX
+        this.alpha = alpha
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(cornerRadius.dp)
+        clip = true
+        shadowElevation = lerp(16f, 0f, progress)
+    }
+}
+
+/**
+ * Scale-based exit animation.
+ * Continues scaling down with fade out.
+ */
+private fun Modifier.scaleExitAnimation(progress: Float): Modifier {
+    // Continue from gesture end state (scale 0.9, alpha 0.8)
+    val scale = lerp(0.9f, 0.6f, progress)
+    val alpha = lerp(0.8f, 0f, progress)
 
     return this.graphicsLayer {
         scaleX = scale
         scaleY = scale
         this.alpha = alpha
+    }
+}
+
+/**
+ * Slide-based exit animation.
+ * Continues sliding right with fade out.
+ */
+private fun Modifier.slideExitAnimation(progress: Float): Modifier {
+    // Continue from gesture end state (offset 100px)
+    val offsetX = lerp(100f, 300f, progress)
+    val alpha = lerp(1f, 0f, progress)
+
+    return this.graphicsLayer {
         translationX = offsetX
+        this.alpha = alpha
     }
 }
 

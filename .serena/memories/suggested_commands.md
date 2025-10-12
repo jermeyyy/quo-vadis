@@ -2,7 +2,7 @@
 
 ## Build Commands
 
-### Android
+### Android (recommended, faster than running iOS)
 
 #### Build Debug APK
 ```bash
