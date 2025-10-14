@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,8 @@ import com.jermey.navplayground.demo.ui.components.BottomNavigationBar
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.SettingItem
 import com.jermey.navplayground.demo.ui.components.SettingsSection
+import com.jermey.navplayground.demo.ui.components.ThemeSettingItem
+import com.jermey.navplayground.demo.ui.theme.rememberThemeManager
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
@@ -52,6 +55,10 @@ fun SettingsScreen(
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    
+    // Theme manager for theme switching
+    val themeManager = rememberThemeManager()
+    val currentThemeMode by themeManager.themeMode.collectAsState()
 
     Scaffold(
         topBar = {
@@ -99,7 +106,12 @@ fun SettingsScreen(
 
             item {
                 SettingsSection("Appearance") {
-                    SettingItem("Dark mode", Icons.Default.DarkMode)
+                    ThemeSettingItem(
+                        currentMode = currentThemeMode,
+                        onThemeChange = { newMode ->
+                            themeManager.setThemeMode(newMode)
+                        }
+                    )
                     SettingItem("Language", Icons.Default.Language)
                 }
             }

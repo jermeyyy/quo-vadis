@@ -6,8 +6,10 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -122,7 +124,8 @@ fun GraphNavHost(
             lastStackSize = stackSize
             lastEntryId = currentId
             lastCurrentEntry = currentEntry
-            logNav("Updated tracking: lastStackSize=$stackSize, lastEntryId=$currentId, lastCurrentEntry=${currentEntry?.destination?.route}")
+            logNav("Updated tracking: lastStackSize=$stackSize, lastEntryId=$currentId," +
+                    " lastCurrentEntry=${currentEntry?.destination?.route}")
             logNav("=== End LaunchedEffect (skipped) ===\n")
             return@LaunchedEffect
         }
@@ -262,7 +265,8 @@ fun GraphNavHost(
         lastStackSize = stackSize
         lastEntryId = currentId
         lastCurrentEntry = currentEntry
-        logNav("Updated tracking: lastStackSize=$stackSize, lastEntryId=$currentId, lastCurrentEntry=${currentEntry?.destination?.route}")
+        logNav("Updated tracking: lastStackSize=$stackSize, lastEntryId=$currentId, " +
+                "lastCurrentEntry=${currentEntry?.destination?.route}")
         logNav("=== End LaunchedEffect ===\n")
     }
 
@@ -382,11 +386,16 @@ fun GraphNavHost(
         }
     }
 
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         // Render previous screen during back navigation (static, no parallax)
         // Only render if it's a different entry than current (prevent duplicate key crash)
         if (isBackNavigation && displayedPrevious != null && displayedPrevious?.id != displayedCurrent?.id) {
-            logNav("[RENDER] Rendering PREVIOUS screen (behind): ${displayedPrevious!!.destination.route} (id: ${displayedPrevious!!.id})")
+            logNav("[RENDER] Rendering PREVIOUS screen (behind): ${displayedPrevious!!.destination.route}" +
+                    " (id: ${displayedPrevious!!.id})")
             ScreenContent(
                 entry = displayedPrevious!!,
                 graph = graph,
@@ -396,12 +405,15 @@ fun GraphNavHost(
                 enableCache = enableComposableCache
             )
         } else if (isBackNavigation && displayedPrevious != null) {
-            logNav("[RENDER] Skipping PREVIOUS screen render - same ID as current: ${displayedPrevious!!.id}")
+            logNav("[RENDER] Skipping PREVIOUS screen render - same ID as current: " +
+                    "${displayedPrevious!!.id}")
         }
 
         // Render current screen with animations
         displayedCurrent?.let { entry ->
-            logNav("[RENDER] Rendering CURRENT screen: ${entry.destination.route} (id: ${entry.id}), isPredictiveGesture=$isPredictiveGesture, isBackNavigation=$isBackNavigation, justCompletedGesture=$justCompletedGesture, isNavigating=$isNavigating")
+            logNav("[RENDER] Rendering CURRENT screen: ${entry.destination.route} (id: ${entry.id})," +
+                    " isPredictiveGesture=$isPredictiveGesture, isBackNavigation=$isBackNavigation, " +
+                    "justCompletedGesture=$justCompletedGesture, isNavigating=$isNavigating")
             
             when {
                 // Predictive gesture active - manual transform
@@ -441,7 +453,8 @@ fun GraphNavHost(
                             .graphicsLayer {
                                 val offset = size.width * backAnimProgress
                                 val currentAlpha = 1f - backAnimProgress
-                                logNav("[ANIMATION] size.width=${size.width}, progress=$backAnimProgress, translationX=$offset, alpha=$currentAlpha")
+                                logNav("[ANIMATION] size.width=${size.width}," +
+                                        " progress=$backAnimProgress, translationX=$offset, alpha=$currentAlpha")
                                 translationX = offset
                                 alpha = currentAlpha
                             }
