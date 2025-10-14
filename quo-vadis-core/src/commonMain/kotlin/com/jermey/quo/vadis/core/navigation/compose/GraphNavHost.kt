@@ -36,7 +36,6 @@ import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
-import com.jermey.quo.vadis.core.navigation.utils.logNav
 import kotlinx.coroutines.launch
 
 // Animation constants
@@ -106,37 +105,19 @@ fun GraphNavHost(
         val stackSize = backStackEntries.size
         val currentId = currentEntry?.id
         
-        logNav("=== LaunchedEffect triggered ===")
-        logNav("stackSize: $stackSize, lastStackSize: $lastStackSize")
-        logNav("currentId: $currentId, lastEntryId: $lastEntryId")
-        logNav("isPredictiveGesture: $isPredictiveGesture")
-        logNav("justCompletedGesture: $justCompletedGesture")
-        logNav("currentEntry: ${currentEntry?.destination?.route}")
-        logNav("previousEntry: ${previousEntry?.destination?.route}")
-        logNav("lastCurrentEntry: ${lastCurrentEntry?.destination?.route}")
-        
         // Skip processing if predictive gesture is active OR just completed
         // The gesture handler manages its own state
         if (isPredictiveGesture || justCompletedGesture) {
-            logNav("!!! Skipping LaunchedEffect - gesture is active or just completed")
-            
             // Still update tracking to stay in sync
             lastStackSize = stackSize
             lastEntryId = currentId
             lastCurrentEntry = currentEntry
-            logNav("Updated tracking: lastStackSize=$stackSize, lastEntryId=$currentId," +
-                    " lastCurrentEntry=${currentEntry?.destination?.route}")
-            logNav("=== End LaunchedEffect (skipped) ===\n")
             return@LaunchedEffect
         }
 
         when {
             // Forward navigation
             stackSize > lastStackSize -> {
-                logNav(">>> FORWARD NAVIGATION detected")
-                logNav("Setting displayedCurrent to: ${currentEntry?.destination?.route}")
-                logNav("Setting displayedPrevious to: ${previousEntry?.destination?.route}")
-                
                 displayedCurrent = currentEntry
                 displayedPrevious = previousEntry
                 isBackNavigation = false
@@ -145,35 +126,25 @@ fun GraphNavHost(
                 // Lock entries to prevent cache eviction during animation
                 currentEntry?.let { 
                     composableCache.lockEntry(it.id)
-                    logNav("Locked entry: ${it.destination.route} (id: ${it.id})")
                 }
                 previousEntry?.let { 
                     composableCache.lockEntry(it.id)
-                    logNav("Locked entry: ${it.destination.route} (id: ${it.id})")
                 }
                 
-                logNav("Starting forward animation (${NavigationTransitions.ANIMATION_DURATION}ms)")
                 // Auto-complete animation after duration
                 kotlinx.coroutines.delay(NavigationTransitions.ANIMATION_DURATION.toLong())
                 isNavigating = false
-                logNav("Forward animation completed")
                 
                 // Unlock entries
                 currentEntry?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry: ${it.destination.route} (id: ${it.id})")
                 }
                 previousEntry?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry: ${it.destination.route} (id: ${it.id})")
                 }
             }
             // Back navigation (programmatic - not predictive gesture)
             stackSize < lastStackSize && !isPredictiveGesture -> {
-                logNav("<<< BACK NAVIGATION detected (programmatic)")
-                logNav("Setting displayedPrevious (stays behind) to: ${currentEntry?.destination?.route}")
-                logNav("Setting displayedCurrent (slides out) to: ${lastCurrentEntry?.destination?.route}")
-                
                 // For back: old current slides out, new current (previous) revealed
                 displayedPrevious = currentEntry  // The destination (stays behind)
                 displayedCurrent = lastCurrentEntry  // The screen being removed (slides out)
@@ -183,45 +154,34 @@ fun GraphNavHost(
                 // Lock entries to prevent cache eviction during animation
                 currentEntry?.let { 
                     composableCache.lockEntry(it.id)
-                    logNav("Locked entry (destination): ${it.destination.route} (id: ${it.id})")
                 }
                 lastCurrentEntry?.let { 
                     composableCache.lockEntry(it.id)
-                    logNav("Locked entry (leaving): ${it.destination.route} (id: ${it.id})")
                 }
                 
-                logNav("Starting programmatic back animation by setting backAnimTarget to 1.0")
                 // Trigger animation by changing target state
                 backAnimTarget = 0f  // Reset first
                 backAnimTarget = 1f  // Then animate to 1
                 
                 // Wait for animation to complete (300ms)
                 kotlinx.coroutines.delay(NavigationTransitions.ANIMATION_DURATION.toLong())
-                logNav("Programmatic back animation completed")
                 
                 isNavigating = false
                 isBackNavigation = false
                 backAnimTarget = 0f  // Reset for next time
                 displayedCurrent = currentEntry
                 displayedPrevious = null
-                logNav("State reset: displayedCurrent now ${currentEntry?.destination?.route}, displayedPrevious null")
                 
                 // Unlock entries
                 currentEntry?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry: ${it.destination.route} (id: ${it.id})")
                 }
                 lastCurrentEntry?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry: ${it.destination.route} (id: ${it.id})")
                 }
             }
             // Replace (same size, different entry)
             stackSize == lastStackSize && currentId != lastEntryId && currentId != null -> {
-                logNav("=== REPLACE NAVIGATION detected")
-                logNav("Setting displayedCurrent to: ${currentEntry?.destination?.route}")
-                logNav("Setting displayedPrevious to: ${previousEntry?.destination?.route}")
-                
                 displayedCurrent = currentEntry
                 displayedPrevious = previousEntry
                 isBackNavigation = false
@@ -230,33 +190,25 @@ fun GraphNavHost(
                 // Lock entries to prevent cache eviction during animation
                 currentEntry?.let { 
                     composableCache.lockEntry(it.id)
-                    logNav("Locked entry: ${it.destination.route} (id: ${it.id})")
                 }
                 previousEntry?.let { 
                     composableCache.lockEntry(it.id)
-                    logNav("Locked entry: ${it.destination.route} (id: ${it.id})")
                 }
                 
-                logNav("Starting replace animation (${NavigationTransitions.ANIMATION_DURATION}ms)")
                 // Auto-complete animation after duration
                 kotlinx.coroutines.delay(NavigationTransitions.ANIMATION_DURATION.toLong())
                 isNavigating = false
-                logNav("Replace animation completed")
                 
                 // Unlock entries
                 currentEntry?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry: ${it.destination.route} (id: ${it.id})")
                 }
                 previousEntry?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry: ${it.destination.route} (id: ${it.id})")
                 }
             }
             // No animation (idle or predictive gesture completed)
             else -> {
-                logNav("--- NO ANIMATION (idle state)")
-                logNav("Setting displayedCurrent to: ${currentEntry?.destination?.route}")
                 displayedCurrent = currentEntry
                 displayedPrevious = null
             }
@@ -265,20 +217,13 @@ fun GraphNavHost(
         lastStackSize = stackSize
         lastEntryId = currentId
         lastCurrentEntry = currentEntry
-        logNav("Updated tracking: lastStackSize=$stackSize, lastEntryId=$currentId, " +
-                "lastCurrentEntry=${currentEntry?.destination?.route}")
-        logNav("=== End LaunchedEffect ===\n")
     }
 
     // Predictive back gesture handler
     PredictiveBackHandler(enabled = enablePredictiveBack && canGoBack && !isNavigating) { backEvent ->
-        logNav("### PREDICTIVE GESTURE STARTED ###")
         // Capture entries BEFORE navigation
         val capturedCurrent = currentEntry
         val capturedPrevious = previousEntry
-        
-        logNav("Captured current: ${capturedCurrent?.destination?.route}")
-        logNav("Captured previous: ${capturedPrevious?.destination?.route}")
         
         displayedCurrent = capturedCurrent
         displayedPrevious = capturedPrevious
@@ -288,11 +233,9 @@ fun GraphNavHost(
         // Lock entries to prevent cache eviction during gesture
         capturedCurrent?.let { 
             composableCache.lockEntry(it.id)
-            logNav("Locked entry (gesture): ${it.destination.route} (id: ${it.id})")
         }
         capturedPrevious?.let { 
             composableCache.lockEntry(it.id)
-            logNav("Locked entry (gesture): ${it.destination.route} (id: ${it.id})")
         }
 
         try {
@@ -300,11 +243,9 @@ fun GraphNavHost(
                 // Clamp gesture progress to maximum (25%)
                 val clampedProgress = event.progress.coerceAtMost(MAX_GESTURE_PROGRESS)
                 gestureProgress = clampedProgress
-                logNav("Gesture progress: ${event.progress} (clamped to: $clampedProgress)")
             }
 
             // Gesture completed - animate exit from current position
-            logNav("Gesture COMPLETED - starting exit animation from progress: $gestureProgress")
             scope.launch {
                 exitAnimProgress.snapTo(gestureProgress)
                 gestureProgress = 0f  // Clear gesture progress so animation takes over
@@ -315,38 +256,30 @@ fun GraphNavHost(
                         stiffness = Spring.StiffnessMedium
                     )
                 )
-                logNav("Gesture exit animation completed")
 
                 // Complete navigation - but keep isPredictiveGesture flag set
-                logNav("Calling navigateBack() from gesture")
                 navigator.navigateBack()
                 
                 // Wait a frame for stack change to be processed
-                logNav("Waiting ${FRAME_DELAY_MS}ms for stack change")
                 kotlinx.coroutines.delay(FRAME_DELAY_MS)
                 
                 // Update final state BEFORE resetting isPredictiveGesture
-                logNav("Setting final state after gesture")
                 displayedCurrent = currentEntry
                 displayedPrevious = null
                 isBackNavigation = false
                 justCompletedGesture = true  // Flag to skip AnimatedContent
                 
                 // Reset gesture state - this will trigger LaunchedEffect but it will now see correct state
-                logNav("Resetting gesture state")
                 isPredictiveGesture = false
                 exitAnimProgress.snapTo(0f)
                 
                 // Unlock entries
                 capturedCurrent?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry (gesture complete): ${it.destination.route}")
                 }
                 capturedPrevious?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry (gesture complete): ${it.destination.route}")
                 }
-                logNav("### PREDICTIVE GESTURE COMPLETED ###\n")
                 
                 // Wait a frame, then clear the flag to allow normal animations again
                 kotlinx.coroutines.delay(FRAME_DELAY_MS)
@@ -354,7 +287,6 @@ fun GraphNavHost(
             }
         } catch (_: Exception) {
             // Gesture cancelled - animate back to original position
-            logNav("Gesture CANCELLED - animating back to original position from progress: $gestureProgress")
             scope.launch {
                 exitAnimProgress.snapTo(gestureProgress)
                 gestureProgress = 0f  // Clear gesture progress so animation takes over
@@ -365,7 +297,6 @@ fun GraphNavHost(
                         stiffness = Spring.StiffnessMedium
                     )
                 )
-                logNav("Gesture cancel animation completed")
                 
                 // Reset state - no navigation happened
                 isPredictiveGesture = false
@@ -375,13 +306,10 @@ fun GraphNavHost(
                 // Unlock entries
                 capturedCurrent?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry (gesture cancel): ${it.destination.route}")
                 }
                 capturedPrevious?.let { 
                     composableCache.unlockEntry(it.id)
-                    logNav("Unlocked entry (gesture cancel): ${it.destination.route}")
                 }
-                logNav("### PREDICTIVE GESTURE CANCELLED ###\n")
             }
         }
     }
@@ -394,8 +322,6 @@ fun GraphNavHost(
         // Render previous screen during back navigation (static, no parallax)
         // Only render if it's a different entry than current (prevent duplicate key crash)
         if (isBackNavigation && displayedPrevious != null && displayedPrevious?.id != displayedCurrent?.id) {
-            logNav("[RENDER] Rendering PREVIOUS screen (behind): ${displayedPrevious!!.destination.route}" +
-                    " (id: ${displayedPrevious!!.id})")
             ScreenContent(
                 entry = displayedPrevious!!,
                 graph = graph,
@@ -404,17 +330,10 @@ fun GraphNavHost(
                 saveableStateHolder = saveableStateHolder,
                 enableCache = enableComposableCache
             )
-        } else if (isBackNavigation && displayedPrevious != null) {
-            logNav("[RENDER] Skipping PREVIOUS screen render - same ID as current: " +
-                    "${displayedPrevious!!.id}")
         }
 
         // Render current screen with animations
         displayedCurrent?.let { entry ->
-            logNav("[RENDER] Rendering CURRENT screen: ${entry.destination.route} (id: ${entry.id})," +
-                    " isPredictiveGesture=$isPredictiveGesture, isBackNavigation=$isBackNavigation, " +
-                    "justCompletedGesture=$justCompletedGesture, isNavigating=$isNavigating")
-            
             when {
                 // Predictive gesture active - manual transform
                 isPredictiveGesture -> {
@@ -439,22 +358,12 @@ fun GraphNavHost(
                 }
                 // Back navigation in progress (programmatic) - manual slide-out animation
                 isBackNavigation && isNavigating -> {
-                    // backAnimProgress is now a State from animateFloatAsState
-                    logNav("[RENDER] Using manual slide-out for programmatic back (progress=$backAnimProgress)")
-                    
-                    // Add a LaunchedEffect to log progress changes
-                    LaunchedEffect(backAnimProgress) {
-                        logNav("[PROGRESS_CHANGE] backAnimProgress changed to: $backAnimProgress")
-                    }
-                    
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .graphicsLayer {
                                 val offset = size.width * backAnimProgress
                                 val currentAlpha = 1f - backAnimProgress
-                                logNav("[ANIMATION] size.width=${size.width}," +
-                                        " progress=$backAnimProgress, translationX=$offset, alpha=$currentAlpha")
                                 translationX = offset
                                 alpha = currentAlpha
                             }
@@ -471,7 +380,6 @@ fun GraphNavHost(
                 }
                 // Just completed gesture OR back navigation - render without animation
                 justCompletedGesture || (isBackNavigation && !isNavigating) -> {
-                    logNav("[RENDER] Skipping AnimatedContent - just completed gesture or back nav finished")
                     ScreenContent(
                         entry = entry,
                         graph = graph,
@@ -483,7 +391,6 @@ fun GraphNavHost(
                 }
                 // Regular forward navigation - use AnimatedContent with enter transitions
                 else -> {
-                    logNav("[RENDER] Using AnimatedContent for forward navigation")
                     AnimatedContent(
                         targetState = entry,
                         transitionSpec = {
@@ -516,26 +423,21 @@ private fun ScreenContent(
     saveableStateHolder: SaveableStateHolder,
     enableCache: Boolean
 ) {
-    logNav("[SCREEN_CONTENT] Composing: ${entry.destination.route} (id: ${entry.id}), enableCache=$enableCache")
-    
     val destConfig = remember(entry.destination.route) {
         graph.destinations.find { it.destination.route == entry.destination.route }
     }
 
     destConfig?.let { config ->
         if (enableCache) {
-            logNav("[SCREEN_CONTENT] Using ComposableCache.Entry for: ${entry.destination.route}")
             key(entry.id) {
                 composableCache.Entry(
                     entry = entry,
                     saveableStateHolder = saveableStateHolder
                 ) { stackEntry ->
-                    logNav("[SCREEN_CONTENT] Rendering cached content for: ${stackEntry.destination.route}")
                     config.content(stackEntry.destination, navigator)
                 }
             }
         } else {
-            logNav("[SCREEN_CONTENT] Rendering WITHOUT cache for: ${entry.destination.route}")
             config.content(entry.destination, navigator)
         }
     }
