@@ -5,7 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import com.jermey.navplayground.demo.destinations.MainDestination
 import com.jermey.navplayground.demo.graphs.appRootGraph
-import com.jermey.quo.vadis.core.navigation.compose.NavHost
+import com.jermey.quo.vadis.core.navigation.compose.GraphNavHost
 import com.jermey.quo.vadis.core.navigation.compose.rememberNavigator
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
@@ -13,9 +13,10 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 /**
  * Main entry point for the demo application.
  *
- * Uses a single-level navigation structure where all destinations (including main screens
- * with Scaffold) are defined in the same graph. This ensures predictive back animations
- * work correctly by caching complete screen structures.
+ * Uses unified GraphNavHost with support for:
+ * - Animated forward/back navigation with correct directional transitions
+ * - Predictive back gesture animations
+ * - Composable caching for smooth transitions
  */
 @Composable
 fun DemoApp() {
@@ -28,10 +29,10 @@ fun DemoApp() {
         setupDemoDeepLinks(navigator)
     }
 
-    NavHost(
+    GraphNavHost(
         graph = appGraph,
         navigator = navigator,
-        defaultTransition = NavigationTransitions.Fade,
+        defaultTransition = NavigationTransitions.SlideHorizontal,
         enablePredictiveBack = true
     )
 }

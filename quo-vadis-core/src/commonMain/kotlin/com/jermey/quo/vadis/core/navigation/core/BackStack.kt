@@ -35,7 +35,7 @@ interface BackStack {
     /**
      * Push a destination onto the stack.
      */
-    fun push(destination: Destination)
+    fun push(destination: Destination, transition: NavigationTransition? = null)
 
     /**
      * Pop the current destination from the stack.
@@ -50,7 +50,7 @@ interface BackStack {
     /**
      * Replace the current destination.
      */
-    fun replace(destination: Destination)
+    fun replace(destination: Destination, transition: NavigationTransition? = null)
 
     /**
      * Replace the entire stack with new destinations.
@@ -74,13 +74,19 @@ interface BackStack {
 data class BackStackEntry(
     val id: String = generateId(),
     val destination: Destination,
-    val savedState: Map<String, Any?> = emptyMap()
+    val savedState: Map<String, Any?> = emptyMap(),
+    val transition: NavigationTransition? = null,
+    val isPopping: Boolean = false
 ) {
     companion object {
-        fun create(destination: Destination): BackStackEntry {
+        fun create(
+            destination: Destination,
+            transition: NavigationTransition? = null
+        ): BackStackEntry {
             return BackStackEntry(
                 id = generateId(),
-                destination = destination
+                destination = destination,
+                transition = transition
             )
         }
 
@@ -108,8 +114,8 @@ class MutableBackStack : BackStack {
     private val _canGoBack = MutableStateFlow(false)
     override val canGoBack: StateFlow<Boolean> = _canGoBack
 
-    override fun push(destination: Destination) {
-        val entry = BackStackEntry.create(destination)
+    override fun push(destination: Destination, transition: NavigationTransition?) {
+        val entry = BackStackEntry.create(destination, transition)
         val newStack = _stack.value + entry
         updateStack(newStack)
     }
@@ -134,14 +140,14 @@ class MutableBackStack : BackStack {
         return true
     }
 
-    override fun replace(destination: Destination) {
+    override fun replace(destination: Destination, transition: NavigationTransition?) {
         val currentStack = _stack.value
         if (currentStack.isEmpty()) {
-            push(destination)
+            push(destination, transition)
             return
         }
 
-        val entry = BackStackEntry.create(destination)
+        val entry = BackStackEntry.create(destination, transition)
         val newStack = currentStack.dropLast(1) + entry
         updateStack(newStack)
     }

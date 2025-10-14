@@ -35,7 +35,8 @@ interface NavigationGraph {
  */
 data class DestinationConfig(
     val destination: Destination,
-    val content: @Composable (Destination, Navigator) -> Unit
+    val content: @Composable (Destination, Navigator) -> Unit,
+    val defaultTransition: NavigationTransition? = null
 )
 
 /**
@@ -49,11 +50,15 @@ class NavigationGraphBuilder(private val graphRoute: String) {
         startDest = destination
     }
 
+    /**
+     * Register a destination with optional default transition.
+     */
     fun destination(
         destination: Destination,
+        transition: NavigationTransition? = null,
         content: @Composable (Destination, Navigator) -> Unit
     ) {
-        dests.add(DestinationConfig(destination, content))
+        dests.add(DestinationConfig(destination, content, transition))
     }
 
     /**

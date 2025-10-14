@@ -31,8 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.components.BottomNavigationBar
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
+
 private const val EXPLORE_ITEMS_COUNT = 20
 
 /**
@@ -67,7 +69,12 @@ fun ExploreScreen(
         bottomBar = {
             BottomNavigationBar(
                 currentRoute = "explore",
-                onNavigate = { destination -> navigator.navigateAndReplace(destination) }
+                onNavigate = { destination ->
+                    navigator.navigateAndReplace(
+                        destination,
+                        transition = NavigationTransitions.Fade
+                    )
+                }
             )
         }
     ) { paddingValues ->

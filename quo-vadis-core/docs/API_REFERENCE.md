@@ -236,6 +236,197 @@ PredictiveBackNavigation(
 )
 ```
 
+---
+
+## Unified GraphNavHost - Complete Animation Support
+
+### GraphNavHost
+
+**PRIMARY navigation host with unified support for all animation scenarios.**
+
+```kotlin
+@Composable
+fun GraphNavHost(
+    graph: NavigationGraph,
+    navigator: Navigator,
+    modifier: Modifier = Modifier,
+    defaultTransition: NavigationTransition = NavigationTransitions.Fade,
+    enableComposableCache: Boolean = true,
+    enablePredictiveBack: Boolean = true,
+    maxCacheSize: Int = 3
+)
+```
+
+#### Features
+- ✅ **Animated forward navigation** with enter transitions
+- ✅ **Animated back navigation** with popEnter/popExit (direction-aware)
+- ✅ **Predictive back gestures** with progressive animations
+- ✅ **Composable caching** for smooth transitions
+- ✅ **Entry locking** prevents cache eviction during animations
+- ✅ **Multiplatform logging** for debugging (NAV_DEBUG tag)
+
+#### Animation Behavior
+
+**Forward Navigation:**
+```kotlin
+navigator.navigate(DetailScreen, NavigationTransitions.SlideHorizontal)
+```
+- New screen slides in from RIGHT using `enter` transition
+- Old screen fades out using `exit` transition
+- 300ms duration (NavigationTransitions.ANIMATION_DURATION)
+
+**Back Navigation (Programmatic):**
+```kotlin
+navigator.navigateBack()
+```
+- Current screen slides out to RIGHT using `popExit` transition
+- Previous screen fades in using `popEnter` transition  
+- Uses `animateFloatAsState` for frame-by-frame recomposition
+- Proper animation completes over full 300ms
+
+**Predictive Back Gesture:**
+- User swipe from edge starts gesture
+- Current screen translates RIGHT + scales down (90%)
+- Maximum drag limited to 25% of screen width (MAX_GESTURE_PROGRESS)
+- Previous screen static behind (no parallax effects)
+- Complete gesture → navigation commits with exit animation
+- Cancel gesture → animates back to original position
+
+#### Transition Priority Chain
+1. **Explicit transition** - Passed to `navigate(destination, transition)`
+2. **Destination default** - From `TransitionDestination.defaultTransition`
+3. **Graph default** - From `destination(dest, transition) { ... }`
+4. **NavHost default** - From `GraphNavHost(defaultTransition = ...)`
+
+#### Example Usage
+
+```kotlin
+// Basic usage with default transition
+GraphNavHost(
+    graph = appGraph,
+    navigator = navigator,
+    defaultTransition = NavigationTransitions.SlideHorizontal,
+    enablePredictiveBack = true
+)
+
+// Navigate with explicit transition
+navigator.navigate(
+    destination = DetailScreen("item-123"),
+    transition = NavigationTransitions.SlideHorizontal
+)
+
+// Back navigation (uses popExit/popEnter)
+navigator.navigateBack()
+```
+
+---
+
+## NavigationTransition API
+
+### Interface
+```kotlin
+interface NavigationTransition {
+    val enter: EnterTransition        // Forward navigation entry
+    val exit: ExitTransition          // Forward navigation exit
+    val popEnter: EnterTransition     // Back navigation entry (revealed screen)
+    val popExit: ExitTransition       // Back navigation exit (leaving screen)
+}
+```
+
+### Pre-built Transitions
+
+**NavigationTransitions.None**
+- No animation (instant)
+
+**NavigationTransitions.Fade**
+- Crossfade between screens (300ms)
+- Use for: Same-level navigation (e.g., bottom nav tabs)
+
+**NavigationTransitions.SlideHorizontal**
+- Forward: New screen slides in from RIGHT, old fades out
+- Back: Current slides out to RIGHT, previous fades in
+- Use for: Drill-down navigation (master-detail, hierarchical flows)
+
+**NavigationTransitions.SlideVertical**
+- Forward: New screen slides in from BOTTOM, old fades out
+- Back: Current slides out to BOTTOM, previous fades in
+- Use for: Modal-like navigation, bottom sheets
+
+**NavigationTransitions.ScaleIn**
+- Forward: New screen scales up from center with fade
+- Back: Current scales down to center with fade
+- Use for: Special states (success screens, completion screens)
+
+### TransitionDestination Interface
+
+**Define default transition for a destination:**
+```kotlin
+object DetailScreen : TransitionDestination {
+    override val route = "detail/{id}"
+    override val defaultTransition = NavigationTransitions.SlideHorizontal
+    
+    override val arguments: Map<String, Any?> = mapOf("id" to id)
+}
+
+// Now just:
+navigator.navigate(DetailScreen) // Uses SlideHorizontal automatically
+```
+
+### Custom Transitions
+
+```kotlin
+val customTransition = customTransition {
+    enter = slideInHorizontally { it / 2 } + fadeIn()
+    exit = slideOutHorizontally { -it / 3 } + fadeOut()
+    popEnter = fadeIn()
+    popExit = slideOutHorizontally { it } + fadeOut()
+}
+```
+
+---
+
+## Shared Element Transitions (Foundation)
+
+### SharedElementNavHost
+
+**Wrapper for shared element support (future):**
+```kotlin
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun SharedElementNavHost(
+    graph: NavigationGraph,
+    navigator: Navigator,
+    modifier: Modifier = Modifier,
+    defaultTransition: NavigationTransition,
+    enablePredictiveBack: Boolean = true
+)
+```
+
+### SharedElementTransition API
+
+```kotlin
+// Define shared element keys
+val heroImageKey = SharedElementKey("hero_image", SharedElementType.Bounds)
+
+// Create transition with shared elements
+val transition = NavigationTransitions.SlideHorizontal.withSharedElements(
+    listOf(SharedElementKey("hero_image"))
+)
+
+// Navigate with shared elements
+navigator.navigate(DetailScreen, transition)
+```
+
+**Helper Functions:**
+```kotlin
+SharedElementTransitions.slideWithHero(heroKey: String)
+SharedElementTransitions.fadeWithSharedBounds(vararg keys: String)
+```
+
+**Status:** API foundation complete, implementation requires `SharedTransitionLayout` integration.
+
+---
+
 ### ComposableCache
 
 **Internal caching system for predictive back navigation.**

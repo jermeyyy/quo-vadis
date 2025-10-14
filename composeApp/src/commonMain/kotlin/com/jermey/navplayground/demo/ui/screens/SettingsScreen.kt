@@ -36,6 +36,7 @@ import com.jermey.navplayground.demo.ui.components.BottomNavigationBar
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.SettingItem
 import com.jermey.navplayground.demo.ui.components.SettingsSection
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
 
@@ -66,7 +67,12 @@ fun SettingsScreen(
         bottomBar = {
             BottomNavigationBar(
                 currentRoute = "settings",
-                onNavigate = { destination -> navigator.navigateAndReplace(destination) }
+                onNavigate = { destination ->
+                    navigator.navigateAndReplace(
+                        destination = destination,
+                        transition = NavigationTransitions.Fade
+                    )
+                }
             )
         }
     ) { paddingValues ->

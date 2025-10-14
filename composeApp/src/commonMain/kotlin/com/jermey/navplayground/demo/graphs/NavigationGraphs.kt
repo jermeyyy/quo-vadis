@@ -36,31 +36,35 @@ import com.jermey.quo.vadis.core.navigation.core.navigationGraph
 fun appRootGraph() = navigationGraph("app_root") {
     startDestination(MainDestination.Home)
 
-    destination(MainDestination.Home) { _, navigator ->
+    // Main bottom nav screens use Fade transition
+    destination(MainDestination.Home, NavigationTransitions.Fade) { _, navigator ->
         HomeScreen(
             onNavigateToMasterDetail = {
-                navigator.navigate(MasterDetailDestination.List)
+                navigator.navigate(MasterDetailDestination.List, NavigationTransitions.SlideHorizontal)
             },
             onNavigateToTabs = {
-                navigator.navigate(TabsDestination.Main)
+                navigator.navigate(TabsDestination.Main, NavigationTransitions.SlideHorizontal)
             },
             onNavigateToProcess = {
-                navigator.navigate(ProcessDestination.Start)
+                navigator.navigate(ProcessDestination.Start, NavigationTransitions.SlideHorizontal)
             },
             navigator = navigator
         )
     }
 
-    destination(MainDestination.Explore) { _, navigator ->
+    destination(MainDestination.Explore, NavigationTransitions.Fade) { _, navigator ->
         ExploreScreen(
             onItemClick = { itemId ->
-                navigator.navigate(MasterDetailDestination.Detail(itemId))
+                navigator.navigate(
+                    MasterDetailDestination.Detail(itemId),
+                    NavigationTransitions.SlideHorizontal
+                )
             },
             navigator = navigator
         )
     }
 
-    destination(MainDestination.Profile) { _, navigator ->
+    destination(MainDestination.Profile, NavigationTransitions.Fade) { _, navigator ->
         ProfileScreen(
             onEditProfile = {
                 // Could navigate to edit screen
@@ -69,13 +73,13 @@ fun appRootGraph() = navigationGraph("app_root") {
         )
     }
 
-    destination(MainDestination.Settings) { _, navigator ->
+    destination(MainDestination.Settings, NavigationTransitions.Fade) { _, navigator ->
         SettingsScreen(
             navigator = navigator
         )
     }
 
-    destination(MainDestination.DeepLinkDemo) { _, navigator ->
+    destination(MainDestination.DeepLinkDemo, NavigationTransitions.Fade) { _, navigator ->
         DeepLinkDemoScreen(
             onBack = { navigator.navigateBack() },
             onNavigateViaDeepLink = { deepLinkUri ->
@@ -96,7 +100,7 @@ fun appRootGraph() = navigationGraph("app_root") {
 fun masterDetailGraph() = navigationGraph("master_detail") {
     startDestination(MasterDetailDestination.List)
 
-    destination(MasterDetailDestination.List) { _, navigator ->
+    destination(MasterDetailDestination.List, NavigationTransitions.SlideHorizontal) { _, navigator ->
         MasterListScreen(
             onItemClick = { itemId ->
                 navigator.navigate(
@@ -108,13 +112,16 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
         )
     }
 
-    destination(SimpleDestination("master_detail_detail")) { dest, navigator ->
+    destination(SimpleDestination("master_detail_detail"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
         val itemId = dest.arguments["itemId"] as? String ?: "unknown"
         DetailScreen(
             itemId = itemId,
             onBack = { navigator.navigateBack() },
             onNavigateToRelated = { relatedId ->
-                navigator.navigate(MasterDetailDestination.Detail(relatedId))
+                navigator.navigate(
+                    MasterDetailDestination.Detail(relatedId),
+                    NavigationTransitions.SlideHorizontal
+                )
             }
         )
     }
@@ -126,7 +133,7 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
 fun tabsGraph() = navigationGraph("tabs") {
     startDestination(TabsDestination.Main)
 
-    destination(TabsDestination.Main) { _, navigator ->
+    destination(TabsDestination.Main, NavigationTransitions.SlideVertical) { _, navigator ->
         TabsMainScreen(
             onNavigateToSubItem = { tabId, itemId ->
                 navigator.navigate(
@@ -138,7 +145,7 @@ fun tabsGraph() = navigationGraph("tabs") {
         )
     }
 
-    destination(SimpleDestination("tabs_subitem")) { dest, navigator ->
+    destination(SimpleDestination("tabs_subitem"), NavigationTransitions.SlideVertical) { dest, navigator ->
         val tabId = dest.arguments["tabId"] as? String ?: "tab1"
         val itemId = dest.arguments["itemId"] as? String ?: "unknown"
         TabSubItemScreen(
@@ -155,7 +162,7 @@ fun tabsGraph() = navigationGraph("tabs") {
 fun processGraph() = navigationGraph("process") {
     startDestination(ProcessDestination.Start)
 
-    destination(ProcessDestination.Start) { _, navigator ->
+    destination(ProcessDestination.Start, NavigationTransitions.SlideHorizontal) { _, navigator ->
         ProcessStartScreen(
             onStart = {
                 navigator.navigate(
@@ -167,7 +174,7 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    destination(SimpleDestination("process_step1")) { dest, navigator ->
+    destination(SimpleDestination("process_step1"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
         val userType = dest.arguments["userType"] as? String
         ProcessStep1Screen(
             initialUserType = userType,
@@ -189,7 +196,7 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    destination(SimpleDestination("process_step2a")) { dest, navigator ->
+    destination(SimpleDestination("process_step2a"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
         val data = dest.arguments["data"] as? String ?: ""
         ProcessStep2AScreen(
             previousData = data,
@@ -203,7 +210,7 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    destination(SimpleDestination("process_step2b")) { dest, navigator ->
+    destination(SimpleDestination("process_step2b"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
         val data = dest.arguments["data"] as? String ?: ""
         ProcessStep2BScreen(
             previousData = data,
@@ -217,7 +224,7 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    destination(SimpleDestination("process_step3")) { dest, navigator ->
+    destination(SimpleDestination("process_step3"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
         val previousData = dest.arguments["previousData"] as? String ?: ""
         val branch = dest.arguments["branch"] as? String ?: ""
         ProcessStep3Screen(
@@ -234,7 +241,7 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    destination(ProcessDestination.Complete) { _, navigator ->
+    destination(ProcessDestination.Complete, NavigationTransitions.ScaleIn) { _, navigator ->
         ProcessCompleteScreen(
             onDone = {
                 navigator.navigateAndClearAll(MainDestination.Home)

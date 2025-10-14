@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.components.BottomNavigationBar
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.ProfileInfoSection
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
 
@@ -63,7 +64,12 @@ fun ProfileScreen(
         bottomBar = {
             BottomNavigationBar(
                 currentRoute = "profile",
-                onNavigate = { destination -> navigator.navigateAndReplace(destination) }
+                onNavigate = { destination ->
+                    navigator.navigateAndReplace(
+                        destination = destination,
+                        transition = NavigationTransitions.Fade
+                    )
+                }
             )
         }
     ) { paddingValues ->

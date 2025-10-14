@@ -1,5 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+
+
 /**
  * Base interface for all navigation destinations.
  * Each screen/feature should implement this to define a navigation target.
@@ -15,6 +17,50 @@ interface Destination {
      * Optional arguments passed to this destination.
      */
     val arguments: Map<String, Any?> get() = emptyMap()
+}
+
+/**
+ * Destination with default transition.
+ * Implement this interface to specify a default transition for a destination.
+ */
+interface TransitionDestination : Destination {
+    /**
+     * Default transition when navigating TO this destination.
+     * If null, uses NavHost's default transition.
+     */
+    val defaultTransition: NavigationTransition?
+        get() = null
+}
+
+/**
+ * Extension property to access transition from any Destination.
+ */
+val Destination.transition: NavigationTransition?
+    get() = (this as? TransitionDestination)?.defaultTransition
+
+/**
+ * Extension property to access shared elements from any Destination.
+ */
+val Destination.sharedElements: List<SharedElementKey>
+    get() = (this as? SharedElementDestination)?.sharedElementKeys ?: emptyList()
+
+/**
+ * Destination that participates in shared element transitions.
+ * Implement this interface to enable shared element animations for a destination.
+ */
+interface SharedElementDestination : TransitionDestination {
+    /**
+     * Shared element keys for this destination.
+     */
+    val sharedElementKeys: List<SharedElementKey>
+        get() = emptyList()
+
+    /**
+     * Default shared element transition.
+     * Should typically use withSharedElements() on a base transition.
+     */
+    override val defaultTransition: NavigationTransition?
+        get() = null
 }
 
 /**
