@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "type": "kotlin",
+      "request": "launch",
+      "name": "Launch Kotlin Multiplatform App",
+      "projectRoot": "${workspaceFolder}",
+      "mainClass": "${input:mainClass}",
+      "preLaunchTask": "gradle-build"
+    }
+  ],
+  "inputs": [
+    {
+      "type": "pickString",
+      "id": "mainClass",
+      "description": "Select the module to run",
+      "options": [
+        "composeApp",
+        "quo-vadis-core"
+      ]
+    }
+  ]
+}
