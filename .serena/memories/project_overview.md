@@ -12,7 +12,13 @@ NavPlayground is a **Kotlin Multiplatform** navigation library demonstration pro
 - **Direct Backstack Access**: Full control over navigation stack manipulation
 - **Type-Safe Navigation**: Compile-time safety for navigation targets
 - **Deep Link Support**: URI-based and custom deep linking
-- **Transition Animations**: Including support for shared element transitions
+- **Transition Animations**: Custom enter/exit animations with full control
+- **Shared Element Transitions**: ✨ Material Design-compliant shared elements (NEW!)
+  - Works in BOTH forward AND backward navigation
+  - Compatible with predictive back gestures
+  - Per-destination opt-in via `destinationWithScopes()`
+  - Full multiplatform support
+- **Predictive Back Navigation**: Smooth gesture-based back navigation (Android 13+, iOS)
 - **MVI Architecture Integration**: First-class support for MVI pattern
 - **DI Framework Ready**: Easy integration with Koin and other DI frameworks
 - **No External Dependencies**: Independent from other navigation libraries
@@ -30,7 +36,13 @@ NavPlayground/
 │       │       ├── DemoApp.kt   # Main demo with drawer & bottom nav
 │       │       ├── destinations/ # All destination definitions
 │       │       ├── graphs/      # Navigation graph definitions
-│       │       └── ui/screens/  # Demo screens for all patterns
+│       │       └── ui/
+│       │           ├── components/  # Reusable components (ItemCard, etc.)
+│       │           └── screens/     # Demo screens for all patterns
+│       │               ├── masterdetail/  # Master-detail with shared elements
+│       │               ├── process/       # Wizard/process flow
+│       │               ├── tabs/          # Nested tabs
+│       │               └── ...
 │       ├── androidMain/     # Android app entry point
 │       ├── iosMain/         # iOS app entry point
 │       ├── jsMain/          # JavaScript/Web entry point
@@ -38,10 +50,25 @@ NavPlayground/
 │       └── desktopMain/     # Desktop (JVM) entry point
 ├── quo-vadis-core/          # Navigation library module
 │   ├── docs/                # Architecture and API documentation
+│   │   ├── API_REFERENCE.md                    # Complete API docs
+│   │   ├── ARCHITECTURE.md                     # Design patterns
+│   │   ├── NAVIGATION_IMPLEMENTATION.md        # Implementation guide
+│   │   ├── MULTIPLATFORM_PREDICTIVE_BACK.md   # Predictive back details
+│   │   └── SHARED_ELEMENT_TRANSITIONS.md      # ✨ Shared elements guide (NEW!)
 │   └── src/
 │       ├── commonMain/kotlin/com/jermey/quo/vadis/core/navigation/
-│       │   ├── core/        # Core navigation components (Navigator, BackStack, etc.)
-│       │   ├── compose/     # Compose integration (NavHost)
+│       │   ├── core/        # Core navigation components
+│       │   │   ├── Destination.kt
+│       │   │   ├── BackStack.kt
+│       │   │   ├── Navigator.kt
+│       │   │   ├── NavigationGraph.kt
+│       │   │   └── NavigationTransition.kt
+│       │   ├── compose/     # Compose integration
+│       │   │   ├── NavHost.kt
+│       │   │   ├── GraphNavHost.kt
+│       │   │   ├── PredictiveBackNavigation.kt
+│       │   │   ├── SharedElementScope.kt         # ✨ NEW
+│       │   │   └── SharedElementModifiers.kt     # ✨ NEW
 │       │   ├── mvi/         # MVI pattern support
 │       │   ├── integration/ # DI framework integration
 │       │   ├── serialization/ # State serialization
@@ -71,6 +98,9 @@ The demo app showcases the following navigation patterns:
 
 1. **Bottom Navigation**: 4 main tabs (Home, Explore, Profile, Settings)
 2. **Master-Detail Navigation**: List with detail views and deep navigation
+   - ✨ **NEW**: Features shared element transitions (icon + title)
+   - Icon animates from 56dp to 80dp during transition
+   - Title animates position with crossfade
 3. **Tabs Navigation**: Nested tabs with sub-navigation
 4. **Process/Wizard Navigation**: Multi-step flow with branching logic
 5. **Modal Drawer Navigation**: Side drawer with menu items
@@ -79,16 +109,23 @@ The demo app showcases the following navigation patterns:
 
 ### Mobile
 - **Android**: Min SDK 24, Target SDK 36, Compile SDK 36
+  - Predictive back gestures (API 33+)
+  - Shared element transitions
 - **iOS Arm64**: Physical devices
+  - Swipe-back gestures
+  - Shared element transitions
 - **iOS Simulator Arm64**: M1/M2 Mac simulators
 - **iOS x64**: Intel Mac simulators
 
 ### Web
 - **JavaScript (IR)**: Browser-based with Canvas rendering, broader compatibility
+  - Shared element transitions
 - **WebAssembly**: Near-native performance, modern browsers only
+  - Shared element transitions
 
 ### Desktop
 - **JVM (Desktop)**: Native applications for macOS, Windows, Linux
+  - Shared element transitions
 
 ## Publishing
 
@@ -111,15 +148,17 @@ Published artifacts:
 
 ### Android
 - System back button integration
-- Predictive back gestures (Android 13+)
+- Predictive back gestures (Android 13+) with shared elements
 - Deep link handling
 - Activity lifecycle integration
+- Shared element transitions
 
 ### iOS
-- Swipe-back navigation
+- Swipe-back navigation with shared elements
 - Navigation bar customization
 - Universal links support
 - iOS-specific transitions
+- Shared element transitions
 
 ### Web (JS/Wasm)
 - Browser back button support
@@ -127,6 +166,7 @@ Published artifacts:
 - Canvas-based rendering via ComposeViewport
 - Single-page application (SPA) architecture
 - Progressive Web App (PWA) compatible
+- Shared element transitions
 
 ### Desktop (JVM)
 - Native window controls (macOS, Windows, Linux)
@@ -134,3 +174,16 @@ Published artifacts:
 - Menu bar integration
 - Multi-window support
 - Native installers (DMG, MSI, DEB)
+- Shared element transitions
+
+## Recent Updates
+
+### December 2024 - Shared Element Transitions
+✅ **Fully implemented** shared element transitions using Compose SharedTransitionLayout
+✅ **Bidirectional support** - works in forward AND backward navigation
+✅ **Predictive back integration** - shared elements follow gestures smoothly
+✅ **Per-destination opt-in** - use `destinationWithScopes()` for granular control
+✅ **Complete documentation** - SHARED_ELEMENT_TRANSITIONS.md guide
+✅ **Demo implementation** - master-detail flow with icon + title transitions
+
+See `shared_element_transitions` memory for implementation details.

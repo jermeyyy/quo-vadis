@@ -21,6 +21,7 @@ This project consists of **two main components**:
 - ✅ **Direct BackStack Access** - Full control over navigation stack
 - ✅ **Deep Link Support** - URI-based navigation with pattern matching
 - ✅ **Predictive Back Navigation** - Smooth animated back gestures (Android 13+ & iOS)
+- ✅ **Shared Element Transitions** - Material Design shared elements (forward & back!)
 - ✅ **MVI Architecture** - First-class MVI pattern integration
 - ✅ **Transitions & Animations** - Built-in and custom transitions
 - ✅ **DI Framework Support** - Easy integration with Koin, Kodein, etc.
@@ -40,7 +41,8 @@ NavPlayground/
 │       ├── ARCHITECTURE.md
 │       ├── API_REFERENCE.md
 │       ├── NAVIGATION_IMPLEMENTATION.md
-│       └── MULTIPLATFORM_PREDICTIVE_BACK.md
+│       ├── MULTIPLATFORM_PREDICTIVE_BACK.md
+│       └── SHARED_ELEMENT_TRANSITIONS.md
 ├── composeApp/                  # Demo application
 │   └── src/
 │       ├── commonMain/          # Demo screens & examples
@@ -121,6 +123,7 @@ Comprehensive documentation is available in the `quo-vadis-core/docs/` directory
 - **[API Reference](quo-vadis-core/docs/API_REFERENCE.md)** - Complete API documentation with examples
 - **[Navigation Implementation](quo-vadis-core/docs/NAVIGATION_IMPLEMENTATION.md)** - Implementation details and features
 - **[Multiplatform Predictive Back](quo-vadis-core/docs/MULTIPLATFORM_PREDICTIVE_BACK.md)** - Advanced gesture navigation
+- **[Shared Element Transitions](quo-vadis-core/docs/SHARED_ELEMENT_TRANSITIONS.md)** - Material Design shared elements guide
 
 ## 🎮 Demo Application
 

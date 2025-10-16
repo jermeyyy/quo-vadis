@@ -34,5 +34,6 @@ fun DemoApp() {
         navigator = navigator,
         defaultTransition = NavigationTransitions.SlideHorizontal,
         enablePredictiveBack = true
+        // Note: SharedTransitionLayout is always enabled. Use destinationWithScopes() to opt-in per destination.
     )
 }

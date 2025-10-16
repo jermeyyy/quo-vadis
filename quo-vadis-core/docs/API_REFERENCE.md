@@ -459,6 +459,199 @@ fun rememberNavigator(
 
 ---
 
+## Shared Element Transitions (`navigation.compose`)
+
+**Type-safe shared element transitions using Compose Multiplatform's SharedTransitionLayout API.**
+
+> 📖 **Full Guide**: See [SHARED_ELEMENT_TRANSITIONS.md](SHARED_ELEMENT_TRANSITIONS.md) for comprehensive documentation.
+
+### Overview
+
+Quo Vadis provides first-class support for shared element transitions that work in **both forward and backward** navigation, including predictive back gestures. SharedTransitionLayout is always enabled in GraphNavHost, and destinations opt-in via `destinationWithScopes()`.
+
+### destinationWithScopes()
+
+Enable shared elements for specific destinations:
+
+```kotlin
+fun NavigationGraphBuilder.destinationWithScopes(
+    destination: Destination,
+    content: @Composable (
+        destination: Destination,
+        navigator: Navigator,
+        sharedTransitionScope: SharedTransitionScope?,
+        animatedVisibilityScope: AnimatedVisibilityScope?
+    ) -> Unit
+)
+
+fun NavigationGraphBuilder.destinationWithScopes(
+    destinationClass: KClass<out Destination>,
+    content: @Composable (
+        destination: Destination,
+        navigator: Navigator,
+        sharedTransitionScope: SharedTransitionScope?,
+        animatedVisibilityScope: AnimatedVisibilityScope?
+    ) -> Unit
+)
+```
+
+**Example:**
+```kotlin
+navigationGraph("master-detail") {
+    destinationWithScopes(MasterList) { _, nav, shared, animated ->
+        MasterListScreen(nav, shared, animated)
+    }
+    
+    destinationWithScopes(Detail::class) { dest, nav, shared, animated ->
+        DetailScreen((dest as Detail).id, nav, shared, animated)
+    }
+}
+```
+
+### Modifier Extensions
+
+#### quoVadisSharedElement()
+
+For **visual elements** (icons, images, shapes) that animate smoothly:
+
+```kotlin
+fun Modifier.quoVadisSharedElement(
+    key: String,
+    sharedTransitionScope: SharedTransitionScope?,
+    animatedVisibilityScope: AnimatedVisibilityScope?,
+    boundsTransform: BoundsTransform = DefaultBoundsTransform,
+    placeHolderSize: SharedTransitionScope.PlaceHolderSize = ContentSize,
+    renderInOverlayDuringTransition: Boolean = true,
+    zIndexInOverlay: Float = 0f,
+    clipInOverlayDuringTransition: (LayoutDirection, Density) -> Path? = { _, _ -> null }
+): Modifier
+```
+
+**Example:**
+```kotlin
+Icon(
+    imageVector = Icons.Default.AccountCircle,
+    contentDescription = null,
+    modifier = Modifier
+        .size(56.dp)
+        .quoVadisSharedElement(
+            key = "icon-${item.id}",
+            sharedTransitionScope = sharedTransitionScope,
+            animatedVisibilityScope = animatedVisibilityScope
+        )
+)
+```
+
+#### quoVadisSharedBounds()
+
+For **text and containers** where content crossfades:
+
+```kotlin
+fun Modifier.quoVadisSharedBounds(
+    key: String,
+    sharedTransitionScope: SharedTransitionScope?,
+    animatedVisibilityScope: AnimatedVisibilityScope?,
+    boundsTransform: BoundsTransform = DefaultBoundsTransform,
+    enter: EnterTransition = fadeIn(),
+    exit: ExitTransition = fadeOut(),
+    resizeMode: SharedTransitionScope.ResizeMode = ScaleToBounds(),
+    placeHolderSize: SharedTransitionScope.PlaceHolderSize = ContentSize,
+    renderInOverlayDuringTransition: Boolean = true,
+    zIndexInOverlay: Float = 0f,
+    clipInOverlayDuringTransition: (LayoutDirection, Density) -> Path? = { _, _ -> null }
+): Modifier
+```
+
+**Example:**
+```kotlin
+Text(
+    text = item.title,
+    modifier = Modifier.quoVadisSharedBounds(
+        key = "title-${item.id}",
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = animatedVisibilityScope
+    )
+)
+```
+
+#### quoVadisSharedElementOrNoop()
+
+Graceful fallback when scopes are null:
+
+```kotlin
+fun Modifier.quoVadisSharedElementOrNoop(
+    key: String,
+    sharedTransitionScope: SharedTransitionScope?,
+    animatedVisibilityScope: AnimatedVisibilityScope?,
+    // ... same parameters as quoVadisSharedElement
+): Modifier
+```
+
+### CompositionLocal Access
+
+Direct access to scopes via CompositionLocals:
+
+```kotlin
+@Composable
+fun currentSharedTransitionScope(): SharedTransitionScope?
+
+@Composable
+fun currentNavAnimatedVisibilityScope(): AnimatedVisibilityScope?
+```
+
+**Example:**
+```kotlin
+@Composable
+fun MyScreen() {
+    val sharedScope = currentSharedTransitionScope()
+    val animatedScope = currentNavAnimatedVisibilityScope()
+    
+    Icon(
+        modifier = Modifier.quoVadisSharedElement(
+            key = "icon",
+            sharedTransitionScope = sharedScope,
+            animatedVisibilityScope = animatedScope
+        )
+    )
+}
+```
+
+### Key Features
+
+✅ **Bidirectional Transitions**: Works in both forward AND backward navigation  
+✅ **Predictive Back Support**: Shared elements follow predictive back gestures  
+✅ **Type-Safe**: Compile-time safe with no string routing  
+✅ **Per-Destination Opt-In**: Use `destinationWithScopes()` only where needed  
+✅ **Graceful Degradation**: Elements render normally if scopes are null  
+✅ **Multiplatform**: Works on Android, iOS, Desktop, Web (JS/Wasm)  
+
+### Usage Pattern
+
+```kotlin
+// 1. Define destinations with scopes
+destinationWithScopes(Screen1) { _, nav, shared, animated ->
+    Screen1(nav, shared, animated)
+}
+
+// 2. Mark shared elements with matching keys
+@Composable
+fun Screen1(nav: Navigator, shared: SharedTransitionScope?, animated: AnimatedVisibilityScope?) {
+    Icon(
+        modifier = Modifier.quoVadisSharedElement(
+            key = "icon-123",  // Must match on both screens
+            sharedTransitionScope = shared,
+            animatedVisibilityScope = animated
+        )
+    )
+}
+
+// 3. Navigate normally - transitions happen automatically
+nav.navigate(Screen2)
+nav.navigateBack()  // Transitions work in reverse!
+```
+
+---
+
 ## MVI Package (`navigation.mvi`)
 
 ### NavigationIntent

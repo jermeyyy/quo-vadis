@@ -1,8 +1,9 @@
 {
     "chat.mcp.serverSampling": {
-        "NavPlayground/.vscode/mcp.json: serena": {
+        "NavPlayground/.vscode/mcp.json: javadoc-mcp": {
             "allowedModels": [
                 "copilot/gpt-4.1",
+                "copilot/claude-haiku-4.5",
                 "copilot/claude-opus-4",
                 "copilot/claude-opus-41",
                 "copilot/claude-3.5-sonnet",
@@ -23,5 +24,6 @@
                 "ollama/qwen3-coder:30b"
             ]
         }
-    }
+    },
+    "chat.agent.maxRequests": 100
 }

@@ -95,12 +95,17 @@ fun appRootGraph() = navigationGraph("app_root") {
 }
 
 /**
- * Master-Detail navigation graph
+ * Master-Detail navigation graph with shared element transitions
  */
+@OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
 fun masterDetailGraph() = navigationGraph("master_detail") {
     startDestination(MasterDetailDestination.List)
 
-    destination(MasterDetailDestination.List, NavigationTransitions.SlideHorizontal) { _, navigator ->
+    // Use scope-aware destination for shared element support
+    destinationWithScopes(
+        destination = MasterDetailDestination.List,
+        transition = NavigationTransitions.SlideHorizontal
+    ) { _, navigator, sharedScope, animScope ->
         MasterListScreen(
             onItemClick = { itemId ->
                 navigator.navigate(
@@ -108,11 +113,16 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
                     NavigationTransitions.SlideHorizontal
                 )
             },
-            onBack = { navigator.navigateBack() }
+            onBack = { navigator.navigateBack() },
+            sharedTransitionScope = sharedScope,
+            animatedVisibilityScope = animScope
         )
     }
 
-    destination(SimpleDestination("master_detail_detail"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
+    destinationWithScopes(
+        destination = SimpleDestination("master_detail_detail"),
+        transition = NavigationTransitions.SlideHorizontal
+    ) { dest, navigator, sharedScope, animScope ->
         val itemId = dest.arguments["itemId"] as? String ?: "unknown"
         DetailScreen(
             itemId = itemId,
@@ -122,7 +132,9 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
                     MasterDetailDestination.Detail(relatedId),
                     NavigationTransitions.SlideHorizontal
                 )
-            }
+            },
+            sharedTransitionScope = sharedScope,
+            animatedVisibilityScope = animScope
         )
     }
 }

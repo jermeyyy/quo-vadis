@@ -1,13 +1,40 @@
 package com.jermey.quo.vadis.core.navigation.serialization
 
+import com.jermey.quo.vadis.core.navigation.core.BackStack
 import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 import com.jermey.quo.vadis.core.navigation.core.Destination
-import com.jermey.quo.vadis.core.navigation.core.BackStack
 import com.jermey.quo.vadis.core.navigation.core.MutableBackStack
+import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+
+/**
+ * Serializable wrapper for Destination.
+ * Used to convert Destination interface to a serializable data class.
+ */
+@Serializable
+data class SerializableDestination(
+    val route: String,
+    val arguments: Map<String, String> = emptyMap()
+)
+
+/**
+ * Serializable wrapper for BackStackEntry.
+ * Used to convert BackStackEntry to a fully serializable structure.
+ */
+@Serializable
+data class SerializableBackStackEntry(
+    val id: String,
+    val destination: SerializableDestination,
+    val savedState: Map<String, String> = emptyMap()
+)
 
 /**
  * State restoration support for navigation.
  * Allows saving and restoring backstack state across process death.
+ *
+ * Now powered by kotlinx.serialization for robust, type-safe serialization.
  */
 interface NavigationStateSerializer {
     /**
@@ -32,88 +59,103 @@ interface NavigationStateSerializer {
 }
 
 /**
- * Simple JSON-like serializer for navigation state.
- * For production, consider using kotlinx.serialization.
+ * Kotlinx.serialization-based serializer for navigation state.
+ * Provides robust JSON serialization with proper type safety.
  */
-class SimpleNavigationStateSerializer : NavigationStateSerializer {
+class KotlinxNavigationStateSerializer(
+    private val json: Json = Json {
+        ignoreUnknownKeys = true
+        prettyPrint = false
+        encodeDefaults = true
+    }
+) : NavigationStateSerializer {
 
     override fun serializeBackStack(entries: List<BackStackEntry>): String {
-        return entries.joinToString("|") { entry ->
-            serializeEntry(entry)
-        }
+        val serializableEntries = entries.map { it.toSerializable() }
+        return json.encodeToString(serializableEntries)
     }
 
     override fun deserializeBackStack(serialized: String): List<BackStackEntry> {
         if (serialized.isBlank()) return emptyList()
 
-        return serialized.split("|").mapNotNull { entryStr ->
-            deserializeEntry(entryStr)
+        return try {
+            val serializableEntries =
+                json.decodeFromString<List<SerializableBackStackEntry>>(serialized)
+            serializableEntries.map { it.toBackStackEntry() }
+        } catch (e: SerializationException) {
+            // Log or handle serialization errors if needed
+            println("Failed to deserialize backstack: ${e.message}")
+            emptyList()
         }
     }
 
     override fun serializeDestination(destination: Destination): String {
-        val args = destination.arguments.entries.joinToString(",") { (key, value) ->
-            "$key=$value"
-        }
-        return "${destination.route}?$args"
+        val serializableDestination = destination.toSerializable()
+        return json.encodeToString(serializableDestination)
     }
 
     override fun deserializeDestination(serialized: String): Destination? {
-        val parts = serialized.split("?")
-        val route = parts[0]
-        val args = if (parts.size > 1) {
-            parts[1].split(",").mapNotNull { pair ->
-                val keyValue = pair.split("=")
-                if (keyValue.size == 2) {
-                    keyValue[0] to keyValue[1]
-                } else null
-            }.toMap()
-        } else {
-            emptyMap()
-        }
-
-        return object : Destination {
-            override val route = route
-            override val arguments = args
+        return try {
+            val serializableDestination = json.decodeFromString<SerializableDestination>(serialized)
+            serializableDestination.toDestination()
+        } catch (e: SerializationException) {
+            // Log or handle serialization errors if needed
+            println("Failed to deserialize destination: ${e.message}")
+            null
         }
     }
 
-    private fun serializeEntry(entry: BackStackEntry): String {
-        return "${entry.id}:${serializeDestination(entry.destination)}"
+    private fun Destination.toSerializable(): SerializableDestination {
+        return SerializableDestination(
+            route = route,
+            arguments = arguments.mapValues { (_, value) -> value.toString() }
+        )
     }
 
-    private fun deserializeEntry(serialized: String): BackStackEntry? {
-        val parts = serialized.split(":", limit = 2)
-        if (parts.size != 2) return null
+    private fun SerializableDestination.toDestination(): Destination {
+        return SimpleDestination(
+            route = route,
+            arguments = arguments
+        )
+    }
 
-        val destination = deserializeDestination(parts[1]) ?: return null
+    private fun BackStackEntry.toSerializable(): SerializableBackStackEntry {
+        return SerializableBackStackEntry(
+            id = id,
+            destination = destination.toSerializable(),
+            savedState = savedState.mapValues { (_, value) -> value.toString() }
+        )
+    }
 
+    private fun SerializableBackStackEntry.toBackStackEntry(): BackStackEntry {
         return BackStackEntry(
-            id = parts[0],
-            destination = destination
+            id = id,
+            destination = destination.toDestination(),
+            savedState = savedState
         )
     }
 }
 
 /**
  * Extension function to save navigation state.
+ * Now uses KotlinxNavigationStateSerializer by default for better type safety.
  */
 fun BackStack.saveState(
-    serializer: NavigationStateSerializer = SimpleNavigationStateSerializer()
+    serializer: NavigationStateSerializer = KotlinxNavigationStateSerializer()
 ): String {
     return serializer.serializeBackStack(stack.value)
 }
 
 /**
  * Extension function to restore navigation state.
+ * Now uses KotlinxNavigationStateSerializer by default for better type safety.
  */
 fun MutableBackStack.restoreState(
     savedState: String,
-    serializer: NavigationStateSerializer = SimpleNavigationStateSerializer()
+    serializer: NavigationStateSerializer = KotlinxNavigationStateSerializer()
 ) {
     val entries = serializer.deserializeBackStack(savedState)
     if (entries.isNotEmpty()) {
         replaceAll(entries.map { it.destination })
     }
 }
-

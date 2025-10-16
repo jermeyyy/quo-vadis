@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -147,22 +148,26 @@ fun customTransition(block: TransitionBuilder.() -> Unit): NavigationTransition 
 
 /**
  * Shared element transition configuration.
- * Provides support for shared element animations between screens.
+ * Provides support for shared element animations between screens using Compose's SharedTransitionLayout.
+ *
+ * @param key Unique identifier for matching shared elements between screens (can be Any type for flexibility)
+ * @param type Type of shared element transition (Element vs Bounds)
+ * @param boundsTransform Custom animation spec for bounds transformation (optional)
  */
+@ExperimentalSharedTransitionApi
 data class SharedElementConfig(
-    val key: String,
-    val animationSpec: FiniteAnimationSpec<Float> = spring(
-        dampingRatio = Spring.DampingRatioMediumBouncy,
-        stiffness = Spring.StiffnessLow
-    )
+    val key: Any,
+    val type: SharedElementType = SharedElementType.Element,
+    val boundsTransform: androidx.compose.animation.BoundsTransform? = null
 )
-
-
 
 /**
  * Shared element transition key.
  * Identifies elements that should animate between screens.
+ * 
+ * @deprecated Use SharedElementConfig with type parameter instead
  */
+@Deprecated("Use SharedElementConfig with type parameter instead", ReplaceWith("SharedElementConfig(key, type)"))
 data class SharedElementKey(
     val key: String,
     val type: SharedElementType = SharedElementType.Bounds
@@ -173,123 +178,46 @@ data class SharedElementKey(
  */
 enum class SharedElementType {
     /**
-     * Animate bounds (position and size).
+     * Use sharedElement() - for exact visual match between screens.
+     * The content should look the same (e.g., same image, same text).
      */
-    Bounds,
+    Element,
 
     /**
-     * Animate bounds with content crossfade.
+     * Use sharedBounds() - for different content occupying same space.
+     * The bounds transition while content can change (e.g., list item expanding to detail).
      */
-    BoundsWithContentFade,
-
-    /**
-     * Animate only position (size stays same).
-     */
-    PositionOnly,
-
-    /**
-     * Animate only size (position stays same).
-     */
-    SizeOnly
+    Bounds
 }
 
 /**
- * Shared element scope for defining shared elements within a screen.
+ * Create a SharedElementConfig for sharedElement() modifier.
+ *
+ * @param key Unique identifier for matching elements between screens
+ * @param boundsTransform Optional custom bounds transform animation
  */
-@Stable
-interface SharedElementScope {
-    /**
-     * Mark a composable as a shared element.
-     */
-    fun Modifier.sharedElement(
-        key: SharedElementKey,
-        animationSpec: FiniteAnimationSpec<Float> = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        )
-    ): Modifier
-
-    /**
-     * Mark content bounds as shared (for complex content).
-     */
-    fun Modifier.sharedBounds(
-        key: SharedElementKey,
-        animationSpec: FiniteAnimationSpec<Float> = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        )
-    ): Modifier
-}
+@ExperimentalSharedTransitionApi
+fun sharedElement(
+    key: Any,
+    boundsTransform: androidx.compose.animation.BoundsTransform? = null
+): SharedElementConfig = SharedElementConfig(
+    key = key,
+    type = SharedElementType.Element,
+    boundsTransform = boundsTransform
+)
 
 /**
- * Transition with shared elements.
+ * Create a SharedElementConfig for sharedBounds() modifier.
+ *
+ * @param key Unique identifier for matching bounds between screens
+ * @param boundsTransform Optional custom bounds transform animation
  */
-interface SharedElementTransition : NavigationTransition {
-    /**
-     * Shared elements participating in this transition.
-     */
-    val sharedElements: List<SharedElementKey>
-
-    /**
-     * Provide shared element scope for screens.
-     */
-    @Composable
-    fun provideSharedElementScope(): SharedElementScope
-}
-
-/**
- * Create a transition with shared elements.
- */
-fun NavigationTransition.withSharedElements(
-    sharedElements: List<SharedElementKey>
-): SharedElementTransition {
-    val baseTransition = this
-    return object : SharedElementTransition {
-        override val enter = baseTransition.enter
-        override val exit = baseTransition.exit
-        override val popEnter = baseTransition.popEnter
-        override val popExit = baseTransition.popExit
-        override val sharedElements = sharedElements
-
-        @Composable
-        override fun provideSharedElementScope(): SharedElementScope {
-            // Return no-op implementation until SharedTransitionLayout is integrated
-            return remember {
-                object : SharedElementScope {
-                    override fun Modifier.sharedElement(
-                        key: SharedElementKey,
-                        animationSpec: FiniteAnimationSpec<Float>
-                    ): Modifier = this
-
-                    override fun Modifier.sharedBounds(
-                        key: SharedElementKey,
-                        animationSpec: FiniteAnimationSpec<Float>
-                    ): Modifier = this
-                }
-            }
-        }
-    }
-}
-
-/**
- * Helper for common shared element transitions.
- */
-object SharedElementTransitions {
-    /**
-     * Slide with shared hero image.
-     */
-    fun slideWithHero(heroKey: String): SharedElementTransition {
-        return NavigationTransitions.SlideHorizontal.withSharedElements(
-            listOf(SharedElementKey(heroKey, SharedElementType.Bounds))
-        )
-    }
-
-    /**
-     * Fade with shared bounds.
-     */
-    fun fadeWithSharedBounds(vararg keys: String): SharedElementTransition {
-        return NavigationTransitions.Fade.withSharedElements(
-            keys.map { SharedElementKey(it, SharedElementType.Bounds) }
-        )
-    }
-}
+@ExperimentalSharedTransitionApi
+fun sharedBounds(
+    key: Any,
+    boundsTransform: androidx.compose.animation.BoundsTransform? = null
+): SharedElementConfig = SharedElementConfig(
+    key = key,
+    type = SharedElementType.Bounds,
+    boundsTransform = boundsTransform
+)

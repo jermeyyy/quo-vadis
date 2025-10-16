@@ -1,5 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 
 /**
@@ -32,11 +35,19 @@ interface NavigationGraph {
 
 /**
  * Configuration for a destination including its composable content.
+ *
+ * Supports two content signatures:
+ * - Legacy: `content(destination, navigator)` - standard navigation
+ * - Scoped: `contentWithScopes(destination, navigator, sharedTransitionScope, animatedVisibilityScope)` - with shared element support
+ *
+ * The scoped variant is preferred when both are provided.
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 data class DestinationConfig(
     val destination: Destination,
     val content: @Composable (Destination, Navigator) -> Unit,
-    val defaultTransition: NavigationTransition? = null
+    val defaultTransition: NavigationTransition? = null,
+    val contentWithScopes: @Composable ((Destination, Navigator, SharedTransitionScope?, AnimatedVisibilityScope?) -> Unit)? = null
 )
 
 /**
@@ -53,12 +64,48 @@ class NavigationGraphBuilder(private val graphRoute: String) {
     /**
      * Register a destination with optional default transition.
      */
+    @OptIn(ExperimentalSharedTransitionApi::class)
     fun destination(
         destination: Destination,
         transition: NavigationTransition? = null,
         content: @Composable (Destination, Navigator) -> Unit
     ) {
-        dests.add(DestinationConfig(destination, content, transition))
+        dests.add(DestinationConfig(destination, content, transition, contentWithScopes = null))
+    }
+
+    /**
+     * Register a destination with scope-aware content that receives SharedTransitionScope and AnimatedVisibilityScope.
+     * Preferred over the basic signature when using shared element transitions.
+     *
+     * Usage:
+     * ```kotlin
+     * destinationWithScopes(
+     *     destination = DetailsDestination,
+     *     transition = NavigationTransitions.SlideHorizontal
+     * ) { dest, nav, sharedScope, animScope ->
+     *     DetailsScreen(
+     *         destination = dest,
+     *         navigator = nav,
+     *         sharedTransitionScope = sharedScope,
+     *         animatedVisibilityScope = animScope
+     *     )
+     * }
+     * ```
+     */
+    @OptIn(ExperimentalSharedTransitionApi::class)
+    fun destinationWithScopes(
+        destination: Destination,
+        transition: NavigationTransition? = null,
+        content: @Composable (Destination, Navigator, SharedTransitionScope?, AnimatedVisibilityScope?) -> Unit
+    ) {
+        dests.add(
+            DestinationConfig(
+                destination = destination,
+                content = { dest, nav -> content(dest, nav, null, null) }, // Fallback when scopes unavailable
+                defaultTransition = transition,
+                contentWithScopes = content
+            )
+        )
     }
 
     /**

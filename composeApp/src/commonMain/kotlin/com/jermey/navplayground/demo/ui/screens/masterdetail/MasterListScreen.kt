@@ -26,11 +26,13 @@ private const val MASTER_LIST_ITEMS_COUNT = 50
 /**
  * Master List Screen - Shows list of items (Master view)
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.animation.ExperimentalSharedTransitionApi::class)
 @Composable
 fun MasterListScreen(
     onItemClick: (String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
+    animatedVisibilityScope: androidx.compose.animation.AnimatedVisibilityScope? = null
 ) {
     val items = remember {
         (1..MASTER_LIST_ITEMS_COUNT).map {
@@ -74,7 +76,9 @@ fun MasterListScreen(
             items(items) { item ->
                 ItemCard(
                     item = item,
-                    onClick = { onItemClick(item.id) }
+                    onClick = { onItemClick(item.id) },
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope
                 )
             }
         }

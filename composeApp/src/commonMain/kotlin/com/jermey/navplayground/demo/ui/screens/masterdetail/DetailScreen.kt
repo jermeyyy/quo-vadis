@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -29,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.components.DetailRow
@@ -39,12 +43,14 @@ private const val RELATED_ITEMS_COUNT = 5
 /**
  * Detail Screen - Shows details of selected item (Detail view)
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.animation.ExperimentalSharedTransitionApi::class)
 @Composable
 fun DetailScreen(
     itemId: String,
     onBack: () -> Unit,
-    onNavigateToRelated: (String) -> Unit
+    onNavigateToRelated: (String) -> Unit,
+    sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
+    animatedVisibilityScope: androidx.compose.animation.AnimatedVisibilityScope? = null
 ) {
     val relatedItems = remember(itemId) {
         (1..RELATED_ITEMS_COUNT).map { "Related item $it" }
@@ -84,12 +90,62 @@ fun DetailScreen(
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(
-                            itemId.replace("_", " ").capitalize(),
-                            style = MaterialTheme.typography.headlineMedium
-                        )
+                        // Header with large icon and title (shared element transitions)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Apply shared element transition to icon (matching key from ItemCard) - larger in detail
+                            val iconModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                                with(sharedTransitionScope) {
+                                    Modifier
+                                        .size(80.dp)
+                                        .sharedElement(
+                                            sharedContentState = rememberSharedContentState(key = "icon-$itemId"),
+                                            animatedVisibilityScope = animatedVisibilityScope
+                                        )
+                                }
+                            } else {
+                                Modifier.size(80.dp)
+                            }
+                            
+                            Icon(
+                                Icons.Default.AccountCircle,
+                                contentDescription = "Item icon",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = iconModifier
+                            )
+                            
+                            Spacer(Modifier.width(16.dp))
+                            
+                            Column(modifier = Modifier.weight(1f)) {
+                                // Apply shared element transition to title (matching key from ItemCard)
+                                val titleModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                                    with(sharedTransitionScope) {
+                                        Modifier.sharedBounds(
+                                            sharedContentState = rememberSharedContentState(key = "title-$itemId"),
+                                            animatedVisibilityScope = animatedVisibilityScope
+                                        )
+                                    }
+                                } else {
+                                    Modifier
+                                }
+                                
+                                Text(
+                                    itemId.replace("_", " ").capitalize(),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    modifier = titleModifier
+                                )
+                                
+                                Text(
+                                    "Detailed Information",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
 
                         Text(
                             text = "This is a detailed view of $itemId. In a real application, " +
@@ -142,7 +198,7 @@ fun DetailScreen(
                     ListItem(
                         headlineContent = { Text(relatedItems[index]) },
                         supportingContent = { Text("Tap to view details") },
-                        trailingContent = { Icon(Icons.Default.ChevronRight, "View") }
+                        trailingContent = { Icon(Icons.Default.KeyboardArrowRight, "View") }
                     )
                 }
             }

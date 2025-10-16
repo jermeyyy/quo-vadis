@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.compose
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -48,10 +50,20 @@ private const val FRAME_DELAY_MS = 16L // One frame at 60fps
  * - Animated forward/back navigation with correct directional transitions
  * - Predictive back gesture animations
  * - Composable caching for smooth transitions
+ * - Shared element transitions (automatically enabled per-destination)
  *
  * This is the primary NavHost for all navigation scenarios.
+ * Shared element transitions are automatically available to destinations that use `destinationWithScopes`.
+ *
+ * @param graph The navigation graph containing all destinations
+ * @param navigator The navigator instance for controlling navigation
+ * @param modifier Modifier to be applied to the navigation host
+ * @param defaultTransition Default transition to use when destination doesn't specify one
+ * @param enableComposableCache Whether to enable composable caching for performance
+ * @param enablePredictiveBack Whether to enable predictive back gesture animations
+ * @param maxCacheSize Maximum number of composables to keep in cache
  */
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, androidx.compose.animation.ExperimentalSharedTransitionApi::class)
 @Composable
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 fun GraphNavHost(
@@ -62,6 +74,39 @@ fun GraphNavHost(
     enableComposableCache: Boolean = true,
     enablePredictiveBack: Boolean = true,
     maxCacheSize: Int = 3
+) {
+    // Always wrap in SharedTransitionLayout - it's lightweight and enables per-destination shared elements
+    SharedTransitionLayout(modifier = modifier) {
+        CompositionLocalProvider(
+            LocalSharedTransitionScope provides this
+        ) {
+            GraphNavHostContent(
+                graph = graph,
+                navigator = navigator,
+                defaultTransition = defaultTransition,
+                enableComposableCache = enableComposableCache,
+                enablePredictiveBack = enablePredictiveBack,
+                maxCacheSize = maxCacheSize,
+                modifier = Modifier // Use Modifier inside SharedTransitionLayout
+            )
+        }
+    }
+}
+
+/**
+ * Internal content of GraphNavHost, extracted to allow wrapping with SharedTransitionLayout.
+ */
+@OptIn(ExperimentalComposeUiApi::class, androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+@Composable
+@Suppress("LongMethod", "CyclomaticComplexity", "ComplexMethod")
+private fun GraphNavHostContent(
+    graph: NavigationGraph,
+    navigator: Navigator,
+    defaultTransition: NavigationTransition,
+    enableComposableCache: Boolean,
+    enablePredictiveBack: Boolean,
+    maxCacheSize: Int,
+    modifier: Modifier = Modifier
 ) {
     val backStackEntries by navigator.backStack.stack.collectAsState()
     val currentEntry by navigator.backStack.current.collectAsState()
@@ -79,17 +124,6 @@ fun GraphNavHost(
     var justCompletedGesture by remember { mutableStateOf(false) }
     var gestureProgress by remember { mutableFloatStateOf(0f) }
     val exitAnimProgress = remember { Animatable(0f) }
-    
-    // For programmatic back animation - use state to drive animation
-    var backAnimTarget by remember { mutableFloatStateOf(0f) }
-    val backAnimProgress by androidx.compose.animation.core.animateFloatAsState(
-        targetValue = backAnimTarget,
-        animationSpec = tween(
-            durationMillis = NavigationTransitions.ANIMATION_DURATION,
-            easing = androidx.compose.animation.core.FastOutSlowInEasing
-        ),
-        label = "back_animation"
-    )
 
     // Track stack changes for animation direction detection
     var lastStackSize by remember { mutableIntStateOf(backStackEntries.size) }
@@ -143,42 +177,13 @@ fun GraphNavHost(
                     composableCache.unlockEntry(it.id)
                 }
             }
-            // Back navigation (programmatic - not predictive gesture)
-            stackSize < lastStackSize && !isPredictiveGesture -> {
-                // For back: old current slides out, new current (previous) revealed
-                displayedPrevious = currentEntry  // The destination (stays behind)
-                displayedCurrent = lastCurrentEntry  // The screen being removed (slides out)
-                isBackNavigation = true
-                isNavigating = true
-                
-                // Lock entries to prevent cache eviction during animation
-                currentEntry?.let { 
-                    composableCache.lockEntry(it.id)
-                }
-                lastCurrentEntry?.let { 
-                    composableCache.lockEntry(it.id)
-                }
-                
-                // Trigger animation by changing target state
-                backAnimTarget = 0f  // Reset first
-                backAnimTarget = 1f  // Then animate to 1
-                
-                // Wait for animation to complete (300ms)
-                kotlinx.coroutines.delay(NavigationTransitions.ANIMATION_DURATION.toLong())
-                
-                isNavigating = false
-                isBackNavigation = false
-                backAnimTarget = 0f  // Reset for next time
+            // Navigation change (forward or back, not predictive gesture)
+            // AnimatedContent will handle the animation automatically
+            stackSize != lastStackSize && !isPredictiveGesture -> {
                 displayedCurrent = currentEntry
-                displayedPrevious = null
-                
-                // Unlock entries
-                currentEntry?.let { 
-                    composableCache.unlockEntry(it.id)
-                }
-                lastCurrentEntry?.let { 
-                    composableCache.unlockEntry(it.id)
-                }
+                displayedPrevious = previousEntry
+                isBackNavigation = stackSize < lastStackSize
+                isNavigating = false  // Let AnimatedContent handle animation
             }
             // Replace (same size, different entry)
             stackSize == lastStackSize && currentId != lastEntryId && currentId != null -> {
@@ -229,6 +234,9 @@ fun GraphNavHost(
         displayedPrevious = capturedPrevious
         isPredictiveGesture = true
         isBackNavigation = true
+        
+        // Set initial gesture progress immediately to start animation without delay
+        gestureProgress = 0.001f  // Small non-zero value to trigger immediate rendering
         
         // Lock entries to prevent cache eviction during gesture
         capturedCurrent?.let { 
@@ -319,9 +327,8 @@ fun GraphNavHost(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Render previous screen during back navigation (static, no parallax)
-        // Only render if it's a different entry than current (prevent duplicate key crash)
-        if (isBackNavigation && displayedPrevious != null && displayedPrevious?.id != displayedCurrent?.id) {
+        // Render previous screen during predictive gesture (static underneath)
+        if (isPredictiveGesture && displayedPrevious != null && displayedPrevious?.id != displayedCurrent?.id) {
             ScreenContent(
                 entry = displayedPrevious!!,
                 graph = graph,
@@ -331,7 +338,7 @@ fun GraphNavHost(
                 enableCache = enableComposableCache
             )
         }
-
+        
         // Render current screen with animations
         displayedCurrent?.let { entry ->
             when {
@@ -356,30 +363,8 @@ fun GraphNavHost(
                         )
                     }
                 }
-                // Back navigation in progress (programmatic) - manual slide-out animation
-                isBackNavigation && isNavigating -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .graphicsLayer {
-                                val offset = size.width * backAnimProgress
-                                val currentAlpha = 1f - backAnimProgress
-                                translationX = offset
-                                alpha = currentAlpha
-                            }
-                    ) {
-                        ScreenContent(
-                            entry = entry,
-                            graph = graph,
-                            navigator = navigator,
-                            composableCache = composableCache,
-                            saveableStateHolder = saveableStateHolder,
-                            enableCache = enableComposableCache
-                        )
-                    }
-                }
-                // Just completed gesture OR back navigation - render without animation
-                justCompletedGesture || (isBackNavigation && !isNavigating) -> {
+                // Just completed gesture - render without animation
+                justCompletedGesture -> {
                     ScreenContent(
                         entry = entry,
                         graph = graph,
@@ -389,24 +374,30 @@ fun GraphNavHost(
                         enableCache = enableComposableCache
                     )
                 }
-                // Regular forward navigation - use AnimatedContent with enter transitions
+                // Regular navigation (forward or back) - use AnimatedContent with proper transitions
+                // This enables AnimatedVisibilityScope for shared elements in BOTH directions
                 else -> {
                     AnimatedContent(
                         targetState = entry,
                         transitionSpec = {
                             val transition = entry.transition ?: defaultTransition
+                            // Use the transition as-is - AnimatedContent handles direction automatically
                             transition.enter togetherWith transition.exit
                         },
                         label = "navigation_animation"
                     ) { animatingEntry ->
-                        ScreenContent(
-                            entry = animatingEntry,
-                            graph = graph,
-                            navigator = navigator,
-                            composableCache = composableCache,
-                            saveableStateHolder = saveableStateHolder,
-                            enableCache = enableComposableCache
-                        )
+                        CompositionLocalProvider(
+                            LocalNavAnimatedVisibilityScope provides this@AnimatedContent
+                        ) {
+                            ScreenContent(
+                                entry = animatingEntry,
+                                graph = graph,
+                                navigator = navigator,
+                                composableCache = composableCache,
+                                saveableStateHolder = saveableStateHolder,
+                                enableCache = enableComposableCache
+                            )
+                        }
                     }
                 }
             }
@@ -414,6 +405,7 @@ fun GraphNavHost(
     }
 }
 
+@OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
 @Composable
 private fun ScreenContent(
     entry: BackStackEntry,
@@ -427,18 +419,37 @@ private fun ScreenContent(
         graph.destinations.find { it.destination.route == entry.destination.route }
     }
 
+    // Get scopes from composition locals (will be null if shared elements disabled)
+    val sharedTransitionScope = currentSharedTransitionScope()
+    val animatedVisibilityScope = currentNavAnimatedVisibilityScope()
+
     destConfig?.let { config ->
+        // Prefer contentWithScopes if available (for shared element support)
+        val renderContent: @Composable (BackStackEntry) -> Unit = if (config.contentWithScopes != null) {
+            { stackEntry ->
+                config.contentWithScopes.invoke(
+                    stackEntry.destination,
+                    navigator,
+                    sharedTransitionScope,
+                    animatedVisibilityScope
+                )
+            }
+        } else {
+            { stackEntry ->
+                config.content(stackEntry.destination, navigator)
+            }
+        }
+
         if (enableCache) {
             key(entry.id) {
                 composableCache.Entry(
                     entry = entry,
-                    saveableStateHolder = saveableStateHolder
-                ) { stackEntry ->
-                    config.content(stackEntry.destination, navigator)
-                }
+                    saveableStateHolder = saveableStateHolder,
+                    content = renderContent
+                )
             }
         } else {
-            config.content(entry.destination, navigator)
+            renderContent(entry)
         }
     }
 }
