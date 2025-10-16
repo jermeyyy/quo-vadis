@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
     alias(libs.plugins.androidLint) apply false
     alias(libs.plugins.detekt)
+    alias(libs.plugins.dokka)
 }
 
 allprojects {

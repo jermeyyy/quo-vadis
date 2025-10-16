@@ -17,6 +17,7 @@ kotlinx-serialization-json = "1.8.0"
 runner = "1.5.2"
 core = "1.5.0"
 detekt = "2.0.0-alpha.0"
+dokka = "2.0.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -47,3 +48,4 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 androidLint = { id = "com.android.lint", version.ref = "agp" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

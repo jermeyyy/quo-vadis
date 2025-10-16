@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidLint)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.dokka)
     `maven-publish`
 }
 
@@ -197,5 +198,48 @@ publishing {
     
     repositories {
         mavenLocal()
+    }
+}
+
+// Dokka configuration for API documentation
+dokka {
+    moduleName.set("Quo Vadis Navigation Library")
+    moduleVersion.set(project.version.toString())
+    
+    dokkaPublications.html {
+        outputDirectory.set(layout.buildDirectory.dir("dokka/html"))
+        
+        // Suppress obvious functions and inherited members at publication level
+        suppressObviousFunctions.set(true)
+        suppressInheritedMembers.set(false)
+    }
+    
+    dokkaSourceSets.configureEach {
+        // Source links to GitHub
+        sourceLink {
+            localDirectory.set(file("src/commonMain/kotlin"))
+            remoteUrl("https://github.com/jermeyyy/quo-vadis/tree/main/quo-vadis-core/src/commonMain/kotlin")
+            remoteLineSuffix.set("")
+        }
+        
+        // External documentation links
+        externalDocumentationLinks.create("android") {
+            url("https://developer.android.com/reference/kotlin/")
+            packageListUrl("https://developer.android.com/reference/kotlin/androidx/package-list")
+        }
+        
+        externalDocumentationLinks.create("coroutines") {
+            url("https://kotlinlang.org/api/kotlinx.coroutines/")
+        }
+        
+        // Package options - suppress internal packages
+        perPackageOption {
+            matchingRegex.set(".*\\.internal.*")
+            suppress.set(true)
+        }
+        
+        // Reporting undocumented
+        reportUndocumented.set(false)
+        skipEmptyPackages.set(true)
     }
 }

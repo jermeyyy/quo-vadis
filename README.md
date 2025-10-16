@@ -125,6 +125,25 @@ Comprehensive documentation is available in the `quo-vadis-core/docs/` directory
 - **[Multiplatform Predictive Back](quo-vadis-core/docs/MULTIPLATFORM_PREDICTIVE_BACK.md)** - Advanced gesture navigation
 - **[Shared Element Transitions](quo-vadis-core/docs/SHARED_ELEMENT_TRANSITIONS.md)** - Material Design shared elements guide
 
+### 📖 Generating API Documentation
+
+You can generate comprehensive HTML API documentation using Dokka:
+
+```bash
+# Generate HTML documentation
+./gradlew :quo-vadis-core:dokkaGenerate
+
+# View the generated documentation
+open quo-vadis-core/build/dokka/html/index.html
+```
+
+The documentation includes:
+- All public APIs with KDoc comments
+- Source code links to GitHub
+- External documentation links (Android, Coroutines)
+- Package-level documentation
+- Automatic suppression of internal packages
+
 ## 🎮 Demo Application
 
 The **`composeApp`** module contains a comprehensive demo showcasing all navigation patterns:
