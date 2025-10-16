@@ -4,7 +4,11 @@ plugins {
     alias(libs.plugins.androidLint)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    `maven-publish`
 }
+
+group = "com.jermey.quo.vadis"
+version = "0.1.0-SNAPSHOT"
 
 kotlin {
 
@@ -101,11 +105,54 @@ kotlin {
             dependencies {
                 // Add iOS-specific dependencies here. This a source set created by Kotlin Gradle
                 // Plugin (KGP) that each specific iOS target (e.g., iosX64) depends on as
-                // part of KMP’s default source set hierarchy. Note that this source set depends
+                // part of KMP's default source set hierarchy. Note that this source set depends
                 // on common by default and will correctly pull the iOS artifacts of any
                 // KMP dependencies declared in commonMain.
             }
         }
     }
 
+}
+
+// Maven Publishing Configuration
+publishing {
+    publications {
+        // Configure publications for all targets
+        withType<MavenPublication> {
+            groupId = "com.jermey.quo.vadis"
+            artifactId = "quo-vadis-core${if (name != "kotlinMultiplatform") "-$name" else ""}"
+            version = project.version.toString()
+
+            pom {
+                name.set("Quo Vadis - Navigation Library")
+                description.set("A comprehensive type-safe navigation library for Compose Multiplatform supporting Android and iOS with predictive back gestures, animations, and modular architecture.")
+                url.set("https://github.com/jermeyyy/quo-vadis")
+                
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                
+                developers {
+                    developer {
+                        id.set("jermeyyy")
+                        name.set("Jermey")
+                        email.set("jermey@example.com")
+                    }
+                }
+                
+                scm {
+                    connection.set("scm:git:git://github.com/jermeyyy/quo-vadis.git")
+                    developerConnection.set("scm:git:ssh://github.com/jermeyyy/quo-vadis.git")
+                    url.set("https://github.com/jermeyyy/quo-vadis")
+                }
+            }
+        }
+    }
+    
+    repositories {
+        mavenLocal()
+    }
 }
