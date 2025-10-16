@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quo Vadis Demo Application - See Navigation in Action">
+    <title>Demo - Quo Vadis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Highlight.js - theme loaded dynamically by main.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/kotlin.min.js"></script>
+    <script src="js/main.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="images/logo.jpg" alt="Quo Vadis Logo" class="logo">
+                <div>
+                    <div class="site-title">Quo Vadis</div>
+                    <div class="site-subtitle">Where are you going?</div>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="demo.html" class="active">Demo</a></li>
+                    <li><a href="api/index.html">API Reference</a></li>
+                    <li><a href="https://github.com/jermeyyy/quo-vadis" target="_blank">GitHub</a></li>
+                    <li><button id="theme-switcher" class="theme-switcher" onclick="toggleTheme()"></button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>Demo Application</h1>
+        <p>
+            The Quo Vadis demo application showcases all navigation features and patterns in a 
+            comprehensive, real-world example. Explore the various navigation techniques and 
+            see how they work together to create a smooth user experience.
+        </p>
+
+        <section>
+            <h2>Demo Features</h2>
+            <div class="features-grid">
+                <div class="feature-grid-item">
+                    <h3>Bottom Navigation</h3>
+                    <p>Tab-based navigation between main sections with independent back stacks for each tab.</p>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Drawer Navigation</h3>
+                    <p>Side drawer with quick access to different features and settings.</p>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Master-Detail Flow</h3>
+                    <p>Classic list-to-detail pattern with shared element transitions.</p>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Multi-Step Process</h3>
+                    <p>Wizard-style flow with complex backstack management and validation.</p>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Nested Navigation</h3>
+                    <p>Multiple navigation levels with tab containers and hierarchical screens.</p>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Transitions Showcase</h3>
+                    <p>Demonstration of all built-in transitions and custom animations.</p>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Shared Elements</h3>
+                    <p>Beautiful shared element transitions between screens with bidirectional support.</p>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Predictive Back</h3>
+                    <p>Gesture-driven back navigation with preview animations (Android 13+ / iOS).</p>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Deep Links</h3>
+                    <p>Navigate directly to any screen via URL or custom scheme.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Screenshots</h2>
+            <p>Screenshots from the demo application running on Android:</p>
+            
+            <div class="screenshots">
+                <div class="screenshot-card">
+                    <img src="images/Screenshot_20251017_005703.png" alt="Main navigation screen with bottom tabs">
+                    <div class="screenshot-caption">
+                        <strong>Main Screen</strong><br>
+                        Bottom navigation with multiple tabs and drawer access
+                    </div>
+                </div>
+
+                <div class="screenshot-card">
+                    <img src="images/Screenshot_20251017_005713.png" alt="Master-detail list view">
+                    <div class="screenshot-caption">
+                        <strong>Master-Detail Pattern</strong><br>
+                        List view with cards ready for navigation to detail screens
+                    </div>
+                </div>
+
+                <div class="screenshot-card">
+                    <img src="images/Screenshot_20251017_005720.png" alt="Detail screen with shared element">
+                    <div class="screenshot-caption">
+                        <strong>Detail Screen</strong><br>
+                        Full detail view with shared element transition from list
+                    </div>
+                </div>
+
+                <div class="screenshot-card">
+                    <img src="images/Screenshot_20251017_005731.png" alt="Multi-step process flow">
+                    <div class="screenshot-caption">
+                        <strong>Multi-Step Process</strong><br>
+                        Wizard-style flow with step indicators and navigation controls
+                    </div>
+                </div>
+
+                <div class="screenshot-card">
+                    <img src="images/Screenshot_20251017_005814.png" alt="Predictive back navigation">
+                    <div class="screenshot-caption">
+                        <strong>Predictive Back Navigation</strong><br>
+                        Interactive back gesture with preview animation
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Navigation Patterns Demonstrated</h2>
+            
+            <h3>1. Bottom Navigation Pattern</h3>
+            <p>
+                The demo uses bottom navigation for main app sections (Home, Profile, Settings). 
+                Each tab maintains its own independent back stack, allowing users to navigate 
+                deeply within a section without losing their place in other tabs.
+            </p>
+            <pre><code>val bottomNavGraph = navigationGraph("bottom_nav") {
+    tab("home") {
+        startDestination(HomeDestination.Main)
+        destination(HomeDestination.Main) { _, nav -> HomeScreen(nav) }
+        destination(HomeDestination.Details) { _, nav -> DetailsScreen(nav) }
+    }
+    
+    tab("profile") {
+        startDestination(ProfileDestination.Main)
+        destination(ProfileDestination.Main) { _, nav -> ProfileScreen(nav) }
+    }
+    
+    tab("settings") {
+        startDestination(SettingsDestination.Main)
+        destination(SettingsDestination.Main) { _, nav -> SettingsScreen(nav) }
+    }
+}</code></pre>
+
+            <h3>2. Master-Detail Flow</h3>
+            <p>
+                Classic list-to-detail pattern enhanced with shared element transitions. 
+                Images and text smoothly animate from the list to the detail screen.
+            </p>
+            <pre><code>// List screen
+LazyColumn {
+    items(products) { product ->
+        ProductCard(
+            product = product,
+            onClick = { 
+                navigator.navigate(ProductDestination.Details(product.id)) 
+            },
+            imageModifier = Modifier.sharedElement(
+                sharedConfig = SharedElementConfig(
+                    key = "product_${product.id}",
+                    type = SharedElementType.Bounds
+                ),
+                navigator = navigator
+            )
+        )
+    }
+}</code></pre>
+
+            <h3>3. Multi-Step Process</h3>
+            <p>
+                Wizard-style flows are handled elegantly with backstack management. 
+                The demo includes validation, progress tracking, and the ability to jump 
+                to specific steps.
+            </p>
+            <pre><code>sealed class ProcessStep : Destination {
+    object Step1 : ProcessStep() { override val route = "step1" }
+    object Step2 : ProcessStep() { override val route = "step2" }
+    object Step3 : ProcessStep() { override val route = "step3" }
+    object Complete : ProcessStep() { override val route = "complete" }
+}
+
+// Navigate forward through steps
+fun onNext(currentStep: ProcessStep) {
+    when (currentStep) {
+        is ProcessStep.Step1 -> navigator.navigate(ProcessStep.Step2)
+        is ProcessStep.Step2 -> navigator.navigate(ProcessStep.Step3)
+        is ProcessStep.Step3 -> navigator.navigateAndClearTo(
+            destination = ProcessStep.Complete,
+            clearRoute = "step1",
+            inclusive = false
+        )
+    }
+}</code></pre>
+
+            <h3>4. Nested Navigation</h3>
+            <p>
+                The demo shows how to implement tabs within tabs - a common pattern in 
+                complex applications. Each level of navigation is independent and maintains 
+                its own state.
+            </p>
+
+            <h3>5. Transition Showcase</h3>
+            <p>
+                A dedicated screen demonstrates all available transitions:
+            </p>
+            <ul>
+                <li><strong>Slide Horizontal:</strong> Standard left/right slide</li>
+                <li><strong>Slide Vertical:</strong> Bottom-up modal style</li>
+                <li><strong>Fade:</strong> Simple cross-fade</li>
+                <li><strong>Fade Through:</strong> Material Design fade through</li>
+                <li><strong>Scale In:</strong> Zoom-in effect</li>
+                <li><strong>Custom:</strong> User-defined transitions</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Platform-Specific Features</h2>
+            
+            <h3>Android</h3>
+            <ul>
+                <li><strong>System Back Button:</strong> Integrated with Android's back button</li>
+                <li><strong>Predictive Back (Android 13+):</strong> Gesture preview animations</li>
+                <li><strong>Deep Links:</strong> Handle app links and custom schemes</li>
+                <li><strong>State Restoration:</strong> Survive configuration changes and process death</li>
+            </ul>
+
+            <h3>iOS</h3>
+            <ul>
+                <li><strong>Swipe Gestures:</strong> Native-feeling swipe-to-go-back</li>
+                <li><strong>Predictive Back:</strong> Interactive pop gesture with preview</li>
+                <li><strong>Universal Links:</strong> Deep linking via HTTPS URLs</li>
+                <li><strong>Navigation Bar:</strong> Automatic back button integration</li>
+            </ul>
+
+            <h3>Web</h3>
+            <ul>
+                <li><strong>Browser History:</strong> Forward/back buttons work naturally</li>
+                <li><strong>URL Routing:</strong> Deep linkable URLs for every screen</li>
+                <li><strong>Bookmarking:</strong> Users can bookmark specific screens</li>
+            </ul>
+
+            <h3>Desktop</h3>
+            <ul>
+                <li><strong>Keyboard Shortcuts:</strong> Alt+Left/Right for navigation</li>
+                <li><strong>Mouse Buttons:</strong> Back/forward mouse buttons</li>
+                <li><strong>Window State:</strong> Navigation state persists across sessions</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Running the Demo</h2>
+            
+            <h3>Prerequisites</h3>
+            <ul>
+                <li>Kotlin 2.2.20+</li>
+                <li>Android Studio or IntelliJ IDEA</li>
+                <li>For iOS: macOS with Xcode installed</li>
+            </ul>
+
+            <h3>Clone and Run</h3>
+            <pre><code># Clone the repository
+git clone https://github.com/jermeyyy/quo-vadis.git
+cd quo-vadis
+
+# Run on Android
+./gradlew :composeApp:installDebug
+
+# Run on iOS (macOS only)
+open iosApp/iosApp.xcodeproj
+
+# Run on Desktop
+./gradlew :composeApp:run
+
+# Run on Web (JavaScript)
+./gradlew :composeApp:jsBrowserDevelopmentRun
+
+# Run on Web (WebAssembly)
+./gradlew :composeApp:wasmJsBrowserDevelopmentRun</code></pre>
+
+            <div class="highlight-box">
+                <h3>Tip</h3>
+                <p>
+                    The demo application source code is fully documented and serves as a 
+                    comprehensive example of best practices. Check the 
+                    <code>composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/</code> 
+                    directory for implementation details.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Code Examples from Demo</h2>
+            
+            <h3>Main Application Structure</h3>
+            <pre><code>@Composable
+fun DemoApp() {
+    val navigator = rememberNavigator()
+    
+    LaunchedEffect(Unit) {
+        // Register all feature graphs
+        navigator.registerGraph(homeGraph)
+        navigator.registerGraph(profileGraph)
+        navigator.registerGraph(settingsGraph)
+        
+        // Set initial destination
+        navigator.setStartDestination(MainDestination.Home)
+    }
+    
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                currentRoute = navigator.currentDestination.value?.route,
+                onTabSelected = { destination ->
+                    navigator.navigate(destination)
+                }
+            )
+        }
+    ) { paddingValues ->
+        GraphNavHost(
+            graph = mainGraph,
+            navigator = navigator,
+            modifier = Modifier.padding(paddingValues),
+            defaultTransition = NavigationTransitions.SlideHorizontal,
+            enablePredictiveBack = true
+        )
+    }
+}</code></pre>
+
+            <h3>Feature Module Example</h3>
+            <pre><code>object ProductFeature {
+    // Public destinations (entry points)
+    sealed class Destination : com.jermey.quo.vadis.core.navigation.core.Destination {
+        object List : Destination() {
+            override val route = "products"
+        }
+        
+        data class Details(val productId: String) : Destination() {
+            override val route = "product_details"
+            override val arguments = mapOf("productId" to productId)
+        }
+    }
+    
+    // Navigation graph (internal structure hidden)
+    fun graph() = navigationGraph("products") {
+        startDestination(Destination.List)
+        
+        destination(Destination.List) { _, navigator ->
+            ProductListScreen(
+                onProductClick = { id ->
+                    navigator.navigate(Destination.Details(id))
+                }
+            )
+        }
+        
+        destination(SimpleDestination("product_details")) { dest, navigator ->
+            val productId = dest.arguments["productId"] as String
+            ProductDetailScreen(
+                productId = productId,
+                onBack = { navigator.navigateBack() }
+            )
+        }
+    }
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Explore More</h2>
+            <ul>
+                <li><a href="https://github.com/jermeyyy/quo-vadis/tree/main/composeApp" target="_blank">Demo Source Code</a> - Full implementation on GitHub</li>
+                <li><a href="getting-started.html">Getting Started</a> - Build your own navigation</li>
+                <li><a href="features.html">Features</a> - Learn about all capabilities</li>
+                <li><a href="api/index.html">API Reference</a> - Detailed API documentation</li>
+            </ul>
+        </section>
+    </div>
+
+    <footer>
+        <p>
+            Quo Vadis Navigation Library &copy; 2024-2025 
+            | <a href="https://github.com/jermeyyy/quo-vadis" target="_blank">GitHub</a>
+            | <a href="https://github.com/jermeyyy/quo-vadis/blob/main/LICENSE" target="_blank">License</a>
+        </p>
+    </footer>
+</body>
+</html>

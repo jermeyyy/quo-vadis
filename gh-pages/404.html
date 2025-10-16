@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - Quo Vadis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/main.js" defer></script>
+    <style>
+        .error-container {
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-code {
+            font-size: 6rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .error-message {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .error-description {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="images/logo.jpg" alt="Quo Vadis Logo" class="logo">
+                <div>
+                    <div class="site-title">Quo Vadis</div>
+                    <div class="site-subtitle">Where are you going?</div>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="demo.html">Demo</a></li>
+                    <li><a href="api/index.html">API Reference</a></li>
+                    <li><a href="https://github.com/jermeyyy/quo-vadis" target="_blank">GitHub</a></li>
+                    <li><button id="theme-switcher" class="theme-switcher" onclick="toggleTheme()"></button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container error-container">
+        <h1 class="error-code">404</h1>
+        <p class="error-message">Page Not Found</p>
+        <p class="error-description">
+            Looks like you've navigated to a destination that doesn't exist.<br>
+            Let's get you back on track!
+        </p>
+        <div class="hero-buttons">
+            <a href="index.html" class="btn btn-primary">Go Home</a>
+            <a href="getting-started.html" class="btn btn-secondary">Get Started</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>
+            Quo Vadis Navigation Library &copy; 2024-2025 
+            | <a href="https://github.com/jermeyyy/quo-vadis" target="_blank">GitHub</a>
+            | <a href="https://github.com/jermeyyy/quo-vadis/blob/main/LICENSE" target="_blank">License</a>
+        </p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quo Vadis Features - Complete Navigation Solution">
+    <title>Features - Quo Vadis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Highlight.js - theme loaded dynamically by main.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/kotlin.min.js"></script>
+    <script src="js/main.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="images/logo.jpg" alt="Quo Vadis Logo" class="logo">
+                <div>
+                    <div class="site-title">Quo Vadis</div>
+                    <div class="site-subtitle">Where are you going?</div>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="features.html" class="active">Features</a></li>
+                    <li><a href="demo.html">Demo</a></li>
+                    <li><a href="api/index.html">API Reference</a></li>
+                    <li><a href="https://github.com/jermeyyy/quo-vadis" target="_blank">GitHub</a></li>
+                    <li><button class="theme-switcher" aria-label="Toggle theme">☀ Light</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>Features</h1>
+        <p>Explore the comprehensive feature set that makes Quo Vadis the ideal navigation solution for Kotlin Multiplatform projects.</p>
+
+        <section>
+            <h2>Type-Safe Navigation</h2>
+            <p>
+                Quo Vadis eliminates string-based routing entirely, providing compile-time safety 
+                for all navigation operations. Define destinations using sealed classes and enjoy 
+                IDE autocompletion, refactoring support, and zero runtime routing errors.
+            </p>
+            
+            <h3>Benefits</h3>
+            <ul>
+                <li><strong>Compile-time Safety:</strong> Catch navigation errors at compile time, not runtime</li>
+                <li><strong>IDE Support:</strong> Full autocompletion and refactoring capabilities</li>
+                <li><strong>Type-safe Arguments:</strong> Pass complex data types, not just strings</li>
+                <li><strong>Sealed Class Hierarchies:</strong> Group related destinations logically</li>
+            </ul>
+
+            <h3>Example</h3>
+            <pre><code>sealed class FeatureDestination : Destination {
+    object List : FeatureDestination() {
+        override val route = "list"
+    }
+    
+    data class Details(
+        val id: String,
+        val mode: ViewMode = ViewMode.READ
+    ) : FeatureDestination() {
+        override val route = "details"
+        override val arguments = mapOf(
+            "id" to id,
+            "mode" to mode.name
+        )
+    }
+}
+
+// Type-safe navigation - compiler ensures correctness
+navigator.navigate(FeatureDestination.Details("123", ViewMode.EDIT))</code></pre>
+        </section>
+
+        <section>
+            <h2>Multiplatform Support</h2>
+            <p>
+                Truly multiplatform navigation that works identically across all supported platforms.
+                Write your navigation logic once and deploy everywhere.
+            </p>
+            
+            <div class="features-grid">
+                <div class="feature-grid-item">
+                    <h3>Android</h3>
+                    <ul>
+                        <li>System back button integration</li>
+                        <li>Predictive back gestures (Android 13+)</li>
+                        <li>Deep link support</li>
+                        <li>SavedStateHandle integration</li>
+                    </ul>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>iOS</h3>
+                    <ul>
+                        <li>Native swipe gestures</li>
+                        <li>Predictive back animations</li>
+                        <li>Universal Links support</li>
+                        <li>Navigation bar integration</li>
+                    </ul>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Desktop</h3>
+                    <ul>
+                        <li>Keyboard shortcuts (Alt+Left/Right)</li>
+                        <li>Mouse button navigation</li>
+                        <li>Window state persistence</li>
+                        <li>All core features</li>
+                    </ul>
+                </div>
+
+                <div class="feature-grid-item">
+                    <h3>Web</h3>
+                    <ul>
+                        <li>Browser history integration</li>
+                        <li>URL routing</li>
+                        <li>Forward/back buttons</li>
+                        <li>Deep linking via URLs</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>BackStack Management</h2>
+            <p>
+                Direct access to the navigation back stack provides unprecedented control over 
+                navigation state. Manipulate the stack programmatically for complex navigation flows.
+            </p>
+            
+            <h3>Operations</h3>
+            <pre><code>// Access current stack
+val backStack = navigator.backStack.value
+
+// Pop multiple destinations
+navigator.popBackStack(count = 3)
+
+// Clear to specific destination
+navigator.navigateAndClearTo(
+    destination = HomeDestination,
+    clearRoute = "onboarding",
+    inclusive = true
+)
+
+// Replace current destination
+navigator.navigateAndReplace(NewDestination)
+
+// Clear everything and start fresh
+navigator.navigateAndClearAll(StartDestination)</code></pre>
+
+            <h3>Use Cases</h3>
+            <ul>
+                <li>Multi-step wizards with complex navigation</li>
+                <li>Authentication flows that clear login screens</li>
+                <li>Tab-based navigation with independent stacks</li>
+                <li>Undo/redo functionality</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Deep Link Support</h2>
+            <p>
+                Comprehensive deep linking system that works across all platforms. Define URL 
+                patterns and automatically map them to type-safe destinations.
+            </p>
+            
+            <h3>Pattern Matching</h3>
+            <pre><code>val graph = navigationGraph("main") {
+    // Simple path
+    deepLink("myapp://home") {
+        HomeDestination
+    }
+    
+    // Path parameters
+    deepLink("myapp://user/{userId}") { args ->
+        UserDestination(userId = args["userId"] as String)
+    }
+    
+    // Query parameters
+    deepLink("myapp://search?q={query}") { args ->
+        SearchDestination(query = args["query"] as String)
+    }
+    
+    // Optional parameters
+    deepLink("myapp://settings/{section?}") { args ->
+        SettingsDestination(section = args["section"] as? String)
+    }
+}</code></pre>
+
+            <h3>Platform Integration</h3>
+            <ul>
+                <li><strong>Android:</strong> Intent filters and App Links</li>
+                <li><strong>iOS:</strong> Universal Links and custom URL schemes</li>
+                <li><strong>Web:</strong> Direct URL navigation</li>
+                <li><strong>Desktop:</strong> Custom protocol handlers</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Predictive Back Navigation</h2>
+            <p>
+                Modern, gesture-driven back navigation with smooth animations. Users can preview 
+                the previous screen before committing to navigation.
+            </p>
+            
+            <h3>Supported Platforms</h3>
+            <ul>
+                <li><strong>Android 13+:</strong> System predictive back API</li>
+                <li><strong>iOS:</strong> Interactive pop gesture</li>
+                <li><strong>Custom Implementations:</strong> Desktop and Web</li>
+            </ul>
+
+            <h3>Features</h3>
+            <ul>
+                <li>Smooth, interruptible animations</li>
+                <li>Cross-fade between screens</li>
+                <li>Scale and position transitions</li>
+                <li>Cancelable gestures</li>
+            </ul>
+
+            <pre><code>GraphNavHost(
+    graph = mainGraph,
+    navigator = navigator,
+    enablePredictiveBack = true,
+    predictiveBackAnimationType = PredictiveBackAnimationType.Material3
+)</code></pre>
+        </section>
+
+        <section>
+            <h2>Shared Element Transitions</h2>
+            <p>
+                Material Design 3 shared element transitions with full bidirectional support. 
+                Create stunning visual continuity between screens.
+            </p>
+            
+            <h3>Key Features</h3>
+            <ul>
+                <li><strong>Bidirectional:</strong> Works for both forward and back navigation</li>
+                <li><strong>Type-Safe:</strong> Compile-time verified shared element keys</li>
+                <li><strong>Flexible:</strong> Bounds, content, or both transitions</li>
+                <li><strong>Platform-Aware:</strong> Native behavior on each platform</li>
+            </ul>
+
+            <h3>Example</h3>
+            <pre><code>// Define shared element configuration
+val imageConfig = SharedElementConfig(
+    key = "product_image_${product.id}",
+    type = SharedElementType.Bounds
+)
+
+// Source screen
+Image(
+    modifier = Modifier.sharedElement(
+        sharedConfig = imageConfig,
+        navigator = navigator
+    )
+)
+
+// Destination screen (same key!)
+Image(
+    modifier = Modifier.sharedElement(
+        sharedConfig = imageConfig,
+        navigator = navigator
+    )
+)</code></pre>
+
+            <h3>Transition Types</h3>
+            <ul>
+                <li><strong>Bounds:</strong> Animate position and size</li>
+                <li><strong>Content:</strong> Cross-fade content</li>
+                <li><strong>Both:</strong> Animate bounds and content together</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>MVI Architecture Support</h2>
+            <p>
+                First-class integration with MVI (Model-View-Intent) architecture pattern. 
+                Navigation intents, state, and side effects are handled cleanly.
+            </p>
+            
+            <h3>Integration</h3>
+            <pre><code>// Navigation as intents
+sealed class Intent {
+    data class NavigateToDetails(val id: String) : Intent()
+    object NavigateBack : Intent()
+}
+
+// Handle in reducer
+fun reduce(intent: Intent) {
+    when (intent) {
+        is Intent.NavigateToDetails -> {
+            navigator.navigate(DetailsDestination(intent.id))
+        }
+        is Intent.NavigateBack -> {
+            navigator.navigateBack()
+        }
+    }
+}
+
+// Or as side effects
+sealed class SideEffect {
+    data class Navigate(val destination: Destination) : SideEffect()
+}
+
+// Handle side effects
+viewModel.sideEffects.collect { effect ->
+    when (effect) {
+        is SideEffect.Navigate -> navigator.navigate(effect.destination)
+    }
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Transitions & Animations</h2>
+            <p>
+                Rich set of built-in transitions and support for custom animations. 
+                Create polished, professional navigation experiences.
+            </p>
+            
+            <h3>Built-in Transitions</h3>
+            <div class="features-grid">
+                <div class="feature-grid-item">
+                    <h3>SlideHorizontal</h3>
+                    <p>Standard horizontal slide, ideal for hierarchical navigation</p>
+                </div>
+                <div class="feature-grid-item">
+                    <h3>SlideVertical</h3>
+                    <p>Vertical slide, perfect for modal presentations</p>
+                </div>
+                <div class="feature-grid-item">
+                    <h3>Fade</h3>
+                    <p>Simple cross-fade between screens</p>
+                </div>
+                <div class="feature-grid-item">
+                    <h3>FadeThrough</h3>
+                    <p>Material Design fade through pattern</p>
+                </div>
+                <div class="feature-grid-item">
+                    <h3>ScaleIn</h3>
+                    <p>Scale animation for emphasizing content</p>
+                </div>
+                <div class="feature-grid-item">
+                    <h3>None</h3>
+                    <p>Instant navigation without animation</p>
+                </div>
+            </div>
+
+            <h3>Custom Transitions</h3>
+            <pre><code>val customTransition = NavigationTransition(
+    enter = slideInVertically { it } + fadeIn(),
+    exit = slideOutVertically { -it / 2 } + fadeOut(),
+    popEnter = slideInVertically { -it / 2 } + fadeIn(),
+    popExit = slideOutVertically { it } + fadeOut()
+)</code></pre>
+        </section>
+
+        <section>
+            <h2>Testing Support</h2>
+            <p>
+                Built-in testing utilities make it easy to verify navigation behavior without 
+                UI testing. Test navigation logic in fast, reliable unit tests.
+            </p>
+            
+            <h3>FakeNavigator</h3>
+            <pre><code>@Test
+fun `navigates to details when item clicked`() {
+    // Arrange
+    val navigator = FakeNavigator()
+    val viewModel = ProductListViewModel(navigator)
+    
+    // Act
+    viewModel.onProductClicked("product-123")
+    
+    // Assert
+    assertEquals(
+        ProductDestination.Details("product-123"),
+        navigator.lastDestination
+    )
+}
+
+@Test
+fun `clears backstack on logout`() {
+    // Arrange
+    val navigator = FakeNavigator()
+    val viewModel = SettingsViewModel(navigator)
+    
+    // Act
+    viewModel.onLogout()
+    
+    // Assert
+    assertTrue(navigator.backStackCleared)
+    assertEquals(LoginDestination, navigator.lastDestination)
+}</code></pre>
+
+            <h3>Verification Methods</h3>
+            <ul>
+                <li><code>verifyNavigate(destination)</code> - Verify navigation to destination</li>
+                <li><code>verifyNavigateBack()</code> - Verify back navigation</li>
+                <li><code>clearCalls()</code> - Reset navigation call history</li>
+                <li><code>navigationCalls</code> - Access full navigation history</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Modular Architecture</h2>
+            <p>
+                Gray box pattern support enables true modular architecture. Features can 
+                define their own navigation graphs and expose public entry points.
+            </p>
+            
+            <h3>Feature Module Example</h3>
+            <pre><code>// Feature exposes navigation graph
+object ProfileFeature {
+    fun navigationGraph(): NavigationGraph = navigationGraph("profile") {
+        startDestination(ProfileDestination.List)
+        
+        destination(ProfileDestination.List) { _, nav -> ... }
+        destination(ProfileDestination.Details) { _, nav -> ... }
+    }
+    
+    // Public entry points
+    val entryPoint: Destination = ProfileDestination.List
+}
+
+// Main app integrates feature
+val mainGraph = navigationGraph("main") {
+    includeGraph(ProfileFeature.navigationGraph())
+    
+    // Navigate to feature
+    navigator.navigate(ProfileFeature.entryPoint)
+}</code></pre>
+
+            <h3>Benefits</h3>
+            <ul>
+                <li>Independent feature development</li>
+                <li>Clear module boundaries</li>
+                <li>Reusable feature modules</li>
+                <li>Easier testing and maintenance</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>DI Framework Integration</h2>
+            <p>
+                Easy integration with popular DI frameworks like Koin, Kodein, and others. 
+                Inject dependencies into destination composables seamlessly.
+            </p>
+            
+            <h3>Koin Example</h3>
+            <pre><code>val graph = navigationGraph("app") {
+    destination(HomeDestination) { _, navigator ->
+        val viewModel: HomeViewModel = koinInject()
+        HomeScreen(viewModel, navigator)
+    }
+}</code></pre>
+
+            <h3>Custom Injection</h3>
+            <pre><code>// Create custom destination factory
+interface DestinationFactory {
+    @Composable
+    fun create(destination: Destination, navigator: Navigator)
+}
+
+// Use in navigation graph
+val graph = navigationGraph("app") {
+    factory = myDependencyContainer.destinationFactory
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Performance</h2>
+            <p>
+                Optimized for performance with minimal overhead. Lazy initialization, 
+                efficient state management, and smart recomposition.
+            </p>
+            
+            <h3>Optimizations</h3>
+            <ul>
+                <li><strong>Lazy Loading:</strong> Destinations created only when needed</li>
+                <li><strong>Efficient State:</strong> StateFlow with structural sharing</li>
+                <li><strong>Smart Recomposition:</strong> Minimal recomposition on navigation</li>
+                <li><strong>No Reflection:</strong> Zero runtime reflection overhead</li>
+                <li><strong>Small Footprint:</strong> No external dependencies</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>No External Dependencies</h2>
+            <p>
+                Quo Vadis is completely self-contained with zero external navigation dependencies. 
+                This means:
+            </p>
+            <ul>
+                <li>Smaller app size</li>
+                <li>No version conflicts</li>
+                <li>No dependency chain issues</li>
+                <li>Full control over updates</li>
+                <li>Better long-term stability</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="getting-started.html">Get started</a> with the quick start guide</li>
+                <li><a href="demo.html">See the demo</a> to explore features in action</li>
+                <li><a href="api/index.html">Browse API docs</a> for detailed reference</li>
+                <li><a href="https://github.com/jermeyyy/quo-vadis/tree/main/quo-vadis-core/docs" target="_blank">Read detailed docs</a> on GitHub</li>
+            </ul>
+        </section>
+    </div>
+
+    <footer>
+        <p>
+            Quo Vadis Navigation Library &copy; 2024-2025 
+            | <a href="https://github.com/jermeyyy/quo-vadis" target="_blank">GitHub</a>
+            | <a href="https://github.com/jermeyyy/quo-vadis/blob/main/LICENSE" target="_blank">License</a>
+        </p>
+    </footer>
+</body>
+</html>
