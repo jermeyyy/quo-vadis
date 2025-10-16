@@ -141,14 +141,36 @@ The **`composeApp`** module contains a comprehensive demo showcasing all navigat
 ### Running the Demo
 
 **Android:**
-```shell
+```bash
 ./gradlew :composeApp:assembleDebug
+# Or install directly on connected device
+./gradlew :composeApp:installDebug
 ```
 
 **iOS:**
 Open the `iosApp` directory in Xcode and run, or use:
-```shell
+```bash
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+# Then open in Xcode
+open iosApp/iosApp.xcodeproj
+```
+
+**Web (JavaScript):**
+```bash
+./gradlew :composeApp:jsBrowserDevelopmentRun --continuous
+# Opens at http://localhost:8080 with hot reload
+```
+
+**Web (WebAssembly):**
+```bash
+./gradlew :composeApp:wasmJsBrowserDevelopmentRun --continuous
+# Opens at http://localhost:8080 with hot reload
+```
+
+**Desktop:**
+```bash
+./gradlew :composeApp:run
+# Launches native window application
 ```
 
 ## 🛠 Technology Stack
@@ -157,8 +179,18 @@ Open the `iosApp` directory in Xcode and run, or use:
 - **Compose Multiplatform**: 1.9.0
 - **Android**: Min SDK 24, Target/Compile SDK 36
 - **iOS**: iosArm64, iosSimulatorArm64, iosX64
-- **Gradle**: 8.11+
+- **JavaScript**: IR compiler with Canvas rendering
+- **WebAssembly**: Wasm-JS target with Canvas rendering
+- **Desktop**: JVM target (Java 11+)
+- **Gradle**: 8.14.3 (8GB heap)
 - **AGP**: 8.11.2
+
+### Build Configuration
+
+- **Gradle Daemon**: 6GB (-Xmx6144M)
+- **Gradle Build**: 8GB (-Xmx8192M)
+- **Configuration Cache**: Enabled
+- **Build Cache**: Enabled
 
 ## 🏗 Architecture Highlights
 
@@ -212,12 +244,43 @@ fun `navigate to details screen`() {
 
 ## 📱 Platform Support
 
-| Platform | Support | Features |
-|----------|---------|----------|
-| Android  | ✅ Full  | Predictive back, deep links, system integration |
-| iOS      | ✅ Full  | Predictive back, universal links, navigation bar |
-| Desktop  | 🚧 Ready | Window-based navigation, keyboard shortcuts |
-| Web      | 🚧 Ready | Browser history, URL routing (framework ready) |
+The Quo Vadis library supports **7 platforms** across mobile, desktop, and web:
+
+| Platform | Target                          | Status | Features |
+|----------|---------------------------------|--------|----------|
+| **Android** | `androidLibrary`                | ✅ Production | Predictive back, deep links, system integration |
+| **iOS** | `iosArm64` `iosSimulatorArm64` `iosX64` | ✅ Production | Predictive back, universal links, navigation bar |
+| **JavaScript** | `js(IR)`                        | ✅ Production | Browser history, Canvas rendering, PWA-ready |
+| **WebAssembly** | `wasmJs`                        | ✅ Production | Near-native performance, modern browsers |
+| **Desktop** | `jvm("desktop")`                | ✅ Production | Native windows (macOS, Windows, Linux) |
+
+### Platform-Specific Features
+
+**Android:**
+- System back button integration
+- Predictive back gestures (Android 13+)
+- Deep link handling
+- Activity lifecycle integration
+
+**iOS:**
+- Swipe-back navigation
+- Navigation bar customization
+- Universal links
+- iOS-specific transitions
+
+**Web (JS/Wasm):**
+- Browser back button support
+- URL-based routing
+- Canvas-based rendering
+- Single-page application (SPA) support
+- Progressive Web App (PWA) compatible
+
+**Desktop (JVM):**
+- Native window controls (macOS, Windows, Linux)
+- Keyboard shortcuts support
+- Menu bar integration
+- Multi-window support
+- Native installers (DMG, MSI, DEB)
 
 ## 🎨 Animation Types
 
@@ -233,6 +296,8 @@ The library supports multiple animation styles:
 
 ## 🔧 Build Commands
 
+### Core Commands
+
 ```bash
 # Clean build
 ./gradlew clean build
@@ -243,17 +308,108 @@ The library supports multiple animation styles:
 # Build library only
 ./gradlew :quo-vadis-core:build
 
-# Build Android demo
-./gradlew :composeApp:assembleDebug
-
-# Build iOS framework
-./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
-
 # Lint check
 ./gradlew lint
 ```
 
-## 📖 Examples
+### Platform-Specific Builds
+
+**Android:**
+```bash
+./gradlew :composeApp:assembleDebug        # Debug APK
+./gradlew :composeApp:assembleRelease      # Release APK
+./gradlew :composeApp:installDebug         # Install on device
+```
+
+**iOS:**
+```bash
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64  # M1/M2 simulator
+./gradlew :composeApp:linkDebugFrameworkIosArm64           # Physical device
+./gradlew :composeApp:linkDebugFrameworkIosX64             # Intel simulator
+```
+
+**Web:**
+```bash
+# Development (with hot reload)
+./gradlew :composeApp:jsBrowserDevelopmentRun              # JavaScript
+./gradlew :composeApp:wasmJsBrowserDevelopmentRun          # WebAssembly
+
+# Production build
+./gradlew :composeApp:jsBrowserDistribution                # JS bundle
+./gradlew :composeApp:wasmJsBrowserDistribution            # Wasm bundle
+
+# Build library
+./gradlew :quo-vadis-core:jsJar                            # JS library
+./gradlew :quo-vadis-core:wasmJsJar                        # Wasm library
+```
+
+**Desktop:**
+```bash
+./gradlew :composeApp:run                                  # Run app
+./gradlew :composeApp:createDistributable                  # App bundle
+./gradlew :composeApp:packageDistributionForCurrentOS      # Native installer
+
+# Platform-specific installers
+./gradlew :composeApp:packageDmg                           # macOS DMG
+./gradlew :composeApp:packageMsi                           # Windows MSI
+./gradlew :composeApp:packageDeb                           # Linux DEB
+
+# Build library
+./gradlew :quo-vadis-core:desktopJar                       # Desktop library
+```
+
+### Publishing
+
+```bash
+# Publish to Maven Local
+./gradlew :quo-vadis-core:publishToMavenLocal
+
+# Published artifacts location
+ls ~/.m2/repository/com/jermey/quo/vadis/quo-vadis-core/0.1.0-SNAPSHOT/
+```
+
+## � Using the Library
+
+### Add Dependency
+
+First, publish to Maven Local:
+
+```bash
+./gradlew :quo-vadis-core:publishToMavenLocal
+```
+
+Then add to your project:
+
+**build.gradle.kts:**
+```kotlin
+repositories {
+    mavenLocal()  // Add this
+    mavenCentral()
+    google()
+}
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.jermey.quo.vadis:quo-vadis-core:0.1.0-SNAPSHOT")
+        }
+    }
+}
+```
+
+### Platform-Specific Setup
+
+The library automatically includes platform-specific implementations:
+
+- **Android**: AAR artifact with Activity integration
+- **iOS**: Framework with UIKit integration
+- **JavaScript**: JS bundle with Canvas rendering
+- **WebAssembly**: Wasm binary with JS glue code
+- **Desktop**: JAR with native window support
+
+No additional configuration required - it just works! ✨
+
+## �📖 Examples
 
 Check out the demo app for complete working examples:
 
@@ -261,6 +417,14 @@ Check out the demo app for complete working examples:
 - **[destinations/](composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/destinations/)** - All destination definitions
 - **[graphs/](composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/graphs/)** - Navigation graph examples
 - **[ui/screens/](composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/ui/screens/)** - Demo screens
+
+### Platform Entry Points
+
+- **Android**: `composeApp/src/androidMain/kotlin/MainActivity.kt`
+- **iOS**: `composeApp/src/iosMain/kotlin/MainViewController.kt`
+- **JavaScript**: `composeApp/src/jsMain/kotlin/main.js.kt`
+- **WebAssembly**: `composeApp/src/wasmJsMain/kotlin/main.wasmJs.kt`
+- **Desktop**: `composeApp/src/desktopMain/kotlin/main.desktop.kt`
 
 ## 🤝 Contributing
 

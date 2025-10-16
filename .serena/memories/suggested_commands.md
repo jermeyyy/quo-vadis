@@ -2,7 +2,7 @@
 
 ## Build Commands
 
-### Android (recommended, faster than running iOS)
+### Android
 
 #### Build Debug APK
 ```bash
@@ -26,9 +26,14 @@
 
 ### iOS
 
-#### Build iOS Framework
+#### Build iOS Framework (M1/M2 Macs)
 ```bash
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+```
+
+#### Build iOS Framework (Intel Macs)
+```bash
+./gradlew :composeApp:linkDebugFrameworkIosX64
 ```
 
 #### Build for Physical Device
@@ -40,6 +45,94 @@
 ```bash
 open iosApp/iosApp.xcodeproj
 ```
+
+### Web Targets
+
+#### JavaScript (Development with Hot Reload)
+```bash
+./gradlew :composeApp:jsBrowserDevelopmentRun --continuous
+```
+Opens at `http://localhost:8080` with automatic reload on code changes.
+
+#### WebAssembly (Development with Hot Reload)
+```bash
+./gradlew :composeApp:wasmJsBrowserDevelopmentRun --continuous
+```
+Opens at `http://localhost:8080` with automatic reload on code changes.
+
+#### JavaScript (Production Build)
+```bash
+./gradlew :composeApp:jsBrowserDistribution
+```
+Output: `composeApp/build/dist/js/productionExecutable/`
+
+#### WebAssembly (Production Build)
+```bash
+./gradlew :composeApp:wasmJsBrowserDistribution
+```
+Output: `composeApp/build/dist/wasmJs/productionExecutable/`
+
+#### Build Web Libraries
+```bash
+./gradlew :quo-vadis-core:jsJar          # JavaScript library
+./gradlew :quo-vadis-core:wasmJsJar      # WebAssembly library
+```
+
+### Desktop (JVM)
+
+#### Run Desktop App
+```bash
+./gradlew :composeApp:run --no-configuration-cache
+```
+Launches native window application.
+
+#### Create Distributable Bundle
+```bash
+./gradlew :composeApp:createDistributable
+```
+Output: `composeApp/build/compose/binaries/main/app/NavPlayground`
+
+#### Create Native Installer (Current OS)
+```bash
+./gradlew :composeApp:packageDistributionForCurrentOS
+```
+
+#### Platform-Specific Installers
+```bash
+./gradlew :composeApp:packageDmg        # macOS DMG (macOS only)
+./gradlew :composeApp:packageMsi        # Windows MSI (Windows only)
+./gradlew :composeApp:packageDeb        # Linux DEB (Linux only)
+```
+
+#### Build Desktop Library
+```bash
+./gradlew :quo-vadis-core:desktopJar
+```
+Output: `quo-vadis-core/build/libs/quo-vadis-core-desktop.jar`
+
+**Note**: The `desktopJar` task creates a library JAR (not executable). Use `:composeApp:run` to run the app.
+
+## Publishing Commands
+
+### Publish to Maven Local
+```bash
+./gradlew :quo-vadis-core:publishToMavenLocal
+```
+Publishes all platform artifacts to `~/.m2/repository/com/jermey/quo/vadis/quo-vadis-core/0.1.0-SNAPSHOT/`
+
+### Verify Published Artifacts
+```bash
+ls ~/.m2/repository/com/jermey/quo/vadis/quo-vadis-core/0.1.0-SNAPSHOT/
+```
+
+Expected artifacts:
+- `quo-vadis-core-android-0.1.0-SNAPSHOT.aar`
+- `quo-vadis-core-desktop-0.1.0-SNAPSHOT.jar`
+- `quo-vadis-core-iosarm64-0.1.0-SNAPSHOT.klib`
+- `quo-vadis-core-iossimulatorarm64-0.1.0-SNAPSHOT.klib`
+- `quo-vadis-core-iosx64-0.1.0-SNAPSHOT.klib`
+- `quo-vadis-core-js-0.1.0-SNAPSHOT.klib`
+- `quo-vadis-core-wasm-js-0.1.0-SNAPSHOT.klib`
 
 ## Testing Commands
 
@@ -57,6 +150,12 @@ open iosApp/iosApp.xcodeproj
 ### Run Android Instrumented Tests
 ```bash
 ./gradlew :quo-vadis-core:connectedAndroidTest
+```
+
+### Run Web Tests
+```bash
+./gradlew :composeApp:jsTest              # JavaScript tests
+./gradlew :quo-vadis-core:jsTest          # Library JS tests
 ```
 
 ## Cleaning Commands
@@ -78,12 +177,22 @@ rm -rf .gradle/configuration-cache
 ./gradlew clean
 ```
 
+### Full Clean (including dependencies)
+```bash
+./gradlew clean --refresh-dependencies
+```
+
 ## Dependency Commands
 
 ### Show Dependencies
 ```bash
 ./gradlew :composeApp:dependencies
 ./gradlew :quo-vadis-core:dependencies
+```
+
+### Show Desktop Runtime Dependencies
+```bash
+./gradlew :composeApp:dependencies --configuration desktopRuntimeClasspath
 ```
 
 ### Check for Dependency Updates
@@ -100,6 +209,14 @@ rm -rf .gradle/configuration-cache
 
 ### Lint Report Location
 After running lint, check: `composeApp/build/reports/lint-results.html`
+
+### Check Errors
+Use IDE tools or:
+```bash
+./gradlew :composeApp:compileKotlinAndroid
+./gradlew :composeApp:compileKotlinDesktop
+./gradlew :composeApp:compileKotlinJs
+```
 
 ## Gradle Commands
 
@@ -124,67 +241,6 @@ After running lint, check: `composeApp/build/reports/lint-results.html`
 ./gradlew build --scan
 ```
 
-## Git Commands (macOS/Darwin specific)
-
-### Standard Git Operations
-```bash
-git status
-git add .
-git commit -m "message"
-git push
-git pull
-```
-
-### View Git Log
-```bash
-git log --oneline --graph --decorate
-```
-
-### Check Git Diff
-```bash
-git diff
-```
-
-## File System Commands (macOS/Darwin)
-
-### List Files
-```bash
-ls -la                    # List all with details
-ls -lh                    # List with human-readable sizes
-```
-
-### Find Files
-```bash
-find . -name "*.kt"       # Find all Kotlin files
-find . -name "*.swift"    # Find all Swift files
-find . -type d -name build # Find all build directories
-```
-
-### Search in Files (grep)
-```bash
-grep -r "Navigator" composeApp/src/
-grep -r "Destination" quo-vadis-core/src/
-```
-
-### Tree View (if tree is installed)
-```bash
-tree -L 3                 # Show 3 levels
-tree -I 'build|.gradle'   # Exclude build and .gradle
-```
-
-### Disk Usage
-```bash
-du -sh build/             # Size of build directory
-du -sh .gradle/           # Size of gradle cache
-```
-
-## IDE Commands
-
-### Generate IDE Metadata
-```bash
-./gradlew idea           # For IntelliJ IDEA (rarely needed)
-```
-
 ## Daemon Management
 
 ### Stop Gradle Daemon
@@ -197,7 +253,7 @@ du -sh .gradle/           # Size of gradle cache
 ./gradlew --status
 ```
 
-## Running the Application
+## Running Applications
 
 ### Android (via Gradle)
 ```bash
@@ -210,11 +266,32 @@ adb shell am start -n com.jermey.navplayground/.MainActivity
 2. Select simulator/device
 3. Press Run (⌘R)
 
-## Documentation Generation
-
-### Generate KDoc (if configured)
+### Web (Development Server)
 ```bash
-./gradlew dokkaHtml
+# JavaScript with hot reload
+./gradlew :composeApp:jsBrowserDevelopmentRun --continuous
+
+# WebAssembly with hot reload
+./gradlew :composeApp:wasmJsBrowserDevelopmentRun --continuous
+```
+Both open at `http://localhost:8080`
+
+### Web (Production - Static Server)
+```bash
+# After building production bundle
+cd composeApp/build/dist/js/productionExecutable
+python3 -m http.server 8000
+# Open http://localhost:8000
+```
+
+### Desktop
+```bash
+# Direct run (fastest for development)
+./gradlew :composeApp:run --no-configuration-cache
+
+# Or run distributable
+./gradlew :composeApp:createDistributable
+./composeApp/build/compose/binaries/main/app/NavPlayground/NavPlayground
 ```
 
 ## Performance Analysis
@@ -227,8 +304,8 @@ adb shell am start -n com.jermey.navplayground/.MainActivity
 
 ### Build with Stack Traces
 ```bash
-./gradlew build --stacktrace    # Abbreviated
-./gradlew build --full-stacktrace # Full traces
+./gradlew build --stacktrace          # Abbreviated
+./gradlew build --full-stacktrace     # Full traces
 ```
 
 ## Useful Gradle Options
@@ -253,9 +330,41 @@ adb shell am start -n com.jermey.navplayground/.MainActivity
 ./gradlew clean build --no-build-cache
 ```
 
+### No Configuration Cache
+```bash
+./gradlew build --no-configuration-cache
+```
+
+## Quick Reference
+
+### Most Common Commands
+
+**Development:**
+```bash
+./gradlew :composeApp:installDebug                      # Android
+./gradlew :composeApp:jsBrowserDevelopmentRun           # Web JS
+./gradlew :composeApp:run                               # Desktop
+open iosApp/iosApp.xcodeproj                            # iOS
+```
+
+**Testing:**
+```bash
+./gradlew test                                          # All tests
+./gradlew clean build                                   # Clean build
+```
+
+**Publishing:**
+```bash
+./gradlew :quo-vadis-core:publishToMavenLocal           # Publish library
+```
+
 ## Notes
 
 - All commands assume you're in the project root directory
 - Use `./gradlew` on macOS/Linux, `gradlew.bat` on Windows
 - Configuration cache is enabled by default (improves build performance)
 - Build cache is enabled by default (reuses outputs across builds)
+- Gradle daemon uses 6GB heap, builds use 8GB heap
+- For desktop, use `:composeApp:run` task (not `desktopRun`)
+- For web, dev server runs on port 8080 by default
+- Desktop JAR task creates library JAR, not executable

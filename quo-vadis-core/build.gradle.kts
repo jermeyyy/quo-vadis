@@ -77,6 +77,9 @@ kotlin {
         binaries.executable()
     }
 
+    // Desktop (JVM) target
+    jvm("desktop")
+
     // Source set declarations.
     // Declaring a target automatically creates a source set with the same name. By default, the
     // Kotlin Gradle Plugin creates additional source sets that depend on each other, since it is
@@ -89,7 +92,6 @@ kotlin {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
-                implementation(compose.materialIconsExtended)
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
@@ -140,6 +142,13 @@ kotlin {
         wasmJsMain {
             dependencies {
                 // Add Wasm-specific dependencies here if needed
+            }
+        }
+
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                // Desktop (JVM) dependencies automatically inherit from commonMain
             }
         }
     }

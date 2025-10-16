@@ -7,6 +7,18 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+// Force Compose Multiplatform version alignment
+configurations.all {
+    resolutionStrategy {
+        force("org.jetbrains.compose.material3:material3:1.9.0")
+        force("org.jetbrains.compose.material3:material3-desktop:1.9.0")
+        force("org.jetbrains.compose.ui:ui:1.9.0")
+        force("org.jetbrains.compose.ui:ui-desktop:1.9.0")
+        force("org.jetbrains.compose.runtime:runtime:1.9.0")
+        force("org.jetbrains.compose.runtime:runtime-desktop:1.9.0")
+    }
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -43,11 +55,15 @@ kotlin {
         }
         binaries.executable()
     }
+
+    // Desktop (JVM) target
+    jvm("desktop")
     
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(compose.materialIconsExtended)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -68,9 +84,16 @@ kotlin {
         }
         jsMain.dependencies {
             implementation(compose.html.core)
+            implementation(compose.materialIconsExtended)
         }
         wasmJsMain.dependencies {
-            // Wasm-specific dependencies if needed
+            implementation(compose.materialIconsExtended)
+        }
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                // Desktop JVM doesn't support materialIconsExtended in Compose 1.9.0
+            }
         }
     }
 }
@@ -104,4 +127,38 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+}
+
+compose.desktop {
+    application {
+        mainClass = "com.jermey.navplayground.Main_desktopKt"
+        
+        // Configure JVM arguments if needed
+        jvmArgs += listOf("-Xmx2G")
+        
+        nativeDistributions {
+            targetFormats(
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg,
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi,
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb
+            )
+            packageName = "NavPlayground"
+            packageVersion = "1.0.0"
+            description = "Quo Vadis Navigation Library Demo"
+            copyright = "© 2025 Jermey. All rights reserved."
+            vendor = "Jermey"
+            
+            macOS {
+                bundleID = "com.jermey.navplayground"
+                iconFile.set(project.file("src/desktopMain/resources/icon.icns"))
+            }
+            windows {
+                iconFile.set(project.file("src/desktopMain/resources/icon.ico"))
+                menuGroup = "NavPlayground"
+            }
+            linux {
+                iconFile.set(project.file("src/desktopMain/resources/icon.png"))
+            }
+        }
+    }
 }

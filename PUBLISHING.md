@@ -44,13 +44,16 @@ version    = "0.1.0-SNAPSHOT"
 
 ### Published Artifacts
 
-The following artifacts are published to Maven Local:
+The following artifacts are published to Maven Local (7 platforms):
 
 1. **Common Metadata** - `quo-vadis-core-0.1.0-SNAPSHOT.module`
 2. **Android** - `quo-vadis-core-android-0.1.0-SNAPSHOT.aar`
 3. **iOS x64** - `quo-vadis-core-iosx64-0.1.0-SNAPSHOT.klib`
 4. **iOS Arm64** - `quo-vadis-core-iosarm64-0.1.0-SNAPSHOT.klib`
 5. **iOS Simulator Arm64** - `quo-vadis-core-iossimulatorarm64-0.1.0-SNAPSHOT.klib`
+6. **JavaScript** - `quo-vadis-core-js-0.1.0-SNAPSHOT.klib`
+7. **WebAssembly** - `quo-vadis-core-wasm-js-0.1.0-SNAPSHOT.klib`
+8. **Desktop (JVM)** - `quo-vadis-core-desktop-0.1.0-SNAPSHOT.jar`
 
 ### Maven Local Location
 
@@ -136,6 +139,9 @@ version = "0.1.0-SNAPSHOT"  // ← Change this
 ./gradlew :quo-vadis-core:publishIosX64PublicationToMavenLocal
 ./gradlew :quo-vadis-core:publishIosArm64PublicationToMavenLocal
 ./gradlew :quo-vadis-core:publishIosSimulatorArm64PublicationToMavenLocal
+./gradlew :quo-vadis-core:publishJsPublicationToMavenLocal
+./gradlew :quo-vadis-core:publishWasmJsPublicationToMavenLocal
+./gradlew :quo-vadis-core:publishDesktopPublicationToMavenLocal
 
 # Generate POM files (for verification)
 ./gradlew :quo-vadis-core:generatePomFileForKotlinMultiplatformPublication
