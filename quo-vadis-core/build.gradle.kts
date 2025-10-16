@@ -57,6 +57,26 @@ kotlin {
         }
     }
 
+    // Web targets
+    js(IR) {
+        browser {
+            commonWebpackConfig {
+                outputFileName = "quo-vadis-core.js"
+            }
+        }
+        binaries.executable()
+    }
+
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+            commonWebpackConfig {
+                outputFileName = "quo-vadis-core.wasm.js"
+            }
+        }
+        binaries.executable()
+    }
+
     // Source set declarations.
     // Declaring a target automatically creates a source set with the same name. By default, the
     // Kotlin Gradle Plugin creates additional source sets that depend on each other, since it is
@@ -108,6 +128,18 @@ kotlin {
                 // part of KMP's default source set hierarchy. Note that this source set depends
                 // on common by default and will correctly pull the iOS artifacts of any
                 // KMP dependencies declared in commonMain.
+            }
+        }
+
+        jsMain {
+            dependencies {
+                // Add JS-specific dependencies here if needed
+            }
+        }
+
+        wasmJsMain {
+            dependencies {
+                // Add Wasm-specific dependencies here if needed
             }
         }
     }

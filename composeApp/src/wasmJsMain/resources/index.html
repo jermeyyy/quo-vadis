@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NavPlayground - Quo Vadis Demo (WebAssembly)</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1C1B1F;
+        }
+        #root {
+            width: 100vw;
+            height: 100vh;
+        }
+        #ComposeTarget {
+            width: 100%;
+            height: 100%;
+        }
+        .loader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #D0BCFF;
+        }
+        .loader-spinner {
+            border: 4px solid rgba(208, 188, 255, 0.2);
+            border-top: 4px solid #D0BCFF;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <p>Loading Quo Vadis Demo (WebAssembly)...</p>
+        </div>
+        <div id="ComposeTarget"></div>
+    </div>
+    <script src="composeApp.wasm.js"></script>
+</body>
+</html>

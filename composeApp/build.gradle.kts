@@ -23,6 +23,26 @@ kotlin {
             isStatic = true
         }
     }
+
+    // Web targets
+    js(IR) {
+        browser {
+            commonWebpackConfig {
+                outputFileName = "composeApp.js"
+            }
+        }
+        binaries.executable()
+    }
+
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+            commonWebpackConfig {
+                outputFileName = "composeApp.wasm.js"
+            }
+        }
+        binaries.executable()
+    }
     
     sourceSets {
         androidMain.dependencies {
@@ -45,6 +65,12 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        jsMain.dependencies {
+            implementation(compose.html.core)
+        }
+        wasmJsMain.dependencies {
+            // Wasm-specific dependencies if needed
         }
     }
 }
