@@ -347,7 +347,8 @@ private suspend fun animateGestureCancellation(
         )
     )
     
-    onStateUpdate(null, null, false, 0f, false)
+    // Restore the current screen (gesture was cancelled, so we stay on the same screen)
+    onStateUpdate(capturedCurrent, null, false, 0f, false)
     
     exitAnimProgress.snapTo(0f)
     capturedCurrent?.let { composableCache.unlockEntry(it.id) }
