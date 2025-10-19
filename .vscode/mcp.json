@@ -15,19 +15,41 @@
 				"ide-assistant"
 			]
 		},
+		"gradle-mcp": {
+			"type": "stdio",
+			"command": "uv",
+			"args": [
+				"run",
+				"--directory",
+				"/Users/jermey/Projects/gradle-mcp",
+				"gradle-mcp",
+			],
+			"env": {
+				"GRADLE_PROJECT_ROOT":"/Users/jermey/Projects/NavPlayground",
+				"GRADLE_WRAPPER":"/Users/jermey/Projects/NavPlayground/gradlew"
+			}
+
+		},
 		"docs-mcp": {
 			"url": "http://localhost:6280/mcp",
 			"type": "http"
 		},
 		"javadoc-mcp": {
-      		"type": "stdio",
-      		"command": "uv",
-      		"args": [
-      			"run",
-      			"--directory",
-      			"/Users/jermey/Projects/javadoc-mcp",
-      			"main.py"
-      		]
+			"type": "stdio",
+			"command": "uv",
+			"args": [
+				"run",
+				"--directory",
+				"/Users/jermey/Projects/javadoc-mcp",
+				"main.py"
+			]
+		},
+		"drawio": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"drawio-mcp-server"
+			]
 		}
 	},
 	"inputs": []

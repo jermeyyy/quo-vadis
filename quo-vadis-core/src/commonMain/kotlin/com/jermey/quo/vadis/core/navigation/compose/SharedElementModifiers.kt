@@ -8,10 +8,101 @@ import com.jermey.quo.vadis.core.navigation.core.SharedElementConfig
 import com.jermey.quo.vadis.core.navigation.core.SharedElementType
 
 /**
- * Apply a shared element modifier using the current [SharedTransitionScope] and [AnimatedVisibilityScope].
+ * Apply a shared element modifier using the provided [TransitionScope].
  *
- * This is a convenience extension that automatically retrieves the scopes from the current composition
- * and applies the appropriate shared element modifier based on the configuration type.
+ * This is the recommended API for applying shared element transitions with a single scope parameter.
+ *
+ * Usage:
+ * ```kotlin
+ * @Composable
+ * fun MyScreen(
+ *     navigator: Navigator,
+ *     transitionScope: TransitionScope? = null
+ * ) {
+ *     transitionScope?.let { scope ->
+ *         Image(
+ *             painter = painterResource(imageRes),
+ *             contentDescription = null,
+ *             modifier = Modifier
+ *                 .size(100.dp)
+ *                 .sharedElement(scope, key = "image_key")
+ *         )
+ *     }
+ * }
+ * ```
+ *
+ * @param scope The TransitionScope containing both SharedTransitionScope and AnimatedVisibilityScope
+ * @param key Unique identifier for matching elements between screens
+ * @param type Type of shared element transition (Element or Bounds)
+ * @param boundsTransform Optional custom bounds animation spec
+ * @return Modified Modifier with shared element transition
+ */
+@ExperimentalSharedTransitionApi
+@androidx.compose.runtime.Composable
+fun Modifier.sharedElement(
+    scope: TransitionScope,
+    key: Any,
+    type: SharedElementType = SharedElementType.Element,
+    boundsTransform: BoundsTransform? = null
+): Modifier {
+    return with(scope.sharedTransitionScope) {
+        when (type) {
+            SharedElementType.Element -> {
+                sharedElement(
+                    sharedContentState = rememberSharedContentState(key = key),
+                    animatedVisibilityScope = scope.animatedVisibilityScope,
+                    boundsTransform = boundsTransform ?: BoundsTransform { _, _ ->
+                        androidx.compose.animation.core.spring(
+                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+                        )
+                    }
+                )
+            }
+            SharedElementType.Bounds -> {
+                sharedBounds(
+                    sharedContentState = rememberSharedContentState(key = key),
+                    animatedVisibilityScope = scope.animatedVisibilityScope,
+                    boundsTransform = boundsTransform ?: BoundsTransform { _, _ ->
+                        androidx.compose.animation.core.spring(
+                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Apply a shared bounds modifier using the provided [TransitionScope].
+ *
+ * Convenience wrapper for shared bounds transitions.
+ *
+ * @param scope The TransitionScope containing both scopes
+ * @param key Unique identifier for matching bounds between screens
+ * @param boundsTransform Optional custom bounds animation spec
+ * @return Modified Modifier with shared bounds transition
+ */
+@ExperimentalSharedTransitionApi
+@androidx.compose.runtime.Composable
+fun Modifier.sharedBounds(
+    scope: TransitionScope,
+    key: Any,
+    boundsTransform: BoundsTransform? = null
+): Modifier = sharedElement(
+    scope = scope,
+    key = key,
+    type = SharedElementType.Bounds,
+    boundsTransform = boundsTransform
+)
+
+/**
+ * Apply a shared element modifier using the current [TransitionScope] from composition.
+ *
+ * This automatically retrieves the TransitionScope from the current composition
+ * and applies the shared element modifier, or returns the original modifier if not available.
  *
  * Usage:
  * ```kotlin
@@ -25,7 +116,7 @@ import com.jermey.quo.vadis.core.navigation.core.SharedElementType
  * ```
  *
  * @param config SharedElementConfig specifying the key, type, and optional bounds transform
- * @return Modified Modifier with shared element transition, or original if scopes unavailable
+ * @return Modified Modifier with shared element transition, or original if scope unavailable
  *
  * @see SharedElementConfig
  * @see com.jermey.quo.vadis.core.navigation.core.sharedElement
@@ -36,37 +127,13 @@ import com.jermey.quo.vadis.core.navigation.core.SharedElementType
 fun Modifier.quoVadisSharedElement(
     config: SharedElementConfig
 ): Modifier {
-    val sharedTransitionScope = currentSharedTransitionScope() ?: return this
-    val animatedVisibilityScope = currentNavAnimatedVisibilityScope() ?: return this
-
-    return with(sharedTransitionScope) {
-        when (config.type) {
-            SharedElementType.Element -> {
-                sharedElement(
-                    sharedContentState = rememberSharedContentState(key = config.key),
-                    animatedVisibilityScope = animatedVisibilityScope,
-                    boundsTransform = config.boundsTransform ?: BoundsTransform { _, _ ->
-                        androidx.compose.animation.core.spring(
-                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
-                            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
-                        )
-                    }
-                )
-            }
-            SharedElementType.Bounds -> {
-                sharedBounds(
-                    sharedContentState = rememberSharedContentState(key = config.key),
-                    animatedVisibilityScope = animatedVisibilityScope,
-                    boundsTransform = config.boundsTransform ?: BoundsTransform { _, _ ->
-                        androidx.compose.animation.core.spring(
-                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
-                            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
-                        )
-                    }
-                )
-            }
-        }
-    }
+    val transitionScope = currentTransitionScope() ?: return this
+    return sharedElement(
+        scope = transitionScope,
+        key = config.key,
+        type = config.type,
+        boundsTransform = config.boundsTransform
+    )
 }
 
 /**
@@ -133,11 +200,10 @@ fun Modifier.quoVadisSharedElementOrNoop(
     type: SharedElementType = SharedElementType.Element,
     boundsTransform: BoundsTransform? = null
 ): Modifier {
-    val sharedTransitionScope = currentSharedTransitionScope()
-    val animatedVisibilityScope = currentNavAnimatedVisibilityScope()
+    val transitionScope = currentTransitionScope()
 
-    // Return original modifier if scopes unavailable (graceful degradation)
-    if (sharedTransitionScope == null || animatedVisibilityScope == null) {
+    // Return original modifier if scope unavailable (graceful degradation)
+    if (transitionScope == null) {
         return this
     }
 

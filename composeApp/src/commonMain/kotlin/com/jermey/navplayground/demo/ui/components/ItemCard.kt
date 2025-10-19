@@ -1,6 +1,5 @@
 package com.jermey.navplayground.demo.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,15 +20,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.screens.masterdetail.Item
+import com.jermey.quo.vadis.core.navigation.compose.quoVadisSharedElement
+import com.jermey.quo.vadis.core.navigation.core.sharedBounds
+import com.jermey.quo.vadis.core.navigation.core.sharedElement
 
 
 @OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
 @Composable
 fun ItemCard(
     item: Item,
-    onClick: () -> Unit,
-    sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
-    animatedVisibilityScope: androidx.compose.animation.AnimatedVisibilityScope? = null
+    onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
@@ -42,45 +42,23 @@ fun ItemCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Apply shared element transition to the icon (now on the left, larger)
-            val iconModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                with(sharedTransitionScope) {
-                    Modifier
-                        .size(56.dp)
-                        .sharedElement(
-                            sharedContentState = rememberSharedContentState(key = "icon-${item.id}"),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
-                }
-            } else {
-                Modifier.size(56.dp)
-            }
-            
             Icon(
                 Icons.Default.AccountCircle,
                 contentDescription = "Item icon",
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = iconModifier
+                modifier = Modifier
+                    .size(56.dp)
+                    .quoVadisSharedElement(sharedElement(key = "icon-${item.id}"))
             )
             
             Spacer(Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 // Apply shared element transition to the title
-                val titleModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                    with(sharedTransitionScope) {
-                        Modifier.sharedBounds(
-                            sharedContentState = rememberSharedContentState(key = "title-${item.id}"),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
-                    }
-                } else {
-                    Modifier
-                }
-                
                 Text(
                     item.title,
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = titleModifier
+                    modifier = Modifier.quoVadisSharedElement(sharedBounds(key = "title-${item.id}"))
                 )
                 Text(
                     item.subtitle,

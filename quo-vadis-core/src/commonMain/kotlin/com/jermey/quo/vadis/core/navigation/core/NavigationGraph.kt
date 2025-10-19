@@ -34,11 +34,11 @@ interface NavigationGraph {
 }
 
 /**
- * Configuration for a destination including its composable content.
- *
+ * Configuration for a destination in the navigation graph.
+ * 
  * Supports two content signatures:
  * - Legacy: `content(destination, navigator)` - standard navigation
- * - Scoped: `contentWithScopes(destination, navigator, sharedTransitionScope, animatedVisibilityScope)` - with shared element support
+ * - Scoped: `contentWithTransitionScope(destination, navigator, transitionScope)` - with shared element support
  *
  * The scoped variant is preferred when both are provided.
  */
@@ -47,7 +47,7 @@ data class DestinationConfig(
     val destination: Destination,
     val content: @Composable (Destination, Navigator) -> Unit,
     val defaultTransition: NavigationTransition? = null,
-    val contentWithScopes: @Composable ((Destination, Navigator, SharedTransitionScope?, AnimatedVisibilityScope?) -> Unit)? = null
+    val contentWithTransitionScope: @Composable ((Destination, Navigator, com.jermey.quo.vadis.core.navigation.compose.TransitionScope?) -> Unit)? = null
 )
 
 /**
@@ -70,11 +70,11 @@ class NavigationGraphBuilder(private val graphRoute: String) {
         transition: NavigationTransition? = null,
         content: @Composable (Destination, Navigator) -> Unit
     ) {
-        dests.add(DestinationConfig(destination, content, transition, contentWithScopes = null))
+        dests.add(DestinationConfig(destination, content, transition, contentWithTransitionScope = null))
     }
 
     /**
-     * Register a destination with scope-aware content that receives SharedTransitionScope and AnimatedVisibilityScope.
+     * Register a destination with TransitionScope-aware content.
      * Preferred over the basic signature when using shared element transitions.
      *
      * Usage:
@@ -82,12 +82,11 @@ class NavigationGraphBuilder(private val graphRoute: String) {
      * destinationWithScopes(
      *     destination = DetailsDestination,
      *     transition = NavigationTransitions.SlideHorizontal
-     * ) { dest, nav, sharedScope, animScope ->
+     * ) { dest, nav, transitionScope ->
      *     DetailsScreen(
      *         destination = dest,
      *         navigator = nav,
-     *         sharedTransitionScope = sharedScope,
-     *         animatedVisibilityScope = animScope
+     *         transitionScope = transitionScope
      *     )
      * }
      * ```
@@ -96,14 +95,14 @@ class NavigationGraphBuilder(private val graphRoute: String) {
     fun destinationWithScopes(
         destination: Destination,
         transition: NavigationTransition? = null,
-        content: @Composable (Destination, Navigator, SharedTransitionScope?, AnimatedVisibilityScope?) -> Unit
+        content: @Composable (Destination, Navigator, com.jermey.quo.vadis.core.navigation.compose.TransitionScope?) -> Unit
     ) {
         dests.add(
             DestinationConfig(
                 destination = destination,
-                content = { dest, nav -> content(dest, nav, null, null) }, // Fallback when scopes unavailable
+                content = { dest, nav -> content(dest, nav, null) }, // Fallback when scopes unavailable
                 defaultTransition = transition,
-                contentWithScopes = content
+                contentWithTransitionScope = content
             )
         )
     }

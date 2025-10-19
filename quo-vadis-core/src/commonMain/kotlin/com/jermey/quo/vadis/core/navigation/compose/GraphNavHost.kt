@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.compose
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -77,19 +78,16 @@ fun GraphNavHost(
 ) {
     // Always wrap in SharedTransitionLayout - it's lightweight and enables per-destination shared elements
     SharedTransitionLayout(modifier = modifier) {
-        CompositionLocalProvider(
-            LocalSharedTransitionScope provides this
-        ) {
-            GraphNavHostContent(
-                graph = graph,
-                navigator = navigator,
-                defaultTransition = defaultTransition,
-                enableComposableCache = enableComposableCache,
-                enablePredictiveBack = enablePredictiveBack,
-                maxCacheSize = maxCacheSize,
-                modifier = Modifier // Use Modifier inside SharedTransitionLayout
-            )
-        }
+        GraphNavHostContent(
+            graph = graph,
+            navigator = navigator,
+            defaultTransition = defaultTransition,
+            enableComposableCache = enableComposableCache,
+            enablePredictiveBack = enablePredictiveBack,
+            maxCacheSize = maxCacheSize,
+            sharedTransitionScope = this,
+            modifier = Modifier // Use Modifier inside SharedTransitionLayout
+        )
     }
 }
 
@@ -106,6 +104,7 @@ private fun GraphNavHostContent(
     enableComposableCache: Boolean,
     enablePredictiveBack: Boolean,
     maxCacheSize: Int,
+    sharedTransitionScope: SharedTransitionScope,
     modifier: Modifier = Modifier
 ) {
     val backStackEntries by navigator.backStack.stack.collectAsState()
@@ -386,8 +385,11 @@ private fun GraphNavHostContent(
                         },
                         label = "navigation_animation"
                     ) { animatingEntry ->
+                        // Create TransitionScope combining SharedTransitionScope and AnimatedVisibilityScope
+                        val transitionScope = TransitionScope(sharedTransitionScope, this@AnimatedContent)
+                        
                         CompositionLocalProvider(
-                            LocalNavAnimatedVisibilityScope provides this@AnimatedContent
+                            LocalTransitionScope provides transitionScope
                         ) {
                             ScreenContent(
                                 entry = animatingEntry,
@@ -419,19 +421,17 @@ private fun ScreenContent(
         graph.destinations.find { it.destination.route == entry.destination.route }
     }
 
-    // Get scopes from composition locals (will be null if shared elements disabled)
-    val sharedTransitionScope = currentSharedTransitionScope()
-    val animatedVisibilityScope = currentNavAnimatedVisibilityScope()
+    // Get transition scope from composition local (will be null if shared elements disabled)
+    val transitionScope = currentTransitionScope()
 
     destConfig?.let { config ->
-        // Prefer contentWithScopes if available (for shared element support)
-        val renderContent: @Composable (BackStackEntry) -> Unit = if (config.contentWithScopes != null) {
+        // Prefer contentWithTransitionScope if available (for shared element support)
+        val renderContent: @Composable (BackStackEntry) -> Unit = if (config.contentWithTransitionScope != null) {
             { stackEntry ->
-                config.contentWithScopes.invoke(
+                config.contentWithTransitionScope.invoke(
                     stackEntry.destination,
                     navigator,
-                    sharedTransitionScope,
-                    animatedVisibilityScope
+                    transitionScope
                 )
             }
         } else {

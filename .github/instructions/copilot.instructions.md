@@ -78,32 +78,41 @@ applyTo: '**'
 - `mcp_javadoc-mcp_search_artifact` - Maven artifacts
 - `mcp_javadoc-mcp_get_class_documentation` - Class docs
 
+**For Gradle Builds** (PRIMARY):
+- `mcp_gradle-mcp_run_task` - Run any Gradle task (PREFERRED over terminal!)
+- `mcp_gradle-mcp_list_projects` - List projects
+- `mcp_gradle-mcp_list_project_tasks` - List available tasks
+- `mcp_gradle-mcp_clean` - Clean build artifacts
+
 **For Verification**:
 - `get_errors` - IDE errors (may show KMP false positives)
-- `run_in_terminal` - Gradle builds (source of truth)
+- `run_in_terminal` - Only for non-Gradle commands (file ops, git, etc.)
 
 ### Essential Commands
 
-**FASTEST VERIFICATION** (Priority #1):
-```bash
-./gradlew :composeApp:assembleDebug
+**FASTEST VERIFICATION** (Priority #1 - Use Gradle MCP):
+```python
+mcp_gradle-mcp_run_task(task=":composeApp:assembleDebug")  # 2 seconds
 ```
 
-**Other Build Commands**:
-```bash
-./gradlew clean build                                    # Full build
-./gradlew :quo-vadis-core:build                         # Library only
-./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64  # iOS
-./gradlew :composeApp:jsBrowserDevelopmentRun           # Web JS
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun       # Web Wasm
-./gradlew :composeApp:run                               # Desktop
+**Other Build Commands** (Use Gradle MCP):
+```python
+mcp_gradle-mcp_run_task(task="clean")                      # Clean build
+mcp_gradle-mcp_run_task(task="build")                      # Full build
+mcp_gradle-mcp_run_task(task=":quo-vadis-core:build", args=["-x", "detekt"])
+mcp_gradle-mcp_run_task(task=":composeApp:linkDebugFrameworkIosSimulatorArm64")
+mcp_gradle-mcp_run_task(task=":composeApp:jsBrowserDevelopmentRun")
+mcp_gradle-mcp_run_task(task=":composeApp:wasmJsBrowserDevelopmentRun")
+mcp_gradle-mcp_run_task(task=":composeApp:run")
 ```
 
-**Testing**:
-```bash
-./gradlew test                                          # All tests
-./gradlew :quo-vadis-core:testDebugUnitTest            # Unit tests
+**Testing** (Use Gradle MCP):
+```python
+mcp_gradle-mcp_run_task(task="test")
+mcp_gradle-mcp_run_task(task=":quo-vadis-core:testDebugUnitTest")
 ```
+
+**See `gradle_mcp_tools` memory** for complete tool documentation and examples.
 
 **Cleaning**:
 ```bash

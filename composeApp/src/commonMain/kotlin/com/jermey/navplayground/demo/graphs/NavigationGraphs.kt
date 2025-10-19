@@ -105,7 +105,7 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
     destinationWithScopes(
         destination = MasterDetailDestination.List,
         transition = NavigationTransitions.SlideHorizontal
-    ) { _, navigator, sharedScope, animScope ->
+    ) { _, navigator, transitionScope ->
         MasterListScreen(
             onItemClick = { itemId ->
                 navigator.navigate(
@@ -114,15 +114,14 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
                 )
             },
             onBack = { navigator.navigateBack() },
-            sharedTransitionScope = sharedScope,
-            animatedVisibilityScope = animScope
+            transitionScope = transitionScope
         )
     }
 
     destinationWithScopes(
         destination = SimpleDestination("master_detail_detail"),
         transition = NavigationTransitions.SlideHorizontal
-    ) { dest, navigator, sharedScope, animScope ->
+    ) { dest, navigator, transitionScope ->
         val itemId = dest.arguments["itemId"] as? String ?: "unknown"
         DetailScreen(
             itemId = itemId,
@@ -133,8 +132,7 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
                     NavigationTransitions.SlideHorizontal
                 )
             },
-            sharedTransitionScope = sharedScope,
-            animatedVisibilityScope = animScope
+            transitionScope = transitionScope
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -158,7 +159,7 @@ fun customTransition(block: TransitionBuilder.() -> Unit): NavigationTransition 
 data class SharedElementConfig(
     val key: Any,
     val type: SharedElementType = SharedElementType.Element,
-    val boundsTransform: androidx.compose.animation.BoundsTransform? = null
+    val boundsTransform: BoundsTransform? = null
 )
 
 /**
@@ -199,7 +200,7 @@ enum class SharedElementType {
 @ExperimentalSharedTransitionApi
 fun sharedElement(
     key: Any,
-    boundsTransform: androidx.compose.animation.BoundsTransform? = null
+    boundsTransform: BoundsTransform? = null
 ): SharedElementConfig = SharedElementConfig(
     key = key,
     type = SharedElementType.Element,
@@ -215,7 +216,7 @@ fun sharedElement(
 @ExperimentalSharedTransitionApi
 fun sharedBounds(
     key: Any,
-    boundsTransform: androidx.compose.animation.BoundsTransform? = null
+    boundsTransform: BoundsTransform? = null
 ): SharedElementConfig = SharedElementConfig(
     key = key,
     type = SharedElementType.Bounds,

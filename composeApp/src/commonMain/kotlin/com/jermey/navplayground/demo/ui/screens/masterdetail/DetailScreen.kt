@@ -37,6 +37,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.components.DetailRow
 import com.jermey.navplayground.demo.ui.components.SpecificationRow
+import com.jermey.quo.vadis.core.navigation.compose.TransitionScope
+import com.jermey.quo.vadis.core.navigation.compose.quoVadisSharedElement
+import com.jermey.quo.vadis.core.navigation.core.sharedBounds
+import com.jermey.quo.vadis.core.navigation.core.sharedElement
 
 private const val RELATED_ITEMS_COUNT = 5
 
@@ -49,8 +53,7 @@ fun DetailScreen(
     itemId: String,
     onBack: () -> Unit,
     onNavigateToRelated: (String) -> Unit,
-    sharedTransitionScope: androidx.compose.animation.SharedTransitionScope? = null,
-    animatedVisibilityScope: androidx.compose.animation.AnimatedVisibilityScope? = null
+    transitionScope: TransitionScope? = null
 ) {
     val relatedItems = remember(itemId) {
         (1..RELATED_ITEMS_COUNT).map { "Related item $it" }
@@ -98,45 +101,23 @@ fun DetailScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             // Apply shared element transition to icon (matching key from ItemCard) - larger in detail
-                            val iconModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                                with(sharedTransitionScope) {
-                                    Modifier
-                                        .size(80.dp)
-                                        .sharedElement(
-                                            sharedContentState = rememberSharedContentState(key = "icon-$itemId"),
-                                            animatedVisibilityScope = animatedVisibilityScope
-                                        )
-                                }
-                            } else {
-                                Modifier.size(80.dp)
-                            }
-                            
                             Icon(
                                 Icons.Default.AccountCircle,
                                 contentDescription = "Item icon",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = iconModifier
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .quoVadisSharedElement(sharedElement(key = "icon-$itemId"))
                             )
                             
                             Spacer(Modifier.width(16.dp))
                             
                             Column(modifier = Modifier.weight(1f)) {
                                 // Apply shared element transition to title (matching key from ItemCard)
-                                val titleModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                                    with(sharedTransitionScope) {
-                                        Modifier.sharedBounds(
-                                            sharedContentState = rememberSharedContentState(key = "title-$itemId"),
-                                            animatedVisibilityScope = animatedVisibilityScope
-                                        )
-                                    }
-                                } else {
-                                    Modifier
-                                }
-                                
                                 Text(
                                     itemId.replace("_", " ").capitalize(),
                                     style = MaterialTheme.typography.headlineMedium,
-                                    modifier = titleModifier
+                                    modifier = Modifier.quoVadisSharedElement(sharedBounds(key = "title-$itemId"))
                                 )
                                 
                                 Text(
