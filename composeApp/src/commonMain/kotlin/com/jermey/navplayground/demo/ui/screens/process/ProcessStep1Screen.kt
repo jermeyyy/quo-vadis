@@ -65,76 +65,88 @@ fun ProcessStep1Screen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                ProcessStepIndicator(currentStep = 1, totalSteps = 4)
+            ProcessStep1Content(selectedType, name, onBack, onNext)
+        }
+    }
+}
 
-                Text(
-                    "Choose Account Type",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+@Composable
+private fun ProcessStep1Content(
+    selectedType: String,
+    name: String,
+    onBack: () -> Unit,
+    onNext: (String, String) -> Unit
+) {
+    var selectedType1 = selectedType
+    var name1 = name
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        ProcessStepIndicator(currentStep = 1, totalSteps = 4)
 
-                Text(
-                    "Select the type of account you want to create. This will determine the next steps.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        Text(
+            "Choose Account Type",
+            style = MaterialTheme.typography.headlineMedium
+        )
 
-                Spacer(Modifier.height(8.dp))
+        Text(
+            "Select the type of account you want to create. This will determine the next steps.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
-                Column(Modifier.selectableGroup()) {
-                    AccountTypeOption(
-                        type = "personal",
-                        title = "Personal Account",
-                        description = "For individual use",
-                        icon = Icons.Default.Person,
-                        selected = selectedType == "personal",
-                        onSelect = { selectedType = "personal" }
-                    )
+        Spacer(Modifier.height(8.dp))
 
-                    Spacer(Modifier.height(8.dp))
+        Column(Modifier.selectableGroup()) {
+            AccountTypeOption(
+                type = "personal",
+                title = "Personal Account",
+                description = "For individual use",
+                icon = Icons.Default.Person,
+                selected = selectedType1 == "personal",
+                onSelect = { selectedType1 = "personal" }
+            )
 
-                    AccountTypeOption(
-                        type = "business",
-                        title = "Business Account",
-                        description = "For companies and organizations",
-                        icon = Icons.Default.Business,
-                        selected = selectedType == "business",
-                        onSelect = { selectedType = "business" }
-                    )
-                }
+            Spacer(Modifier.height(8.dp))
 
-                Spacer(Modifier.height(16.dp))
+            AccountTypeOption(
+                type = "business",
+                title = "Business Account",
+                description = "For companies and organizations",
+                icon = Icons.Default.Business,
+                selected = selectedType1 == "business",
+                onSelect = { selectedType1 = "business" }
+            )
+        }
 
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Your Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            }
+        Spacer(Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onBack,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Back")
-                }
+        OutlinedTextField(
+            value = name1,
+            onValueChange = { name1 = it },
+            label = { Text("Your Name") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+    }
 
-                Button(
-                    onClick = { onNext(selectedType, name) },
-                    modifier = Modifier.weight(1f),
-                    enabled = name.isNotBlank()
-                ) {
-                    Text("Next")
-                }
-            }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedButton(
+            onClick = onBack,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Back")
+        }
+
+        Button(
+            onClick = { onNext(selectedType1, name1) },
+            modifier = Modifier.weight(1f),
+            enabled = name1.isNotBlank()
+        ) {
+            Text("Next")
         }
     }
 }

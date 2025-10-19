@@ -1,5 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens.masterdetail
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +27,7 @@ private const val MASTER_LIST_ITEMS_COUNT = 50
 /**
  * Master List Screen - Shows list of items (Master view)
  */
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun MasterListScreen(
     onItemClick: (String) -> Unit,

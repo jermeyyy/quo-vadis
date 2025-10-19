@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,9 +21,9 @@ fun ProfileInfoSection() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ProfileInfoRow("Member since", "January 2024")
-            Divider()
+            HorizontalDivider()
             ProfileInfoRow("Posts", "42")
-            Divider()
+            HorizontalDivider()
             ProfileInfoRow("Followers", "1,234")
         }
     }

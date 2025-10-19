@@ -58,53 +58,58 @@ fun ProcessStartScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+            ProcessStartContent(onStart)
+        }
+    }
+}
+
+@Composable
+private fun ProcessStartContent(onStart: () -> Unit) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(
+            Icons.AutoMirrored.Filled.AssistantDirection,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+
+        Text(
+            "Welcome to Setup",
+            style = MaterialTheme.typography.headlineLarge
+        )
+
+        Text(
+            "This wizard demonstrates a multi-step process with branching logic based on user choices.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        ProcessStepIndicator(currentStep = 0, totalSteps = 4)
+
+        Spacer(Modifier.height(8.dp))
+
+        Card(modifier = Modifier.fillMaxWidth()) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.AssistantDirection,
-                    contentDescription = null,
-                    modifier = Modifier.size(80.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-
-                Text(
-                    "Welcome to Setup",
-                    style = MaterialTheme.typography.headlineLarge
-                )
-
-                Text(
-                    "This wizard demonstrates a multi-step process with branching logic based on user choices.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                ProcessStepIndicator(currentStep = 0, totalSteps = 4)
-
-                Spacer(Modifier.height(8.dp))
-
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text("What you'll do:", style = MaterialTheme.typography.titleMedium)
-                        ProcessStep("Choose account type", Icons.Default.Person)
-                        ProcessStep("Configure settings", Icons.Default.Settings)
-                        ProcessStep("Review choices", Icons.Default.CheckCircle)
-                        ProcessStep("Complete setup", Icons.Default.Done)
-                    }
-                }
-            }
-
-            Button(
-                onClick = onStart,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Start Setup")
+                Text("What you'll do:", style = MaterialTheme.typography.titleMedium)
+                ProcessStep("Choose account type", Icons.Default.Person)
+                ProcessStep("Configure settings", Icons.Default.Settings)
+                ProcessStep("Review choices", Icons.Default.CheckCircle)
+                ProcessStep("Complete setup", Icons.Default.Done)
             }
         }
+    }
+
+    Button(
+        onClick = onStart,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("Start Setup")
     }
 }

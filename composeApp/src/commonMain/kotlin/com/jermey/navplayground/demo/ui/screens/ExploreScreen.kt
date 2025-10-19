@@ -78,35 +78,7 @@ fun ExploreScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = modifier.padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item {
-                Text(
-                    "Explore Items",
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            items(items) { item ->
-                Card(
-                    onClick = { onItemClick(item) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(item, style = MaterialTheme.typography.bodyLarge)
-                        Icon(Icons.Default.ChevronRight, "Open")
-                    }
-                }
-            }
-        }
+        ExploreScreenContent(modifier, paddingValues, items, onItemClick)
     }
 
     if (showBottomSheet) {
@@ -124,6 +96,44 @@ fun ExploreScreen(
                     }
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun ExploreScreenContent(
+    modifier: Modifier,
+    paddingValues: PaddingValues,
+    items: List<String>,
+    onItemClick: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = modifier.padding(paddingValues),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Text(
+                "Explore Items",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
+
+        items(items) { item ->
+            Card(
+                onClick = { onItemClick(item) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(item, style = MaterialTheme.typography.bodyLarge)
+                    Icon(Icons.Default.ChevronRight, "Open")
+                }
+            }
         }
     }
 }

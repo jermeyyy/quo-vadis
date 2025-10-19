@@ -1,5 +1,6 @@
 package com.jermey.navplayground.demo.graphs
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import com.jermey.navplayground.demo.destinations.MainDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
@@ -27,9 +28,7 @@ import com.jermey.quo.vadis.core.navigation.core.navigationGraph
 /**
  * Root application navigation graph.
  *
- * This graph contains all main bottom navigation destinations wrapped in [ScreenWithScaffold]
- * to ensure the complete screen structure (TopAppBar + BottomNav + content) is cached together,
- * preventing visual glitches during predictive back animations.
+ * This graph contains all main bottom navigation destinations
  *
  * Nested graphs (master-detail, tabs, process) are included as full-screen destinations.
  */
@@ -97,7 +96,7 @@ fun appRootGraph() = navigationGraph("app_root") {
 /**
  * Master-Detail navigation graph with shared element transitions
  */
-@OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 fun masterDetailGraph() = navigationGraph("master_detail") {
     startDestination(MasterDetailDestination.List)
 

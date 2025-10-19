@@ -2,6 +2,7 @@ package com.jermey.navplayground.demo.ui.screens.process
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,8 +13,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,95 +58,121 @@ fun ProcessStep3Screen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                ProcessStepIndicator(currentStep = 3, totalSteps = 4)
+        ProcessStep3Content(padding, branch, dataParts, onBack, onComplete)
+    }
+}
 
-                Text(
-                    "Review Your Information",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+@Composable
+private fun ProcessStep3Content(
+    padding: PaddingValues,
+    branch: String,
+    dataParts: List<String>,
+    onBack: () -> Unit,
+    onComplete: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            ProcessStepIndicator(currentStep = 3, totalSteps = 4)
 
-                Text(
-                    "Please review the information you've provided before completing the setup.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Text(
+                "Review Your Information",
+                style = MaterialTheme.typography.headlineMedium
+            )
 
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            "Account Type",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            branch.uppercase(),
-                            style = MaterialTheme.typography.titleMedium
-                        )
+            Text(
+                "Please review the information you've provided before completing the setup.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-                        Divider()
-
-                        if (dataParts.isNotEmpty()) {
-                            ReviewRow("Name", dataParts.getOrNull(DATA_INDEX_NAME) ?: "")
-
-                            if (branch == "personal") {
-                                ReviewRow("Email", dataParts.getOrNull(DATA_INDEX_SECOND_FIELD) ?: "")
-                                ReviewRow("Birth Date", dataParts.getOrNull(DATA_INDEX_THIRD_FIELD) ?: "")
-                            } else {
-                                ReviewRow("Company", dataParts.getOrNull(DATA_INDEX_SECOND_FIELD) ?: "")
-                                ReviewRow("Tax ID", dataParts.getOrNull(DATA_INDEX_THIRD_FIELD) ?: "")
-                                ReviewRow("Industry", dataParts.getOrNull(DATA_INDEX_INDUSTRY) ?: "")
-                            }
-                        }
-                    }
-                }
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(Icons.Default.Info, null)
-                        Text(
-                            "By continuing, you agree to our Terms of Service and Privacy Policy.",
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    Text(
+                        "Account Type",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        branch.uppercase(),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    HorizontalDivider()
+
+                    if (dataParts.isNotEmpty()) {
+                        ReviewRow("Name", dataParts.getOrNull(DATA_INDEX_NAME) ?: "")
+
+                        if (branch == "personal") {
+                            ReviewRow(
+                                "Email",
+                                dataParts.getOrNull(DATA_INDEX_SECOND_FIELD) ?: ""
+                            )
+                            ReviewRow(
+                                "Birth Date",
+                                dataParts.getOrNull(DATA_INDEX_THIRD_FIELD) ?: ""
+                            )
+                        } else {
+                            ReviewRow(
+                                "Company",
+                                dataParts.getOrNull(DATA_INDEX_SECOND_FIELD) ?: ""
+                            )
+                            ReviewRow(
+                                "Tax ID",
+                                dataParts.getOrNull(DATA_INDEX_THIRD_FIELD) ?: ""
+                            )
+                            ReviewRow(
+                                "Industry",
+                                dataParts.getOrNull(DATA_INDEX_INDUSTRY) ?: ""
+                            )
+                        }
                     }
                 }
             }
 
-            Row(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
             ) {
-                OutlinedButton(
-                    onClick = onBack,
-                    modifier = Modifier.weight(1f)
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Back")
+                    Icon(Icons.Default.Info, null)
+                    Text(
+                        "By continuing, you agree to our Terms of Service and Privacy Policy.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
+            }
+        }
 
-                Button(
-                    onClick = onComplete,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Complete")
-                }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = onBack,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Back")
+            }
+
+            Button(
+                onClick = onComplete,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Complete")
             }
         }
     }

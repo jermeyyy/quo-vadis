@@ -38,6 +38,8 @@ import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.SettingItem
 import com.jermey.navplayground.demo.ui.components.SettingsSection
 import com.jermey.navplayground.demo.ui.components.ThemeSettingItem
+import com.jermey.navplayground.demo.ui.theme.ThemeManager
+import com.jermey.navplayground.demo.ui.theme.ThemeMode
 import com.jermey.navplayground.demo.ui.theme.rememberThemeManager
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -83,47 +85,7 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = modifier.fillMaxSize().padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item {
-                Text(
-                    "Settings",
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            item {
-                SettingsSection("Account") {
-                    SettingItem("Email notifications", Icons.Default.Email)
-                    SettingItem("Push notifications", Icons.Default.Notifications)
-                    SettingItem("Privacy settings", Icons.Default.Lock)
-                }
-            }
-
-            item {
-                SettingsSection("Appearance") {
-                    ThemeSettingItem(
-                        currentMode = currentThemeMode,
-                        onThemeChange = { newMode ->
-                            themeManager.setThemeMode(newMode)
-                        }
-                    )
-                    SettingItem("Language", Icons.Default.Language)
-                }
-            }
-
-            item {
-                SettingsSection("About") {
-                    SettingItem("Version", Icons.Default.Info)
-                    SettingItem("Terms of Service", Icons.Default.Description)
-                    SettingItem("Privacy Policy", Icons.Default.Policy)
-                }
-            }
-        }
+        SettingsScreenContent(modifier, paddingValues, currentThemeMode, themeManager)
     }
 
     if (showBottomSheet) {
@@ -141,6 +103,56 @@ fun SettingsScreen(
                     }
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun SettingsScreenContent(
+    modifier: Modifier,
+    paddingValues: PaddingValues,
+    currentThemeMode: ThemeMode,
+    themeManager: ThemeManager
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize().padding(paddingValues),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Text(
+                "Settings",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
+
+        item {
+            SettingsSection("Account") {
+                SettingItem("Email notifications", Icons.Default.Email)
+                SettingItem("Push notifications", Icons.Default.Notifications)
+                SettingItem("Privacy settings", Icons.Default.Lock)
+            }
+        }
+
+        item {
+            SettingsSection("Appearance") {
+                ThemeSettingItem(
+                    currentMode = currentThemeMode,
+                    onThemeChange = { newMode ->
+                        themeManager.setThemeMode(newMode)
+                    }
+                )
+                SettingItem("Language", Icons.Default.Language)
+            }
+        }
+
+        item {
+            SettingsSection("About") {
+                SettingItem("Version", Icons.Default.Info)
+                SettingItem("Terms of Service", Icons.Default.Description)
+                SettingItem("Privacy Policy", Icons.Default.Policy)
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package com.jermey.navplayground.demo.ui.screens.process
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,64 +56,78 @@ fun ProcessStep2AScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+        ProcessStep2AContent(padding, previousData, email, birthdate, onBack, onNext)
+    }
+}
+
+@Composable
+private fun ProcessStep2AContent(
+    padding: PaddingValues,
+    previousData: String,
+    email: String,
+    birthdate: String,
+    onBack: () -> Unit,
+    onNext: (String) -> Unit
+) {
+    var email1 = email
+    var birthdate1 = birthdate
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            ProcessStepIndicator(currentStep = 2, totalSteps = 4)
+
+            Text(
+                "Personal Information",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Text(
+                "Hello $previousData! Please provide your personal details.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            OutlinedTextField(
+                value = email1,
+                onValueChange = { email1 = it },
+                label = { Text("Email Address") },
+                leadingIcon = { Icon(Icons.Default.Email, null) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            OutlinedTextField(
+                value = birthdate1,
+                onValueChange = { birthdate1 = it },
+                label = { Text("Birth Date (YYYY-MM-DD)") },
+                leadingIcon = { Icon(Icons.Default.CalendarToday, null) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                ProcessStepIndicator(currentStep = 2, totalSteps = 4)
-
-                Text(
-                    "Personal Information",
-                    style = MaterialTheme.typography.headlineMedium
-                )
-
-                Text(
-                    "Hello $previousData! Please provide your personal details.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email Address") },
-                    leadingIcon = { Icon(Icons.Default.Email, null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                OutlinedTextField(
-                    value = birthdate,
-                    onValueChange = { birthdate = it },
-                    label = { Text("Birth Date (YYYY-MM-DD)") },
-                    leadingIcon = { Icon(Icons.Default.CalendarToday, null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+            OutlinedButton(
+                onClick = onBack,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Back")
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Button(
+                onClick = { onNext("$previousData|$email1|$birthdate1") },
+                modifier = Modifier.weight(1f),
+                enabled = email1.isNotBlank() && birthdate1.isNotBlank()
             ) {
-                OutlinedButton(
-                    onClick = onBack,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Back")
-                }
-
-                Button(
-                    onClick = { onNext("$previousData|$email|$birthdate") },
-                    modifier = Modifier.weight(1f),
-                    enabled = email.isNotBlank() && birthdate.isNotBlank()
-                ) {
-                    Text("Next")
-                }
+                Text("Next")
             }
         }
     }

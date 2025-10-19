@@ -2,6 +2,7 @@ package com.jermey.navplayground.demo.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -73,42 +74,7 @@ fun ProfileScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Icon(
-                Icons.Default.Person,
-                contentDescription = null,
-                modifier = Modifier.size(120.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-
-            Text(
-                "John Doe",
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            Text(
-                "john.doe@example.com",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            Button(onClick = onEditProfile) {
-                Text("Edit Profile")
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            ProfileInfoSection()
-        }
+        ProfileScreenContent(modifier, paddingValues, onEditProfile)
     }
 
     if (showBottomSheet) {
@@ -127,6 +93,50 @@ fun ProfileScreen(
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun ProfileScreenContent(
+    modifier: Modifier,
+    paddingValues: PaddingValues,
+    onEditProfile: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(
+            Icons.Default.Person,
+            contentDescription = null,
+            modifier = Modifier.size(120.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+
+        Text(
+            "John Doe",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Text(
+            "john.doe@example.com",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        Button(onClick = onEditProfile) {
+            Text("Edit Profile")
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        ProfileInfoSection()
     }
 }
 
