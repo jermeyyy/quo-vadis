@@ -113,8 +113,7 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
                     NavigationTransitions.SlideHorizontal
                 )
             },
-            onBack = { navigator.navigateBack() },
-            transitionScope = transitionScope
+            onBack = { navigator.navigateBack() }
         )
     }
 
@@ -131,8 +130,7 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
                     MasterDetailDestination.Detail(relatedId),
                     NavigationTransitions.SlideHorizontal
                 )
-            },
-            transitionScope = transitionScope
+            }
         )
     }
 }

@@ -93,6 +93,7 @@ fun currentTransitionScope(): TransitionScope? {
 @Composable
 fun requireTransitionScope(): TransitionScope {
     return currentTransitionScope()
-        ?: error("TransitionScope not found. Ensure you are within a navigation transition with shared elements enabled.")
+        ?: error("TransitionScope not found. " +
+                "Ensure you are within a navigation transition with shared elements enabled.")
 }
 

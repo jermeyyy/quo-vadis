@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -46,6 +47,7 @@ import kotlinx.coroutines.launch
 // Animation constants
 private const val PREDICTIVE_BACK_SCALE_FACTOR = 0.1f
 private const val MAX_GESTURE_PROGRESS = 0.25f // Maximum drag distance (25% of screen width)
+private const val INITIAL_GESTURE_PROGRESS = 0.001f // Small non-zero value to trigger immediate rendering
 
 /**
  * Unified navigation host with support for:
@@ -67,7 +69,6 @@ private const val MAX_GESTURE_PROGRESS = 0.25f // Maximum drag distance (25% of 
  */
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
-@Suppress("LongMethod", "CyclomaticComplexMethod")
 fun GraphNavHost(
     graph: NavigationGraph,
     navigator: Navigator,
@@ -93,11 +94,275 @@ fun GraphNavHost(
 }
 
 /**
+ * Renders content with predictive gesture animation.
+ */
+@Composable
+private fun PredictiveGestureContent(
+    entry: BackStackEntry,
+    gestureProgress: Float,
+    exitAnimProgress: Animatable<Float, *>,
+    graph: NavigationGraph,
+    navigator: Navigator,
+    composableCache: ComposableCache,
+    saveableStateHolder: SaveableStateHolder,
+    enableCache: Boolean
+) {
+    val progress = if (gestureProgress > 0) gestureProgress else exitAnimProgress.value
+    
+    Box(
+        modifier = Modifier.graphicsLayer {
+            translationX = size.width * progress
+            scaleX = 1f - (progress * PREDICTIVE_BACK_SCALE_FACTOR)
+            scaleY = 1f - (progress * PREDICTIVE_BACK_SCALE_FACTOR)
+        }
+    ) {
+        ScreenContent(
+            entry = entry,
+            graph = graph,
+            navigator = navigator,
+            composableCache = composableCache,
+            saveableStateHolder = saveableStateHolder,
+            enableCache = enableCache
+        )
+    }
+}
+
+/**
+ * Renders content with animated transitions.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun AnimatedNavigationContent(
+    entry: BackStackEntry,
+    isBackNavigation: Boolean,
+    defaultTransition: NavigationTransition,
+    sharedTransitionScope: SharedTransitionScope,
+    graph: NavigationGraph,
+    navigator: Navigator,
+    composableCache: ComposableCache,
+    saveableStateHolder: SaveableStateHolder,
+    enableCache: Boolean
+) {
+    AnimatedContent(
+        targetState = entry,
+        transitionSpec = {
+            // Select transition source based on navigation direction
+            val transition = if (isBackNavigation) {
+                // For back navigation, prefer the exiting screen's transition (initialState)
+                // This ensures the leaving screen's exit animation is shown
+                initialState.transition ?: targetState.transition ?: defaultTransition
+            } else {
+                // For forward navigation, use the entering screen's transition (targetState)
+                targetState.transition ?: defaultTransition
+            }
+            
+            // Use pop animations for back navigation, regular animations for forward
+            if (isBackNavigation) {
+                transition.popEnter togetherWith transition.popExit
+            } else {
+                transition.enter togetherWith transition.exit
+            }
+        },
+        label = "navigation_animation"
+    ) { animatingEntry ->
+        val transitionScope = TransitionScope(sharedTransitionScope, this@AnimatedContent)
+        
+        CompositionLocalProvider(
+            LocalTransitionScope provides transitionScope
+        ) {
+            ScreenContent(
+                entry = animatingEntry,
+                graph = graph,
+                navigator = navigator,
+                composableCache = composableCache,
+                saveableStateHolder = saveableStateHolder,
+                enableCache = enableCache
+            )
+        }
+    }
+}
+
+/**
+ * Renders navigation content with appropriate animations.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun NavigationContentRenderer(
+    displayedCurrent: BackStackEntry?,
+    displayedPrevious: BackStackEntry?,
+    isPredictiveGesture: Boolean,
+    justCompletedGesture: Boolean,
+    isBackNavigation: Boolean,
+    gestureProgress: Float,
+    exitAnimProgress: Animatable<Float, *>,
+    graph: NavigationGraph,
+    navigator: Navigator,
+    composableCache: ComposableCache,
+    saveableStateHolder: SaveableStateHolder,
+    enableComposableCache: Boolean,
+    defaultTransition: NavigationTransition,
+    sharedTransitionScope: SharedTransitionScope
+) {
+    // Render previous screen during predictive gesture
+    if (isPredictiveGesture && displayedPrevious != null && displayedPrevious.id != displayedCurrent?.id) {
+        ScreenContent(
+            entry = displayedPrevious,
+            graph = graph,
+            navigator = navigator,
+            composableCache = composableCache,
+            saveableStateHolder = saveableStateHolder,
+            enableCache = enableComposableCache
+        )
+    }
+    
+    // Render current screen
+    displayedCurrent?.let { entry ->
+        when {
+            isPredictiveGesture -> {
+                PredictiveGestureContent(
+                    entry = entry,
+                    gestureProgress = gestureProgress,
+                    exitAnimProgress = exitAnimProgress,
+                    graph = graph,
+                    navigator = navigator,
+                    composableCache = composableCache,
+                    saveableStateHolder = saveableStateHolder,
+                    enableCache = enableComposableCache
+                )
+            }
+            justCompletedGesture -> {
+                ScreenContent(
+                    entry = entry,
+                    graph = graph,
+                    navigator = navigator,
+                    composableCache = composableCache,
+                    saveableStateHolder = saveableStateHolder,
+                    enableCache = enableComposableCache
+                )
+            }
+            else -> {
+                AnimatedNavigationContent(
+                    entry = entry,
+                    isBackNavigation = isBackNavigation,
+                    defaultTransition = defaultTransition,
+                    sharedTransitionScope = sharedTransitionScope,
+                    graph = graph,
+                    navigator = navigator,
+                    composableCache = composableCache,
+                    saveableStateHolder = saveableStateHolder,
+                    enableCache = enableComposableCache
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Handles forward navigation or replacement with animation.
+ */
+private suspend fun handleAnimatedNavigation(
+    currentEntry: BackStackEntry?,
+    previousEntry: BackStackEntry?,
+    composableCache: ComposableCache,
+    onNavigatingChange: (Boolean) -> Unit
+) {
+    onNavigatingChange(true)
+    
+    currentEntry?.let { composableCache.lockEntry(it.id) }
+    previousEntry?.let { composableCache.lockEntry(it.id) }
+    
+    kotlinx.coroutines.delay(NavigationTransitions.ANIMATION_DURATION.toLong())
+    onNavigatingChange(false)
+    
+    currentEntry?.let { composableCache.unlockEntry(it.id) }
+    previousEntry?.let { composableCache.unlockEntry(it.id) }
+}
+
+/**
+ * Animates gesture completion and completes navigation.
+ */
+private suspend fun animateGestureCompletion(
+    gestureProgress: MutableFloatState,
+    exitAnimProgress: Animatable<Float, *>,
+    navigator: Navigator,
+    capturedCurrent: BackStackEntry?,
+    capturedPrevious: BackStackEntry?,
+    composableCache: ComposableCache,
+    getCurrentEntry: () -> BackStackEntry?,
+    onStateUpdate: (
+        current: BackStackEntry?,
+        previous: BackStackEntry?,
+        isPredictive: Boolean,
+        progress: Float,
+        justCompleted: Boolean
+    ) -> Unit
+) {
+    exitAnimProgress.snapTo(gestureProgress.floatValue)
+    gestureProgress.floatValue = 0f
+    exitAnimProgress.animateTo(
+        targetValue = 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        )
+    )
+    
+    navigator.navigateBack()
+    withFrameNanos { }
+    
+    onStateUpdate(getCurrentEntry(), null, false, 0f, true)
+    
+    exitAnimProgress.snapTo(0f)
+    capturedCurrent?.let { composableCache.unlockEntry(it.id) }
+    capturedPrevious?.let { composableCache.unlockEntry(it.id) }
+    
+    withFrameNanos { }
+    onStateUpdate(getCurrentEntry(), null, false, 0f, false)
+}
+
+/**
+ * Animates gesture cancellation and resets state.
+ */
+private suspend fun animateGestureCancellation(
+    gestureProgress: MutableFloatState,
+    exitAnimProgress: Animatable<Float, *>,
+    capturedCurrent: BackStackEntry?,
+    capturedPrevious: BackStackEntry?,
+    composableCache: ComposableCache,
+    onStateUpdate: (
+        current: BackStackEntry?,
+        previous: BackStackEntry?,
+        isPredictive: Boolean,
+        progress: Float,
+        justCompleted: Boolean
+    ) -> Unit
+) {
+    exitAnimProgress.snapTo(gestureProgress.floatValue)
+    gestureProgress.floatValue = 0f
+    exitAnimProgress.animateTo(
+        targetValue = 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        )
+    )
+    
+    onStateUpdate(null, null, false, 0f, false)
+    
+    exitAnimProgress.snapTo(0f)
+    capturedCurrent?.let { composableCache.unlockEntry(it.id) }
+    capturedPrevious?.let { composableCache.unlockEntry(it.id) }
+}
+
+/**
  * Internal content of GraphNavHost, extracted to allow wrapping with SharedTransitionLayout.
+ * 
+ * Note: LaunchedEffect and PredictiveBackHandler must remain inline to maintain reactive access
+ * to state for immediate updates. Complex logic is extracted to separate suspend functions.
  */
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
-@Suppress("LongMethod", "CyclomaticComplexity", "ComplexMethod")
+@Suppress("LongMethod")
 private fun GraphNavHostContent(
     graph: NavigationGraph,
     navigator: Navigator,
@@ -112,40 +377,31 @@ private fun GraphNavHostContent(
     val currentEntry by navigator.backStack.current.collectAsState()
     val previousEntry by navigator.backStack.previous.collectAsState()
     val canGoBack by remember { derivedStateOf { backStackEntries.size > 1 } }
-
     val saveableStateHolder = rememberSaveableStateHolder()
     val composableCache = remember { ComposableCache(maxCacheSize) }
-    val scope = rememberCoroutineScope()
 
-    // Animation state
     var isNavigating by remember { mutableStateOf(false) }
-    var isBackNavigation by remember { mutableStateOf(false) }
     var isPredictiveGesture by remember { mutableStateOf(false) }
     var justCompletedGesture by remember { mutableStateOf(false) }
-    var gestureProgress by remember { mutableFloatStateOf(0f) }
+    var isBackNavigation by remember { mutableStateOf(false) }
+    val gestureProgress = remember { mutableFloatStateOf(0f) }
     val exitAnimProgress = remember { Animatable(0f) }
+    var displayedCurrent by remember { mutableStateOf<BackStackEntry?>(null) }
+    var displayedPrevious by remember { mutableStateOf<BackStackEntry?>(null) }
 
     // Track stack changes for animation direction detection
     var lastStackSize by remember { mutableIntStateOf(backStackEntries.size) }
     var lastEntryId by remember { mutableStateOf<String?>(null) }
-    var lastCurrentEntry by remember { mutableStateOf<BackStackEntry?>(null) }
 
-    // Stable rendering state during animations
-    var displayedCurrent by remember { mutableStateOf<BackStackEntry?>(null) }
-    var displayedPrevious by remember { mutableStateOf<BackStackEntry?>(null) }
-
-    // Update displayed entries and animation state
+    // Update displayed entries and animation state - MUST be inline for immediate state updates
     LaunchedEffect(backStackEntries.size, currentEntry?.id) {
         val stackSize = backStackEntries.size
         val currentId = currentEntry?.id
         
         // Skip processing if predictive gesture is active OR just completed
-        // The gesture handler manages its own state
         if (isPredictiveGesture || justCompletedGesture) {
-            // Still update tracking to stay in sync
             lastStackSize = stackSize
             lastEntryId = currentId
-            lastCurrentEntry = currentEntry
             return@LaunchedEffect
         }
 
@@ -155,256 +411,152 @@ private fun GraphNavHostContent(
                 displayedCurrent = currentEntry
                 displayedPrevious = previousEntry
                 isBackNavigation = false
-                isNavigating = true
-                
-                // Lock entries to prevent cache eviction during animation
-                currentEntry?.let { 
-                    composableCache.lockEntry(it.id)
-                }
-                previousEntry?.let { 
-                    composableCache.lockEntry(it.id)
-                }
-                
-                // Auto-complete animation after duration
-                kotlinx.coroutines.delay(NavigationTransitions.ANIMATION_DURATION.toLong())
-                isNavigating = false
-                
-                // Unlock entries
-                currentEntry?.let { 
-                    composableCache.unlockEntry(it.id)
-                }
-                previousEntry?.let { 
-                    composableCache.unlockEntry(it.id)
-                }
+                handleAnimatedNavigation(currentEntry, previousEntry, composableCache) { isNavigating = it }
             }
-            // Navigation change (forward or back, not predictive gesture)
-            // AnimatedContent will handle the animation automatically
-            stackSize != lastStackSize && !isPredictiveGesture -> {
+            // Back navigation (not predictive gesture)
+            stackSize < lastStackSize -> {
                 displayedCurrent = currentEntry
                 displayedPrevious = previousEntry
-                isBackNavigation = stackSize < lastStackSize
-                isNavigating = false  // Let AnimatedContent handle animation
+                isBackNavigation = true
+                isNavigating = false
             }
             // Replace (same size, different entry)
             stackSize == lastStackSize && currentId != lastEntryId && currentId != null -> {
                 displayedCurrent = currentEntry
                 displayedPrevious = previousEntry
                 isBackNavigation = false
-                isNavigating = true
-                
-                // Lock entries to prevent cache eviction during animation
-                currentEntry?.let { 
-                    composableCache.lockEntry(it.id)
-                }
-                previousEntry?.let { 
-                    composableCache.lockEntry(it.id)
-                }
-                
-                // Auto-complete animation after duration
-                kotlinx.coroutines.delay(NavigationTransitions.ANIMATION_DURATION.toLong())
-                isNavigating = false
-                
-                // Unlock entries
-                currentEntry?.let { 
-                    composableCache.unlockEntry(it.id)
-                }
-                previousEntry?.let { 
-                    composableCache.unlockEntry(it.id)
-                }
+                handleAnimatedNavigation(currentEntry, previousEntry, composableCache) { isNavigating = it }
             }
-            // No animation (idle or predictive gesture completed)
+            // No animation
             else -> {
                 displayedCurrent = currentEntry
                 displayedPrevious = null
+                isBackNavigation = false
             }
         }
 
         lastStackSize = stackSize
         lastEntryId = currentId
-        lastCurrentEntry = currentEntry
     }
 
-    // Predictive back gesture handler
+    // Predictive back gesture handler - MUST be inline to access reactive state
+    val scope = rememberCoroutineScope()
     PredictiveBackHandler(enabled = enablePredictiveBack && canGoBack && !isNavigating) { backEvent ->
-        // Capture entries BEFORE navigation
         val capturedCurrent = currentEntry
         val capturedPrevious = previousEntry
         
         displayedCurrent = capturedCurrent
         displayedPrevious = capturedPrevious
         isPredictiveGesture = true
-        isBackNavigation = true
+        gestureProgress.floatValue = INITIAL_GESTURE_PROGRESS
         
-        // Set initial gesture progress immediately to start animation without delay
-        gestureProgress = 0.001f  // Small non-zero value to trigger immediate rendering
-        
-        // Lock entries to prevent cache eviction during gesture
-        capturedCurrent?.let { 
-            composableCache.lockEntry(it.id)
-        }
-        capturedPrevious?.let { 
-            composableCache.lockEntry(it.id)
-        }
+        capturedCurrent?.let { composableCache.lockEntry(it.id) }
+        capturedPrevious?.let { composableCache.lockEntry(it.id) }
 
         try {
             backEvent.collect { event ->
-                // Clamp gesture progress to maximum (25%)
                 val clampedProgress = event.progress.coerceAtMost(MAX_GESTURE_PROGRESS)
-                gestureProgress = clampedProgress
+                gestureProgress.floatValue = clampedProgress
             }
-
-            // Gesture completed - animate exit from current position
+            
             scope.launch {
-                exitAnimProgress.snapTo(gestureProgress)
-                gestureProgress = 0f  // Clear gesture progress so animation takes over
-                exitAnimProgress.animateTo(
-                    targetValue = 1f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
-                )
-
-                // Complete navigation - but keep isPredictiveGesture flag set
-                navigator.navigateBack()
-                
-                // Wait for next frame to allow LaunchedEffect to process stack change
-                withFrameNanos { }
-                
-                // Update final state BEFORE resetting isPredictiveGesture
-                displayedCurrent = currentEntry
-                displayedPrevious = null
-                isBackNavigation = false
-                justCompletedGesture = true  // Flag to skip AnimatedContent
-                
-                // Reset gesture state - this will trigger LaunchedEffect but it will now see correct state
-                isPredictiveGesture = false
-                exitAnimProgress.snapTo(0f)
-                
-                // Unlock entries
-                capturedCurrent?.let { 
-                    composableCache.unlockEntry(it.id)
+                animateGestureCompletion(
+                    gestureProgress,
+                    exitAnimProgress,
+                    navigator,
+                    capturedCurrent,
+                    capturedPrevious,
+                    composableCache,
+                    { currentEntry }
+                ) { current, previous, isPredictive, progress, justCompleted ->
+                    displayedCurrent = current
+                    displayedPrevious = previous
+                    isPredictiveGesture = isPredictive
+                    gestureProgress.floatValue = progress
+                    justCompletedGesture = justCompleted
                 }
-                capturedPrevious?.let { 
-                    composableCache.unlockEntry(it.id)
-                }
-                
-                // Wait for next frame to allow recomposition, then clear the flag
-                withFrameNanos { }
-                justCompletedGesture = false
             }
         } catch (_: Exception) {
-            // Gesture cancelled - animate back to original position
             scope.launch {
-                exitAnimProgress.snapTo(gestureProgress)
-                gestureProgress = 0f  // Clear gesture progress so animation takes over
-                exitAnimProgress.animateTo(
-                    targetValue = 0f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
-                )
-                
-                // Reset state - no navigation happened
-                isPredictiveGesture = false
-                exitAnimProgress.snapTo(0f)
-                displayedPrevious = null
-                
-                // Unlock entries
-                capturedCurrent?.let { 
-                    composableCache.unlockEntry(it.id)
-                }
-                capturedPrevious?.let { 
-                    composableCache.unlockEntry(it.id)
+                animateGestureCancellation(
+                    gestureProgress,
+                    exitAnimProgress,
+                    capturedCurrent,
+                    capturedPrevious,
+                    composableCache
+                ) { current, previous, isPredictive, progress, justCompleted ->
+                    displayedCurrent = current
+                    displayedPrevious = previous
+                    isPredictiveGesture = isPredictive
+                    gestureProgress.floatValue = progress
+                    justCompletedGesture = justCompleted
                 }
             }
         }
     }
 
+    NavigationContainer(
+        displayedCurrent = displayedCurrent,
+        displayedPrevious = displayedPrevious,
+        isPredictiveGesture = isPredictiveGesture,
+        justCompletedGesture = justCompletedGesture,
+        isBackNavigation = isBackNavigation,
+        gestureProgress = gestureProgress.floatValue,
+        exitAnimProgress = exitAnimProgress,
+        graph = graph,
+        navigator = navigator,
+        composableCache = composableCache,
+        saveableStateHolder = saveableStateHolder,
+        enableComposableCache = enableComposableCache,
+        defaultTransition = defaultTransition,
+        sharedTransitionScope = sharedTransitionScope,
+        modifier = modifier
+    )
+}
+
+/**
+ * Container for navigation content with background.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun NavigationContainer(
+    displayedCurrent: BackStackEntry?,
+    displayedPrevious: BackStackEntry?,
+    isPredictiveGesture: Boolean,
+    justCompletedGesture: Boolean,
+    isBackNavigation: Boolean,
+    gestureProgress: Float,
+    exitAnimProgress: Animatable<Float, *>,
+    graph: NavigationGraph,
+    navigator: Navigator,
+    composableCache: ComposableCache,
+    saveableStateHolder: SaveableStateHolder,
+    enableComposableCache: Boolean,
+    defaultTransition: NavigationTransition,
+    sharedTransitionScope: SharedTransitionScope,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Render previous screen during predictive gesture (static underneath)
-        if (isPredictiveGesture && displayedPrevious != null && displayedPrevious?.id != displayedCurrent?.id) {
-            ScreenContent(
-                entry = displayedPrevious!!,
-                graph = graph,
-                navigator = navigator,
-                composableCache = composableCache,
-                saveableStateHolder = saveableStateHolder,
-                enableCache = enableComposableCache
-            )
-        }
-        
-        // Render current screen with animations
-        displayedCurrent?.let { entry ->
-            when {
-                // Predictive gesture active - manual transform
-                isPredictiveGesture -> {
-                    val progress = if (gestureProgress > 0) gestureProgress else exitAnimProgress.value
-                    
-                    Box(
-                        modifier = Modifier.graphicsLayer {
-                            translationX = size.width * progress
-                            scaleX = 1f - (progress * PREDICTIVE_BACK_SCALE_FACTOR)
-                            scaleY = 1f - (progress * PREDICTIVE_BACK_SCALE_FACTOR)
-                        }
-                    ) {
-                        ScreenContent(
-                            entry = entry,
-                            graph = graph,
-                            navigator = navigator,
-                            composableCache = composableCache,
-                            saveableStateHolder = saveableStateHolder,
-                            enableCache = enableComposableCache
-                        )
-                    }
-                }
-                // Just completed gesture - render without animation
-                justCompletedGesture -> {
-                    ScreenContent(
-                        entry = entry,
-                        graph = graph,
-                        navigator = navigator,
-                        composableCache = composableCache,
-                        saveableStateHolder = saveableStateHolder,
-                        enableCache = enableComposableCache
-                    )
-                }
-                // Regular navigation (forward or back) - use AnimatedContent with proper transitions
-                // This enables AnimatedVisibilityScope for shared elements in BOTH directions
-                else -> {
-                    AnimatedContent(
-                        targetState = entry,
-                        transitionSpec = {
-                            val transition = entry.transition ?: defaultTransition
-                            // Use the transition as-is - AnimatedContent handles direction automatically
-                            transition.enter togetherWith transition.exit
-                        },
-                        label = "navigation_animation"
-                    ) { animatingEntry ->
-                        // Create TransitionScope combining SharedTransitionScope and AnimatedVisibilityScope
-                        val transitionScope = TransitionScope(sharedTransitionScope, this@AnimatedContent)
-                        
-                        CompositionLocalProvider(
-                            LocalTransitionScope provides transitionScope
-                        ) {
-                            ScreenContent(
-                                entry = animatingEntry,
-                                graph = graph,
-                                navigator = navigator,
-                                composableCache = composableCache,
-                                saveableStateHolder = saveableStateHolder,
-                                enableCache = enableComposableCache
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        NavigationContentRenderer(
+            displayedCurrent = displayedCurrent,
+            displayedPrevious = displayedPrevious,
+            isPredictiveGesture = isPredictiveGesture,
+            justCompletedGesture = justCompletedGesture,
+            isBackNavigation = isBackNavigation,
+            gestureProgress = gestureProgress,
+            exitAnimProgress = exitAnimProgress,
+            graph = graph,
+            navigator = navigator,
+            composableCache = composableCache,
+            saveableStateHolder = saveableStateHolder,
+            enableComposableCache = enableComposableCache,
+            defaultTransition = defaultTransition,
+            sharedTransitionScope = sharedTransitionScope
+        )
     }
 }
 

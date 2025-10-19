@@ -1,9 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.core
 
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.core.navigation.compose.TransitionScope
 
 /**
  * Represents a navigation graph for a feature module.
@@ -35,7 +34,7 @@ interface NavigationGraph {
 
 /**
  * Configuration for a destination in the navigation graph.
- * 
+ *
  * Supports two content signatures:
  * - Legacy: `content(destination, navigator)` - standard navigation
  * - Scoped: `contentWithTransitionScope(destination, navigator, transitionScope)` - with shared element support
@@ -47,18 +46,18 @@ data class DestinationConfig(
     val destination: Destination,
     val content: @Composable (Destination, Navigator) -> Unit,
     val defaultTransition: NavigationTransition? = null,
-    val contentWithTransitionScope: @Composable ((Destination, Navigator, com.jermey.quo.vadis.core.navigation.compose.TransitionScope?) -> Unit)? = null
+    val contentWithTransitionScope: @Composable ((Destination, Navigator, TransitionScope?) -> Unit)? = null
 )
 
 /**
  * Builder for creating navigation graphs with DSL.
  */
 class NavigationGraphBuilder(private val graphRoute: String) {
-    private var startDest: Destination? = null
-    private val dests = mutableListOf<DestinationConfig>()
+    private var startDestination: Destination? = null
+    private val destinationConfigs = mutableListOf<DestinationConfig>()
 
     fun startDestination(destination: Destination) {
-        startDest = destination
+        startDestination = destination
     }
 
     /**
@@ -70,7 +69,14 @@ class NavigationGraphBuilder(private val graphRoute: String) {
         transition: NavigationTransition? = null,
         content: @Composable (Destination, Navigator) -> Unit
     ) {
-        dests.add(DestinationConfig(destination, content, transition, contentWithTransitionScope = null))
+        destinationConfigs.add(
+            DestinationConfig(
+                destination = destination,
+                content = content,
+                defaultTransition = transition,
+                contentWithTransitionScope = null
+            )
+        )
     }
 
     /**
@@ -95,12 +101,14 @@ class NavigationGraphBuilder(private val graphRoute: String) {
     fun destinationWithScopes(
         destination: Destination,
         transition: NavigationTransition? = null,
-        content: @Composable (Destination, Navigator, com.jermey.quo.vadis.core.navigation.compose.TransitionScope?) -> Unit
+        content: @Composable (Destination, Navigator, TransitionScope?) -> Unit
     ) {
-        dests.add(
+        destinationConfigs.add(
             DestinationConfig(
                 destination = destination,
-                content = { dest, nav -> content(dest, nav, null) }, // Fallback when scopes unavailable
+                content = { dest, nav ->
+                    content(dest,nav,null                    )
+                }, // Fallback when scopes unavailable
                 defaultTransition = transition,
                 contentWithTransitionScope = content
             )
@@ -112,16 +120,16 @@ class NavigationGraphBuilder(private val graphRoute: String) {
      * Useful for nested navigation structures.
      */
     fun include(graph: NavigationGraph) {
-        dests.addAll(graph.destinations)
+        destinationConfigs.addAll(graph.destinations)
     }
 
     fun build(): NavigationGraph {
-        requireNotNull(startDest) { "Start destination must be set" }
+        requireNotNull(startDestination) { "Start destination must be set" }
 
         return object : NavigationGraph {
             override val graphRoute: String = this@NavigationGraphBuilder.graphRoute
-            override val startDestination: Destination = startDest!!
-            override val destinations: List<DestinationConfig> = dests
+            override val startDestination: Destination = this@NavigationGraphBuilder.startDestination!!
+            override val destinations: List<DestinationConfig> = destinationConfigs
         }
     }
 }

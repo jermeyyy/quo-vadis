@@ -37,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.components.DetailRow
 import com.jermey.navplayground.demo.ui.components.SpecificationRow
-import com.jermey.quo.vadis.core.navigation.compose.TransitionScope
 import com.jermey.quo.vadis.core.navigation.compose.quoVadisSharedElement
 import com.jermey.quo.vadis.core.navigation.core.sharedBounds
 import com.jermey.quo.vadis.core.navigation.core.sharedElement
@@ -52,8 +51,7 @@ private const val RELATED_ITEMS_COUNT = 5
 fun DetailScreen(
     itemId: String,
     onBack: () -> Unit,
-    onNavigateToRelated: (String) -> Unit,
-    transitionScope: TransitionScope? = null
+    onNavigateToRelated: (String) -> Unit
 ) {
     val relatedItems = remember(itemId) {
         (1..RELATED_ITEMS_COUNT).map { "Related item $it" }
