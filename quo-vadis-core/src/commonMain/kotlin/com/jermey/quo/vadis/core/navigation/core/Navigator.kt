@@ -46,14 +46,6 @@ interface Navigator {
     )
 
     /**
-     * Navigate with explicit transition, overriding destination defaults.
-     */
-    fun navigateWithTransition(
-        destination: Destination,
-        transition: NavigationTransition
-    ) = navigate(destination, transition)
-
-    /**
      * Navigate back in the stack.
      * @return true if navigation was successful
      */

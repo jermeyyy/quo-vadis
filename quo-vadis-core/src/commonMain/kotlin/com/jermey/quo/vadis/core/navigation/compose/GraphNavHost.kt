@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.compose
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
@@ -27,6 +28,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.PredictiveBackHandler
@@ -44,7 +46,6 @@ import kotlinx.coroutines.launch
 // Animation constants
 private const val PREDICTIVE_BACK_SCALE_FACTOR = 0.1f
 private const val MAX_GESTURE_PROGRESS = 0.25f // Maximum drag distance (25% of screen width)
-private const val FRAME_DELAY_MS = 16L // One frame at 60fps
 
 /**
  * Unified navigation host with support for:
@@ -64,7 +65,7 @@ private const val FRAME_DELAY_MS = 16L // One frame at 60fps
  * @param enablePredictiveBack Whether to enable predictive back gesture animations
  * @param maxCacheSize Maximum number of composables to keep in cache
  */
-@OptIn(ExperimentalComposeUiApi::class, androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 fun GraphNavHost(
@@ -94,7 +95,7 @@ fun GraphNavHost(
 /**
  * Internal content of GraphNavHost, extracted to allow wrapping with SharedTransitionLayout.
  */
-@OptIn(ExperimentalComposeUiApi::class, androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 @Suppress("LongMethod", "CyclomaticComplexity", "ComplexMethod")
 private fun GraphNavHostContent(
@@ -267,8 +268,8 @@ private fun GraphNavHostContent(
                 // Complete navigation - but keep isPredictiveGesture flag set
                 navigator.navigateBack()
                 
-                // Wait a frame for stack change to be processed
-                kotlinx.coroutines.delay(FRAME_DELAY_MS)
+                // Wait for next frame to allow LaunchedEffect to process stack change
+                withFrameNanos { }
                 
                 // Update final state BEFORE resetting isPredictiveGesture
                 displayedCurrent = currentEntry
@@ -288,8 +289,8 @@ private fun GraphNavHostContent(
                     composableCache.unlockEntry(it.id)
                 }
                 
-                // Wait a frame, then clear the flag to allow normal animations again
-                kotlinx.coroutines.delay(FRAME_DELAY_MS)
+                // Wait for next frame to allow recomposition, then clear the flag
+                withFrameNanos { }
                 justCompletedGesture = false
             }
         } catch (_: Exception) {
@@ -407,7 +408,7 @@ private fun GraphNavHostContent(
     }
 }
 
-@OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun ScreenContent(
     entry: BackStackEntry,
