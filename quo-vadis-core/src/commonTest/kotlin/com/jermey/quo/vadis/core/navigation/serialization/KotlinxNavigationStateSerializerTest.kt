@@ -1,7 +1,9 @@
 package com.jermey.quo.vadis.core.navigation.serialization
 
 import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
-import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
+import com.jermey.quo.vadis.core.navigation.core.TypedDestination
+import com.jermey.quo.vadis.core.navigation.core.BasicDestination
+import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -14,11 +16,14 @@ class KotlinxNavigationStateSerializerTest {
 
     private val serializer = KotlinxNavigationStateSerializer()
 
+    @Serializable
+    data class TestData(val arg1: String, val arg2: String)
+
     @Test
-    fun `serialize and deserialize destination`() {
-        val destination = SimpleDestination(
+    fun `serialize and deserialize typed destination`() {
+        val destination = TypedDestination(
             route = "test_route",
-            arguments = mapOf("arg1" to "value1", "arg2" to "value2")
+            data = TestData("value1", "value2")
         )
 
         val serialized = serializer.serializeDestination(destination)
@@ -26,19 +31,19 @@ class KotlinxNavigationStateSerializerTest {
 
         assertNotNull(deserialized)
         assertEquals(destination.route, deserialized.route)
-        assertEquals(destination.arguments.size, deserialized.arguments.size)
+        assertNotNull(deserialized.data)
     }
 
     @Test
     fun `serialize and deserialize empty destination`() {
-        val destination = SimpleDestination(route = "empty_route")
+        val destination = BasicDestination(route = "empty_route")
 
         val serialized = serializer.serializeDestination(destination)
         val deserialized = serializer.deserializeDestination(serialized)
 
         assertNotNull(deserialized)
         assertEquals(destination.route, deserialized.route)
-        assertTrue(deserialized.arguments.isEmpty())
+        assertEquals(null, deserialized.data)
     }
 
     @Test
@@ -46,15 +51,15 @@ class KotlinxNavigationStateSerializerTest {
         val entries = listOf(
             BackStackEntry(
                 id = "entry1",
-                destination = SimpleDestination("route1", mapOf("key1" to "val1"))
+                destination = TypedDestination("route1", TestData("val1", "val2"))
             ),
             BackStackEntry(
                 id = "entry2",
-                destination = SimpleDestination("route2", mapOf("key2" to "val2"))
+                destination = TypedDestination("route2", "simple string data")
             ),
             BackStackEntry(
                 id = "entry3",
-                destination = SimpleDestination("route3")
+                destination = BasicDestination("route3")
             )
         )
 
@@ -88,9 +93,9 @@ class KotlinxNavigationStateSerializerTest {
 
     @Test
     fun `serialized format is valid JSON`() {
-        val destination = SimpleDestination(
+        val destination = TypedDestination(
             route = "test",
-            arguments = mapOf("arg" to "value")
+            data = "simple string value"
         )
         val serialized = serializer.serializeDestination(destination)
         

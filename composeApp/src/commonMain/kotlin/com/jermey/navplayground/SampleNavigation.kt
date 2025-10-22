@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.DetailData
 import com.jermey.quo.vadis.core.navigation.compose.GraphNavHost
 import com.jermey.quo.vadis.core.navigation.compose.rememberNavigator
 import com.jermey.quo.vadis.core.navigation.core.BaseModuleNavigation
@@ -23,30 +24,46 @@ import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
+import com.jermey.quo.vadis.core.navigation.core.TypedDestination
 import com.jermey.quo.vadis.core.navigation.core.navigationGraph
+import com.jermey.quo.vadis.core.navigation.core.typedDestination
+import kotlinx.serialization.Serializable
 
 /**
  * Example destinations for the sample app.
  */
-object SampleDestinations {
-    object Home : Destination {
+sealed class SampleDestinations : Destination {
+    object Home : SampleDestinations() {
         override val route = "home"
     }
 
-    data class Details(val itemId: String) : Destination {
-        override val route = "details"
-        override val arguments = mapOf("itemId" to itemId)
-    }
+    /**
+     * Serializable data for Details destination.
+     */
 
-    object Settings : Destination {
+
+    object Settings : SampleDestinations() {
         override val route = "settings"
     }
 
-    data class Profile(val userId: String) : Destination {
-        override val route = "profile"
-        override val arguments = mapOf("userId" to userId)
+    data class Details(val itemId: String) : SampleDestinations(),
+        TypedDestination<Details.DetailsData> {
+        override val route = "details"
+        override val data = DetailsData(itemId)
+
+        @Serializable
+        data class DetailsData(val itemId: String)
     }
+
+    data class Profile(val userId: String) : SampleDestinations(),
+        TypedDestination<Profile.ProfileData> {
+        override val route = "profile"
+        override val data = ProfileData(userId)
+
+        @Serializable
+        data class ProfileData(val userId: String)
+    }
+
 }
 
 /**
@@ -61,9 +78,9 @@ class SampleFeatureNavigation : BaseModuleNavigation() {
                 HomeScreen(navigator)
             }
 
-            destination(SimpleDestination("details")) { dest, navigator ->
+            typedDestination("details") { data: DetailData, navigator ->
                 DetailsScreen(
-                    itemId = dest.arguments["itemId"] as? String ?: "",
+                    itemId = data.itemId,
                     navigator = navigator
                 )
             }
@@ -72,9 +89,9 @@ class SampleFeatureNavigation : BaseModuleNavigation() {
                 SettingsScreen(navigator)
             }
 
-            destination(SimpleDestination("profile")) { dest, navigator ->
+            typedDestination("profile") { data: SampleDestinations.Profile.ProfileData, navigator ->
                 ProfileScreen(
-                    userId = dest.arguments["userId"] as? String ?: "",
+                    userId = data.userId,
                     navigator = navigator
                 )
             }
@@ -103,7 +120,7 @@ fun HomeScreen(navigator: Navigator) {
 
         Button(onClick = {
             navigator.navigate(
-                SampleDestinations.Details("item-123"),
+                SampleDestinations.Details(itemId = "item-123"),
                 NavigationTransitions.SlideHorizontal
             )
         }) {
@@ -121,7 +138,7 @@ fun HomeScreen(navigator: Navigator) {
 
         Button(onClick = {
             navigator.navigate(
-                SampleDestinations.Profile("user-456"),
+                SampleDestinations.Profile(userId = "user-456"),
                 NavigationTransitions.ScaleIn
             )
         }) {

@@ -136,6 +136,6 @@ fun NavigationGraphBuilder.deepLinkDestination(
     deepLinkPattern: String,
     content: @Composable (Destination, Navigator) -> Unit
 ) {
-    val dest = SimpleDestination(route)
+    val dest = BasicDestination(route)
     destination(dest, transition = null, content = content)
 }

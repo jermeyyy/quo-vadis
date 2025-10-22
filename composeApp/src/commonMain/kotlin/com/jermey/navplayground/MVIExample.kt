@@ -6,10 +6,12 @@ import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
+import com.jermey.quo.vadis.core.navigation.core.TypedDestination
 import com.jermey.quo.vadis.core.navigation.core.navigationGraph
+import com.jermey.quo.vadis.core.navigation.core.typedDestination
 import com.jermey.quo.vadis.core.navigation.mvi.NavigationIntent
 import com.jermey.quo.vadis.core.navigation.mvi.NavigationViewModel
+import kotlinx.serialization.Serializable
 
 /**
  * Example of using the navigation library with MVI architecture.
@@ -21,15 +23,39 @@ sealed class FeatureDestination : Destination {
         override val route = "products"
     }
 
-    data class ProductDetail(val productId: String) : FeatureDestination() {
-        override val route = "product_detail"
-        override val arguments = mapOf("productId" to productId)
+    data class ProductDetail(val productId: String) : FeatureDestination(),
+        TypedDestination<ProductDetail.ProductDetailData> {
+        companion object {
+            const val ROUTE = "product_detail"
+        }
+
+        override val route = ROUTE
+        override val data = ProductDetailData(productId)
+
+        /**
+         * Serializable data for ProductDetail destination.
+         */
+        @Serializable
+        data class ProductDetailData(val productId: String)
     }
 
-    data class Cart(val items: Int = 0) : FeatureDestination() {
-        override val route = "cart"
-        override val arguments = mapOf("itemCount" to items)
+    data class CartDetail(val itemCount: Int) : FeatureDestination(),
+        TypedDestination<CartDetail.CartData> {
+        companion object {
+            const val ROUTE = "cart_detail"
+        }
+
+        override val route = ROUTE
+        override val data = CartData(itemCount)
+
+        /**
+         * Serializable data for Cart destination.
+         */
+        @Serializable
+        data class CartData(val itemCount: Int = 0)
     }
+
+
 }
 
 // Define MVI state for the feature
@@ -68,7 +94,7 @@ class ProductViewModel(
                 // Then navigate
                 handleNavigationIntent(
                     NavigationIntent.Navigate(
-                        destination = FeatureDestination.Cart(items = 1),
+                        destination = FeatureDestination.CartDetail(itemCount = 1),
                         transition = NavigationTransitions.SlideVertical
                     )
                 )
@@ -77,7 +103,7 @@ class ProductViewModel(
             is ProductIntent.ViewCart -> {
                 handleNavigationIntent(
                     NavigationIntent.Navigate(
-                        destination = FeatureDestination.Cart(),
+                        destination = FeatureDestination.CartDetail(itemCount = 0),
                         transition = NavigationTransitions.Fade
                     )
                 )
@@ -102,14 +128,12 @@ class ProductFeatureNavigation : BaseModuleNavigation() {
                 ProductListScreen(ProductViewModel(navigator))
             }
 
-            destination(SimpleDestination("product_detail")) { dest, navigator ->
-                val productId = dest.arguments["productId"] as? String ?: ""
-                ProductDetailScreen(productId, ProductViewModel(navigator))
+            typedDestination(FeatureDestination.ProductDetail.ROUTE) { data: FeatureDestination.ProductDetail, navigator ->
+                ProductDetailScreen(data.productId, ProductViewModel(navigator))
             }
 
-            destination(SimpleDestination("cart")) { dest, navigator ->
-                val itemCount = dest.arguments["itemCount"] as? Int ?: 0
-                CartScreen(itemCount, ProductViewModel(navigator))
+            typedDestination(FeatureDestination.CartDetail.ROUTE) { data: FeatureDestination.CartDetail, navigator ->
+                CartScreen(data.itemCount, ProductViewModel(navigator))
             }
         }
     }

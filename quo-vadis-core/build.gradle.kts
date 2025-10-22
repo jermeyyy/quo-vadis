@@ -91,6 +91,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
+                implementation(libs.kotlin.reflect)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(compose.runtime)
                 implementation(compose.foundation)
@@ -156,6 +157,13 @@ kotlin {
         }
     }
 
+}
+
+// Configure JVM target for all JVM-based platforms
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
 }
 
 // Maven Publishing Configuration

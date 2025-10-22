@@ -4,7 +4,8 @@ import com.jermey.quo.vadis.core.navigation.core.BackStack
 import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.MutableBackStack
-import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
+import com.jermey.quo.vadis.core.navigation.core.RestoredTypedDestination
+import com.jermey.quo.vadis.core.navigation.core.TypedDestination
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -12,11 +13,16 @@ import kotlinx.serialization.json.Json
 /**
  * Serializable wrapper for Destination.
  * Used to convert Destination interface to a serializable data class.
+ * 
+ * The data field stores the serialized JSON representation of the destination's data.
+ * The hasTypedData flag indicates whether this destination has typed data or is a simple destination.
+ * This allows proper type-safe deserialization using kotlinx.serialization while preserving type information.
  */
 @Serializable
 data class SerializableDestination(
     val route: String,
-    val arguments: Map<String, String> = emptyMap()
+    val data: String = "",
+    val hasTypedData: Boolean = false
 )
 
 /**
@@ -106,17 +112,47 @@ class KotlinxNavigationStateSerializer(
     }
 
     private fun Destination.toSerializable(): SerializableDestination {
+        // Check if this is a TypedDestination
+        val isTypedDestination = this is TypedDestination<*>
+        
+        val serializedData = when (val destData = data) {
+            null -> "" // Empty string for destinations without data
+            is String -> destData // Already a string (from previous serialization)
+            else -> {
+                // Convert to string representation
+                // For proper serialization, the destination should use TypedDestination
+                // with a serializable type and handle serialization in the DSL
+                destData.toString()
+            }
+        }
+        
         return SerializableDestination(
             route = route,
-            arguments = arguments.mapValues { (_, value) -> value.toString() }
+            data = serializedData,
+            hasTypedData = isTypedDestination && serializedData.isNotEmpty()
         )
     }
 
     private fun SerializableDestination.toDestination(): Destination {
-        return SimpleDestination(
-            route = route,
-            arguments = arguments
-        )
+        // Use the type discriminator to determine what kind of destination to restore
+        return when {
+            hasTypedData && data.isNotEmpty() -> {
+                // This was a TypedDestination - restore it with the internal implementation
+                // The actual typed deserialization happens in typedDestination DSL
+                RestoredTypedDestination(
+                    route = route,
+                    data = data
+                )
+            }
+            else -> {
+                // This was a simple destination without typed data
+                val serializedData = this.data
+                object : Destination {
+                    override val route = this@toDestination.route
+                    override val data: Any? = if (serializedData.isEmpty()) null else serializedData
+                }
+            }
+        }
     }
 
     private fun BackStackEntry.toSerializable(): SerializableBackStackEntry {

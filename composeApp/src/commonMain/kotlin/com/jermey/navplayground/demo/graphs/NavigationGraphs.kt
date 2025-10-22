@@ -1,6 +1,8 @@
 package com.jermey.navplayground.demo.graphs
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import com.jermey.navplayground.SampleDestinations
+import com.jermey.navplayground.demo.destinations.DetailData
 import com.jermey.navplayground.demo.destinations.MainDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
@@ -22,8 +24,9 @@ import com.jermey.navplayground.demo.ui.screens.tabs.TabSubItemScreen
 import com.jermey.navplayground.demo.ui.screens.tabs.TabsMainScreen
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
-import com.jermey.quo.vadis.core.navigation.core.SimpleDestination
 import com.jermey.quo.vadis.core.navigation.core.navigationGraph
+import com.jermey.quo.vadis.core.navigation.core.typedDestination
+import kotlinx.serialization.serializer
 
 /**
  * Root application navigation graph.
@@ -39,7 +42,10 @@ fun appRootGraph() = navigationGraph("app_root") {
     destination(MainDestination.Home, NavigationTransitions.Fade) { _, navigator ->
         HomeScreen(
             onNavigateToMasterDetail = {
-                navigator.navigate(MasterDetailDestination.List, NavigationTransitions.SlideHorizontal)
+                navigator.navigate(
+                    MasterDetailDestination.List,
+                    NavigationTransitions.SlideHorizontal
+                )
             },
             onNavigateToTabs = {
                 navigator.navigate(TabsDestination.Main, NavigationTransitions.SlideHorizontal)
@@ -116,13 +122,10 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
         )
     }
 
-    destinationWithScopes(
-        destination = SimpleDestination("master_detail_detail"),
-        transition = NavigationTransitions.SlideHorizontal
-    ) { dest, navigator, transitionScope ->
-        val itemId = dest.arguments["itemId"] as? String ?: "unknown"
+    @OptIn(ExperimentalSharedTransitionApi::class)
+    typedDestination(MasterDetailDestination.Detail.ROUTE) { data: DetailData, navigator ->
         DetailScreen(
-            itemId = itemId,
+            itemId = data.itemId,
             onBack = { navigator.navigateBack() },
             onNavigateToRelated = { relatedId ->
                 navigator.navigate(
@@ -152,12 +155,10 @@ fun tabsGraph() = navigationGraph("tabs") {
         )
     }
 
-    destination(SimpleDestination("tabs_subitem"), NavigationTransitions.SlideVertical) { dest, navigator ->
-        val tabId = dest.arguments["tabId"] as? String ?: "tab1"
-        val itemId = dest.arguments["itemId"] as? String ?: "unknown"
+    typedDestination(TabsDestination.SubItem.ROUTE) { data: TabsDestination.SubItemData, navigator ->
         TabSubItemScreen(
-            tabId = tabId,
-            itemId = itemId,
+            tabId = data.tabId,
+            itemId = data.itemId,
             onBack = { navigator.navigateBack() }
         )
     }
@@ -181,20 +182,19 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    destination(SimpleDestination("process_step1"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
-        val userType = dest.arguments["userType"] as? String
+    typedDestination(ProcessDestination.Step1.ROUTE) { data: ProcessDestination.Step1Data, navigator ->
         ProcessStep1Screen(
-            initialUserType = userType,
-            onNext = { selectedType, data ->
+            initialUserType = data.userType,
+            onNext = { selectedType, stepData ->
                 // Branch based on user selection
                 if (selectedType == "personal") {
                     navigator.navigate(
-                        ProcessDestination.Step2A(data),
+                        ProcessDestination.Step2A(stepData),
                         NavigationTransitions.SlideHorizontal
                     )
                 } else {
                     navigator.navigate(
-                        ProcessDestination.Step2B(data),
+                        ProcessDestination.Step2B(stepData),
                         NavigationTransitions.SlideHorizontal
                     )
                 }
@@ -203,10 +203,9 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    destination(SimpleDestination("process_step2a"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
-        val data = dest.arguments["data"] as? String ?: ""
+    typedDestination(ProcessDestination.Step2A.ROUTE) { data: ProcessDestination.Step2Data, navigator ->
         ProcessStep2AScreen(
-            previousData = data,
+            previousData = data.stepData,
             onNext = { newData ->
                 navigator.navigate(
                     ProcessDestination.Step3(newData, "personal"),
@@ -217,10 +216,9 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    destination(SimpleDestination("process_step2b"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
-        val data = dest.arguments["data"] as? String ?: ""
+    typedDestination(ProcessDestination.Step2B.ROUTE) { data: ProcessDestination.Step2Data, navigator ->
         ProcessStep2BScreen(
-            previousData = data,
+            previousData = data.stepData,
             onNext = { newData ->
                 navigator.navigate(
                     ProcessDestination.Step3(newData, "business"),
@@ -231,12 +229,10 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    destination(SimpleDestination("process_step3"), NavigationTransitions.SlideHorizontal) { dest, navigator ->
-        val previousData = dest.arguments["previousData"] as? String ?: ""
-        val branch = dest.arguments["branch"] as? String ?: ""
+    typedDestination(ProcessDestination.Step3.ROUTE) { data: ProcessDestination.Step3Data, navigator ->
         ProcessStep3Screen(
-            previousData = previousData,
-            branch = branch,
+            previousData = data.previousData,
+            branch = data.branch,
             onComplete = {
                 navigator.navigateAndClearTo(
                     ProcessDestination.Complete,
