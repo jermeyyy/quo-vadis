@@ -75,7 +75,7 @@ class QuoVadisSymbolProcessor(
         DestinationExtensionsGenerator.generate(graphInfo, codeGenerator, logger)
         
         // Generate complete graph DSL builder (NEW!)
-        CompleteGraphGenerator.generate(graphInfo, contentMappings, codeGenerator, logger)
+        GraphGenerator.generate(graphInfo, contentMappings, codeGenerator, logger)
         
         logger.info("Completed processing graph: ${graphInfo.className}")
     }

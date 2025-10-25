@@ -10,7 +10,4 @@ fun initializeRoutes() {
     MasterDetailDestinationRouteInitializer
     TabsDestinationRouteInitializer
     ProcessDestinationRouteInitializer
-    
-    // Test destinations
-    com.jermey.navplayground.demo.test.TestGraphRouteInitializer
 }
