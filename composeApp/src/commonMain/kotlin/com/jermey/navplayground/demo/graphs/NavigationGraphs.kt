@@ -1,12 +1,14 @@
 package com.jermey.navplayground.demo.graphs
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import com.jermey.navplayground.SampleDestinations
 import com.jermey.navplayground.demo.destinations.DetailData
 import com.jermey.navplayground.demo.destinations.MainDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
+import com.jermey.navplayground.demo.destinations.MasterDetailDestinationRoutes
 import com.jermey.navplayground.demo.destinations.ProcessDestination
+import com.jermey.navplayground.demo.destinations.ProcessDestinationRoutes
 import com.jermey.navplayground.demo.destinations.TabsDestination
+import com.jermey.navplayground.demo.destinations.TabsDestinationRoutes
 import com.jermey.navplayground.demo.ui.screens.DeepLinkDemoScreen
 import com.jermey.navplayground.demo.ui.screens.ExploreScreen
 import com.jermey.navplayground.demo.ui.screens.HomeScreen
@@ -25,8 +27,14 @@ import com.jermey.navplayground.demo.ui.screens.tabs.TabsMainScreen
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.navigationGraph
-import com.jermey.quo.vadis.core.navigation.core.typedDestination
-import kotlinx.serialization.serializer
+// Import generated type-safe typed destination extensions
+import com.jermey.navplayground.demo.destinations.typedDestinationDetail
+import com.jermey.navplayground.demo.destinations.typedDestinationDetailWithScopes
+import com.jermey.navplayground.demo.destinations.typedDestinationSubItem
+import com.jermey.navplayground.demo.destinations.typedDestinationStep1
+import com.jermey.navplayground.demo.destinations.typedDestinationStep2A
+import com.jermey.navplayground.demo.destinations.typedDestinationStep2B
+import com.jermey.navplayground.demo.destinations.typedDestinationStep3
 
 /**
  * Root application navigation graph.
@@ -122,8 +130,12 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
         )
     }
 
+    println("DEBUG: masterDetailGraph - About to call typedDestinationDetailWithScopes")
     @OptIn(ExperimentalSharedTransitionApi::class)
-    typedDestination(MasterDetailDestination.Detail.ROUTE) { data: DetailData, navigator ->
+    typedDestinationDetailWithScopes(
+        destination = MasterDetailDestination.Detail::class
+    ) { data, navigator, transitionScope ->
+        println("DEBUG: masterDetailGraph - DetailScreen content called with itemId=${data.itemId}")
         DetailScreen(
             itemId = data.itemId,
             onBack = { navigator.navigateBack() },
@@ -135,6 +147,7 @@ fun masterDetailGraph() = navigationGraph("master_detail") {
             }
         )
     }
+    println("DEBUG: masterDetailGraph - After typedDestinationDetailWithScopes call")
 }
 
 /**
@@ -155,7 +168,7 @@ fun tabsGraph() = navigationGraph("tabs") {
         )
     }
 
-    typedDestination(TabsDestination.SubItem.ROUTE) { data: TabsDestination.SubItemData, navigator ->
+    typedDestinationSubItem(TabsDestination.SubItem::class) { data, navigator ->
         TabSubItemScreen(
             tabId = data.tabId,
             itemId = data.itemId,
@@ -182,7 +195,7 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    typedDestination(ProcessDestination.Step1.ROUTE) { data: ProcessDestination.Step1Data, navigator ->
+    typedDestinationStep1(ProcessDestination.Step1::class) { data, navigator ->
         ProcessStep1Screen(
             initialUserType = data.userType,
             onNext = { selectedType, stepData ->
@@ -203,7 +216,7 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    typedDestination(ProcessDestination.Step2A.ROUTE) { data: ProcessDestination.Step2Data, navigator ->
+    typedDestinationStep2A(ProcessDestination.Step2A::class) { data, navigator ->
         ProcessStep2AScreen(
             previousData = data.stepData,
             onNext = { newData ->
@@ -216,7 +229,7 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    typedDestination(ProcessDestination.Step2B.ROUTE) { data: ProcessDestination.Step2Data, navigator ->
+    typedDestinationStep2B(ProcessDestination.Step2B::class) { data, navigator ->
         ProcessStep2BScreen(
             previousData = data.stepData,
             onNext = { newData ->
@@ -229,14 +242,14 @@ fun processGraph() = navigationGraph("process") {
         )
     }
 
-    typedDestination(ProcessDestination.Step3.ROUTE) { data: ProcessDestination.Step3Data, navigator ->
+    typedDestinationStep3(ProcessDestination.Step3::class) { data, navigator ->
         ProcessStep3Screen(
             previousData = data.previousData,
             branch = data.branch,
             onComplete = {
                 navigator.navigateAndClearTo(
                     ProcessDestination.Complete,
-                    clearRoute = "process_start",
+                    clearRoute = "process/start",
                     inclusive = false
                 )
             },
@@ -252,7 +265,7 @@ fun processGraph() = navigationGraph("process") {
             onRestart = {
                 navigator.navigateAndClearTo(
                     ProcessDestination.Start,
-                    clearRoute = "process_complete",
+                    clearRoute = "process/complete",
                     inclusive = true
                 )
             }

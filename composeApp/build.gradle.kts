@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.ksp)
 }
 
 // Force Compose Multiplatform version alignment
@@ -162,4 +163,14 @@ compose.desktop {
             }
         }
     }
+}
+
+// KSP configuration for commonMain only
+dependencies {
+    add("kspCommonMainMetadata", project(":quo-vadis-ksp"))
+}
+
+// Ensure KSP generated files are included in commonMain
+kotlin.sourceSets.commonMain {
+    kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
 }

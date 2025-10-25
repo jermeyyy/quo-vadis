@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.utils
 
 import com.jermey.quo.vadis.core.navigation.core.BackStack
 import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
+import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator

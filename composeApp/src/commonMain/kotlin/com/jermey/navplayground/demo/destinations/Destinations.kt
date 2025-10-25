@@ -1,6 +1,10 @@
 package com.jermey.navplayground.demo.destinations
 
+import com.jermey.quo.vadis.annotations.Argument
+import com.jermey.quo.vadis.annotations.Graph
+import com.jermey.quo.vadis.annotations.Route
 import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.RouteRegistry
 import com.jermey.quo.vadis.core.navigation.core.TypedDestination
 import kotlinx.serialization.Serializable
 
@@ -8,35 +12,42 @@ import kotlinx.serialization.Serializable
  * Top-level destinations exposed by the demo application.
  */
 sealed class DemoDestination : Destination {
-    object Root : DemoDestination() {
-        override val route = "demo_root"
-    }
+    @Route("demo_root")
+    object Root : DemoDestination()
 }
 
 /**
  * Main bottom navigation destinations
  */
-sealed class MainDestination(override val route: String) : Destination {
-    object Home : MainDestination("home")
-    object Explore : MainDestination("explore")
-    object Profile : MainDestination("profile")
-    object Settings : MainDestination("settings")
-    object DeepLinkDemo : MainDestination("deeplink_demo")
+@Graph("main")
+sealed class MainDestination : Destination {
+    @Route("main/home")
+    data object Home : MainDestination()
+    
+    @Route("main/explore")
+    data object Explore : MainDestination()
+    
+    @Route("main/profile")
+    data object Profile : MainDestination()
+    
+    @Route("main/settings")
+    data object Settings : MainDestination()
+    
+    @Route("main/deeplink_demo")
+    data object DeepLinkDemo : MainDestination()
 }
 
 /**
  * Master-Detail pattern destinations
  */
+@Graph("master_detail")
 sealed class MasterDetailDestination : Destination {
-    object List : MasterDetailDestination() {
-        override val route = "master_detail_list"
-    }
+    @Route("master_detail/list")
+    data object List : MasterDetailDestination()
 
+    @Route("master_detail/detail")
+    @Argument(DetailData::class)
     data class Detail(val itemId: String) : MasterDetailDestination(), TypedDestination<DetailData> {
-        companion object {
-            const val ROUTE = "master_detail_detail"
-        }
-        override val route = ROUTE
         override val data = DetailData(itemId)
     }
 }
@@ -50,10 +61,10 @@ data class DetailData(val itemId: String)
 /**
  * Tabs navigation destinations
  */
+@Graph("tabs")
 sealed class TabsDestination : Destination {
-    object Main : TabsDestination() {
-        override val route = "tabs_main"
-    }
+    @Route("tabs/main")
+    data object Main : TabsDestination()
 
     /**
      * Serializable data for SubItem destination.
@@ -61,16 +72,17 @@ sealed class TabsDestination : Destination {
     @Serializable
     data class SubItemData(val tabId: String, val itemId: String)
 
+    // Dynamic route - register manually at creation
     data class Tab(val tabId: String) : TabsDestination() {
-        override val route = "tabs_tab_$tabId"
+        init {
+            RouteRegistry.register(this::class, "tabs_tab_$tabId")
+        }
         override val data = tabId
     }
 
+    @Route("tabs/subitem")
+    @Argument(SubItemData::class)
     data class SubItem(val tabId: String, val itemId: String) : TabsDestination(), TypedDestination<SubItemData> {
-        companion object {
-            const val ROUTE = "tabs_subitem"
-        }
-        override val route = ROUTE
         override val data = SubItemData(tabId, itemId)
     }
 }
@@ -78,10 +90,10 @@ sealed class TabsDestination : Destination {
 /**
  * Process/Wizard flow destinations
  */
+@Graph("process")
 sealed class ProcessDestination : Destination {
-    object Start : ProcessDestination() {
-        override val route = "process_start"
-    }
+    @Route("process/start")
+    data object Start : ProcessDestination()
 
     /**
      * Serializable data for Step1 destination.
@@ -101,40 +113,30 @@ sealed class ProcessDestination : Destination {
     @Serializable
     data class Step3Data(val previousData: String, val branch: String)
 
+    @Route("process/step1")
+    @Argument(Step1Data::class)
     data class Step1(val userType: String? = null) : ProcessDestination(), TypedDestination<Step1Data> {
-        companion object {
-            const val ROUTE = "process_step1"
-        }
-
-        override val route = ROUTE
         override val data = Step1Data(userType)
     }
 
+    @Route("process/step2a")
+    @Argument(Step2Data::class)
     data class Step2A(val stepData: String) : ProcessDestination(), TypedDestination<Step2Data> {
-        companion object {
-            const val ROUTE = "process_step2a"
-        }
-        override val route = "process_step2a"
         override val data = Step2Data(stepData)
     }
 
+    @Route("process/step2b")
+    @Argument(Step2Data::class)
     data class Step2B(val stepData: String) : ProcessDestination(), TypedDestination<Step2Data> {
-        companion object {
-            const val ROUTE = "process_step2b"
-        }
-        override val route = "process_step2b"
         override val data = Step2Data(stepData)
     }
 
+    @Route("process/step3")
+    @Argument(Step3Data::class)
     data class Step3(val previousData: String, val branch: String) : ProcessDestination(), TypedDestination<Step3Data> {
-        companion object {
-            const val ROUTE = "process_step3"
-        }
-        override val route = "process_step3"
         override val data = Step3Data(previousData, branch)
     }
 
-    object Complete : ProcessDestination() {
-        override val route = "process_complete"
-    }
+    @Route("process/complete")
+    data object Complete : ProcessDestination()
 }
