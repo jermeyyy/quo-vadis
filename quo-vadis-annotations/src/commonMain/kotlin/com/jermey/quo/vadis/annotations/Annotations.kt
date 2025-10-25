@@ -54,3 +54,28 @@ annotation class Route(val path: String)
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class Argument(val dataClass: KClass<*>)
+
+/**
+ * Marks a Composable function as the content renderer for a specific destination.
+ * 
+ * The Composable function signature should match the destination type:
+ * - For simple destinations: `@Composable (Navigator) -> Unit`
+ * - For typed destinations: `@Composable (DataType, Navigator) -> Unit`
+ * 
+ * KSP will automatically generate graph builder code that wires this Composable
+ * function to the specified destination.
+ * 
+ * @param destination The destination class that this Composable renders
+ * 
+ * @sample
+ * ```
+ * @Content(MasterDetailDestination.Detail::class)
+ * @Composable
+ * fun DetailScreen(data: DetailData, navigator: Navigator) {
+ *     // UI implementation
+ * }
+ * ```
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.SOURCE)
+annotation class Content(val destination: KClass<*>)
