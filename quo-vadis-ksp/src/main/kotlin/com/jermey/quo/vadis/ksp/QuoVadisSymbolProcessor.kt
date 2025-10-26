@@ -1,7 +1,15 @@
 package com.jermey.quo.vadis.ksp
 
-import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.jermey.quo.vadis.annotations.Content
 import com.jermey.quo.vadis.annotations.Graph
 
@@ -11,6 +19,7 @@ import com.jermey.quo.vadis.annotations.Graph
  * Processes:
  * - @Graph annotated sealed classes - generates route registry and typed destination helpers
  * - @Content annotated functions - generates complete graph DSL builders
+ * - Route initialization - generates single initialization function for all routes
  */
 class QuoVadisSymbolProcessor(
     private val codeGenerator: CodeGenerator,
@@ -18,6 +27,7 @@ class QuoVadisSymbolProcessor(
 ) : SymbolProcessor {
     
     private val contentMappings = mutableMapOf<String, ContentFunctionInfo>()
+    private val allGraphInfos = mutableListOf<GraphInfo>()
     
     override fun process(resolver: Resolver): List<KSAnnotated> {
         // First pass: collect @Content functions
@@ -41,6 +51,17 @@ class QuoVadisSymbolProcessor(
         }
         
         return emptyList()
+    }
+    
+    override fun finish() {
+        // Third pass: generate route initialization function after all graphs are processed
+        if (allGraphInfos.isNotEmpty()) {
+            try {
+                RouteInitializationGenerator.generate(allGraphInfos, codeGenerator, logger)
+            } catch (e: Exception) {
+                logger.error("Error generating route initialization: ${e.message}")
+            }
+        }
     }
     
     private fun processContentFunction(function: KSFunctionDeclaration) {
@@ -68,13 +89,16 @@ class QuoVadisSymbolProcessor(
         // Extract graph metadata
         val graphInfo = GraphInfoExtractor.extract(classDeclaration, logger)
         
+        // Store for route initialization generation
+        allGraphInfos.add(graphInfo)
+        
         // Generate route constants
         RouteConstantsGenerator.generate(graphInfo, codeGenerator, logger)
         
         // Generate extension properties
         DestinationExtensionsGenerator.generate(graphInfo, codeGenerator, logger)
         
-        // Generate complete graph DSL builder (NEW!)
+        // Generate complete graph DSL builder
         GraphGenerator.generate(graphInfo, contentMappings, codeGenerator, logger)
         
         logger.info("Completed processing graph: ${graphInfo.className}")
