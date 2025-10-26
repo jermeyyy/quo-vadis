@@ -145,6 +145,15 @@ rm -rf .gradle/configuration-cache
 **Project Root**:
 - `README.md` - Platform support, quick start
 - `PUBLISHING.md` - Maven publishing
+- `CONTRIBUTING.md` - Contribution guidelines
+- `docs/SITE_MAINTENANCE.md` - Website maintenance guide
+
+**Documentation Website**:
+- URL: https://jermeyyy.github.io/quo-vadis/
+- Static site: `/docs/site/` (HTML, CSS, JS, images)
+- API docs: Auto-generated from Dokka during deployment
+- Workflow: `.github/workflows/deploy-pages.yml`
+- Deployment: Automatic on push to `main` branch
 
 ---
 
@@ -225,6 +234,36 @@ rm -rf .gradle/configuration-cache
 ```
 
 Update markdown docs when architecture/API changes.
+
+### Updating Documentation Website
+
+**Static Site Content** (`/docs/site/`):
+- Edit HTML files directly for content changes
+- Update CSS in `/docs/site/css/style.css`
+- Update JavaScript in `/docs/site/js/main.js`
+- Add images to `/docs/site/images/`
+
+**API Documentation**:
+- Update KDoc comments in source code
+- Dokka auto-generates during GitHub Actions deployment
+- No manual regeneration needed
+
+**Deployment**:
+- Automatic on push to `main` branch
+- GitHub Actions workflow: `.github/workflows/deploy-pages.yml`
+- Monitor at: https://github.com/jermeyyy/quo-vadis/actions
+
+**Local Preview**:
+```bash
+# Static site
+open docs/site/index.html
+
+# Dokka docs
+./gradlew :quo-vadis-core:dokkaGenerateHtml
+open quo-vadis-core/build/dokka/html/index.html
+```
+
+See `docs/SITE_MAINTENANCE.md` for detailed instructions.
 
 ### Multiplatform Rules
 
