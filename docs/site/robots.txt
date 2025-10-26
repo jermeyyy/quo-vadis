@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jermeyyy.github.io/quo-vadis/sitemap.xml

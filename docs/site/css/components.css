@@ -1,0 +1,516 @@
+/* Quo Vadis - Reusable Component Library */
+
+/* ===========================================
+   BADGES & SHIELDS
+   =========================================== */
+
+.badges-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1.5rem 0;
+}
+
+.badges-container img {
+    height: 20px;
+    transition: transform 0.2s;
+}
+
+.badges-container img:hover {
+    transform: scale(1.05);
+}
+
+/* ===========================================
+   CALLOUTS / ADMONITIONS
+   =========================================== */
+
+.callout {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    border-radius: 8px;
+    border-left: 4px solid;
+    background-color: var(--background-card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.callout-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.callout-content {
+    flex: 1;
+}
+
+.callout-content strong {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+/* Callout Types */
+.callout-tip {
+    border-left-color: #10b981;
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+.callout-warning {
+    border-left-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.callout-danger {
+    border-left-color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.callout-note {
+    border-left-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.callout-success {
+    border-left-color: #22c55e;
+    background-color: rgba(34, 197, 94, 0.1);
+}
+
+/* ===========================================
+   STATISTICS CARDS
+   =========================================== */
+
+.stats-section {
+    margin: 3rem 0;
+    text-align: center;
+}
+
+.stats-section h2 {
+    margin-bottom: 2rem;
+    font-size: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.stat-card {
+    background: var(--background-card);
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(33, 150, 243, 0.2);
+    border-color: var(--primary-color);
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* ===========================================
+   ENHANCED FEATURE CARDS
+   =========================================== */
+
+.feature-card {
+    background: var(--background-card);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    border-color: var(--primary-color);
+}
+
+.feature-card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.feature-card h3 {
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+}
+
+.feature-card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.feature-card-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: gap 0.3s;
+}
+
+.feature-card-link:hover {
+    gap: 0.5rem;
+}
+
+.feature-card-link::after {
+    content: '→';
+}
+
+/* Badge for new/beta features */
+.feature-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+    text-transform: uppercase;
+}
+
+.feature-badge-new {
+    background: #10b981;
+    color: white;
+}
+
+.feature-badge-beta {
+    background: #f59e0b;
+    color: white;
+}
+
+/* ===========================================
+   CODE BLOCK ENHANCEMENTS
+   =========================================== */
+
+.code-block-wrapper {
+    position: relative;
+    margin: 1.5rem 0;
+}
+
+.code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: var(--background-elevated);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+}
+
+.code-block-filename {
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.code-block-language {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: var(--primary-color);
+    color: white;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.code-block-wrapper pre {
+    margin-top: 0;
+    border-radius: 0 0 8px 8px;
+}
+
+.code-block-wrapper.has-header pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* ===========================================
+   STEP INDICATOR
+   =========================================== */
+
+.steps-container {
+    counter-reset: step-counter;
+}
+
+.step {
+    position: relative;
+    padding-left: 3.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.step::before {
+    counter-increment: step-counter;
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.step h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.step-verification {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--background-elevated);
+    border-radius: 6px;
+    border-left: 3px solid #10b981;
+}
+
+.step-verification::before {
+    content: '✅';
+    font-size: 1.25rem;
+}
+
+/* ===========================================
+   COMPARISON TABLE
+   =========================================== */
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    background: var(--background-card);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.comparison-table th {
+    background: var(--background-elevated);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.comparison-table tr:last-child td {
+    border-bottom: none;
+}
+
+.comparison-table td:first-child {
+    font-weight: 500;
+}
+
+/* Feature indicators */
+.feature-full::before {
+    content: '✅ ';
+}
+
+.feature-partial::before {
+    content: '⚠️ ';
+}
+
+.feature-none::before {
+    content: '❌ ';
+}
+
+/* ===========================================
+   HERO ENHANCEMENTS
+   =========================================== */
+
+.hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.hero-buttons .btn {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+}
+
+/* Additional button styles */
+.btn-tertiary {
+    background-color: rgba(255,255,255,0.15);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.5);
+}
+
+.btn-tertiary:hover {
+    background-color: rgba(255,255,255,0.25);
+    border-color: white;
+}
+
+/* ===========================================
+   QUICKSTART SECTION
+   =========================================== */
+
+.quickstart-section {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(25, 118, 210, 0.05) 100%);
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 3rem 0;
+}
+
+.quickstart-section h2 {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quickstart-section h2::before {
+    content: '⚡️';
+    font-size: 1.5em;
+}
+
+.quickstart-time {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-left: 1rem;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+    }
+    
+    .badges-container {
+        justify-content: center;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .hero-buttons .btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .step {
+        padding-left: 2.5rem;
+    }
+    
+    .step::before {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1rem;
+    }
+    
+    .callout {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .quickstart-section {
+        padding: 1.5rem;
+    }
+}
+
+/* ===========================================
+   GITHUB STAR HISTORY
+   =========================================== */
+
+.star-history-section {
+    margin: 3rem 0;
+    text-align: center;
+}
+
+.star-history-section h2 {
+    margin-bottom: 2rem;
+}
+
+.star-history-section picture,
+.star-history-section img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* ===========================================
+   UTILITY CLASSES
+   =========================================== */
+
+.text-center {
+    text-align: center;
+}
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 2rem; }
+
+.hidden {
+    display: none;
+}
+
+.visible {
+    display: block;
+}
