@@ -42,38 +42,178 @@
             <h2>Installation</h2>
             <p>Add the Quo Vadis library to your Kotlin Multiplatform project.</p>
 
-            <h3>Gradle (Kotlin DSL)</h3>
-            <pre><code>// In your shared module's build.gradle.kts
+            <h3>Gradle (Kotlin DSL) - Recommended</h3>
+            <pre><code>// build.gradle.kts
+plugins {
+    kotlin("multiplatform")
+    kotlin("plugin.serialization") version "2.2.20"
+    id("com.google.devtools.ksp") version "2.2.20-1.0.29"
+}
+
 kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                // Core navigation library
                 implementation("com.jermey.quo.vadis:quo-vadis-core:0.1.0")
+                
+                // Annotation-based API (recommended)
+                implementation("com.jermey.quo.vadis:quo-vadis-annotations:0.1.0")
+                
+                // For type-safe arguments
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
             }
         }
     }
+}
+
+dependencies {
+    // KSP code generator
+    add("kspCommonMainMetadata", "com.jermey.quo.vadis:quo-vadis-ksp:0.1.0")
 }</code></pre>
 
             <h3>Version Catalog</h3>
             <pre><code># libs.versions.toml
 [versions]
 quoVadis = "0.1.0"
+ksp = "2.2.20-1.0.29"
+kotlinxSerialization = "1.6.0"
 
 [libraries]
 quo-vadis-core = { module = "com.jermey.quo.vadis:quo-vadis-core", version.ref = "quoVadis" }
+quo-vadis-annotations = { module = "com.jermey.quo.vadis:quo-vadis-annotations", version.ref = "quoVadis" }
+quo-vadis-ksp = { module = "com.jermey.quo.vadis:quo-vadis-ksp", version.ref = "quoVadis" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+[plugins]
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 # In build.gradle.kts
+plugins {
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlinSerialization)
+}
+
 dependencies {
     implementation(libs.quo.vadis.core)
+    implementation(libs.quo.vadis.annotations)
+    implementation(libs.kotlinx.serialization.json)
+    add("kspCommonMainMetadata", libs.quo.vadis.ksp)
 }</code></pre>
         </section>
 
         <section>
-            <h2>Basic Setup</h2>
+            <h2>Basic Setup (Annotation-based API)</h2>
+            <p>The <strong>annotation-based API</strong> is the recommended approach. It uses KSP to generate navigation code automatically, reducing boilerplate by 70%.</p>
             
-            <h3>Step 1: Define Destinations</h3>
-            <p>Create type-safe destinations using sealed classes:</p>
-            <pre><code>sealed class AppDestination : Destination {
+            <h3>Step 1: Define Destinations with Annotations</h3>
+            <p>Create type-safe destinations using sealed classes with annotations:</p>
+            <pre><code>import com.jermey.quo.vadis.annotations.*
+import com.jermey.quo.vadis.core.navigation.core.*
+import kotlinx.serialization.Serializable
+
+// Define serializable data for typed arguments
+@Serializable
+data class ProfileData(val userId: String, val tab: String = "posts")
+
+@Graph("app")
+sealed class AppDestination : Destination {
+    @Route("app/home")
+    data object Home : AppDestination()
+    
+    @Route("app/profile")
+    @Argument(ProfileData::class)
+    data class UserProfile(val userId: String, val tab: String = "posts") 
+        : AppDestination(), TypedDestination<ProfileData> {
+        override val data = ProfileData(userId, tab)
+    }
+    
+    @Route("app/settings")
+    data object Settings : AppDestination()
+}</code></pre>
+
+            <h3>Step 2: Define Content Functions</h3>
+            <p>Use <code>@Content</code> to wire Composables to destinations:</p>
+            <pre><code>import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.annotations.Content
+
+@Content(AppDestination.Home::class)
+@Composable
+fun HomeContent(navigator: Navigator) {
+    HomeScreen(
+        onNavigateToProfile = { userId ->
+            navigator.navigate(AppDestination.UserProfile(userId))
+        },
+        onNavigateToSettings = {
+            navigator.navigate(AppDestination.Settings)
+        }
+    )
+}
+
+// Typed destinations receive data as first parameter
+@Content(AppDestination.UserProfile::class)
+@Composable
+fun ProfileContent(data: ProfileData, navigator: Navigator) {
+    ProfileScreen(
+        userId = data.userId,
+        initialTab = data.tab,
+        onBack = { navigator.navigateBack() }
+    )
+}
+
+@Content(AppDestination.Settings::class)
+@Composable
+fun SettingsContent(navigator: Navigator) {
+    SettingsScreen(
+        onBack = { navigator.navigateBack() }
+    )
+}</code></pre>
+
+            <h3>Step 3: Use Generated Graph</h3>
+            <p>KSP automatically generates a graph builder function:</p>
+            <pre><code>import com.example.app.destinations.buildAppDestinationGraph
+
+// Use the generated graph builder
+fun rootGraph() = navigationGraph("root") {
+    startDestination(AppDestination.Home)
+    include(buildAppDestinationGraph())  // Auto-generated!
+}</code></pre>
+
+            <h3>Step 4: Setup NavHost</h3>
+            <p>Integrate the navigation host in your app:</p>
+            <pre><code>@Composable
+fun App() {
+    val navigator = rememberNavigator()
+    
+    LaunchedEffect(Unit) {
+        navigator.registerGraph(rootGraph())
+        navigator.setStartDestination(AppDestination.Home)
+    }
+    
+    GraphNavHost(
+        graph = rootGraph(),
+        navigator = navigator,
+        defaultTransition = NavigationTransitions.SlideHorizontal
+    )
+}</code></pre>
+
+            <div class="note">
+                <p><strong>What KSP Generates:</strong></p>
+                <ul>
+                    <li><code>AppDestinationRouteInitializer</code> - Automatic route registration</li>
+                    <li><code>buildAppDestinationGraph()</code> - Complete graph with all destinations wired</li>
+                    <li><code>typedDestinationXxx()</code> - Type-safe extensions for destinations with @Argument</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Alternative: Manual DSL Approach</h2>
+            <p>For dynamic navigation or fine-grained control, use the manual DSL approach:</p>
+            
+            <pre><code>// Define destinations manually
+sealed class AppDestination : Destination {
     object Home : AppDestination() {
         override val route = "home"
     }
@@ -82,25 +222,16 @@ dependencies {
         override val route = "profile"
         override val arguments = mapOf("userId" to userId)
     }
-    
-    data class Settings(val section: String? = null) : AppDestination() {
-        override val route = "settings"
-        override val arguments = section?.let { mapOf("section" to it) } ?: emptyMap()
-    }
-}</code></pre>
+}
 
-            <h3>Step 2: Create Navigation Graph</h3>
-            <p>Define your navigation structure using the DSL:</p>
-            <pre><code>val mainGraph = navigationGraph("main") {
+// Build graph manually
+val mainGraph = navigationGraph("main") {
     startDestination(AppDestination.Home)
     
     destination(AppDestination.Home) { _, navigator ->
         HomeScreen(
             onNavigateToProfile = { userId ->
                 navigator.navigate(AppDestination.UserProfile(userId))
-            },
-            onNavigateToSettings = {
-                navigator.navigate(AppDestination.Settings())
             }
         )
     }
@@ -112,32 +243,6 @@ dependencies {
             onBack = { navigator.navigateBack() }
         )
     }
-    
-    destination(SimpleDestination("settings")) { dest, navigator ->
-        val section = dest.arguments["section"] as? String
-        SettingsScreen(
-            initialSection = section,
-            onBack = { navigator.navigateBack() }
-        )
-    }
-}</code></pre>
-
-            <h3>Step 3: Setup NavHost</h3>
-            <p>Integrate the navigation host in your app:</p>
-            <pre><code>@Composable
-fun App() {
-    val navigator = rememberNavigator()
-    
-    LaunchedEffect(Unit) {
-        navigator.registerGraph(mainGraph)
-        navigator.setStartDestination(AppDestination.Home)
-    }
-    
-    GraphNavHost(
-        graph = mainGraph,
-        navigator = navigator,
-        defaultTransition = NavigationTransitions.SlideHorizontal
-    )
 }</code></pre>
         </section>
 

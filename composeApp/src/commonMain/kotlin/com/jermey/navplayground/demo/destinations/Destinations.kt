@@ -9,6 +9,58 @@ import com.jermey.quo.vadis.core.navigation.core.TypedDestination
 import kotlinx.serialization.Serializable
 
 /**
+ * # Quo Vadis Demo App - Navigation Destinations
+ * 
+ * This file demonstrates the **annotation-based API** for defining navigation destinations.
+ * 
+ * ## Key Annotations Used:
+ * 
+ * ### @Graph("name")
+ * Marks a sealed class as a navigation graph. KSP generates:
+ * - Route initializer: `{GraphName}RouteInitializer`
+ * - Graph builder: `build{GraphName}Graph()`
+ * 
+ * ### @Route("path")
+ * Specifies the route path for a destination.
+ * Routes are automatically registered at initialization.
+ * 
+ * ### @Argument(DataClass::class)
+ * Defines typed, serializable arguments for a destination.
+ * - Data class must be annotated with @Serializable
+ * - Destination must implement TypedDestination<T>
+ * - KSP generates typed navigation extension functions
+ * 
+ * ## Generated Code:
+ * 
+ * For each graph, KSP generates:
+ * ```kotlin
+ * // Route registration (automatic)
+ * object MainDestinationRouteInitializer {
+ *     init {
+ *         MainDestination.Home.registerRoute("main/home")
+ *         // ... other routes
+ *     }
+ * }
+ * 
+ * // Graph builder function
+ * fun buildMainDestinationGraph(): NavigationGraph { /* ... */ }
+ * 
+ * // Typed navigation extensions
+ * fun Navigator.navigateToDetail(itemId: String) { /* ... */ }
+ * ```
+ * 
+ * ## Benefits:
+ * - 50-70% less boilerplate code
+ * - Automatic serialization/deserialization
+ * - Type-safe navigation extensions
+ * - Compile-time verification
+ * - Better IDE support
+ * 
+ * See: ContentDefinitions.kt for @Content annotation usage
+ * See: NavigationGraphs.kt for graph composition
+ */
+
+/**
  * Top-level destinations exposed by the demo application.
  */
 sealed class DemoDestination : Destination {
@@ -17,7 +69,19 @@ sealed class DemoDestination : Destination {
 }
 
 /**
- * Main bottom navigation destinations
+ * Main bottom navigation destinations.
+ * 
+ * ANNOTATION PATTERN: Simple Destinations (No Arguments)
+ * 
+ * These destinations use:
+ * - @Graph to mark the sealed class
+ * - @Route to define route paths
+ * - data object for singleton destinations
+ * 
+ * Generated code includes:
+ * - Automatic route registration
+ * - Graph builder function: buildMainDestinationGraph()
+ * - Navigation extensions (when used with @Content)
  */
 @Graph("main")
 sealed class MainDestination : Destination {
@@ -38,13 +102,36 @@ sealed class MainDestination : Destination {
 }
 
 /**
- * Master-Detail pattern destinations
+ * Master-Detail pattern destinations.
+ * 
+ * ANNOTATION PATTERN: Typed Destinations (With Arguments)
+ * 
+ * The Detail destination demonstrates:
+ * - @Argument annotation with @Serializable data class
+ * - Implementation of TypedDestination<T> interface
+ * - Type-safe argument passing
+ * 
+ * Generated code includes:
+ * - Typed extension: navigator.navigateToDetail(itemId = "123")
+ * - Automatic serialization/deserialization
+ * - Content function receives DetailData directly (see ContentDefinitions.kt)
  */
 @Graph("master_detail")
 sealed class MasterDetailDestination : Destination {
     @Route("master_detail/list")
     data object List : MasterDetailDestination()
 
+    /**
+     * Detail destination with typed argument.
+     * 
+     * KSP generates:
+     * ```kotlin
+     * fun Navigator.navigateToDetail(
+     *     itemId: String,
+     *     transition: NavigationTransition? = null
+     * )
+     * ```
+     */
     @Route("master_detail/detail")
     @Argument(DetailData::class)
     data class Detail(val itemId: String) : MasterDetailDestination(), TypedDestination<DetailData> {

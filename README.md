@@ -15,6 +15,8 @@ This project consists of **two main components**:
 
 ## ✨ Key Features
 
+- ✅ **Annotation-based API** - KSP code generation for zero-boilerplate navigation
+- ✅ **Type-Safe Arguments** - Serializable data classes with automatic wiring
 - ✅ **Type-Safe Navigation** - Compile-time safety with no string-based routing
 - ✅ **Multiplatform** - Works on Android, iOS, Desktop, and Web
 - ✅ **Modular Architecture** - Gray box pattern for feature modules
@@ -32,17 +34,22 @@ This project consists of **two main components**:
 
 ```
 NavPlayground/
-├── quo-vadis-core/              # Navigation library
-│   ├── src/
-│   │   ├── commonMain/          # Core navigation logic
-│   │   ├── androidMain/         # Android-specific features
-│   │   └── iosMain/             # iOS-specific features
+├── quo-vadis-core/              # Core navigation library
+│   ├── src/commonMain/          # Core navigation logic
+│   ├── src/androidMain/         # Android-specific features
+│   ├── src/iosMain/             # iOS-specific features
 │   └── docs/                    # Library documentation
+│       ├── ANNOTATION_API.md               # Annotation-based API guide
+│       ├── TYPED_DESTINATIONS.md           # Type-safe arguments guide
 │       ├── ARCHITECTURE.md
 │       ├── API_REFERENCE.md
 │       ├── NAVIGATION_IMPLEMENTATION.md
 │       ├── MULTIPLATFORM_PREDICTIVE_BACK.md
 │       └── SHARED_ELEMENT_TRANSITIONS.md
+├── quo-vadis-annotations/       # Annotation definitions (@Graph, @Route, etc.)
+│   └── src/commonMain/          # Multiplatform annotations
+├── quo-vadis-ksp/               # KSP code generator
+│   └── src/main/                # Processor implementation
 ├── composeApp/                  # Demo application
 │   └── src/
 │       ├── commonMain/          # Demo screens & examples
@@ -51,12 +58,143 @@ NavPlayground/
 └── iosApp/                      # iOS app wrapper
 ```
 
+## 📚 Modules Overview
+
+### quo-vadis-core
+The core navigation library with full multiplatform support. Contains all navigation primitives, graph builders, and Compose integration. **No external dependencies** - can be used standalone.
+
+### quo-vadis-annotations  
+Annotation definitions for the code generation API. Provides `@Graph`, `@Route`, `@Argument`, and `@Content` annotations. Lightweight module with only Kotlin reflection dependency.
+
+### quo-vadis-ksp
+KSP (Kotlin Symbol Processing) code generator that processes annotations and generates graph builders, route registration, and typed destination extensions. Build-time only dependency.
+
+### composeApp
+Comprehensive demo application showcasing all navigation patterns using the annotation-based API. Demonstrates best practices for real-world applications.
+
 ## 🚀 Quick Start
 
-### Using the Library
+### Installation
+
+Add the library to your Kotlin Multiplatform project:
 
 ```kotlin
-// 1. Define type-safe destinations
+// build.gradle.kts
+plugins {
+    kotlin("multiplatform")
+    kotlin("plugin.serialization") version "2.2.20"
+    id("com.google.devtools.ksp") version "2.2.20-1.0.29"
+}
+
+kotlin {
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                // Core navigation library
+                implementation("com.jermey.quo.vadis:quo-vadis-core:0.1.0")
+                
+                // Annotation-based API (recommended)
+                implementation("com.jermey.quo.vadis:quo-vadis-annotations:0.1.0")
+                
+                // For type-safe arguments
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+            }
+        }
+    }
+}
+
+dependencies {
+    // KSP code generator
+    add("kspCommonMainMetadata", "com.jermey.quo.vadis:quo-vadis-ksp:0.1.0")
+}
+```
+
+### Using the Annotation-based API (Recommended)
+
+The annotation-based API uses KSP to generate navigation code, reducing boilerplate by 70%:
+
+```kotlin
+// 1. Define destinations with annotations
+import com.jermey.quo.vadis.annotations.*
+import com.jermey.quo.vadis.core.navigation.core.*
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class DetailData(val itemId: String, val mode: String = "view")
+
+@Graph("app")
+sealed class AppDestination : Destination {
+    @Route("app/home")
+    data object Home : AppDestination()
+    
+    @Route("app/detail")
+    @Argument(DetailData::class)
+    data class Detail(val itemId: String, val mode: String = "view") 
+        : AppDestination(), TypedDestination<DetailData> {
+        override val data = DetailData(itemId, mode)
+    }
+}
+
+// 2. Define content functions with @Content
+import androidx.compose.runtime.Composable
+
+@Content(AppDestination.Home::class)
+@Composable
+fun HomeContent(navigator: Navigator) {
+    HomeScreen(
+        onNavigateToDetail = { itemId ->
+            navigator.navigate(AppDestination.Detail(itemId))
+        }
+    )
+}
+
+@Content(AppDestination.Detail::class)
+@Composable
+fun DetailContent(data: DetailData, navigator: Navigator) {
+    DetailScreen(
+        itemId = data.itemId,
+        mode = data.mode,
+        onBack = { navigator.navigateBack() }
+    )
+}
+
+// 3. Use generated graph builder
+import com.example.app.destinations.buildAppDestinationGraph
+
+fun rootGraph() = navigationGraph("root") {
+    startDestination(AppDestination.Home)
+    include(buildAppDestinationGraph())  // Auto-generated!
+}
+
+// 4. Setup navigation in your app
+@Composable
+fun App() {
+    val navigator = rememberNavigator()
+    
+    LaunchedEffect(Unit) {
+        navigator.registerGraph(rootGraph())
+        navigator.setStartDestination(AppDestination.Home)
+    }
+    
+    GraphNavHost(
+        graph = rootGraph(),
+        navigator = navigator,
+        defaultTransition = NavigationTransitions.SlideHorizontal
+    )
+}
+```
+
+**What gets generated:**
+- ✅ Route registration (`AppDestinationRouteInitializer`)
+- ✅ Graph builder function (`buildAppDestinationGraph()`)
+- ✅ Typed destination extensions (for destinations with `@Argument`)
+
+### Alternative: Manual DSL Approach
+
+For dynamic navigation or when you prefer explicit control:
+
+```kotlin
+// Define destinations manually
 sealed class AppDestination : Destination {
     object Home : AppDestination() {
         override val route = "home"
@@ -68,14 +206,16 @@ sealed class AppDestination : Destination {
     }
 }
 
-// 2. Create a navigation graph
+// Build graph manually
 val appGraph = navigationGraph("app") {
     startDestination(AppDestination.Home)
     
     destination(AppDestination.Home) { _, navigator ->
-        HomeScreen(onNavigateToDetails = { id ->
-            navigator.navigate(AppDestination.Details(id))
-        })
+        HomeScreen(
+            onNavigateToDetails = { id ->
+                navigator.navigate(AppDestination.Details(id))
+            }
+        )
     }
     
     destination(SimpleDestination("details")) { dest, navigator ->
@@ -86,7 +226,7 @@ val appGraph = navigationGraph("app") {
     }
 }
 
-// 3. Setup navigation
+// Setup navigation
 @Composable
 fun App() {
     val navigator = rememberNavigator()
@@ -103,6 +243,12 @@ fun App() {
     )
 }
 ```
+
+**When to use manual DSL:**
+- Dynamic navigation that changes at runtime
+- Integration with existing manual code
+- Fine-grained control over graph construction
+- Building libraries that avoid KSP dependency
 
 ### Predictive Back Navigation
 
@@ -129,13 +275,20 @@ The website includes:
 
 ### 📖 Local Documentation
 
-Comprehensive documentation is also available in the `quo-vadis-core/docs/` directory:
+Comprehensive documentation is available in the `quo-vadis-core/docs/` directory:
 
+**Getting Started:**
+- **[Annotation-based API Guide](quo-vadis-core/docs/ANNOTATION_API.md)** - Complete guide to using annotations (recommended)
+- **[TypedDestination Guide](quo-vadis-core/docs/TYPED_DESTINATIONS.md)** - Type-safe navigation arguments with serialization
+
+**Core Documentation:**
 - **[Architecture Overview](quo-vadis-core/docs/ARCHITECTURE.md)** - Design principles, patterns, and architecture layers
 - **[API Reference](quo-vadis-core/docs/API_REFERENCE.md)** - Complete API documentation with examples
 - **[Navigation Implementation](quo-vadis-core/docs/NAVIGATION_IMPLEMENTATION.md)** - Implementation details and features
-- **[Multiplatform Predictive Back](quo-vadis-core/docs/MULTIPLATFORM_PREDICTIVE_BACK.md)** - Advanced gesture navigation
-- **[Shared Element Transitions](quo-vadis-core/docs/SHARED_ELEMENT_TRANSITIONS.md)** - Material Design shared elements guide
+
+**Advanced Features:**
+- **[Multiplatform Predictive Back](quo-vadis-core/docs/MULTIPLATFORM_PREDICTIVE_BACK.md)** - Gesture-based back navigation
+- **[Shared Element Transitions](quo-vadis-core/docs/SHARED_ELEMENT_TRANSITIONS.md)** - Material Design shared element animations
 
 ### 🔧 Updating the Website
 

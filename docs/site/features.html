@@ -40,23 +40,159 @@
         <p>Explore the comprehensive feature set that makes Quo Vadis the ideal navigation solution for Kotlin Multiplatform projects.</p>
 
         <section>
+            <h2>Annotation-Based API with Code Generation</h2>
+            <p>
+                The modern, recommended approach to building navigation in Quo Vadis. 
+                Use simple annotations on your destinations and let KSP generate all the boilerplate 
+                code automatically. This approach combines compile-time safety with minimal code.
+            </p>
+            
+            <h3>Key Features</h3>
+            <ul>
+                <li><strong>Zero Boilerplate:</strong> No manual graph builders, route registration, or destination factories</li>
+                <li><strong>Type-Safe Arguments:</strong> Automatic serialization/deserialization with kotlinx.serialization</li>
+                <li><strong>IDE Support:</strong> Full autocompletion and navigation for generated code</li>
+                <li><strong>Compile-Time Verification:</strong> Catch errors before runtime</li>
+            </ul>
+
+            <h3>The Four Annotations</h3>
+            <div class="features-grid">
+                <div class="feature-grid-item">
+                    <h3>@Graph</h3>
+                    <p>Marks a sealed class as a navigation graph. Generates graph builder functions.</p>
+                </div>
+                <div class="feature-grid-item">
+                    <h3>@Route</h3>
+                    <p>Specifies the route path. Automatically registers routes with the system.</p>
+                </div>
+                <div class="feature-grid-item">
+                    <h3>@Argument</h3>
+                    <p>Defines typed, serializable arguments. Generates typed destination extensions.</p>
+                </div>
+                <div class="feature-grid-item">
+                    <h3>@Content</h3>
+                    <p>Connects Composable functions to destinations. Wired automatically in graph.</p>
+                </div>
+            </div>
+
+            <h3>Complete Example</h3>
+            <pre><code>// 1. Define your graph with annotations
+@Graph("shop")
+sealed class ShopDestination : Destination
+
+// 2. Add destinations with routes
+@Route("shop/products")
+data object ProductList : ShopDestination()
+
+// 3. Add typed destinations with arguments
+@Serializable
+data class ProductData(val productId: String, val mode: String = "view")
+
+@Route("shop/product/detail")
+@Argument(ProductData::class)
+data class ProductDetail(
+    val productId: String,
+    val mode: String = "view"
+) : ShopDestination(), TypedDestination&lt;ProductData&gt; {
+    override val data = ProductData(productId, mode)
+}
+
+// 4. Define content with @Content annotation
+@Content(ProductList::class)
+@Composable
+fun ProductListContent(navigator: Navigator) {
+    ProductListScreen(
+        onProductClick = { id ->
+            // Type-safe navigation with generated extension
+            navigator.navigateToProductDetail(
+                productId = id,
+                mode = "view"
+            )
+        }
+    )
+}
+
+@Content(ProductDetail::class)
+@Composable
+fun ProductDetailContent(data: ProductData, navigator: Navigator) {
+    ProductDetailScreen(
+        productId = data.productId,
+        mode = data.mode,
+        onBack = { navigator.navigateBack() }
+    )
+}
+
+// 5. Use generated graph builder
+val shopGraph = buildShopDestinationGraph()
+
+// That's it! KSP generates:
+// - Route registration (ShopDestinationRouteInitializer)
+// - Graph builder (buildShopDestinationGraph())
+// - Typed navigation extensions (navigateToProductDetail())</code></pre>
+
+            <h3>What Gets Generated</h3>
+            <ul>
+                <li><strong>Route Initializers:</strong> Automatic route registration objects</li>
+                <li><strong>Graph Builders:</strong> <code>build{GraphName}Graph()</code> functions</li>
+                <li><strong>Typed Extensions:</strong> <code>navigateTo{DestinationName}()</code> functions</li>
+                <li><strong>Serialization Code:</strong> Argument encoding/decoding logic</li>
+            </ul>
+
+            <h3>Benefits Over Manual DSL</h3>
+            <ul>
+                <li>Write 50-70% less code</li>
+                <li>No manual route registration needed</li>
+                <li>Automatic argument serialization</li>
+                <li>Generated code is type-safe and tested</li>
+                <li>Easier to maintain and refactor</li>
+            </ul>
+
+            <div class="note">
+                <strong>Note:</strong> The manual DSL approach is still fully supported for advanced use cases. 
+                See <a href="getting-started.html#manual-approach">Getting Started - Alternative Approach</a>.
+            </div>
+        </section>
+
+        <section>
             <h2>Type-Safe Navigation</h2>
             <p>
                 Quo Vadis eliminates string-based routing entirely, providing compile-time safety 
-                for all navigation operations. Define destinations using sealed classes and enjoy 
-                IDE autocompletion, refactoring support, and zero runtime routing errors.
+                for all navigation operations through two approaches: the annotation-based API (recommended) 
+                and the manual DSL (for advanced use cases).
             </p>
             
             <h3>Benefits</h3>
             <ul>
-                <li><strong>Compile-time Safety:</strong> Catch navigation errors at compile time, not runtime</li>
-                <li><strong>IDE Support:</strong> Full autocompletion and refactoring capabilities</li>
+                <li><strong>Compile-time Safety:</strong> Catch navigation errors at compile time with sealed classes</li>
+                <li><strong>IDE Support:</strong> Full autocompletion and refactoring for both approaches</li>
                 <li><strong>Type-safe Arguments:</strong> Pass complex data types, not just strings</li>
-                <li><strong>Sealed Class Hierarchies:</strong> Group related destinations logically</li>
+                <li><strong>Two Approaches:</strong> Use annotations (recommended) or manual DSL (advanced)</li>
             </ul>
 
-            <h3>Example</h3>
-            <pre><code>sealed class FeatureDestination : Destination {
+            <h3>Annotation-Based Approach (Recommended)</h3>
+            <pre><code>// Define destinations with annotations
+@Graph("feature")
+sealed class FeatureDestination : Destination
+
+@Route("feature/list")
+data object List : FeatureDestination()
+
+@Serializable
+data class DetailData(val id: String, val mode: ViewMode = ViewMode.READ)
+
+@Route("feature/details")
+@Argument(DetailData::class)
+data class Details(val id: String, val mode: ViewMode = ViewMode.READ) 
+    : FeatureDestination(), TypedDestination&lt;DetailData&gt; {
+    override val data = DetailData(id, mode)
+}
+
+// Navigate with generated extension
+navigator.navigateToDetails(id = "123", mode = ViewMode.EDIT)</code></pre>
+
+            <h3>Manual DSL Approach</h3>
+            <pre><code>// Define destinations manually
+sealed class FeatureDestination : Destination {
     object List : FeatureDestination() {
         override val route = "list"
     }
@@ -73,8 +209,14 @@
     }
 }
 
-// Type-safe navigation - compiler ensures correctness
+// Navigate with destination instance
 navigator.navigate(FeatureDestination.Details("123", ViewMode.EDIT))</code></pre>
+
+            <p>
+                Both approaches provide complete type safety and work seamlessly together. 
+                The annotation-based approach requires less code and generates helpful extensions,
+                while the manual DSL offers more control for complex scenarios.
+            </p>
         </section>
 
         <section>

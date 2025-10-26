@@ -12,9 +12,48 @@ interface Destination {
 }
 ```
 
+#### TypedDestination Interface
+
+**Type-safe destination with serializable data:**
+
+```kotlin
+interface TypedDestination<T : Any> : Destination {
+    val data: T
+}
+```
+
+**Usage with annotations:**
+```kotlin
+@Serializable
+data class DetailData(val itemId: String, val mode: String = "view")
+
+@Route("detail")
+@Argument(DetailData::class)
+data class Detail(val itemId: String, val mode: String = "view") 
+    : Destination, TypedDestination<DetailData> {
+    override val data = DetailData(itemId, mode)
+}
+```
+
+**Usage with manual DSL:**
+```kotlin
+typedDestination<DetailData>(
+    destination = Detail::class,
+    dataClass = DetailData::class
+) { data, navigator ->
+    DetailScreen(
+        itemId = data.itemId,
+        mode = data.mode,
+        navigator = navigator
+    )
+}
+```
+
+**See:** [TYPED_DESTINATIONS.md](TYPED_DESTINATIONS.md) for complete guide
+
 #### Implementations
 - `SimpleDestination(route, arguments)` - Basic destination with arguments
-- `TypedDestination<T>(route, data)` - Typed destination with data
+- `TypedDestination<T>` - Typed destination with serializable data
 - Custom implementations for feature-specific destinations
 
 #### Factory Functions
@@ -148,6 +187,182 @@ handler.register("app://user/{userId}") { params ->
     UserDestination(params["userId"]!!)
 }
 ```
+
+---
+
+## Annotation-based API (`quo-vadis-annotations`)
+
+**KSP-powered code generation for zero-boilerplate navigation.** See [ANNOTATION_API.md](ANNOTATION_API.md) for complete guide.
+
+### @Graph
+
+Marks a sealed class as a navigation graph.
+
+```kotlin
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class Graph(val name: String)
+```
+
+**Example:**
+```kotlin
+@Graph("main")
+sealed class MainDestination : Destination {
+    @Route("main/home")
+    data object Home : MainDestination()
+    
+    @Route("main/settings")
+    data object Settings : MainDestination()
+}
+```
+
+**Generates:**
+- `MainDestinationRouteInitializer` - Route registration
+- `buildMainDestinationGraph()` - Graph builder function
+
+---
+
+### @Route
+
+Specifies the route path for a destination.
+
+```kotlin
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class Route(val path: String)
+```
+
+**Example:**
+```kotlin
+@Route("profile/user")
+data object UserProfile : ProfileDestination()
+```
+
+---
+
+### @Argument
+
+Specifies serializable typed arguments for a destination.
+
+```kotlin
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class Argument(val dataClass: KClass<*>)
+```
+
+**Example:**
+```kotlin
+@Serializable
+data class UserData(val userId: String, val displayName: String)
+
+@Route("profile/user")
+@Argument(UserData::class)
+data class UserProfile(val userId: String, val displayName: String)
+    : ProfileDestination(), TypedDestination<UserData> {
+    override val data = UserData(userId, displayName)
+}
+```
+
+**Generates:**
+- `typedDestinationUserProfile()` - Typed destination extension
+
+---
+
+### @Content
+
+Wires a Composable function to a destination.
+
+```kotlin
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.SOURCE)
+annotation class Content(val destination: KClass<*>)
+```
+
+**For simple destinations:**
+```kotlin
+@Content(MainDestination.Home::class)
+@Composable
+fun HomeContent(navigator: Navigator) {
+    HomeScreen(navigator = navigator)
+}
+```
+
+**For typed destinations:**
+```kotlin
+@Content(ProfileDestination.UserProfile::class)
+@Composable
+fun UserProfileContent(data: UserData, navigator: Navigator) {
+    ProfileScreen(
+        userId = data.userId,
+        displayName = data.displayName,
+        navigator = navigator
+    )
+}
+```
+
+---
+
+### Generated Code
+
+#### Route Registration
+
+```kotlin
+// Auto-generated
+object MainDestinationRouteInitializer {
+    init {
+        RouteRegistry.register(MainDestination.Home::class, "main/home")
+        RouteRegistry.register(MainDestination.Settings::class, "main/settings")
+    }
+}
+```
+
+Triggered automatically on first reference to any destination in the sealed class.
+
+#### Graph Builder
+
+```kotlin
+// Auto-generated
+fun buildMainDestinationGraph(): NavigationGraph {
+    return navigationGraph("main") {
+        startDestination(MainDestination.Home)
+        
+        destination(MainDestination.Home) { _, navigator ->
+            HomeContent(navigator)
+        }
+        
+        destination(MainDestination.Settings) { _, navigator ->
+            SettingsContent(navigator)
+        }
+    }
+}
+```
+
+**Usage:**
+```kotlin
+fun rootGraph() = navigationGraph("root") {
+    include(buildMainDestinationGraph())
+}
+```
+
+#### Typed Destination Extensions
+
+```kotlin
+// Auto-generated for @Argument destinations
+fun NavigationGraphBuilder.typedDestinationUserProfile(
+    destination: KClass<ProfileDestination.UserProfile>,
+    transition: NavigationTransition? = null,
+    content: @Composable (UserData, Navigator) -> Unit
+) {
+    typedDestination(
+        destination = destination,
+        dataClass = UserData::class,
+        transition = transition,
+        content = content
+    )
+}
+```
+
+Called automatically by generated graph builder.
 
 ---
 

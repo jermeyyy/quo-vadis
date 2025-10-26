@@ -68,6 +68,11 @@
             <h2>Key Features</h2>
             <div class="features">
                 <div class="feature-item">
+                    <h3>Annotation-Based API</h3>
+                    <p>Modern code generation with KSP. Define navigation graphs using simple annotations and let the library generate all boilerplate code automatically.</p>
+                </div>
+
+                <div class="feature-item">
                     <h3>Type-Safe Navigation</h3>
                     <p>Compile-time safety with no string-based routing. Navigate with confidence using sealed classes and type-safe destinations.</p>
                 </div>
@@ -115,8 +120,66 @@
         </section>
 
         <section>
-            <h2>Quick Example</h2>
-            <pre><code>// 1. Define type-safe destinations
+            <h2>Quick Example (Annotation-Based)</h2>
+            <pre><code>// 1. Define destinations with annotations
+@Graph("app")
+sealed class AppDestination : Destination
+
+@Route("app/home")
+data object Home : AppDestination()
+
+@Serializable
+data class DetailData(val id: String)
+
+@Route("app/details")
+@Argument(DetailData::class)
+data class Details(val id: String) 
+    : AppDestination(), TypedDestination&lt;DetailData&gt; {
+    override val data = DetailData(id)
+}
+
+// 2. Define content with @Content
+@Content(Home::class)
+@Composable
+fun HomeContent(navigator: Navigator) {
+    HomeScreen(
+        onNavigateToDetails = { id ->
+            // Generated extension function
+            navigator.navigateToDetails(id = id)
+        }
+    )
+}
+
+@Content(Details::class)
+@Composable
+fun DetailsContent(data: DetailData, navigator: Navigator) {
+    DetailsScreen(
+        itemId = data.id,
+        onBack = { navigator.navigateBack() }
+    )
+}
+
+// 3. Use generated graph builder
+@Composable
+fun App() {
+    val navigator = rememberNavigator()
+    val graph = remember { buildAppDestinationGraph() }
+    
+    GraphNavHost(
+        graph = graph,
+        navigator = navigator,
+        defaultTransition = NavigationTransitions.SlideHorizontal
+    )
+}</code></pre>
+            <p class="note">
+                <strong>That's it!</strong> KSP generates route registration, graph builders, and typed navigation extensions automatically. 
+                See <a href="getting-started.html">Getting Started</a> for more details.
+            </p>
+        </section>
+
+        <section>
+            <h2>Or Use Manual DSL for Full Control</h2>
+            <pre><code>// Define destinations manually
 sealed class AppDestination : Destination {
     object Home : AppDestination() {
         override val route = "home"
@@ -128,7 +191,7 @@ sealed class AppDestination : Destination {
     }
 }
 
-// 2. Create a navigation graph
+// Build graph manually
 val appGraph = navigationGraph("app") {
     startDestination(AppDestination.Home)
     
@@ -140,35 +203,26 @@ val appGraph = navigationGraph("app") {
         )
     }
     
-    destination(SimpleDestination("details")) { dest, navigator ->
+    destination(AppDestination.Details) { dest, navigator ->
+        val details = dest as AppDestination.Details
         DetailsScreen(
-            itemId = dest.arguments["id"] as String,
+            itemId = details.id,
             onBack = { navigator.navigateBack() }
         )
     }
-}
-
-// 3. Setup navigation in your app
-@Composable
-fun App() {
-    val navigator = rememberNavigator()
-    
-    LaunchedEffect(Unit) {
-        navigator.registerGraph(appGraph)
-        navigator.setStartDestination(AppDestination.Home)
-    }
-    
-    GraphNavHost(
-        graph = appGraph,
-        navigator = navigator,
-        defaultTransition = NavigationTransitions.SlideHorizontal
-    )
 }</code></pre>
         </section>
 
         <section>
             <h2>Why Quo Vadis?</h2>
             
+            <h3>Modern Code Generation</h3>
+            <p>
+                The annotation-based API uses KSP (Kotlin Symbol Processing) to generate all boilerplate code automatically.
+                Write 50-70% less code while maintaining complete type safety and IDE support. The manual DSL is still 
+                available for advanced use cases requiring fine-grained control.
+            </p>
+
             <h3>Built for Modern Apps</h3>
             <p>
                 Quo Vadis was designed from the ground up for Kotlin Multiplatform and Compose Multiplatform. 
@@ -177,7 +231,7 @@ fun App() {
 
             <h3>No External Dependencies</h3>
             <p>
-                The library is completely self-contained with no external navigation dependencies. 
+                The core library is completely self-contained with no external navigation dependencies. 
                 This means smaller app sizes and no conflicts with other libraries.
             </p>
 

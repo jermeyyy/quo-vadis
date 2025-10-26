@@ -29,10 +29,84 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 
 /**
- * Content definitions for all navigation destinations.
+ * # Quo Vadis Demo App - Content Definitions
  * 
- * This file replaces manual graph builders with simple @Content annotations.
- * KSP generates the complete graph DSL automatically.
+ * This file demonstrates the **@Content annotation** for connecting Composable
+ * functions to navigation destinations.
+ * 
+ * ## @Content Annotation
+ * 
+ * The @Content annotation replaces manual graph builder code:
+ * 
+ * ### Before (Manual DSL):
+ * ```kotlin
+ * val graph = navigationGraph("main") {
+ *     destination(MainDestination.Home) { _, navigator ->
+ *         HomeScreen(navigator)
+ *     }
+ * }
+ * ```
+ * 
+ * ### After (Annotation-Based):
+ * ```kotlin
+ * @Content(MainDestination.Home::class)
+ * @Composable
+ * fun HomeContent(navigator: Navigator) {
+ *     HomeScreen(navigator)
+ * }
+ * ```
+ * 
+ * ## Function Signatures
+ * 
+ * ### Simple Destinations (no @Argument):
+ * ```kotlin
+ * @Content(Home::class)
+ * @Composable
+ * fun HomeContent(navigator: Navigator) { /* ... */ }
+ * ```
+ * 
+ * ### Typed Destinations (with @Argument):
+ * ```kotlin
+ * @Content(Detail::class)
+ * @Composable
+ * fun DetailContent(data: DetailData, navigator: Navigator) { /* ... */ }
+ * ```
+ * Note: First parameter is the @Serializable data class type
+ * 
+ * ## Generated Code
+ * 
+ * KSP automatically generates graph builder functions that:
+ * 1. Register all destinations from @Route annotations
+ * 2. Wire @Content functions to their destinations
+ * 3. Handle argument deserialization for typed destinations
+ * 
+ * Example generated code:
+ * ```kotlin
+ * fun buildMainDestinationGraph(): NavigationGraph {
+ *     return navigationGraph("main") {
+ *         startDestination(MainDestination.Home)
+ *         
+ *         destination(MainDestination.Home) { _, navigator ->
+ *             HomeContent(navigator)
+ *         }
+ *         
+ *         typedDestinationDetail(
+ *             destination = MasterDetailDestination.Detail::class
+ *         ) { data, navigator ->
+ *             DetailContent(data, navigator)
+ *         }
+ *     }
+ * }
+ * ```
+ * 
+ * ## Benefits
+ * - Clean separation of UI and navigation logic
+ * - Type-safe content function signatures
+ * - Automatic wiring in generated graph builders
+ * - Easier to test (mock Navigator)
+ * 
+ * See: Destinations.kt for @Graph, @Route, @Argument usage
+ * See: NavigationGraphs.kt for graph composition
  */
 
 // ============================================================================
@@ -119,13 +193,33 @@ fun MasterListContent(navigator: Navigator) {
     )
 }
 
+/**
+ * TYPED DESTINATION EXAMPLE
+ * 
+ * This demonstrates @Content with a typed destination:
+ * - First parameter is DetailData (the @Serializable data class from @Argument)
+ * - Navigator is second parameter
+ * - KSP automatically deserializes DetailData from navigation arguments
+ * - No manual argument extraction needed!
+ * 
+ * Compare with manual approach:
+ * ```kotlin
+ * destination(MasterDetailDestination.Detail) { dest, navigator ->
+ *     val detail = dest as MasterDetailDestination.Detail
+ *     DetailScreen(itemId = detail.itemId, ...)  // Manual extraction
+ * }
+ * ```
+ * 
+ * With annotations, data is already deserialized and type-safe.
+ */
 @Content(MasterDetailDestination.Detail::class)
 @Composable
 fun DetailContent(data: DetailData, navigator: Navigator) {
     DetailScreen(
-        itemId = data.itemId,
+        itemId = data.itemId,  // Data already deserialized!
         onBack = { navigator.navigateBack() },
         onNavigateToRelated = { relatedId ->
+            // Can still navigate manually, or use generated extension
             navigator.navigate(
                 MasterDetailDestination.Detail(relatedId),
                 NavigationTransitions.SlideHorizontal

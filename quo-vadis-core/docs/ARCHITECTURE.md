@@ -20,6 +20,14 @@ This navigation library follows these key principles:
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
+│               Code Generation Layer (KSP)               │
+│  - Processes @Graph, @Route, @Argument, @Content        │
+│  - Generates route initializers                          │
+│  - Generates graph builders                              │
+│  - Generates typed navigation extensions                 │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
 │                    Integration Layer                     │
 │  - MVI Support (Intents, Effects, State)                │
 │  - DI Integration (Koin, Kodein, etc.)                  │
@@ -38,6 +46,7 @@ This navigation library follows these key principles:
 │  - Navigator (Controller)                                │
 │  - BackStack (State management)                          │
 │  - Destination (Data model)                              │
+│  - TypedDestination (Serializable destinations)          │
 │  - NavigationGraph (Modular graphs)                      │
 │  - DeepLink (URL handling)                               │
 └─────────────────────────────────────────────────────────┘
@@ -46,12 +55,47 @@ This navigation library follows these key principles:
 ## Core Concepts
 
 ### 1. Destination
-A `Destination` represents where you want to navigate. It's a simple data class with a route and optional arguments.
+A `Destination` represents where you want to navigate. It can be a simple object or a data class with typed arguments.
+
+**Two Approaches:**
+
+**Annotation-Based (Recommended):**
+```kotlin
+@Graph("feature")
+sealed class FeatureDestination : Destination
+
+@Route("feature/home")
+data object Home : FeatureDestination()
+
+@Serializable
+data class DetailData(val itemId: String)
+
+@Route("feature/detail")
+@Argument(DetailData::class)
+data class Detail(val itemId: String) 
+    : FeatureDestination(), TypedDestination<DetailData> {
+    override val data = DetailData(itemId)
+}
+```
+
+**Manual DSL:**
+```kotlin
+sealed class FeatureDestination : Destination {
+    object Home : FeatureDestination() {
+        override val route = "feature/home"
+    }
+    data class Detail(val itemId: String) : FeatureDestination() {
+        override val route = "feature/detail"
+        override val arguments = mapOf("itemId" to itemId)
+    }
+}
+```
 
 **Benefits:**
-- Type-safe navigation targets
+- Type-safe navigation targets (both approaches)
 - Serializable for deep links and state restoration
 - Can carry typed data
+- Annotation approach generates helpful extensions
 
 ### 2. Navigator
 The `Navigator` is the central controller that manages all navigation operations.
@@ -113,7 +157,135 @@ URI-based navigation with pattern matching.
 - Integration with navigation graphs
 - Universal link support
 
-### 7. Predictive Back Navigation
+### 7. Code Generation Layer (KSP)
+
+The annotation-based API leverages Kotlin Symbol Processing (KSP) to generate navigation boilerplate automatically.
+
+**Architecture:**
+```
+Source Code with Annotations
+          ↓
+    KSP Processor
+          ↓
+    ┌─────────────────┐
+    │   GraphProcessor│
+    └─────────────────┘
+          ↓
+    ┌─────────────────────────────────────┐
+    │  Generators (3 types)               │
+    ├─────────────────────────────────────┤
+    │  1. RouteInitializerGenerator       │
+    │     → {Graph}RouteInitializer       │
+    │                                     │
+    │  2. GraphBuilderGenerator           │
+    │     → build{Graph}Graph()           │
+    │                                     │
+    │  3. DestinationExtensionGenerator   │
+    │     → navigateTo{Destination}()     │
+    └─────────────────────────────────────┘
+          ↓
+    Generated Kotlin Code
+```
+
+**What Gets Generated:**
+
+**1. Route Initializers**
+```kotlin
+// Input
+@Graph("feature")
+sealed class FeatureDestination : Destination
+
+@Route("feature/home")
+data object Home : FeatureDestination()
+
+// Generated
+object FeatureDestinationRouteInitializer {
+    init {
+        FeatureDestination.Home.registerRoute("feature/home")
+    }
+}
+```
+
+**2. Graph Builders**
+```kotlin
+// Input
+@Content(FeatureDestination.Home::class)
+@Composable
+fun HomeContent(navigator: Navigator) { /* ... */ }
+
+// Generated
+fun buildFeatureDestinationGraph(): NavigationGraph {
+    return navigationGraph("feature") {
+        startDestination(FeatureDestination.Home)
+        
+        destination(FeatureDestination.Home) { _, navigator ->
+            HomeContent(navigator)
+        }
+    }
+}
+```
+
+**3. Typed Navigation Extensions**
+```kotlin
+// Input
+@Serializable
+data class DetailData(val itemId: String, val mode: String = "view")
+
+@Route("feature/detail")
+@Argument(DetailData::class)
+data class Detail(val itemId: String, val mode: String = "view") 
+    : FeatureDestination(), TypedDestination<DetailData> {
+    override val data = DetailData(itemId, mode)
+}
+
+// Generated
+fun Navigator.navigateToDetail(
+    itemId: String,
+    mode: String = "view",
+    transition: NavigationTransition? = null
+) {
+    val destination = FeatureDestination.Detail(
+        itemId = itemId,
+        mode = mode
+    )
+    if (transition != null) {
+        navigate(destination, transition)
+    } else {
+        navigate(destination)
+    }
+}
+```
+
+**Benefits:**
+- **Zero Boilerplate**: No manual route registration or graph building
+- **Type Safety**: Compile-time verification of all navigation operations
+- **IDE Support**: Generated code is navigable and autocompleted
+- **Automatic Serialization**: kotlinx.serialization handles complex types
+- **Maintainability**: Generated code is consistent and tested
+
+**KSP Processing Flow:**
+1. **Discovery Phase**: Find all `@Graph` annotated sealed classes
+2. **Validation Phase**: Verify `@Route`, `@Argument`, `@Content` usage
+3. **Analysis Phase**: Extract destination info, content functions, data types
+4. **Generation Phase**: Generate route initializers, graph builders, extensions
+5. **Output Phase**: Write generated Kotlin files to `build/generated/ksp/`
+
+**Error Handling:**
+KSP processor validates:
+- `@Graph` only on sealed classes extending `Destination`
+- `@Route` values are unique within a graph
+- `@Argument` data classes are `@Serializable`
+- `@Content` function signatures match destination types
+- `TypedDestination<T>` properly implemented
+
+Compile errors are reported with clear messages and source locations.
+
+**Performance:**
+- Incremental processing: Only reprocesses changed files
+- Caching: Generated code cached until annotations change
+- Build time impact: Typically <1 second for dozens of destinations
+
+### 8. Predictive Back Navigation
 Provides smooth, animated back gestures on both iOS and Android with automatic screen caching.
 
 **Key Features:**
@@ -151,6 +323,43 @@ Each type has matching gesture and exit animations for consistency.
 ## Modularization Strategy
 
 ### Feature Module Structure
+
+**Annotation-Based Approach (Recommended):**
+```kotlin
+// Feature module - destinations.kt
+@Graph("shop")
+sealed class ShopDestination : Destination
+
+@Route("shop/list")
+data object ProductList : ShopDestination()
+
+@Route("shop/detail")
+@Argument(ProductDetailData::class)
+data class ProductDetail(val productId: String) 
+    : ShopDestination(), TypedDestination<ProductDetailData> {
+    override val data = ProductDetailData(productId)
+}
+
+// Feature module - content.kt
+@Content(ProductList::class)
+@Composable
+fun ProductListContent(navigator: Navigator) { /* ... */ }
+
+@Content(ProductDetail::class)
+@Composable
+fun ProductDetailContent(data: ProductDetailData, navigator: Navigator) { /* ... */ }
+
+// Feature module - public API
+object ShopFeature {
+    fun navigationGraph() = buildShopDestinationGraph()
+    val entryPoint: Destination = ShopDestination.ProductList
+}
+
+// Other modules navigate to feature
+navigator.navigate(ShopFeature.entryPoint)
+```
+
+**Manual DSL Approach:**
 ```kotlin
 // Feature module exposes this
 class FeatureNavigation : BaseModuleNavigation() {
@@ -177,6 +386,7 @@ fun navigateToFeature() {
 - Internal navigation stays private
 - Easy to refactor within module
 - Compile-time safety across modules
+- Annotation approach reduces boilerplate significantly
 
 ## MVI Integration
 
@@ -267,22 +477,44 @@ The library is designed to be extended:
 
 ## Migration Path
 
-If migrating from other libraries:
+### From Other Libraries
 
-1. **From Compose Navigation**: Similar concepts, easier backstack control
-2. **From Voyager**: Similar screen-based approach, better modularization
-3. **From Custom Solution**: Gradual migration, can coexist
+1. **From Compose Navigation**: Similar concepts, easier backstack control, annotation-based API optional
+2. **From Voyager**: Similar screen-based approach, better modularization, code generation available
+3. **From Custom Solution**: Gradual migration, can coexist with existing code
+
+### From Manual DSL to Annotations
+
+If you're already using Quo Vadis with manual DSL:
+
+1. **Gradual Migration**: Both approaches work together in same project
+2. **Per-Feature**: Migrate one feature module at a time
+3. **Zero Breaking Changes**: Existing manual DSL code continues to work
+4. **See MIGRATION.md**: Complete guide with examples and patterns
+
+**Quick Comparison:**
+
+| Aspect | Manual DSL | Annotation-Based |
+|--------|-----------|------------------|
+| Code Volume | More boilerplate | 50-70% less code |
+| Setup Time | Slower | Faster |
+| Control | Maximum | Standard patterns |
+| Serialization | Manual | Automatic |
+| Best For | Complex/dynamic | Most use cases |
 
 ## Best Practices
 
-1. **Keep Destinations Simple**: Just data, no logic
-2. **Use Sealed Classes**: For related destination groups
-3. **One Graph Per Feature**: Clear module boundaries
-4. **Test Navigation**: Use FakeNavigator extensively
-5. **Handle Deep Links Early**: Setup in app initialization
-6. **Use Transitions Sparingly**: Default fade is often enough
-7. **Observe State Reactively**: Don't poll, use StateFlow
-8. **Clear Backstack Judiciously**: Users expect back button to work
+1. **Prefer Annotation-Based API**: Use for most features, reserve manual DSL for special cases
+2. **Keep Destinations Simple**: Just data, no logic (both approaches)
+3. **Use Sealed Classes**: For related destination groups (both approaches)
+4. **One Graph Per Feature**: Clear module boundaries
+5. **Use @Serializable**: For all typed destination data classes
+6. **Test Navigation**: Use FakeNavigator extensively
+7. **Handle Deep Links Early**: Setup in app initialization
+8. **Use Transitions Sparingly**: Default fade is often enough
+9. **Observe State Reactively**: Don't poll, use StateFlow
+10. **Clear Backstack Judiciously**: Users expect back button to work
+11. **Leverage Generated Code**: Use `navigateTo*()` extensions for type safety
 
 ## Future Enhancements
 
