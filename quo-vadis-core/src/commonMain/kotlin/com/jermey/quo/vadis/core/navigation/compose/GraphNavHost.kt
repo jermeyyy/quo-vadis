@@ -572,14 +572,18 @@ private fun ScreenContent(
     saveableStateHolder: SaveableStateHolder,
     enableCache: Boolean
 ) {
-    println("DEBUG: GraphNavHost renderDestination - entry.destination=${entry.destination}, route=${entry.destination.route}")
+    val destRoute = entry.destination.route
+    println("DEBUG: GraphNavHost renderDestination - entry.destination=${entry.destination}, route=$destRoute")
     
     val destConfig = remember(entry.destination.route) {
         val entryRoute = entry.destination.route
         println("DEBUG: GraphNavHost - Looking for destination with route: '$entryRoute'")
-        println("DEBUG: GraphNavHost - Graph has ${graph.destinations.size} destinations")
+        val destCount = graph.destinations.size
+        println("DEBUG: GraphNavHost - Graph has $destCount destinations")
         graph.destinations.forEachIndexed { index, config ->
-            println("DEBUG: GraphNavHost - [$index] route='${config.destination.route}' class=${config.destination::class.simpleName}")
+            val configRoute = config.destination.route
+            val configClass = config.destination::class.simpleName
+            println("DEBUG: GraphNavHost - [$index] route='$configRoute' class=$configClass")
         }
         val found = graph.destinations.find { 
             val matches = it.destination.route == entryRoute

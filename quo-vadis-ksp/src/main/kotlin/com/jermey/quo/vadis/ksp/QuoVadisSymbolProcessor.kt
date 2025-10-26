@@ -35,8 +35,9 @@ class QuoVadisSymbolProcessor(
         contentFunctions.filterIsInstance<KSFunctionDeclaration>().forEach { function ->
             try {
                 processContentFunction(function)
-            } catch (e: Exception) {
-                logger.error("Error processing @Content function ${function.simpleName.asString()}: ${e.message}", function)
+            } catch (e: IllegalStateException) {
+                val functionName = function.simpleName.asString()
+                logger.error("Error processing @Content function $functionName: ${e.message}", function)
             }
         }
         
@@ -45,8 +46,9 @@ class QuoVadisSymbolProcessor(
         graphSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
             try {
                 processGraphClass(classDeclaration)
-            } catch (e: Exception) {
-                logger.error("Error processing ${classDeclaration.qualifiedName?.asString()}: ${e.message}", classDeclaration)
+            } catch (e: IllegalStateException) {
+                val className = classDeclaration.qualifiedName?.asString()
+                logger.error("Error processing $className: ${e.message}", classDeclaration)
             }
         }
         
@@ -58,7 +60,7 @@ class QuoVadisSymbolProcessor(
         if (allGraphInfos.isNotEmpty()) {
             try {
                 RouteInitializationGenerator.generate(allGraphInfos, codeGenerator, logger)
-            } catch (e: Exception) {
+            } catch (e: IllegalStateException) {
                 logger.error("Error generating route initialization: ${e.message}")
             }
         }

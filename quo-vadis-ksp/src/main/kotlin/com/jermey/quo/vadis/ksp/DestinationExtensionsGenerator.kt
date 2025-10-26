@@ -60,6 +60,7 @@ object DestinationExtensionsGenerator {
         logger.info("Generated route registration and typed destination extensions: $fileName")
     }
     
+    @Suppress("LongMethod")
     private fun FileSpec.Builder.generateTypedDestinationExtension(
         graphInfo: GraphInfo,
         dest: DestinationInfo
@@ -77,13 +78,21 @@ object DestinationExtensionsGenerator {
         
         addFunction(
             FunSpec.builder(functionName)
-                .receiver(ClassName("com.jermey.quo.vadis.core.navigation.core", "NavigationGraphBuilder"))
-                .addParameter(
-                    ParameterSpec.builder("destination", KClass::class.asClassName().parameterizedBy(destinationType))
-                        .build()
+                .receiver(
+                    ClassName("com.jermey.quo.vadis.core.navigation.core", "NavigationGraphBuilder")
                 )
                 .addParameter(
-                    ParameterSpec.builder("transition", ClassName("com.jermey.quo.vadis.core.navigation.core", "NavigationTransition").copy(nullable = true))
+                    ParameterSpec.builder(
+                        "destination",
+                        KClass::class.asClassName().parameterizedBy(destinationType)
+                    ).build()
+                )
+                .addParameter(
+                    ParameterSpec.builder(
+                        "transition",
+                        ClassName("com.jermey.quo.vadis.core.navigation.core", "NavigationTransition")
+                            .copy(nullable = true)
+                    )
                         .defaultValue("null")
                         .build()
                 )
@@ -93,10 +102,18 @@ object DestinationExtensionsGenerator {
                         LambdaTypeName.get(
                             parameters = listOf(
                                 ParameterSpec.unnamed(argumentTypeName),
-                                ParameterSpec.unnamed(ClassName("com.jermey.quo.vadis.core.navigation.core", "Navigator"))
+                                ParameterSpec.unnamed(
+                                    ClassName("com.jermey.quo.vadis.core.navigation.core", "Navigator")
+                                )
                             ),
                             returnType = UNIT
-                        ).copy(annotations = listOf(AnnotationSpec.builder(ClassName("androidx.compose.runtime", "Composable")).build()))
+                        ).copy(
+                            annotations = listOf(
+                                AnnotationSpec.builder(
+                                    ClassName("androidx.compose.runtime", "Composable")
+                                ).build()
+                            )
+                        )
                     )
                         .build()
                 )
@@ -111,31 +128,46 @@ object DestinationExtensionsGenerator {
                     @param content Composable content receiving typed data and navigator
                     """.trimIndent()
                 )
-                .addStatement("typedDestination<%T, %T>(%S, transition, content)", destinationType, argumentTypeName, dest.route)
+                .addStatement(
+                    "typedDestination<%T, %T>(%S, transition, content)",
+                    destinationType,
+                    argumentTypeName,
+                    dest.route
+                )
                 .build()
         )
     }
     
+    @Suppress("LongMethod")
     private fun FileSpec.Builder.generateTypedDestinationWithScopesExtension(
         graphInfo: GraphInfo,
         dest: DestinationInfo
     ) {
         val destinationType = ClassName(graphInfo.packageName, graphInfo.className, dest.name)
         val argumentTypeName = ClassName.bestGuess(dest.argumentType!!)
-        val functionName = "typedDestination${dest.name}WithScopes"  // Include destination name to avoid JVM signature clashes
+        // Include destination name to avoid JVM signature clashes
+        val functionName = "typedDestination${dest.name}WithScopes"
         
         addImport("com.jermey.quo.vadis.core.navigation.core", "typedDestinationWithScopes")
         addImport("com.jermey.quo.vadis.core.navigation.compose", "TransitionScope")
         
         addFunction(
             FunSpec.builder(functionName)
-                .receiver(ClassName("com.jermey.quo.vadis.core.navigation.core", "NavigationGraphBuilder"))
-                .addParameter(
-                    ParameterSpec.builder("destination", KClass::class.asClassName().parameterizedBy(destinationType))
-                        .build()
+                .receiver(
+                    ClassName("com.jermey.quo.vadis.core.navigation.core", "NavigationGraphBuilder")
                 )
                 .addParameter(
-                    ParameterSpec.builder("transition", ClassName("com.jermey.quo.vadis.core.navigation.core", "NavigationTransition").copy(nullable = true))
+                    ParameterSpec.builder(
+                        "destination",
+                        KClass::class.asClassName().parameterizedBy(destinationType)
+                    ).build()
+                )
+                .addParameter(
+                    ParameterSpec.builder(
+                        "transition",
+                        ClassName("com.jermey.quo.vadis.core.navigation.core", "NavigationTransition")
+                            .copy(nullable = true)
+                    )
                         .defaultValue("null")
                         .build()
                 )
@@ -145,11 +177,24 @@ object DestinationExtensionsGenerator {
                         LambdaTypeName.get(
                             parameters = listOf(
                                 ParameterSpec.unnamed(argumentTypeName),
-                                ParameterSpec.unnamed(ClassName("com.jermey.quo.vadis.core.navigation.core", "Navigator")),
-                                ParameterSpec.unnamed(ClassName("com.jermey.quo.vadis.core.navigation.compose", "TransitionScope").copy(nullable = true))
+                                ParameterSpec.unnamed(
+                                    ClassName("com.jermey.quo.vadis.core.navigation.core", "Navigator")
+                                ),
+                                ParameterSpec.unnamed(
+                                    ClassName(
+                                        "com.jermey.quo.vadis.core.navigation.compose",
+                                        "TransitionScope"
+                                    ).copy(nullable = true)
+                                )
                             ),
                             returnType = UNIT
-                        ).copy(annotations = listOf(AnnotationSpec.builder(ClassName("androidx.compose.runtime", "Composable")).build()))
+                        ).copy(
+                            annotations = listOf(
+                                AnnotationSpec.builder(
+                                    ClassName("androidx.compose.runtime", "Composable")
+                                ).build()
+                            )
+                        )
                     )
                         .build()
                 )
@@ -167,10 +212,18 @@ object DestinationExtensionsGenerator {
                 )
                 .addAnnotation(
                     AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
-                        .addMember("%T::class", ClassName("androidx.compose.animation", "ExperimentalSharedTransitionApi"))
+                        .addMember(
+                            "%T::class",
+                            ClassName("androidx.compose.animation", "ExperimentalSharedTransitionApi")
+                        )
                         .build()
                 )
-                .addStatement("typedDestinationWithScopes<%T, %T>(%S, transition, content)", destinationType, argumentTypeName, dest.route)
+                .addStatement(
+                    "typedDestinationWithScopes<%T, %T>(%S, transition, content)",
+                    destinationType,
+                    argumentTypeName,
+                    dest.route
+                )
                 .build()
         )
     }

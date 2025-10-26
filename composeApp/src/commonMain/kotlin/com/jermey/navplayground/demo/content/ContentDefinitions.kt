@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.jermey.navplayground.demo.content
 
 import androidx.compose.runtime.Composable

@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.runtime.Composable
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -88,8 +89,9 @@ internal fun <T : Any> NavigationGraphBuilder.typedDestinationImpl(
             else -> {
                 // Direct cast (in-memory navigation with typed data)
                 @Suppress("UNCHECKED_CAST")
+                val expectedType = dataSerializer.descriptor.serialName
                 (destData as? T)
-                    ?: error("Error: Type mismatch for destination '$route'. Expected ${dataSerializer.descriptor.serialName}")
+                    ?: error("Error: Type mismatch for destination '$route'. Expected $expectedType")
             }
         }
 
@@ -110,11 +112,16 @@ internal fun <T : Any> NavigationGraphBuilder.typedDestinationImpl(
  * @param content Composable content that receives the typed data, navigator, and transition scope
  */
 @Suppress("UNCHECKED_CAST")
-@OptIn(InternalSerializationApi::class, androidx.compose.animation.ExperimentalSharedTransitionApi::class)
-inline fun <reified DESTINATION: TypedDestination<TYPE>, reified TYPE: Any> NavigationGraphBuilder.typedDestinationWithScopes(
+@OptIn(InternalSerializationApi::class, ExperimentalSharedTransitionApi::class)
+inline fun <reified DESTINATION: TypedDestination<TYPE>, reified TYPE: Any>
+NavigationGraphBuilder.typedDestinationWithScopes(
     route: String,
     transition: NavigationTransition? = null,
-    noinline content: @Composable (TYPE, Navigator, com.jermey.quo.vadis.core.navigation.compose.TransitionScope?) -> Unit
+    noinline content: @Composable (
+        TYPE,
+        Navigator,
+        com.jermey.quo.vadis.core.navigation.compose.TransitionScope?
+    ) -> Unit
 ) {
     typedDestinationWithScopesImpl(
         route = route,
@@ -127,8 +134,9 @@ inline fun <reified DESTINATION: TypedDestination<TYPE>, reified TYPE: Any> Navi
 /**
  * Internal implementation for typedDestinationWithScopes.
  */
+@Suppress("UNCHECKED_CAST")
 @PublishedApi
-@OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 internal fun <T : Any> NavigationGraphBuilder.typedDestinationWithScopesImpl(
     route: String,
     transition: NavigationTransition?,
@@ -169,8 +177,13 @@ internal fun <T : Any> NavigationGraphBuilder.typedDestinationWithScopesImpl(
                 println("DEBUG: Data is object, casting... type=${destData::class}")
                 // Direct cast (in-memory navigation with typed data)
                 @Suppress("UNCHECKED_CAST")
+                val expectedType = dataSerializer.descriptor.serialName
+                val actualType = destData::class
                 (destData as? T)
-                    ?: error("Error: Type mismatch for destination '$route'. Expected ${dataSerializer.descriptor.serialName}, got ${destData::class}")
+                    ?: error(
+                        "Error: Type mismatch for destination '$route'. " +
+                        "Expected $expectedType, got $actualType"
+                    )
             }
         }
 

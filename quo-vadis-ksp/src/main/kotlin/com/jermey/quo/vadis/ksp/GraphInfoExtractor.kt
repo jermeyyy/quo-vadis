@@ -58,7 +58,11 @@ object GraphInfoExtractor {
             .firstOrNull { it.shortName.asString() == "Route" }
         
         if (routeAnnotation == null) {
-            logger.warn("Destination ${destinationClass.simpleName.asString()} has no @Route annotation, skipping", destinationClass)
+            val destName = destinationClass.simpleName.asString()
+            logger.warn(
+                "Destination $destName has no @Route annotation, skipping",
+                destinationClass
+            )
             return null
         }
         

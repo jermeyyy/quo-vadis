@@ -24,7 +24,8 @@ object RouteRegistry {
      */
     fun getRoute(destinationClass: KClass<*>): String? {
         val route = routes[destinationClass]
-        println("DEBUG: RouteRegistry.getRoute - class=$destinationClass, route=$route, allRoutes=${routes.keys.map { it.simpleName }}")
+        val allRoutes = routes.keys.map { it.simpleName }
+        println("DEBUG: RouteRegistry.getRoute - class=$destinationClass, route=$route, allRoutes=$allRoutes")
         return route
     }
     
