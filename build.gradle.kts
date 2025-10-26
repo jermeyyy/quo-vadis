@@ -12,30 +12,34 @@ plugins {
     alias(libs.plugins.dokka)
 }
 
+
 allprojects {
-    plugins.apply(rootProject.libs.plugins.detekt.get().pluginId)
+    // Skip detekt for gradle plugin module to avoid conflicts with kotlin-dsl
+    if (project.name != "quo-vadis-gradle-plugin") {
+        plugins.apply(rootProject.libs.plugins.detekt.get().pluginId)
 
-    afterEvaluate {
+        afterEvaluate {
 
-        detekt {
-            config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-            baseline = file("detekt-baseline.xml")
-            autoCorrect = true
-            parallel = true
-            buildUponDefaultConfig = true
-            source = fileTree("src").apply {
-                include("**/*.kt")
-                include("**/*.kts")
-                exclude("**/build/**")
+            detekt {
+                config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+                baseline = file("detekt-baseline.xml")
+                autoCorrect = true
+                parallel = true
+                buildUponDefaultConfig = true
+                source = fileTree("src").apply {
+                    include("**/*.kt")
+                    include("**/*.kts")
+                    exclude("**/build/**")
+                }
             }
-        }
 
-        tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-            reports {
-                xml.required.set(true)
-                html.required.set(true)
-                sarif.required.set(true)
-                md.required.set(true)
+            tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+                reports {
+                    xml.required.set(true)
+                    html.required.set(true)
+                    sarif.required.set(true)
+                    md.required.set(true)
+                }
             }
         }
     }

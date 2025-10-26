@@ -40,6 +40,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import kotlinx.coroutines.launch
@@ -571,8 +572,26 @@ private fun ScreenContent(
     saveableStateHolder: SaveableStateHolder,
     enableCache: Boolean
 ) {
+    val destRoute = entry.destination.route
+    println("DEBUG: GraphNavHost renderDestination - entry.destination=${entry.destination}, route=$destRoute")
+    
     val destConfig = remember(entry.destination.route) {
-        graph.destinations.find { it.destination.route == entry.destination.route }
+        val entryRoute = entry.destination.route
+        println("DEBUG: GraphNavHost - Looking for destination with route: '$entryRoute'")
+        val destCount = graph.destinations.size
+        println("DEBUG: GraphNavHost - Graph has $destCount destinations")
+        graph.destinations.forEachIndexed { index, config ->
+            val configRoute = config.destination.route
+            val configClass = config.destination::class.simpleName
+            println("DEBUG: GraphNavHost - [$index] route='$configRoute' class=$configClass")
+        }
+        val found = graph.destinations.find { 
+            val matches = it.destination.route == entryRoute
+            println("DEBUG: GraphNavHost - Comparing '${it.destination.route}' == '$entryRoute': $matches")
+            matches
+        }
+        println("DEBUG: GraphNavHost - Match result: ${found != null}")
+        found
     }
 
     // Get transition scope from composition local (will be null if shared elements disabled)

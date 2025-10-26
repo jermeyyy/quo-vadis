@@ -1,18 +1,14 @@
 package com.jermey.quo.vadis.core.navigation.core
 
 /**
- * Base interface for all navigation destinations.
- * Each screen/feature should implement this to define a navigation target.
- *
- * All destinations support optional transition animations and type-safe arguments.
+ * Marker interface for navigation destinations.
+ * 
+ * Use this interface with @Route annotations to define navigation targets.
+ * The actual route resolution is handled internally by the library via RouteRegistry.
+ * 
+ * KSP generates the necessary code to register routes, so destinations remain simple POJOs.
  */
 interface Destination {
-    /**
-     * Unique identifier for this destination.
-     * Used for backstack management and deep linking.
-     */
-    val route: String
-
     /**
      * Optional data passed to this destination.
      * Should be a serializable type when using TypedDestination.
@@ -28,6 +24,25 @@ interface Destination {
 }
 
 /**
+ * Extension to get the route for any Destination.
+ * For BasicDestination, returns the stored route directly.
+ * For other destinations, routes are resolved from RouteRegistry (populated by KSP-generated code).
+ */
+val Destination.route: String
+    get() {
+        // BasicDestination holds its route directly
+        if (this is BasicDestination) {
+            return this.routeString
+        }
+        
+        // For user-defined destinations, use RouteRegistry
+        val kClass = this::class
+        val route = RouteRegistry.getRoute(kClass)
+        println("DEBUG: Destination.route - class=$kClass, simpleName=${kClass.simpleName}, route=$route")
+        return route ?: error("Route not registered for ${kClass.simpleName}. Ensure @Route annotation is present.")
+    }
+
+/**
  * Typed destination that can carry serializable data with type safety.
  *
  * @param T The type of data this destination carries (must be non-nullable).
@@ -40,17 +55,18 @@ interface Destination {
  * @Serializable
  * data class ProductDetails(val id: String, val name: String)
  * 
+ * @Graph("app")
  * sealed class AppDestination : Destination {
+ *     @Route("product_detail")
+ *     @Argument(ProductDetails::class)
  *     data class ProductDetail(val itemId: String) : 
  *         AppDestination(), TypedDestination<ProductDetails> {
- *         override val route = "product_detail"
  *         override val data = ProductDetails(itemId, "Product Name")
  *     }
  * }
  * ```
  */
 interface TypedDestination<T>: Destination {
-    override val route: String
     override val data: T
     override val transition: NavigationTransition?
         get() = null
@@ -59,28 +75,29 @@ interface TypedDestination<T>: Destination {
 /**
  * Internal implementation of TypedDestination for state restoration.
  * This class is used by the serialization framework to reconstruct typed destinations
- * from saved state. The actual type information is preserved as a string and
- * deserialized by the DSL layer.
+ * from saved state. Routes are resolved via RouteRegistry.
  * 
  * @internal This class is internal to the library.
  */
 internal data class RestoredTypedDestination<T>(
-    override val route: String,
+    private val routeString: String,
     override val data: T,
     override val transition: NavigationTransition? = null
-) : TypedDestination<T>
+) : TypedDestination<T> {
+    init {
+        // Register the route for this restored destination
+        RouteRegistry.register(this::class, routeString)
+    }
+}
 
 /**
  * Basic destination implementation for simple navigation without typed data.
- * Prefer using sealed classes with specific destination objects for type safety.
- *
- * This class does not accept data in its constructor to enforce type safety.
- * Use sealed classes or TypedDestination for destinations that need to carry data.
+ * Holds the route string directly, bypassing RouteRegistry to avoid conflicts.
  * 
  * @internal This class is internal to the library. Use the DSL functions to create destinations.
  */
 internal data class BasicDestination(
-    override val route: String,
+    internal val routeString: String,
     override val transition: NavigationTransition? = null
 ) : Destination
 

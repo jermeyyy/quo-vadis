@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import com.jermey.navplayground.demo.destinations.MainDestination
+import com.jermey.navplayground.demo.destinations.initializeQuoVadisRoutes
 import com.jermey.navplayground.demo.graphs.appRootGraph
 import com.jermey.quo.vadis.core.navigation.compose.GraphNavHost
 import com.jermey.quo.vadis.core.navigation.compose.rememberNavigator
@@ -20,6 +21,9 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
  */
 @Composable
 fun DemoApp() {
+    // Initialize auto-generated route registrations
+    remember { initializeQuoVadisRoutes() }
+    
     val navigator = rememberNavigator()
     val appGraph = remember<NavigationGraph> { appRootGraph() }
 

@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.runtime.Composable
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -88,12 +89,107 @@ internal fun <T : Any> NavigationGraphBuilder.typedDestinationImpl(
             else -> {
                 // Direct cast (in-memory navigation with typed data)
                 @Suppress("UNCHECKED_CAST")
+                val expectedType = dataSerializer.descriptor.serialName
                 (destData as? T)
-                    ?: error("Error: Type mismatch for destination '$route'. Expected ${dataSerializer.descriptor.serialName}")
+                    ?: error("Error: Type mismatch for destination '$route'. Expected $expectedType")
             }
         }
 
         content(data, navigator)
     }
 }
+
+/**
+ * DSL extension for registering typed destinations with shared element transition support.
+ *
+ * This variant provides access to TransitionScope for shared element animations.
+ * Use this when you need shared elements with typed, serializable data destinations.
+ *
+ * @param DESTINATION The destination type implementing TypedDestination<TYPE>
+ * @param TYPE The non-nullable serializable data type (must be annotated with @Serializable)
+ * @param route The unique route identifier for this destination
+ * @param transition Optional default transition animation
+ * @param content Composable content that receives the typed data, navigator, and transition scope
+ */
+@Suppress("UNCHECKED_CAST")
+@OptIn(InternalSerializationApi::class, ExperimentalSharedTransitionApi::class)
+inline fun <reified DESTINATION: TypedDestination<TYPE>, reified TYPE: Any>
+NavigationGraphBuilder.typedDestinationWithScopes(
+    route: String,
+    transition: NavigationTransition? = null,
+    noinline content: @Composable (
+        TYPE,
+        Navigator,
+        com.jermey.quo.vadis.core.navigation.compose.TransitionScope?
+    ) -> Unit
+) {
+    typedDestinationWithScopesImpl(
+        route = route,
+        transition = transition,
+        dataSerializer = serializer<TYPE>(),
+        content = content
+    )
+}
+
+/**
+ * Internal implementation for typedDestinationWithScopes.
+ */
+@Suppress("UNCHECKED_CAST")
+@PublishedApi
+@OptIn(ExperimentalSharedTransitionApi::class)
+internal fun <T : Any> NavigationGraphBuilder.typedDestinationWithScopesImpl(
+    route: String,
+    transition: NavigationTransition?,
+    dataSerializer: KSerializer<T>,
+    content: @Composable (T, Navigator, com.jermey.quo.vadis.core.navigation.compose.TransitionScope?) -> Unit
+) {
+    destinationWithScopes(
+        destination = BasicDestination(route, transition),
+        transition = transition
+    ) { dest, navigator, transitionScope ->
+        // Extract the data from the current destination in backstack
+        val currentDest = navigator.backStack.current.value
+
+        println("DEBUG: typedDestinationWithScopesImpl - route=$route")
+        println("DEBUG: currentDest=${currentDest?.destination}")
+        println("DEBUG: currentDest.data=${currentDest?.destination?.data}")
+        println("DEBUG: currentDest.route=${currentDest?.destination?.route}")
+
+        // TypedDestination now requires non-null data, so it must be present
+        val data: T = when (val destData = currentDest?.destination?.data) {
+            null -> {
+                println("DEBUG: ERROR - No data found!")
+                error("Error: TypedDestination requires non-null data for route '$route'")
+            }
+            is String -> {
+                println("DEBUG: Data is String, deserializing...")
+                // Deserialize from JSON string (e.g., from state restoration)
+                @Suppress("TooGenericExceptionCaught", "SwallowedException")
+                try {
+                    val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+                    json.decodeFromString(dataSerializer, destData)
+                } catch (e: Exception) {
+                    error("Error: Failed to deserialize data for destination '$route': ${e.message}")
+                }
+            }
+
+            else -> {
+                println("DEBUG: Data is object, casting... type=${destData::class}")
+                // Direct cast (in-memory navigation with typed data)
+                @Suppress("UNCHECKED_CAST")
+                val expectedType = dataSerializer.descriptor.serialName
+                val actualType = destData::class
+                (destData as? T)
+                    ?: error(
+                        "Error: Type mismatch for destination '$route'. " +
+                        "Expected $expectedType, got $actualType"
+                    )
+            }
+        }
+
+        println("DEBUG: Successfully extracted data: $data")
+        content(data, navigator, transitionScope)
+    }
+}
+
 

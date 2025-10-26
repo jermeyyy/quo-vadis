@@ -117,13 +117,53 @@ PredictiveBackNavigation(
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the `quo-vadis-core/docs/` directory:
+### 🌐 Documentation Website
+
+The project documentation is published at **[https://jermeyyy.github.io/quo-vadis/](https://jermeyyy.github.io/quo-vadis/)**
+
+The website includes:
+- **Getting Started Guide** - Installation and basic setup
+- **Features Documentation** - Detailed feature explanations
+- **Demo Application** - Interactive examples
+- **API Reference** - Complete API documentation (auto-generated from source)
+
+### 📖 Local Documentation
+
+Comprehensive documentation is also available in the `quo-vadis-core/docs/` directory:
 
 - **[Architecture Overview](quo-vadis-core/docs/ARCHITECTURE.md)** - Design principles, patterns, and architecture layers
 - **[API Reference](quo-vadis-core/docs/API_REFERENCE.md)** - Complete API documentation with examples
 - **[Navigation Implementation](quo-vadis-core/docs/NAVIGATION_IMPLEMENTATION.md)** - Implementation details and features
 - **[Multiplatform Predictive Back](quo-vadis-core/docs/MULTIPLATFORM_PREDICTIVE_BACK.md)** - Advanced gesture navigation
 - **[Shared Element Transitions](quo-vadis-core/docs/SHARED_ELEMENT_TRANSITIONS.md)** - Material Design shared elements guide
+
+### 🔧 Updating the Website
+
+The website is automatically deployed when changes are pushed to the `main` branch via GitHub Actions.
+
+**Static site content:** `/docs/site/`  
+**API documentation:** Auto-generated from Dokka
+
+To preview locally:
+```bash
+# Generate Dokka documentation
+./gradlew :quo-vadis-core:dokkaGenerateHtml
+
+# View Dokka output
+open quo-vadis-core/build/dokka/html/index.html
+
+# View static site
+open docs/site/index.html
+```
+
+**Website structure:**
+- Homepage and guides: `/docs/site/*.html`
+- Styles: `/docs/site/css/`
+- Scripts: `/docs/site/js/`
+- Images: `/docs/site/images/`
+- API Reference: Auto-generated during deployment
+
+See [docs/SITE_MAINTENANCE.md](docs/SITE_MAINTENANCE.md) for detailed website maintenance instructions.
 
 ### 📖 Generating API Documentation
 

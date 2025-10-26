@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.testing
 
 import com.jermey.quo.vadis.core.navigation.core.BackStack
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
+import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.Destination

@@ -2,6 +2,8 @@ package com.jermey.quo.vadis.core.navigation.serialization
 
 import com.jermey.quo.vadis.core.navigation.core.BackStack
 import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
+import com.jermey.quo.vadis.core.navigation.core.BasicDestination
+import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.MutableBackStack
 import com.jermey.quo.vadis.core.navigation.core.RestoredTypedDestination
@@ -139,18 +141,18 @@ class KotlinxNavigationStateSerializer(
             hasTypedData && data.isNotEmpty() -> {
                 // This was a TypedDestination - restore it with the internal implementation
                 // The actual typed deserialization happens in typedDestination DSL
-                RestoredTypedDestination(
-                    route = route,
-                    data = data
+                RestoredTypedDestination<String>(
+                    routeString = route,
+                    data = data,
+                    transition = null
                 )
             }
             else -> {
                 // This was a simple destination without typed data
-                val serializedData = this.data
-                object : Destination {
-                    override val route = this@toDestination.route
-                    override val data: Any? = if (serializedData.isEmpty()) null else serializedData
-                }
+                BasicDestination(
+                    routeString = route,
+                    transition = null
+                )
             }
         }
     }

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quo Vadis - Type-safe Kotlin Multiplatform Navigation Library for Compose Multiplatform">
+    <meta name="keywords" content="Kotlin, Multiplatform, Navigation, Compose, Android, iOS, Web, Desktop">
+    <meta name="author" content="Jeremey">
+        <title>Quo Vadis - Type-Safe Multiplatform Navigation</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Highlight.js - theme loaded dynamically by main.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/kotlin.min.js"></script>
+    <script src="js/main.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="images/logo.jpg" alt="Quo Vadis Logo" class="logo">
+                <div>
+                    <div class="site-title">Quo Vadis</div>
+                    <div class="site-subtitle">Where are you going?</div>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="demo.html">Demo</a></li>
+                    <li><a href="api/index.html">API Reference</a></li>
+                    <li><a href="https://github.com/jermeyyy/quo-vadis" target="_blank">GitHub</a></li>
+                    <li><button class="theme-switcher" aria-label="Toggle theme">☀ Light</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="hero">
+        <h1>Quo Vadis Navigation Library</h1>
+        <p>Type-safe, multiplatform navigation for Compose Multiplatform</p>
+        <div class="hero-buttons">
+            <a href="getting-started.html" class="btn btn-primary">Get Started</a>
+            <a href="https://github.com/jermeyyy/quo-vadis" class="btn btn-secondary" target="_blank">View on GitHub</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <section>
+            <h2>Overview</h2>
+            <p>
+                <strong>Quo Vadis</strong> (Latin for "Where are you going?") is a comprehensive, type-safe navigation 
+                library for Kotlin Multiplatform and Compose Multiplatform. It provides a clean, intuitive API for 
+                managing navigation across Android, iOS, Desktop, and Web platforms with zero string-based routing.
+            </p>
+            
+            <div class="platforms">
+                <span class="platform-badge">Android</span>
+                <span class="platform-badge">iOS</span>
+                <span class="platform-badge">Desktop (JVM)</span>
+                <span class="platform-badge">Web (JS)</span>
+                <span class="platform-badge">Web (Wasm)</span>
+            </div>
+        </section>
+
+        <section>
+            <h2>Key Features</h2>
+            <div class="features">
+                <div class="feature-item">
+                    <h3>Type-Safe Navigation</h3>
+                    <p>Compile-time safety with no string-based routing. Navigate with confidence using sealed classes and type-safe destinations.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>Truly Multiplatform</h3>
+                    <p>Works seamlessly on Android, iOS, Desktop, and Web. Write once, navigate everywhere.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>Modular Architecture</h3>
+                    <p>Gray box pattern for feature modules. Build scalable apps with clean separation of concerns.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>Direct BackStack Access</h3>
+                    <p>Full control over navigation stack. Pop multiple screens, clear to specific destinations, and more.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>Deep Link Support</h3>
+                    <p>URI-based navigation with pattern matching. Handle deep links elegantly across all platforms.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>Predictive Back Navigation</h3>
+                    <p>Smooth animated back gestures on Android 13+ and iOS. Modern, native-feeling navigation.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>Shared Element Transitions</h3>
+                    <p>Material Design shared element transitions with bidirectional support for stunning animations.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>MVI Architecture Support</h3>
+                    <p>First-class MVI pattern integration. Clean, predictable state management for navigation.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>Fully Testable</h3>
+                    <p>FakeNavigator included for easy unit testing. Verify navigation behavior without UI.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Quick Example</h2>
+            <pre><code>// 1. Define type-safe destinations
+sealed class AppDestination : Destination {
+    object Home : AppDestination() {
+        override val route = "home"
+    }
+    
+    data class Details(val id: String) : AppDestination() {
+        override val route = "details"
+        override val arguments = mapOf("id" to id)
+    }
+}
+
+// 2. Create a navigation graph
+val appGraph = navigationGraph("app") {
+    startDestination(AppDestination.Home)
+    
+    destination(AppDestination.Home) { _, navigator ->
+        HomeScreen(
+            onNavigateToDetails = { id ->
+                navigator.navigate(AppDestination.Details(id))
+            }
+        )
+    }
+    
+    destination(SimpleDestination("details")) { dest, navigator ->
+        DetailsScreen(
+            itemId = dest.arguments["id"] as String,
+            onBack = { navigator.navigateBack() }
+        )
+    }
+}
+
+// 3. Setup navigation in your app
+@Composable
+fun App() {
+    val navigator = rememberNavigator()
+    
+    LaunchedEffect(Unit) {
+        navigator.registerGraph(appGraph)
+        navigator.setStartDestination(AppDestination.Home)
+    }
+    
+    GraphNavHost(
+        graph = appGraph,
+        navigator = navigator,
+        defaultTransition = NavigationTransitions.SlideHorizontal
+    )
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Why Quo Vadis?</h2>
+            
+            <h3>Built for Modern Apps</h3>
+            <p>
+                Quo Vadis was designed from the ground up for Kotlin Multiplatform and Compose Multiplatform. 
+                It embraces modern patterns like MVI, reactive state management with Flow, and type-safe APIs.
+            </p>
+
+            <h3>No External Dependencies</h3>
+            <p>
+                The library is completely self-contained with no external navigation dependencies. 
+                This means smaller app sizes and no conflicts with other libraries.
+            </p>
+
+            <h3>Beautiful Transitions</h3>
+            <p>
+                Built-in support for shared element transitions, predictive back gestures, and custom animations. 
+                Create polished, native-feeling apps with minimal effort.
+            </p>
+        </section>
+
+        <section>
+            <h2>Platform Support</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>Status</th>
+                        <th>Features</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Android</td>
+                        <td>Fully Supported</td>
+                        <td>Predictive back, deep links, shared elements, system back button</td>
+                    </tr>
+                    <tr>
+                        <td>iOS</td>
+                        <td>Fully Supported</td>
+                        <td>Predictive back, universal links, shared elements, swipe gestures</td>
+                    </tr>
+                    <tr>
+                        <td>Desktop (JVM)</td>
+                        <td>Fully Supported</td>
+                        <td>All core navigation features, keyboard shortcuts</td>
+                    </tr>
+                    <tr>
+                        <td>Web (JavaScript)</td>
+                        <td>Fully Supported</td>
+                        <td>Browser history, URL routing, all core features</td>
+                    </tr>
+                    <tr>
+                        <td>Web (WebAssembly)</td>
+                        <td>Fully Supported</td>
+                        <td>Browser history, URL routing, all core features</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Resources</h2>
+            <ul>
+                <li><a href="getting-started.html">Getting Started Guide</a> - Installation and basic setup</li>
+                <li><a href="features.html">Features Documentation</a> - Detailed feature explanations</li>
+                <li><a href="api/index.html">API Reference</a> - Complete API documentation</li>
+                <li><a href="demo.html">Demo Application</a> - See all features in action</li>
+                <li><a href="https://github.com/jermeyyy/quo-vadis" target="_blank">GitHub Repository</a> - Source code and issues</li>
+            </ul>
+        </section>
+    </div>
+
+    <footer>
+        <p>
+            Quo Vadis Navigation Library &copy; 2024-2025 
+            | <a href="https://github.com/jermeyyy/quo-vadis" target="_blank">GitHub</a>
+            | <a href="https://github.com/jermeyyy/quo-vadis/blob/main/LICENSE" target="_blank">License</a>
+        </p>
+    </footer>
+</body>
+</html>

@@ -102,6 +102,9 @@ kotlin {
                 implementation(libs.compose.backhandler)
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
+                
+                // Optional: annotations for users who want to use KSP
+                api(project(":quo-vadis-annotations"))
             }
         }
 

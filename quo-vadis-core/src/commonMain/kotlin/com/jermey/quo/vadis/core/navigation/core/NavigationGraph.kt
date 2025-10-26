@@ -69,6 +69,7 @@ class NavigationGraphBuilder(private val graphRoute: String) {
         transition: NavigationTransition? = null,
         content: @Composable (Destination, Navigator) -> Unit
     ) {
+        println("DEBUG: destination - Adding destination with route: ${destination.route}")
         destinationConfigs.add(
             DestinationConfig(
                 destination = destination,
@@ -77,6 +78,7 @@ class NavigationGraphBuilder(private val graphRoute: String) {
                 contentWithTransitionScope = null
             )
         )
+        println("DEBUG: destination - Total destinations now: ${destinationConfigs.size}")
     }
 
     /**
@@ -103,16 +105,18 @@ class NavigationGraphBuilder(private val graphRoute: String) {
         transition: NavigationTransition? = null,
         content: @Composable (Destination, Navigator, TransitionScope?) -> Unit
     ) {
+        println("DEBUG: destinationWithScopes - Adding destination with route: ${destination.route}")
         destinationConfigs.add(
             DestinationConfig(
                 destination = destination,
                 content = { dest, nav ->
-                    content(dest,nav,null                    )
+                    content(dest, nav, null)
                 }, // Fallback when scopes unavailable
                 defaultTransition = transition,
                 contentWithTransitionScope = content
             )
         )
+        println("DEBUG: destinationWithScopes - Total destinations now: ${destinationConfigs.size}")
     }
 
     /**
@@ -120,7 +124,12 @@ class NavigationGraphBuilder(private val graphRoute: String) {
      * Useful for nested navigation structures.
      */
     fun include(graph: NavigationGraph) {
+        println("DEBUG: include - Including graph '${graph.graphRoute}' with ${graph.destinations.size} destinations")
+        graph.destinations.forEach { config ->
+            println("DEBUG: include - Including destination: ${config.destination.route}")
+        }
         destinationConfigs.addAll(graph.destinations)
+        println("DEBUG: include - Total destinations now: ${destinationConfigs.size}")
     }
 
     fun build(): NavigationGraph {

@@ -30,3 +30,6 @@ dependencyResolutionManagement {
 
 include(":composeApp")
 include(":quo-vadis-core")
+include(":quo-vadis-annotations")
+include(":quo-vadis-ksp")
+

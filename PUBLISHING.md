@@ -260,6 +260,52 @@ publishing {
 
 ---
 
+## Documentation Publishing
+
+The project documentation website is automatically published to GitHub Pages when changes are pushed to the `main` branch.
+
+### Documentation Components
+
+1. **Static Website** - Located in `/docs/site/`
+   - Homepage, getting started, features, demo pages
+   - CSS, JavaScript, and images
+
+2. **API Documentation** - Auto-generated from source code
+   - Generated via Dokka during GitHub Actions workflow
+   - Published at: https://jermeyyy.github.io/quo-vadis/api/
+
+### Publishing Process
+
+The documentation is deployed automatically via GitHub Actions:
+
+```yaml
+# Triggered on push to main branch
+on:
+  push:
+    branches: [ main ]
+```
+
+**Workflow steps:**
+1. Generate Dokka documentation from source code
+2. Copy static site files from `/docs/site/`
+3. Combine content and deploy to GitHub Pages
+
+### Manual Documentation Generation
+
+To generate API documentation locally:
+
+```bash
+# Generate Dokka HTML
+./gradlew :quo-vadis-core:dokkaGenerateHtml
+
+# View output
+open quo-vadis-core/build/dokka/html/index.html
+```
+
+See [docs/SITE_MAINTENANCE.md](docs/SITE_MAINTENANCE.md) for detailed website maintenance instructions.
+
+---
+
 ## Summary
 
 ✅ **Maven Local publishing configured**  
