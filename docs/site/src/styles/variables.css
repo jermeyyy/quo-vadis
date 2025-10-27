@@ -1,0 +1,134 @@
+:root {
+  /* Layout */
+  --navbar-height: 64px;
+  --sidebar-width: 280px;
+  --toc-width: 240px;
+  --content-max-width: 900px;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+  
+  /* Light Theme Colors */
+  --primary-color: #2196F3;
+  --primary-dark: #1976D2;
+  --primary-light: #BBDEFB;
+  --accent-color: #FF5722;
+  
+  --color-primary: var(--primary-color);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-tertiary: #71717a;
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  
+  --background: #ffffff;
+  --background-elevated: #fafafa;
+  --background-card: #ffffff;
+  --code-background: #f4f4f5;
+  
+  --color-surface-raised: var(--background-elevated);
+  --color-code-bg: var(--code-background);
+  --color-info-bg: #eff6ff;
+  
+  --border-color: #e4e4e7;
+  --divider-color: #e4e4e7;
+  
+  --color-border: var(--border-color);
+  
+  /* Code Block Colors - Light Theme */
+  --code-block-bg: #fafafa;
+  --code-block-border: #e1e4e8;
+  --code-block-header-bg: #f6f8fa;
+  --code-block-text: #383a42;
+  --code-block-line-bg: #f0f0f0;
+  --code-block-line-number: #9ca1aa;
+  --code-block-button-bg: rgba(0, 0, 0, 0.05);
+  --code-block-button-border: rgba(0, 0, 0, 0.1);
+  --code-block-button-hover-bg: rgba(0, 0, 0, 0.08);
+  --code-block-button-hover-border: rgba(0, 0, 0, 0.15);
+  --code-block-scrollbar-track: rgba(0, 0, 0, 0.05);
+  --code-block-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --code-block-scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  /* Transitions */
+  --transition-fast: 150ms;
+  --transition-base: 250ms;
+  --transition-slow: 350ms;
+  
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-mono: 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+  
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+}
+
+[data-theme="dark"] {
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  
+  --background: #09090b;
+  --background-elevated: #18181b;
+  --background-card: #27272a;
+  --code-background: #18181b;
+  
+  --color-surface-raised: var(--background-elevated);
+  --color-code-bg: var(--code-background);
+  --color-info-bg: #1e3a5f;
+  
+  --border-color: #3f3f46;
+  --divider-color: #3f3f46;
+  
+  --color-border: var(--border-color);
+  
+  /* Code Block Colors - Dark Theme */
+  --code-block-bg: #282c34;
+  --code-block-border: #3e4451;
+  --code-block-header-bg: #21252b;
+  --code-block-text: #abb2bf;
+  --code-block-line-bg: #21252b;
+  --code-block-line-number: #636d83;
+  --code-block-button-bg: rgba(255, 255, 255, 0.05);
+  --code-block-button-border: rgba(255, 255, 255, 0.1);
+  --code-block-button-hover-bg: rgba(255, 255, 255, 0.1);
+  --code-block-button-hover-border: rgba(255, 255, 255, 0.15);
+  --code-block-scrollbar-track: rgba(0, 0, 0, 0.3);
+  --code-block-scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --code-block-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}

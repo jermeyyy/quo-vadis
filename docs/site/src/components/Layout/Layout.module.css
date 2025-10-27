@@ -1,0 +1,30 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.mainContainer {
+  display: flex;
+  flex: 1;
+  margin-top: var(--navbar-height);
+}
+
+.content {
+  flex: 1;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  width: 100%;
+  min-width: 0; /* Allow content to shrink below its min-content size */
+}
+
+@media (min-width: 768px) {
+  .mainContainer {
+    margin-left: var(--sidebar-width);
+  }
+}
+
+@media (min-width: 1280px) {
+  .content {
+    margin-right: var(--toc-width);
+  }
+}

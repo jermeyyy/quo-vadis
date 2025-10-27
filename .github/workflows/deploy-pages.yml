@@ -21,6 +21,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: docs/site/package-lock.json
+      
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -30,13 +37,21 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
       
+      - name: Install npm dependencies
+        working-directory: docs/site
+        run: npm ci
+      
+      - name: Build React documentation site
+        working-directory: docs/site
+        run: npm run build
+      
       - name: Generate Dokka documentation
         run: ./gradlew :quo-vadis-core:dokkaGenerateHtml --no-daemon
       
       - name: Prepare GitHub Pages content
         run: |
           mkdir -p _site
-          cp -r docs/site/* _site/
+          cp -r docs/site/dist/* _site/
           cp -r quo-vadis-core/build/dokka/html _site/api
       
       - name: Upload artifact
