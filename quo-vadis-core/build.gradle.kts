@@ -214,7 +214,7 @@ publishing {
 
 // Dokka configuration for API documentation
 dokka {
-    moduleName.set("Quo Vadis Navigation Library")
+    moduleName.set("Core")
     moduleVersion.set(project.version.toString())
     
     dokkaPublications.html {

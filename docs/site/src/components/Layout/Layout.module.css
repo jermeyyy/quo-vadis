@@ -14,6 +14,9 @@
   flex: 1;
   padding: var(--spacing-xl) var(--spacing-lg);
   width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
   min-width: 0; /* Allow content to shrink below its min-content size */
 }
 
@@ -24,7 +27,7 @@
 }
 
 @media (min-width: 1280px) {
-  .content {
-    margin-right: var(--toc-width);
+  .mainContainer {
+    padding-right: var(--toc-width);
   }
 }

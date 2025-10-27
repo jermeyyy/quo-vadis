@@ -212,7 +212,7 @@ export default function Demo() {
         
         <div className={styles.screenshots}>
           <div className={styles.screenshotCard}>
-            <img src="/quo-vadis/images/main_screen.png" alt="Main navigation screen with bottom tabs" />
+            <img src="/images/main_screen.png" alt="Main navigation screen with bottom tabs" />
             <div className={styles.caption}>
               <strong>Main Screen</strong><br />
               Bottom navigation with multiple tabs and drawer access
@@ -220,7 +220,7 @@ export default function Demo() {
           </div>
 
           <div className={styles.screenshotCard}>
-            <img src="/quo-vadis/images/master_detail_pattern.png" alt="Master-detail list view" />
+            <img src="/images/master_detail_pattern.png" alt="Master-detail list view" />
             <div className={styles.caption}>
               <strong>Master-Detail Pattern</strong><br />
               List view with cards ready for navigation to detail screens
@@ -228,7 +228,7 @@ export default function Demo() {
           </div>
 
           <div className={styles.screenshotCard}>
-            <img src="/quo-vadis/images/modal_bottom_sheet.png" alt="Modal bottom sheet navigation" />
+            <img src="/images/modal_bottom_sheet.png" alt="Modal bottom sheet navigation" />
             <div className={styles.caption}>
               <strong>Modal Bottom Sheet</strong><br />
               Bottom sheet navigation with smooth transitions
@@ -236,7 +236,7 @@ export default function Demo() {
           </div>
 
           <div className={styles.screenshotCard}>
-            <img src="/quo-vadis/images/multistep_process_pattern.png" alt="Multi-step process flow" />
+            <img src="/images/multistep_process_pattern.png" alt="Multi-step process flow" />
             <div className={styles.caption}>
               <strong>Multi-Step Process</strong><br />
               Wizard-style flow with step indicators and navigation controls
@@ -244,7 +244,7 @@ export default function Demo() {
           </div>
 
           <div className={styles.screenshotCard}>
-            <img src="/quo-vadis/images/predictive_back.png" alt="Predictive back navigation" />
+            <img src="/images/predictive_back.png" alt="Predictive back navigation" />
             <div className={styles.caption}>
               <strong>Predictive Back Navigation</strong><br />
               Interactive back gesture with preview animation

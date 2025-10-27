@@ -12,6 +12,28 @@ plugins {
     alias(libs.plugins.dokka)
 }
 
+// Apply Dokka to library subprojects for multi-module documentation
+subprojects {
+    if (project.name in listOf("quo-vadis-core", "quo-vadis-annotations", "quo-vadis-ksp")) {
+        apply(plugin = "org.jetbrains.dokka")
+    }
+}
+
+// Configure Dokka for multi-module aggregation
+dokka {
+    moduleName.set("Quo Vadis Navigation Library")
+    
+    dokkaPublications.html {
+        outputDirectory.set(layout.buildDirectory.dir("dokka/html"))
+    }
+}
+
+// Aggregate documentation from library subprojects
+dependencies {
+    dokka(project(":quo-vadis-core"))
+    dokka(project(":quo-vadis-annotations"))
+    dokka(project(":quo-vadis-ksp"))
+}
 
 allprojects {
     // Skip detekt for gradle plugin module to avoid conflicts with kotlin-dsl

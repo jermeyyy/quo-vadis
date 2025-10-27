@@ -26,7 +26,7 @@ java {
 
 // Dokka configuration for API documentation
 dokka {
-    moduleName.set("Quo Vadis KSP Processor")
+    moduleName.set("KSP Processor")
     moduleVersion.set(project.version.toString())
     
     dokkaPublications.html {

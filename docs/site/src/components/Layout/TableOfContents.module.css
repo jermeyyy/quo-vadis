@@ -6,7 +6,7 @@
   .toc {
     display: block;
     position: fixed;
-    right: 0;
+    right: max(0px, calc((100vw - var(--sidebar-width) - 1280px - var(--toc-width)) / 2));
     top: var(--navbar-height);
     bottom: 0;
     width: var(--toc-width);

@@ -49,7 +49,7 @@ android {
 
 // Dokka configuration for API documentation
 dokka {
-    moduleName.set("Quo Vadis Annotations")
+    moduleName.set("Annotations")
     moduleVersion.set(project.version.toString())
     
     dokkaPublications.html {

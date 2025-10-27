@@ -45,14 +45,14 @@ jobs:
         working-directory: docs/site
         run: npm run build
       
-      - name: Generate Dokka documentation
-        run: ./gradlew :quo-vadis-core:dokkaGenerateHtml --no-daemon
+      - name: Generate Dokka multi-module documentation
+        run: ./gradlew dokkaGeneratePublicationHtml --no-daemon
       
       - name: Prepare GitHub Pages content
         run: |
           mkdir -p _site
           cp -r docs/site/dist/* _site/
-          cp -r quo-vadis-core/build/dokka/html _site/api
+          cp -r build/dokka/html _site/api
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
