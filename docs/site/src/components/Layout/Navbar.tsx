@@ -23,7 +23,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           </button>
           
           <Link to="/" className={styles.brand}>
-            <img src="/logo.jpg" alt="Quo Vadis Logo" className={styles.logo} />
+            <img src={`${import.meta.env.BASE_URL}logo.jpg`} alt="Quo Vadis Logo" className={styles.logo} />
             <div className={styles.brandText}>
               <span className={styles.title}>Quo Vadis</span>
               <span className={styles.subtitle}>Where are you going?</span>
