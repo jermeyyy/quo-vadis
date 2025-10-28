@@ -3,6 +3,8 @@ import SearchBar from '../Search/SearchBar'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
 import styles from './Navbar.module.css'
 
+const CURRENT_VERSION = '0.1.0'
+
 interface NavbarProps {
   onMenuToggle: () => void
 }
@@ -29,6 +31,17 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
               <span className={styles.subtitle}>Where are you going?</span>
             </div>
           </Link>
+
+          <a
+            href="https://central.sonatype.com/artifact/io.github.jermeyyy/quo-vadis-core"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.versionBadge}
+            title="View on Maven Central"
+          >
+            <span className={styles.versionLabel}>v</span>
+            <span className={styles.versionNumber}>{CURRENT_VERSION}</span>
+          </a>
         </div>
 
         <div className={styles.right}>

@@ -368,10 +368,10 @@ export default function Demo() {
         <h2 id="code-examples">Code Examples from Demo</h2>
         
         <h3>Main Application Structure</h3>
-        <CodeBlock code={mainAppCode} language="kotlin" showLineNumbers />
+        <CodeBlock code={mainAppCode} language="kotlin" />
 
         <h3>Feature Module Example</h3>
-        <CodeBlock code={featureModuleCode} language="kotlin" showLineNumbers />
+        <CodeBlock code={featureModuleCode} language="kotlin" />
       </section>
 
       <section>

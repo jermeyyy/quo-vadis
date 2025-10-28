@@ -8,15 +8,20 @@ plugins {
     id("com.google.devtools.ksp") version "2.2.20-1.0.29"
 }
 
+repositories {
+    mavenCentral()
+    google()
+}
+
 kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
                 // Core navigation library
-                implementation("com.jermey.quo.vadis:quo-vadis-core:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-core:0.1.0")
                 
                 // Annotation-based API (recommended)
-                implementation("com.jermey.quo.vadis:quo-vadis-annotations:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0")
                 
                 // For type-safe arguments
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -27,7 +32,7 @@ kotlin {
 
 dependencies {
     // KSP code generator
-    add("kspCommonMainMetadata", "com.jermey.quo.vadis:quo-vadis-ksp:0.1.0")
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0")
 }`
 
 const versionCatalogCode = `# libs.versions.toml
@@ -37,9 +42,9 @@ ksp = "2.2.20-1.0.29"
 kotlinxSerialization = "1.6.0"
 
 [libraries]
-quo-vadis-core = { module = "com.jermey.quo.vadis:quo-vadis-core", version.ref = "quoVadis" }
-quo-vadis-annotations = { module = "com.jermey.quo.vadis:quo-vadis-annotations", version.ref = "quoVadis" }
-quo-vadis-ksp = { module = "com.jermey.quo.vadis:quo-vadis-ksp", version.ref = "quoVadis" }
+quo-vadis-core = { module = "io.github.jermeyyy:quo-vadis-core", version.ref = "quoVadis" }
+quo-vadis-annotations = { module = "io.github.jermeyyy:quo-vadis-annotations", version.ref = "quoVadis" }
+quo-vadis-ksp = { module = "io.github.jermeyyy:quo-vadis-ksp", version.ref = "quoVadis" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 [plugins]
@@ -50,6 +55,11 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinSerialization)
+}
+
+repositories {
+    mavenCentral()
+    google()
 }
 
 dependencies {
@@ -309,6 +319,7 @@ export default function GettingStarted() {
 
       <section>
         <h2 id="installation">Installation</h2>
+
         <p>Add the Quo Vadis library to your Kotlin Multiplatform project.</p>
 
         <h3 id="gradle-kotlin">Gradle (Kotlin DSL) - Recommended</h3>
@@ -351,7 +362,7 @@ export default function GettingStarted() {
       <section>
         <h2 id="manual-dsl">Alternative: Manual DSL Approach</h2>
         <p>For dynamic navigation or fine-grained control, use the manual DSL approach:</p>
-        <CodeBlock code={manualDSLCode} language="kotlin" showLineNumbers />
+        <CodeBlock code={manualDSLCode} language="kotlin" />
       </section>
 
       <section>

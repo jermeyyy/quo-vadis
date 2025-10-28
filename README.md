@@ -4,6 +4,11 @@
   <img src="art/logo.jpg" alt="NavPlayground Logo" width="200"/>
 </p>
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.jermeyyy/quo-vadis-core)](https://central.sonatype.com/artifact/io.github.jermeyyy/quo-vadis-core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.2.20-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.9.0-4285F4.svg?logo=jetpackcompose)](https://www.jetbrains.com/lp/compose-multiplatform/)
+
 **"Quo Vadis"** (Latin for "Where are you going?") - A comprehensive, type-safe navigation library for Kotlin Multiplatform and Compose Multiplatform.
 
 ## 🎯 Project Overview
@@ -86,15 +91,20 @@ plugins {
     id("com.google.devtools.ksp") version "2.2.20-1.0.29"
 }
 
+repositories {
+    mavenCentral()
+    google()
+}
+
 kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
                 // Core navigation library
-                implementation("com.jermey.quo.vadis:quo-vadis-core:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-core:0.1.0")
                 
                 // Annotation-based API (recommended)
-                implementation("com.jermey.quo.vadis:quo-vadis-annotations:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0")
                 
                 // For type-safe arguments
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -105,7 +115,7 @@ kotlin {
 
 dependencies {
     // KSP code generator
-    add("kspCommonMainMetadata", "com.jermey.quo.vadis:quo-vadis-ksp:0.1.0")
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0")
 }
 ```
 
@@ -578,12 +588,35 @@ The library supports multiple animation styles:
 ./gradlew :quo-vadis-core:publishToMavenLocal
 
 # Published artifacts location
-ls ~/.m2/repository/com/jermey/quo/vadis/quo-vadis-core/0.1.0-SNAPSHOT/
+ls ~/.m2/repository/io/github/jermeyyy/quo-vadis-core/0.1.0-SNAPSHOT/
 ```
 
-## � Using the Library
+## 📦 Using the Library
 
-### Add Dependency
+### From Maven Central (Stable Releases)
+
+**build.gradle.kts:**
+```kotlin
+repositories {
+    mavenCentral()
+    google()
+}
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.jermeyyy:quo-vadis-core:0.1.0")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0")
+        }
+    }
+}
+
+dependencies {
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0")
+}
+```
+
+### From Maven Local (Development)
 
 First, publish to Maven Local:
 
@@ -596,7 +629,7 @@ Then add to your project:
 **build.gradle.kts:**
 ```kotlin
 repositories {
-    mavenLocal()  // Add this
+    mavenLocal()  // For local SNAPSHOT versions
     mavenCentral()
     google()
 }
@@ -604,9 +637,14 @@ repositories {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.jermey.quo.vadis:quo-vadis-core:0.1.0-SNAPSHOT")
+            implementation("io.github.jermeyyy:quo-vadis-core:0.1.0-SNAPSHOT")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0-SNAPSHOT")
         }
     }
+}
+
+dependencies {
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0-SNAPSHOT")
 }
 ```
 

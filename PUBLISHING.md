@@ -1,12 +1,87 @@
-# Publishing Quo Vadis to Maven Local
+# Publishing Quo Vadis
 
 ## Overview
 
-The Quo Vadis navigation library can be published to your local Maven repository for testing and development purposes before releasing to remote repositories like Maven Central.
+The Quo Vadis navigation library is published to **Maven Central** for public use and can also be published to **Maven Local** for local testing and development.
 
 ---
 
-## Quick Start
+## Publishing to Maven Central
+
+### Prerequisites
+
+1. **Sonatype OSSRH Account**
+   - Sign up at https://issues.sonatype.org/
+   - Request namespace: `io.github.jermeyyy`
+
+2. **GPG Key**
+   - Generate key: `gpg --gen-key`
+   - Export public key: `gpg --keyserver keyserver.ubuntu.com --send-keys YOUR_KEY_ID`
+   - Export to Gradle: Configure in `~/.gradle/gradle.properties`
+
+3. **Gradle Properties Configuration**
+   
+   Add to `~/.gradle/gradle.properties`:
+   ```properties
+   mavenCentralUsername=YOUR_SONATYPE_USERNAME
+   mavenCentralPassword=YOUR_SONATYPE_PASSWORD
+   
+   signing.keyId=<last 8 chars>
+   signing.password=<passphrase>
+   signing.secretKeyRingFile=<path to secring.gpg>
+   ```
+
+### Publishing Releases
+
+```bash
+# 1. Update version in gradle.properties (remove -SNAPSHOT)
+# VERSION_NAME=0.1.0
+
+# 2. Build and publish all modules
+./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+
+# 3. Verify on Maven Central (can take 15-30 minutes)
+# https://central.sonatype.com/artifact/io.github.jermeyyy/quo-vadis-core
+```
+
+### Version Management for Releases
+
+- **Stable Releases**: `X.Y.Z` (e.g., `0.1.0`, `1.0.0`)
+- **Release Candidates**: `X.Y.Z-rc.N` (e.g., `0.1.0-rc.1`)
+- **Beta Releases**: `X.Y.Z-beta.N` (e.g., `0.2.0-beta.1`)
+- **Alpha Releases**: `X.Y.Z-alpha.N` (e.g., `0.3.0-alpha.1`)
+
+### Using Published Library from Maven Central
+
+Add to your project's `build.gradle.kts`:
+
+```kotlin
+repositories {
+    mavenCentral()
+    google()
+}
+
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation("io.github.jermeyyy:quo-vadis-core:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0")
+            }
+        }
+    }
+}
+
+dependencies {
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0")
+}
+```
+
+---
+
+## Publishing to Maven Local (Development)
+
+### Quick Start
 
 ### Option 1: Using the Helper Script (Recommended)
 
@@ -36,8 +111,16 @@ This script will:
 
 ### Library Coordinates
 
+**Maven Central:**
 ```kotlin
-groupId    = "com.jermey.quo.vadis"
+groupId    = "io.github.jermeyyy"
+artifactId = "quo-vadis-core" / "quo-vadis-annotations" / "quo-vadis-ksp"
+version    = "0.1.0"
+```
+
+**Maven Local (Development):**
+```kotlin
+groupId    = "io.github.jermeyyy"
 artifactId = "quo-vadis-core"
 version    = "0.1.0-SNAPSHOT"
 ```
@@ -59,14 +142,40 @@ The following artifacts are published to Maven Local (7 platforms):
 
 Artifacts are published to:
 ```
-~/.m2/repository/com/jermey/quo/vadis/quo-vadis-core/
+~/.m2/repository/io/github/jermeyyy/quo-vadis-core/
 ```
 
 ---
 
 ## Using the Published Library
 
-### In Another KMP Project
+### From Maven Central (Stable Releases)
+
+Add to your project's `build.gradle.kts`:
+
+```kotlin
+repositories {
+    mavenCentral()
+    google()
+}
+
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation("io.github.jermeyyy:quo-vadis-core:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0")
+            }
+        }
+    }
+}
+
+dependencies {
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0")
+}
+```
+
+### From Maven Local (Development)
 
 Add to your project's `build.gradle.kts`:
 
@@ -81,10 +190,15 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation("com.jermey.quo.vadis:quo-vadis-core:0.1.0-SNAPSHOT")
+                implementation("io.github.jermeyyy:quo-vadis-core:0.1.0-SNAPSHOT")
+                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0-SNAPSHOT")
             }
         }
     }
+}
+
+dependencies {
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0-SNAPSHOT")
 }
 ```
 
@@ -92,13 +206,16 @@ kotlin {
 
 ```kotlin
 repositories {
-    mavenLocal()
-    mavenCentral()
+    mavenCentral()  // For stable releases
+    // OR
+    mavenLocal()    // For development with SNAPSHOT
     google()
 }
 
 dependencies {
-    implementation("com.jermey.quo.vadis:quo-vadis-core-android:0.1.0-SNAPSHOT")
+    implementation("io.github.jermeyyy:quo-vadis-core-android:0.1.0")
+    // OR for development:
+    // implementation("io.github.jermeyyy:quo-vadis-core-android:0.1.0-SNAPSHOT")
 }
 ```
 
@@ -106,13 +223,15 @@ dependencies {
 
 ## Version Management
 
-### Current Version: `0.1.0-SNAPSHOT`
+### Current Version: `0.1.0`
 
-To change the version, edit `quo-vadis-core/build.gradle.kts`:
+**Maven Central:** Stable release `0.1.0`  
+**Maven Local:** Development version `0.1.0-SNAPSHOT`
 
-```kotlin
-group = "com.jermey.quo.vadis"
-version = "0.1.0-SNAPSHOT"  // ← Change this
+To change the version for local development, edit `gradle.properties`:
+
+```properties
+VERSION_NAME=0.1.0-SNAPSHOT  # ← Change this for local development
 ```
 
 ### Version Naming Convention
@@ -151,12 +270,25 @@ version = "0.1.0-SNAPSHOT"  // ← Change this
 
 ## Troubleshooting
 
+### Maven Central Issues
+
+**Issue**: GPG signing fails  
+**Solution**: Ensure GPG key is properly exported and configured in `~/.gradle/gradle.properties`
+
+**Issue**: Upload fails with 401 Unauthorized  
+**Solution**: Check Sonatype credentials in `~/.gradle/gradle.properties`
+
+**Issue**: Module not found on Maven Central  
+**Solution**: Wait 15-30 minutes for sync, check status at https://central.sonatype.com/
+
+### Maven Local Issues
+
 ### Clear Maven Local Cache
 
 If you need to completely remove the library from Maven Local:
 
 ```bash
-rm -rf ~/.m2/repository/com/jermey/quo/vadis/
+rm -rf ~/.m2/repository/io/github/jermeyyy/
 ```
 
 ### Verify Published Artifacts
@@ -164,7 +296,7 @@ rm -rf ~/.m2/repository/com/jermey/quo/vadis/
 Check what was published:
 
 ```bash
-ls -la ~/.m2/repository/com/jermey/quo/vadis/quo-vadis-core/0.1.0-SNAPSHOT/
+ls -la ~/.m2/repository/io/github/jermeyyy/quo-vadis-core/0.1.0-SNAPSHOT/
 ```
 
 ### Build Issues
@@ -218,30 +350,20 @@ This metadata is included in the POM file and helps with dependency resolution.
 
 ---
 
-## Next Steps for Public Release
+## Next Steps for Future Releases
 
-Once tested locally, you can publish to remote repositories:
+### Preparing a New Release
 
-### Maven Central
+1. Update `VERSION_NAME` in `gradle.properties` (remove `-SNAPSHOT`)
+2. Update documentation if needed
+3. Run tests: `./gradlew test`
+4. Publish to Maven Central: `./gradlew publishAndReleaseToMavenCentral --no-configuration-cache`
+5. Create GitHub release with changelog
+6. Update version to next SNAPSHOT: `VERSION_NAME=0.2.0-SNAPSHOT`
 
-1. Set up Sonatype account and GPG signing
-2. Add publishing configuration:
-   ```kotlin
-   publishing {
-       repositories {
-           maven {
-               name = "sonatype"
-               url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-               credentials {
-                   username = project.findProperty("ossrhUsername") as String?
-                   password = project.findProperty("ossrhPassword") as String?
-               }
-           }
-       }
-   }
-   ```
+### Alternative Publishing Options (Not Currently Used)
 
-### GitHub Packages
+#### GitHub Packages
 
 ```kotlin
 publishing {
@@ -305,12 +427,13 @@ open quo-vadis-core/build/dokka/html/index.html
 
 ## Summary
 
-✅ **Maven Local publishing configured**  
-✅ **Helper script created** (`publish-local.sh`)  
-✅ **All KMP targets supported** (Android, iOS x64, iOS Arm64, iOS Simulator Arm64)  
-✅ **POM metadata configured**  
+✅ **Published to Maven Central v0.1.0**  
+✅ **Maven Local publishing configured** for development  
+✅ **Helper script available** (`publish-local.sh`)  
+✅ **All KMP targets supported** (Android, iOS x3, Desktop, JS, Wasm)  
+✅ **Vanniktech Maven Publish plugin** configured  
 ✅ **Version management ready**  
 
-**To publish:** Run `./publish-local.sh` or `./gradlew :quo-vadis-core:publishToMavenLocal`
-
-**Published location:** `~/.m2/repository/com/jermey/quo/vadis/quo-vadis-core/0.1.0-SNAPSHOT/`
+**For stable releases:** `implementation("io.github.jermeyyy:quo-vadis-core:0.1.0")`  
+**For development:** Run `./publish-local.sh` or `./gradlew :quo-vadis-core:publishToMavenLocal`  
+**Maven Central:** https://central.sonatype.com/artifact/io.github.jermeyyy/quo-vadis-core

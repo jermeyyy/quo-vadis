@@ -98,7 +98,7 @@ export default function AnnotationAPI() {
 
       <section>
         <h2 id="complete-example">Complete Example</h2>
-        <CodeBlock code={annotationExample} language="kotlin" showLineNumbers />
+        <CodeBlock code={annotationExample} language="kotlin" />
       </section>
 
       <section>

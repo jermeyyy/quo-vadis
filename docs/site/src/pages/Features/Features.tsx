@@ -318,7 +318,7 @@ export default function Features() {
         </div>
 
         <h3>Complete Example</h3>
-        <CodeBlock code={annotationExample} language="kotlin" showLineNumbers />
+        <CodeBlock code={annotationExample} language="kotlin" />
 
         <h3>What Gets Generated</h3>
         <ul>

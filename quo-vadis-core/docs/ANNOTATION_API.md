@@ -48,15 +48,20 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+repositories {
+    mavenCentral()
+    google()
+}
+
 kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
                 // Core navigation library
-                implementation("com.jermey.quo.vadis:quo-vadis-core:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-core:0.1.0")
                 
                 // Annotation definitions
-                implementation("com.jermey.quo.vadis:quo-vadis-annotations:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0")
                 
                 // Required for type-safe arguments
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -67,7 +72,7 @@ kotlin {
 
 dependencies {
     // KSP processor (applied to common source set)
-    add("kspCommonMainMetadata", "com.jermey.quo.vadis:quo-vadis-ksp:0.1.0")
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0")
 }
 ```
 
@@ -81,9 +86,9 @@ ksp = "2.2.20-1.0.29"
 quoVadis = "0.1.0"
 
 [libraries]
-quo-vadis-core = { module = "com.jermey.quo.vadis:quo-vadis-core", version.ref = "quoVadis" }
-quo-vadis-annotations = { module = "com.jermey.quo.vadis:quo-vadis-annotations", version.ref = "quoVadis" }
-quo-vadis-ksp = { module = "com.jermey.quo.vadis:quo-vadis-ksp", version.ref = "quoVadis" }
+quo-vadis-core = { module = "io.github.jermeyyy:quo-vadis-core", version.ref = "quoVadis" }
+quo-vadis-annotations = { module = "io.github.jermeyyy:quo-vadis-annotations", version.ref = "quoVadis" }
+quo-vadis-ksp = { module = "io.github.jermeyyy:quo-vadis-ksp", version.ref = "quoVadis" }
 
 [plugins]
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
@@ -938,7 +943,7 @@ plugins {
 }
 
 dependencies {
-    add("kspCommonMainMetadata", "com.jermey.quo.vadis:quo-vadis-ksp:0.1.0")
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0")
 }
 ```
 
