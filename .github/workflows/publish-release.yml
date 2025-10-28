@@ -51,7 +51,7 @@ jobs:
       
       - name: Import GPG key
         run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 -d | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
       
       - name: Publish to Maven Central
