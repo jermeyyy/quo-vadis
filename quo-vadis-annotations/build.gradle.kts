@@ -48,12 +48,8 @@ android {
 }
 
 mavenPublishing {
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
-    
-    // Only sign when publishing to Maven Central (CI environment)
-    if (System.getenv("CI") == "true") {
-        signAllPublications()
-    }
+    publishToMavenCentral()
+    signAllPublications()
     
     pom {
         name.set("Quo Vadis Annotations")
