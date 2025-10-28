@@ -18,6 +18,7 @@ dokka = "2.1.0"
 ksp = "2.3.0"
 kotlinpoet = "2.2.0"
 symbolProcessingApi = "2.3.0"
+vanniktechMavenPublish = "0.34.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -52,3 +53,4 @@ androidLint = { id = "com.android.lint", version.ref = "agp" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+vanniktechMavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktechMavenPublish" }

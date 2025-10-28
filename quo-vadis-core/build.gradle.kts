@@ -6,11 +6,9 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.dokka)
-    `maven-publish`
+    alias(libs.plugins.vanniktechMavenPublish)
 }
 
-group = "com.jermey.quo.vadis"
-version = "0.1.0-SNAPSHOT"
 
 kotlin {
     androidLibrary {
@@ -140,47 +138,41 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     }
 }
 
-publishing {
-    publications {
-        withType<MavenPublication> {
-            groupId = "com.jermey.quo.vadis"
-            artifactId = "quo-vadis-core${if (name != "kotlinMultiplatform") "-$name" else ""}"
-            version = project.version.toString()
-
-            pom {
-                name.set("Quo Vadis - Navigation Library")
-                description.set(
-                    "A comprehensive type-safe navigation library for Compose Multiplatform supporting " +
-                    "Android and iOS with predictive back gestures, animations, and modular architecture."
-                )
-                url.set("https://github.com/jermeyyy/quo-vadis")
-
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("jermeyyy")
-                        name.set("Jermey")
-                        email.set("jermey@example.com")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/jermeyyy/quo-vadis.git")
-                    developerConnection.set("scm:git:ssh://github.com/jermeyyy/quo-vadis.git")
-                    url.set("https://github.com/jermeyyy/quo-vadis")
-                }
+mavenPublishing {
+    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+    
+    // Only sign when publishing to Maven Central (CI environment)
+    if (System.getenv("CI") == "true") {
+        signAllPublications()
+    }
+    
+    pom {
+        name.set("Quo Vadis Core")
+        description.set("Type-safe, reactive navigation library for Kotlin Multiplatform with Compose support")
+        url.set("https://github.com/jermeyyy/quo-vadis")
+        inceptionYear.set("2024")
+        
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+                distribution.set("repo")
             }
         }
-    }
-
-    repositories {
-        mavenLocal()
+        
+        developers {
+            developer {
+                id.set("jermeyyy")
+                name.set("Karol Celebi")
+                url.set("https://github.com/jermeyyy")
+            }
+        }
+        
+        scm {
+            url.set("https://github.com/jermeyyy/quo-vadis")
+            connection.set("scm:git:git://github.com/jermeyyy/quo-vadis.git")
+            developerConnection.set("scm:git:ssh://git@github.com/jermeyyy/quo-vadis.git")
+        }
     }
 }
 
