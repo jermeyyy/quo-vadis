@@ -13,8 +13,8 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":quo-vadis-annotations"))
-    implementation("com.google.devtools.ksp:symbol-processing-api:2.2.20-2.0.4")
+    implementation(projects.quoVadisAnnotations)
+    implementation(libs.symbol.processing.api)
     implementation(libs.kotlinpoet)
     implementation(libs.kotlinpoet.ksp)
 }

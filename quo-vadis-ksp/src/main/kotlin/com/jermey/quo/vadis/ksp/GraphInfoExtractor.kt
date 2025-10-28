@@ -25,7 +25,7 @@ object GraphInfoExtractor {
         // Validate sealed class
         if (graphClass.modifiers.contains(Modifier.SEALED).not()) {
             logger.error("@Graph can only be applied to sealed classes", graphClass)
-            throw IllegalStateException("Graph class must be sealed")
+            error("Graph class must be sealed")
         }
         
         // Extract destinations from sealed subclasses

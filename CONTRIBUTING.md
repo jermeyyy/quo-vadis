@@ -259,8 +259,6 @@ rm -rf _site_preview
    - Deploys to GitHub Pages
 3. Site updates at: https://jermeyyy.github.io/quo-vadis/
 
-See [docs/SITE_MAINTENANCE.md](docs/SITE_MAINTENANCE.md) for detailed website maintenance instructions.
-
 ## Submitting Changes
 
 ### Pull Request Process

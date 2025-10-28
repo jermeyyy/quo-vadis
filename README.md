@@ -316,8 +316,6 @@ open docs/site/index.html
 - Images: `/docs/site/images/`
 - API Reference: Auto-generated during deployment
 
-See [docs/SITE_MAINTENANCE.md](docs/SITE_MAINTENANCE.md) for detailed website maintenance instructions.
-
 ### 📖 Generating API Documentation
 
 You can generate comprehensive HTML API documentation using Dokka:

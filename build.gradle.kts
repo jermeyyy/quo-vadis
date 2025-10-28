@@ -30,9 +30,9 @@ dokka {
 
 // Aggregate documentation from library subprojects
 dependencies {
-    dokka(project(":quo-vadis-core"))
-    dokka(project(":quo-vadis-annotations"))
-    dokka(project(":quo-vadis-ksp"))
+    dokka(projects.quoVadisCore)
+    dokka(projects.quoVadisAnnotations)
+    dokka(projects.quoVadisKsp)
 }
 
 allprojects {

@@ -301,9 +301,6 @@ To generate API documentation locally:
 # View output
 open quo-vadis-core/build/dokka/html/index.html
 ```
-
-See [docs/SITE_MAINTENANCE.md](docs/SITE_MAINTENANCE.md) for detailed website maintenance instructions.
-
 ---
 
 ## Summary
