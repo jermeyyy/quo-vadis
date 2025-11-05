@@ -1,7 +1,7 @@
 ---
 description: 'Switch to the planning mode'
 ---
-Change mode to planning one shot and create comprehensive implementation plan for the user request.
+Change mode to planning and create comprehensive implementation plan for the user request.
 Prepared plan should include:
 - High-level steps to achieve the goal
 - Detailed sub-steps for each high-level step
