@@ -79,6 +79,11 @@ class NavigatorContainer(
 
         // Initialize: set up navigator synchronization
         init {
+            // Navigate to initial destination if provided
+            if (initialDestination != null) {
+                navigator.navigate(initialDestination)
+            }
+            
             // Sync Navigator's state changes to Store state
             navigator.currentDestination
                 .onEach { destination ->

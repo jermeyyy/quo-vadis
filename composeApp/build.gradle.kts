@@ -88,6 +88,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.flowmvi.test)
         }
         jsMain.dependencies {
             implementation(compose.html.core)
