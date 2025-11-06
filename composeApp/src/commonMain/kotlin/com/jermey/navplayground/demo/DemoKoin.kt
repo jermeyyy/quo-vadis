@@ -1,11 +1,10 @@
 package com.jermey.navplayground.demo
 
-import com.jermey.navplayground.demo.profile.ProfileContainer
-import com.jermey.navplayground.demo.profile.ProfileRepository
+import com.jermey.navplayground.demo.ui.screens.profile.ProfileContainer
+import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
 import com.jermey.quo.vadis.core.navigation.core.DefaultNavigator
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import org.koin.core.context.startKoin
-import org.koin.core.module.Module
 import org.koin.dsl.module
 
 /**

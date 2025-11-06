@@ -1,8 +1,7 @@
-package com.jermey.navplayground.demo.profile
+package com.jermey.navplayground.demo.ui.screens.profile
 
-import com.jermey.navplayground.demo.destinations.MainDestination
+import com.jermey.navplayground.demo.destinations.TabDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import kotlinx.coroutines.delay
 import pro.respawn.flowmvi.api.Container
 import pro.respawn.flowmvi.api.PipelineContext
 import pro.respawn.flowmvi.api.Store
@@ -235,7 +234,7 @@ class ProfileContainer(
      */
     private suspend fun PipelineContext<ProfileState, ProfileIntent, ProfileAction>.handleNavigateToSettings() {
         try {
-            navigator.navigate(MainDestination.Settings)
+            navigator.navigate(TabDestination.Settings)
         } catch (e: Exception) {
             action(ProfileAction.ShowError("Navigation failed"))
         }
@@ -272,7 +271,9 @@ class ProfileContainer(
     /**
      * Helper to safely access Content state.
      */
-    private suspend inline fun <reified T : ProfileState> PipelineContext<ProfileState, ProfileIntent, ProfileAction>.withContentState(
+    private suspend inline fun
+            <reified T : ProfileState> PipelineContext<ProfileState, ProfileIntent, ProfileAction>
+            .withContentState(
         crossinline block: suspend (T) -> Unit
     ) {
         withState {

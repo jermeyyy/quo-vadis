@@ -1,8 +1,11 @@
 package com.jermey.navplayground.demo.graphs
 
 // Import auto-generated graph builders
-import com.jermey.navplayground.demo.destinations.MainDestination
-import com.jermey.navplayground.demo.destinations.buildMainDestinationGraph
+import com.jermey.navplayground.demo.destinations.AppDestination
+import com.jermey.navplayground.demo.destinations.TabDestination
+import com.jermey.navplayground.demo.destinations.buildAppDestinationGraph
+import com.jermey.navplayground.demo.destinations.buildTabDestinationGraph
+import com.jermey.navplayground.demo.destinations.buildDeepLinkDestinationGraph
 import com.jermey.navplayground.demo.destinations.buildMasterDetailDestinationGraph
 import com.jermey.navplayground.demo.destinations.buildProcessDestinationGraph
 import com.jermey.navplayground.demo.destinations.buildTabsDestinationGraph
@@ -72,22 +75,37 @@ import com.jermey.quo.vadis.core.navigation.core.navigationGraph
 /**
  * Root application navigation graph.
  *
- * This graph now uses auto-generated graph builders from KSP!
- * All destination content is wired via @Content annotations in ContentDefinitions.kt.
+ * This is the top-level graph that contains:
+ * - MainTabs destination (the tabbed container)
+ * - Full-screen flows that should render on top of tabs (MasterDetail, Process, etc.)
  *
- * Benefits:
- * - No manual destination registration needed
- * - Type-safe argument passing handled automatically  
- * - Content functions matched to destinations at compile time
- * - Much less boilerplate code!
+ * This prevents conflicts by ensuring tab-level and app-level navigation are separate.
  */
 fun appRootGraph() = navigationGraph("app_root") {
-    startDestination(MainDestination.Home)
+    startDestination(AppDestination.MainTabs)
     
-    // Include all auto-generated graphs
-    include(buildMainDestinationGraph())
+    // Include the app-level graph with MainTabs destination
+    include(buildAppDestinationGraph())
+    
+    // Include full-screen flows that render on top of tabs
     include(buildMasterDetailDestinationGraph())
     include(buildTabsDestinationGraph())
     include(buildProcessDestinationGraph())
+    include(buildDeepLinkDestinationGraph())
+}
+
+/**
+ * Tab content navigation graph.
+ *
+ * This graph includes ONLY destinations that should be accessible within tabs:
+ * - Tab root destinations (Home, Explore, Profile, Settings)
+ *
+ * Important: This graph is used by tab navigators, NOT by the parent navigator.
+ * Deep navigation flows (MasterDetail, Process, etc.) are in appRootGraph.
+ */
+fun tabContentGraph() = navigationGraph("tab_content") {
+    // Tab root destinations only
+    startDestination(TabDestination.Home)
+    include(buildTabDestinationGraph())
 }
 

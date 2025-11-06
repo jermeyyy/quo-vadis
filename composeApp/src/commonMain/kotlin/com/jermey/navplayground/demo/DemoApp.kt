@@ -3,7 +3,7 @@ package com.jermey.navplayground.demo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import com.jermey.navplayground.demo.destinations.MainDestination
+import com.jermey.navplayground.demo.destinations.AppDestination
 import com.jermey.navplayground.demo.destinations.initializeQuoVadisRoutes
 import com.jermey.navplayground.demo.graphs.appRootGraph
 import com.jermey.quo.vadis.core.navigation.compose.GraphNavHost
@@ -14,10 +14,12 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 /**
  * Main entry point for the demo application.
  *
- * Uses unified GraphNavHost with support for:
- * - Animated forward/back navigation with correct directional transitions
- * - Predictive back gesture animations
- * - Composable caching for smooth transitions
+ * Architecture:
+ * - appRootGraph contains only AppDestination.MainTabs
+ * - MainTabsScreen hosts tabbed navigation with 4 tabs
+ * - Each tab uses tabContentGraph for navigation within its stack
+ * - MasterDetail, Process, Tabs demos open in new stacks
+ * - DeepLink demo accessible via modal bottom sheet
  */
 @Composable
 fun DemoApp() {
@@ -29,8 +31,7 @@ fun DemoApp() {
 
     LaunchedEffect(navigator, appGraph) {
         navigator.registerGraph(appGraph)
-        navigator.setStartDestination(MainDestination.Home)
-        setupDemoDeepLinks(navigator)
+        navigator.setStartDestination(AppDestination.MainTabs)
     }
 
     GraphNavHost(
@@ -38,6 +39,5 @@ fun DemoApp() {
         navigator = navigator,
         defaultTransition = NavigationTransitions.SlideHorizontal,
         enablePredictiveBack = true
-        // Note: SharedTransitionLayout is always enabled. Use destinationWithScopes() to opt-in per destination.
     )
 }

@@ -33,7 +33,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.ui.components.BottomNavigationBar
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.SettingItem
 import com.jermey.navplayground.demo.ui.components.SettingsSection
@@ -43,6 +42,7 @@ import com.jermey.navplayground.demo.ui.theme.ThemeMode
 import com.jermey.navplayground.demo.ui.theme.rememberThemeManager
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import androidx.compose.foundation.layout.WindowInsets
 import kotlinx.coroutines.launch
 
 /**
@@ -63,24 +63,15 @@ fun SettingsScreen(
     val currentThemeMode by themeManager.themeMode.collectAsState()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = { showBottomSheet = true }) {
                         Icon(Icons.Default.Menu, contentDescription = "Menu")
                     }
-                }
-            )
-        },
-        bottomBar = {
-            BottomNavigationBar(
-                currentRoute = "settings",
-                onNavigate = { destination ->
-                    navigator.navigateAndReplace(
-                        destination = destination,
-                        transition = NavigationTransitions.Fade
-                    )
                 }
             )
         }

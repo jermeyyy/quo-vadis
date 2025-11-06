@@ -55,16 +55,26 @@ fun TabNavigationContainer(
     transitionSpec: TabTransitionSpec = TabTransitionSpec.Default,
     content: @Composable (TabDefinition) -> Unit
 ) {
+    println("DEBUG_TAB_NAV: TabNavigationContainer - Composing with selectedTab: ${selectedTab.route}")
+    println("DEBUG_TAB_NAV: TabNavigationContainer - All tabs: ${allTabs.map { it.route }}")
+    
     Box(modifier = modifier) {
+        println("DEBUG_TAB_NAV: TabNavigationContainer - Rendering ${allTabs.size} tabs")
         allTabs.forEach { tab ->
+            val isVisible = tab == selectedTab
+            println("DEBUG_TAB_NAV: TabNavigationContainer - Tab ${tab.route}, visible: $isVisible")
             key(tab.route) {
                 TabContent(
-                    visible = tab == selectedTab,
+                    visible = isVisible,
                     transitionSpec = transitionSpec,
-                    content = { content(tab) }
+                    content = { 
+                        println("DEBUG_TAB_NAV: TabNavigationContainer - Invoking content lambda for tab: ${tab.route}")
+                        content(tab) 
+                    }
                 )
             }
         }
+        println("DEBUG_TAB_NAV: TabNavigationContainer - Finished rendering all tabs")
     }
 }
 
@@ -80,11 +90,13 @@ private fun TabContent(
     transitionSpec: TabTransitionSpec,
     content: @Composable () -> Unit
 ) {
+    println("DEBUG_TAB_NAV: TabContent - visible: $visible")
     AnimatedVisibility(
         visible = visible,
         enter = transitionSpec.enter,
         exit = transitionSpec.exit
     ) {
+        println("DEBUG_TAB_NAV: TabContent - AnimatedVisibility content lambda invoked")
         content()
     }
 }

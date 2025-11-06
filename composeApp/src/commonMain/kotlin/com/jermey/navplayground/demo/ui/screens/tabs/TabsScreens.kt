@@ -25,36 +25,64 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.buildTabsDestinationGraph
+import com.jermey.navplayground.demo.tabs.DemoTabs
+import com.jermey.navplayground.demo.tabs.DemoTabsConfig
 import com.jermey.navplayground.demo.ui.components.DetailInfoRow
+import com.jermey.quo.vadis.core.navigation.compose.rememberTabNavigator
+import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
- * Tabs Main Screen - Shows nested tabs navigation
+ * Tabs Main Screen - Demonstrates nested tabs navigation using the new tabbed navigation API.
+ *
+ * This screen showcases the @TabGraph annotation and generated code in action:
+ * - Uses DemoTabs sealed class with @TabGraph annotation
+ * - Generated DemoTabsConfig and DemoTabsContainer
+ * - Three independent tabs with their own content
+ * - Custom ScrollableTabRow for tab switching UI
+ *
+ * Each tab contains a list of items that can be clicked to navigate to detail screens,
+ * demonstrating how tabs maintain independent navigation stacks.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabsMainScreen(
     onNavigateToSubItem: (tabId: String, itemId: String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    navigator: Navigator
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Tab 1", "Tab 2", "Tab 3")
+    // Use the generated config and tab navigator
+    val tabState = rememberTabNavigator(DemoTabsConfig, navigator)
+    val selectedTab by tabState.selectedTab.collectAsState()
+
+    // Build navigation graph for tabs
+    val tabsGraph = remember<NavigationGraph> {
+        buildTabsDestinationGraph()
+    }
+
+    // Register graph with navigator
+    LaunchedEffect(navigator, tabsGraph) {
+        navigator.registerGraph(tabsGraph)
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tabs Navigation") },
+                title = { Text("Tabs Navigation Demo") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -68,35 +96,59 @@ fun TabsMainScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            TabRow(selectedTabIndex = selectedTabIndex) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
-                    )
+            // Custom tab bar UI
+            PrimaryScrollableTabRow(
+                selectedTabIndex = when (selectedTab) {
+                    DemoTabs.Tab1 -> 0
+                    DemoTabs.Tab2 -> 1
+                    DemoTabs.Tab3 -> 2
+                    else -> 0
                 }
+            ) {
+                Tab(
+                    selected = selectedTab == DemoTabs.Tab1,
+                    onClick = { tabState.selectTab(DemoTabs.Tab1) },
+                    text = { Text("Tab 1") },
+                    icon = { Icon(Icons.Default.Star, null) }
+                )
+                Tab(
+                    selected = selectedTab == DemoTabs.Tab2,
+                    onClick = { tabState.selectTab(DemoTabs.Tab2) },
+                    text = { Text("Tab 2") },
+                    icon = { Icon(Icons.Default.Favorite, null) }
+                )
+                Tab(
+                    selected = selectedTab == DemoTabs.Tab3,
+                    onClick = { tabState.selectTab(DemoTabs.Tab3) },
+                    text = { Text("Tab 3") },
+                    icon = { Icon(Icons.Default.Bookmark, null) }
+                )
             }
 
-            when (selectedTabIndex) {
-                0 -> TabContent(
+            // Tab content based on selected tab
+            when (selectedTab) {
+                DemoTabs.Tab1 -> TabContent(
                     tabId = "tab1",
                     title = "First Tab",
                     items = (1..10).map { "Item $it in Tab 1" },
-                    onItemClick = { onNavigateToSubItem("tab1", it) }
+                    onItemClick = { onNavigateToSubItem("tab1", it) },
+                    icon = Icons.Default.Star
                 )
-                1 -> TabContent(
+                DemoTabs.Tab2 -> TabContent(
                     tabId = "tab2",
                     title = "Second Tab",
                     items = (1..15).map { "Item $it in Tab 2" },
-                    onItemClick = { onNavigateToSubItem("tab2", it) }
+                    onItemClick = { onNavigateToSubItem("tab2", it) },
+                    icon = Icons.Default.Favorite
                 )
-                2 -> TabContent(
+                DemoTabs.Tab3 -> TabContent(
                     tabId = "tab3",
                     title = "Third Tab",
                     items = (1..8).map { "Item $it in Tab 3" },
-                    onItemClick = { onNavigateToSubItem("tab3", it) }
+                    onItemClick = { onNavigateToSubItem("tab3", it) },
+                    icon = Icons.Default.Bookmark
                 )
+                else -> {}
             }
         }
     }
@@ -107,7 +159,8 @@ private fun TabContent(
     tabId: String,
     title: String,
     items: List<String>,
-    onItemClick: (String) -> Unit
+    onItemClick: (String) -> Unit,
+    icon: ImageVector
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -147,11 +200,7 @@ private fun TabContent(
                     supportingContent = { Text("Click to view details") },
                     leadingContent = {
                         Icon(
-                            when (tabId) {
-                                "tab1" -> Icons.Default.Star
-                                "tab2" -> Icons.Default.Favorite
-                                else -> Icons.Default.Bookmark
-                            },
+                            icon,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary
                         )

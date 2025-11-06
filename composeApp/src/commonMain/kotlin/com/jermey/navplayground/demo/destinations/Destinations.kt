@@ -69,36 +69,53 @@ sealed class DemoDestination : Destination {
 }
 
 /**
- * Main bottom navigation destinations.
+ * Top-level app destinations.
  * 
- * ANNOTATION PATTERN: Simple Destinations (No Arguments)
- * 
- * These destinations use:
- * - @Graph to mark the sealed class
- * - @Route to define route paths
- * - data object for singleton destinations
- * 
- * Generated code includes:
- * - Automatic route registration
- * - Graph builder function: buildMainDestinationGraph()
- * - Navigation extensions (when used with @Content)
+ * Contains only the main entry point of the application.
+ * This is the root graph registered with the parent navigator.
  */
-@Graph("main")
-sealed class MainDestination : Destination {
-    @Route("main/home")
-    data object Home : MainDestination()
+@Graph("app", startDestination = "MainTabs")
+sealed class AppDestination : Destination {
+    @Route("app/main_tabs")
+    data object MainTabs : AppDestination()
+}
+
+/**
+ * Tab content destinations - used as root destinations for each tab.
+ * 
+ * These are the 4 main tabs in the bottom navigation:
+ * - Home: Showcase of navigation patterns
+ * - Explore: Master-detail and deep navigation
+ * - Profile: Profile management flows
+ * - Settings: App configuration
+ * 
+ * These destinations are used by tab navigators, not the parent navigator.
+ */
+@Graph("tabs_content", startDestination = "Home")
+sealed class TabDestination : Destination {
+    @Route("tab/home")
+    data object Home : TabDestination()
     
-    @Route("main/explore")
-    data object Explore : MainDestination()
+    @Route("tab/explore")
+    data object Explore : TabDestination()
     
-    @Route("main/profile")
-    data object Profile : MainDestination()
+    @Route("tab/profile")
+    data object Profile : TabDestination()
     
-    @Route("main/settings")
-    data object Settings : MainDestination()
-    
-    @Route("main/deeplink_demo")
-    data object DeepLinkDemo : MainDestination()
+    @Route("tab/settings")
+    data object Settings : TabDestination()
+}
+
+/**
+ * Deep link demo destination.
+ * 
+ * Accessible from anywhere via modal bottom sheet.
+ * Allows navigation to all linked screens for testing deep links.
+ */
+@Graph("deeplink", startDestination = "Demo")
+sealed class DeepLinkDestination : Destination {
+    @Route("deeplink/demo")
+    data object Demo : DeepLinkDestination()
 }
 
 /**

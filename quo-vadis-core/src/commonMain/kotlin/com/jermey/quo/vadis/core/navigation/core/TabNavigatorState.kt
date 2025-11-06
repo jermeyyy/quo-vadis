@@ -102,18 +102,23 @@ class TabNavigatorState(
      * @param tab The tab to select.
      */
     fun selectTab(tab: TabDefinition) {
+        println("DEBUG_TAB_NAV: TabNavigatorState.selectTab called - tab: ${tab.route}")
         require(tab in config.allTabs) { "Tab $tab is not in the configured tabs" }
         
         if (_selectedTab.value == tab) {
+            println("DEBUG_TAB_NAV: Already on tab ${tab.route}, doing nothing")
             // Already on this tab, do nothing
             return
         }
+        
+        println("DEBUG_TAB_NAV: Switching from ${_selectedTab.value?.route} to ${tab.route}")
         
         // Initialize the tab if this is the first visit
         initializeTabIfNeeded(tab)
         
         // Switch to the new tab
         _selectedTab.update { tab }
+        println("DEBUG_TAB_NAV: Tab switched successfully to ${tab.route}")
     }
     
     /**

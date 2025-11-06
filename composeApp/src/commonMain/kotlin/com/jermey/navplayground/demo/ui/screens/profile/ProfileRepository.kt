@@ -1,6 +1,7 @@
-package com.jermey.navplayground.demo.profile
+package com.jermey.navplayground.demo.ui.screens.profile
 
 import kotlinx.coroutines.delay
+
 
 /**
  * Simple profile repository for demo purposes.
@@ -12,6 +13,15 @@ import kotlinx.coroutines.delay
  * - Provide reactive data streams
  */
 class ProfileRepository {
+
+    companion object {
+        private const val loginDelay = 1000L
+        private const val updateUserDelay = 1500L
+        private const val logoutDelay = 500L
+        private const val nameMaxLenght = 50
+
+        private const val bioMaxLength = 500
+    }
     
     // Mock user data
     private var currentUser = UserData(
@@ -28,7 +38,7 @@ class ProfileRepository {
      * Simulates network delay.
      */
     suspend fun getUser(): UserData {
-        delay(1000) // Simulate network delay
+        delay(loginDelay) // Simulate network delay
         return currentUser
     }
     
@@ -41,7 +51,7 @@ class ProfileRepository {
         email: String,
         bio: String
     ): Result<UserData> {
-        delay(1500) // Simulate network delay
+        delay(updateUserDelay) // Simulate network delay
         
         // Validate
         val errors = validateUserData(name, email, bio)
@@ -73,7 +83,7 @@ class ProfileRepository {
             errors["name"] = "Name cannot be empty"
         } else if (name.length < 2) {
             errors["name"] = "Name must be at least 2 characters"
-        } else if (name.length > 50) {
+        } else if (name.length > nameMaxLenght) {
             errors["name"] = "Name must be less than 50 characters"
         }
         
@@ -83,7 +93,7 @@ class ProfileRepository {
             errors["email"] = "Invalid email format"
         }
         
-        if (bio.length > 500) {
+        if (bio.length > bioMaxLength) {
             errors["bio"] = "Bio must be less than 500 characters"
         }
         
@@ -94,7 +104,7 @@ class ProfileRepository {
      * Logout user (clear session).
      */
     suspend fun logout() {
-        delay(500)
+        delay(logoutDelay)
         // In real app: clear tokens, cache, etc.
     }
 }

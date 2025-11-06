@@ -12,10 +12,12 @@ import kotlin.reflect.KClass
  * - Typed destination extensions (for destinations with [@Argument])
  * 
  * @param name The unique identifier for this navigation graph. Used in generated function names.
+ * @param startDestination The simple name of the destination to use as the start destination.
+ *                         If not specified, the first destination in the sealed class will be used.
  * 
  * @sample Basic graph with simple destinations
  * ```kotlin
- * @Graph("main")
+ * @Graph("main", startDestination = "Home")
  * sealed class MainDestination : Destination {
  *     @Route("main/home")
  *     data object Home : MainDestination()
@@ -24,7 +26,7 @@ import kotlin.reflect.KClass
  *     data object Settings : MainDestination()
  * }
  * 
- * // Generated: buildMainDestinationGraph()
+ * // Generated: buildMainDestinationGraph() with Home as start destination
  * ```
  * 
  * @sample Graph with typed destinations
@@ -32,7 +34,7 @@ import kotlin.reflect.KClass
  * @Serializable
  * data class DetailData(val itemId: String)
  * 
- * @Graph("feature")
+ * @Graph("feature", startDestination = "List")
  * sealed class FeatureDestination : Destination {
  *     @Route("feature/list")
  *     data object List : FeatureDestination()
@@ -52,7 +54,7 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class Graph(val name: String)
+annotation class Graph(val name: String, val startDestination: String = "")
 
 /**
  * Specifies the route path for a destination.

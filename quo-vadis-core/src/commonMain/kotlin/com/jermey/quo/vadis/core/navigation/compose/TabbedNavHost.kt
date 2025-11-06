@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.compose
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -64,54 +65,106 @@ fun TabbedNavHost(
     tabState: TabNavigatorState,
     tabGraphs: Map<TabDefinition, NavigationGraph>,
     modifier: Modifier = Modifier,
+    tabUI: (@Composable (content: @Composable () -> Unit) -> Unit)? = null,
     defaultTransition: NavigationTransition = NavigationTransitions.Fade,
     tabTransitionSpec: TabTransitionSpec = TabTransitionSpec.Default,
     enableComposableCache: Boolean = true,
     enablePredictiveBack: Boolean = true,
-    maxCacheSize: Int = 3
+    maxCacheSize: Int = 3,
+    navigator : Navigator
 ) {
+    println("DEBUG_TAB_NAV: TabbedNavHost - Starting composition")
     val selectedTab by tabState.selectedTab.collectAsState()
     val allTabs = tabState.getAllTabs()
+    
+    println("DEBUG_TAB_NAV: TabbedNavHost - Selected tab: ${selectedTab?.route}")
+    println("DEBUG_TAB_NAV: TabbedNavHost - All tabs: ${allTabs.map { it.route }}")
+    println("DEBUG_TAB_NAV: TabbedNavHost - Tab graphs count: ${tabGraphs.size}")
 
     // Create and remember navigators for all tabs
     val tabNavigators = remember(allTabs) {
+        println("DEBUG_TAB_NAV: TabbedNavHost - Creating tab navigators for ${allTabs.size} tabs")
         allTabs.associateWith { tab ->
-            val navigator = DefaultNavigator()
+            println("DEBUG_TAB_NAV: TabbedNavHost - Creating navigator for tab: ${tab.route}")
             TabScopedNavigator(tab, tabState, navigator)
         }
     }
 
-    // Initialize navigators with their start destinations
+    // Register graphs and initialize navigators with their start destinations
     DisposableEffect(tabNavigators, tabGraphs) {
-        tabNavigators.forEach { (tab, navigator) ->
+        println("DEBUG_TAB_NAV: TabbedNavHost - DisposableEffect: Registering graphs")
+        tabNavigators.forEach { (tab, tabNavigator) ->
             val graph = tabGraphs[tab]
-            if (graph != null && navigator.backStack.stack.value.isEmpty()) {
-                navigator.setStartDestination(graph.startDestination)
+            println("DEBUG_TAB_NAV: TabbedNavHost - Tab: ${tab.route}, Graph: ${graph?.graphRoute}, Destinations: ${graph?.destinations?.size}")
+            if (graph != null) {
+                // Register the graph with the tab navigator
+                tabNavigator.registerGraph(graph)
+                println("DEBUG_TAB_NAV: TabbedNavHost - Registered graph '${graph.graphRoute}' with tab navigator for ${tab.route}")
+                
+                // Set start destination if navigator is empty
+                // Use the tab's rootDestination, NOT the graph's startDestination
+                if (tabNavigator.backStack.stack.value.isEmpty()) {
+                    val startDest = tab.rootDestination
+                    println("DEBUG_TAB_NAV: TabbedNavHost - Setting start destination for ${tab.route}: ${startDest::class.simpleName}")
+                    tabNavigator.setStartDestination(startDest)
+                } else {
+                    println("DEBUG_TAB_NAV: TabbedNavHost - Tab ${tab.route} already has backstack: ${tabNavigator.backStack.stack.value.size} entries")
+                }
+            } else {
+                println("DEBUG_TAB_NAV: TabbedNavHost - WARNING: No graph found for tab ${tab.route}")
             }
         }
-        onDispose { }
+        onDispose {
+            println("DEBUG_TAB_NAV: TabbedNavHost - DisposableEffect disposed")
+        }
     }
 
     // Render tab container with all tab content
-    TabNavigationContainer(
-        selectedTab = selectedTab,
-        allTabs = allTabs,
-        modifier = modifier,
-        transitionSpec = tabTransitionSpec
-    ) { tab ->
-        val navigator = tabNavigators[tab]
-        val graph = tabGraphs[tab]
+    println("DEBUG_TAB_NAV: TabbedNavHost - About to render TabNavigationContainer")
+    
+    val tabContent: @Composable () -> Unit = {
+        TabNavigationContainer(
+            selectedTab = selectedTab,
+            allTabs = allTabs,
+            modifier = Modifier.fillMaxSize(),
+            transitionSpec = tabTransitionSpec
+        ) { tab ->
+            println("DEBUG_TAB_NAV: TabbedNavHost - TabNavigationContainer rendering content for tab: ${tab.route}")
+            val tabNavigator = tabNavigators[tab]
+            val graph = tabGraphs[tab]
 
-        if (navigator != null && graph != null) {
-            GraphNavHost(
-                graph = graph,
-                navigator = navigator,
-                modifier = Modifier.fillMaxSize(),
-                defaultTransition = defaultTransition,
-                enableComposableCache = enableComposableCache,
-                enablePredictiveBack = enablePredictiveBack,
-                maxCacheSize = maxCacheSize
-            )
+            println("DEBUG_TAB_NAV: TabbedNavHost - Tab: ${tab.route}, Navigator: ${tabNavigator != null}, Graph: ${graph != null}")
+            
+            if (tabNavigator != null && graph != null) {
+                println("DEBUG_TAB_NAV: TabbedNavHost - About to render GraphNavHost for tab ${tab.route}")
+                println("DEBUG_TAB_NAV: TabbedNavHost - Graph destinations: ${graph.destinations.size}")
+                println("DEBUG_TAB_NAV: TabbedNavHost - Navigator backstack size: ${tabNavigator.backStack.stack.value.size}")
+                
+                GraphNavHost(
+                    graph = graph,
+                    navigator = tabNavigator,
+                    modifier = Modifier.fillMaxSize(),
+                    defaultTransition = defaultTransition,
+                    enableComposableCache = enableComposableCache,
+                    enablePredictiveBack = enablePredictiveBack,
+                    maxCacheSize = maxCacheSize
+                )
+            } else {
+                println("DEBUG_TAB_NAV: TabbedNavHost - WARNING: Cannot render tab ${tab.route} - Navigator or Graph is null")
+            }
+        }
+    }
+    
+    // Wrap content with tabUI if provided, otherwise render directly
+    if (tabUI != null) {
+        println("DEBUG_TAB_NAV: TabbedNavHost - Using custom tabUI wrapper")
+        Box(modifier = modifier) {
+            tabUI(tabContent)
+        }
+    } else {
+        println("DEBUG_TAB_NAV: TabbedNavHost - No tabUI wrapper, rendering content directly")
+        Box(modifier = modifier) {
+            tabContent()
         }
     }
 }
@@ -127,6 +180,7 @@ fun TabbedNavHost(
  * @param modifier Modifier for the navigation host.
  * @param defaultTransition Default transition for navigation.
  * @param tabTransitionSpec Transition specification for tab switches.
+ * @param navigator The parent navigator for back press delegation.
  */
 @Composable
 fun TabbedNavHost(
@@ -134,7 +188,8 @@ fun TabbedNavHost(
     navigationGraph: NavigationGraph,
     modifier: Modifier = Modifier,
     defaultTransition: NavigationTransition = NavigationTransitions.Fade,
-    tabTransitionSpec: TabTransitionSpec = TabTransitionSpec.Default
+    tabTransitionSpec: TabTransitionSpec = TabTransitionSpec.Default,
+    navigator: Navigator
 ) {
     val allTabs = tabState.getAllTabs()
     val tabGraphs = remember(allTabs, navigationGraph) {
@@ -146,6 +201,7 @@ fun TabbedNavHost(
         tabGraphs = tabGraphs,
         modifier = modifier,
         defaultTransition = defaultTransition,
-        tabTransitionSpec = tabTransitionSpec
+        tabTransitionSpec = tabTransitionSpec,
+        navigator = navigator
     )
 }

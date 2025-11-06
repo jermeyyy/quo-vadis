@@ -202,8 +202,7 @@ class DefaultNavigator(
     }
 
     override fun handleDeepLink(deepLink: DeepLink) {
-        val destination = deepLinkHandler.resolve(deepLink, graphs)
-        destination?.let { navigate(it) }
+        deepLinkHandler.handle(deepLink, this, graphs)
     }
 
     override fun registerGraph(graph: NavigationGraph) {

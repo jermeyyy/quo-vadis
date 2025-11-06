@@ -1,7 +1,5 @@
-package com.jermey.navplayground.demo.profile
+package com.jermey.navplayground.demo.ui.screens.profile
 
-import com.jermey.quo.vadis.flowmvi.core.NavigationAction
-import com.jermey.quo.vadis.flowmvi.core.NavigationIntent
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState

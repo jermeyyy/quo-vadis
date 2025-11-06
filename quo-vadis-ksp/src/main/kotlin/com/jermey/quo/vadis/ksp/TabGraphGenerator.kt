@@ -105,7 +105,7 @@ object TabGraphGenerator {
     @Suppress("LongMethod")
     private fun FileSpec.Builder.generateTabContainer(tabGraphInfo: TabGraphInfo) {
         val tabGraphsMapType = MAP.parameterizedBy(
-            ClassName(tabGraphInfo.packageName, tabGraphInfo.className),
+            ClassName("com.jermey.quo.vadis.core.navigation.core", "TabDefinition"),
             ClassName("com.jermey.quo.vadis.core.navigation.core", "NavigationGraph")
         )
 
@@ -171,13 +171,18 @@ object TabGraphGenerator {
                     tabGraphInfo.getConfigName()
                 )
                 .addStatement("")
-                .beginControlFlow("TabbedNavHost(")
-                .addStatement("tabState = tabState,")
-                .addStatement("tabGraphs = tabGraphs,")
-                .addStatement("modifier = modifier,")
-                .addStatement("tabTransitionSpec = tabTransitionSpec,")
-                .addStatement("defaultTransition = defaultTransition")
-                .endControlFlow()
+                .addCode(
+                    """
+                    TabbedNavHost(
+                        tabState = tabState,
+                        tabGraphs = tabGraphs,
+                        modifier = modifier,
+                        tabTransitionSpec = tabTransitionSpec,
+                        defaultTransition = defaultTransition,
+                        navigator = parentNavigator
+                    )
+                    """.trimIndent()
+                )
                 .build()
         )
     }
