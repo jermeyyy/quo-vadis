@@ -12,6 +12,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.jermey.quo.vadis.annotations.Content
 import com.jermey.quo.vadis.annotations.Graph
+import com.jermey.quo.vadis.annotations.TabGraph
 
 /**
  * KSP processor for Quo Vadis navigation annotations.
@@ -19,6 +20,7 @@ import com.jermey.quo.vadis.annotations.Graph
  * Processes:
  * - @Graph annotated sealed classes - generates route registry and typed destination helpers
  * - @Content annotated functions - generates complete graph DSL builders
+ * - @TabGraph annotated sealed classes - generates tab configuration and containers
  * - Route initialization - generates single initialization function for all routes
  */
 class QuoVadisSymbolProcessor(
@@ -49,6 +51,17 @@ class QuoVadisSymbolProcessor(
             } catch (e: IllegalStateException) {
                 val className = classDeclaration.qualifiedName?.asString()
                 logger.error("Error processing $className: ${e.message}", classDeclaration)
+            }
+        }
+        
+        // Third pass: process @TabGraph classes
+        val tabGraphSymbols = resolver.getSymbolsWithAnnotation(TabGraph::class.qualifiedName!!)
+        tabGraphSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
+            try {
+                processTabGraphClass(classDeclaration)
+            } catch (e: IllegalStateException) {
+                val className = classDeclaration.qualifiedName?.asString()
+                logger.error("Error processing @TabGraph $className: ${e.message}", classDeclaration)
             }
         }
         
@@ -104,6 +117,18 @@ class QuoVadisSymbolProcessor(
         GraphGenerator.generate(graphInfo, contentMappings, codeGenerator, logger)
         
         logger.info("Completed processing graph: ${graphInfo.className}")
+    }
+    
+    private fun processTabGraphClass(classDeclaration: KSClassDeclaration) {
+        logger.info("Processing tab graph: ${classDeclaration.qualifiedName?.asString()}")
+        
+        // Extract tab graph metadata
+        val tabGraphInfo = TabGraphExtractor.extract(classDeclaration, logger)
+        
+        // Generate tab configuration and container
+        TabGraphGenerator.generate(tabGraphInfo, codeGenerator, logger)
+        
+        logger.info("Completed processing tab graph: ${tabGraphInfo.className}")
     }
 }
 
