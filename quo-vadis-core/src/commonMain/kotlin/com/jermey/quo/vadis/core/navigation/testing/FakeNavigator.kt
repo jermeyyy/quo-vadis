@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.testing
 
+import com.jermey.quo.vadis.core.navigation.core.BackPressHandler
 import com.jermey.quo.vadis.core.navigation.core.BackStack
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.route
@@ -47,9 +48,9 @@ class FakeNavigator : Navigator {
     }
 
     override fun navigateBack(): Boolean {
-        val result = _backStack.pop()
+        // Use ParentNavigator's delegation logic
+        val result = onBack()
         navigationCalls.add(NavigationCall.NavigateBack(result))
-        updateDestinationFlows()
         return result
     }
 
@@ -102,6 +103,23 @@ class FakeNavigator : Navigator {
 
     override fun getDeepLinkHandler(): DeepLinkHandler {
         return fakeDeepLinkHandler
+    }
+    
+    // Child navigator support for hierarchical navigation
+    private var _activeChild: BackPressHandler? = null
+    override val activeChild: BackPressHandler?
+        get() = _activeChild
+    
+    override fun setActiveChild(child: BackPressHandler?) {
+        _activeChild = child
+    }
+    
+    override fun handleBackInternal(): Boolean {
+        val result = _backStack.pop()
+        if (result) {
+            updateDestinationFlows()
+        }
+        return result
     }
 
     /**

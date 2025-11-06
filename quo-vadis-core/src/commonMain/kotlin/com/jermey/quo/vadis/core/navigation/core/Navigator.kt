@@ -14,9 +14,11 @@ import kotlinx.coroutines.flow.SharingStarted
  * Manages navigation state, backstack, and coordinates with graphs.
  *
  * Thread-safe and designed to work with MVI architecture pattern.
+ *
+ * Implements [ParentNavigator] to support hierarchical navigation with child navigators.
  */
 @Stable
-interface Navigator {
+interface Navigator : ParentNavigator {
     /**
      * Access to the backstack for direct manipulation.
      */
@@ -94,11 +96,22 @@ interface Navigator {
      * Get the deep link handler to register patterns.
      */
     fun getDeepLinkHandler(): DeepLinkHandler
+    
+    /**
+     * Set the active child navigator for back press delegation.
+     * 
+     * When a child navigator is set, back press events will be delegated
+     * to the child first before being handled by this navigator.
+     * 
+     * @param child The child navigator to delegate to, or null to clear.
+     */
+    fun setActiveChild(child: BackPressHandler?)
 }
 
 /**
  * Default implementation of Navigator.
  */
+@Suppress("TooManyFunctions")
 class DefaultNavigator(
     private val deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler()
 ) : Navigator {
@@ -106,41 +119,57 @@ class DefaultNavigator(
     private val _backStack: MutableBackStack = MutableBackStack()
     override val backStack: BackStack = _backStack
 
-    override val currentDestination: StateFlow<Destination?> =
-        _backStack.current.map { it?.destination }
-            .stateIn(
-                scope = CoroutineScope(Dispatchers.Default),
-                started = SharingStarted.Eagerly,
-                initialValue = null
-            )
+    private val _currentDestination = MutableStateFlow<Destination?>(_backStack.current.value?.destination)
+    override val currentDestination: StateFlow<Destination?> = _currentDestination
 
-    override val previousDestination: StateFlow<Destination?> =
-        _backStack.previous.map { it?.destination }
-            .stateIn(
-                scope = CoroutineScope(Dispatchers.Default),
-                started = SharingStarted.Eagerly,
-                initialValue = null
-            )
+    private val _previousDestination = MutableStateFlow<Destination?>(_backStack.previous.value?.destination)
+    override val previousDestination: StateFlow<Destination?> = _previousDestination
 
     private val _currentTransition = MutableStateFlow<NavigationTransition?>(null)
     override val currentTransition: StateFlow<NavigationTransition?> = _currentTransition
 
     private val graphs = mutableMapOf<String, NavigationGraph>()
+    
+    // Child navigator support for hierarchical navigation
+    private var _activeChild: BackPressHandler? = null
+    override val activeChild: BackPressHandler?
+        get() = _activeChild
 
     override fun navigate(destination: Destination, transition: NavigationTransition?) {
         // Use provided transition, or fall back to destination's default
         val effectiveTransition = transition ?: destination.transition
         _backStack.push(destination, effectiveTransition)
         _currentTransition.value = effectiveTransition
+        updateDestinationFlows()
     }
-
-    override fun navigateBack(): Boolean {
+    
+    /**
+     * Handle back press for this navigator's backstack.
+     * Implementation of ParentNavigator.handleBackInternal().
+     */
+    override fun handleBackInternal(): Boolean {
+        // Only pop if we can actually go back (more than 1 entry in stack)
+        if (!_backStack.canGoBack.value) {
+            return false
+        }
+        
         val result = _backStack.pop()
         if (result) {
             // Current transition should be the one from the entry being revealed
             _currentTransition.value = _backStack.current.value?.transition
+            updateDestinationFlows()
         }
         return result
+    }
+
+    override fun navigateBack(): Boolean {
+        // Use ParentNavigator's delegation logic (tries child first, then handleBackInternal)
+        return onBack()
+    }
+    
+    private fun updateDestinationFlows() {
+        _currentDestination.value = _backStack.current.value?.destination
+        _previousDestination.value = _backStack.previous.value?.destination
     }
 
     override fun navigateAndClearTo(
@@ -156,17 +185,20 @@ class DefaultNavigator(
         }
         _backStack.push(destination)
         _currentTransition.value = null
+        updateDestinationFlows()
     }
 
     override fun navigateAndReplace(destination: Destination, transition: NavigationTransition?) {
         _backStack.replace(destination, transition)
         _currentTransition.value = transition
+        updateDestinationFlows()
     }
 
     override fun navigateAndClearAll(destination: Destination) {
         _backStack.clear()
         _backStack.push(destination)
         _currentTransition.value = null
+        updateDestinationFlows()
     }
 
     override fun handleDeepLink(deepLink: DeepLink) {
@@ -181,7 +213,12 @@ class DefaultNavigator(
     override fun setStartDestination(destination: Destination) {
         _backStack.clear()
         _backStack.push(destination)
+        updateDestinationFlows()
     }
 
     override fun getDeepLinkHandler(): DeepLinkHandler = deepLinkHandler
+    
+    override fun setActiveChild(child: BackPressHandler?) {
+        _activeChild = child
+    }
 }
