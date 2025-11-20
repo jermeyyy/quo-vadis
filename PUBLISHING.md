@@ -343,7 +343,7 @@ The library is published with the following metadata:
 
 - **Name:** Quo Vadis - Navigation Library
 - **Description:** A comprehensive type-safe navigation library for Compose Multiplatform
-- **License:** Apache License 2.0
+- **License:** MIT License
 - **Repository:** https://github.com/jermeyyy/quo-vadis
 
 This metadata is included in the POM file and helps with dependency resolution.

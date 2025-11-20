@@ -683,21 +683,19 @@ This is a demonstration project showcasing navigation patterns. Feel free to exp
 
 ## 📄 License
 
-This project is licensed under the **GNU Lesser General Public License v2.1 (LGPL-2.1)**.
+This project is licensed under the **MIT License**.
 
-The LGPL allows you to:
-- Use the library in proprietary applications
+The MIT License allows you to:
+- Use the library in any project (commercial or open-source)
 - Modify the library for your own use
-- Distribute modified versions under the LGPL
+- Distribute modified or unmodified versions
+- Use the library without any copyleft requirements
 
-However, if you modify the library and distribute it, you must:
-- Make your modifications available under the LGPL
-- Provide complete source code for the modified library
-- Allow users to relink with modified versions
+The only requirement is that you include the copyright notice and license text in any copies or substantial portions of the software.
 
 See the [LICENSE](LICENSE) file for the complete license text.
 
-**Note**: This license applies to the `quo-vadis-core` navigation library. The demo application (`composeApp`) is provided as-is for educational purposes.
+**Note**: This license applies to the `quo-vadis-core` navigation library and the demo application (`composeApp`).
 
 ---
 
