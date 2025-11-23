@@ -9,6 +9,7 @@ import com.jermey.navplayground.demo.destinations.buildDeepLinkDestinationGraph
 import com.jermey.navplayground.demo.destinations.buildMasterDetailDestinationGraph
 import com.jermey.navplayground.demo.destinations.buildProcessDestinationGraph
 import com.jermey.navplayground.demo.destinations.buildTabsDestinationGraph
+import com.jermey.navplayground.demo.destinations.buildSettingsDestinationGraph
 import com.jermey.quo.vadis.core.navigation.core.navigationGraph
 
 /**
@@ -107,5 +108,6 @@ fun tabContentGraph() = navigationGraph("tab_content") {
     // Tab root destinations only
     startDestination(TabDestination.Home)
     include(buildTabDestinationGraph())
+    include(buildSettingsDestinationGraph())
 }
 

@@ -14,7 +14,9 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Policy
+import com.jermey.navplayground.demo.destinations.SettingsDestination
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -76,7 +78,7 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        SettingsScreenContent(modifier, paddingValues, currentThemeMode, themeManager)
+        SettingsScreenContent(navigator, modifier, paddingValues, currentThemeMode, themeManager)
     }
 
     if (showBottomSheet) {
@@ -100,6 +102,7 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingsScreenContent(
+    navigator: Navigator,
     modifier: Modifier,
     paddingValues: PaddingValues,
     currentThemeMode: ThemeMode,
@@ -116,6 +119,26 @@ private fun SettingsScreenContent(
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
+        }
+
+        item {
+            SettingsSection("General") {
+                SettingItem(
+                    title = "Profile",
+                    icon = Icons.Default.Person,
+                    onClick = { navigator.navigate(SettingsDestination.Profile) }
+                )
+                SettingItem(
+                    title = "Notifications",
+                    icon = Icons.Default.Notifications,
+                    onClick = { navigator.navigate(SettingsDestination.Notifications) }
+                )
+                SettingItem(
+                    title = "About",
+                    icon = Icons.Default.Info,
+                    onClick = { navigator.navigate(SettingsDestination.About) }
+                )
+            }
         }
 
         item {

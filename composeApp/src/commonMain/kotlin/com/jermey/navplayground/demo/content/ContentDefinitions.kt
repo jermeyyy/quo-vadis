@@ -26,6 +26,8 @@ import com.jermey.navplayground.demo.ui.screens.tabs.TabSubItemScreen
 import com.jermey.navplayground.demo.ui.screens.tabs.TabsMainScreen
 import com.jermey.navplayground.demo.tabs.MainTabsScreen
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileScreen
+import com.jermey.navplayground.demo.destinations.SettingsDestination
+import com.jermey.navplayground.demo.ui.screens.SettingsDetailScreen
 import com.jermey.quo.vadis.annotations.Content
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -375,4 +377,22 @@ fun ProcessCompleteContent(navigator: Navigator) {
             )
         }
     )
+}
+
+@Content(SettingsDestination.Profile::class)
+@Composable
+fun ProfileSettingsContent(navigator: Navigator) {
+    SettingsDetailScreen("Profile", navigator)
+}
+
+@Content(SettingsDestination.Notifications::class)
+@Composable
+fun NotificationsSettingsContent(navigator: Navigator) {
+    SettingsDetailScreen("Notifications", navigator)
+}
+
+@Content(SettingsDestination.About::class)
+@Composable
+fun AboutSettingsContent(navigator: Navigator) {
+    SettingsDetailScreen("About", navigator)
 }
