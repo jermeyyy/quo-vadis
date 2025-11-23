@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,10 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.ui.components.BottomNavigationBar
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.NavigationPatternCard
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
 
@@ -54,24 +53,15 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text("Home") },
                 navigationIcon = {
                     IconButton(onClick = { showBottomSheet = true }) {
                         Icon(Icons.Default.Menu, contentDescription = "Menu")
                     }
-                }
-            )
-        },
-        bottomBar = {
-            BottomNavigationBar(
-                currentRoute = "home",
-                onNavigate = { destination ->
-                    navigator.navigateAndReplace(
-                        destination = destination,
-                        transition = NavigationTransitions.Fade
-                    )
                 }
             )
         }

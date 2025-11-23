@@ -19,6 +19,10 @@ object GraphInfoExtractor {
             .first { it.name?.asString() == "name" }
             .value as String
         
+        val startDestinationName = graphAnnotation.arguments
+            .firstOrNull { it.name?.asString() == "startDestination" }
+            ?.value as? String
+        
         val packageName = graphClass.packageName.asString()
         val className = graphClass.simpleName.asString()
         
@@ -36,7 +40,8 @@ object GraphInfoExtractor {
             graphName = graphName,
             packageName = packageName,
             className = className,
-            destinations = destinations
+            destinations = destinations,
+            startDestinationName = startDestinationName?.takeIf { it.isNotEmpty() }
         )
     }
     

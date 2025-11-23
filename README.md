@@ -29,6 +29,8 @@ This project consists of **two main components**:
 - ✅ **Deep Link Support** - URI-based navigation with pattern matching
 - ✅ **Predictive Back Navigation** - Smooth animated back gestures (Android 13+ & iOS)
 - ✅ **Shared Element Transitions** - Material Design shared elements (forward & back!)
+- ✅ **Tabbed Navigation** - Annotation-based generation of tabbed navigation with independent backstacks
+- ✅ **FlowMVI Integration** - Built-in support for FlowMVI state management
 - ✅ **MVI Architecture** - First-class MVI pattern integration
 - ✅ **Transitions & Animations** - Built-in and custom transitions
 - ✅ **DI Framework Support** - Easy integration with Koin, Kodein, etc.
@@ -46,6 +48,8 @@ NavPlayground/
 │   └── docs/                    # Library documentation
 │       ├── ANNOTATION_API.md               # Annotation-based API guide
 │       ├── TYPED_DESTINATIONS.md           # Type-safe arguments guide
+│       ├── TAB_NAVIGATION.md               # Tabbed navigation guide
+│       ├── FLOW_MVI.md                     # FlowMVI integration guide
 │       ├── ARCHITECTURE.md
 │       ├── API_REFERENCE.md
 │       ├── NAVIGATION_IMPLEMENTATION.md

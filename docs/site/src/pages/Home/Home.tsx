@@ -185,6 +185,16 @@ export default function Home() {
           </div>
 
           <div className={styles.featureCard}>
+            <h4>Tabbed Navigation</h4>
+            <p>Generate complex tab layouts with independent backstacks using simple <code>@TabGraph</code> annotations.</p>
+          </div>
+
+          <div className={styles.featureCard}>
+            <h4>FlowMVI Ready</h4>
+            <p>First-class support for FlowMVI state management, allowing navigation to be treated as a pure side-effect.</p>
+          </div>
+
+          <div className={styles.featureCard}>
             <h4>Comprehensive Docs</h4>
             <p>Complete API documentation, guides, and examples. Get productive quickly with excellent documentation.</p>
           </div>

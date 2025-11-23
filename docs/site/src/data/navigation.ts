@@ -27,6 +27,8 @@ export const navigationData: NavItem[] = [
       { label: 'Predictive Back', path: '/features/predictive-back' },
       { label: 'Shared Elements', path: '/features/shared-elements' },
       { label: 'Transitions & Animations', path: '/features/transitions' },
+      { label: 'Tabbed Navigation', path: '/features/tabbed-navigation' },
+      { label: 'FlowMVI Integration', path: '/features/flow-mvi' },
       { label: 'Testing Support', path: '/features/testing' },
       { label: 'MVI Architecture', path: '/features/mvi' },
       { label: 'Modular Architecture', path: '/features/modular' },

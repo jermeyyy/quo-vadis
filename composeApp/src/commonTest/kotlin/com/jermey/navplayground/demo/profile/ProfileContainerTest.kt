@@ -1,5 +1,9 @@
 package com.jermey.navplayground.demo.profile
 
+import com.jermey.navplayground.demo.ui.screens.profile.ProfileContainer
+import com.jermey.navplayground.demo.ui.screens.profile.ProfileIntent
+import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
+import com.jermey.navplayground.demo.ui.screens.profile.ProfileState
 import com.jermey.quo.vadis.core.navigation.testing.FakeNavigator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle

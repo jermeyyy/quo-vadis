@@ -5,13 +5,14 @@ package com.jermey.navplayground.demo.content
 import androidx.compose.runtime.Composable
 import com.jermey.navplayground.demo.destinations.DetailData
 import com.jermey.navplayground.demo.destinations.TabsDestination
-import com.jermey.navplayground.demo.destinations.MainDestination
+import com.jermey.navplayground.demo.destinations.AppDestination
+import com.jermey.navplayground.demo.destinations.TabDestination
+import com.jermey.navplayground.demo.destinations.DeepLinkDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.ui.screens.DeepLinkDemoScreen
 import com.jermey.navplayground.demo.ui.screens.HomeScreen
 import com.jermey.navplayground.demo.ui.screens.ExploreScreen
-import com.jermey.navplayground.demo.ui.screens.ProfileScreen
 import com.jermey.navplayground.demo.ui.screens.SettingsScreen
 import com.jermey.navplayground.demo.ui.screens.masterdetail.DetailScreen
 import com.jermey.navplayground.demo.ui.screens.masterdetail.MasterListScreen
@@ -23,6 +24,8 @@ import com.jermey.navplayground.demo.ui.screens.process.ProcessStep3Screen
 import com.jermey.navplayground.demo.ui.screens.process.ProcessCompleteScreen
 import com.jermey.navplayground.demo.ui.screens.tabs.TabSubItemScreen
 import com.jermey.navplayground.demo.ui.screens.tabs.TabsMainScreen
+import com.jermey.navplayground.demo.tabs.MainTabsScreen
+import com.jermey.navplayground.demo.ui.screens.profile.ProfileScreen
 import com.jermey.quo.vadis.annotations.Content
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -110,12 +113,23 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
  */
 
 // ============================================================================
-// MAIN DESTINATIONS
+// APP LEVEL DESTINATIONS
 // ============================================================================
 
-@Content(MainDestination.Home::class)
+@Content(AppDestination.MainTabs::class)
+@Composable
+fun MainTabsContent(navigator: Navigator) {
+    MainTabsScreen(parentNavigator = navigator)
+}
+
+// ============================================================================
+// TAB DESTINATIONS
+// ============================================================================
+
+@Content(TabDestination.Home::class)
 @Composable
 fun HomeContent(navigator: Navigator) {
+    println("DEBUG_TAB_NAV: HomeContent - Composing")
     HomeScreen(
         onNavigateToMasterDetail = {
             navigator.navigate(
@@ -131,9 +145,10 @@ fun HomeContent(navigator: Navigator) {
         },
         navigator = navigator
     )
+    println("DEBUG_TAB_NAV: HomeContent - HomeScreen rendered")
 }
 
-@Content(MainDestination.Explore::class)
+@Content(TabDestination.Explore::class)
 @Composable
 fun ExploreContent(navigator: Navigator) {
     ExploreScreen(
@@ -147,20 +162,24 @@ fun ExploreContent(navigator: Navigator) {
     )
 }
 
-@Content(MainDestination.Profile::class)
+@Content(TabDestination.Profile::class)
 @Composable
 fun ProfileContent(navigator: Navigator) {
     // FlowMVI-based Profile screen (demo implementation)
-    com.jermey.navplayground.demo.profile.ProfileScreen(navigator = navigator)
+    ProfileScreen(navigator = navigator)
 }
 
-@Content(MainDestination.Settings::class)
+@Content(TabDestination.Settings::class)
 @Composable
 fun SettingsContent(navigator: Navigator) {
     SettingsScreen(navigator = navigator)
 }
 
-@Content(MainDestination.DeepLinkDemo::class)
+// ============================================================================
+// DEEPLINK DESTINATIONS
+// ============================================================================
+
+@Content(DeepLinkDestination.Demo::class)
 @Composable
 fun DeepLinkDemoContent(navigator: Navigator) {
     DeepLinkDemoScreen(
@@ -238,7 +257,8 @@ fun TabsMainContent(navigator: Navigator) {
                 NavigationTransitions.SlideHorizontal
             )
         },
-        onBack = { navigator.navigateBack() }
+        onBack = { navigator.navigateBack() },
+        navigator = navigator
     )
 }
 

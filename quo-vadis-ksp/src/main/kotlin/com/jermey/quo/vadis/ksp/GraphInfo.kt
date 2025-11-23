@@ -10,7 +10,8 @@ data class GraphInfo(
     val graphName: String,
     val packageName: String,
     val className: String,
-    val destinations: List<DestinationInfo>
+    val destinations: List<DestinationInfo>,
+    val startDestinationName: String? = null
 )
 
 /**

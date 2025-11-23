@@ -16,7 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.MainDestination
+import com.jermey.navplayground.demo.destinations.TabDestination
+import com.jermey.navplayground.demo.destinations.DeepLinkDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.TabsDestination
@@ -45,7 +46,7 @@ fun NavigationBottomSheetContent(
             label = "Home",
             description = "Main dashboard",
             selected = currentRoute == "home",
-            onClick = { onNavigate(MainDestination.Home) }
+            onClick = { onNavigate(TabDestination.Home) }
         )
 
         BottomSheetNavigationItem(
@@ -77,7 +78,7 @@ fun NavigationBottomSheetContent(
             label = "Deep Link Demo",
             description = "Deep linking examples",
             selected = currentRoute == "deeplink_demo",
-            onClick = { onNavigate(MainDestination.DeepLinkDemo) }
+            onClick = { onNavigate(DeepLinkDestination.Demo) }
         )
 
         BottomSheetNavigationItem(
@@ -85,7 +86,7 @@ fun NavigationBottomSheetContent(
             label = "Settings",
             description = "App settings",
             selected = currentRoute == "settings",
-            onClick = { onNavigate(MainDestination.Settings) }
+            onClick = { onNavigate(TabDestination.Settings) }
         )
     }
 }

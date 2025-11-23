@@ -3,6 +3,7 @@ package com.jermey.navplayground.demo.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.ui.components.BottomNavigationBar
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -56,24 +56,15 @@ fun ExploreScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text("Explore") },
                 navigationIcon = {
                     IconButton(onClick = { showBottomSheet = true }) {
                         Icon(Icons.Default.Menu, contentDescription = "Menu")
                     }
-                }
-            )
-        },
-        bottomBar = {
-            BottomNavigationBar(
-                currentRoute = "explore",
-                onNavigate = { destination ->
-                    navigator.navigateAndReplace(
-                        destination,
-                        transition = NavigationTransitions.Fade
-                    )
                 }
             )
         }

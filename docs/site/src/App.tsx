@@ -21,6 +21,8 @@ import MVI from '@pages/Features/MVI/MVI'
 import Modular from '@pages/Features/Modular/Modular'
 import DIIntegration from '@pages/Features/DIIntegration/DIIntegration'
 import Performance from '@pages/Features/Performance/Performance'
+import TabbedNavigation from '@pages/Features/TabbedNavigation/TabbedNavigation'
+import FlowMVI from '@pages/Features/FlowMVI/FlowMVI'
 
 function App() {
   const basename = import.meta.env.PROD ? '/quo-vadis' : '/'
@@ -48,6 +50,8 @@ function App() {
               <Route path="/features/modular" element={<Modular />} />
               <Route path="/features/di-integration" element={<DIIntegration />} />
               <Route path="/features/performance" element={<Performance />} />
+              <Route path="/features/tabbed-navigation" element={<TabbedNavigation />} />
+              <Route path="/features/flow-mvi" element={<FlowMVI />} />
               
               <Route path="/demo" element={<Demo />} />
               <Route path="*" element={<Home />} />
