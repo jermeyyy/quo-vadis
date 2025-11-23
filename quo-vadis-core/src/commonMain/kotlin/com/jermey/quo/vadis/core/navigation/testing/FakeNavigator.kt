@@ -22,28 +22,34 @@ class FakeNavigator : Navigator {
     private val _backStack = MutableBackStack()
     override val backStack: BackStack = _backStack
 
-    override val currentDestination: StateFlow<Destination?>
-        get() = MutableStateFlow(_backStack.current.value?.destination)
+    private val _currentDestination = MutableStateFlow<Destination?>(_backStack.current.value?.destination)
+    override val currentDestination: StateFlow<Destination?> = _currentDestination
 
-    override val previousDestination: StateFlow<Destination?>
-        get() = MutableStateFlow(_backStack.previous.value?.destination)
+    private val _previousDestination = MutableStateFlow<Destination?>(_backStack.previous.value?.destination)
+    override val previousDestination: StateFlow<Destination?> = _previousDestination
 
     private val _currentTransition = MutableStateFlow<NavigationTransition?>(null)
-    override val currentTransition: StateFlow<NavigationTransition?>
-        get() = _currentTransition
+    override val currentTransition: StateFlow<NavigationTransition?> = _currentTransition
 
     // Track navigation calls for verification
     val navigationCalls = mutableListOf<NavigationCall>()
+
+    private fun updateDestinationFlows() {
+        _currentDestination.value = _backStack.current.value?.destination
+        _previousDestination.value = _backStack.previous.value?.destination
+    }
 
     override fun navigate(destination: Destination, transition: NavigationTransition?) {
         navigationCalls.add(NavigationCall.Navigate(destination, transition))
         _currentTransition.value = transition
         _backStack.push(destination, transition)
+        updateDestinationFlows()
     }
 
     override fun navigateBack(): Boolean {
         val result = _backStack.pop()
         navigationCalls.add(NavigationCall.NavigateBack(result))
+        updateDestinationFlows()
         return result
     }
 
@@ -60,17 +66,20 @@ class FakeNavigator : Navigator {
             }
         }
         _backStack.push(destination)
+        updateDestinationFlows()
     }
 
     override fun navigateAndReplace(destination: Destination, transition: NavigationTransition?) {
         navigationCalls.add(NavigationCall.NavigateAndReplace(destination, transition))
         _backStack.replace(destination)
+        updateDestinationFlows()
     }
 
     override fun navigateAndClearAll(destination: Destination) {
         navigationCalls.add(NavigationCall.NavigateAndClearAll(destination))
         _backStack.clear()
         _backStack.push(destination)
+        updateDestinationFlows()
     }
 
     override fun handleDeepLink(deepLink: DeepLink) {
@@ -86,6 +95,7 @@ class FakeNavigator : Navigator {
         navigationCalls.add(NavigationCall.SetStartDestination(destination))
         _backStack.clear()
         _backStack.push(destination)
+        updateDestinationFlows()
     }
 
     private val fakeDeepLinkHandler = DefaultDeepLinkHandler()

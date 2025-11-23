@@ -80,9 +80,15 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
             implementation(projects.quoVadisCore)
+            implementation(projects.quoVadisCoreFlowMvi)
+            
+            // Koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.flowmvi.test)
         }
         jsMain.dependencies {
             implementation(compose.html.core)

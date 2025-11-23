@@ -150,12 +150,8 @@ fun ExploreContent(navigator: Navigator) {
 @Content(MainDestination.Profile::class)
 @Composable
 fun ProfileContent(navigator: Navigator) {
-    ProfileScreen(
-        onEditProfile = {
-            // Could navigate to edit screen
-        },
-        navigator = navigator
-    )
+    // FlowMVI-based Profile screen (demo implementation)
+    com.jermey.navplayground.demo.profile.ProfileScreen(navigator = navigator)
 }
 
 @Content(MainDestination.Settings::class)
