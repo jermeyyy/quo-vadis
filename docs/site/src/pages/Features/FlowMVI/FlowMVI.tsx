@@ -210,8 +210,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation("io.github.jermeyyy:quo-vadis-core:0.1.0")
-                implementation("io.github.jermeyyy:quo-vadis-core-flow-mvi:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-core:0.1.1")
+                implementation("io.github.jermeyyy:quo-vadis-core-flow-mvi:0.1.1")
                 
                 implementation("pro.respawn.flowmvi:core:2.6.1")
                 implementation("pro.respawn.flowmvi:compose:2.6.1")

@@ -3,7 +3,7 @@ import SearchBar from '../Search/SearchBar'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
 import styles from './Navbar.module.css'
 
-const CURRENT_VERSION = '0.1.0'
+const CURRENT_VERSION = '0.1.1'
 
 interface NavbarProps {
   onMenuToggle: () => void

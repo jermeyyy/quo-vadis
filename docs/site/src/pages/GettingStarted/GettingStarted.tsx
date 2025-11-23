@@ -18,10 +18,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 // Core navigation library
-                implementation("io.github.jermeyyy:quo-vadis-core:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-core:0.1.1")
                 
                 // Annotation-based API (recommended)
-                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0")
+                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.1")
                 
                 // For type-safe arguments
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -32,12 +32,12 @@ kotlin {
 
 dependencies {
     // KSP code generator
-    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0")
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.1")
 }`
 
 const versionCatalogCode = `# libs.versions.toml
 [versions]
-quoVadis = "0.1.0"
+quoVadis = "0.1.1"
 ksp = "2.2.20-1.0.29"
 kotlinxSerialization = "1.6.0"
 

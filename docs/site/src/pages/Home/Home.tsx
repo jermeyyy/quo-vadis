@@ -2,7 +2,7 @@ import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from './Home.module.css'
 
 const quickstartCode = `[versions]
-quoVadis = "0.1.0"
+quoVadis = "0.1.1"
 ksp = "2.2.20-1.0.29"
 
 [libraries]
