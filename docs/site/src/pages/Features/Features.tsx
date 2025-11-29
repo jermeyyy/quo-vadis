@@ -166,36 +166,6 @@ Image(
     )
 )`
 
-const mviCode = `// Navigation as intents
-sealed class Intent {
-    data class NavigateToDetails(val id: String) : Intent()
-    object NavigateBack : Intent()
-}
-
-// Handle in reducer
-fun reduce(intent: Intent) {
-    when (intent) {
-        is Intent.NavigateToDetails -> {
-            navigator.navigate(DetailsDestination(intent.id))
-        }
-        is Intent.NavigateBack -> {
-            navigator.navigateBack()
-        }
-    }
-}
-
-// Or as side effects
-sealed class SideEffect {
-    data class Navigate(val destination: Destination) : SideEffect()
-}
-
-// Handle side effects
-viewModel.sideEffects.collect { effect ->
-    when (effect) {
-        is SideEffect.Navigate -> navigator.navigate(effect.destination)
-    }
-}`
-
 const customTransitionCode = `val customTransition = NavigationTransition(
     enter = slideInVertically { it } + fadeIn(),
     exit = slideOutVertically { -it / 2 } + fadeOut(),
@@ -514,12 +484,23 @@ export default function Features() {
       <section>
         <h2 id="mvi">MVI Architecture Support</h2>
         <p>
-          First-class integration with MVI (Model-View-Intent) architecture pattern. 
-          Navigation intents, state, and side effects are handled cleanly.
+          First-class integration with MVI (Model-View-Intent) architecture pattern through 
+          the <strong>quo-vadis-core-flow-mvi</strong> module. Navigation is treated as a 
+          side effect of business logic, keeping your UI clean and testable.
         </p>
 
-        <h3>Integration</h3>
-        <CodeBlock code={mviCode} language="kotlin" />
+        <h3>Key Benefits</h3>
+        <ul>
+          <li><strong>Testable:</strong> Test navigation logic without UI using FakeNavigator</li>
+          <li><strong>Predictable:</strong> Navigation as pure side effect of state changes</li>
+          <li><strong>Centralized:</strong> All navigation logic in one place (Container)</li>
+          <li><strong>Decoupled:</strong> UI doesn't need to know about destination types</li>
+        </ul>
+
+        <div className={styles.note}>
+          <strong>📦 Module:</strong> Add <code>io.github.jermeyyy:quo-vadis-core-flow-mvi</code> to your dependencies.
+          See the <a href="/features/flow-mvi">FlowMVI Integration Guide</a> for complete documentation.
+        </div>
       </section>
 
       <section>

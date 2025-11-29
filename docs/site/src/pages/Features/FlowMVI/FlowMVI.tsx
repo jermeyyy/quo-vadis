@@ -368,7 +368,7 @@ reduce { intent ->
         <ul>
           <li><a href="https://github.com/respawn-app/FlowMVI" target="_blank" rel="noopener noreferrer">FlowMVI Documentation</a> - Learn more about FlowMVI</li>
           <li><a href="/quo-vadis/api/index.html">API Reference</a> - Complete API documentation</li>
-          <li><a href="/features/mvi">MVI Architecture</a> - General MVI patterns</li>
+          <li><a href="/features/mvi">MVI Architecture Concepts</a> - Understanding MVI patterns</li>
           <li><a href="/demo">Live Demo</a> - See FlowMVI integration in action</li>
         </ul>
       </section>
