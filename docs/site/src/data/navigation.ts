@@ -30,7 +30,6 @@ export const navigationData: NavItem[] = [
       { label: 'Tabbed Navigation', path: '/features/tabbed-navigation' },
       { label: 'FlowMVI Integration', path: '/features/flow-mvi' },
       { label: 'Testing Support', path: '/features/testing' },
-      { label: 'MVI Concepts', path: '/features/mvi' },
       { label: 'Modular Architecture', path: '/features/modular' },
       { label: 'DI Integration', path: '/features/di-integration' },
       { label: 'Performance', path: '/features/performance' }
