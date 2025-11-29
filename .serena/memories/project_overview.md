@@ -69,7 +69,6 @@ NavPlayground/
 │       │   │   ├── PredictiveBackNavigation.kt
 │       │   │   ├── SharedElementScope.kt         # ✨ NEW
 │       │   │   └── SharedElementModifiers.kt     # ✨ NEW
-│       │   ├── mvi/         # MVI pattern support
 │       │   ├── integration/ # DI framework integration
 │       │   ├── serialization/ # State serialization
 │       │   ├── testing/     # Testing utilities (FakeNavigator)
