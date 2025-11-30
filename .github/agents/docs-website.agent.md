@@ -114,7 +114,6 @@ docs/site/
     │       ├── FlowMVI/
     │       ├── Modular/
     │       ├── Multiplatform/
-    │       ├── MVI/
     │       ├── Performance/
     │       ├── PredictiveBack/
     │       ├── SharedElements/

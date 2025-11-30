@@ -39,6 +39,6 @@ package com.jermey.quo.vadis.core.navigation
  * For MVI architecture integration, use the separate `quo-vadis-core-flow-mvi` module
  * which provides integration with the FlowMVI library.
  *
- * @see com.jermey.navplayground.navigation.example for usage examples
+ * @see com.jermey.navplayground.demo for usage examples
  */
 
