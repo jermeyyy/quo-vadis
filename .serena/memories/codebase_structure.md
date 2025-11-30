@@ -95,20 +95,14 @@ quo-vadis-core/
     │           │   ├── NavHost.kt              # Navigation host composable
     │           │   ├── PlatformAwareNavHost.kt # Platform-specific hosting
     │           │   └── PredictiveBackNavigation.kt  # Android predictive back
-    │           ├── mvi/                        # MVI architecture support
-    │           │   ├── NavigationIntent.kt     # MVI intents
-    │           │   └── NavigationViewModel.kt  # Base ViewModel
     │           ├── integration/                # DI framework integration
     │           │   └── KoinIntegration.kt      # Koin support
     │           ├── serialization/              # State serialization
     │           │   └── StateSerializer.kt      # Save/restore state
     │           ├── testing/                    # Testing utilities
     │           │   └── FakeNavigator.kt        # Test double
-    │           ├── utils/                      # Extension functions
-    │           │   └── NavigationExtensions.kt # Utility extensions
-    │           └── example/                    # Example implementations
-    │               ├── SampleNavigation.kt     # Sample code
-    │               └── MVIExample.kt           # MVI example
+    │           └── utils/                      # Extension functions
+    │               └── NavigationExtensions.kt # Utility extensions
     ├── androidMain/         # Android-specific implementations
     │   └── kotlin/com/jermey/quo/vadis/core/
     ├── iosMain/             # iOS-specific implementations

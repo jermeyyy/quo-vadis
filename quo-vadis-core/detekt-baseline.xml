@@ -5,9 +5,7 @@
     <ID>LongMethod:PredictiveBackNavigation.kt:@OptIn(ExperimentalComposeUiApi::class) @Composable fun PredictiveBackNavigation( navigator: Navigator, graph: NavigationGraph, enabled: Boolean = true, modifier: Modifier = Modifier, animationType: PredictiveBackAnimationType = PredictiveBackAnimationType.Slide, sensitivity: Float = 1f, maxCacheSize: Int = 3 )</ID>
     <ID>ReturnCount:DeepLink.kt:DefaultDeepLinkHandler$override fun resolve(deepLink: DeepLink, graphs: Map&lt;String, NavigationGraph>): Destination?</ID>
     <ID>ReturnCount:NavigationExtensions.kt:fun BackStack.popCount(count: Int): Boolean</ID>
-    <ID>SwallowedException:NavigationViewModel.kt:NavigationViewModel$e: Exception</ID>
     <ID>TooGenericExceptionCaught:NavigationExtensions.kt:e: Exception</ID>
-    <ID>TooGenericExceptionCaught:NavigationViewModel.kt:NavigationViewModel$e: Exception</ID>
     <ID>TooManyFunctions:FakeNavigator.kt:FakeNavigator : Navigator</ID>
     <ID>TooManyFunctions:PredictiveBackNavigation.kt:com.jermey.quo.vadis.core.navigation.compose.PredictiveBackNavigation.kt</ID>
     <ID>UnusedParameter:DeepLink.kt:deepLinkPattern: String</ID>

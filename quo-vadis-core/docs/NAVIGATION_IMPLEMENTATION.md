@@ -132,9 +132,6 @@ com.jermey.quo.vadis.core.navigation/
 │   └── DeepLink.kt                 - Deep link handling
 ├── compose/
 │   └── NavHost.kt                  - Composable navigation hosts
-├── mvi/
-│   ├── NavigationIntent.kt         - MVI intents & effects
-│   └── NavigationViewModel.kt      - Base ViewModel for MVI
 ├── integration/
 │   └── KoinIntegration.kt          - DI framework support
 ├── utils/
@@ -225,12 +222,8 @@ quo-vadis-core/docs/
 - **Clean APIs**: Inspired by best practices but independent
 - **Minimal Dependencies**: Only Compose and Kotlin stdlib
 
-### ✅ 7. MVI Architecture Integration
-- **NavigationIntent**: Type-safe navigation actions
-- **NavigationViewModel**: Base ViewModel with navigation support
-- **NavigationEffect**: Side effects for navigation events
-- **NavigationState**: Observable state for UI
-- **Effect Collection**: Composable helper for collecting effects
+### ✅ 7. FlowMVI Architecture Integration
+For MVI architecture, use the separate `quo-vadis-core-flow-mvi` module which provides integration with the [FlowMVI](https://github.com/respawn-app/FlowMVI) library. See [FLOW_MVI.md](FLOW_MVI.md) for details.
 
 ### ✅ 8. DI Framework Support (Koin)
 - **NavigationFactory**: Factory interface for DI
@@ -338,15 +331,6 @@ class FeatureNavigation : BaseModuleNavigation() {
 
 // Registration
 navigator.registerGraph(featureNavigation.provideGraph())
-```
-
-### MVI Pattern
-```kotlin
-class MyViewModel(navigator: Navigator) : NavigationViewModel(navigator) {
-    fun onAction() {
-        handleNavigationIntent(NavigationIntent.Navigate(destination))
-    }
-}
 ```
 
 ### Transitions
@@ -468,7 +452,7 @@ The core library is complete. Future enhancements could include:
 - ✅ Deep link navigation support
 - ✅ Transition animations including shared element framework
 - ✅ Independent of other navigation libraries
-- ✅ Integrates with MVI architecture
+- ✅ FlowMVI integration via separate module (`quo-vadis-core-flow-mvi`)
 - ✅ Easy integration with DI frameworks (Koin)
 - ✅ Kotlin Multiplatform compatible (Android, iOS, Desktop, JS, Wasm)
 - ✅ Compose Multiplatform compatible

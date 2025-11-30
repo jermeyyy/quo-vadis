@@ -30,8 +30,7 @@ This project consists of **two main components**:
 - ✅ **Predictive Back Navigation** - Smooth animated back gestures (Android 13+ & iOS)
 - ✅ **Shared Element Transitions** - Material Design shared elements (forward & back!)
 - ✅ **Tabbed Navigation** - Annotation-based generation of tabbed navigation with independent backstacks
-- ✅ **FlowMVI Integration** - Built-in support for FlowMVI state management
-- ✅ **MVI Architecture** - First-class MVI pattern integration
+- ✅ **FlowMVI Integration** - Built-in support for FlowMVI state management via `quo-vadis-core-flow-mvi` module
 - ✅ **Transitions & Animations** - Built-in and custom transitions
 - ✅ **DI Framework Support** - Easy integration with Koin, Kodein, etc.
 - ✅ **Testable** - FakeNavigator for unit testing
@@ -362,7 +361,7 @@ The **`composeApp`** module contains a comprehensive demo showcasing all navigat
 - **Predictive Back Gestures** - Animated back navigation (Android 13+ & iOS)
 - **Transitions** - Various animation styles (Fade, Slide, Scale, Material3)
 - **Deep Links** - URI-based navigation examples
-- **MVI Pattern** - MVI architecture integration
+- **FlowMVI Pattern** - FlowMVI architecture integration
 - **BackStack Manipulation** - Direct stack access examples
 
 ### Running the Demo
@@ -444,14 +443,8 @@ class FeatureNavigation : BaseModuleNavigation() {
 }
 ```
 
-### MVI Integration
-```kotlin
-class MyViewModel(navigator: Navigator) : NavigationViewModel(navigator) {
-    fun onAction() {
-        handleNavigationIntent(NavigationIntent.Navigate(destination))
-    }
-}
-```
+### FlowMVI Integration
+For MVI architecture, use the `quo-vadis-core-flow-mvi` module. See [FlowMVI Integration Guide](quo-vadis-core/docs/FLOW_MVI.md).
 
 ## 🧪 Testing
 

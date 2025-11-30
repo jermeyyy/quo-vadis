@@ -867,41 +867,11 @@ nav.navigateBack()  // Transitions work in reverse!
 
 ---
 
-## MVI Package (`navigation.mvi`)
+## MVI Support
 
-### NavigationIntent
+For MVI architecture integration, use the separate `quo-vadis-core-flow-mvi` module which provides integration with the [FlowMVI](https://github.com/respawn-app/FlowMVI) library.
 
-```kotlin
-sealed interface NavigationIntent {
-    data class Navigate(destination, transition)
-    object NavigateBack
-    object NavigateUp
-    data class NavigateAndClearAll(destination)
-    data class NavigateAndClearTo(destination, clearRoute, inclusive)
-    data class NavigateAndReplace(destination, transition)
-    data class HandleDeepLink(uri)
-}
-```
-
-### NavigationViewModel
-
-```kotlin
-abstract class NavigationViewModel(navigator: Navigator) : ViewModel() {
-    val navigationState: StateFlow<NavigationState>
-    val navigationEffects: SharedFlow<NavigationEffect>
-    
-    fun handleNavigationIntent(intent: NavigationIntent)
-}
-```
-
-### Effect Collection
-
-```kotlin
-@Composable
-fun SharedFlow<NavigationEffect>.collectAsEffect(
-    onEffect: suspend (NavigationEffect) -> Unit
-)
-```
+See the [FlowMVI Integration Guide](FLOW_MVI.md) for complete documentation.
 
 ---
 
@@ -960,15 +930,7 @@ navigationTest {
 }
 ```
 
----
-
-## Integration Package (`navigation.integration`)
-
-### DI Support
-
-```kotlin
-interface NavigationFactory {
-### Pattern 6: Predictive Back Navigation
+### Pattern 5: Predictive Back Navigation
 ```kotlin
 // With default Material3 animation
 PredictiveBackNavigation(
@@ -986,6 +948,14 @@ PredictiveBackNavigation(
 )
 ```
 
+---
+
+## Integration Package (`navigation.integration`)
+
+### DI Support
+
+```kotlin
+interface NavigationFactory {
     fun createNavigator(): Navigator
     fun createDeepLinkHandler(): DeepLinkHandler
 }
@@ -1039,18 +1009,7 @@ class FeatureNavigation : BaseModuleNavigation() {
 }
 ```
 
-### Pattern 3: MVI Navigation
-```kotlin
-class MyViewModel(nav: Navigator) : NavigationViewModel(nav) {
-    fun onItemClick(id: String) {
-        handleNavigationIntent(
-            NavigationIntent.Navigate(DetailDestination(id))
-        )
-    }
-}
-```
-
-### Pattern 4: Deep Links
+### Pattern 3: Deep Links
 ```kotlin
 val handler = DefaultDeepLinkHandler()
 handler.register("app://product/{id}") { params ->
@@ -1059,7 +1018,7 @@ handler.register("app://product/{id}") { params ->
 navigator.handleDeepLink(DeepLink.parse("app://product/123"))
 ```
 
-### Pattern 5: Custom Transitions
+### Pattern 4: Custom Transitions
 ```kotlin
 navigator.navigate(
     destination = Details,

@@ -1,0 +1,16 @@
+{
+  "android": {
+    "appium:app": "/Users/jermey/Projects/NavPlayground/composeApp/build/outputs/apk/debug/composeApp-debug.apk",
+    "appium:deviceName": "Android Device",
+    "appium:platformVersion": "11.0",
+    "appium:automationName": "UiAutomator2",
+    "appium:udid": "emulator-5554"
+  },
+  "ios": {
+    "appium:app": "/Users/jermey/Projects/NavPlayground/iosApp/build/ios/iphonesimulator/Debug/iosApp.app",
+    "appium:deviceName": "iPhone 16 Pro Max",
+    "appium:platformVersion": "15.0",
+    "appium:automationName": "XCUITest",
+    "appium:udid": "78C77ED7-1322-4A33-9B6C-F5E99F8AB2C9"
+  }
+}

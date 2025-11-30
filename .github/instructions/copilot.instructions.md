@@ -200,7 +200,8 @@ rm -rf .gradle/configuration-cache
 
 **Demo**: `com.jermey.navplayground.demo.<feature>`  
 **Library**: `com.jermey.quo.vadis.core.navigation.<package>`
-- Subpackages: `core`, `compose`, `mvi`, `integration`, `testing`, `utils`, `serialization`
+- Subpackages: `core`, `compose`, `integration`, `testing`, `utils`, `serialization`
+- **FlowMVI**: Use `quo-vadis-core-flow-mvi` module for MVI architecture
 
 ### Kotlin Best Practices
 
@@ -350,12 +351,13 @@ com/jermey/navplayground/
 com/jermey/quo/vadis/core/navigation/
 ├── core/
 ├── compose/
-├── mvi/
 ├── integration/
 ├── serialization/
 ├── testing/
 └── utils/
 ```
+
+**FlowMVI Module** (`quo-vadis-core-flow-mvi/`): FlowMVI architecture integration
 
 ---
 

@@ -28,11 +28,11 @@
 - Advanced operations (popUntil, popTo, etc.)
 - Complex navigation patterns supported
 
-### 5. MVI Architecture Integration
-- First-class support for MVI pattern
-- NavigationIntent for actions
-- NavigationEffect for side effects
-- NavigationState for UI
+### 5. FlowMVI Architecture Integration
+- MVI support via separate `quo-vadis-core-flow-mvi` module
+- FlowMVI library integration
+- Type-safe navigation intents and actions
+- Observable navigation state
 
 ### 6. Predictive Back Navigation
 - Smooth gesture-based navigation
@@ -67,10 +67,6 @@ com.jermey.quo.vadis.core.navigation/
 │   ├── ComposableCache.kt          - Screen caching
 │   ├── SharedElementScope.kt       - ✨ CompositionLocal providers (NEW)
 │   └── SharedElementModifiers.kt   - ✨ Convenience extensions (NEW)
-├── mvi/
-│   ├── NavigationIntent.kt         - MVI intents
-│   ├── NavigationEffect.kt         - Side effects
-│   └── NavigationViewModel.kt      - Base ViewModel
 ├── integration/
 │   └── KoinIntegration.kt          - DI support
 ├── utils/
@@ -80,6 +76,13 @@ com.jermey.quo.vadis.core.navigation/
 └── serialization/
     └── StateSerializer.kt          - State persistence
 ```
+
+**FlowMVI Module** (`quo-vadis-core-flow-mvi/`):
+For MVI architecture, use the separate FlowMVI integration module which provides:
+- NavigationIntent - Type-safe navigation actions
+- NavigationAction - Side effects
+- NavigationState - Observable state
+- NavigatorContainer - FlowMVI store integration
 
 ## Key Components
 

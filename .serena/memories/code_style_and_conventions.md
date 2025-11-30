@@ -53,12 +53,13 @@
 com.jermey.quo.vadis.core.navigation/
 ├── core/          - Core navigation components
 ├── compose/       - Compose UI integration
-├── mvi/           - MVI pattern support
 ├── integration/   - DI framework integration
 ├── testing/       - Testing utilities
 ├── utils/         - Extension functions
 └── serialization/ - State save/restore
 ```
+
+For MVI architecture, use the separate `quo-vadis-core-flow-mvi` module.
 
 ### Demo App (composeApp)
 ```
