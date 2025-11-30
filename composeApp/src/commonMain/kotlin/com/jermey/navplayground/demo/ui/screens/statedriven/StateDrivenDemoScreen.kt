@@ -1,5 +1,9 @@
 package com.jermey.navplayground.demo.ui.screens.statedriven
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,13 +33,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.StateDrivenDestination
-import com.jermey.quo.vadis.core.navigation.compose.StateNavHost
-import com.jermey.quo.vadis.core.navigation.compose.rememberStateBackStack
-import com.jermey.quo.vadis.core.navigation.core.StateBackStack
+import com.jermey.quo.vadis.core.navigation.core.BackStack
+import com.jermey.quo.vadis.core.navigation.core.MutableBackStack
 
 /**
  * State-Driven Navigation Demo Screen.
@@ -56,7 +62,11 @@ fun StateDrivenDemoScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backStack = rememberStateBackStack(StateDrivenDestination.Home)
+    val backStack = remember {
+        MutableBackStack().apply {
+            push(StateDrivenDestination.Home)
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -85,7 +95,7 @@ private val WIDE_LAYOUT_BREAKPOINT = 600.dp
 
 @Composable
 private fun StateDrivenDemoContent(
-    backStack: StateBackStack,
+    backStack: BackStack,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -167,28 +177,31 @@ private fun StateDrivenDemoContent(
 
 @Composable
 private fun ContentHost(
-    backStack: StateBackStack,
+    backStack: BackStack,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)
-    ) {
-        StateNavHost(
-            stateBackStack = backStack,
-            modifier = Modifier.fillMaxSize()
-        ) { destination ->
-            when (destination) {
-                is StateDrivenDestination.Home -> HomeContent()
-                is StateDrivenDestination.Profile -> ProfileContent(userId = destination.userId)
-                is StateDrivenDestination.Settings -> SettingsContent()
-                is StateDrivenDestination.Detail -> DetailContent(itemId = destination.itemId)
-                else -> {
-                    // Fallback for any unknown destination
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Unknown destination: $destination")
+    val currentEntry = backStack.entries.lastOrNull()
+
+    Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)) {
+        AnimatedContent(
+            targetState = currentEntry,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            contentKey = { it?.id }
+        ) { entry ->
+            if (entry != null) {
+                when (val destination = entry.destination) {
+                    is StateDrivenDestination.Home -> HomeContent()
+                    is StateDrivenDestination.Profile -> ProfileContent(userId = destination.userId)
+                    is StateDrivenDestination.Settings -> SettingsContent()
+                    is StateDrivenDestination.Detail -> DetailContent(itemId = destination.itemId)
+                    else -> {
+                        // Fallback for any unknown destination
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Unknown destination: $destination")
+                        }
                     }
                 }
             }
@@ -198,9 +211,12 @@ private fun ContentHost(
 
 @Composable
 private fun StateInfoBar(
-    backStack: StateBackStack,
+    backStack: BackStack,
     modifier: Modifier = Modifier
 ) {
+    val canGoBack by backStack.canGoBack.collectAsState()
+    val current by backStack.current.collectAsState()
+
     Card(
         modifier = modifier.padding(8.dp),
         colors = CardDefaults.cardColors(
@@ -223,14 +239,14 @@ private fun StateInfoBar(
 
             StateInfoItem(
                 label = "Can Go Back",
-                value = if (backStack.canGoBack) "Yes" else "No"
+                value = if (canGoBack) "Yes" else "No"
             )
 
             Spacer(Modifier.width(16.dp))
 
             StateInfoItem(
                 label = "Current",
-                value = backStack.current?.destination?.let {
+                value = current?.destination?.let {
                     StateDrivenDestination.getDisplayName(it as StateDrivenDestination)
                 } ?: "None"
             )

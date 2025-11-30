@@ -40,6 +40,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.StateDrivenDestination
-import com.jermey.quo.vadis.core.navigation.core.StateBackStack
+import com.jermey.quo.vadis.core.navigation.core.BackStack
 
 /**
  * Panel for editing and viewing the backstack state.
@@ -63,10 +64,11 @@ import com.jermey.quo.vadis.core.navigation.core.StateBackStack
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BackstackEditorPanel(
-    backStack: StateBackStack,
+    backStack: BackStack,
     modifier: Modifier = Modifier
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
+    val canGoBack by backStack.canGoBack.collectAsState()
 
     Column(
         modifier = modifier.padding(12.dp),
@@ -103,7 +105,7 @@ fun BackstackEditorPanel(
 
             OutlinedButton(
                 onClick = { backStack.pop() },
-                enabled = backStack.canGoBack,
+                enabled = canGoBack,
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding
             ) {
                 Icon(Icons.Default.ArrowUpward, null, Modifier.size(18.dp))

@@ -1,26 +1,85 @@
 # State-Driven Navigation Guide
 
+> **⚠️ DEPRECATION NOTICE:** The standalone `StateBackStack`, `StateNavigator`, and `StateNavHost` 
+> classes are deprecated. The unified `BackStack` interface now provides the same functionality.
+> Use `Navigator.backStack.entries` for Nav3-style state-driven navigation with full animation
+> and predictive back support.
+
 ## Overview
 
 State-driven navigation is an alternative navigation paradigm where **the UI is directly driven by observable backstack state**. Instead of calling imperative navigation methods, you manipulate a state-backed list and the UI automatically reflects the changes.
 
 This approach, inspired by Navigation 3 patterns, provides:
 
-- **Direct State Access**: The backstack is a `SnapshotStateList` that you can observe and manipulate directly
+- **Direct State Access**: The backstack's `entries` property is a `SnapshotStateList` that you can observe and manipulate directly
 - **Compose-Native Integration**: No flow collection needed - state changes trigger recomposition automatically
 - **Flexible Operations**: Insert, remove, swap, and reorder entries anywhere in the stack
 - **Predictable Behavior**: The UI always reflects the current state of the backstack
 
+## Unified API (Recommended)
+
+The **unified API** is now the recommended approach. It provides all the state-driven capabilities
+while also supporting predictive back gestures, shared element transitions, and full animation support.
+
+```kotlin
+// Create a navigator with the unified API
+val navigator = rememberNavigator(startDestination = HomeDestination)
+
+// Access entries directly for state-driven patterns
+navigator.backStack.entries  // SnapshotStateList<BackStackEntry>
+
+// Direct manipulation (Nav3-style)
+navigator.backStack.push(DetailDestination(id = "123"))
+navigator.backStack.insert(0, FilterDestination)
+navigator.backStack.removeAt(1)
+navigator.backStack.swap(0, 1)
+
+// Use with standard NavHost for full feature support
+NavHost(graph = graph, navigator = navigator)
+```
+
+## Migration from Deprecated API
+
+### Before (Deprecated)
+
+```kotlin
+val backStack = rememberStateBackStack(HomeDestination)
+backStack.push(DetailDestination(id = "123"))
+StateNavHost(stateBackStack = backStack) { destination ->
+    when (destination) { ... }
+}
+```
+
+### After (Recommended)
+
+```kotlin
+val navigator = rememberNavigator(startDestination = HomeDestination)
+navigator.backStack.push(DetailDestination(id = "123"))
+
+// For direct entry manipulation:
+navigator.backStack.entries  // SnapshotStateList for observation
+
+// Use with NavHost
+NavHost(graph = graph, navigator = navigator)
+
+// Or with AnimatedContent for simple cases:
+val currentEntry = navigator.backStack.entries.lastOrNull()
+AnimatedContent(targetState = currentEntry) { entry ->
+    when (entry?.destination) { ... }
+}
+```
+
 ## Comparison with Traditional API
 
-| Aspect | Traditional API | State-Driven API |
-|--------|-----------------|------------------|
+| Aspect | Traditional API | State-Driven (Unified) |
+|--------|-----------------|------------------------|
 | **State Container** | `StateFlow<List<BackStackEntry>>` | `SnapshotStateList<BackStackEntry>` |
-| **Observation** | Requires `collectAsState()` | Direct property access |
-| **Navigation** | Semantic methods (`navigate()`, `navigateBack()`) | Direct list manipulation or wrapper methods |
+| **Observation** | Requires `collectAsState()` | Direct property access via `entries` |
+| **Navigation** | Semantic methods (`navigate()`, `navigateBack()`) | Both methods AND direct list manipulation |
 | **Flexibility** | Predefined operations | Full list manipulation (insert, remove, swap, move) |
-| **Use Case** | Standard navigation flows | Complex navigation patterns, state-driven UIs |
-| **Testing** | `FakeNavigator` | `FakeStateNavigator` |
+| **Animations** | Full support | Full support |
+| **Predictive Back** | Full support | Full support |
+| **Testing** | `FakeNavigator` | `FakeNavigator` |
 
 ### Code Comparison
 
@@ -35,15 +94,17 @@ navigator.navigate(DetailDestination(id = "123"))
 val currentDestination by navigator.currentDestination.collectAsState(null)
 ```
 
-**State-Driven API:**
+**State-Driven API (Unified):**
 ```kotlin
-val backStack = rememberStateBackStack(HomeDestination)
+val navigator = rememberNavigator(startDestination = HomeDestination)
 
-// Navigate
-backStack.push(DetailDestination(id = "123"))
+// Navigate (use methods OR direct manipulation)
+navigator.navigate(DetailDestination(id = "123"))
+// OR
+navigator.backStack.push(DetailDestination(id = "123"))
 
-// Observe current destination (no collection needed!)
-val currentDestination = backStack.current?.destination
+// Observe current entry directly (no collection needed!)
+val currentEntry = navigator.backStack.entries.lastOrNull()
 ```
 
 ## When to Use State-Driven Navigation
@@ -69,35 +130,59 @@ State-driven navigation is ideal for:
 - When backstack state is part of a larger state management solution
 - Integration with state machines or redux-like patterns
 
-### ❌ When Traditional API is Better
+### ❌ When Traditional Methods are Better
 - Simple linear navigation flows
 - When you don't need direct stack manipulation
-- Graph-based navigation with declarative routes
+- Standard navigation patterns
 
 ## Core Concepts
 
-### StateBackStack
+### BackStack Interface (Unified)
 
-The foundation of state-driven navigation. It wraps a `SnapshotStateList` from Compose's runtime, enabling automatic recomposition when the backstack changes.
+The `BackStack` interface now provides both flow-based and state-driven capabilities:
 
 ```kotlin
 @Stable
-class StateBackStack {
-    // The underlying state list - observable in Compose
+interface BackStack {
+    // Direct state access (Nav3-style)
     val entries: SnapshotStateList<BackStackEntry>
-    
-    // Derived properties (use derivedStateOf for efficiency)
-    val current: BackStackEntry?      // Top entry
-    val previous: BackStackEntry?     // Second from top
-    val canGoBack: Boolean            // Has 2+ entries
     val size: Int
     val isEmpty: Boolean
     val isNotEmpty: Boolean
     
-    // Flow for non-Compose consumers
-    val entriesFlow: Flow<List<BackStackEntry>>
+    // Flow-based observation (for non-Compose consumers)
+    val stack: StateFlow<List<BackStackEntry>>
+    val current: StateFlow<BackStackEntry?>
+    val previous: StateFlow<BackStackEntry?>
+    val canGoBack: StateFlow<Boolean>
+    
+    // Standard operations
+    fun push(destination: Destination, transition: NavigationTransition? = null)
+    fun pop(): Boolean
+    fun popUntil(predicate: (Destination) -> Boolean): Boolean
+    fun replace(destination: Destination, transition: NavigationTransition? = null)
+    fun replaceAll(destinations: List<Destination>)
+    fun clear()
+    fun popToRoot(): Boolean
+    
+    // Advanced operations (Nav3-style)
+    fun insert(index: Int, destination: Destination, transition: NavigationTransition? = null)
+    fun removeAt(index: Int): BackStackEntry
+    fun removeById(id: String): Boolean
+    fun swap(indexA: Int, indexB: Int)
+    fun move(fromIndex: Int, toIndex: Int)
+    fun replaceAllWithEntries(entries: List<BackStackEntry>)
 }
 ```
+
+---
+
+## Deprecated API Reference
+
+> The following classes are deprecated and will be removed in a future version.
+> Use the unified `Navigator`/`BackStack` API instead.
+
+### StateBackStack (Deprecated)
 
 **Key Design Decisions:**
 

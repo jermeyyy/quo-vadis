@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -23,6 +24,15 @@ interface Navigator : ParentNavigator {
      * Access to the backstack for direct manipulation.
      */
     val backStack: BackStack
+
+    /**
+     * Direct access to backstack entries for navigation.
+     *
+     * This is a convenience property that delegates to [backStack.entries].
+     * The list can be directly observed in Compose UI for automatic recomposition.
+     */
+    val entries: SnapshotStateList<BackStackEntry>
+        get() = backStack.entries
 
     /**
      * Current destination.
