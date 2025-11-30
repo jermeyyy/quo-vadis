@@ -17,7 +17,6 @@ import PredictiveBack from '@pages/Features/PredictiveBack/PredictiveBack'
 import SharedElements from '@pages/Features/SharedElements/SharedElements'
 import Transitions from '@pages/Features/Transitions/Transitions'
 import Testing from '@pages/Features/Testing/Testing'
-import MVI from '@pages/Features/MVI/MVI'
 import Modular from '@pages/Features/Modular/Modular'
 import DIIntegration from '@pages/Features/DIIntegration/DIIntegration'
 import Performance from '@pages/Features/Performance/Performance'
@@ -46,7 +45,6 @@ function App() {
               <Route path="/features/shared-elements" element={<SharedElements />} />
               <Route path="/features/transitions" element={<Transitions />} />
               <Route path="/features/testing" element={<Testing />} />
-              <Route path="/features/mvi" element={<MVI />} />
               <Route path="/features/modular" element={<Modular />} />
               <Route path="/features/di-integration" element={<DIIntegration />} />
               <Route path="/features/performance" element={<Performance />} />

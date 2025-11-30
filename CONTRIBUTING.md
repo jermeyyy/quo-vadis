@@ -123,12 +123,14 @@ fun myFunction(paramName: String): Result
 com.jermey.quo.vadis.core.navigation/
 ├── core/          # Core navigation interfaces and classes
 ├── compose/       # Compose-specific components
-├── mvi/           # MVI pattern integration
 ├── integration/   # External integrations
 ├── testing/       # Test utilities
 ├── utils/         # Utility functions
 └── serialization/ # Serialization support
 ```
+
+**FlowMVI Module (`quo-vadis-core-flow-mvi`):**
+For MVI architecture integration with FlowMVI library.
 
 **Demo (`composeApp`):**
 ```
