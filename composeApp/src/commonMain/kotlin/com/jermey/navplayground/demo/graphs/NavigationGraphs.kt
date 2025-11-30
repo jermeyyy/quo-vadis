@@ -10,6 +10,7 @@ import com.jermey.navplayground.demo.destinations.buildMasterDetailDestinationGr
 import com.jermey.navplayground.demo.destinations.buildProcessDestinationGraph
 import com.jermey.navplayground.demo.destinations.buildTabsDestinationGraph
 import com.jermey.navplayground.demo.destinations.buildSettingsDestinationGraph
+import com.jermey.navplayground.demo.destinations.buildStateDrivenDemoDestinationGraph
 import com.jermey.quo.vadis.core.navigation.core.navigationGraph
 
 /**
@@ -93,6 +94,7 @@ fun appRootGraph() = navigationGraph("app_root") {
     include(buildTabsDestinationGraph())
     include(buildProcessDestinationGraph())
     include(buildDeepLinkDestinationGraph())
+    include(buildStateDrivenDemoDestinationGraph())
 }
 
 /**

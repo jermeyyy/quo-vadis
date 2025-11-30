@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AssistantDirection
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,6 +46,7 @@ fun HomeScreen(
     onNavigateToMasterDetail: () -> Unit,
     onNavigateToTabs: () -> Unit,
     onNavigateToProcess: () -> Unit,
+    onNavigateToStateDriven: () -> Unit,
     navigator: Navigator,
     modifier: Modifier = Modifier
 ) {
@@ -71,7 +73,8 @@ fun HomeScreen(
             paddingValues,
             onNavigateToMasterDetail,
             onNavigateToTabs,
-            onNavigateToProcess
+            onNavigateToProcess,
+            onNavigateToStateDriven
         )
     }
 
@@ -100,7 +103,8 @@ private fun HomeScreenContent(
     paddingValues: PaddingValues,
     onNavigateToMasterDetail: () -> Unit,
     onNavigateToTabs: () -> Unit,
-    onNavigateToProcess: () -> Unit
+    onNavigateToProcess: () -> Unit,
+    onNavigateToStateDriven: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -141,6 +145,13 @@ private fun HomeScreenContent(
             title = "Process Flow",
             description = "Multi-step wizard with branching logic",
             onClick = onNavigateToProcess
+        )
+
+        NavigationPatternCard(
+            icon = Icons.Default.Layers,
+            title = "State-Driven Navigation",
+            description = "Navigation 3-style backstack manipulation",
+            onClick = onNavigateToStateDriven
         )
 
         Spacer(Modifier.weight(1f))

@@ -27,7 +27,9 @@ import com.jermey.navplayground.demo.ui.screens.tabs.TabsMainScreen
 import com.jermey.navplayground.demo.tabs.MainTabsScreen
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileScreen
 import com.jermey.navplayground.demo.destinations.SettingsDestination
+import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
 import com.jermey.navplayground.demo.ui.screens.SettingsDetailScreen
+import com.jermey.navplayground.demo.ui.screens.statedriven.StateDrivenDemoScreen
 import com.jermey.quo.vadis.annotations.Content
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -145,6 +147,12 @@ fun HomeContent(navigator: Navigator) {
         onNavigateToProcess = {
             navigator.navigate(ProcessDestination.Start, NavigationTransitions.SlideHorizontal)
         },
+        onNavigateToStateDriven = {
+            navigator.navigate(
+                StateDrivenDemoDestination.Demo,
+                NavigationTransitions.SlideHorizontal
+            )
+        },
         navigator = navigator
     )
     println("DEBUG_TAB_NAV: HomeContent - HomeScreen rendered")
@@ -189,6 +197,18 @@ fun DeepLinkDemoContent(navigator: Navigator) {
         onNavigateViaDeepLink = { deepLinkUri ->
             navigator.handleDeepLink(DeepLink.parse(deepLinkUri))
         }
+    )
+}
+
+// ============================================================================
+// STATE-DRIVEN NAVIGATION DEMO
+// ============================================================================
+
+@Content(StateDrivenDemoDestination.Demo::class)
+@Composable
+fun StateDrivenDemoContent(navigator: Navigator) {
+    StateDrivenDemoScreen(
+        onBack = { navigator.navigateBack() }
     )
 }
 
