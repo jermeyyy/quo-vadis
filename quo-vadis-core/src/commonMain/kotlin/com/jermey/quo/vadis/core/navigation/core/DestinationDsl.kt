@@ -88,8 +88,8 @@ internal fun <T : Any> NavigationGraphBuilder.typedDestinationImpl(
 
             else -> {
                 // Direct cast (in-memory navigation with typed data)
-                @Suppress("UNCHECKED_CAST")
                 val expectedType = dataSerializer.descriptor.serialName
+                @Suppress("UNCHECKED_CAST")
                 (destData as? T)
                     ?: error("Error: Type mismatch for destination '$route'. Expected $expectedType")
             }

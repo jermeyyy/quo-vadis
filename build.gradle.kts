@@ -58,10 +58,8 @@ allprojects {
 
             tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
                 reports {
-                    xml.required.set(true)
                     html.required.set(true)
                     sarif.required.set(true)
-                    md.required.set(true)
                 }
             }
         }
