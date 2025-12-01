@@ -1,5 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,6 +9,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AssistantDirection
 import androidx.compose.material.icons.automirrored.filled.List
@@ -31,11 +35,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.NavigationPatternCard
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
+import navplayground.composeapp.generated.resources.Res
+import navplayground.composeapp.generated.resources.compose_multiplatform
+import navplayground.composeapp.generated.resources.logo
+import org.jetbrains.compose.resources.imageResource
 
 /**
  * Home Screen - Main entry point with navigation to all patterns
@@ -110,18 +119,27 @@ private fun HomeScreenContent(
         modifier = modifier
             .fillMaxSize()
             .padding(paddingValues)
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            "Navigation Patterns Demo",
-            style = MaterialTheme.typography.headlineMedium
+            "Quo Vadis Demo",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+
+        Image(
+            imageResource(Res.drawable.logo),
+            contentDescription = "Logo",
+            modifier = Modifier.width(72.dp).height(72.dp).align(Alignment.CenterHorizontally)
         )
 
         Text(
             "Explore different navigation patterns implemented with our custom navigation library",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
 
         Spacer(Modifier.height(8.dp))
