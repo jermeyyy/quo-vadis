@@ -252,6 +252,15 @@ class MutableBackStack : BackStack {
     private val _canGoBack = MutableStateFlow(false)
     override val canGoBack: StateFlow<Boolean> = _canGoBack
 
+    /**
+     * Updates the derived StateFlow properties to reflect the current state of [entries].
+     *
+     * Note: This method creates a new list copy via `entries.toList()` for the [stack] flow.
+     * For typical navigation scenarios, this overhead is negligible. If you're building
+     * performance-critical scenarios with very frequent mutations or large backstacks,
+     * consider using the [entries] SnapshotStateList directly for observation instead of
+     * the flow-based properties.
+     */
     private fun updateFlows() {
         _stack.value = entries.toList()
         _current.value = entries.lastOrNull()
@@ -327,12 +336,18 @@ class MutableBackStack : BackStack {
     // ═══════════════════════════════════════════════════════════════
 
     override fun insert(index: Int, destination: Destination, transition: NavigationTransition?) {
+        if (index < 0 || index > entries.size) {
+            throw IndexOutOfBoundsException("index $index is out of bounds for size ${entries.size}")
+        }
         val entry = BackStackEntry.create(destination, transition)
         entries.add(index, entry)
         updateFlows()
     }
 
     override fun removeAt(index: Int): BackStackEntry {
+        if (index < 0 || index >= entries.size) {
+            throw IndexOutOfBoundsException("index $index is out of bounds for size ${entries.size}")
+        }
         val entry = entries.removeAt(index)
         updateFlows()
         return entry
@@ -350,6 +365,12 @@ class MutableBackStack : BackStack {
     }
 
     override fun swap(indexA: Int, indexB: Int) {
+        if (indexA < 0 || indexA >= entries.size) {
+            throw IndexOutOfBoundsException("indexA $indexA is out of bounds for size ${entries.size}")
+        }
+        if (indexB < 0 || indexB >= entries.size) {
+            throw IndexOutOfBoundsException("indexB $indexB is out of bounds for size ${entries.size}")
+        }
         val temp = entries[indexA]
         entries[indexA] = entries[indexB]
         entries[indexB] = temp
@@ -358,6 +379,12 @@ class MutableBackStack : BackStack {
 
     override fun move(fromIndex: Int, toIndex: Int) {
         if (fromIndex == toIndex) return
+        if (fromIndex < 0 || fromIndex >= entries.size) {
+            throw IndexOutOfBoundsException("fromIndex $fromIndex is out of bounds for size ${entries.size}")
+        }
+        if (toIndex < 0 || toIndex >= entries.size) {
+            throw IndexOutOfBoundsException("toIndex $toIndex is out of bounds for size ${entries.size}")
+        }
         val entry = entries.removeAt(fromIndex)
         entries.add(toIndex, entry)
         updateFlows()
