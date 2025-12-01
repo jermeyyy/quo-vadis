@@ -163,18 +163,6 @@ data class SharedElementConfig(
 )
 
 /**
- * Shared element transition key.
- * Identifies elements that should animate between screens.
- * 
- * @deprecated Use SharedElementConfig with type parameter instead
- */
-@Deprecated("Use SharedElementConfig with type parameter instead", ReplaceWith("SharedElementConfig(key, type)"))
-data class SharedElementKey(
-    val key: String,
-    val type: SharedElementType = SharedElementType.Bounds
-)
-
-/**
  * Type of shared element transition.
  */
 enum class SharedElementType {

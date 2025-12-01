@@ -26,30 +26,6 @@ fun BackStack.findByRoute(route: String): BackStackEntry? {
 }
 
 /**
- * Extension to get the size of the backstack.
- * @deprecated Use BackStack.size property directly instead.
- */
-@Deprecated(
-    message = "Use BackStack.size property directly instead",
-    replaceWith = ReplaceWith("size"),
-    level = DeprecationLevel.WARNING
-)
-val BackStack.extensionSize: Int
-    get() = stack.value.size
-
-/**
- * Extension to check if the backstack is empty.
- * @deprecated Use BackStack.isEmpty property directly instead.
- */
-@Deprecated(
-    message = "Use BackStack.isEmpty property directly instead",
-    replaceWith = ReplaceWith("isEmpty"),
-    level = DeprecationLevel.WARNING
-)
-val BackStack.extensionIsEmpty: Boolean
-    get() = stack.value.isEmpty()
-
-/**
  * Extension to get all routes in the backstack.
  */
 val BackStack.routes: List<String>
