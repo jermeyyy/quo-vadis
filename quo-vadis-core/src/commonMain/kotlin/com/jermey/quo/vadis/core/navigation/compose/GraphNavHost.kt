@@ -30,12 +30,15 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.PredictiveBackHandler
 import androidx.compose.ui.graphics.graphicsLayer
 import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 import com.jermey.quo.vadis.core.navigation.core.DefaultNavigator
+import com.jermey.quo.vadis.core.navigation.core.EXTRA_SELECTED_TAB_ROUTE
+import com.jermey.quo.vadis.core.navigation.core.getExtra
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
@@ -43,12 +46,43 @@ import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
+import com.jermey.quo.vadis.core.navigation.compose.LocalPredictiveBackInProgress
 import kotlinx.coroutines.launch
 
 // Animation constants
 private const val PREDICTIVE_BACK_SCALE_FACTOR = 0.1f
 private const val MAX_GESTURE_PROGRESS = 0.25f // Maximum drag distance (25% of screen width)
 private const val INITIAL_GESTURE_PROGRESS = 0.001f // Small non-zero value to trigger immediate rendering
+
+/**
+ * CompositionLocal providing the current [BackStackEntry] being rendered.
+ *
+ * This is crucial for content composables that need access to their associated entry,
+ * especially during animated transitions when `navigator.backStack.current` might point
+ * to a different entry than the one being rendered.
+ *
+ * Usage:
+ * ```kotlin
+ * @Composable
+ * fun MyScreenContent() {
+ *     val entry = LocalBackStackEntry.current
+ *     // Use entry.id, entry.extras, etc.
+ * }
+ * ```
+ */
+val LocalBackStackEntry = compositionLocalOf<BackStackEntry?> { null }
+
+/**
+ * Returns the current [BackStackEntry] being rendered.
+ *
+ * This should be used instead of `navigator.backStack.current` when you need
+ * the entry that corresponds to the content being rendered, as the navigator's
+ * current entry may differ during animations.
+ *
+ * @return The current BackStackEntry or null if not within a navigation context
+ */
+@Composable
+fun currentBackStackEntry(): BackStackEntry? = LocalBackStackEntry.current
 
 /**
  * Unified navigation host with support for:
@@ -497,23 +531,29 @@ private fun GraphNavHostContent(
         }
     }
 
-    NavigationContainer(
-        displayedCurrent = displayedCurrent,
-        displayedPrevious = displayedPrevious,
-        isPredictiveGesture = isPredictiveGesture,
-        justCompletedGesture = justCompletedGesture,
-        isBackNavigation = isBackNavigation,
-        gestureProgress = gestureProgress.floatValue,
-        exitAnimProgress = exitAnimProgress,
-        graph = graph,
-        navigator = navigator,
-        composableCache = composableCache,
-        saveableStateHolder = saveableStateHolder,
-        enableComposableCache = enableComposableCache,
-        defaultTransition = defaultTransition,
-        sharedTransitionScope = sharedTransitionScope,
-        modifier = modifier
-    )
+    // Provide predictive back state to child composables (e.g., TabContent)
+    // so they can skip animations during the gesture and prevent visual glitches
+    CompositionLocalProvider(
+        LocalPredictiveBackInProgress provides (isPredictiveGesture || justCompletedGesture)
+    ) {
+        NavigationContainer(
+            displayedCurrent = displayedCurrent,
+            displayedPrevious = displayedPrevious,
+            isPredictiveGesture = isPredictiveGesture,
+            justCompletedGesture = justCompletedGesture,
+            isBackNavigation = isBackNavigation,
+            gestureProgress = gestureProgress.floatValue,
+            exitAnimProgress = exitAnimProgress,
+            graph = graph,
+            navigator = navigator,
+            composableCache = composableCache,
+            saveableStateHolder = saveableStateHolder,
+            enableComposableCache = enableComposableCache,
+            defaultTransition = defaultTransition,
+            sharedTransitionScope = sharedTransitionScope,
+            modifier = modifier
+        )
+    }
 }
 
 /**
@@ -572,57 +612,66 @@ private fun ScreenContent(
     saveableStateHolder: SaveableStateHolder,
     enableCache: Boolean
 ) {
+    // Debug logging for tracing cross-navigator animation issues
     val destRoute = entry.destination.route
-    println("DEBUG: GraphNavHost renderDestination - entry.destination=${entry.destination}, route=$destRoute")
+    val selectedTabExtra = entry.getExtra(EXTRA_SELECTED_TAB_ROUTE)
+    println("DEBUG_ANIM: ScreenContent entry.id=${entry.id}, dest=$destRoute, selectedTabExtra=$selectedTabExtra")
     
-    val destConfig = remember(entry.destination.route) {
-        val entryRoute = entry.destination.route
-        println("DEBUG: GraphNavHost - Looking for destination with route: '$entryRoute'")
-        val destCount = graph.destinations.size
-        println("DEBUG: GraphNavHost - Graph has $destCount destinations")
-        graph.destinations.forEachIndexed { index, config ->
-            val configRoute = config.destination.route
-            val configClass = config.destination::class.simpleName
-            println("DEBUG: GraphNavHost - [$index] route='$configRoute' class=$configClass")
-        }
-        val found = graph.destinations.find { 
-            val matches = it.destination.route == entryRoute
-            println("DEBUG: GraphNavHost - Comparing '${it.destination.route}' == '$entryRoute': $matches")
-            matches
-        }
-        println("DEBUG: GraphNavHost - Match result: ${found != null}")
-        found
-    }
-
-    // Get transition scope from composition local (will be null if shared elements disabled)
-    val transitionScope = currentTransitionScope()
-
-    destConfig?.let { config ->
-        // Prefer contentWithTransitionScope if available (for shared element support)
-        val renderContent: @Composable (BackStackEntry) -> Unit = if (config.contentWithTransitionScope != null) {
-            { stackEntry ->
-                config.contentWithTransitionScope.invoke(
-                    stackEntry.destination,
-                    navigator,
-                    transitionScope
-                )
+    // CRITICAL FIX: Provide entry at the TOP level, BEFORE cache lookup
+    // This ensures that all content, including cached SaveableStateHolder content,
+    // sees the correct BackStackEntry during animations. Previously, the provider
+    // was inside the renderContent lambda, which meant cached content could see
+    // stale values during animations.
+    CompositionLocalProvider(LocalBackStackEntry provides entry) {
+        val destConfig = remember(entry.destination.route) {
+            val entryRoute = entry.destination.route
+            println("DEBUG: GraphNavHost - Looking for destination with route: '$entryRoute'")
+            val destCount = graph.destinations.size
+            println("DEBUG: GraphNavHost - Graph has $destCount destinations")
+            graph.destinations.forEachIndexed { index, config ->
+                val configRoute = config.destination.route
+                val configClass = config.destination::class.simpleName
+                println("DEBUG: GraphNavHost - [$index] route='$configRoute' class=$configClass")
             }
-        } else {
-            { stackEntry ->
-                config.content(stackEntry.destination, navigator)
+            val found = graph.destinations.find { 
+                val matches = it.destination.route == entryRoute
+                println("DEBUG: GraphNavHost - Comparing '${it.destination.route}' == '$entryRoute': $matches")
+                matches
             }
+            println("DEBUG: GraphNavHost - Match result: ${found != null}")
+            found
         }
 
-        if (enableCache) {
-            key(entry.id) {
-                composableCache.Entry(
-                    entry = entry,
-                    saveableStateHolder = saveableStateHolder,
-                    content = renderContent
-                )
+        // Get transition scope from composition local (will be null if shared elements disabled)
+        val transitionScope = currentTransitionScope()
+
+        destConfig?.let { config ->
+            // Prefer contentWithTransitionScope if available (for shared element support)
+            val renderContent: @Composable (BackStackEntry) -> Unit = if (config.contentWithTransitionScope != null) {
+                { stackEntry ->
+                    config.contentWithTransitionScope.invoke(
+                        stackEntry.destination,
+                        navigator,
+                        transitionScope
+                    )
+                }
+            } else {
+                { stackEntry ->
+                    config.content(stackEntry.destination, navigator)
+                }
             }
-        } else {
-            renderContent(entry)
+
+            if (enableCache) {
+                key(entry.id) {
+                    composableCache.Entry(
+                        entry = entry,
+                        saveableStateHolder = saveableStateHolder,
+                        content = renderContent
+                    )
+                }
+            } else {
+                renderContent(entry)
+            }
         }
     }
 }

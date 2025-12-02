@@ -3,6 +3,8 @@
 package com.jermey.navplayground.demo.content
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.jermey.navplayground.demo.destinations.DetailData
 import com.jermey.navplayground.demo.destinations.TabsDestination
 import com.jermey.navplayground.demo.destinations.AppDestination
@@ -31,7 +33,10 @@ import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
 import com.jermey.navplayground.demo.ui.screens.SettingsDetailScreen
 import com.jermey.navplayground.demo.ui.screens.statedriven.StateDrivenDemoScreen
 import com.jermey.quo.vadis.annotations.Content
+import com.jermey.quo.vadis.core.navigation.compose.currentBackStackEntry
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
+import com.jermey.quo.vadis.core.navigation.core.EXTRA_SELECTED_TAB_ROUTE
+import com.jermey.quo.vadis.core.navigation.core.getExtra
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 
@@ -123,7 +128,23 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 @Content(AppDestination.MainTabs::class)
 @Composable
 fun MainTabsContent(navigator: Navigator) {
-    MainTabsScreen(parentNavigator = navigator)
+    // Get the current back stack entry being rendered via CompositionLocal
+    // This is crucial during animations when navigator.backStack.current may differ
+    // from the entry being rendered (e.g., during forward navigation to Detail,
+    // the MainTabs screen is still rendered but navigator.current is already Detail)
+    val renderingEntry = currentBackStackEntry()
+    
+    // Debug logging for tracing cross-navigator animation issues
+    println("DEBUG_ANIM: MainTabsContent renderingEntry.id=${renderingEntry?.id}")
+    println("DEBUG_ANIM: MainTabsContent selectedTabExtra=${renderingEntry?.getExtra(EXTRA_SELECTED_TAB_ROUTE)}")
+    
+    // Only render when we have a valid entry (which should always be the case)
+    renderingEntry?.let { entry ->
+        MainTabsScreen(
+            parentNavigator = navigator,
+            parentEntry = entry
+        )
+    }
 }
 
 // ============================================================================

@@ -421,6 +421,92 @@ This enables:
 - State persistence
 - Integration with any state management pattern
 
+### BackStackEntry Extras
+
+`BackStackEntry` supports arbitrary key-value extras for persisting component-level state that needs to survive recomposition and configuration changes.
+
+**Property:**
+```kotlin
+val extras: MutableMap<String, Any?>
+```
+
+**Extension Functions:**
+```kotlin
+// Type-safe getter with default value
+inline fun <reified T> BackStackEntry.getExtra(key: String, defaultValue: T): T
+
+// Type-safe setter
+inline fun <reified T> BackStackEntry.setExtra(key: String, value: T)
+```
+
+**Use Cases:**
+- Preserving UI state (scroll position, selected items)
+- Caching component state between recompositions
+- Storing navigation-related metadata
+- Tab selection persistence (see below)
+
+**Example:**
+```kotlin
+// Store state in entry
+entry.setExtra("scrollPosition", scrollState.value)
+entry.setExtra("selectedItemId", selectedItem?.id)
+
+// Restore state from entry
+val savedScrollPosition = entry.getExtra("scrollPosition", 0)
+val savedSelectedId = entry.getExtra<String?>("selectedItemId", null)
+```
+
+### Tab State Persistence
+
+The library provides automatic tab selection persistence for tabbed navigation patterns. When using `rememberTabNavigator`, the selected tab is automatically preserved across recompositions and configuration changes.
+
+**How It Works:**
+
+1. **Storage**: Tab selection state is stored in the parent `BackStackEntry.extras`
+2. **Restoration**: On recomposition, the previously selected tab is restored
+3. **Sync**: Tab selection changes are automatically synced to the entry
+
+**Constant:**
+```kotlin
+const val EXTRA_SELECTED_TAB_ROUTE = "quo_vadis_selected_tab_route"
+```
+
+**Integration Pattern:**
+```kotlin
+@Composable
+fun TabbedScreen(
+    navigator: Navigator,
+    parentEntry: BackStackEntry
+) {
+    val tabState = rememberTabNavigator(
+        config = TabNavigatorConfig(
+            tabs = listOf(HomeTab, SearchTab, ProfileTab),
+            defaultTab = HomeTab
+        ),
+        parentNavigator = navigator,
+        parentEntry = parentEntry  // Entry for state persistence
+    )
+    
+    TabScaffold(tabState = tabState) { tab ->
+        when (tab) {
+            HomeTab -> HomeContent()
+            SearchTab -> SearchContent()
+            ProfileTab -> ProfileContent()
+        }
+    }
+}
+```
+
+**Behavior:**
+- When user switches tabs, the selection is saved to `parentEntry.extras`
+- When the composable is recreated (e.g., after predictive back gesture), the tab selection is restored
+- When navigating away and back to the tabbed screen, the previously selected tab is shown
+
+**Benefits:**
+- Seamless user experience during configuration changes
+- Consistent tab state during predictive back animations
+- No manual state management required
+
 ## Testing Strategy
 
 Use `FakeNavigator` for unit tests:

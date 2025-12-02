@@ -18,6 +18,7 @@ import com.jermey.navplayground.demo.ui.components.BottomNavigationBar
 import com.jermey.quo.vadis.core.navigation.compose.TabTransitionSpec
 import com.jermey.quo.vadis.core.navigation.compose.TabbedNavHost
 import com.jermey.quo.vadis.core.navigation.compose.rememberTabNavigator
+import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -37,11 +38,14 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  * Tab navigators use tabContentGraph which contains all navigable destinations.
  *
  * @param parentNavigator The parent navigator for back press delegation
+ * @param parentEntry The parent back stack entry for state synchronization during
+ *                    predictive back gestures and proper state restoration
  * @param modifier Modifier to be applied to the root container
  */
 @Composable
 fun MainTabsScreen(
     parentNavigator: Navigator,
+    parentEntry: BackStackEntry,
     modifier: Modifier = Modifier
 ) {
     println("DEBUG_TAB_NAV: MainTabsScreen - Starting composition")
@@ -59,7 +63,11 @@ fun MainTabsScreen(
     println("DEBUG_TAB_NAV: MainTabsScreen - About to render MainTabsContainer")
     
     // Create tab state
-    val tabState = rememberTabNavigator(MainTabsConfig, parentNavigator)
+    val tabState = rememberTabNavigator(
+        config = MainTabsConfig,
+        parentNavigator = parentNavigator,
+        parentEntry = parentEntry
+    )
     val selectedTab by tabState.selectedTab.collectAsState()
     
     // Use TabbedNavHost with custom bottom navigation UI

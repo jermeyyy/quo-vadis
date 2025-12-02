@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
@@ -21,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.PredictiveBackHandler
@@ -33,6 +35,15 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 import com.jermey.quo.vadis.core.navigation.core.route
 import kotlinx.coroutines.launch
+
+/**
+ * CompositionLocal that indicates whether a predictive back gesture is currently in progress.
+ *
+ * Child composables can check this value to skip animations during the predictive back gesture,
+ * preventing visual glitches like blinking when content is being rendered as part of the
+ * back animation.
+ */
+val LocalPredictiveBackInProgress = staticCompositionLocalOf { false }
 
 /**
  * Coordinates animation state and display entries during predictive back gestures.
@@ -247,37 +258,42 @@ private fun PredictiveBackContent(
 ) {
     val isAnimating = isGesturing || isExitAnimating
 
-    Box(modifier = modifier.fillMaxSize()) {
-        // Previous screen layer
-        if (isAnimating && previousEntry != null) {
-            PreviousScreenLayer(
-                entry = previousEntry,
-                graph = graph,
-                navigator = navigator,
-                composableCache = composableCache,
-                saveableStateHolder = saveableStateHolder
-            )
-        }
+    // Provide predictive back state to child composables so they can skip animations
+    CompositionLocalProvider(
+        LocalPredictiveBackInProgress provides isAnimating
+    ) {
+        Box(modifier = modifier.fillMaxSize()) {
+            // Previous screen layer
+            if (isAnimating && previousEntry != null) {
+                PreviousScreenLayer(
+                    entry = previousEntry,
+                    graph = graph,
+                    navigator = navigator,
+                    composableCache = composableCache,
+                    saveableStateHolder = saveableStateHolder
+                )
+            }
 
-        // Scrim layer - only during gesture, not during exit
-        if (isGesturing && gestureProgress > 0f && previousEntry != null) {
-            ScrimLayer(gestureProgress)
-        }
+            // Scrim layer - only during gesture, not during exit
+            if (isGesturing && gestureProgress > 0f && previousEntry != null) {
+                ScrimLayer(gestureProgress)
+            }
 
-        // Current screen layer
-        if (currentEntry != null) {
-            CurrentScreenLayer(
-                entry = currentEntry,
-                isGesturing = isGesturing,
-                isExitAnimating = isExitAnimating,
-                gestureProgress = gestureProgress,
-                exitProgress = exitProgress,
-                animationType = animationType,
-                graph = graph,
-                navigator = navigator,
-                composableCache = composableCache,
-                saveableStateHolder = saveableStateHolder
-            )
+            // Current screen layer
+            if (currentEntry != null) {
+                CurrentScreenLayer(
+                    entry = currentEntry,
+                    isGesturing = isGesturing,
+                    isExitAnimating = isExitAnimating,
+                    gestureProgress = gestureProgress,
+                    exitProgress = exitProgress,
+                    animationType = animationType,
+                    graph = graph,
+                    navigator = navigator,
+                    composableCache = composableCache,
+                    saveableStateHolder = saveableStateHolder
+                )
+            }
         }
     }
 }

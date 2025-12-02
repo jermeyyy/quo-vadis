@@ -5,6 +5,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TabDefinition
 import com.jermey.quo.vadis.core.navigation.core.TabNavigatorConfig
@@ -32,7 +33,16 @@ import com.jermey.quo.vadis.core.navigation.core.TabNavigatorState
  *     )
  * )
  * ```
+ *
+ * @deprecated Use [rememberTabNavigator] instead, which provides proper integration
+ *             with parent navigator for back press handling and state restoration
+ *             via parent entry extras. This legacy function does not support state
+ *             restoration during predictive back gestures.
  */
+@Deprecated(
+    message = "Use rememberTabNavigator for proper back press handling and state restoration",
+    replaceWith = ReplaceWith("rememberTabNavigator(config, parentNavigator, parentEntry)")
+)
 @Composable
 fun rememberTabNavigatorState(
     config: TabNavigatorConfig
@@ -80,25 +90,36 @@ private fun tabNavigatorStateSaver(
  * - Creates a tab navigation state
  * - Registers it with the parent navigator for back press handling
  * - Automatically cleans up on disposal
+ * - Optionally syncs state with the parent back stack entry for state restoration
  *
  * @param config The tab navigator configuration.
  * @param parentNavigator The parent navigator for back press delegation.
+ * @param parentEntry Optional parent back stack entry. When provided, the tab selection
+ *                    state will be persisted to and restored from the entry's extras.
+ *                    This enables proper state restoration during predictive back gestures
+ *                    and when navigating back to this screen. The state is keyed on
+ *                    `parentEntry.id` so a new state is created when the entry changes.
  * @return A [TabNavigatorState] instance integrated with the parent.
  *
  * @sample
  * ```kotlin
  * val tabState = rememberTabNavigator(
  *     config = TabNavigatorConfig(...),
- *     parentNavigator = navigator
+ *     parentNavigator = navigator,
+ *     parentEntry = entry  // Optional: for state sync
  * )
  * ```
  */
 @Composable
 fun rememberTabNavigator(
     config: TabNavigatorConfig,
-    parentNavigator: Navigator
+    parentNavigator: Navigator,
+    parentEntry: BackStackEntry? = null
 ): TabNavigatorState {
-    val tabState = rememberTabNavigatorState(config)
+    // Use entry-based state if available, key on entry.id for proper recreation
+    val tabState = remember(config, parentEntry?.id) {
+        TabNavigatorState(config, parentEntry)
+    }
     
     // Register with parent for back press delegation
     DisposableEffect(tabState, parentNavigator) {

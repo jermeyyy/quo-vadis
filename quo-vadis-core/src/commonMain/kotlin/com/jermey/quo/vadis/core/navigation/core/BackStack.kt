@@ -186,14 +186,34 @@ interface BackStack {
 }
 
 /**
+ * Key for storing the selected tab route in a [BackStackEntry]'s extras.
+ *
+ * This constant is used to persist and restore the selected tab when navigating
+ * back to a tabbed navigation destination.
+ */
+const val EXTRA_SELECTED_TAB_ROUTE = "quo_vadis_selected_tab_route"
+
+/**
  * Entry in the backstack.
+ *
+ * Each entry represents a destination in the navigation stack along with its associated state.
+ * The [extras] map can be used to store arbitrary data that should persist across navigation
+ * and be restored when returning to this entry.
+ *
+ * @property id Unique identifier for this entry
+ * @property destination The navigation destination this entry represents
+ * @property savedState State saved for this entry (used for state restoration)
+ * @property transition The transition animation to use when navigating to/from this entry
+ * @property isPopping Whether this entry is currently being popped from the stack
+ * @property extras Mutable map for storing arbitrary data that persists with this entry
  */
 data class BackStackEntry(
     val id: String = generateId(),
     val destination: Destination,
     val savedState: Map<String, Any?> = emptyMap(),
     val transition: NavigationTransition? = null,
-    val isPopping: Boolean = false
+    val isPopping: Boolean = false,
+    val extras: MutableMap<String, Any?> = mutableMapOf()
 ) {
     companion object {
         fun create(
@@ -211,8 +231,25 @@ data class BackStackEntry(
         private fun generateId(): String {
             return Uuid.random().toString()
         }
-
     }
+}
+
+/**
+ * Retrieves an extra value from this [BackStackEntry].
+ *
+ * @param key The key associated with the extra value
+ * @return The value associated with the key, or `null` if not found
+ */
+fun BackStackEntry.getExtra(key: String): Any? = extras[key]
+
+/**
+ * Stores an extra value in this [BackStackEntry].
+ *
+ * @param key The key to associate with the value
+ * @param value The value to store (can be `null` to remove the entry)
+ */
+fun BackStackEntry.setExtra(key: String, value: Any?) {
+    extras[key] = value
 }
 
 /**

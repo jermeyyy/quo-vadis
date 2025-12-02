@@ -30,12 +30,16 @@ data class SerializableDestination(
 /**
  * Serializable wrapper for BackStackEntry.
  * Used to convert BackStackEntry to a fully serializable structure.
+ *
+ * Note: Only string-serializable extras are persisted. Non-string values are
+ * converted via toString() and should be manually reconstructed on restore.
  */
 @Serializable
 data class SerializableBackStackEntry(
     val id: String,
     val destination: SerializableDestination,
-    val savedState: Map<String, String> = emptyMap()
+    val savedState: Map<String, String> = emptyMap(),
+    val extras: Map<String, String> = emptyMap()
 )
 
 /**
@@ -161,7 +165,8 @@ class KotlinxNavigationStateSerializer(
         return SerializableBackStackEntry(
             id = id,
             destination = destination.toSerializable(),
-            savedState = savedState.mapValues { (_, value) -> value.toString() }
+            savedState = savedState.mapValues { (_, value) -> value.toString() },
+            extras = extras.mapValues { (_, value) -> value?.toString() ?: "" }
         )
     }
 
@@ -169,7 +174,8 @@ class KotlinxNavigationStateSerializer(
         return BackStackEntry(
             id = id,
             destination = destination.toDestination(),
-            savedState = savedState
+            savedState = savedState,
+            extras = extras.toMutableMap() as MutableMap<String, Any?>
         )
     }
 }
