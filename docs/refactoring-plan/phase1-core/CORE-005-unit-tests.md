@@ -1329,6 +1329,5 @@ kotlin {
 - [CORE-002](./CORE-002-tree-mutator.md) - TreeMutator operations
 - [CORE-003](./CORE-003-navigator-refactor.md) - TreeNavigator implementation
 - [CORE-004](./CORE-004-state-serialization.md) - Serialization
-- [CORE-005](./CORE-005-backward-compat.md) - Backward compatibility
 - [Kotlin Test documentation](https://kotlinlang.org/api/latest/kotlin.test/)
 - [kotlinx-coroutines-test](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/)

@@ -765,6 +765,5 @@ fun `toTreeNavigator converts backstack correctly`() {
 
 - [INDEX](../INDEX.md) - Phase 2 Overview
 - [RENDER-004](./RENDER-004-quovadis-host.md) - QuoVadisHost implementation
-- [CORE-005](../phase1-core/CORE-005-backward-compat.md) - Backward compatibility layer
 - [MIG-003](../phase5-migration/MIG-003-host-adapter.md) - Host adapter utilities
 - [Kotlin Deprecation](https://kotlinlang.org/docs/deprecation.html) - Deprecation best practices

@@ -45,8 +45,6 @@ Replaces the linear backstack with a recursive tree structure.
 
 **Phase 1 Total: ~14-19 days**
 
-> ~~CORE-005-backward-compat~~ **REMOVED** - No backward compatibility required
-
 ---
 
 ### Phase 2: Unified Renderer (7 Tasks)
