@@ -1,259 +1,847 @@
-# KSP-001: Enhance @Graph with GraphType Support
+# KSP-001: Create Annotation Extractors
 
 ## Task Metadata
 
 | Property | Value |
 |----------|-------|
 | **Task ID** | KSP-001 |
-| **Task Name** | Enhance @Graph with GraphType Support |
-| **Phase** | Phase 3: KSP Processor Updates |
-| **Complexity** | Low |
-| **Estimated Time** | 1 day |
-| **Dependencies** | None |
-| **Blocked By** | - |
-| **Blocks** | KSP-003 |
+| **Task Name** | Create Annotation Extractors |
+| **Phase** | Phase 4: KSP Processor Rewrite |
+| **Complexity** | Medium |
+| **Estimated Time** | 2-3 days |
+| **Dependencies** | ANN-001, ANN-002, ANN-003, ANN-004, ANN-005 (Phase 3 Annotations) |
+| **Blocked By** | Phase 3 Annotations |
+| **Blocks** | KSP-002, KSP-003, KSP-004, KSP-005 |
 
 ---
 
 ## Overview
 
-This task introduces a `GraphType` enumeration to the `@Graph` annotation, enabling developers to specify the type of navigation structure a graph represents. This is foundational for the new tree-based navigation architecture, where graphs can represent:
-
-- **Stack**: Traditional linear push/pop navigation (default)
-- **Tab**: Parallel stacks with tab switching
-- **Pane**: Adaptive multi-pane layouts
+This task creates the **extraction layer** of the KSP processor—a set of extractor classes that parse each annotation type into strongly-typed intermediate models. These models serve as the foundation for all code generation in subsequent KSP tasks.
 
 ### Rationale
 
-The current `@Graph` annotation assumes all graphs are linear stacks. The new `NavNode` architecture (Phase 1) supports multiple container types. By adding `GraphType` to the annotation, the KSP processor can generate appropriate `NavNode` structures (e.g., `StackNode`, `TabNode`, `PaneNode`) based on the declared type.
+The extraction phase separates annotation parsing from code generation, providing:
+
+1. **Clean separation of concerns**: Parsing logic isolated from generation logic
+2. **Testability**: Extractors can be unit tested independently
+3. **Reusability**: Multiple generators consume the same extracted models
+4. **Type safety**: Strongly-typed models prevent runtime errors during generation
 
 ---
 
-## File Location
+## Module Structure
 
 ```
-quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/Annotations.kt
+quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/
+├── extractors/
+│   ├── DestinationExtractor.kt     # @Destination extraction
+│   ├── StackExtractor.kt           # @Stack extraction
+│   ├── TabExtractor.kt             # @Tab/@TabItem extraction
+│   ├── PaneExtractor.kt            # @Pane/@PaneItem extraction
+│   └── ScreenExtractor.kt          # @Screen extraction
+│
+└── models/
+    ├── DestinationInfo.kt          # Destination metadata
+    ├── ParamInfo.kt                # Constructor parameter metadata
+    ├── StackInfo.kt                # Stack container metadata
+    ├── TabInfo.kt                  # Tab container metadata
+    ├── TabItemInfo.kt              # Tab item metadata
+    ├── PaneInfo.kt                 # Pane container metadata
+    ├── PaneItemInfo.kt             # Pane item metadata
+    └── ScreenInfo.kt               # Screen binding metadata
 ```
 
 ---
 
-## Implementation
+## Output Models
 
-### GraphType Enumeration
+### DestinationInfo
+
+Represents metadata extracted from `@Destination` annotations.
 
 ```kotlin
+package com.jermey.quo.vadis.ksp.models
+
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
+
 /**
- * Defines the structural type of a navigation graph.
+ * Extracted metadata from a @Destination annotation.
  *
- * The graph type determines how the generated NavNode tree is structured:
- * - [STACK]: Linear navigation with push/pop semantics
- * - [TAB]: Parallel stacks accessible via tab switching
- * - [PANE]: Adaptive layout with simultaneously visible panes
- *
- * @sample Stack graph (default behavior)
- * ```kotlin
- * @Graph("main", type = GraphType.STACK)
- * sealed class MainDestination : Destination {
- *     @Route("home") data object Home : MainDestination()
- *     @Route("detail") data class Detail(val id: String) : MainDestination()
- * }
- * // Generates: StackNode with push/pop navigation
- * ```
- *
- * @sample Tab graph
- * ```kotlin
- * @Graph("tabs", type = GraphType.TAB)
- * sealed class MainTabs : Destination {
- *     @Route("home") data object Home : MainTabs()
- *     @Route("search") data object Search : MainTabs()
- *     @Route("profile") data object Profile : MainTabs()
- * }
- * // Generates: TabNode with parallel stacks per tab
- * ```
- *
- * @sample Pane graph
- * ```kotlin
- * @Graph("master-detail", type = GraphType.PANE)
- * sealed class MasterDetailDestination : Destination {
- *     @Route("list") data object List : MasterDetailDestination()
- *     @Route("detail") data class Detail(val id: String) : MasterDetailDestination()
- * }
- * // Generates: PaneNode for adaptive layouts
- * ```
+ * @property classDeclaration The KSP class declaration for this destination
+ * @property className Simple class name (e.g., "Detail")
+ * @property qualifiedName Fully qualified name (e.g., "com.example.HomeDestination.Detail")
+ * @property route Deep link route pattern (e.g., "home/detail/{id}"), null if not specified
+ * @property routeParams List of route parameter names extracted from the route pattern
+ * @property isDataObject True if this is a `data object`
+ * @property isDataClass True if this is a `data class`
+ * @property constructorParams List of constructor parameters (for data classes)
+ * @property parentSealedClass Simple name of the parent sealed class, if any
  */
-enum class GraphType {
-    /**
-     * Linear navigation stack with push/pop semantics.
-     *
-     * This is the default type. Destinations are arranged in a linear history
-     * where navigating forward pushes to the stack and back pops from it.
-     *
-     * Maps to: [StackNode]
-     */
-    STACK,
+data class DestinationInfo(
+    val classDeclaration: KSClassDeclaration,
+    val className: String,
+    val qualifiedName: String,
+    val route: String?,
+    val routeParams: List<String>,
+    val isDataObject: Boolean,
+    val isDataClass: Boolean,
+    val constructorParams: List<ParamInfo>,
+    val parentSealedClass: String?
+)
+```
 
-    /**
-     * Tabbed navigation with parallel stacks.
-     *
-     * Each destination in the graph becomes a tab, with its own independent
-     * navigation stack. Tab switching preserves per-tab history.
-     *
-     * Maps to: [TabNode]
-     */
-    TAB,
+### ParamInfo
 
-    /**
-     * Adaptive pane layout with simultaneous visibility.
-     *
-     * Multiple destinations can be displayed simultaneously in a split-view
-     * or master-detail configuration. Responsive to screen size changes.
-     *
-     * Maps to: [PaneNode]
-     */
-    PANE
+Represents constructor parameter metadata.
+
+```kotlin
+package com.jermey.quo.vadis.ksp.models
+
+import com.google.devtools.ksp.symbol.KSType
+
+/**
+ * Metadata for a constructor parameter.
+ *
+ * @property name Parameter name
+ * @property type KSP type of the parameter
+ * @property hasDefault True if the parameter has a default value
+ */
+data class ParamInfo(
+    val name: String,
+    val type: KSType,
+    val hasDefault: Boolean
+)
+```
+
+### StackInfo
+
+Represents metadata extracted from `@Stack` annotations.
+
+```kotlin
+package com.jermey.quo.vadis.ksp.models
+
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+
+/**
+ * Extracted metadata from a @Stack annotation.
+ *
+ * @property classDeclaration The KSP class declaration for this stack
+ * @property name Stack identifier from annotation (e.g., "home")
+ * @property className Simple class name (e.g., "HomeDestination")
+ * @property packageName Package containing this class
+ * @property startDestination Simple name of the start destination (e.g., "Feed")
+ * @property destinations List of all @Destination subclasses within this sealed class
+ * @property resolvedStartDestination The DestinationInfo matching startDestination, if found
+ */
+data class StackInfo(
+    val classDeclaration: KSClassDeclaration,
+    val name: String,
+    val className: String,
+    val packageName: String,
+    val startDestination: String,
+    val destinations: List<DestinationInfo>,
+    val resolvedStartDestination: DestinationInfo?
+)
+```
+
+### TabInfo & TabItemInfo
+
+Represents metadata extracted from `@Tab` and `@TabItem` annotations.
+
+```kotlin
+package com.jermey.quo.vadis.ksp.models
+
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+
+/**
+ * Extracted metadata from a @Tab annotation.
+ *
+ * @property classDeclaration The KSP class declaration for this tab container
+ * @property name Tab container identifier from annotation (e.g., "main")
+ * @property className Simple class name (e.g., "MainTabs")
+ * @property packageName Package containing this class
+ * @property initialTab Simple name of the initial tab (e.g., "Home")
+ * @property tabs List of all @TabItem subclasses within this sealed class
+ */
+data class TabInfo(
+    val classDeclaration: KSClassDeclaration,
+    val name: String,
+    val className: String,
+    val packageName: String,
+    val initialTab: String,
+    val tabs: List<TabItemInfo>
+)
+
+/**
+ * Extracted metadata from a @TabItem annotation.
+ *
+ * @property destination The destination info for this tab
+ * @property label Display label for the tab (e.g., "Home")
+ * @property icon Icon identifier for the tab (e.g., "home")
+ * @property rootGraphClass Class declaration for the root graph of this tab
+ */
+data class TabItemInfo(
+    val destination: DestinationInfo,
+    val label: String,
+    val icon: String,
+    val rootGraphClass: KSClassDeclaration
+)
+```
+
+### PaneInfo & PaneItemInfo
+
+Represents metadata extracted from `@Pane` and `@PaneItem` annotations.
+
+```kotlin
+package com.jermey.quo.vadis.ksp.models
+
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+
+/**
+ * Extracted metadata from a @Pane annotation.
+ *
+ * @property classDeclaration The KSP class declaration for this pane container
+ * @property name Pane container identifier from annotation
+ * @property className Simple class name
+ * @property packageName Package containing this class
+ * @property backBehavior Back navigation behavior for panes
+ * @property panes List of all @PaneItem subclasses within this sealed class
+ */
+data class PaneInfo(
+    val classDeclaration: KSClassDeclaration,
+    val name: String,
+    val className: String,
+    val packageName: String,
+    val backBehavior: PaneBackBehavior,
+    val panes: List<PaneItemInfo>
+)
+
+/**
+ * Extracted metadata from a @PaneItem annotation.
+ *
+ * @property destination The destination info for this pane
+ * @property role The pane role (PRIMARY, SUPPORTING, EXTRA)
+ * @property adaptStrategy Strategy when pane space is limited (HIDE, LEVITATE, REFLOW)
+ * @property rootGraphClass Class declaration for the root graph of this pane
+ */
+data class PaneItemInfo(
+    val destination: DestinationInfo,
+    val role: PaneRole,
+    val adaptStrategy: AdaptStrategy,
+    val rootGraphClass: KSClassDeclaration
+)
+
+/**
+ * Pane role in adaptive layouts.
+ */
+enum class PaneRole {
+    PRIMARY,
+    SUPPORTING,
+    EXTRA
+}
+
+/**
+ * Adaptation strategy when screen space is limited.
+ */
+enum class AdaptStrategy {
+    HIDE,
+    LEVITATE,
+    REFLOW
+}
+
+/**
+ * Back navigation behavior for pane containers.
+ */
+enum class PaneBackBehavior {
+    POP_UNTIL_CONTENT_CHANGE,
+    POP_LATEST
 }
 ```
 
-### Updated @Graph Annotation
+### ScreenInfo
+
+Represents metadata extracted from `@Screen` annotations.
 
 ```kotlin
+package com.jermey.quo.vadis.ksp.models
+
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+
 /**
- * Marks a sealed class as a navigation graph.
+ * Extracted metadata from a @Screen annotation.
  *
- * The sealed class should extend [Destination] and contain destination objects/classes
- * representing the screens in this graph. KSP will generate:
- * - Route registration code (`{ClassName}RouteInitializer`)
- * - Graph builder function (`build{ClassName}Graph()`)
- * - NavNode builder function (`build{ClassName}NavNode()`) - NEW
- * - Typed destination extensions (for destinations with [@Argument])
- *
- * @param name The unique identifier for this navigation graph. Used in generated function names.
- * @param startDestination The simple name of the destination to use as the start destination.
- *                         If not specified, the first destination in the sealed class will be used.
- * @param type The structural type of this graph. Determines the generated NavNode container type.
- *             Defaults to [GraphType.STACK] for backward compatibility.
- *
- * @sample Basic stack graph (default)
- * ```kotlin
- * @Graph("main", startDestination = "Home")
- * sealed class MainDestination : Destination {
- *     @Route("main/home")
- *     data object Home : MainDestination()
- *
- *     @Route("main/settings")
- *     data object Settings : MainDestination()
- * }
- * ```
- *
- * @sample Tab graph
- * ```kotlin
- * @Graph("bottomNav", type = GraphType.TAB)
- * sealed class BottomNavDestination : Destination {
- *     @Route("home") data object Home : BottomNavDestination()
- *     @Route("search") data object Search : BottomNavDestination()
- *     @Route("profile") data object Profile : BottomNavDestination()
- * }
- * ```
- *
- * @sample Pane graph for adaptive layouts
- * ```kotlin
- * @Graph("adaptive", type = GraphType.PANE)
- * sealed class AdaptiveDestination : Destination {
- *     @Route("list") data object List : AdaptiveDestination()
- *     @Route("detail") data class Detail(val id: String) : AdaptiveDestination()
- * }
- * ```
- *
- * @see Route
- * @see Argument
- * @see Content
- * @see GraphType
+ * @property functionDeclaration The KSP function declaration for this screen
+ * @property functionName Simple function name (e.g., "DetailScreen")
+ * @property destinationClass Class declaration for the destination this screen renders
+ * @property hasDestinationParam True if the function accepts a destination parameter
+ * @property hasSharedTransitionScope True if the function accepts SharedTransitionScope
+ * @property hasAnimatedVisibilityScope True if the function accepts AnimatedVisibilityScope
+ * @property packageName Package containing this function
  */
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class Graph(
-    val name: String,
-    val startDestination: String = "",
-    val type: GraphType = GraphType.STACK
+data class ScreenInfo(
+    val functionDeclaration: KSFunctionDeclaration,
+    val functionName: String,
+    val destinationClass: KSClassDeclaration,
+    val hasDestinationParam: Boolean,
+    val hasSharedTransitionScope: Boolean,
+    val hasAnimatedVisibilityScope: Boolean,
+    val packageName: String
 )
+```
+
+---
+
+## Extractor Implementations
+
+### 1. DestinationExtractor
+
+```kotlin
+package com.jermey.quo.vadis.ksp.extractors
+
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.Modifier
+import com.jermey.quo.vadis.ksp.models.DestinationInfo
+import com.jermey.quo.vadis.ksp.models.ParamInfo
+
+/**
+ * Extracts @Destination annotations into DestinationInfo models.
+ */
+class DestinationExtractor(
+    private val logger: KSPLogger
+) {
+    
+    /**
+     * Extract DestinationInfo from a class declaration.
+     *
+     * @param classDeclaration The class annotated with @Destination
+     * @return DestinationInfo or null if extraction fails
+     */
+    fun extract(classDeclaration: KSClassDeclaration): DestinationInfo? {
+        val annotation = classDeclaration.annotations.find {
+            it.shortName.asString() == "Destination"
+        } ?: return null
+        
+        val route = annotation.arguments.find { 
+            it.name?.asString() == "route" 
+        }?.value as? String
+        
+        val routeParams = route?.let { extractRouteParams(it) } ?: emptyList()
+        
+        val isDataObject = classDeclaration.modifiers.contains(Modifier.DATA) &&
+                          classDeclaration.classKind.name == "OBJECT"
+        
+        val isDataClass = classDeclaration.modifiers.contains(Modifier.DATA) &&
+                         classDeclaration.classKind.name == "CLASS"
+        
+        val constructorParams = if (isDataClass) {
+            extractConstructorParams(classDeclaration)
+        } else {
+            emptyList()
+        }
+        
+        val parentSealedClass = classDeclaration.parentDeclaration?.let {
+            (it as? KSClassDeclaration)?.simpleName?.asString()
+        }
+        
+        return DestinationInfo(
+            classDeclaration = classDeclaration,
+            className = classDeclaration.simpleName.asString(),
+            qualifiedName = classDeclaration.qualifiedName?.asString() ?: "",
+            route = route,
+            routeParams = routeParams,
+            isDataObject = isDataObject,
+            isDataClass = isDataClass,
+            constructorParams = constructorParams,
+            parentSealedClass = parentSealedClass
+        )
+    }
+    
+    /**
+     * Extract all destinations from a container (sealed class).
+     */
+    fun extractFromContainer(containerClass: KSClassDeclaration): List<DestinationInfo> {
+        return containerClass.getSealedSubclasses()
+            .mapNotNull { extract(it) }
+            .toList()
+    }
+    
+    private fun extractRouteParams(route: String): List<String> {
+        val regex = Regex("\\{([^}]+)\\}")
+        return regex.findAll(route).map { it.groupValues[1] }.toList()
+    }
+    
+    private fun extractConstructorParams(classDeclaration: KSClassDeclaration): List<ParamInfo> {
+        val primaryConstructor = classDeclaration.primaryConstructor ?: return emptyList()
+        return primaryConstructor.parameters.map { param ->
+            ParamInfo(
+                name = param.name?.asString() ?: "",
+                type = param.type.resolve(),
+                hasDefault = param.hasDefault
+            )
+        }
+    }
+}
+```
+
+### 2. StackExtractor
+
+```kotlin
+package com.jermey.quo.vadis.ksp.extractors
+
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.jermey.quo.vadis.ksp.models.StackInfo
+
+/**
+ * Extracts @Stack annotations into StackInfo models.
+ */
+class StackExtractor(
+    private val destinationExtractor: DestinationExtractor,
+    private val logger: KSPLogger
+) {
+    
+    /**
+     * Extract StackInfo from a class declaration.
+     *
+     * @param classDeclaration The sealed class annotated with @Stack
+     * @return StackInfo or null if extraction fails
+     */
+    fun extract(classDeclaration: KSClassDeclaration): StackInfo? {
+        val annotation = classDeclaration.annotations.find {
+            it.shortName.asString() == "Stack"
+        } ?: return null
+        
+        val name = annotation.arguments.find { 
+            it.name?.asString() == "name" 
+        }?.value as? String ?: return null
+        
+        val startDestination = annotation.arguments.find { 
+            it.name?.asString() == "startDestination" 
+        }?.value as? String ?: ""
+        
+        val destinations = destinationExtractor.extractFromContainer(classDeclaration)
+        
+        val resolvedStart = destinations.find { 
+            it.className == startDestination 
+        } ?: destinations.firstOrNull()
+        
+        return StackInfo(
+            classDeclaration = classDeclaration,
+            name = name,
+            className = classDeclaration.simpleName.asString(),
+            packageName = classDeclaration.packageName.asString(),
+            startDestination = startDestination,
+            destinations = destinations,
+            resolvedStartDestination = resolvedStart
+        )
+    }
+    
+    /**
+     * Extract all @Stack-annotated classes from the resolver.
+     */
+    fun extractAll(resolver: Resolver): List<StackInfo> {
+        return resolver.getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.Stack")
+            .filterIsInstance<KSClassDeclaration>()
+            .mapNotNull { extract(it) }
+            .toList()
+    }
+}
+```
+
+### 3. TabExtractor
+
+```kotlin
+package com.jermey.quo.vadis.ksp.extractors
+
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.jermey.quo.vadis.ksp.models.TabInfo
+import com.jermey.quo.vadis.ksp.models.TabItemInfo
+
+/**
+ * Extracts @Tab and @TabItem annotations into TabInfo models.
+ */
+class TabExtractor(
+    private val destinationExtractor: DestinationExtractor,
+    private val logger: KSPLogger
+) {
+    
+    /**
+     * Extract TabInfo from a class declaration.
+     *
+     * @param classDeclaration The sealed class annotated with @Tab
+     * @return TabInfo or null if extraction fails
+     */
+    fun extract(classDeclaration: KSClassDeclaration): TabInfo? {
+        val annotation = classDeclaration.annotations.find {
+            it.shortName.asString() == "Tab"
+        } ?: return null
+        
+        val name = annotation.arguments.find { 
+            it.name?.asString() == "name" 
+        }?.value as? String ?: return null
+        
+        val initialTab = annotation.arguments.find { 
+            it.name?.asString() == "initialTab" 
+        }?.value as? String ?: ""
+        
+        val tabs = classDeclaration.getSealedSubclasses()
+            .mapNotNull { extractTabItem(it) }
+            .toList()
+        
+        return TabInfo(
+            classDeclaration = classDeclaration,
+            name = name,
+            className = classDeclaration.simpleName.asString(),
+            packageName = classDeclaration.packageName.asString(),
+            initialTab = initialTab,
+            tabs = tabs
+        )
+    }
+    
+    private fun extractTabItem(classDeclaration: KSClassDeclaration): TabItemInfo? {
+        val tabItemAnnotation = classDeclaration.annotations.find {
+            it.shortName.asString() == "TabItem"
+        } ?: return null
+        
+        val destination = destinationExtractor.extract(classDeclaration) ?: return null
+        
+        val label = tabItemAnnotation.arguments.find { 
+            it.name?.asString() == "label" 
+        }?.value as? String ?: ""
+        
+        val icon = tabItemAnnotation.arguments.find { 
+            it.name?.asString() == "icon" 
+        }?.value as? String ?: ""
+        
+        val rootGraphType = tabItemAnnotation.arguments.find { 
+            it.name?.asString() == "rootGraph" 
+        }?.value as? KSType
+        
+        val rootGraphClass = rootGraphType?.declaration as? KSClassDeclaration ?: return null
+        
+        return TabItemInfo(
+            destination = destination,
+            label = label,
+            icon = icon,
+            rootGraphClass = rootGraphClass
+        )
+    }
+    
+    /**
+     * Extract all @Tab-annotated classes from the resolver.
+     */
+    fun extractAll(resolver: Resolver): List<TabInfo> {
+        return resolver.getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.Tab")
+            .filterIsInstance<KSClassDeclaration>()
+            .mapNotNull { extract(it) }
+            .toList()
+    }
+}
+```
+
+### 4. PaneExtractor
+
+```kotlin
+package com.jermey.quo.vadis.ksp.extractors
+
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.jermey.quo.vadis.ksp.models.*
+
+/**
+ * Extracts @Pane and @PaneItem annotations into PaneInfo models.
+ */
+class PaneExtractor(
+    private val destinationExtractor: DestinationExtractor,
+    private val logger: KSPLogger
+) {
+    
+    /**
+     * Extract PaneInfo from a class declaration.
+     *
+     * @param classDeclaration The sealed class annotated with @Pane
+     * @return PaneInfo or null if extraction fails
+     */
+    fun extract(classDeclaration: KSClassDeclaration): PaneInfo? {
+        val annotation = classDeclaration.annotations.find {
+            it.shortName.asString() == "Pane"
+        } ?: return null
+        
+        val name = annotation.arguments.find { 
+            it.name?.asString() == "name" 
+        }?.value as? String ?: return null
+        
+        val backBehaviorStr = annotation.arguments.find { 
+            it.name?.asString() == "backBehavior" 
+        }?.value?.toString() ?: "POP_UNTIL_CONTENT_CHANGE"
+        
+        val backBehavior = PaneBackBehavior.valueOf(backBehaviorStr)
+        
+        val panes = classDeclaration.getSealedSubclasses()
+            .mapNotNull { extractPaneItem(it) }
+            .toList()
+        
+        return PaneInfo(
+            classDeclaration = classDeclaration,
+            name = name,
+            className = classDeclaration.simpleName.asString(),
+            packageName = classDeclaration.packageName.asString(),
+            backBehavior = backBehavior,
+            panes = panes
+        )
+    }
+    
+    private fun extractPaneItem(classDeclaration: KSClassDeclaration): PaneItemInfo? {
+        val paneItemAnnotation = classDeclaration.annotations.find {
+            it.shortName.asString() == "PaneItem"
+        } ?: return null
+        
+        val destination = destinationExtractor.extract(classDeclaration) ?: return null
+        
+        val roleStr = paneItemAnnotation.arguments.find { 
+            it.name?.asString() == "role" 
+        }?.value?.toString() ?: "PRIMARY"
+        
+        val adaptStrategyStr = paneItemAnnotation.arguments.find { 
+            it.name?.asString() == "adaptStrategy" 
+        }?.value?.toString() ?: "HIDE"
+        
+        val rootGraphType = paneItemAnnotation.arguments.find { 
+            it.name?.asString() == "rootGraph" 
+        }?.value as? KSType
+        
+        val rootGraphClass = rootGraphType?.declaration as? KSClassDeclaration ?: return null
+        
+        return PaneItemInfo(
+            destination = destination,
+            role = PaneRole.valueOf(roleStr),
+            adaptStrategy = AdaptStrategy.valueOf(adaptStrategyStr),
+            rootGraphClass = rootGraphClass
+        )
+    }
+    
+    /**
+     * Extract all @Pane-annotated classes from the resolver.
+     */
+    fun extractAll(resolver: Resolver): List<PaneInfo> {
+        return resolver.getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.Pane")
+            .filterIsInstance<KSClassDeclaration>()
+            .mapNotNull { extract(it) }
+            .toList()
+    }
+}
+```
+
+### 5. ScreenExtractor
+
+```kotlin
+package com.jermey.quo.vadis.ksp.extractors
+
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.jermey.quo.vadis.ksp.models.ScreenInfo
+
+/**
+ * Extracts @Screen annotations into ScreenInfo models.
+ */
+class ScreenExtractor(
+    private val logger: KSPLogger
+) {
+    
+    /**
+     * Extract ScreenInfo from a function declaration.
+     *
+     * @param functionDeclaration The @Composable function annotated with @Screen
+     * @return ScreenInfo or null if extraction fails
+     */
+    fun extract(functionDeclaration: KSFunctionDeclaration): ScreenInfo? {
+        val annotation = functionDeclaration.annotations.find {
+            it.shortName.asString() == "Screen"
+        } ?: return null
+        
+        val destinationType = annotation.arguments.firstOrNull()?.value as? KSType
+        val destinationClass = destinationType?.declaration as? KSClassDeclaration ?: return null
+        
+        val parameters = functionDeclaration.parameters
+        
+        val hasDestinationParam = parameters.any { param ->
+            val paramType = param.type.resolve()
+            paramType.declaration.qualifiedName?.asString() == 
+                destinationClass.qualifiedName?.asString()
+        }
+        
+        val hasSharedTransitionScope = parameters.any { param ->
+            param.type.resolve().declaration.simpleName.asString() == "SharedTransitionScope"
+        }
+        
+        val hasAnimatedVisibilityScope = parameters.any { param ->
+            param.type.resolve().declaration.simpleName.asString() == "AnimatedVisibilityScope"
+        }
+        
+        return ScreenInfo(
+            functionDeclaration = functionDeclaration,
+            functionName = functionDeclaration.simpleName.asString(),
+            destinationClass = destinationClass,
+            hasDestinationParam = hasDestinationParam,
+            hasSharedTransitionScope = hasSharedTransitionScope,
+            hasAnimatedVisibilityScope = hasAnimatedVisibilityScope,
+            packageName = functionDeclaration.packageName.asString()
+        )
+    }
+    
+    /**
+     * Extract all @Screen-annotated functions from the resolver.
+     */
+    fun extractAll(resolver: Resolver): List<ScreenInfo> {
+        return resolver.getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.Screen")
+            .filterIsInstance<KSFunctionDeclaration>()
+            .mapNotNull { extract(it) }
+            .toList()
+    }
+}
 ```
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Create GraphType Enum (30 minutes)
+### Step 1: Create Model Classes (Day 1 - 4 hours)
 
-Add the `GraphType` enum to `Annotations.kt`:
+Create all model data classes in `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/models/`:
 
-```kotlin
-// Add before @Graph annotation
-enum class GraphType {
-    STACK,
-    TAB,
-    PANE
-}
-```
+1. `DestinationInfo.kt`
+2. `ParamInfo.kt`
+3. `StackInfo.kt`
+4. `TabInfo.kt` and `TabItemInfo.kt`
+5. `PaneInfo.kt` and `PaneItemInfo.kt`
+6. `ScreenInfo.kt`
 
-### Step 2: Update @Graph Annotation (15 minutes)
+### Step 2: Implement DestinationExtractor (Day 1 - 3 hours)
 
-Add the `type` parameter with default value:
+Create `DestinationExtractor.kt` with:
+- Route parameter extraction from pattern strings
+- Constructor parameter extraction
+- Data object vs data class detection
+- Parent sealed class detection
 
-```kotlin
-annotation class Graph(
-    val name: String,
-    val startDestination: String = "",
-    val type: GraphType = GraphType.STACK  // New parameter
-)
-```
+### Step 3: Implement Container Extractors (Day 2 - 6 hours)
 
-### Step 3: Add KDoc Documentation (30 minutes)
+Create extractors in order:
+1. `StackExtractor.kt` - delegates to DestinationExtractor
+2. `TabExtractor.kt` - handles @TabItem sub-annotations
+3. `PaneExtractor.kt` - handles @PaneItem sub-annotations
 
-Document both `GraphType` and the updated `@Graph` with:
-- Enum value descriptions
-- Code samples for each graph type
-- Cross-references to NavNode types
+### Step 4: Implement ScreenExtractor (Day 2 - 2 hours)
 
-### Step 4: Verify Compilation (15 minutes)
+Create `ScreenExtractor.kt` with:
+- Function parameter analysis
+- Scope parameter detection (SharedTransitionScope, AnimatedVisibilityScope)
 
-Ensure the annotation module compiles on all platforms:
+### Step 5: Write Unit Tests (Day 3 - 4 hours)
 
-```bash
-./gradlew :quo-vadis-annotations:build
-```
+Create comprehensive tests for each extractor:
+- Happy path extraction
+- Missing annotation handling
+- Edge cases (empty routes, default values)
 
-### Step 5: Update Unit Tests (30 minutes)
+### Step 6: Integration Testing (Day 3 - 2 hours)
 
-If annotation tests exist, add tests for the new parameter:
-
-```kotlin
-@Test
-fun `Graph annotation accepts type parameter`() {
-    @Graph("test", type = GraphType.TAB)
-    sealed class TestGraph : Destination {
-        @Route("home") data object Home : TestGraph()
-    }
-    // Verify annotation is correctly applied
-}
-```
+Test all extractors together in the processor pipeline.
 
 ---
 
-## Backward Compatibility
+## Code Examples
 
-The `type` parameter defaults to `GraphType.STACK`, ensuring:
-
-1. **Existing code continues to work** without modification
-2. **Generated code remains identical** for existing `@Graph` usages
-3. **Gradual adoption** of new graph types
+### Input Annotations
 
 ```kotlin
-// These are equivalent:
-@Graph("main")
-sealed class MainDest : Destination { /* ... */ }
+@Stack(name = "home", startDestination = "Feed")
+sealed class HomeDestination : Destination {
+    
+    @Destination(route = "home/feed")
+    data object Feed : HomeDestination()
+    
+    @Destination(route = "home/detail/{id}")
+    data class Detail(val id: String) : HomeDestination()
+}
 
-@Graph("main", type = GraphType.STACK)
-sealed class MainDest : Destination { /* ... */ }
+@Tab(name = "main", initialTab = "Home")
+sealed class MainTabs : Destination {
+    
+    @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
+    @Destination(route = "tab/home")
+    data object Home : MainTabs()
+    
+    @TabItem(label = "Profile", icon = "person", rootGraph = ProfileDestination::class)
+    @Destination(route = "tab/profile")
+    data object Profile : MainTabs()
+}
+
+@Screen(HomeDestination.Detail::class)
+@Composable
+fun DetailScreen(destination: HomeDestination.Detail, navigator: Navigator) { }
+```
+
+### Extracted Output
+
+```kotlin
+// DestinationInfo for Detail
+DestinationInfo(
+    className = "Detail",
+    qualifiedName = "com.example.HomeDestination.Detail",
+    route = "home/detail/{id}",
+    routeParams = listOf("id"),
+    isDataObject = false,
+    isDataClass = true,
+    constructorParams = listOf(ParamInfo("id", String::class, false)),
+    parentSealedClass = "HomeDestination"
+)
+
+// StackInfo for HomeDestination
+StackInfo(
+    name = "home",
+    className = "HomeDestination",
+    packageName = "com.example",
+    startDestination = "Feed",
+    destinations = listOf(feedDestInfo, detailDestInfo),
+    resolvedStartDestination = feedDestInfo
+)
+
+// TabInfo for MainTabs
+TabInfo(
+    name = "main",
+    className = "MainTabs",
+    packageName = "com.example",
+    initialTab = "Home",
+    tabs = listOf(
+        TabItemInfo(destination = homeTabDest, label = "Home", icon = "home", ...),
+        TabItemInfo(destination = profileTabDest, label = "Profile", icon = "person", ...)
+    )
+)
+
+// ScreenInfo for DetailScreen
+ScreenInfo(
+    functionName = "DetailScreen",
+    destinationClass = HomeDestination.Detail::class,
+    hasDestinationParam = true,
+    hasSharedTransitionScope = false,
+    hasAnimatedVisibilityScope = false,
+    packageName = "com.example"
+)
 ```
 
 ---
@@ -262,100 +850,89 @@ sealed class MainDest : Destination { /* ... */ }
 
 | File | Action | Description |
 |------|--------|-------------|
-| `quo-vadis-annotations/.../Annotations.kt` | Modify | Add `GraphType` enum and update `@Graph` |
-
----
-
-## Dependencies
-
-This task has **no dependencies** and can be started immediately. It is a prerequisite for KSP-003.
+| `quo-vadis-ksp/src/main/kotlin/.../models/DestinationInfo.kt` | Create | Destination metadata model |
+| `quo-vadis-ksp/src/main/kotlin/.../models/ParamInfo.kt` | Create | Parameter metadata model |
+| `quo-vadis-ksp/src/main/kotlin/.../models/StackInfo.kt` | Create | Stack metadata model |
+| `quo-vadis-ksp/src/main/kotlin/.../models/TabInfo.kt` | Create | Tab/TabItem metadata models |
+| `quo-vadis-ksp/src/main/kotlin/.../models/PaneInfo.kt` | Create | Pane/PaneItem metadata models |
+| `quo-vadis-ksp/src/main/kotlin/.../models/ScreenInfo.kt` | Create | Screen binding metadata model |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/DestinationExtractor.kt` | Create | @Destination extractor |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/StackExtractor.kt` | Create | @Stack extractor |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/TabExtractor.kt` | Create | @Tab/@TabItem extractor |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/PaneExtractor.kt` | Create | @Pane/@PaneItem extractor |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/ScreenExtractor.kt` | Create | @Screen extractor |
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `GraphType` enum defined with `STACK`, `TAB`, `PANE` values
-- [ ] `@Graph` annotation includes `type: GraphType = GraphType.STACK` parameter
-- [ ] KDoc documentation for all new APIs
-- [ ] Code samples demonstrating each `GraphType`
-- [ ] Module compiles on all platforms (Android, iOS, Desktop, Web)
-- [ ] Existing `@Graph` usages continue to work without changes
-- [ ] No breaking changes to the annotation API
+- [ ] All model data classes created with proper KDoc documentation
+- [ ] `DestinationExtractor` correctly extracts route params and constructor params
+- [ ] `StackExtractor` resolves start destination from destinations list
+- [ ] `TabExtractor` extracts nested @TabItem annotations with rootGraph references
+- [ ] `PaneExtractor` extracts nested @PaneItem annotations with role and strategy
+- [ ] `ScreenExtractor` detects optional scope parameters
+- [ ] All extractors handle missing/malformed annotations gracefully
+- [ ] Unit tests for each extractor with >80% coverage
+- [ ] Integration test verifying all extractors work together
+- [ ] KSP module compiles successfully
 
 ---
 
 ## Testing Notes
 
-Basic validation during development:
+### Unit Test Examples
 
 ```kotlin
-@Test
-fun `GraphType enum has expected values`() {
-    val types = GraphType.values()
-    assertEquals(3, types.size)
-    assertTrue(GraphType.STACK in types)
-    assertTrue(GraphType.TAB in types)
-    assertTrue(GraphType.PANE in types)
-}
-
-@Test
-fun `Graph annotation with default type compiles`() {
-    @Graph("test")
-    sealed class TestGraph : Destination {
-        @Route("home") data object Home : TestGraph()
+class DestinationExtractorTest {
+    
+    @Test
+    fun `extracts route params from pattern`() {
+        // Given a route pattern "home/detail/{id}/{section}"
+        // When extracted
+        // Then routeParams = ["id", "section"]
     }
-    // Should compile without errors
-}
-
-@Test
-fun `Graph annotation with explicit type compiles`() {
-    @Graph("test", type = GraphType.TAB)
-    sealed class TestGraph : Destination {
-        @Route("home") data object Home : TestGraph()
+    
+    @Test
+    fun `identifies data object correctly`() {
+        // Given: data object Feed : HomeDestination()
+        // When extracted
+        // Then: isDataObject = true, isDataClass = false
     }
-    // Should compile without errors
+    
+    @Test
+    fun `extracts constructor params for data class`() {
+        // Given: data class Detail(val id: String, val title: String = "")
+        // When extracted
+        // Then: constructorParams has 2 entries, second has hasDefault = true
+    }
 }
-```
 
----
-
-## Future Considerations
-
-### Additional Graph Types
-
-Future versions may introduce additional types:
-
-```kotlin
-enum class GraphType {
-    STACK,
-    TAB,
-    PANE,
-    DIALOG,    // Future: Modal dialog navigation
-    DRAWER,    // Future: Drawer-based navigation
-    BOTTOM_SHEET  // Future: Bottom sheet navigation
+class StackExtractorTest {
+    
+    @Test
+    fun `resolves start destination by name`() {
+        // Given: @Stack(name = "home", startDestination = "Detail")
+        // When extracted
+        // Then: resolvedStartDestination.className == "Detail"
+    }
+    
+    @Test
+    fun `falls back to first destination if start not found`() {
+        // Given: @Stack(name = "home", startDestination = "Unknown")
+        // When extracted
+        // Then: resolvedStartDestination == destinations.first()
+    }
 }
-```
-
-### Type-Specific Parameters
-
-Consider extending `@Graph` with type-specific configuration:
-
-```kotlin
-// Potential future enhancement
-@Graph(
-    name = "tabs",
-    type = GraphType.TAB,
-    tabConfig = TabConfig(
-        persistBackStack = true,
-        resetOnReselect = false
-    )
-)
 ```
 
 ---
 
 ## References
 
-- [INDEX](../INDEX.md) - Phase 3 Overview
-- [CORE-001](../phase1-core/CORE-001-navnode-hierarchy.md) - NavNode definitions
-- [Current Annotations](../../../quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/Annotations.kt)
+- [INDEX.md](../INDEX.md) - Phase 4 KSP Overview
+- [ANN-001](../phase4-annotations/ANN-001-graph-type.md) - @Destination Annotation
+- [ANN-002](../phase4-annotations/ANN-002-pane-graph.md) - @Stack Annotation
+- [ANN-003](../phase4-annotations/ANN-003-route-transitions.md) - @Tab/@TabItem Annotations
+- [ANN-004](../phase4-annotations/ANN-004-shared-element.md) - @Pane/@PaneItem Annotations
+- [ANN-005](../phase4-annotations/ANN-005-screen.md) - @Screen Annotation

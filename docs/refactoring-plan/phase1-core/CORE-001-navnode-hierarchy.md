@@ -11,7 +11,7 @@
 | **Estimated Time** | 2-3 days |
 | **Dependencies** | None |
 | **Blocked By** | - |
-| **Blocks** | CORE-002, CORE-003, CORE-004, CORE-005 |
+| **Blocks** | CORE-002, CORE-003, CORE-004 |
 
 ---
 
@@ -23,14 +23,20 @@ This task establishes the foundation of the new navigation architecture by defin
 - **Tabbed navigators** (parallel stacks with active tab tracking)
 - **Adaptive panes** (simultaneous display of multiple nodes)
 
+> **Related**: This hierarchy directly maps to the new annotation system defined in [Phase 4: Annotations](../INDEX.md#phase-4-annotations):
+> - `@Destination` → `ScreenNode`
+> - `@Stack` → `StackNode`
+> - `@Tab` → `TabNode`
+> - `@Pane` → `PaneNode`
+
 ### Node Taxonomy
 
-| Node Type | Description | Navigation Behavior | Theoretical Equivalent |
-|-----------|-------------|---------------------|------------------------|
-| **ScreenNode** | Leaf node representing a specific destination | Terminal state | Vertex |
-| **StackNode** | Linear history of nodes (index N covers index N-1) | Push appends, Pop removes tail | Directed Path |
-| **TabNode** | Collection of parallel StackNodes with active index | SwitchTab changes index | Disjoint Union |
-| **PaneNode** | Role-based collection of panes with adaptive layout support | Active role tracks focus; visibility determined by renderer | Cartesian Product with Role Mapping |
+| Node Type | Description | Annotation | Navigation Behavior |
+|-----------|-------------|------------|---------------------|
+| **ScreenNode** | Leaf node (single destination) | `@Destination` | Terminal state |
+| **StackNode** | Linear history of nodes | `@Stack` | Push appends, Pop removes tail |
+| **TabNode** | Parallel StackNodes with active index | `@Tab` | SwitchTab changes index |
+| **PaneNode** | Role-based panes for adaptive layouts | `@Pane` | Active role tracks focus |
 
 This recursive structure allows infinite nesting (e.g., a Stack inside a Pane inside a Tab inside a Stack).
 

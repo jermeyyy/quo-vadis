@@ -1,30 +1,68 @@
-# CORE-005: Create Backward Compatibility Layer
+# ~~CORE-005: Create Backward Compatibility Layer~~ **DEPRECATED**
 
-## Task Metadata
+> ⚠️ **THIS TASK HAS BEEN REMOVED FROM THE REFACTORING PLAN**
+>
+> **Reason**: Library is in development stage; backward compatibility is not required.
+> Breaking changes are acceptable, and users will adopt the new API directly.
+>
+> **See**: [INDEX.md](../INDEX.md) for the revised plan.
+
+---
+
+## Original Task Metadata (For Reference)
 
 | Property | Value |
 |----------|-------|
 | **Task ID** | CORE-005 |
-| **Task Name** | Create Backward Compatibility Layer |
+| **Task Name** | ~~Create Backward Compatibility Layer~~ |
+| **Status** | **REMOVED** |
 | **Phase** | Phase 1: Core State Refactoring |
-| **Complexity** | Medium |
-| **Estimated Time** | 2-3 days |
-| **Dependencies** | CORE-001, CORE-003 |
-| **Blocked By** | CORE-001, CORE-003 |
-| **Blocks** | - |
+| **Original Complexity** | Medium |
+| **Original Estimated Time** | 2-3 days |
 
 ---
 
-## Overview
+## Why This Task Was Removed
 
-This task creates a backward compatibility layer that allows existing code using the `BackStack` API to continue functioning during the migration to the tree-based `NavNode` architecture.
+The original plan included backward compatibility to support gradual migration from the old API. However, after review:
 
-### Goals
+1. **Library status**: Quo Vadis is still in development, not yet stable release
+2. **User base**: Limited users who can adopt breaking changes directly
+3. **Cleaner API**: Removing compatibility shims results in a cleaner, simpler API
+4. **Reduced complexity**: ~2-3 days saved; less code to maintain
+5. **New annotation system**: Complete redesign makes compatibility layers impractical
 
-1. **Zero-breakage migration** - Existing code continues to work without modification
-2. **Gradual adoption** - Teams can migrate at their own pace
-3. **Clear deprecation path** - Deprecated APIs guide toward new patterns
-4. **Equivalent functionality** - All existing operations have tree-based equivalents
+## What Would Have Been Built
+
+The following compatibility features are **no longer being implemented**:
+
+- `BackStack` adapter wrapping `Navigator<NavNode>`
+- Extension properties for list-like access to the tree
+- Deprecation warnings guiding migration
+- `BackStackNavigator` interface for legacy code
+
+## Migration Path for Existing Code
+
+Instead of compatibility layers, users should:
+
+1. **Replace** `@Graph` with `@Stack` (or `@Tab`/`@Pane`)
+2. **Replace** `@Route` with `@Destination`
+3. **Replace** `@Content` with `@Screen`
+4. **Use** `navigator.navigate(Destination)` instead of extension functions
+5. **Adopt** `QuoVadisHost` instead of `GraphNavHost`/`NavHost`
+
+---
+
+## ~~Original Overview~~ (Archived)
+
+~~This task creates a backward compatibility layer that allows existing code using the `BackStack` API to continue functioning during the migration to the tree-based `NavNode` architecture.~~
+
+~~### Goals~~
+
+~~1. **Zero-breakage migration** - Existing code continues to work without modification~~
+~~2. **Gradual adoption** - Teams can migrate at their own pace~~
+~~3. **Clear deprecation path** - Deprecated APIs guide toward new patterns~~
+~~4. **Equivalent functionality** - All existing operations have tree-based equivalents~~
 
 ### Strategy
 

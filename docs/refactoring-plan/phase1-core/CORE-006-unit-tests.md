@@ -1,15 +1,17 @@
-# CORE-006: Comprehensive Unit Test Suite
+# CORE-005: Comprehensive Unit Test Suite
+
+> **Note**: This was previously CORE-006 but renumbered after backward compat task was removed.
 
 ## Task Metadata
 
 | Property | Value |
 |----------|-------|
-| **Task ID** | CORE-006 |
+| **Task ID** | CORE-005 |
 | **Task Name** | Comprehensive Unit Test Suite |
 | **Phase** | Phase 1: Core State Refactoring |
 | **Complexity** | Medium |
 | **Estimated Time** | 3-4 days |
-| **Dependencies** | CORE-001, CORE-002, CORE-003, CORE-004, CORE-005 |
+| **Dependencies** | CORE-001, CORE-002, CORE-003, CORE-004 |
 | **Blocked By** | All other CORE tasks |
 | **Blocks** | Phase 2 |
 
@@ -27,7 +29,8 @@ This task implements a comprehensive unit test suite for all Phase 1 components.
 | TreeMutator | Pure function correctness | Input/output verification |
 | TreeNavigator | State flow behavior | Coroutine testing |
 | Serialization | Round-trip integrity | Snapshot testing |
-| Backward Compat | API equivalence | Comparison testing |
+
+> ~~Backward Compat~~ - **Removed** (no backward compatibility layer)
 
 ---
 

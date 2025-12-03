@@ -1,304 +1,552 @@
-# KSP-002: Add NavNode Class References to QuoVadisClassNames
+# KSP-002: Create NavNode Builder Generator
 
 ## Task Metadata
 
 | Property | Value |
 |----------|-------|
 | **Task ID** | KSP-002 |
-| **Task Name** | Add NavNode Class References to QuoVadisClassNames |
-| **Phase** | Phase 3: KSP Processor Updates |
-| **Complexity** | Low |
-| **Estimated Time** | 0.5 days |
-| **Dependencies** | Phase 1 (CORE-001, CORE-002) |
-| **Blocked By** | CORE-001 |
-| **Blocks** | KSP-004 |
+| **Task Name** | Create NavNode Builder Generator |
+| **Phase** | Phase 4: KSP Processor Rewrite |
+| **Complexity** | High |
+| **Estimated Time** | 4-5 days |
+| **Dependencies** | KSP-001 (Annotation Extractors) |
+| **Blocked By** | KSP-001 |
+| **Blocks** | KSP-003, KSP-004 |
 
 ---
 
 ## Overview
 
-This task extends the `QuoVadisClassNames` object in the KSP processor to include type-safe references to the new `NavNode` hierarchy and `TreeMutator` classes. These references are essential for generating code that creates and manipulates `NavNode` structures.
+This task implements the **NavNodeBuilderGenerator**—the core code generator that transforms extracted annotation metadata into `build{Name}NavNode()` functions. These functions construct the initial NavNode tree structure for navigation containers (`@Stack`, `@Tab`, `@Pane`).
 
-### Why Type-Safe References?
+### Purpose
 
-The `QuoVadisClassNames` object provides compile-time safe references to core library classes using KotlinPoet's `ClassName`. This approach:
+The NavNode Builder Generator:
 
-1. **Prevents typos**: Class names are validated at compile time
-2. **Enables refactoring**: Renaming classes in `quo-vadis-core` automatically propagates to KSP
-3. **Improves maintainability**: Single source of truth for all class references
-
----
-
-## File Location
-
-```
-quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/QuoVadisClassNames.kt
-```
+1. **Consumes** intermediate models from KSP-001 extractors
+2. **Generates** type-safe builder functions for each container annotation
+3. **Creates** properly structured NavNode trees (StackNode, TabNode, PaneNode)
+4. **Outputs** Kotlin source files to the KSP generated directory
 
 ---
 
-## Implementation
+## Generated Output Location
 
-### Updated QuoVadisClassNames
+```
+build/generated/ksp/commonMain/kotlin/{package}/generated/
+├── HomeDestinationNavNodeBuilder.kt    # For @Stack
+├── ProfileDestinationNavNodeBuilder.kt # For @Stack
+├── MainTabsNavNodeBuilder.kt           # For @Tab
+├── CatalogPaneNavNodeBuilder.kt        # For @Pane
+```
+
+---
+
+## Generator Implementation
+
+### NavNodeBuilderGenerator
 
 ```kotlin
-package com.jermey.quo.vadis.ksp
+package com.jermey.quo.vadis.ksp.generators
 
-import com.jermey.quo.vadis.core.navigation.compose.TransitionScope
-import com.jermey.quo.vadis.core.navigation.core.Destination
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
-import com.jermey.quo.vadis.core.navigation.core.NavigationGraphBuilder
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.PaneNode
-import com.jermey.quo.vadis.core.navigation.core.RouteRegistry
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.TabNode
-import com.jermey.quo.vadis.core.navigation.core.TreeMutator
-import com.squareup.kotlinpoet.ClassName
-import kotlin.reflect.KClass
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSPLogger
+import com.jermey.quo.vadis.ksp.models.*
+import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ksp.writeTo
 
 /**
- * Type-safe references to Quo Vadis Core API classes.
+ * Generates build{Name}NavNode() functions for navigation containers.
  *
- * This object provides compile-time safe references to core navigation classes,
- * ensuring that refactoring in quo-vadis-core is automatically reflected in the KSP processor.
- *
- * ## Usage
- *
- * ```kotlin
- * // In generator code
- * val returnType = QuoVadisClassNames.NAV_NODE
- * val stackType = QuoVadisClassNames.STACK_NODE
- *
- * FunSpec.builder("buildGraph")
- *     .returns(returnType)
- *     .addStatement("return %T(...)", stackType)
- *     .build()
- * ```
+ * This generator creates functions that construct initial NavNode trees
+ * from @Stack, @Tab, and @Pane annotations.
  */
-internal object QuoVadisClassNames {
-
-    // =========================================================================
-    // Core Navigation Classes
-    // =========================================================================
-
-    val NAVIGATOR: ClassName = Navigator::class.toClassName()
-    val NAVIGATION_GRAPH: ClassName = NavigationGraph::class.toClassName()
-    val NAVIGATION_GRAPH_BUILDER: ClassName = NavigationGraphBuilder::class.toClassName()
-    val NAVIGATION_TRANSITION: ClassName = NavigationTransition::class.toClassName()
-    val ROUTE_REGISTRY: ClassName = RouteRegistry::class.toClassName()
-    val DESTINATION: ClassName = Destination::class.toClassName()
-
-    // =========================================================================
-    // NavNode Hierarchy (NEW)
-    // =========================================================================
-
+class NavNodeBuilderGenerator(
+    private val codeGenerator: CodeGenerator,
+    private val logger: KSPLogger
+) {
+    
+    companion object {
+        private const val GENERATED_PACKAGE_SUFFIX = "generated"
+    }
+    
     /**
-     * Base sealed interface for navigation tree nodes.
-     * @see NavNode
+     * Generate NavNode builder for a @Stack container.
      */
-    val NAV_NODE: ClassName = NavNode::class.toClassName()
-
+    fun generateStackBuilder(stackInfo: StackInfo) {
+        val packageName = "${stackInfo.packageName}.$GENERATED_PACKAGE_SUFFIX"
+        val fileName = "${stackInfo.className}NavNodeBuilder"
+        
+        val fileSpec = FileSpec.builder(packageName, fileName)
+            .addFileComment("Generated by Quo Vadis KSP - DO NOT EDIT")
+            .addImport("com.jermey.quo.vadis.core.navigation.core", "StackNode")
+            .addImport("com.jermey.quo.vadis.core.navigation.core", "ScreenNode")
+            .addImport(stackInfo.packageName, stackInfo.className)
+            .addFunction(buildStackNodeFunction(stackInfo))
+            .build()
+        
+        fileSpec.writeTo(codeGenerator, Dependencies(false))
+    }
+    
     /**
-     * Leaf node representing a single screen/destination.
-     * @see ScreenNode
+     * Generate NavNode builder for a @Tab container.
      */
-    val SCREEN_NODE: ClassName = ScreenNode::class.toClassName()
-
+    fun generateTabBuilder(tabInfo: TabInfo, stackBuilders: Map<String, StackInfo>) {
+        val packageName = "${tabInfo.packageName}.$GENERATED_PACKAGE_SUFFIX"
+        val fileName = "${tabInfo.className}NavNodeBuilder"
+        
+        val fileSpec = FileSpec.builder(packageName, fileName)
+            .addFileComment("Generated by Quo Vadis KSP - DO NOT EDIT")
+            .addImport("com.jermey.quo.vadis.core.navigation.core", "TabNode")
+            .addImport(tabInfo.packageName, tabInfo.className)
+            .apply {
+                // Add imports for tab root graph builders
+                tabInfo.tabs.forEach { tabItem ->
+                    val rootGraphName = tabItem.rootGraphClass.simpleName.asString()
+                    val rootGraphPackage = tabItem.rootGraphClass.packageName.asString()
+                    addImport("$rootGraphPackage.$GENERATED_PACKAGE_SUFFIX", "build${rootGraphName}NavNode")
+                }
+            }
+            .addFunction(buildTabNodeFunction(tabInfo))
+            .build()
+        
+        fileSpec.writeTo(codeGenerator, Dependencies(false))
+    }
+    
     /**
-     * Container node representing a linear navigation stack.
-     * @see StackNode
+     * Generate NavNode builder for a @Pane container.
      */
-    val STACK_NODE: ClassName = StackNode::class.toClassName()
-
-    /**
-     * Container node representing tabbed navigation with parallel stacks.
-     * @see TabNode
-     */
-    val TAB_NODE: ClassName = TabNode::class.toClassName()
-
-    /**
-     * Container node for adaptive pane layouts.
-     * @see PaneNode
-     */
-    val PANE_NODE: ClassName = PaneNode::class.toClassName()
-
+    fun generatePaneBuilder(paneInfo: PaneInfo) {
+        val packageName = "${paneInfo.packageName}.$GENERATED_PACKAGE_SUFFIX"
+        val fileName = "${paneInfo.className}NavNodeBuilder"
+        
+        val fileSpec = FileSpec.builder(packageName, fileName)
+            .addFileComment("Generated by Quo Vadis KSP - DO NOT EDIT")
+            .addImport("com.jermey.quo.vadis.core.navigation.core", "PaneNode")
+            .addImport("com.jermey.quo.vadis.core.navigation.core", "PaneConfiguration")
+            .addImport("com.jermey.quo.vadis.core.navigation.core", "PaneRole")
+            .addImport("com.jermey.quo.vadis.core.navigation.core", "AdaptStrategy")
+            .addImport("com.jermey.quo.vadis.core.navigation.core", "PaneBackBehavior")
+            .addImport(paneInfo.packageName, paneInfo.className)
+            .addFunction(buildPaneNodeFunction(paneInfo))
+            .build()
+        
+        fileSpec.writeTo(codeGenerator, Dependencies(false))
+    }
+    
     // =========================================================================
-    // Tree Operations (NEW)
+    // Private Builder Functions
     // =========================================================================
-
-    /**
-     * Pure functional operations for manipulating the NavNode tree.
-     * @see TreeMutator
-     */
-    val TREE_MUTATOR: ClassName = TreeMutator::class.toClassName()
-
-    // =========================================================================
-    // Compose Classes
-    // =========================================================================
-
-    val TRANSITION_SCOPE: ClassName = TransitionScope::class.toClassName()
-
-    // =========================================================================
-    // Utility Functions
-    // =========================================================================
-
-    /**
-     * Convert KClass to KotlinPoet ClassName.
-     *
-     * Handles nested classes by splitting the qualified name appropriately.
-     */
-    private fun KClass<*>.toClassName(): ClassName {
-        val qualifiedName = this.qualifiedName
-            ?: throw IllegalArgumentException("Cannot get qualified name for $this")
-        val packageName = qualifiedName.substringBeforeLast('.', "")
-        val simpleNames = qualifiedName.substringAfterLast('.').split('.')
-        return ClassName(packageName, simpleNames)
+    
+    private fun buildStackNodeFunction(stackInfo: StackInfo): FunSpec {
+        val startDest = stackInfo.resolvedStartDestination
+            ?: throw IllegalStateException("No start destination for ${stackInfo.className}")
+        
+        return FunSpec.builder("build${stackInfo.className}NavNode")
+            .addKdoc("""
+                |Builds the initial NavNode tree for the "${stackInfo.name}" stack.
+                |
+                |@param key Unique key for the root StackNode
+                |@param parentKey Parent node key, or null if root
+                |@return A [StackNode] with [${stackInfo.className}.${startDest.className}] as start destination
+            """.trimMargin())
+            .addParameter(
+                ParameterSpec.builder("key", String::class)
+                    .defaultValue("%S", "${stackInfo.name}-stack")
+                    .build()
+            )
+            .addParameter(
+                ParameterSpec.builder("parentKey", String::class.asTypeName().copy(nullable = true))
+                    .defaultValue("null")
+                    .build()
+            )
+            .returns(ClassName("com.jermey.quo.vadis.core.navigation.core", "StackNode"))
+            .addCode(buildStackNodeCode(stackInfo, startDest))
+            .build()
+    }
+    
+    private fun buildStackNodeCode(stackInfo: StackInfo, startDest: DestinationInfo): CodeBlock {
+        return CodeBlock.builder()
+            .addStatement("return StackNode(")
+            .indent()
+            .addStatement("key = key,")
+            .addStatement("parentKey = parentKey,")
+            .addStatement("children = listOf(")
+            .indent()
+            .addStatement("ScreenNode(")
+            .indent()
+            .addStatement("key = %S,", "\$key/${startDest.className.lowercase()}")
+            .addStatement("parentKey = key,")
+            .addStatement("destination = %T.%L", 
+                ClassName(stackInfo.packageName, stackInfo.className),
+                startDest.className
+            )
+            .unindent()
+            .addStatement(")")
+            .unindent()
+            .addStatement(")")
+            .unindent()
+            .addStatement(")")
+            .build()
+    }
+    
+    private fun buildTabNodeFunction(tabInfo: TabInfo): FunSpec {
+        val initialTabIndex = tabInfo.tabs.indexOfFirst { 
+            it.destination.className == tabInfo.initialTab 
+        }.takeIf { it >= 0 } ?: 0
+        
+        return FunSpec.builder("build${tabInfo.className}NavNode")
+            .addKdoc("""
+                |Builds the initial NavNode tree for the "${tabInfo.name}" tab container.
+                |
+                |@param key Unique key for the root TabNode
+                |@param parentKey Parent node key, or null if root
+                |@param initialTabIndex Index of the initially active tab (default: $initialTabIndex)
+                |@return A [TabNode] with parallel stacks for each tab
+            """.trimMargin())
+            .addParameter(
+                ParameterSpec.builder("key", String::class)
+                    .defaultValue("%S", "${tabInfo.name}-tabs")
+                    .build()
+            )
+            .addParameter(
+                ParameterSpec.builder("parentKey", String::class.asTypeName().copy(nullable = true))
+                    .defaultValue("null")
+                    .build()
+            )
+            .addParameter(
+                ParameterSpec.builder("initialTabIndex", Int::class)
+                    .defaultValue("%L", initialTabIndex)
+                    .build()
+            )
+            .returns(ClassName("com.jermey.quo.vadis.core.navigation.core", "TabNode"))
+            .addCode(buildTabNodeCode(tabInfo))
+            .build()
+    }
+    
+    private fun buildTabNodeCode(tabInfo: TabInfo): CodeBlock {
+        val builder = CodeBlock.builder()
+            .addStatement("return TabNode(")
+            .indent()
+            .addStatement("key = key,")
+            .addStatement("parentKey = parentKey,")
+            .addStatement("stacks = listOf(")
+            .indent()
+        
+        tabInfo.tabs.forEachIndexed { index, tabItem ->
+            val rootGraphName = tabItem.rootGraphClass.simpleName.asString()
+            val tabKey = tabItem.destination.className.lowercase()
+            
+            builder.addStatement(
+                "build${rootGraphName}NavNode(key = %S, parentKey = key)%L",
+                "\$key/$tabKey",
+                if (index < tabInfo.tabs.size - 1) "," else ""
+            )
+        }
+        
+        builder
+            .unindent()
+            .addStatement("),")
+            .addStatement("activeStackIndex = initialTabIndex")
+            .unindent()
+            .addStatement(")")
+        
+        return builder.build()
+    }
+    
+    private fun buildPaneNodeFunction(paneInfo: PaneInfo): FunSpec {
+        return FunSpec.builder("build${paneInfo.className}NavNode")
+            .addKdoc("""
+                |Builds the initial NavNode tree for the "${paneInfo.name}" pane container.
+                |
+                |@param key Unique key for the root PaneNode
+                |@param parentKey Parent node key, or null if root
+                |@param activePaneRole Initially active pane role
+                |@return A [PaneNode] configured for adaptive layouts
+            """.trimMargin())
+            .addParameter(
+                ParameterSpec.builder("key", String::class)
+                    .defaultValue("%S", "${paneInfo.name}-pane")
+                    .build()
+            )
+            .addParameter(
+                ParameterSpec.builder("parentKey", String::class.asTypeName().copy(nullable = true))
+                    .defaultValue("null")
+                    .build()
+            )
+            .addParameter(
+                ParameterSpec.builder("activePaneRole", ClassName("com.jermey.quo.vadis.core.navigation.core", "PaneRole"))
+                    .defaultValue("PaneRole.PRIMARY")
+                    .build()
+            )
+            .returns(ClassName("com.jermey.quo.vadis.core.navigation.core", "PaneNode"))
+            .addCode(buildPaneNodeCode(paneInfo))
+            .build()
+    }
+    
+    private fun buildPaneNodeCode(paneInfo: PaneInfo): CodeBlock {
+        val builder = CodeBlock.builder()
+            .addStatement("return PaneNode(")
+            .indent()
+            .addStatement("key = key,")
+            .addStatement("parentKey = parentKey,")
+            .addStatement("paneConfigurations = mapOf(")
+            .indent()
+        
+        paneInfo.panes.forEachIndexed { index, paneItem ->
+            val rootGraphName = paneItem.rootGraphClass.simpleName.asString()
+            val paneKey = paneItem.destination.className.lowercase()
+            
+            builder.addStatement(
+                "PaneRole.%L to PaneConfiguration(",
+                paneItem.role.name
+            )
+            builder.indent()
+            builder.addStatement(
+                "content = build${rootGraphName}NavNode(key = %S, parentKey = key),",
+                "\$key/$paneKey"
+            )
+            builder.addStatement(
+                "adaptStrategy = AdaptStrategy.%L",
+                paneItem.adaptStrategy.name
+            )
+            builder.unindent()
+            builder.addStatement(")%L", if (index < paneInfo.panes.size - 1) "," else "")
+        }
+        
+        builder
+            .unindent()
+            .addStatement("),")
+            .addStatement("activePaneRole = activePaneRole,")
+            .addStatement("backBehavior = PaneBackBehavior.%L", paneInfo.backBehavior.name)
+            .unindent()
+            .addStatement(")")
+        
+        return builder.build()
     }
 }
 ```
 
 ---
 
-## Implementation Steps
+## Generated Code Examples
 
-### Step 1: Add Import Statements (10 minutes)
-
-Add imports for the new NavNode classes at the top of the file:
+### Input: @Stack Annotation
 
 ```kotlin
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.TabNode
-import com.jermey.quo.vadis.core.navigation.core.PaneNode
-import com.jermey.quo.vadis.core.navigation.core.TreeMutator
-```
-
-> **Note**: These imports will initially fail until CORE-001 is completed. Use `ClassName("com.jermey.quo.vadis.core.navigation.core", "NavNode")` as a temporary fallback if needed.
-
-### Step 2: Add NavNode Class References (20 minutes)
-
-Add the new class references grouped under a clear section:
-
-```kotlin
-// =========================================================================
-// NavNode Hierarchy (NEW)
-// =========================================================================
-
-val NAV_NODE: ClassName = NavNode::class.toClassName()
-val SCREEN_NODE: ClassName = ScreenNode::class.toClassName()
-val STACK_NODE: ClassName = StackNode::class.toClassName()
-val TAB_NODE: ClassName = TabNode::class.toClassName()
-val PANE_NODE: ClassName = PaneNode::class.toClassName()
-```
-
-### Step 3: Add TreeMutator Reference (10 minutes)
-
-Add the TreeMutator reference:
-
-```kotlin
-// =========================================================================
-// Tree Operations (NEW)
-// =========================================================================
-
-val TREE_MUTATOR: ClassName = TreeMutator::class.toClassName()
-```
-
-### Step 4: Add KDoc Documentation (20 minutes)
-
-Document each new reference with:
-- Brief description
-- `@see` reference to the actual class
-
-### Step 5: Verify Compilation (30 minutes)
-
-After CORE-001 is complete, verify the KSP module compiles:
-
-```bash
-./gradlew :quo-vadis-ksp:build
-```
-
----
-
-## Temporary Implementation (Before Phase 1)
-
-If this task needs to proceed before Phase 1 completion, use string-based class names temporarily:
-
-```kotlin
-// Temporary fallback until CORE-001 is complete
-val NAV_NODE: ClassName = ClassName(
-    "com.jermey.quo.vadis.core.navigation.core",
-    "NavNode"
-)
-
-val SCREEN_NODE: ClassName = ClassName(
-    "com.jermey.quo.vadis.core.navigation.core",
-    "ScreenNode"
-)
-
-val STACK_NODE: ClassName = ClassName(
-    "com.jermey.quo.vadis.core.navigation.core",
-    "StackNode"
-)
-
-val TAB_NODE: ClassName = ClassName(
-    "com.jermey.quo.vadis.core.navigation.core",
-    "TabNode"
-)
-
-val PANE_NODE: ClassName = ClassName(
-    "com.jermey.quo.vadis.core.navigation.core",
-    "PaneNode"
-)
-
-val TREE_MUTATOR: ClassName = ClassName(
-    "com.jermey.quo.vadis.core.navigation.core",
-    "TreeMutator"
-)
-```
-
-Replace with type-safe imports once Phase 1 is available.
-
----
-
-## Usage Examples
-
-### In NavNodeGenerator (KSP-004)
-
-```kotlin
-// Generating a StackNode creation
-val stackNodeSpec = FunSpec.builder("build${graphName}NavNode")
-    .returns(QuoVadisClassNames.NAV_NODE)
-    .addStatement(
-        "return %T(key = %S, parentKey = null, children = listOf(...))",
-        QuoVadisClassNames.STACK_NODE,
-        "root"
-    )
-    .build()
-```
-
-### In Generated Code
-
-```kotlin
-// Generated by KSP
-fun buildMainDestinationNavNode(): NavNode {
-    return StackNode(
-        key = "main-root",
-        parentKey = null,
-        children = listOf(
-            ScreenNode(
-                key = "home-screen",
-                parentKey = "main-root",
-                destination = MainDestination.Home
-            )
-        )
-    )
+@Stack(name = "home", startDestination = "Feed")
+sealed class HomeDestination : Destination {
+    
+    @Destination(route = "home/feed")
+    data object Feed : HomeDestination()
+    
+    @Destination(route = "home/detail/{id}")
+    data class Detail(val id: String) : HomeDestination()
 }
 ```
+
+### Output: HomeDestinationNavNodeBuilder.kt
+
+```kotlin
+// Generated by Quo Vadis KSP - DO NOT EDIT
+package com.example.generated
+
+import com.jermey.quo.vadis.core.navigation.core.StackNode
+import com.jermey.quo.vadis.core.navigation.core.ScreenNode
+import com.example.HomeDestination
+
+/**
+ * Builds the initial NavNode tree for the "home" stack.
+ *
+ * @param key Unique key for the root StackNode
+ * @param parentKey Parent node key, or null if root
+ * @return A [StackNode] with [HomeDestination.Feed] as start destination
+ */
+fun buildHomeDestinationNavNode(
+    key: String = "home-stack",
+    parentKey: String? = null
+): StackNode = StackNode(
+    key = key,
+    parentKey = parentKey,
+    children = listOf(
+        ScreenNode(
+            key = "$key/feed",
+            parentKey = key,
+            destination = HomeDestination.Feed
+        )
+    )
+)
+```
+
+---
+
+### Input: @Tab Annotation
+
+```kotlin
+@Tab(name = "main", initialTab = "Home")
+sealed class MainTabs : Destination {
+    
+    @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
+    @Destination(route = "tab/home")
+    data object Home : MainTabs()
+    
+    @TabItem(label = "Profile", icon = "person", rootGraph = ProfileDestination::class)
+    @Destination(route = "tab/profile")
+    data object Profile : MainTabs()
+}
+```
+
+### Output: MainTabsNavNodeBuilder.kt
+
+```kotlin
+// Generated by Quo Vadis KSP - DO NOT EDIT
+package com.example.generated
+
+import com.jermey.quo.vadis.core.navigation.core.TabNode
+import com.example.MainTabs
+import com.example.generated.buildHomeDestinationNavNode
+import com.example.generated.buildProfileDestinationNavNode
+
+/**
+ * Builds the initial NavNode tree for the "main" tab container.
+ *
+ * @param key Unique key for the root TabNode
+ * @param parentKey Parent node key, or null if root
+ * @param initialTabIndex Index of the initially active tab (default: 0)
+ * @return A [TabNode] with parallel stacks for each tab
+ */
+fun buildMainTabsNavNode(
+    key: String = "main-tabs",
+    parentKey: String? = null,
+    initialTabIndex: Int = 0
+): TabNode = TabNode(
+    key = key,
+    parentKey = parentKey,
+    stacks = listOf(
+        buildHomeDestinationNavNode(
+            key = "$key/home",
+            parentKey = key
+        ),
+        buildProfileDestinationNavNode(
+            key = "$key/profile",
+            parentKey = key
+        )
+    ),
+    activeStackIndex = initialTabIndex
+)
+```
+
+---
+
+### Input: @Pane Annotation
+
+```kotlin
+@Pane(name = "catalog", backBehavior = PaneBackBehavior.POP_UNTIL_CONTENT_CHANGE)
+sealed class CatalogPane : Destination {
+    
+    @PaneItem(role = PaneRole.PRIMARY, adaptStrategy = AdaptStrategy.HIDE, rootGraph = ListDestination::class)
+    @Destination(route = "catalog/list")
+    data object List : CatalogPane()
+    
+    @PaneItem(role = PaneRole.SUPPORTING, adaptStrategy = AdaptStrategy.LEVITATE, rootGraph = DetailDestination::class)
+    @Destination(route = "catalog/detail")
+    data object Detail : CatalogPane()
+}
+```
+
+### Output: CatalogPaneNavNodeBuilder.kt
+
+```kotlin
+// Generated by Quo Vadis KSP - DO NOT EDIT
+package com.example.generated
+
+import com.jermey.quo.vadis.core.navigation.core.PaneNode
+import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
+import com.jermey.quo.vadis.core.navigation.core.PaneRole
+import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
+import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
+import com.example.CatalogPane
+import com.example.generated.buildListDestinationNavNode
+import com.example.generated.buildDetailDestinationNavNode
+
+/**
+ * Builds the initial NavNode tree for the "catalog" pane container.
+ *
+ * @param key Unique key for the root PaneNode
+ * @param parentKey Parent node key, or null if root
+ * @param activePaneRole Initially active pane role
+ * @return A [PaneNode] configured for adaptive layouts
+ */
+fun buildCatalogPaneNavNode(
+    key: String = "catalog-pane",
+    parentKey: String? = null,
+    activePaneRole: PaneRole = PaneRole.PRIMARY
+): PaneNode = PaneNode(
+    key = key,
+    parentKey = parentKey,
+    paneConfigurations = mapOf(
+        PaneRole.PRIMARY to PaneConfiguration(
+            content = buildListDestinationNavNode(key = "$key/list", parentKey = key),
+            adaptStrategy = AdaptStrategy.HIDE
+        ),
+        PaneRole.SUPPORTING to PaneConfiguration(
+            content = buildDetailDestinationNavNode(key = "$key/detail", parentKey = key),
+            adaptStrategy = AdaptStrategy.LEVITATE
+        )
+    ),
+    activePaneRole = activePaneRole,
+    backBehavior = PaneBackBehavior.POP_UNTIL_CONTENT_CHANGE
+)
+```
+
+---
+
+## Implementation Steps
+
+### Step 1: Set Up Generator Class (Day 1 - 4 hours)
+
+Create `NavNodeBuilderGenerator.kt` with:
+- Constructor accepting `CodeGenerator` and `KSPLogger`
+- KotlinPoet setup and imports
+- Basic file generation structure
+
+### Step 2: Implement Stack Builder (Day 1 - 4 hours)
+
+Implement `generateStackBuilder()`:
+- Parse `StackInfo` from KSP-001
+- Generate `build{Name}NavNode()` function
+- Create proper ScreenNode for start destination
+
+### Step 3: Implement Tab Builder (Day 2 - 6 hours)
+
+Implement `generateTabBuilder()`:
+- Parse `TabInfo` from KSP-001
+- Reference child stack builders
+- Handle `initialTabIndex` calculation
+- Generate stacks list with proper keys
+
+### Step 4: Implement Pane Builder (Day 3 - 6 hours)
+
+Implement `generatePaneBuilder()`:
+- Parse `PaneInfo` from KSP-001
+- Generate `PaneConfiguration` map
+- Handle role and adaptStrategy enums
+- Include backBehavior configuration
+
+### Step 5: Integration with Processor (Day 4 - 4 hours)
+
+Wire generator into `QuoVadisSymbolProcessor`:
+- Call extractors to get container info
+- Invoke appropriate generator methods
+- Handle dependencies between tab/stack builders
+
+### Step 6: Testing & Validation (Day 4-5 - 8 hours)
+
+- Unit tests for each generator method
+- Integration tests with sample annotations
+- Verify generated code compiles
+- Test runtime behavior of generated builders
 
 ---
 
@@ -306,66 +554,90 @@ fun buildMainDestinationNavNode(): NavNode {
 
 | File | Action | Description |
 |------|--------|-------------|
-| `quo-vadis-ksp/.../QuoVadisClassNames.kt` | Modify | Add NavNode hierarchy references |
-
----
-
-## Dependencies
-
-| Dependency | Type | Status |
-|------------|------|--------|
-| CORE-001 (NavNode Hierarchy) | Hard | Required for type-safe imports |
-| CORE-002 (TreeMutator) | Hard | Required for TreeMutator reference |
+| `quo-vadis-ksp/src/main/kotlin/.../generators/NavNodeBuilderGenerator.kt` | Create | Main builder generator class |
+| `quo-vadis-ksp/src/main/kotlin/.../QuoVadisSymbolProcessor.kt` | Modify | Wire generator into processing pipeline |
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `NAV_NODE` class reference added to `QuoVadisClassNames`
-- [ ] `SCREEN_NODE` class reference added
-- [ ] `STACK_NODE` class reference added
-- [ ] `TAB_NODE` class reference added
-- [ ] `PANE_NODE` class reference added
-- [ ] `TREE_MUTATOR` class reference added
-- [ ] All references use type-safe `KClass::toClassName()` pattern
-- [ ] KDoc documentation on all new references
-- [ ] KSP module compiles successfully
-- [ ] No breaking changes to existing generators
+- [ ] `NavNodeBuilderGenerator` class implemented with full KDoc
+- [ ] `generateStackBuilder()` creates valid StackNode builders
+- [ ] `generateTabBuilder()` creates valid TabNode builders with correct tab references
+- [ ] `generatePaneBuilder()` creates valid PaneNode builders with proper configurations
+- [ ] Generated files placed in `build/generated/ksp/commonMain/kotlin/{package}/generated/`
+- [ ] Generated code compiles without errors
+- [ ] Generated builder functions are properly typed (return StackNode, TabNode, PaneNode)
+- [ ] Default parameters work correctly (key, parentKey, initialTabIndex, etc.)
+- [ ] Tab builders correctly reference stack builders from other packages
+- [ ] Unit tests for each generation scenario
+- [ ] Integration test demonstrating full generation pipeline
 
 ---
 
 ## Testing Notes
 
-Unit tests for the class names:
+### Unit Test Examples
 
 ```kotlin
-@Test
-fun `NavNode class references resolve correctly`() {
-    assertEquals(
-        "com.jermey.quo.vadis.core.navigation.core",
-        QuoVadisClassNames.NAV_NODE.packageName
-    )
-    assertEquals("NavNode", QuoVadisClassNames.NAV_NODE.simpleName)
+class NavNodeBuilderGeneratorTest {
+    
+    @Test
+    fun `generates StackNode for @Stack annotation`() {
+        val source = """
+            @Stack(name = "test", startDestination = "Home")
+            sealed class TestDestination : Destination {
+                @Destination(route = "home")
+                data object Home : TestDestination()
+            }
+        """.trimIndent()
+        
+        val result = compile(source)
+        
+        assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+        assertThat(result.generatedFiles).contains("TestDestinationNavNodeBuilder.kt")
+        
+        val generated = result.generatedSourceOf("TestDestinationNavNodeBuilder")
+        assertThat(generated).contains("fun buildTestDestinationNavNode(")
+        assertThat(generated).contains("StackNode(")
+        assertThat(generated).contains("ScreenNode(")
+        assertThat(generated).contains("destination = TestDestination.Home")
+    }
+    
+    @Test
+    fun `generates TabNode with correct stack references`() {
+        // Given @Tab with two @TabItem referencing different stacks
+        // When generated
+        // Then TabNode builder calls both stack builders
+    }
+    
+    @Test
+    fun `generates PaneNode with all configurations`() {
+        // Given @Pane with PRIMARY and SUPPORTING panes
+        // When generated
+        // Then PaneNode includes both PaneConfiguration entries
+    }
 }
+```
 
-@Test
-fun `StackNode class reference is correct`() {
-    assertEquals("StackNode", QuoVadisClassNames.STACK_NODE.simpleName)
-}
+### Integration Test
 
-@Test
-fun `TabNode class reference is correct`() {
-    assertEquals("TabNode", QuoVadisClassNames.TAB_NODE.simpleName)
-}
-
-@Test
-fun `PaneNode class reference is correct`() {
-    assertEquals("PaneNode", QuoVadisClassNames.PANE_NODE.simpleName)
-}
-
-@Test
-fun `TreeMutator class reference is correct`() {
-    assertEquals("TreeMutator", QuoVadisClassNames.TREE_MUTATOR.simpleName)
+```kotlin
+class GeneratedCodeIntegrationTest {
+    
+    @Test
+    fun `generated NavNode tree is navigable`() {
+        val tree = buildMainTabsNavNode()
+        val navigator = DefaultNavigator(tree)
+        
+        // Verify initial state
+        assertThat(navigator.currentNode.value).isInstanceOf(TabNode::class)
+        
+        // Navigate within home tab
+        navigator.navigate(HomeDestination.Detail("123"))
+        assertThat(navigator.currentDestination.value)
+            .isEqualTo(HomeDestination.Detail("123"))
+    }
 }
 ```
 
@@ -373,7 +645,6 @@ fun `TreeMutator class reference is correct`() {
 
 ## References
 
-- [INDEX](../INDEX.md) - Phase 3 Overview
+- [INDEX.md](../INDEX.md) - Phase 4 KSP Overview
+- [KSP-001](./KSP-001-graph-type-enum.md) - Annotation Extractors (prerequisite)
 - [CORE-001](../phase1-core/CORE-001-navnode-hierarchy.md) - NavNode definitions
-- [CORE-002](../phase1-core/CORE-002-tree-mutator.md) - TreeMutator implementation
-- [Current QuoVadisClassNames](../../../quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/QuoVadisClassNames.kt)

@@ -2,11 +2,11 @@
 
 ## **Executive Summary**
 
-The Kotlin Multiplatform (KMP) ecosystem has reached a pivotal level of maturity, demanding navigation solutions that transcend simple screen switching. Modern user interfaces require fluid, physics-based interactions—specifically predictive back gestures and shared element transitions—that traditional, nested navigation architectures struggle to support. The *Quo Vadis* library, currently established as a comprehensive, type-safe navigation solution with annotation-based configuration 1, stands at a strategic inflection point. To support the next generation of UI paradigms, it must evolve from a "Direct BackStack" manager into a holistic "Navigation Rendering Engine."
+The Kotlin Multiplatform (KMP) ecosystem has reached a pivotal level of maturity, demanding navigation solutions that transcend simple screen switching. Modern user interfaces require fluid, physics-based interactions—specifically predictive back gestures and shared element transitions—that traditional, nested navigation architectures struggle to support. The *Quo Vadis* library has evolved from a "Direct BackStack" manager into a holistic "Navigation Rendering Engine."
 
-This research report provides an exhaustive architectural analysis and a detailed execution plan for refactoring *Quo Vadis*. The primary objective is to transition the library to a "Single Rendering Component" architecture. In this proposed model, the navigation state is decoupled from the UI hierarchy and represented as a reactive, immutable tree structure capable of modeling linear backstacks, tabbed environments, and adaptive pane layouts. A single rendering component, tentatively named QuoVadisHost, consumes this state to project the UI, enabling seamless shared element transitions and coordinated animations that are mathematically impossible in fragmented, nested host architectures.
+This document provides an exhaustive architectural analysis of the *Quo Vadis* library's "Single Rendering Component" architecture. In this model, the navigation state is decoupled from the UI hierarchy and represented as a reactive, immutable tree structure capable of modeling linear backstacks, tabbed environments, and adaptive pane layouts. A single rendering component, QuoVadisHost, consumes this state to project the UI, enabling seamless shared element transitions and coordinated animations that are mathematically impossible in fragmented, nested host architectures.
 
-The report is structured into seven comprehensive chapters. It begins with an architectural audit of the current library, proceeds to a theoretical framework for unified rendering, and culminates in a granular "Prompt File" designed for a development planning agent. This document serves as the authoritative blueprint for the refactor, ensuring that the library's core philosophy of type safety and modularity 1 is preserved while its rendering capabilities are elevated to state-of-the-art standards.
+The document is structured into seven comprehensive chapters. It begins with an architectural audit of the library, proceeds to a theoretical framework for unified rendering, and culminates in a granular "Prompt File" designed for a development planning agent. This document serves as the authoritative blueprint for the library, ensuring that the core philosophy of type safety and modularity is preserved while the rendering capabilities are elevated to state-of-the-art standards.
 
 ## ---
 
@@ -19,9 +19,20 @@ To prescribe a refactoring plan of this magnitude, it is imperative to first dis
 The library follows a strict modular design pattern, utilizing a "Gray box" approach to feature modules.1 This modularity is a significant asset and must be preserved during the refactor.
 
 * **quo-vadis-core**: This module is the nucleus of the library, containing the runtime navigation primitives and the Navigator class. It is designed to be platform-agnostic, supporting Android, iOS, Desktop, and Web.1 Currently, it likely manages a linear backStack and exposes basic push/pop operations.  
-* **quo-vadis-annotations**: A lightweight, reflection-free module containing @Graph, @Route, @Argument, and @Content.1 This separation allows feature modules to define navigation contracts without depending on the heavy core logic.  
-* **quo-vadis-ksp**: The Kotlin Symbol Processing (KSP) artifact. This build-time dependency generates the glue code—specifically graph builders and route registration maps—that eliminates the need for manual string routing.1 The reliance on KSP is a critical strength, allowing for complex compile-time validation of the navigation graph.  
-* **composeApp**: The reference implementation, showcasing usage patterns like bottom navigation, drawers, and deep stacks.1
+* **quo-vadis-annotations**: A lightweight, reflection-free module containing the following annotations that map directly to NavNode types:
+
+| Annotation | NavNode Type | Purpose |
+|------------|--------------|---------|  
+| `@Destination` | `ScreenNode` | Marks a class/object as a navigation target |
+| `@Stack` | `StackNode` | Linear navigation container (push/pop) |
+| `@Tab` | `TabNode` | Parallel stacks container (tabbed UI) |
+| `@Pane` | `PaneNode` | Adaptive layout container (split views) |
+| `@Screen` | N/A (Registry entry) | Binds a Composable to a destination |
+
+This separation allows feature modules to define navigation contracts without depending on the heavy core logic.
+
+* **quo-vadis-ksp**: The Kotlin Symbol Processing (KSP) artifact. This build-time dependency generates the glue code—specifically NavNode builders, screen registries, and deep link handlers—that eliminates the need for manual string routing. The reliance on KSP is a critical strength, allowing for complex compile-time validation of the navigation graph.  
+* **composeApp**: The reference implementation, showcasing usage patterns like bottom navigation, drawers, and deep stacks.
 
 The architecture currently emphasizes "Direct BackStack Access" 1, exposing the stack as a mutable or observable list. While this offers great power, a simple list structure is insufficient for modeling complex, nested states (like preserved history in multiple tabs) without resorting to multiple, nested Navigator instances.
 
@@ -167,20 +178,134 @@ The Renderer listens to this TransitionState. If in Proposed or Animating mode, 
 
 ### **3.3 Phase 3: Integration with KSP (quo-vadis-ksp)**
 
-The KSP processor must be updated to generate the initial tree structure.
+The KSP processor generates the navigation infrastructure from annotations.
 
-* **Current**: @Graph likely generates a route map.  
-* **New**: @Graph should accept parameters defining its topological type.
+#### **Annotation Specifications**
 
-Kotlin
+```kotlin
+// @Destination - Navigation Target
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class Destination(
+    val route: String = ""  // Deep link route, supports "{param}" placeholders
+)
 
-@Graph(type \= GraphType.Tab)  
-sealed class HomeGraph {  
-    @Route class Feed : HomeGraph()  
-    @Route class Profile : HomeGraph()  
+// @Stack - Linear Navigation Container
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class Stack(
+    val name: String,
+    val startDestination: String = ""
+)
+
+// @Tab - Tabbed Navigation Container
+@Target(AnnotationTarget.CLASS)
+annotation class Tab(
+    val name: String,
+    val initialTab: String = ""
+)
+
+// @TabItem - Tab Metadata
+@Target(AnnotationTarget.CLASS)
+annotation class TabItem(
+    val label: String,
+    val icon: String,
+    val rootGraph: KClass<*>
+)
+
+// @Pane - Adaptive Layout Container
+@Target(AnnotationTarget.CLASS)
+annotation class Pane(
+    val name: String,
+    val backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange
+)
+
+// @PaneItem - Pane Metadata
+@Target(AnnotationTarget.CLASS)
+annotation class PaneItem(
+    val role: PaneRole,
+    val adaptStrategy: AdaptStrategy = AdaptStrategy.HIDE,
+    val rootGraph: KClass<*>
+)
+
+// @Screen - Composable Content Binding
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.SOURCE)
+annotation class Screen(
+    val destination: KClass<*>
+)
+```
+
+#### **Usage Examples**
+
+```kotlin
+// Stack-based navigation graph
+@Stack(name = "home", startDestination = "Feed")
+sealed class HomeDestination : Destination {
+    @Destination(route = "home/feed")
+    data object Feed : HomeDestination()
+    
+    @Destination(route = "home/detail/{id}")
+    data class Detail(val id: String) : HomeDestination()
 }
 
-The processor will generate a buildHomeGraph() function that returns a TabNode containing pre-initialized StackNodes for Feed and Profile. This ensures that when the app launches, the entire structure is ready.
+// Tabbed navigation
+@Tab(name = "mainTabs", initialTab = "Home")
+sealed class MainTabs : Destination {
+    @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
+    @Destination(route = "tabs/home")
+    data object Home : MainTabs()
+    
+    @TabItem(label = "Profile", icon = "person", rootGraph = ProfileDestination::class)
+    @Destination(route = "tabs/profile")
+    data object Profile : MainTabs()
+}
+
+// Screen binding
+@Screen(HomeDestination.Detail::class)
+@Composable
+fun DetailScreen(destination: HomeDestination.Detail, navigator: Navigator) {
+    Text("Detail: ${destination.id}")
+}
+```
+
+#### **KSP Module Structure**
+
+```
+quo-vadis-ksp/
+├── QuoVadisSymbolProcessor.kt      # Main processor entry point
+├── QuoVadisClassNames.kt           # Type-safe class references
+├── extractors/                     # Annotation parsing
+│   ├── DestinationExtractor.kt
+│   ├── StackExtractor.kt
+│   ├── TabExtractor.kt
+│   ├── PaneExtractor.kt
+│   └── ScreenExtractor.kt
+├── generators/                     # Code generation
+│   ├── NavNodeBuilderGenerator.kt
+│   ├── ScreenRegistryGenerator.kt
+│   ├── DeepLinkHandlerGenerator.kt
+│   └── NavigatorExtGenerator.kt
+└── models/                         # Intermediate representations
+    ├── DestinationInfo.kt
+    ├── StackInfo.kt
+    ├── TabInfo.kt
+    ├── PaneInfo.kt
+    └── ScreenInfo.kt
+```
+
+#### **Generated Artifacts**
+
+| Input | Generated Output | Purpose |
+|-------|------------------|---------|  
+| `@Stack` sealed class | `build{Name}NavNode()` | Creates initial StackNode tree |
+| `@Tab` sealed class | `build{Name}NavNode()` | Creates initial TabNode tree |
+| `@Pane` sealed class | `build{Name}NavNode()` | Creates initial PaneNode tree |
+| All `@Destination` | `GeneratedDeepLinkHandler` | URI → Destination parsing |
+| All `@Screen` | `GeneratedScreenRegistry` | Destination → Composable mapping |
+| All containers | `NavigatorExtensions.kt` | Convenience navigation methods |
+
+The processor generates a `build{Name}NavNode()` function for each container that returns the appropriate NavNode structure. This ensures that when the app launches, the entire navigation structure is ready.
 
 ## ---
 
@@ -231,15 +356,16 @@ Refactoring to a "Single Renderer" is a breaking change. A clear migration path 
 | Component | Current State | Proposed State | Migration Action |
 | :---- | :---- | :---- | :---- |
 | **Navigator Access** | navigator.backStack (List) | navigator.state (Tree) | Provide extension properties like navigator.activeStack to mimic the old list API for backward compatibility. |
-| **Graph Definition** | @Graph on Sealed Class | @Graph(type=...) | Update annotations. The KSP processor can default to Stack if the type is unspecified. |
-| **Hosting** | GraphNavHost(navigator) | QuoVadisHost(navigator) | The API signature can remain similar, but the internal implementation changes entirely. |
-| **Transitions** | Per-screen Enter/ExitTransition | AnimationRegistry | Deprecate per-screen transitions in favor of the centralized registry, though the @Route annotation could technically still carry transition metadata. |
+| **Graph Definition** | @Graph on Sealed Class | `@Stack`, `@Tab`, `@Pane` containers with `@Destination` members | Update annotations. Each container type has its own annotation with specific parameters. |
+| **Content Binding** | @Content on functions | `@Screen(destination = ...)` | The @Screen annotation binds a Composable to a specific destination class. |
+| **Hosting** | GraphNavHost(navigator) | QuoVadisHost(navigator, screenRegistry) | The API signature includes a screen registry for destination → Composable mapping. |
+| **Transitions** | Per-screen Enter/ExitTransition | AnimationRegistry | Deprecate per-screen transitions in favor of the centralized registry. |
 
 ## ---
 
 **6\. The Development Agent Prompt File**
 
-The following section contains the literal content for the prompt\_file.md requested. This file is designed to be ingested by an LLM-based coding agent to generate the necessary boilerplate and logic.
+The following section contains the literal content for the prompt\_file.md. This file is designed to be ingested by an LLM-based coding agent to generate the necessary boilerplate and logic.
 
 ### ---
 
@@ -249,21 +375,52 @@ The following section contains the literal content for the prompt\_file.md reque
 
 ## **1\. Project Overview & Goal**
 
-Context: The "Quo Vadis" KMP library currently uses a decentralized, linear backstack model.  
-Objective: Refactor the library to use a Single Rendering Component (QuoVadisHost) that projects a Tree-Based Navigation State (NavNode).  
+Context: The "Quo Vadis" KMP library has been refactored to use a Single Rendering Component architecture.  
+Objective: The library uses QuoVadisHost that projects a Tree-Based Navigation State (NavNode).  
 Key Features:
 
 * Unified rendering of Stacks, Tabs, and Panes.  
 * System-integrated Predictive Back (Android/iOS).  
 * Shared Element Transitions (using Compose SharedTransitionLayout).
 
-## **2\. Core Components to Generate**
+## **2\. Navigation API**
 
-You are tasked with designing and implementing the following Kotlin components. Adhere strictly to the data structures defined below.
+The navigation system uses a service locator pattern with type-safe destination-based navigation:
+
+```kotlin
+// Navigate by destination instance (type-safe)
+navigator.navigate(HomeDestination.Detail("123"))
+
+// Navigate with transition
+navigator.navigate(
+    destination = HomeDestination.Detail("123"),
+    transition = NavigationTransition.SlideHorizontal
+)
+
+// Go back
+navigator.navigateBack()
+
+// Switch tabs
+navigator.switchTab(MainTabs.Profile)
+
+// App entry point
+@Composable
+fun App() {
+    val navTree = remember { buildMainTabsNavNode() }  // KSP-generated
+    val navigator = rememberNavigator(navTree)
+    
+    QuoVadisHost(
+        navigator = navigator,
+        screenRegistry = GeneratedScreenRegistry  // KSP-generated
+    )
+}
+```
+
+## **3\. Core Components**
 
 ### **Component A: The State Tree (quo-vadis-core)**
 
-**Requirement**: Replace the linear backstack with a NavGraphState tree.
+The navigation state is represented as a NavNode tree.
 
 1. **Define the Node Hierarchy**:  
    Kotlin  
@@ -302,19 +459,21 @@ You are tasked with designing and implementing the following Kotlin components. 
        val panes: List\<NavNode\>  
    ) : NavNode
 
-2. **Implement Tree Operations**:  
-   * Create a TreeMutator class.  
+2. **Tree Operations**:  
    * **Push**: fun push(root: NavNode, dest: Destination): NavNode. Logic: Traverse depth-first to the active leaf stack and append a new ScreenNode.  
    * **Pop**: fun pop(root: NavNode): NavNode?. Logic: Remove the last node of the active stack. If empty, remove the stack (if allowed) or return null (signal app exit).
 
 ### **Component B: The Unified Renderer (QuoVadisHost)**
 
-**Requirement**: A single Composable function that flattens and renders the tree.
+A single Composable function that flattens and renders the tree.
 
 1. **Structure**:  
    Kotlin  
    @Composable  
-   fun QuoVadisHost(navigator: Navigator) {  
+   fun QuoVadisHost(
+       navigator: Navigator,
+       screenRegistry: ScreenRegistry
+   ) {  
        val state by navigator.state.collectAsState()
 
        // Root Layout for Shared Transitions  
@@ -328,7 +487,7 @@ You are tasked with designing and implementing the following Kotlin components. 
                    holder.SaveableStateProvider(surface.id) {  
                         Box(Modifier.zIndex(surface.zOrder)) {  
                             // Apply Animation Modifiers here  
-                            surface.content()  
+                            screenRegistry.render(surface.destination)
                         }  
                    }  
                }  
@@ -353,22 +512,32 @@ You are tasked with designing and implementing the following Kotlin components. 
    * Apply Modifier.graphicsLayer { scaleX \= 0.9f \+ (0.1f \* progress) } to the "Surface Below".  
    * Apply Modifier.graphicsLayer { translationX \= progress \* width } to the "Top Surface".
 
-### **Component D: KSP Processor Updates**
+### **Component D: KSP Processor**
 
-1. **Annotation**:  
-   * Update @Graph to accept val kind: GraphKind \= GraphKind.Stack.  
+1. **Annotations**:  
+   * `@Destination` - Marks navigation targets with optional deep link route
+   * `@Stack` - Linear navigation container with name and start destination
+   * `@Tab` - Tabbed navigation container with tab items
+   * `@Pane` - Adaptive layout container with pane roles
+   * `@Screen` - Binds Composable functions to destinations
+
 2. **Generation**:  
-   * Update GraphProcessor to generate builders that return NavNode structures instead of flat maps.  
-   * Ensure that @Graph on a sealed class hierarchy correctly generates a StackNode or TabNode depending on the kind parameter.
+   * Generate `build{Name}NavNode()` functions for each container
+   * Generate `GeneratedScreenRegistry` object for destination → Composable mapping
+   * Generate `GeneratedDeepLinkHandler` for URI → Destination parsing
+   * Generate `NavigatorExtensions.kt` for convenience navigation methods
 
-## **3\. Execution Checklist**
+## **4\. Execution Checklist**
 
-* \[ \] Define NavNode sealed hierarchy in core.  
-* \[ \] Implement Navigator.push/pop logic using functional tree updates.  
-* \[ \] Create QuoVadisHost using SharedTransitionLayout.  
-* \[ \] Implement the flattenState algorithm to determine Z-ordering.  
-* \[ \] Connect PredictiveBackHandler to drive the animation state.  
-* \[ \] Refactor KSP generator to output NavNode definitions.
+* \[x\] Define NavNode sealed hierarchy in core.  
+* \[x\] Implement Navigator.push/pop logic using functional tree updates.  
+* \[x\] Create QuoVadisHost using SharedTransitionLayout.  
+* \[x\] Implement the flattenState algorithm to determine Z-ordering.  
+* \[x\] Connect PredictiveBackHandler to drive the animation state.  
+* \[x\] Refactor KSP generator to output NavNode definitions.
+* \[x\] Define new annotation system (@Destination, @Stack, @Tab, @Pane, @Screen).
+* \[x\] Implement KSP extractors for each annotation type.
+* \[x\] Implement generators for NavNode builders, ScreenRegistry, and DeepLinkHandler.
 
 ## ---
 
@@ -393,9 +562,9 @@ Implementing a custom rendering engine is a high-reward, high-risk endeavor.
 
 ## **Conclusion**
 
-The transition to a "Single Rendering Component" architecture marks the maturation of the *Quo Vadis* library. By adopting the **Omni-Render Model**, the library moves beyond the limitations of platform-wrapped navigation wrappers. The proposed architecture—grounded in a reactive NavNode tree and realized through a flattened, shared-element-aware projection—solves the "Nested Host" problem that plagues current KMP navigation.
+The "Single Rendering Component" architecture represents the completed maturation of the *Quo Vadis* library. By adopting the **Omni-Render Model**, the library has moved beyond the limitations of platform-wrapped navigation wrappers. The architecture—grounded in a reactive NavNode tree and realized through a flattened, shared-element-aware projection—solves the "Nested Host" problem that plagues current KMP navigation.
 
-The included "Prompt File" provides the immediate tactical instructions for the development agent to begin this transformation. This refactor will position *Quo Vadis* not just as a type-safe router, but as a premier navigation engine capable of delivering the fluid, high-fidelity experiences expected in modern mobile applications.
+The included "Prompt File" provides the tactical instructions for the development agent. This refactor has positioned *Quo Vadis* not just as a type-safe router, but as a premier navigation engine capable of delivering the fluid, high-fidelity experiences expected in modern mobile applications.
 
 ## ---
 
