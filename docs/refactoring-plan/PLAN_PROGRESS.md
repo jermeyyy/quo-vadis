@@ -14,7 +14,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 | Phase | Status | Progress | Tasks Done | Tasks Total |
 |-------|--------|----------|------------|-------------|
-| [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟡 In Progress | 20% | 1 | 5 |
+| [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟡 In Progress | 40% | 2 | 5 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | ⚪ Not Started | 0% | 0 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
@@ -22,7 +22,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~2% | 1 | 51 |
+| **TOTAL** | 🟡 In Progress | ~4% | 2 | 51 |
 
 ---
 
@@ -41,6 +41,17 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-05
+- ✅ **CORE-002**: Implement TreeMutator Operations - **COMPLETED**
+  - Implemented `TreeMutator` object with all pure functional operations
+  - Push operations: `push`, `pushToStack`, `pushAll`
+  - Pop operations: `pop`, `popTo`, `popToRoute`, `popToDestination`
+  - Tab operations: `switchTab`, `switchActiveTab`
+  - Pane operations: `navigateToPane`, `switchActivePane`, `popPane`, `popWithPaneBehavior`, `setPaneConfiguration`, `removePaneConfiguration`
+  - Utility operations: `replaceNode`, `removeNode`, `clearAndPush`, `clearStackAndPush`, `replaceCurrent`, `canGoBack`, `currentDestination`
+  - Full structural sharing for efficient tree updates
+  - Comprehensive KDoc documentation
+  - Build and tests pass
+
 - ✅ **CORE-001**: Define NavNode Sealed Hierarchy - **COMPLETED**
   - Implemented `NavNode` sealed hierarchy with `ScreenNode`, `StackNode`, `TabNode`, `PaneNode`
   - Added `PaneRole`, `AdaptStrategy`, `PaneBackBehavior` enums
@@ -53,17 +64,17 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Next Up (Prioritized)
 
-1. **CORE-002**: Implement TreeMutator Operations
-   - Dependencies: CORE-001 ✅
+1. **CORE-003**: Refactor Navigator to StateFlow<NavNode>
+   - Dependencies: CORE-001 ✅, CORE-002 ✅
    - Can start immediately
 
-2. **CORE-003**: Refactor Navigator to StateFlow<NavNode>
-   - Dependencies: CORE-001 ✅, CORE-002
-   - Blocked by CORE-002
+2. **CORE-004**: Create FakeTreeNavigator for Testing
+   - Dependencies: CORE-003
+   - Blocked by CORE-003
 
 3. **ANN-001**: Define `@Destination` Annotation
    - Dependencies: None
-   - Can start in parallel with CORE-002
+   - Can start in parallel with CORE-003
 
 ---
 
