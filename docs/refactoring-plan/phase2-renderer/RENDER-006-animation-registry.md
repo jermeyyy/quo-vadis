@@ -775,7 +775,7 @@ fun `copy adds new registrations`() {
 
 - [INDEX](../INDEX.md) - Phase 2 Overview
 - [RENDER-001](./RENDER-001-renderable-surface.md) - SurfaceAnimationSpec definition
-- [RENDER-002](./RENDER-002-flatten-algorithm.md) - AnimationResolver integration
+- [RENDER-002A](./RENDER-002A-core-flatten.md) - AnimationResolver integration
 - [RENDER-004](./RENDER-004-quovadis-host.md) - QuoVadisHost integration
 - [Material Motion](https://m3.material.io/styles/motion/overview) - Design guidelines
 - [Compose Animation](https://developer.android.com/jetpack/compose/animation) - API reference

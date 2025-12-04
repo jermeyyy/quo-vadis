@@ -47,22 +47,31 @@ Replaces the linear backstack with a recursive tree structure.
 
 ---
 
-### Phase 2: Unified Renderer (7 Tasks)
-Implements the single rendering component that projects the NavNode tree.
+### Phase 2: Unified Renderer (12 Tasks)
+Implements the single rendering component that projects the NavNode tree with user-controlled wrappers for TabNode and PaneNode.
 
 | ID | Task | Complexity | Est. Time |
 |----|------|------------|-----------|
-| [RENDER-001](./phase2-renderer/RENDER-001-renderable-surface.md) | Define RenderableSurface Data Class | Low | 1 day |
-| [RENDER-002](./phase2-renderer/RENDER-002-flatten-algorithm.md) | Implement flattenState Algorithm | High | 3-4 days |
+| [RENDER-001](./phase2-renderer/RENDER-001-renderable-surface.md) | Define RenderableSurface Data Class | Low | 1.5 days |
+| [RENDER-002A](./phase2-renderer/RENDER-002A-core-flatten.md) | Core flattenState Algorithm (Screen/Stack) | High | 2 days |
+| [RENDER-002B](./phase2-renderer/RENDER-002B-tab-flattening.md) | TabNode Flattening with User Wrapper | High | 2 days |
+| [RENDER-002C](./phase2-renderer/RENDER-002C-pane-flattening.md) | PaneNode Adaptive Flattening | High | 2 days |
 | [RENDER-003](./phase2-renderer/RENDER-003-transition-state.md) | Create TransitionState Sealed Class | Medium | 2 days |
-| [RENDER-004](./phase2-renderer/RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | High | 5-7 days |
+| [RENDER-004](./phase2-renderer/RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | High | 6-8 days |
 | [RENDER-005](./phase2-renderer/RENDER-005-predictive-back.md) | Integrate Predictive Back with Speculative Pop | High | 4-5 days |
 | [RENDER-006](./phase2-renderer/RENDER-006-animation-registry.md) | Create AnimationRegistry | Medium | 2-3 days |
-| [RENDER-007](./phase2-renderer/RENDER-007-saveable-state.md) | SaveableStateHolder Integration | Medium | 2-3 days |
+| [RENDER-007](./phase2-renderer/RENDER-007-saveable-state.md) | SaveableStateHolder Integration | Medium | 3-4 days |
+| [RENDER-008](./phase2-renderer/RENDER-008-user-wrapper-api.md) | User Wrapper API (TabNode/PaneNode) | Medium | 2-3 days |
+| [RENDER-009](./phase2-renderer/RENDER-009-window-size-integration.md) | WindowSizeClass Integration | Medium | 2 days |
+| [RENDER-010](./phase2-renderer/RENDER-010-animation-pair-tracking.md) | Animation Pair Tracking | Medium | 2 days |
 
-**Phase 2 Total: ~19-25 days**
+**Phase 2 Total: ~31-37.5 days**
 
-> ~~RENDER-008-legacy-migration~~ **REMOVED** - No legacy host migration needed
+**Key Architecture Changes:**
+- **User Wrapper API**: Users control wrapper composables (scaffold, tabs, bottom nav) while library manages content
+- **Differentiated Caching**: Whole wrapper cached for cross-node navigation; only content cached for intra-tab/pane navigation
+- **WindowSizeClass Adaptive**: PaneNode renders as StackNode on small screens, multi-pane on large screens
+- **Animation Pair Tracking**: Direct access to current AND previous screens for animations
 
 ---
 
@@ -179,7 +188,12 @@ Ensures comprehensive test coverage.
 ```
 Phase 1 (Core) ─────────────────────────────────────────────────┐
     │                                                            │
-    ├──► Phase 2 (Renderer) ────────────────────────────────────┤
+    ├──► Phase 2 (Renderer)                                     │
+    │    ├── RENDER-001 → RENDER-002A → 002B/002C               │
+    │    │                    ├── RENDER-008 (User Wrapper)     │
+    │    │                    └── RENDER-009 (WindowSize)       │
+    │    ├── RENDER-003 → RENDER-010 (Animation Pairs)          │
+    │    └── → RENDER-004 → 005, 006, 007                       │
     │                                                            │
     ├──► Phase 3 (Annotations) ──► Phase 4 (KSP) ───────────────┤
     │                                                            │
@@ -193,7 +207,7 @@ Phase 1 (Core) ─────────────────────�
 
 1. **CORE-001** → **CORE-002** → **CORE-003** (Foundation)
 2. **ANN-001..005** → **KSP-001..006** (Code Generation)
-3. **RENDER-002** → **RENDER-004** (Renderer Core)
+3. **RENDER-001** → **RENDER-002A** → **RENDER-004** (Renderer Core)
 
 ---
 
@@ -202,13 +216,13 @@ Phase 1 (Core) ─────────────────────�
 | Phase | Tasks | Estimated Days |
 |-------|-------|----------------|
 | Phase 1: Core State | 5 | 14-19 |
-| Phase 2: Renderer | 7 | 19-25 |
+| Phase 2: Renderer | 12 | 31-37.5 |
 | Phase 3: Annotations | 5 | 3.5 |
 | Phase 4: KSP | 6 | 14-19 |
 | Phase 5: Risks | 5 | 11 |
 | Phase 6: Documentation | 4 | 7 |
 | Phase 7: Testing | 5 | 16 |
-| **TOTAL** | **37** | **84.5-100.5 days** |
+| **TOTAL** | **42** | **96.5-113 days** |
 
 > **Reduction from original**: ~22-26 days saved by removing backward compatibility, migration utilities, and legacy adapters.
 >

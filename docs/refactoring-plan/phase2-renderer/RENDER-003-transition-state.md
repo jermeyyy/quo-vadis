@@ -11,7 +11,7 @@
 | **Estimated Time** | 2 days |
 | **Dependencies** | CORE-001 |
 | **Blocked By** | CORE-001 |
-| **Blocks** | RENDER-002, RENDER-004, RENDER-005 |
+| **Blocks** | RENDER-002, RENDER-002A, RENDER-002B, RENDER-002C, RENDER-004, RENDER-005 |
 
 ---
 
@@ -121,6 +121,29 @@ sealed class TransitionState {
     abstract val current: NavNode
     
     /**
+     * Returns composable references for current and previous screens
+     * for animation/shared element purposes.
+     */
+    abstract fun animationComposablePair(): Pair<NavNode, NavNode?>
+    
+    /**
+     * For TabNode transitions: whether this is an intra-tab navigation
+     * (cache content only) or cross-node navigation (cache whole wrapper).
+     */
+    abstract fun isIntraTabNavigation(tabKey: String): Boolean
+    
+    /**
+     * For PaneNode transitions: whether this is an intra-pane navigation
+     * (cache content only) or cross-node navigation (cache whole wrapper).
+     */
+    abstract fun isIntraPaneNavigation(paneKey: String): Boolean
+    
+    /**
+     * Returns true if navigating between different node types (e.g., StackNode → TabNode).
+     */
+    abstract fun isCrossNodeTypeNavigation(): Boolean
+    
+    /**
      * Navigation is at rest, showing the current state.
      * 
      * This is the default state when no transition is in progress.
@@ -133,6 +156,14 @@ sealed class TransitionState {
         override val current: NavNode
     ) : TransitionState() {
         override val direction: TransitionDirection = TransitionDirection.NONE
+        
+        override fun animationComposablePair(): Pair<NavNode, NavNode?> = current to null
+        
+        override fun isIntraTabNavigation(tabKey: String): Boolean = false
+        
+        override fun isIntraPaneNavigation(paneKey: String): Boolean = false
+        
+        override fun isCrossNodeTypeNavigation(): Boolean = false
     }
     
     /**
@@ -169,6 +200,26 @@ sealed class TransitionState {
          */
         fun withProgress(newProgress: Float): Proposed {
             return copy(progress = newProgress.coerceIn(0f, 1f))
+        }
+        
+        override fun animationComposablePair(): Pair<NavNode, NavNode?> = current to proposed
+        
+        override fun isIntraTabNavigation(tabKey: String): Boolean {
+            val currentTab = current.findByKey(tabKey) as? TabNode ?: return false
+            val proposedTab = proposed.findByKey(tabKey) as? TabNode ?: return false
+            // Intra-tab if both are TabNodes with same key and activeStackIndex differs
+            return currentTab.activeStackIndex == proposedTab.activeStackIndex
+        }
+        
+        override fun isIntraPaneNavigation(paneKey: String): Boolean {
+            val currentPane = current.findByKey(paneKey) as? PaneNode ?: return false
+            val proposedPane = proposed.findByKey(paneKey) as? PaneNode ?: return false
+            // Intra-pane if navigation is within the same pane structure
+            return currentPane.key == proposedPane.key
+        }
+        
+        override fun isCrossNodeTypeNavigation(): Boolean {
+            return current::class != proposed::class
         }
     }
     
@@ -214,6 +265,26 @@ sealed class TransitionState {
          */
         fun complete(): Idle {
             return Idle(current = target)
+        }
+        
+        override fun animationComposablePair(): Pair<NavNode, NavNode?> = current to target
+        
+        override fun isIntraTabNavigation(tabKey: String): Boolean {
+            val currentTab = current.findByKey(tabKey) as? TabNode ?: return false
+            val targetTab = target.findByKey(tabKey) as? TabNode ?: return false
+            // Intra-tab if both are TabNodes with same key and activeStackIndex differs
+            return currentTab.activeStackIndex == targetTab.activeStackIndex
+        }
+        
+        override fun isIntraPaneNavigation(paneKey: String): Boolean {
+            val currentPane = current.findByKey(paneKey) as? PaneNode ?: return false
+            val targetPane = target.findByKey(paneKey) as? PaneNode ?: return false
+            // Intra-pane if navigation is within the same pane structure
+            return currentPane.key == targetPane.key
+        }
+        
+        override fun isCrossNodeTypeNavigation(): Boolean {
+            return current::class != target::class
         }
     }
     
@@ -766,6 +837,10 @@ User switches from tab 0 to tab 1
 - [ ] Comprehensive KDoc documentation
 - [ ] Unit tests for all state transitions
 - [ ] Unit tests for query methods
+- [ ] `animationComposablePair()` method implemented
+- [ ] `isIntraTabNavigation()` method implemented
+- [ ] `isIntraPaneNavigation()` method implemented
+- [ ] `isCrossNodeTypeNavigation()` method implemented
 
 ---
 
@@ -865,7 +940,12 @@ fun `TransitionStateManager prevents invalid transitions`() {
 ## References
 
 - [INDEX](../INDEX.md) - Phase 2 Overview
-- [RENDER-002](./RENDER-002-flatten-algorithm.md) - TreeFlattener uses TransitionState
+- [RENDER-002A](./RENDER-002A-core-flatten.md) - Core TreeFlattener uses TransitionState
+- [RENDER-002B](./RENDER-002B-tab-flattening.md) - TabNode flattening uses TransitionState
+- [RENDER-002C](./RENDER-002C-pane-flattening.md) - PaneNode flattening uses TransitionState
+- [RENDER-002A](./RENDER-002A-stack-node-renderer.md) - StackNodeRenderer uses TransitionState
+- [RENDER-002B](./RENDER-002B-tab-node-renderer.md) - TabNodeRenderer uses TransitionState
+- [RENDER-002C](./RENDER-002C-pane-node-renderer.md) - PaneNodeRenderer uses TransitionState
 - [RENDER-004](./RENDER-004-quovadis-host.md) - QuoVadisHost observes TransitionState
 - [RENDER-005](./RENDER-005-predictive-back.md) - Predictive back creates Proposed states
 - [CORE-001](../phase1-core/CORE-001-navnode-hierarchy.md) - NavNode definitions

@@ -166,6 +166,19 @@ saveableStateHolder.SaveableStateProvider(key \= node.key) {
     // Render content  
 }
 
+**Animation Pair Tracking:**
+For animations, shared element transitions, and predictive back to work, the renderer must have direct access to composables of BOTH current AND previous screens simultaneously. The `FlattenResult` includes `animationPairs` that track these relationships:
+
+```kotlin
+data class AnimationPair(
+    val currentId: String,
+    val previousId: String?,
+    val transitionType: TransitionType
+)
+```
+
+This ensures the renderer can apply enter/exit animations to both screens during transitions.
+
 #### **3.2.2 The Frame Manager**
 
 To support predictive back and smooth transitions, the state cannot just "snap" from State A to State B. We need a TransitionState.
@@ -326,6 +339,75 @@ Predictive back is not just an animation; it is a "Speculative Pop." The system 
 
 This decoupling of "Gesture Physics" from "Logical State" is the only robust way to handle predictive back in a custom renderer.
 
+#### **3.2.3 User-Controlled Wrapper Composables**
+
+A critical insight of the refined architecture is that **users must control wrapper composables** for TabNode and PaneNode. The library cannot dictate the scaffold, app bar, tab strip, or bottom navigation layout—these must be customizable.
+
+**The Pattern:**
+- User provides a wrapper composable that receives a `@Composable` lambda parameter
+- User executes this lambda in their own composable hierarchy (inside their scaffold, after their app bar, etc.)
+- Library only controls what content goes into that slot
+
+**TabNode Wrapper API:**
+```kotlin
+QuoVadisHost(
+    navigator = navigator,
+    tabWrapper = { tabNode, tabContent ->
+        Scaffold(
+            topBar = { TopAppBar(title = { Text("My App") }) },
+            bottomBar = { MyBottomNavigation(tabNode.activeStackIndex) }
+        ) { padding ->
+            Box(modifier = Modifier.padding(padding)) {
+                tabContent() // Library provides active tab content
+            }
+        }
+    }
+) { destination -> /* screen content */ }
+```
+
+**PaneNode Wrapper API (Large Screens):**
+```kotlin
+QuoVadisHost(
+    navigator = navigator,
+    paneWrapper = { paneNode, paneContents ->
+        Row {
+            paneContents.forEach { pane ->
+                val weight = if (pane.role == PaneRole.LIST) 0.35f else 0.65f
+                Box(modifier = Modifier.weight(weight)) {
+                    pane.content()
+                }
+            }
+        }
+    }
+) { destination -> /* screen content */ }
+```
+
+**Key Principle:** The user is responsible for creating the proper wrapper structure; the library is responsible for populating the content slot.
+
+#### **3.2.4 Differentiated Caching Strategy**
+
+The caching strategy must differ based on navigation context:
+
+| Navigation Type | What to Cache |
+|----------------|---------------|
+| Cross-node-type (Stack → Tab) | Entire wrapper composable |
+| Intra-tab navigation | Only tab content (wrapper preserved) |
+| Intra-pane navigation | Only pane content (wrapper preserved) |
+
+This ensures that user's wrapper composables (scaffold state, app bar, bottom nav) remain stable during tab switches, while only the content inside changes.
+
+#### **3.2.5 Screen-Size Adaptive Rendering (PaneNode)**
+
+PaneNode behavior depends on `WindowSizeClass`:
+
+| Screen Size | PaneNode Behavior |
+|-------------|-------------------|
+| Compact (< 600dp) | Renders as StackNode (single pane visible) |
+| Medium (600-840dp) | Multi-pane with 2 visible panes |
+| Expanded (> 840dp) | Multi-pane with all panes visible |
+
+On small screens, PaneNode behaves exactly like StackNode—only one pane is visible, and navigating back pops panes sequentially. On larger screens, the user's wrapper composable receives all pane contents to lay out side-by-side.
+
 ### **4.2 Shared Element Transitions (SET)**
 
 SET requires that the entering and exiting elements exist in the same Layout pass.
@@ -346,6 +428,14 @@ The user specifically requested "Panes." This implies support for large screens 
   * If the window is Compact: The middleware structures the state as a StackNode (List \-\> Detail).  
   * If the window is Expanded: The middleware restructures the state as a PaneNode (List | Detail).  
   * Crucially, the *Destination* objects (ListDest, DetailDest) remain unchanged. The *Graph Structure* morphs. This is a powerful "second-order" capability of the Tree-based architecture.
+
+**Implementation Details:**
+- `WindowSizeClass` is observed at the QuoVadisHost level
+- The `flattenPane()` algorithm branches based on width class:
+  - Compact: `flattenPaneAsStack()` - single pane, full caching
+  - Medium/Expanded: `flattenPaneMultiPane()` - user wrapper with pane list
+- User provides `paneWrapper` composable that receives `List<PaneContent>`
+- Each `PaneContent` contains `paneRole` and `@Composable content`
 
 ## ---
 

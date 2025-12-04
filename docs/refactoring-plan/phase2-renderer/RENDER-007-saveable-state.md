@@ -8,7 +8,7 @@
 | **Task Name** | SaveableStateHolder Integration |
 | **Phase** | Phase 2: Unified Renderer |
 | **Complexity** | Medium |
-| **Estimated Time** | 2-3 days |
+| **Estimated Time** | 3-4 days |
 | **Dependencies** | RENDER-004 |
 | **Blocked By** | RENDER-004 |
 | **Blocks** | - |
@@ -22,6 +22,23 @@
 1. **Tab state preservation** - When switching tabs, inactive tab's state should survive
 2. **Back stack restoration** - Screens on the back stack maintain their state
 3. **Process death survival** - State persists across activity recreation
+4. **Differentiated caching** - Different navigation contexts require different caching strategies
+
+### Caching Requirements by Node Type
+
+| Node Type | Cross-Node Navigation | Intra-Node Navigation |
+|-----------|----------------------|----------------------|
+| **TabNode** | Cache whole wrapper (scaffold, app bar, bottom nav) | Cache only tab content |
+| **PaneNode** | Cache whole wrapper (multi-pane layout) | Cache only pane content |
+| **StackNode** | N/A | Standard screen caching |
+| **ScreenNode** | N/A | Full screen caching |
+
+### Why Differentiated Caching Matters
+
+- **Wrapper stability**: User's wrapper composable (Scaffold with BottomNavigation) shouldn't be recreated during tab switches
+- **Content independence**: Each tab's content state is preserved individually
+- **Performance**: Avoiding unnecessary recomposition of stable wrapper elements
+- **User experience**: Smooth transitions without visual glitches in navigation chrome
 
 ### The Problem
 
@@ -65,6 +82,274 @@ SaveableStateProvider(key = "tab-0") {
 | **Unique key generation** | Use NavNode.key for identification |
 | **Cleanup on removal** | Remove saved state when screen is popped |
 | **Process death survival** | Integrate with rememberSaveable |
+| **Differentiated caching** | Different cache scopes for different navigation contexts |
+
+---
+
+## Differentiated Caching Strategy
+
+Not all navigation scenarios require the same caching approach. The caching strategy must differentiate between:
+
+1. **Cross-node-type navigation** - Navigating between different node types (e.g., switching tabs)
+2. **Intra-node navigation** - Navigation within the same node (e.g., pushing screen within a tab's stack)
+
+### Cache Scope Types
+
+```kotlin
+/**
+ * Defines the scope of state caching for navigation surfaces.
+ */
+enum class CacheScope {
+    /**
+     * Normal screen caching for ScreenNode and StackNode.
+     * The entire screen composable is cached.
+     */
+    FULL_SCREEN,
+    
+    /**
+     * Cache entire wrapper for TabNode/PaneNode during cross-node navigation.
+     * Preserves scaffold, app bar, bottom navigation, etc.
+     */
+    WHOLE_WRAPPER,
+    
+    /**
+     * Cache only content, not wrapper, for intra-tab/pane navigation.
+     * Wrapper remains stable while content changes.
+     */
+    CONTENT_ONLY
+}
+```
+
+### Caching Decision Logic
+
+```kotlin
+class NavigationStateHolder(/*...*/) {
+    
+    /**
+     * Determines the appropriate cache scope based on navigation context.
+     *
+     * @param transition Current transition state
+     * @param surfaceId Unique identifier for the surface
+     * @param surfaceMode The rendering mode of the surface
+     * @return The appropriate CacheScope for this navigation context
+     */
+    fun determineCacheScope(
+        transition: TransitionState,
+        surfaceId: String,
+        surfaceMode: SurfaceRenderingMode
+    ): CacheScope {
+        return when {
+            // Cross-node-type navigation: cache whole wrapper
+            transition.isCrossNodeTypeNavigation() && 
+            surfaceMode in listOf(SurfaceRenderingMode.TAB_WRAPPER, SurfaceRenderingMode.PANE_WRAPPER) -> 
+                CacheScope.WHOLE_WRAPPER
+            
+            // Intra-tab navigation: cache only content
+            !transition.isCrossNodeTypeNavigation() &&
+            surfaceMode == SurfaceRenderingMode.TAB_CONTENT ->
+                CacheScope.CONTENT_ONLY
+            
+            // Intra-pane navigation: cache only pane content
+            !transition.isCrossNodeTypeNavigation() &&
+            surfaceMode == SurfaceRenderingMode.PANE_CONTENT ->
+                CacheScope.CONTENT_ONLY
+            
+            // Default screen caching
+            else -> CacheScope.FULL_SCREEN
+        }
+    }
+    
+    /**
+     * Applies the appropriate caching strategy based on scope.
+     */
+    @Composable
+    fun SaveableWithScope(
+        key: String,
+        scope: CacheScope,
+        wrapperContent: @Composable (() -> Unit) -> Unit = { it() },
+        content: @Composable () -> Unit
+    ) {
+        when (scope) {
+            CacheScope.FULL_SCREEN -> {
+                SaveableScreen(key = key) {
+                    wrapperContent { content() }
+                }
+            }
+            CacheScope.WHOLE_WRAPPER -> {
+                SaveableScreen(key = "wrapper-$key") {
+                    wrapperContent {
+                        content()
+                    }
+                }
+            }
+            CacheScope.CONTENT_ONLY -> {
+                // Wrapper is NOT wrapped in SaveableStateProvider
+                // Only content is cached
+                wrapperContent {
+                    SaveableScreen(key = "content-$key") {
+                        content()
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+### Decision Flow Diagram
+
+```
+                    ┌─────────────────┐
+                    │ Navigation Event│
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │ Is cross-node   │
+                    │ type navigation?│
+                    └────────┬────────┘
+                             │
+              ┌──────────────┴──────────────┐
+              │ YES                         │ NO
+              │                             │
+    ┌─────────▼─────────┐         ┌─────────▼─────────┐
+    │ Is TAB_WRAPPER or │         │ Is TAB_CONTENT or │
+    │ PANE_WRAPPER?     │         │ PANE_CONTENT?     │
+    └─────────┬─────────┘         └─────────┬─────────┘
+              │                             │
+       ┌──────┴──────┐               ┌──────┴──────┐
+       │YES       NO │               │YES       NO │
+       │             │               │             │
+       ▼             ▼               ▼             ▼
+  WHOLE_WRAPPER  FULL_SCREEN   CONTENT_ONLY  FULL_SCREEN
+```
+
+---
+
+## Wrapper vs Content State Management
+
+The differentiated caching strategy enables separate management of wrapper and content state.
+
+### Wrapper State Preservation
+
+Wrapper state includes:
+- **Scaffold state** (drawer open/closed, snackbar queue)
+- **App bar state** (expanded/collapsed, search mode)
+- **Bottom navigation state** (selected index, badge counts)
+- **FAB state** (visibility, extended state)
+
+```kotlin
+/**
+ * Wrapper state is preserved across ALL tab switches.
+ * This composable is cached with WHOLE_WRAPPER scope.
+ */
+@Composable
+fun TabbedAppWrapper(
+    tabNode: TabNode,
+    stateHolder: NavigationStateHolder,
+    content: @Composable () -> Unit
+) {
+    // This state survives tab switches because wrapper is cached
+    val scaffoldState = rememberScaffoldState()
+    var selectedTab by rememberSaveable { mutableStateOf(tabNode.activeIndex) }
+    
+    Scaffold(
+        scaffoldState = scaffoldState,
+        bottomBar = {
+            BottomNavigation {
+                tabNode.stacks.forEachIndexed { index, stack ->
+                    BottomNavigationItem(
+                        selected = index == selectedTab,
+                        onClick = { selectedTab = index },
+                        icon = { /* ... */ },
+                        label = { /* ... */ }
+                    )
+                }
+            }
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            content()
+        }
+    }
+}
+```
+
+### Content State Preservation
+
+Each tab's content maintains its own state independently:
+
+```kotlin
+/**
+ * Tab content state is preserved per-tab.
+ * This composable is cached with CONTENT_ONLY scope.
+ */
+@Composable
+fun TabContent(
+    stackNode: StackNode,
+    stateHolder: NavigationStateHolder
+) {
+    // Each tab has its own scroll position
+    val scrollState = rememberLazyListState()
+    
+    // Each tab has its own filter state
+    var filterQuery by rememberSaveable { mutableStateOf("") }
+    
+    Column {
+        SearchBar(
+            query = filterQuery,
+            onQueryChange = { filterQuery = it }
+        )
+        
+        LazyColumn(state = scrollState) {
+            // Content specific to this tab
+        }
+    }
+}
+```
+
+### Multi-Pane State Management
+
+For PaneNode in multi-pane mode, the same principle applies:
+
+```kotlin
+/**
+ * Pane wrapper manages the multi-pane layout.
+ * Cached with WHOLE_WRAPPER scope during cross-node navigation.
+ */
+@Composable
+fun MultiPaneWrapper(
+    paneNode: PaneNode,
+    stateHolder: NavigationStateHolder,
+    content: @Composable () -> Unit
+) {
+    // Pane layout state survives pane switches
+    var paneWeights by rememberSaveable {
+        mutableStateOf(listOf(0.3f, 0.7f))
+    }
+    
+    Row {
+        paneNode.panes.forEachIndexed { index, pane ->
+            Box(
+                modifier = Modifier
+                    .weight(paneWeights[index])
+                    .fillMaxHeight()
+            ) {
+                // Individual pane content
+            }
+        }
+    }
+}
+```
+
+### State Isolation Table
+
+| State Type | Scope | Survives Tab Switch | Survives Intra-Tab Nav | Survives Process Death |
+|------------|-------|---------------------|------------------------|------------------------|
+| Scaffold state | Wrapper | ✅ | ✅ | ✅ (with rememberSaveable) |
+| Bottom nav selection | Wrapper | ✅ | ✅ | ✅ |
+| Tab scroll position | Content | ✅ | ✅ | ✅ (with rememberSaveable) |
+| Tab filter query | Content | ✅ | ✅ | ✅ |
+| Screen-specific state | Screen | N/A | ✅ | ✅ |
 
 ---
 
@@ -498,6 +783,7 @@ private fun findTabNodesRecursive(node: NavNode, result: MutableList<TabNode>) {
 
 ## Acceptance Criteria
 
+### Core State Preservation
 - [ ] `SaveableStateHolder` integrated into QuoVadisHost
 - [ ] Each surface wrapped with `SaveableStateProvider(key = surface.id)`
 - [ ] State cleanup on screen removal (pop)
@@ -508,9 +794,22 @@ private fun findTabNodesRecursive(node: NavNode, result: MutableList<TabNode>) {
 - [ ] No memory leaks from unreleased states
 - [ ] Process death restoration works with `rememberSaveable`
 - [ ] Keys are stable across recompositions
+
+### Differentiated Caching
+- [ ] `CacheScope` enum defined with `FULL_SCREEN`, `WHOLE_WRAPPER`, `CONTENT_ONLY`
+- [ ] `determineCacheScope()` method implemented in `NavigationStateHolder`
+- [ ] Cross-node navigation caches whole wrapper (TabNode/PaneNode)
+- [ ] Intra-tab navigation caches only content
+- [ ] Intra-pane navigation caches only content
+- [ ] Wrapper state preserved during tab/pane switches
+- [ ] `SaveableWithScope()` composable implemented
+
+### Documentation & Testing
 - [ ] Comprehensive KDoc documentation
 - [ ] Unit tests for key collection
+- [ ] Unit tests for differentiated caching scenarios
 - [ ] UI tests for state preservation scenarios
+- [ ] UI tests for wrapper vs content state isolation
 
 ---
 
@@ -607,6 +906,148 @@ fun `pop cleans up state`() {
     composeTestRule.waitForIdle()
     
     assertFalse(stateWasRestored) // State was cleaned up
+}
+```
+
+### Differentiated Caching Tests
+
+```kotlin
+@Test
+fun `cross-node navigation caches whole tab wrapper`() {
+    val navigator = Navigator(/* TabNode setup */)
+    var wrapperRecompositionCount = 0
+    
+    composeTestRule.setContent {
+        QuoVadisHost(navigator) { dest ->
+            TabbedWrapper(
+                onComposition = { wrapperRecompositionCount++ }
+            ) {
+                when (dest) {
+                    is HomeDestination -> HomeScreen()
+                    is ProfileDestination -> ProfileScreen()
+                }
+            }
+        }
+    }
+    
+    val initialCount = wrapperRecompositionCount
+    
+    // Switch tabs (cross-node navigation)
+    navigator.switchTab(1)
+    composeTestRule.waitForIdle()
+    
+    // Switch back
+    navigator.switchTab(0)
+    composeTestRule.waitForIdle()
+    
+    // Wrapper should NOT have recomposed (cached as WHOLE_WRAPPER)
+    assertEquals(initialCount, wrapperRecompositionCount)
+}
+
+@Test
+fun `intra-tab navigation caches only tab content`() {
+    val navigator = Navigator(/* TabNode with StackNode setup */)
+    var contentStatePreserved = false
+    var wrapperStatePreserved = false
+    
+    composeTestRule.setContent {
+        QuoVadisHost(navigator) { dest ->
+            TabbedWrapper(
+                onStateCheck = { wrapperStatePreserved = it }
+            ) {
+                when (dest) {
+                    is HomeDestination -> HomeScreen(
+                        onStateCheck = { contentStatePreserved = it }
+                    )
+                    is DetailDestination -> DetailScreen()
+                }
+            }
+        }
+    }
+    
+    // Set state in home screen
+    composeTestRule.onNodeWithTag("home-input").performTextInput("test")
+    
+    // Navigate within tab (intra-tab navigation)
+    navigator.push(DetailDestination)
+    composeTestRule.waitForIdle()
+    
+    // Pop back
+    navigator.pop()
+    composeTestRule.waitForIdle()
+    
+    // Content state should be preserved (cached as CONTENT_ONLY)
+    assertTrue(contentStatePreserved)
+    // Wrapper state should also be preserved (never left composition)
+    assertTrue(wrapperStatePreserved)
+}
+
+@Test
+fun `pane wrapper state preserved during pane navigation`() {
+    val navigator = Navigator(/* PaneNode setup */)
+    var paneLayoutState: List<Float>? = null
+    
+    composeTestRule.setContent {
+        QuoVadisHost(navigator) { dest ->
+            MultiPaneWrapper(
+                onLayoutState = { paneLayoutState = it }
+            ) {
+                // Pane content
+            }
+        }
+    }
+    
+    // Modify pane layout (e.g., resize)
+    val originalLayout = paneLayoutState?.toList()
+    
+    // Navigate within pane
+    navigator.push(DetailDestination)
+    composeTestRule.waitForIdle()
+    
+    // Layout state should be preserved
+    assertEquals(originalLayout, paneLayoutState)
+}
+
+@Test
+fun `determineCacheScope returns correct scope for cross-node navigation`() {
+    val stateHolder = NavigationStateHolder(mockSaveableStateHolder)
+    val transition = mockTransitionState(isCrossNodeType = true)
+    
+    val scope = stateHolder.determineCacheScope(
+        transition = transition,
+        surfaceId = "tab-wrapper",
+        surfaceMode = SurfaceRenderingMode.TAB_WRAPPER
+    )
+    
+    assertEquals(CacheScope.WHOLE_WRAPPER, scope)
+}
+
+@Test
+fun `determineCacheScope returns correct scope for intra-tab navigation`() {
+    val stateHolder = NavigationStateHolder(mockSaveableStateHolder)
+    val transition = mockTransitionState(isCrossNodeType = false)
+    
+    val scope = stateHolder.determineCacheScope(
+        transition = transition,
+        surfaceId = "tab-content",
+        surfaceMode = SurfaceRenderingMode.TAB_CONTENT
+    )
+    
+    assertEquals(CacheScope.CONTENT_ONLY, scope)
+}
+
+@Test
+fun `determineCacheScope returns FULL_SCREEN for regular screen navigation`() {
+    val stateHolder = NavigationStateHolder(mockSaveableStateHolder)
+    val transition = mockTransitionState(isCrossNodeType = false)
+    
+    val scope = stateHolder.determineCacheScope(
+        transition = transition,
+        surfaceId = "screen",
+        surfaceMode = SurfaceRenderingMode.FULL_SCREEN
+    )
+    
+    assertEquals(CacheScope.FULL_SCREEN, scope)
 }
 ```
 

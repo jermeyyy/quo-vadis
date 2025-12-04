@@ -8,10 +8,10 @@
 | **Task Name** | Define RenderableSurface Data Class |
 | **Phase** | Phase 2: Unified Renderer |
 | **Complexity** | Low |
-| **Estimated Time** | 1 day |
+| **Estimated Time** | 1.5 days |
 | **Dependencies** | None |
 | **Blocked By** | - |
-| **Blocks** | RENDER-002, RENDER-004 |
+| **Blocks** | RENDER-002A, RENDER-002B, RENDER-002C, RENDER-008, RENDER-004 |
 
 ---
 
@@ -35,6 +35,26 @@ The `RenderableSurface` serves as a decoupling layer that:
 2. **Carries rendering metadata** - zIndex, transition state, animation specs
 3. **Enables diffing** - Old vs new surface lists for enter/exit animations
 4. **Simplifies renderer** - QuoVadisHost only needs to iterate surfaces
+5. **Distinguishes wrapper vs content** - Supports differentiated caching strategies
+
+### Wrapper vs Content Surfaces
+
+The rendering system distinguishes between two types of surfaces for `TabNode` and `PaneNode`:
+
+- **Wrapper surfaces** (`TAB_WRAPPER`, `PANE_WRAPPER`): The user's custom composable that wraps all tab/pane content. This is the outer shell that contains navigation UI elements (tab bar, pane dividers, etc.).
+- **Content surfaces** (`TAB_CONTENT`, `PANE_CONTENT`): The actual content rendered inside each tab or pane. These are the individual screens/destinations.
+
+This distinction enables:
+- **Whole-wrapper caching** during cross-node-type navigation (e.g., navigating from a stack to a tab navigator)
+- **Content-only caching** during intra-node navigation (e.g., switching tabs within the same tab navigator)
+
+### Key Field Purposes
+
+| Field | Purpose |
+|-------|---------||
+| `parentWrapperId` | Links content surfaces to their parent wrapper. Used by the caching system to determine when to cache the wrapper vs individual content. |
+| `previousSurfaceId` | Identifies the surface that was previously visible in the same container. Used for animation pairing and predictive back gestures. |
+| `paneStructures` | For `PANE_WRAPPER` in multi-pane mode, provides the pane layout information so the user's wrapper composable can arrange panes correctly. |
 
 ### Design Rationale
 
@@ -45,6 +65,10 @@ The `RenderableSurface` serves as a decoupling layer that:
 | **Content identity** | `id: String` (matches NavNode key) |
 | **Render function** | `content: @Composable () -> Unit` |
 | **Type information** | `nodeType: SurfaceNodeType` |
+| **Rendering mode** | `renderingMode: SurfaceRenderingMode` |
+| **Parent tracking** | `parentWrapperId: String?` |
+| **Animation pairing** | `previousSurfaceId: String?` |
+| **Pane layout** | `paneStructures: List<PaneStructure>?` |
 
 ---
 
@@ -89,6 +113,41 @@ enum class SurfaceNodeType {
     
     /** From a PaneNode - side-by-side pane container */
     PANE
+}
+
+/**
+ * Represents the specific rendering mode for a surface.
+ * 
+ * While [SurfaceNodeType] indicates the source NavNode type, this enum
+ * specifies exactly how the surface should be rendered, distinguishing
+ * between wrapper surfaces and content surfaces for complex node types.
+ * 
+ * This distinction is critical for:
+ * - Differentiated caching strategies (wrapper vs content caching)
+ * - Animation selection (cross-navigator vs intra-navigator)
+ * - Predictive back gesture handling
+ */
+enum class SurfaceRenderingMode {
+    /** ScreenNode - just one composable */
+    SINGLE_SCREEN,
+    
+    /** Content inside a StackNode */
+    STACK_CONTENT,
+    
+    /** User's wrapper composable for TabNode */
+    TAB_WRAPPER,
+    
+    /** Content of individual tab */
+    TAB_CONTENT,
+    
+    /** User's wrapper composable for PaneNode */
+    PANE_WRAPPER,
+    
+    /** Content of individual pane */
+    PANE_CONTENT,
+    
+    /** PaneNode rendered as StackNode (small screens) */
+    PANE_AS_STACK
 }
 
 /**
@@ -167,6 +226,20 @@ data class SurfaceAnimationSpec(
 }
 
 /**
+ * Represents the structure of a single pane within a multi-pane layout.
+ * 
+ * Used by [RenderableSurface] with [SurfaceRenderingMode.PANE_WRAPPER] to provide
+ * the pane layout information to the user's wrapper composable.
+ * 
+ * @property paneRole The role/identifier of this pane in the layout
+ * @property content The composable content to render in this pane
+ */
+data class PaneStructure(
+    val paneRole: PaneRole,
+    val content: @Composable () -> Unit
+)
+
+/**
  * Intermediate representation of a renderable layer in the navigation UI.
  * 
  * A `RenderableSurface` is produced by flattening the NavNode tree and represents
@@ -190,18 +263,26 @@ data class SurfaceAnimationSpec(
  * @property id Unique identifier, typically matches the NavNode.key
  * @property zOrder Rendering order (higher = on top). Based on tree depth.
  * @property nodeType Type of NavNode that produced this surface
+ * @property renderingMode Specific rendering mode for this surface
  * @property transitionState Current animation state of this surface
  * @property animationSpec Enter/exit animations to apply
  * @property content The composable content to render for this surface
+ * @property parentWrapperId For TAB_CONTENT and PANE_CONTENT, identifies the wrapper this belongs to
+ * @property previousSurfaceId For animations/predictive back: the previous surface in the same container
+ * @property paneStructures For PANE_WRAPPER in multi-pane mode: pane structures provided to user
  */
 @Immutable
 data class RenderableSurface(
     val id: String,
     val zOrder: Int,
     val nodeType: SurfaceNodeType,
+    val renderingMode: SurfaceRenderingMode,
     val transitionState: SurfaceTransitionState = SurfaceTransitionState.Visible,
     val animationSpec: SurfaceAnimationSpec = SurfaceAnimationSpec.None,
-    val content: @Composable () -> Unit
+    val content: @Composable () -> Unit,
+    val parentWrapperId: String? = null,
+    val previousSurfaceId: String? = null,
+    val paneStructures: List<PaneStructure>? = null
 ) {
     
     /**
@@ -286,13 +367,19 @@ data class RenderableSurface(
 class RenderableSurfaceBuilder(private val id: String) {
     private var zOrder: Int = 0
     private var nodeType: SurfaceNodeType = SurfaceNodeType.SCREEN
+    private var renderingMode: SurfaceRenderingMode = SurfaceRenderingMode.SINGLE_SCREEN
     private var transitionState: SurfaceTransitionState = SurfaceTransitionState.Visible
     private var animationSpec: SurfaceAnimationSpec = SurfaceAnimationSpec.None
     private var content: (@Composable () -> Unit)? = null
+    private var parentWrapperId: String? = null
+    private var previousSurfaceId: String? = null
+    private var paneStructures: List<PaneStructure>? = null
     
     fun zOrder(order: Int) = apply { this.zOrder = order }
     
     fun nodeType(type: SurfaceNodeType) = apply { this.nodeType = type }
+    
+    fun renderingMode(mode: SurfaceRenderingMode) = apply { this.renderingMode = mode }
     
     fun transitionState(state: SurfaceTransitionState) = apply { this.transitionState = state }
     
@@ -304,15 +391,25 @@ class RenderableSurfaceBuilder(private val id: String) {
     
     fun content(block: @Composable () -> Unit) = apply { this.content = block }
     
+    fun parentWrapperId(id: String?) = apply { this.parentWrapperId = id }
+    
+    fun previousSurfaceId(id: String?) = apply { this.previousSurfaceId = id }
+    
+    fun paneStructures(structures: List<PaneStructure>?) = apply { this.paneStructures = structures }
+    
     fun build(): RenderableSurface {
         requireNotNull(content) { "Content must be set before building RenderableSurface" }
         return RenderableSurface(
             id = id,
             zOrder = zOrder,
             nodeType = nodeType,
+            renderingMode = renderingMode,
             transitionState = transitionState,
             animationSpec = animationSpec,
-            content = content!!
+            content = content!!,
+            parentWrapperId = parentWrapperId,
+            previousSurfaceId = previousSurfaceId,
+            paneStructures = paneStructures
         )
     }
 }
@@ -492,9 +589,15 @@ This task has **no dependencies** and can be started immediately.
 ## Acceptance Criteria
 
 - [ ] `SurfaceNodeType` enum defined with SCREEN, STACK, TAB, PANE values
+- [ ] `SurfaceRenderingMode` enum defined with all modes (SINGLE_SCREEN, STACK_CONTENT, TAB_WRAPPER, TAB_CONTENT, PANE_WRAPPER, PANE_CONTENT, PANE_AS_STACK)
 - [ ] `SurfaceTransitionState` sealed interface with Visible, Entering, Exiting, Hidden
 - [ ] `SurfaceAnimationSpec` data class with enter/exit transitions
+- [ ] `PaneStructure` data class defined with paneRole and content
 - [ ] `RenderableSurface` data class with all required properties
+- [ ] `renderingMode` field for specific rendering mode
+- [ ] `parentWrapperId` field for parent wrapper tracking
+- [ ] `previousSurfaceId` field for animation pair tracking
+- [ ] `paneStructures` field for multi-pane mode
 - [ ] `shouldRender`, `isAnimating`, `isPredictive` computed properties implemented
 - [ ] `withTransitionState()` and `withProgress()` methods functional
 - [ ] Builder pattern implemented (optional but recommended)
@@ -503,6 +606,52 @@ This task has **no dependencies** and can be started immediately.
 - [ ] All types are `@Immutable` annotated where appropriate
 - [ ] Comprehensive KDoc documentation on all public APIs
 - [ ] Code compiles on all target platforms
+
+---
+
+## Caching Strategy Support
+
+The `RenderableSurface` structure is designed to support differentiated caching strategies based on the navigation context:
+
+### Wrapper-Level Caching (Cross-Node-Type Navigation)
+
+When navigating between different node types (e.g., from a StackNode to a TabNode), the entire wrapper surface is cached:
+
+- **`TAB_WRAPPER`** and **`PANE_WRAPPER`** surfaces are cached as a whole
+- This preserves the user's custom navigation UI (tab bars, pane dividers, etc.)
+- The `renderingMode` field identifies these wrapper surfaces for the caching system
+
+### Content-Level Caching (Intra-Node Navigation)
+
+When navigating within the same node (e.g., switching tabs, pushing to a stack), only content surfaces are cached:
+
+- **`TAB_CONTENT`** and **`PANE_CONTENT`** surfaces are cached separately
+- The `parentWrapperId` field links content to its wrapper, enabling:
+  - Quick lookup of which wrapper owns which content
+  - Proper cache invalidation when the wrapper changes
+  - Efficient memory management by grouping related caches
+
+### Animation Pairing
+
+The `previousSurfaceId` field enables proper animation coordination:
+
+- Links the entering surface to the exiting surface in the same container
+- Critical for predictive back gestures where both surfaces animate together
+- Allows the renderer to apply paired enter/exit animations
+
+### Example Caching Decision Flow
+
+```
+1. Navigation occurs
+2. TreeFlattener produces new List<RenderableSurface>
+3. Renderer examines renderingMode:
+   - If cross-node-type navigation:
+     → Cache wrapper surfaces (TAB_WRAPPER, PANE_WRAPPER)
+   - If intra-node navigation:
+     → Cache only content surfaces (TAB_CONTENT, PANE_CONTENT)
+4. Use parentWrapperId to maintain cache associations
+5. Use previousSurfaceId to coordinate animations
+```
 
 ---
 
@@ -572,6 +721,8 @@ fun `diffWith identifies entering and exiting surfaces`() {
 ## References
 
 - [INDEX](../INDEX.md) - Phase 2 Overview
-- [RENDER-002](./RENDER-002-flatten-algorithm.md) - TreeFlattener that produces these surfaces
+- [RENDER-002A](./RENDER-002A-core-flatten.md) - Core TreeFlattener that produces these surfaces
+- [RENDER-002B](./RENDER-002B-tab-flattening.md) - TabNode flattening with user wrapper
+- [RENDER-002C](./RENDER-002C-pane-flattening.md) - PaneNode adaptive flattening
 - [RENDER-004](./RENDER-004-quovadis-host.md) - QuoVadisHost that consumes these surfaces
 - [Original Architecture Plan](../../Refactoring%20Quo-Vadis%20Navigation%20Architecture.md) - Section 3.2 "The Single Rendering Component"

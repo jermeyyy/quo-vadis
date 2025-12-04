@@ -8,8 +8,8 @@
 | **Task Name** | Build QuoVadisHost Composable |
 | **Phase** | Phase 2: Unified Renderer |
 | **Complexity** | High |
-| **Estimated Time** | 5-7 days |
-| **Dependencies** | CORE-001, RENDER-001, RENDER-002, RENDER-003 |
+| **Estimated Time** | 6-8 days |
+| **Dependencies** | CORE-001, RENDER-001, RENDER-002A, RENDER-002B, RENDER-002C, RENDER-003, RENDER-008, RENDER-009 |
 | **Blocked By** | CORE-001, RENDER-001, RENDER-002, RENDER-003 |
 | **Blocks** | RENDER-005, RENDER-007, RENDER-008 |
 
@@ -133,6 +133,20 @@ fun QuoVadisHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
     animationRegistry: AnimationRegistry = AnimationRegistry.Default,
+    enablePredictiveBack: Boolean = true,
+    
+    // NEW: User provides their tab wrapper composable
+    tabWrapper: @Composable (
+        tabNode: TabNode,
+        activeTabContent: @Composable () -> Unit
+    ) -> Unit = { _, content -> content() },
+    
+    // NEW: User provides their pane wrapper composable (for large screens)
+    paneWrapper: @Composable (
+        paneNode: PaneNode,
+        paneContents: List<PaneContent>
+    ) -> Unit = { _, contents -> DefaultPaneLayout(contents) },
+    
     content: @Composable QuoVadisHostScope.(Destination) -> Unit
 ) {
     // Collect navigation state
@@ -160,10 +174,24 @@ fun QuoVadisHost(
         )
     }
     
-    // Flatten the navigation tree
-    val surfaces = remember(navState, transitionState) {
-        flattener.flattenState(navState, transitionState)
+    // WindowSizeClass integration for adaptive layouts
+    val windowSizeClass = calculateWindowSizeClass()
+    
+    // Flatten the navigation tree with window size awareness
+    val flattenResult = remember(navState, transitionState, windowSizeClass) {
+        flattener.flattenState(navState, transitionState, windowSizeClass)
     }
+    
+    val surfaces = flattenResult.surfaces
+    
+    // Differentiated caching strategy based on navigation type
+    val cachingStrategy = determineCachingStrategy(
+        flattenResult.cachingHints,
+        transitionState
+    )
+    
+    // Cache whole wrapper for cross-node-type navigation
+    // Cache only content for intra-tab/pane navigation
     
     // Root container with SharedTransitionLayout
     SharedTransitionLayout(modifier = modifier) {
@@ -320,6 +348,46 @@ private class QuoVadisHostScopeImpl(
     override val animatedContentScope: AnimatedContentScope,
     override val navigator: Navigator
 ) : QuoVadisHostScope, SharedTransitionScope by sharedTransitionScope
+```
+
+### PaneContent Data Class
+
+```kotlin
+/**
+ * Represents content for a single pane in a multi-pane layout.
+ * 
+ * Used by the paneWrapper parameter to provide structured access
+ * to individual pane content with type information.
+ * 
+ * @param paneType The role/type of this pane (e.g., LIST, DETAIL)
+ * @param content The composable content for this pane
+ */
+data class PaneContent(
+    val paneType: PaneRole,
+    val content: @Composable () -> Unit
+)
+
+/**
+ * Default pane layout used when no custom paneWrapper is provided.
+ */
+@Composable
+fun DefaultPaneLayout(contents: List<PaneContent>) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        contents.forEach { pane ->
+            Box(
+                modifier = Modifier.weight(
+                    when (pane.paneType) {
+                        PaneRole.LIST -> 0.3f
+                        PaneRole.DETAIL -> 0.7f
+                        else -> 1f / contents.size
+                    }
+                )
+            ) {
+                pane.content()
+            }
+        }
+    }
+}
 ```
 
 ### Alternative API with Content Slot
@@ -487,6 +555,85 @@ QuoVadisHost(
 
 ---
 
+## User Wrapper Rendering
+
+QuoVadisHost supports user-provided wrapper composables for TabNode and PaneNode rendering, allowing complete customization of tab bars, navigation rails, and multi-pane layouts.
+
+### TabNode Rendering
+
+When rendering a `TabNode`, the wrapper surface invokes the user's `tabWrapper` with:
+- `tabNode`: The current TabNode being rendered
+- `activeTabContent`: A slot composable containing the library-managed tab content (stack navigation, animations, etc.)
+
+```kotlin
+// Internal rendering flow
+@Composable
+internal fun RenderTabNode(
+    tabNode: TabNode,
+    tabWrapper: @Composable (TabNode, @Composable () -> Unit) -> Unit,
+    content: @Composable (Destination) -> Unit
+) {
+    tabWrapper(tabNode) {
+        // Library renders the active tab stack here
+        RenderStack(
+            stackNode = tabNode.children[tabNode.activeStackIndex],
+            content = content
+        )
+    }
+}
+```
+
+The user's wrapper receives full control over the surrounding UI while the library manages tab content internally.
+
+### PaneNode Rendering (Large Screens)
+
+On large screens (determined by `WindowSizeClass`), `PaneNode` renders using the user's `paneWrapper`:
+- `paneNode`: The current PaneNode being rendered
+- `paneContents`: A list of `PaneContent` objects, each containing the pane type and content slot
+
+```kotlin
+// Internal rendering flow for large screens
+@Composable
+internal fun RenderPaneNodeLargeScreen(
+    paneNode: PaneNode,
+    paneWrapper: @Composable (PaneNode, List<PaneContent>) -> Unit,
+    content: @Composable (Destination) -> Unit
+) {
+    val paneContents = paneNode.panes.map { pane ->
+        PaneContent(
+            paneType = pane.role,
+            content = { RenderPaneContent(pane, content) }
+        )
+    }
+    
+    paneWrapper(paneNode, paneContents)
+}
+```
+
+### PaneNode Rendering (Small Screens)
+
+On small screens, `PaneNode` adapts to render as a `StackNode` - the `paneWrapper` is **not** invoked:
+
+```kotlin
+// Internal rendering flow for small screens
+@Composable
+internal fun RenderPaneNodeSmallScreen(
+    paneNode: PaneNode,
+    content: @Composable (Destination) -> Unit
+) {
+    // Render only the active pane as a stack
+    val activePane = paneNode.getActivePaneForSmallScreen()
+    RenderStack(
+        stackNode = activePane.asStackNode(),
+        content = content
+    )
+}
+```
+
+This adaptive behavior is automatic based on `WindowSizeClass` - users don't need to handle responsiveness manually.
+
+---
+
 ## Render Loop Details
 
 ### Step-by-Step Rendering
@@ -578,8 +725,12 @@ QuoVadisHost
 |------------|------|--------|
 | CORE-001 (NavNode Hierarchy) | Hard | Must complete first |
 | RENDER-001 (RenderableSurface) | Hard | Must complete first |
-| RENDER-002 (TreeFlattener) | Hard | Must complete first |
+| RENDER-002A (TreeFlattener Core) | Hard | Must complete first |
+| RENDER-002B (Stack/Screen Flattening) | Hard | Must complete first |
+| RENDER-002C (Tab/Pane Flattening) | Hard | Must complete first |
 | RENDER-003 (TransitionState) | Hard | Must complete first |
+| RENDER-008 (WindowSizeClass) | Hard | Must complete first |
+| RENDER-009 (Caching Strategy) | Hard | Must complete first |
 
 ---
 
@@ -599,6 +750,170 @@ QuoVadisHost
 - [ ] Performance is acceptable (no unnecessary recompositions)
 - [ ] Comprehensive KDoc documentation
 - [ ] Compose UI tests pass
+- [ ] `tabWrapper` parameter accepted and invoked
+- [ ] `paneWrapper` parameter accepted and invoked
+- [ ] `PaneContent` data class defined with paneType and content
+- [ ] WindowSizeClass observed for PaneNode adaptation
+- [ ] Differentiated caching based on navigation type
+- [ ] Cross-node navigation caches whole wrapper
+- [ ] Intra-tab navigation caches only content
+
+---
+
+## Usage Examples
+
+### Basic Usage with Wrapper APIs
+
+```kotlin
+@Composable
+fun MyApp() {
+    val navigator = rememberNavigator(initialGraph)
+    
+    QuoVadisHost(
+        navigator = navigator,
+        tabWrapper = { tabNode, tabContent ->
+            Scaffold(
+                bottomBar = { MyBottomNavigation(tabNode.activeStackIndex) }
+            ) {
+                tabContent() // Library's tab content
+            }
+        },
+        paneWrapper = { paneNode, paneContents ->
+            Row {
+                paneContents.forEach { pane ->
+                    Box(modifier = Modifier.weight(if (pane.paneType == PaneRole.LIST) 0.3f else 0.7f)) {
+                        pane.content()
+                    }
+                }
+            }
+        }
+    ) { destination ->
+        // Screen content resolution
+        when (destination) {
+            is HomeDestination -> HomeScreen()
+            is ProfileDestination -> ProfileScreen(destination.userId)
+            is SettingsDestination -> SettingsScreen()
+        }
+    }
+}
+```
+
+### Custom Tab Navigation with Material 3
+
+```kotlin
+@Composable
+fun MaterialTabsApp() {
+    val navigator = rememberNavigator(initialGraph)
+    
+    QuoVadisHost(
+        navigator = navigator,
+        tabWrapper = { tabNode, tabContent ->
+            val tabs = listOf("Home", "Search", "Profile")
+            
+            Scaffold(
+                bottomBar = {
+                    NavigationBar {
+                        tabs.forEachIndexed { index, title ->
+                            NavigationBarItem(
+                                selected = tabNode.activeStackIndex == index,
+                                onClick = { navigator.switchTab(index) },
+                                icon = { Icon(getIconForTab(index), contentDescription = title) },
+                                label = { Text(title) }
+                            )
+                        }
+                    }
+                }
+            ) { paddingValues ->
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    tabContent()
+                }
+            }
+        }
+    ) { destination -> /* screen content */ }
+}
+```
+
+### Adaptive List-Detail Layout
+
+```kotlin
+@Composable
+fun AdaptiveListDetailApp() {
+    val navigator = rememberNavigator(initialGraph)
+    
+    QuoVadisHost(
+        navigator = navigator,
+        paneWrapper = { paneNode, paneContents ->
+            // Custom responsive layout
+            Row(modifier = Modifier.fillMaxSize()) {
+                // List pane with fixed width
+                paneContents
+                    .find { it.paneType == PaneRole.LIST }
+                    ?.let { listPane ->
+                        Surface(
+                            modifier = Modifier.width(320.dp).fillMaxHeight(),
+                            tonalElevation = 1.dp
+                        ) {
+                            listPane.content()
+                        }
+                    }
+                
+                // Divider
+                VerticalDivider()
+                
+                // Detail pane fills remaining space
+                paneContents
+                    .find { it.paneType == PaneRole.DETAIL }
+                    ?.let { detailPane ->
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            detailPane.content()
+                        }
+                    }
+            }
+        }
+    ) { destination -> /* screen content */ }
+}
+```
+
+### Navigation Rail for Large Screens
+
+```kotlin
+@Composable
+fun NavigationRailApp() {
+    val navigator = rememberNavigator(initialGraph)
+    val windowSizeClass = calculateWindowSizeClass()
+    
+    QuoVadisHost(
+        navigator = navigator,
+        tabWrapper = { tabNode, tabContent ->
+            if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
+                // Large screen: use navigation rail
+                Row {
+                    NavigationRail {
+                        NavigationRailItem(
+                            selected = tabNode.activeStackIndex == 0,
+                            onClick = { navigator.switchTab(0) },
+                            icon = { Icon(Icons.Default.Home, "Home") }
+                        )
+                        NavigationRailItem(
+                            selected = tabNode.activeStackIndex == 1,
+                            onClick = { navigator.switchTab(1) },
+                            icon = { Icon(Icons.Default.Settings, "Settings") }
+                        )
+                    }
+                    tabContent()
+                }
+            } else {
+                // Small screen: use bottom navigation
+                Scaffold(
+                    bottomBar = { /* BottomNavigation */ }
+                ) {
+                    tabContent()
+                }
+            }
+        }
+    ) { destination -> /* screen content */ }
+}
+```
 
 ---
 
@@ -715,7 +1030,9 @@ fun `QuoVadisHost preserves tab state`() {
 
 - [INDEX](../INDEX.md) - Phase 2 Overview
 - [RENDER-001](./RENDER-001-renderable-surface.md) - RenderableSurface definition
-- [RENDER-002](./RENDER-002-flatten-algorithm.md) - TreeFlattener implementation
+- [RENDER-002A](./RENDER-002A-core-flatten.md) - Core TreeFlattener implementation
+- [RENDER-002B](./RENDER-002B-tab-flattening.md) - TabNode flattening
+- [RENDER-002C](./RENDER-002C-pane-flattening.md) - PaneNode flattening
 - [RENDER-003](./RENDER-003-transition-state.md) - TransitionState management
 - [RENDER-005](./RENDER-005-predictive-back.md) - Predictive back integration
 - [RENDER-006](./RENDER-006-animation-registry.md) - AnimationRegistry
