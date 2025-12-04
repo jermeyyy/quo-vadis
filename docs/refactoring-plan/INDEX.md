@@ -126,14 +126,40 @@ Complete rewrite of code generation for the new annotation system.
 
 ---
 
-### ~~Phase 5: Migration Utilities~~ **REMOVED**
+### Phase 5: Migration Examples & Demo App (7 Tasks)
+Provides practical migration examples and rewrites the demo app to showcase the new architecture.
 
-> **No longer needed** - Library is in development stage; breaking changes acceptable.
-> Users will adopt the new API directly without migration utilities.
+> **Note**: No backward compatibility adapters are needed. The library is in development stage and breaking changes are acceptable. This phase focuses on **practical examples** that demonstrate how to migrate common navigation patterns.
+
+| ID | Task | Complexity | Est. Time |
+|----|------|------------|-----------|
+| [MIG-001](./phase5-migration/MIG-001-simple-stack-example.md) | Simple Stack Navigation Example | Low | 1 day |
+| [MIG-002](./phase5-migration/MIG-002-master-detail-example.md) | Master-Detail Pattern Example | Medium | 1.5 days |
+| [MIG-003](./phase5-migration/MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Example | Medium | 2 days |
+| [MIG-004](./phase5-migration/MIG-004-process-flow-example.md) | Process/Wizard Flow Example | Low | 1 day |
+| [MIG-005](./phase5-migration/MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Example | Medium | 1.5 days |
+| [MIG-006](./phase5-migration/MIG-006-demo-app-rewrite.md) | Demo App Rewrite | High | 3-4 days |
+| [MIG-007](./phase5-migration/MIG-007-api-change-summary.md) | API Change Summary Document | Low | 0.5 days |
+
+**Phase 5 Total: ~10-12 days**
+
+**Migration Example Coverage:**
+| Example | Key Patterns Demonstrated |
+|---------|---------------------------|
+| Simple Stack | `@Stack`, `@Destination`, `@Screen`, basic `navigate()`/`navigateBack()` |
+| Master-Detail | Typed arguments via route templates, deep linking, shared elements |
+| Tabbed Navigation | `@Tab`, `@TabItem`, `tabWrapper`, `switchTab()`, tab state preservation |
+| Process/Wizard Flow | Sequential navigation, branching, `navigateAndClearTo()` |
+| Nested Tabs + Detail | Complex hierarchies, full-screen detail over tabs, cross-layer predictive back |
+
+**Key Changes from Old Phase 5:**
+- ~~Backward compatibility adapters~~ → **Practical code examples**
+- ~~Deprecation warnings~~ → **API change summary**
+- ~~State converters~~ → **Demo app rewrite**
 
 ---
 
-### Phase 5: Risk Mitigation (5 Tasks)
+### Phase 6: Risk Mitigation (5 Tasks)
 Implements safeguards against identified risks.
 
 | ID | Task | Complexity | Est. Time |
@@ -144,13 +170,11 @@ Implements safeguards against identified risks.
 | RISK-004 | State Restoration Validation | Medium | 2 days |
 | RISK-005 | Performance Benchmarks | Medium | 3 days |
 
-**Phase 5 Total: ~11 days**
-
-> ~~RISK-004-api-checker~~ **REMOVED** - No backward API compatibility required
+**Phase 6 Total: ~11 days**
 
 ---
 
-### Phase 6: Documentation (4 Tasks)
+### Phase 7: Documentation (4 Tasks)
 Updates all documentation for the new architecture.
 
 | ID | Task | Complexity | Est. Time |
@@ -160,13 +184,11 @@ Updates all documentation for the new architecture.
 | DOC-003 | Create Deep Linking Documentation | Medium | 2 days |
 | DOC-004 | Create Pane Navigation Guide | Medium | 2 days |
 
-**Phase 6 Total: ~7 days**
-
-> ~~DOC-002-migration-guide~~ **REMOVED** - No migration guide needed
+**Phase 7 Total: ~7 days**
 
 ---
 
-### Phase 7: Testing Infrastructure (5 Tasks)
+### Phase 8: Testing Infrastructure (5 Tasks)
 Ensures comprehensive test coverage.
 
 | ID | Task | Complexity | Est. Time |
@@ -177,9 +199,7 @@ Ensures comprehensive test coverage.
 | TEST-004 | Performance Regression Tests | Medium | 2 days |
 | TEST-005 | Multiplatform Compatibility Tests | High | 4 days |
 
-**Phase 7 Total: ~16 days**
-
-> ~~TEST-003-migration-utils~~ **REMOVED** - No migration utilities to test
+**Phase 8 Total: ~16 days**
 
 ---
 
@@ -197,10 +217,12 @@ Phase 1 (Core) ─────────────────────�
     │                                                            │
     ├──► Phase 3 (Annotations) ──► Phase 4 (KSP) ───────────────┤
     │                                                            │
-    └──► Phase 5 (Risks) ───────────────────────────────────────┤
+    ├──► Phase 5 (Migration Examples) ──────────────────────────┤
+    │                                                            │
+    └──► Phase 6 (Risks) ───────────────────────────────────────┤
                                                                  │
                                                                  ▼
-                                                    Phase 6 (Docs) + Phase 7 (Testing)
+                                                    Phase 7 (Docs) + Phase 8 (Testing)
 ```
 
 ### Critical Path
@@ -219,14 +241,15 @@ Phase 1 (Core) ─────────────────────�
 | Phase 2: Renderer | 12 | 31-37.5 |
 | Phase 3: Annotations | 5 | 3.5 |
 | Phase 4: KSP | 6 | 14-19 |
-| Phase 5: Risks | 5 | 11 |
-| Phase 6: Documentation | 4 | 7 |
-| Phase 7: Testing | 5 | 16 |
-| **TOTAL** | **42** | **96.5-113 days** |
+| Phase 5: Migration Examples | 7 | 10-12 |
+| Phase 6: Risks | 5 | 11 |
+| Phase 7: Documentation | 4 | 7 |
+| Phase 8: Testing | 5 | 16 |
+| **TOTAL** | **49** | **106.5-125 days** |
 
-> **Reduction from original**: ~22-26 days saved by removing backward compatibility, migration utilities, and legacy adapters.
+> **Note**: Phase 5 focuses on **practical migration examples** rather than compatibility adapters. No backward compatibility is maintained - the library is in development stage.
 >
-> **Note**: Many tasks can be parallelized. With 2-3 developers, timeline can be reduced to **6-8 weeks**.
+> **Note**: Many tasks can be parallelized. With 2-3 developers, timeline can be reduced to **7-9 weeks**.
 
 ---
 
@@ -237,9 +260,10 @@ Phase 1 (Core) ─────────────────────�
   - [Phase 2: Unified Renderer](./phase2-renderer/)
   - [Phase 3: Annotations](./phase4-annotations/)
   - [Phase 4: KSP Processor](./phase3-ksp/)
-  - [Phase 5: Risk Mitigation](./phase6-risks/)
-  - [Phase 6: Documentation](./phase7-docs/)
-  - [Phase 7: Testing](./phase8-testing/)
+  - [Phase 5: Migration Examples](./phase5-migration/)
+  - [Phase 6: Risk Mitigation](./phase6-risks/)
+  - [Phase 7: Documentation](./phase7-docs/)
+  - [Phase 8: Testing](./phase8-testing/)
 
 ---
 

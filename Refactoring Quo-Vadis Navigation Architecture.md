@@ -441,15 +441,290 @@ The user specifically requested "Panes." This implies support for large screens 
 
 **5\. Migration Strategy**
 
-Refactoring to a "Single Renderer" is a breaking change. A clear migration path is vital for adoption.
+> **Important**: The library is in **development stage**. Backward compatibility is **not maintained**. Breaking changes are acceptable and expected. This section focuses on **practical migration examples** rather than compatibility adapters.
 
-| Component | Current State | Proposed State | Migration Action |
+### 5.1 API Changes Overview
+
+The following table summarizes the key API changes. Since backward compatibility is not required, old APIs will be **removed** rather than deprecated.
+
+| Component | Old API | New API | Migration Approach |
 | :---- | :---- | :---- | :---- |
-| **Navigator Access** | navigator.backStack (List) | navigator.state (Tree) | Provide extension properties like navigator.activeStack to mimic the old list API for backward compatibility. |
-| **Graph Definition** | @Graph on Sealed Class | `@Stack`, `@Tab`, `@Pane` containers with `@Destination` members | Update annotations. Each container type has its own annotation with specific parameters. |
-| **Content Binding** | @Content on functions | `@Screen(destination = ...)` | The @Screen annotation binds a Composable to a specific destination class. |
-| **Hosting** | GraphNavHost(navigator) | QuoVadisHost(navigator, screenRegistry) | The API signature includes a screen registry for destination → Composable mapping. |
-| **Transitions** | Per-screen Enter/ExitTransition | AnimationRegistry | Deprecate per-screen transitions in favor of the centralized registry. |
+| **Navigator Access** | `navigator.backStack` (List) | `navigator.state` (StateFlow<NavNode>) | Direct replacement - use new tree-based state |
+| **Graph Definition** | `@Graph` on Sealed Class | `@Stack`, `@Tab`, `@Pane` containers | Update annotation, define container type explicitly |
+| **Route Definition** | `@Route("path")` | `@Destination(route = "path/{param}")` | Rename annotation, add route template parameters |
+| **Content Binding** | `@Content(Dest::class)` | `@Screen(Dest::class)` | Rename annotation |
+| **Tab Navigation** | `TabbedNavHost` + `TabNavigatorState` | `@Tab` + `QuoVadisHost(tabWrapper = {...})` | Replace host, use wrapper pattern |
+| **Navigation Host** | `GraphNavHost(navigator)` | `QuoVadisHost(navigator, screenRegistry)` | Single host for all navigation types |
+| **Transitions** | Per-call `NavigationTransition` param | `AnimationRegistry` | Configure transitions centrally |
+| **Arguments** | `@Argument` + `TypedDestination<T>` | Route template `{param}` | Use data class params directly |
+
+### 5.2 Migration Examples
+
+The following examples demonstrate how to migrate common navigation patterns from the old API to the new architecture.
+
+#### Example 1: Simple Stack Navigation
+
+**Before (Old API):**
+```kotlin
+@Graph("home", startDestination = "Feed")
+sealed class HomeDestination : Destination {
+    @Route("home/feed")
+    data object Feed : HomeDestination()
+    
+    @Route("home/detail")
+    @Argument(DetailData::class)
+    data class Detail(val id: String) : HomeDestination(), TypedDestination<DetailData> {
+        override val data = DetailData(id)
+    }
+}
+
+@Content(HomeDestination.Feed::class)
+@Composable
+fun FeedContent(navigator: Navigator) { /* ... */ }
+
+// App setup
+val appGraph = remember { homeGraph() }
+GraphNavHost(graph = appGraph, navigator = navigator)
+```
+
+**After (New API):**
+```kotlin
+@Stack(name = "home", startDestination = "Feed")
+sealed class HomeDestination : Destination {
+    @Destination(route = "home/feed")
+    data object Feed : HomeDestination()
+    
+    @Destination(route = "home/detail/{id}")
+    data class Detail(val id: String) : HomeDestination()
+}
+
+@Screen(HomeDestination.Feed::class)
+@Composable
+fun FeedScreen(navigator: Navigator) { /* ... */ }
+
+// App setup
+val navTree = remember { buildHomeNavNode() }  // KSP-generated
+val navigator = rememberNavigator(navTree)
+QuoVadisHost(navigator = navigator, screenRegistry = GeneratedScreenRegistry)
+```
+
+**Key Changes:**
+- `@Graph` → `@Stack`
+- `@Route` → `@Destination`
+- `@Argument` + `TypedDestination<T>` → route template `{param}` in `@Destination`
+- `@Content` → `@Screen`
+- `GraphNavHost` → `QuoVadisHost` with generated `screenRegistry`
+
+#### Example 2: Master-Detail Pattern with Arguments
+
+**Before (Old API):**
+```kotlin
+// Destination with typed arguments
+@Route("master_detail/detail")
+@Argument(DetailData::class)
+data class Detail(val itemId: String) : MasterDetailDestination(), 
+    TypedDestination<DetailData> {
+    override val data = DetailData(itemId)
+}
+
+// Navigation call with transition
+navigator.navigate(Detail("123"), NavigationTransitions.SlideHorizontal)
+
+// Content function receiving typed data
+@Content(Detail::class)
+@Composable
+fun DetailContent(data: DetailData, navigator: Navigator) {
+    Text("Item: ${data.itemId}")
+}
+```
+
+**After (New API):**
+```kotlin
+// Destination with route template parameters
+@Destination(route = "master_detail/detail/{id}")
+data class Detail(val id: String) : MasterDetailDestination()
+
+// Navigation call (transition from AnimationRegistry)
+navigator.navigate(Detail("123"))
+
+// Screen function receiving destination instance
+@Screen(Detail::class)
+@Composable
+fun DetailScreen(destination: Detail, navigator: Navigator) {
+    Text("Item: ${destination.id}")
+}
+
+// Optional: Configure transitions centrally
+val animationRegistry = AnimationRegistry {
+    from(List::class) to Detail::class uses SlideHorizontal
+}
+```
+
+**Key Changes:**
+- Route template `{id}` replaces `@Argument`
+- No `TypedDestination<T>` interface needed
+- Screen receives destination instance, not separate data object
+- Transitions configured via `AnimationRegistry`, not per-call
+
+#### Example 3: Tabbed Navigation
+
+**Before (Old API):**
+```kotlin
+// Tab configuration
+object MainTabsConfig : TabbedNavigatorConfig {
+    override val allTabs = listOf(Home, Search, Profile)
+    override val defaultTab = Home
+}
+
+// Tab usage
+@Composable
+fun MainTabsContent(parentNavigator: Navigator, parentEntry: BackStackEntry) {
+    val tabState = rememberTabNavigator(
+        config = MainTabsConfig,
+        parentNavigator = parentNavigator,
+        parentEntry = parentEntry
+    )
+    
+    TabbedNavHost(
+        tabState = tabState,
+        tabGraphs = MainTabsConfig.allTabs.associateWith { createTabGraph(it) },
+        tabUI = { content ->
+            Scaffold(
+                bottomBar = { MyBottomNavigation(tabState.activeTab) }
+            ) { padding ->
+                Box(modifier = Modifier.padding(padding)) {
+                    content()
+                }
+            }
+        }
+    )
+}
+```
+
+**After (New API):**
+```kotlin
+// Tab definition via annotations
+@Tab(name = "mainTabs", initialTab = "Home")
+sealed class MainTabs : Destination {
+    @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
+    @Destination(route = "tabs/home")
+    data object Home : MainTabs()
+    
+    @TabItem(label = "Search", icon = "search", rootGraph = SearchDestination::class)
+    @Destination(route = "tabs/search")
+    data object Search : MainTabs()
+    
+    @TabItem(label = "Profile", icon = "person", rootGraph = ProfileDestination::class)
+    @Destination(route = "tabs/profile")
+    data object Profile : MainTabs()
+}
+
+// App entry point with tabWrapper
+@Composable
+fun App() {
+    val navTree = remember { buildMainTabsNavNode() }  // KSP-generated
+    val navigator = rememberNavigator(navTree)
+    
+    QuoVadisHost(
+        navigator = navigator,
+        screenRegistry = GeneratedScreenRegistry,
+        tabWrapper = { tabNode, tabContent ->
+            Scaffold(
+                bottomBar = { MyBottomNavigation(tabNode.activeStackIndex) }
+            ) { padding ->
+                Box(modifier = Modifier.padding(padding)) {
+                    tabContent()  // Library provides active tab content
+                }
+            }
+        }
+    )
+}
+
+// Tab switching
+navigator.switchTab(MainTabs.Profile)
+```
+
+**Key Changes:**
+- No separate `TabbedNavigatorConfig` needed
+- `@Tab` + `@TabItem` annotations replace config objects
+- `TabbedNavHost` → `QuoVadisHost` with `tabWrapper` parameter
+- User controls wrapper (scaffold/bottom nav), library provides content slot
+- New `switchTab()` method for tab switching
+
+#### Example 4: Defining Destinations (General Pattern)
+
+**Old Pattern:**
+```kotlin
+// Linear graph with routes
+@Graph("feature", startDestination = "step1")
+sealed class FeatureDestination : Destination {
+    @Route("feature/step1")
+    data object Step1 : FeatureDestination()
+    
+    @Route("feature/step2")
+    data class Step2(val data: String) : FeatureDestination()
+}
+```
+
+**New Pattern - Stack (Linear):**
+```kotlin
+@Stack(name = "feature", startDestination = "Step1")
+sealed class FeatureDestination : Destination {
+    @Destination(route = "feature/step1")
+    data object Step1 : FeatureDestination()
+    
+    @Destination(route = "feature/step2/{data}")
+    data class Step2(val data: String) : FeatureDestination()
+}
+```
+
+**New Pattern - Tab (Parallel Stacks):**
+```kotlin
+@Tab(name = "main", initialTab = "Home")
+sealed class MainDestination : Destination {
+    @TabItem(label = "Home", icon = "home", rootGraph = HomeGraph::class)
+    @Destination(route = "tab/home")
+    data object Home : MainDestination()
+    
+    @TabItem(label = "Settings", icon = "settings", rootGraph = SettingsGraph::class)
+    @Destination(route = "tab/settings")
+    data object Settings : MainDestination()
+}
+```
+
+**New Pattern - Pane (Adaptive Layout):**
+```kotlin
+@Pane(name = "adaptive", backBehavior = PaneBackBehavior.PopUntilScaffoldValueChange)
+sealed class AdaptiveDestination : Destination {
+    @PaneItem(role = PaneRole.LIST, adaptStrategy = AdaptStrategy.HIDE, rootGraph = ListGraph::class)
+    @Destination(route = "pane/list")
+    data object List : AdaptiveDestination()
+    
+    @PaneItem(role = PaneRole.DETAIL, adaptStrategy = AdaptStrategy.SHOW_PLACEHOLDER, rootGraph = DetailGraph::class)
+    @Destination(route = "pane/detail")
+    data object Detail : AdaptiveDestination()
+}
+```
+
+### 5.3 Demo App Rewrite Strategy
+
+The demo app (`composeApp`) serves as the reference implementation and will be rewritten to showcase all new patterns:
+
+1. **Update all destination definitions** - Replace `@Graph`/`@Route` with `@Stack`/`@Tab`/`@Pane`/`@Destination`
+2. **Update all screen bindings** - Replace `@Content` with `@Screen`
+3. **Replace navigation hosts** - Single `QuoVadisHost` with `tabWrapper` and `paneWrapper`
+4. **Configure animation registry** - Centralize transition definitions
+5. **Update navigation calls** - Use new `switchTab()` and destination-based navigation
+
+The rewritten demo app will demonstrate:
+- Simple stack navigation
+- Tabbed navigation with bottom bar
+- Master-detail patterns
+- Process/wizard flows
+- Nested tabs with full-screen detail
+- Deep linking with route templates
+- Shared element transitions
+- Predictive back gestures
 
 ## ---
 
