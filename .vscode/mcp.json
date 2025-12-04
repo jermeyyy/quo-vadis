@@ -29,38 +29,38 @@
 				"GRADLE_WRAPPER": "/Users/jermey/Projects/NavPlayground/gradlew"
 			}
 		},
-		"docs-mcp": {
-			"url": "http://localhost:6280/mcp",
-			"type": "http"
-		},
-		"javadoc-mcp": {
-			"type": "stdio",
-			"command": "uv",
-			"args": [
-				"run",
-				"--directory",
-				"/Users/jermey/Projects/javadoc-mcp",
-				"main.py"
-			]
-		},
-		"drawio": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"drawio-mcp-server"
-			]
-		},
-		"appium": {
-			"type": "stdio",
-			"command": "npx",
-			"args": [
-				"appium-mcp@latest"
-			],
-			"env": {
-				"ANDROID_HOME": "/Users/jermey/Library/Android/sdk",
-				"CAPABILITIES_CONFIG": "/Users/jermey/Projects/NavPlayground/capabilities.json"
-			}
-		}
+		// "docs-mcp": {
+		// 	"url": "http://localhost:6280/mcp",
+		// 	"type": "http"
+		// },
+		// "javadoc-mcp": {
+		// 	"type": "stdio",
+		// 	"command": "uv",
+		// 	"args": [
+		// 		"run",
+		// 		"--directory",
+		// 		"/Users/jermey/Projects/javadoc-mcp",
+		// 		"main.py"
+		// 	]
+		// },
+		// "drawio": {
+		// 	"command": "npx",
+		// 	"args": [
+		// 		"-y",
+		// 		"drawio-mcp-server"
+		// 	]
+		// },
+		// "appium": {
+		// 	"type": "stdio",
+		// 	"command": "npx",
+		// 	"args": [
+		// 		"appium-mcp@latest"
+		// 	],
+		// 	"env": {
+		// 		"ANDROID_HOME": "/Users/jermey/Library/Android/sdk",
+		// 		"CAPABILITIES_CONFIG": "/Users/jermey/Projects/NavPlayground/capabilities.json"
+		// 	}
+		// }
 	},
 	"inputs": []
 }

@@ -26,18 +26,6 @@ fun BackStack.findByRoute(route: String): BackStackEntry? {
 }
 
 /**
- * Extension to get the size of the backstack.
- */
-val BackStack.size: Int
-    get() = stack.value.size
-
-/**
- * Extension to check if the backstack is empty.
- */
-val BackStack.isEmpty: Boolean
-    get() = stack.value.isEmpty()
-
-/**
  * Extension to get all routes in the backstack.
  */
 val BackStack.routes: List<String>

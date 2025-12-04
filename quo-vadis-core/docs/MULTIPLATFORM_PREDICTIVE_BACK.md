@@ -204,6 +204,78 @@ fun App() {
 }
 ```
 
+## Nested Navigation and Animation Skipping
+
+### LocalPredictiveBackInProgress CompositionLocal
+
+To coordinate animations across nested navigation structures (like tabs within a navigable screen), the library provides a `LocalPredictiveBackInProgress` CompositionLocal:
+
+```kotlin
+val LocalPredictiveBackInProgress = staticCompositionLocalOf { false }
+```
+
+**When it's `true`:**
+- During the predictive back gesture (user is dragging)
+- During the exit animation (after gesture release, before navigation completes)
+
+**When it's `false`:**
+- Normal navigation (no predictive back in progress)
+- After the exit animation completes
+
+### Why Animation Skipping is Needed
+
+When a predictive back gesture is in progress, nested navigators (like tab containers) should skip their own animations to prevent visual glitches:
+
+1. **Double Animation Problem**: Without skipping, both the outer predictive back animation AND inner tab switch animations would play simultaneously, creating jarring visuals
+2. **State Synchronization**: The outer animation expects the inner content to remain stable during the gesture
+3. **Performance**: Skipping unnecessary animations reduces rendering overhead during the gesture
+
+### Automatic Handling in Tab Navigation
+
+`TabbedNavHost` and `TabNavigationContainer` automatically check `LocalPredictiveBackInProgress` and skip tab switch animations when a predictive back is in progress:
+
+- Tab switches happen instantly (no crossfade or slide)
+- Ensures smooth visual experience during back gestures
+- No additional configuration needed
+
+### Custom Component Integration
+
+If you're building custom components with animations that should respect predictive back state, you can check the CompositionLocal:
+
+```kotlin
+@Composable
+fun MyNestedContent() {
+    val isPredictiveBack = LocalPredictiveBackInProgress.current
+    
+    // Use instant transitions during predictive back
+    val transitionSpec = if (isPredictiveBack) {
+        TransitionSpec.None  // Instant, no animation
+    } else {
+        TransitionSpec.Default  // Normal animation
+    }
+    
+    // Apply transitionSpec to your animations
+    AnimatedContent(
+        targetState = currentState,
+        transitionSpec = {
+            if (isPredictiveBack) {
+                EnterTransition.None togetherWith ExitTransition.None
+            } else {
+                fadeIn() togetherWith fadeOut()
+            }
+        }
+    ) { state ->
+        // Content
+    }
+}
+```
+
+### Best Practices
+
+1. **Don't fight the gesture**: Let the outer predictive back animation drive the visual experience
+2. **Skip, don't delay**: Instant state changes are better than queued animations during gestures
+3. **Restore after completion**: Normal animations resume automatically when `LocalPredictiveBackInProgress` becomes `false`
+
 ## Technical Implementation Details
 
 ### Gesture Handler

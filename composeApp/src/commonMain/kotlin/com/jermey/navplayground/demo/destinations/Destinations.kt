@@ -119,6 +119,18 @@ sealed class DeepLinkDestination : Destination {
 }
 
 /**
+ * State-Driven Navigation demo destination.
+ * 
+ * Demonstrates Navigation 3-style state-driven navigation API with
+ * direct backstack manipulation and Compose state observation.
+ */
+@Graph("statedriven", startDestination = "Demo")
+sealed class StateDrivenDemoDestination : Destination {
+    @Route("statedriven/demo")
+    data object Demo : StateDrivenDemoDestination()
+}
+
+/**
  * Master-Detail pattern destinations.
  * 
  * ANNOTATION PATTERN: Typed Destinations (With Arguments)

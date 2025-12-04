@@ -33,15 +33,36 @@ import kotlinx.coroutines.flow.update
  * // Get a tab's navigator
  * val homeNav = state.getNavigatorForTab(HomeTab)
  * ```
+ *
+ * @param config The configuration for tabbed navigation.
+ * @param parentEntry Optional parent back stack entry used to persist and restore
+ *                    the selected tab state. When provided, the selected tab will be
+ *                    restored from the entry's extras on initialization and synced
+ *                    back when the tab selection changes.
  */
 class TabNavigatorState(
-    val config: TabNavigatorConfig
+    val config: TabNavigatorConfig,
+    private val parentEntry: BackStackEntry? = null
 ) : BackPressHandler {
     
     /**
      * Currently selected tab.
+     * Restored from parent entry extras if available, otherwise uses initial tab from config.
      */
-    private val _selectedTab = MutableStateFlow(config.initialTab)
+    private val _selectedTab = MutableStateFlow(
+        // Restore from entry extras if available
+        run {
+            val savedRoute = parentEntry?.getExtra(EXTRA_SELECTED_TAB_ROUTE)
+            val restoredTab = savedRoute?.let { route -> config.allTabs.find { it.route == route } }
+            println("DEBUG_TAB_STATE: TabNavigatorState init")
+            println("DEBUG_TAB_STATE: - parentEntry.id = ${parentEntry?.id}")
+            println("DEBUG_TAB_STATE: - savedRoute = $savedRoute")
+            println("DEBUG_TAB_STATE: - restoredTab = ${restoredTab?.route}")
+            println("DEBUG_TAB_STATE: - initialTab = ${config.initialTab.route}")
+            println("DEBUG_TAB_STATE: - using = ${(restoredTab ?: config.initialTab).route}")
+            restoredTab ?: config.initialTab
+        }
+    )
     val selectedTab: StateFlow<TabDefinition> = _selectedTab.asStateFlow()
     
     /**
@@ -118,6 +139,12 @@ class TabNavigatorState(
         
         // Switch to the new tab
         _selectedTab.update { tab }
+        
+        // Sync to parent entry extras for state restoration
+        parentEntry?.setExtra(EXTRA_SELECTED_TAB_ROUTE, tab.route)
+        val savedExtra = parentEntry?.getExtra(EXTRA_SELECTED_TAB_ROUTE)
+        println("DEBUG_TAB_STATE: Saved to extras: $savedExtra (expected: ${tab.route})")
+        
         println("DEBUG_TAB_NAV: Tab switched successfully to ${tab.route}")
     }
     

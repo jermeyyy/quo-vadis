@@ -83,6 +83,8 @@ fun TabNavigationContainer(
  *
  * Wraps tab content in [AnimatedVisibility] to provide smooth transitions
  * when tabs are switched.
+ *
+ * During predictive back gestures, animations are skipped to prevent visual glitches.
  */
 @Composable
 private fun TabContent(
@@ -90,11 +92,20 @@ private fun TabContent(
     transitionSpec: TabTransitionSpec,
     content: @Composable () -> Unit
 ) {
-    println("DEBUG_TAB_NAV: TabContent - visible: $visible")
+    val isPredictiveBack = LocalPredictiveBackInProgress.current
+
+    // Skip animation during predictive back to prevent blink
+    val effectiveTransition = if (isPredictiveBack) {
+        TabTransitionSpec.None
+    } else {
+        transitionSpec
+    }
+
+    println("DEBUG_TAB_NAV: TabContent - visible: $visible, isPredictiveBack: $isPredictiveBack")
     AnimatedVisibility(
         visible = visible,
-        enter = transitionSpec.enter,
-        exit = transitionSpec.exit
+        enter = effectiveTransition.enter,
+        exit = effectiveTransition.exit
     ) {
         println("DEBUG_TAB_NAV: TabContent - AnimatedVisibility content lambda invoked")
         content()

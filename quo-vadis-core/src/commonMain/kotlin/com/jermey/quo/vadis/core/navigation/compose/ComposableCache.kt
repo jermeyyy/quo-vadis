@@ -13,14 +13,22 @@ import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
  * Cache for composables associated with backstack entries.
  * Keeps composables alive to enable smooth transitions and predictive back gestures.
  *
- * @param maxCacheSize Maximum number of composables to keep in cache (default 3)
+ * The cache supports two protection mechanisms:
+ * - **Locked entries**: Temporarily protected during animations (via [lockEntry]/[unlockEntry])
+ * - **Priority entries**: Permanently protected from eviction (via [setPriority])
+ *
+ * Priority entries are intended for screens that contain nested navigators (e.g., tabbed screens).
+ * These screens should not be evicted as recreating them causes visual glitches during back navigation.
+ *
+ * @param maxCacheSize Maximum number of composables to keep in cache (default 5)
  */
 @Stable
 class ComposableCache(
-    private val maxCacheSize: Int = 3
+    private val maxCacheSize: Int = 5
 ) {
     private val accessTimeMap = mutableStateMapOf<String, Long>()
     private val lockedEntries = mutableStateSetOf<String>()
+    private val priorityEntries = mutableStateSetOf<String>()
     private var counter = 0L
 
     /**
@@ -36,6 +44,25 @@ class ComposableCache(
      */
     fun unlockEntry(entryId: String) {
         lockedEntries.remove(entryId)
+    }
+
+    /**
+     * Set the priority status for an entry.
+     * Priority entries are never evicted from the cache, regardless of access time.
+     *
+     * Use this for screens that contain nested navigators (e.g., tabbed navigation screens).
+     * These screens are expensive to recreate and their eviction can cause visual glitches
+     * during back navigation or predictive back gestures.
+     *
+     * @param entryId The ID of the entry to mark as priority
+     * @param isPriority Whether the entry should be treated as priority (true) or not (false)
+     */
+    fun setPriority(entryId: String, isPriority: Boolean) {
+        if (isPriority) {
+            priorityEntries.add(entryId)
+        } else {
+            priorityEntries.remove(entryId)
+        }
     }
 
     /**
@@ -61,7 +88,7 @@ class ComposableCache(
             // Cleanup old entries if cache is full
             if (accessTimeMap.size > maxCacheSize) {
                 val oldestEntry = accessTimeMap.entries
-                    .filter { it.key !in lockedEntries } // Don't evict locked entries
+                    .filter { it.key !in lockedEntries && it.key !in priorityEntries } // Don't evict locked or priority entries
                     .minByOrNull { it.value }
                 oldestEntry?.let { (oldId, _) ->
                     if (oldId != entryId) {
