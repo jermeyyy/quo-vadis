@@ -63,7 +63,7 @@ interface Navigator : ParentNavigator {
      * During navigation, this holds transition metadata for animation
      * coordination. Observe this to drive animations in the renderer.
      */
-    val transitionState: StateFlow<TransitionState>
+    val transitionState: StateFlow<LegacyTransitionState>
 
     // =========================================================================
     // DERIVED CONVENIENCE PROPERTIES

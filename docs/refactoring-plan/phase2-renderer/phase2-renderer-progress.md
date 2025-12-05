@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-05  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 4/12 tasks (33%)
+> **Progress**: 5/12 tasks (42%)
 
 ## Overview
 
@@ -18,7 +18,7 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 | [RENDER-002A](./RENDER-002A-core-flatten.md) | Core flattenState Algorithm (Screen/Stack) | 🟢 Completed | 2025-12-05 | FlattenResult, TreeFlattener with Screen/Stack |
 | [RENDER-002B](./RENDER-002B-tab-flattening.md) | TabNode Flattening with User Wrapper | 🟢 Completed | 2025-12-05 | TAB_WRAPPER/TAB_CONTENT surfaces, caching hints |
 | [RENDER-002C](./RENDER-002C-pane-flattening.md) | PaneNode Adaptive Flattening | 🟢 Completed | 2025-12-05 | WindowSizeClass types, adaptive flattening |
-| [RENDER-003](./RENDER-003-transition-state.md) | Create TransitionState Sealed Class | ⚪ Not Started | - | Depends on Phase 1 |
+| [RENDER-003](./RENDER-003-transition-state.md) | Create TransitionState Sealed Class | 🟢 Completed | 2025-12-05 | Tree-aware TransitionState with manager |
 | [RENDER-004](./RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | ⚪ Not Started | - | Depends on RENDER-001..003 |
 | [RENDER-005](./RENDER-005-predictive-back.md) | Integrate Predictive Back with Speculative Pop | ⚪ Not Started | - | Depends on RENDER-004 |
 | [RENDER-006](./RENDER-006-animation-registry.md) | Create AnimationRegistry | ⚪ Not Started | - | Depends on RENDER-004 |
@@ -152,6 +152,73 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
   - Build passes: `:quo-vadis-core:build -x detekt` ✓
   - Tests pass: `:quo-vadis-core:desktopTest` ✓
 
+### RENDER-003: Create TransitionState Sealed Class ✅
+- **Completed**: 2025-12-05
+- **Files Created**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/core/TransitionState.kt` (completely redesigned)
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/core/LegacyTransitionState.kt`
+  - `quo-vadis-core/src/commonTest/kotlin/com/jermey/quo/vadis/core/navigation/core/TransitionStateTest.kt`
+- **Files Modified**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/core/Navigator.kt` (uses LegacyTransitionState)
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/core/TreeNavigator.kt` (uses LegacyTransitionState)
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/core/TabScopedNavigator.kt` (uses LegacyTransitionState)
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/testing/FakeNavigator.kt` (uses LegacyTransitionState)
+  - `quo-vadis-core/src/commonTest/kotlin/com/jermey/quo/vadis/core/navigation/core/TreeNavigatorTest.kt` (uses LegacyTransitionState)
+- **Summary**:
+  - **New TransitionState** - Complete tree-aware redesign:
+    - `TransitionDirection` enum: FORWARD, BACKWARD, NONE
+    - `TransitionState` sealed class with:
+      - `Idle(current: NavNode)` - holds current navigation tree
+      - `Proposed(current: NavNode, proposed: NavNode, progress: Float)` - predictive back gestures
+      - `Animating(current: NavNode, target: NavNode, progress: Float, direction: TransitionDirection)` - animations
+    - All states are `@Serializable` for state restoration
+    - Abstract properties: `direction`, `current`, `target` (nullable), `effectiveTarget`
+    - Computed properties: `isIdle`, `isProposed`, `isAnimating`, `progress`
+    - Query methods:
+      - `affectsStack(stackKey)` - identifies stacks with changed children
+      - `affectsTab(tabKey)` - identifies tab switches
+      - `previousChildOf(stackKey)` - gets screen being covered/revealed
+      - `previousTabIndex(tabKey)` - gets previous tab during switch
+      - `animationComposablePair()` - returns composable pair for animation
+      - `isIntraTabNavigation(tabKey)` - checks if navigation is within same tab
+      - `isIntraPaneNavigation(paneKey)` - checks if navigation is within same pane
+      - `isCrossNodeTypeNavigation()` - checks if navigation crosses node types
+    - Progress methods:
+      - `Proposed.withProgress(newProgress)` - returns updated copy with clamped progress
+      - `Animating.withProgress(newProgress)` - returns updated copy with clamped progress
+      - `Animating.complete()` - returns `Idle(target)`
+    - Private helpers for tree diffing: `findChangedStacks()`, `hasTabIndexChanged()`, `findLastChild()`, `findSecondToLastChild()`, `findPreviousTabIndex()`
+  - **TransitionStateManager** - State machine manager:
+    - `_state: MutableStateFlow<TransitionState>` internal
+    - `state: StateFlow<TransitionState>` public
+    - `currentState: TransitionState` getter
+    - `startAnimation(target, direction)` - Idle → Animating
+    - `startProposed(proposed)` - Idle → Proposed
+    - `updateProgress(progress)` - updates current state progress
+    - `commitProposed()` - Proposed → Animating(BACKWARD)
+    - `cancelProposed()` - Proposed → Idle
+    - `completeAnimation()` - Animating → Idle(target)
+    - `forceIdle(state)` - force set to Idle
+    - Throws `IllegalStateException` for invalid transitions
+  - **Backward compatibility**:
+    - Created `LegacyTransitionState.kt` with old API (Idle, InProgress, PredictiveBack, Seeking)
+    - Updated Navigator interface to use `LegacyTransitionState`
+    - Updated all navigator implementations (TreeNavigator, TabScopedNavigator, FakeNavigator)
+    - Migrated TreeNavigatorTest to use LegacyTransitionState
+    - Old code continues to work until migrated to new tree-based architecture
+  - **Comprehensive test suite** (55+ tests):
+    - Idle state tests: holds NavNode, has no progress, direction is NONE
+    - Proposed state tests: tracks gesture progress, progress clamping (0-1)
+    - Animating state tests: holds current/target, direction tracking, complete() returns Idle
+    - Query method tests: affectsStack, affectsTab, previousChildOf, previousTabIndex
+    - TransitionStateManager tests: valid transitions, invalid transition exceptions, state machine semantics
+    - Nested structure tests: tab → stack → screen hierarchies
+    - Backward compatibility extension tests: isAnimating, progress
+  - Full KDoc documentation on all public APIs
+- **Verified**: 
+  - Build passes: `:composeApp:assembleDebug` ✓
+  - Tests pass: `test` ✓ (518 tests, including 55 new TransitionState tests)
+
 ---
 
 ## In Progress Tasks
@@ -168,9 +235,10 @@ _None currently blocked._
 
 ## Ready to Start
 
-- **RENDER-003**: Create TransitionState Sealed Class
+- **RENDER-004**: Build QuoVadisHost Composable (all dependencies met)
 - **RENDER-008**: User Wrapper API (TabNode/PaneNode)
 - **RENDER-009**: WindowSizeClass Integration (platform-specific `calculateWindowSizeClass()` implementations)
+- **RENDER-010**: Animation Pair Tracking (now unblocked by RENDER-003)
 
 ---
 
@@ -182,7 +250,7 @@ Phase 1 ─► RENDER-001 ─► RENDER-002A ─┬─► RENDER-002B ✓
                 │                      ├─► RENDER-008
                 │                      └─► RENDER-009
                 │
-                └─► RENDER-003 ─► RENDER-010
+                └─► RENDER-003 ✓ ─► RENDER-010
                          │
                          ▼
                     RENDER-004 ─┬─► RENDER-005

@@ -147,7 +147,7 @@ class TreeNavigatorTest {
 
         val transitionState = navigator.transitionState.value
 
-        assertEquals(TransitionState.Idle, transitionState)
+        assertEquals(LegacyTransitionState.Idle, transitionState)
     }
 
     @Test
@@ -224,8 +224,8 @@ class TreeNavigatorTest {
         navigator.navigate(ProfileDestination, TestTransition)
 
         val transitionState = navigator.transitionState.value
-        assertTrue(transitionState is TransitionState.InProgress)
-        assertEquals(TestTransition, (transitionState as TransitionState.InProgress).transition)
+        assertTrue(transitionState is LegacyTransitionState.InProgress)
+        assertEquals(TestTransition, (transitionState as LegacyTransitionState.InProgress).transition)
         assertEquals(0f, transitionState.progress)
     }
 
@@ -357,7 +357,7 @@ class TreeNavigatorTest {
         navigator.navigateAndReplace(ProfileDestination, TestTransition)
 
         val transitionState = navigator.transitionState.value
-        assertTrue(transitionState is TransitionState.InProgress)
+        assertTrue(transitionState is LegacyTransitionState.InProgress)
     }
 
     // =========================================================================
@@ -847,7 +847,7 @@ class TreeNavigatorTest {
 
         navigator.updateTransitionProgress(0.5f)
 
-        val transitionState = navigator.transitionState.value as TransitionState.InProgress
+        val transitionState = navigator.transitionState.value as LegacyTransitionState.InProgress
         assertEquals(0.5f, transitionState.progress)
     }
 
@@ -858,7 +858,7 @@ class TreeNavigatorTest {
 
         navigator.updateTransitionProgress(0.5f)
 
-        assertEquals(TransitionState.Idle, navigator.transitionState.value)
+        assertEquals(LegacyTransitionState.Idle, navigator.transitionState.value)
     }
 
     @Test
@@ -869,7 +869,7 @@ class TreeNavigatorTest {
 
         navigator.completeTransition()
 
-        assertEquals(TransitionState.Idle, navigator.transitionState.value)
+        assertEquals(LegacyTransitionState.Idle, navigator.transitionState.value)
     }
 
     @Test
@@ -881,8 +881,8 @@ class TreeNavigatorTest {
         navigator.startPredictiveBack()
 
         val transitionState = navigator.transitionState.value
-        assertTrue(transitionState is TransitionState.PredictiveBack)
-        assertEquals(0f, (transitionState as TransitionState.PredictiveBack).progress)
+        assertTrue(transitionState is LegacyTransitionState.PredictiveBack)
+        assertEquals(0f, (transitionState as LegacyTransitionState.PredictiveBack).progress)
     }
 
     @Test
@@ -893,7 +893,7 @@ class TreeNavigatorTest {
 
         navigator.startPredictiveBack()
 
-        val transitionState = navigator.transitionState.value as TransitionState.PredictiveBack
+        val transitionState = navigator.transitionState.value as LegacyTransitionState.PredictiveBack
         assertNotNull(transitionState.currentKey)
         assertNotNull(transitionState.previousKey)
     }
@@ -907,7 +907,7 @@ class TreeNavigatorTest {
 
         navigator.updatePredictiveBack(0.5f, 0.3f, 0.7f)
 
-        val transitionState = navigator.transitionState.value as TransitionState.PredictiveBack
+        val transitionState = navigator.transitionState.value as LegacyTransitionState.PredictiveBack
         assertEquals(0.5f, transitionState.progress)
         assertEquals(0.3f, transitionState.touchX)
         assertEquals(0.7f, transitionState.touchY)
@@ -922,7 +922,7 @@ class TreeNavigatorTest {
 
         navigator.updatePredictiveBack(1.5f, 0f, 0f)
 
-        val transitionState = navigator.transitionState.value as TransitionState.PredictiveBack
+        val transitionState = navigator.transitionState.value as LegacyTransitionState.PredictiveBack
         assertEquals(1f, transitionState.progress)
     }
 
@@ -935,7 +935,7 @@ class TreeNavigatorTest {
 
         navigator.updatePredictiveBack(0.5f, -0.5f, 1.5f)
 
-        val transitionState = navigator.transitionState.value as TransitionState.PredictiveBack
+        val transitionState = navigator.transitionState.value as LegacyTransitionState.PredictiveBack
         assertEquals(0f, transitionState.touchX)
         assertEquals(1f, transitionState.touchY)
     }
@@ -949,7 +949,7 @@ class TreeNavigatorTest {
 
         navigator.cancelPredictiveBack()
 
-        assertEquals(TransitionState.Idle, navigator.transitionState.value)
+        assertEquals(LegacyTransitionState.Idle, navigator.transitionState.value)
     }
 
     @Test
@@ -961,7 +961,7 @@ class TreeNavigatorTest {
 
         navigator.commitPredictiveBack()
 
-        assertEquals(TransitionState.Idle, navigator.transitionState.value)
+        assertEquals(LegacyTransitionState.Idle, navigator.transitionState.value)
         assertEquals(HomeDestination, navigator.currentDestination.value)
     }
 
@@ -1073,7 +1073,7 @@ class TreeNavigatorTest {
         navigator.updateState(newState, TestTransition)
 
         val transitionState = navigator.transitionState.value
-        assertTrue(transitionState is TransitionState.InProgress)
+        assertTrue(transitionState is LegacyTransitionState.InProgress)
     }
 
     @Test
@@ -1086,7 +1086,7 @@ class TreeNavigatorTest {
 
         navigator.updateState(newState, null)
 
-        assertEquals(TransitionState.Idle, navigator.transitionState.value)
+        assertEquals(LegacyTransitionState.Idle, navigator.transitionState.value)
     }
 
     // =========================================================================

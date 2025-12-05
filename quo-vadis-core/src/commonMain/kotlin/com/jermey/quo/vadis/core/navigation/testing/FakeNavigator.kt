@@ -14,7 +14,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.TransitionState
+import com.jermey.quo.vadis.core.navigation.core.LegacyTransitionState
 import com.jermey.quo.vadis.core.navigation.core.activeLeaf
 import com.jermey.quo.vadis.core.navigation.core.activeStack
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,8 +43,8 @@ class FakeNavigator : Navigator {
     )
     override val state: StateFlow<NavNode> = _state.asStateFlow()
 
-    private val _transitionState = MutableStateFlow<TransitionState>(TransitionState.Idle)
-    override val transitionState: StateFlow<TransitionState> = _transitionState.asStateFlow()
+    private val _transitionState = MutableStateFlow<LegacyTransitionState>(LegacyTransitionState.Idle)
+    override val transitionState: StateFlow<LegacyTransitionState> = _transitionState.asStateFlow()
 
     private val _canNavigateBack = MutableStateFlow(false)
     override val canNavigateBack: StateFlow<Boolean> = _canNavigateBack.asStateFlow()
@@ -249,10 +249,10 @@ class FakeNavigator : Navigator {
     override fun updateTransitionProgress(progress: Float) {
         val current = _transitionState.value
         when (current) {
-            is TransitionState.InProgress -> {
+            is LegacyTransitionState.InProgress -> {
                 _transitionState.value = current.copy(progress = progress)
             }
-            is TransitionState.PredictiveBack -> {
+            is LegacyTransitionState.PredictiveBack -> {
                 _transitionState.value = current.copy(progress = progress)
             }
             else -> { /* Ignore if not in transition */ }
@@ -260,7 +260,7 @@ class FakeNavigator : Navigator {
     }
 
     override fun startPredictiveBack() {
-        _transitionState.value = TransitionState.PredictiveBack(
+        _transitionState.value = LegacyTransitionState.PredictiveBack(
             progress = 0f,
             touchX = 0f,
             touchY = 0f
@@ -269,7 +269,7 @@ class FakeNavigator : Navigator {
 
     override fun updatePredictiveBack(progress: Float, touchX: Float, touchY: Float) {
         val current = _transitionState.value
-        if (current is TransitionState.PredictiveBack) {
+        if (current is LegacyTransitionState.PredictiveBack) {
             _transitionState.value = current.copy(
                 progress = progress,
                 touchX = touchX,
@@ -279,16 +279,16 @@ class FakeNavigator : Navigator {
     }
 
     override fun cancelPredictiveBack() {
-        _transitionState.value = TransitionState.Idle
+        _transitionState.value = LegacyTransitionState.Idle
     }
 
     override fun commitPredictiveBack() {
         navigateBack()
-        _transitionState.value = TransitionState.Idle
+        _transitionState.value = LegacyTransitionState.Idle
     }
 
     override fun completeTransition() {
-        _transitionState.value = TransitionState.Idle
+        _transitionState.value = LegacyTransitionState.Idle
     }
 
     // =========================================================================
