@@ -14,7 +14,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 | Phase | Status | Progress | Tasks Done | Tasks Total |
 |-------|--------|----------|------------|-------------|
-| [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟡 In Progress | 80% | 4 | 5 |
+| [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟡 In Progress | 83% | 5 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | ⚪ Not Started | 0% | 0 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
@@ -22,7 +22,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~8% | 4 | 51 |
+| **TOTAL** | 🟡 In Progress | ~10% | 5 | 51 |
 
 ---
 
@@ -41,6 +41,22 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-05 (Latest)
+- ✅ **CORE-004**: Implement NavNode Serialization - **COMPLETED**
+  - Added `@SerialName` annotations to all NavNode types for stable versioning
+  - Created `NavNodeSerializer.kt` with `toJson`, `fromJson`, `fromJsonOrNull` utilities
+  - Created `StateRestoration` interface for platform-specific persistence
+  - Created `InMemoryStateRestoration` for testing
+  - Created `AndroidStateRestoration` with SavedStateHandle integration
+  - Added Bundle extension functions for Activity/Fragment lifecycle
+  - Build passes: `:composeApp:assembleDebug` ✓
+  - Tests pass: `:quo-vadis-core:desktopTest` ✓
+  
+  **Files Created:**
+  - `NavNodeSerializer.kt` - Core serialization utilities
+  - `StateRestoration.kt` - Platform abstraction + InMemoryStateRestoration
+  - `AndroidStateRestoration.kt` - Android SavedStateHandle implementation
+
+### 2025-12-05 (Earlier)
 - ✅ **CORE-003**: Refactor Navigator to StateFlow<NavNode> - **COMPLETED**
   - All dependent files updated with compatibility layer or stubs
   - Build passes: `:composeApp:assembleDebug` ✓
@@ -74,14 +90,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Next Up (Prioritized)
 
-1. **CORE-004**: Create FakeTreeNavigator for Testing
-   - Dependencies: CORE-003 ✅
+1. **CORE-005**: Comprehensive Unit Tests for Phase 1
+   - Dependencies: CORE-001 ✅, CORE-002 ✅, CORE-003 ✅, CORE-004 ✅
    - Ready to start
 
-2. **CORE-005**: Update BackStack for Compatibility (if needed)
-   - May be superseded by NavigatorCompat approach
-
-3. **Phase 2: Renderer** - Rewrite compose layer
+2. **Phase 2: Renderer** - Rewrite compose layer
    - `GraphNavHost.kt` - Main navigation composable  
    - `PredictiveBackNavigation.kt` - Gesture handling
    - `TabbedNavHost.kt` - Tab navigation

@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -71,6 +72,7 @@ sealed interface NavNode {
  * @property destination The destination data (route, arguments, transitions)
  */
 @Serializable
+@SerialName("screen")
 data class ScreenNode(
     override val key: String,
     override val parentKey: String?,
@@ -95,6 +97,7 @@ data class ScreenNode(
  * @property children Ordered list of child nodes (last = active)
  */
 @Serializable
+@SerialName("stack")
 data class StackNode(
     override val key: String,
     override val parentKey: String?,
@@ -146,6 +149,7 @@ data class StackNode(
  * @property activeStackIndex Index of the currently active tab (0-based)
  */
 @Serializable
+@SerialName("tab")
 data class TabNode(
     override val key: String,
     override val parentKey: String?,
@@ -272,6 +276,7 @@ data class PaneConfiguration(
  * @property backBehavior How back navigation should behave in this container
  */
 @Serializable
+@SerialName("pane")
 data class PaneNode(
     override val key: String,
     override val parentKey: String?,

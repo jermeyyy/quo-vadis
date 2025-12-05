@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-05  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 4/5 tasks (80%)
+> **Progress**: 5/6 tasks (83%)
 
 ## Overview
 
@@ -17,12 +17,42 @@ This phase replaces the linear backstack with a recursive tree structure. It est
 | [CORE-001](./CORE-001-navnode-hierarchy.md) | Define NavNode Sealed Hierarchy | 🟢 Completed | 2025-12-05 | Full implementation with all node types |
 | [CORE-002](./CORE-002-tree-mutator.md) | Implement TreeMutator Operations | 🟢 Completed | 2025-12-05 | All operations implemented with pane support |
 | [CORE-003](./CORE-003-navigator-refactor.md) | Refactor Navigator to StateFlow<NavNode> | 🟢 Completed | 2025-12-05 | All dependent files updated, build green |
-| [CORE-004](./CORE-004-state-serialization.md) | Implement NavNode Serialization | ⚪ Not Started | - | Ready to start |
+| [CORE-004](./CORE-004-state-serialization.md) | Implement NavNode Serialization | 🟢 Completed | 2025-12-05 | Full serialization + platform restoration |
 | [CORE-005](./CORE-005-unit-tests.md) | Comprehensive Unit Tests | ⚪ Not Started | - | Can start for completed tasks |
 
 ---
 
 ## Completed Tasks
+
+### CORE-004: Implement NavNode Serialization ✅
+
+**Completed**: 2025-12-05
+
+**Implementation Summary**:
+- Added `@SerialName` annotations to all NavNode types for stable serialization
+- Created `NavNodeSerializer.kt` with core utilities (`toJson`, `fromJson`, `fromJsonOrNull`)
+- Created `StateRestoration.kt` interface with `InMemoryStateRestoration` and `NoOpStateRestoration`
+- Created `AndroidStateRestoration.kt` with SavedStateHandle integration
+
+**Files Modified**:
+- `NavNode.kt` - Added `@SerialName` import and annotations to all node types
+
+**Files Created**:
+- `quo-vadis-core/src/commonMain/kotlin/.../serialization/NavNodeSerializer.kt`
+  - `navNodeJson` - Pre-configured Json instance for NavNode serialization
+  - `NavNodeSerializer` - Utility object for serialize/deserialize operations
+  - `DestinationSerializerRegistry` - Registry for custom Destination serializers
+- `quo-vadis-core/src/commonMain/kotlin/.../serialization/StateRestoration.kt`
+  - `StateRestoration` - Platform abstraction interface
+  - `InMemoryStateRestoration` - Testing implementation
+  - `NoOpStateRestoration` - No-op implementation
+- `quo-vadis-core/src/androidMain/kotlin/.../serialization/AndroidStateRestoration.kt`
+  - `AndroidStateRestoration` - SavedStateHandle-based implementation
+  - Bundle extension functions: `saveNavState()`, `restoreNavState()`
+
+**Build Status**: ✅ Green
+- `:composeApp:assembleDebug` passes
+- `:quo-vadis-core:desktopTest` passes
 
 ### CORE-003: Refactor Navigator to StateFlow<NavNode> ✅
 
