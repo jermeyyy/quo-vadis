@@ -14,7 +14,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 | Phase | Status | Progress | Tasks Done | Tasks Total |
 |-------|--------|----------|------------|-------------|
-| [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟡 In Progress | 83% | 5 | 6 |
+| [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | � Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | ⚪ Not Started | 0% | 0 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
@@ -22,7 +22,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~10% | 5 | 51 |
+| **TOTAL** | 🟡 In Progress | ~12% | 6 | 51 |
 
 ---
 
@@ -41,6 +41,71 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-05 (Latest)
+- ✅ **CORE-005**: Comprehensive Unit Tests for Serialization - **COMPLETED**
+  - Created `NavNodeSerializerTest.kt` with 37 tests covering:
+    - Round-trip serialization for all NavNode types (ScreenNode, StackNode, TabNode, PaneNode)
+    - Complex nested tree serialization
+    - Error handling (`fromJsonOrNull` with invalid/null/empty JSON)
+    - Format verification (type discriminator presence)
+    - Edge cases (empty stacks, deeply nested structures)
+  - Created `StateRestorationTest.kt` with 31 tests covering:
+    - `InMemoryStateRestoration` basic operations
+    - Auto-save functionality (enable/disable/cancel)
+    - `NoOpStateRestoration` no-op behavior verification
+    - Process death simulation scenarios
+  
+  **Files Created:**
+  - `NavNodeSerializerTest.kt` - 37 tests for serialization operations
+  - `StateRestorationTest.kt` - 31 tests for state restoration (desktop-only)
+
+- ✅ **CORE-005**: Comprehensive Unit Tests for TreeNavigator and TransitionState - **COMPLETED**
+  - Created `TreeNavigatorTest.kt` with 70 tests covering:
+    - Initialization (setStartDestination, constructor with initial state)
+    - Navigation operations (navigate, navigateBack, navigateAndReplace, navigateAndClearAll)
+    - Tab navigation (switchTab, activeTabIndex, tab stack preservation)
+    - Pane navigation (navigateToPane, switchPane, isPaneAvailable, navigateBackInPane, clearPane)
+    - State flows (state, currentDestination, previousDestination, canNavigateBack)
+    - Transition management (startPredictiveBack, updatePredictiveBack, cancelPredictiveBack, commitPredictiveBack)
+    - Parent navigator support (activeChild, setActiveChild)
+    - Complex navigation scenarios
+  - Created `TransitionStateTest.kt` with 42 tests covering:
+    - TransitionState.Idle singleton behavior
+    - TransitionState.InProgress creation and validation
+    - TransitionState.PredictiveBack shouldComplete logic
+    - TransitionState.Seeking properties
+    - Extension properties isAnimating and progress
+  - All tests pass: `:quo-vadis-core:desktopTest` ✓, `:quo-vadis-core:jsTest` ✓
+  
+  **Files Created:**
+  - `TreeNavigatorTest.kt` - 70 tests for TreeNavigator reactive state management
+  - `TransitionStateTest.kt` - 42 tests for TransitionState sealed interface
+
+- ✅ **CORE-005**: Comprehensive Unit Tests for TreeMutator Operations - **COMPLETED**
+  - Created 5 test files organized by operation type
+  - Tests cover all TreeMutator methods: push, pop, tab, pane, and utility operations
+  - Tests verify structural sharing, error conditions, and edge cases
+  - All tests pass: `:quo-vadis-core:desktopTest` ✓
+  
+  **Files Created:**
+  - `TreeMutatorPushTest.kt` - 20+ tests for push operations (push, pushToStack, pushAll, clearAndPush, clearStackAndPush)
+  - `TreeMutatorPopTest.kt` - 20+ tests for pop operations (pop, popTo, popToRoute, popToDestination, PopBehavior)
+  - `TreeMutatorTabTest.kt` - 15+ tests for tab operations (switchTab, switchActiveTab)
+  - `TreeMutatorPaneTest.kt` - 25+ tests for pane operations (navigateToPane, switchActivePane, popPane, popWithPaneBehavior, setPaneConfiguration, removePaneConfiguration)
+  - `TreeMutatorEdgeCasesTest.kt` - 25+ tests for utility and edge cases (replaceNode, removeNode, replaceCurrent, canGoBack, currentDestination, deep nesting, structural sharing)
+
+- ✅ **CORE-005**: Comprehensive Unit Tests for NavNode Hierarchy - **COMPLETED**
+  - Created `NavNodeTest.kt` with 80+ test cases
+  - Tests cover all NavNode types: ScreenNode, StackNode, TabNode, PaneNode
+  - Tests cover all extension functions: findByKey, activePathToLeaf, activeLeaf, activeStack, allScreens, etc.
+  - Tests cover validation logic (illegal states throw exceptions)
+  - Tests cover NavKeyGenerator utility
+  - Tests include complex integration scenarios
+  - Build passes: `:quo-vadis-core:desktopTest` ✓
+  
+  **Files Created:**
+  - `quo-vadis-core/src/commonTest/kotlin/com/jermey/quo/vadis/core/navigation/core/NavNodeTest.kt`
+
+### 2025-12-05 (Earlier)
 - ✅ **CORE-004**: Implement NavNode Serialization - **COMPLETED**
   - Added `@SerialName` annotations to all NavNode types for stable versioning
   - Created `NavNodeSerializer.kt` with `toJson`, `fromJson`, `fromJsonOrNull` utilities
@@ -90,15 +155,14 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Next Up (Prioritized)
 
-1. **CORE-005**: Comprehensive Unit Tests for Phase 1
-   - Dependencies: CORE-001 ✅, CORE-002 ✅, CORE-003 ✅, CORE-004 ✅
-   - Ready to start
-
-2. **Phase 2: Renderer** - Rewrite compose layer
+1. **Phase 2: Renderer** - Rewrite compose layer
    - `GraphNavHost.kt` - Main navigation composable  
    - `PredictiveBackNavigation.kt` - Gesture handling
    - `TabbedNavHost.kt` - Tab navigation
    - Fix 4 temporarily ignored tests
+
+2. **Phase 3: KSP** - Update annotation processors (can start in parallel)
+3. **Phase 4: Annotations** - Update annotation definitions (can start in parallel)
 
 ---
 
