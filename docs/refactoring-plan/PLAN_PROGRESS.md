@@ -17,7 +17,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | � Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
+| [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟡 In Progress | 20% | 1 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
@@ -40,7 +40,20 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Recent Updates
 
-### 2025-12-05 (Latest)
+### 2025-12-06 (Latest)
+- ✅ **ANN-001**: Define @Destination Annotation - **COMPLETED**
+  - Created `@Destination(route: String = "")` annotation in `quo-vadis-annotations`
+  - Maps to `ScreenNode` in NavNode hierarchy
+  - Supports deep linking with path params (`{param}`) and query params (`?key={value}`)
+  - Empty route = not deep-linkable
+  - Comprehensive KDoc documentation with examples
+  
+  **File Created:**
+  - `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/Destination.kt`
+  
+  **Verified**: `:quo-vadis-annotations:build` ✓
+
+### 2025-12-05
 - ✅ **RENDER-010**: Animation Pair Tracking - **COMPLETED**
   - Explicitly tracks current/previous screen pairs for animations
   - **TrackerTransitionState sealed interface** (`AnimationPairTracker.kt`):

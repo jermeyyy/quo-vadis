@@ -1,8 +1,8 @@
 # Phase 4: Annotations Redesign - Progress
 
-> **Last Updated**: 2025-12-05  
-> **Phase Status**: ⚪ Not Started  
-> **Progress**: 0/5 tasks (0%)
+> **Last Updated**: 2025-12-06  
+> **Phase Status**: 🟡 In Progress  
+> **Progress**: 1/5 tasks (20%)
 
 ## Overview
 
@@ -14,7 +14,7 @@ This phase introduces the new annotation system that maps directly to NavNode ty
 
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
-| [ANN-001](./ANN-001-graph-type.md) | Define `@Destination` Annotation | ⚪ Not Started | - | No dependencies |
+| [ANN-001](./ANN-001-graph-type.md) | Define `@Destination` Annotation | 🟢 Completed | 2025-12-06 | Created `Destination.kt` with route parameter |
 | [ANN-002](./ANN-002-pane-graph.md) | Define `@Stack` Container Annotation | ⚪ Not Started | - | No dependencies |
 | [ANN-003](./ANN-003-route-transitions.md) | Define `@Tab` and `@TabItem` Annotations | ⚪ Not Started | - | No dependencies |
 | [ANN-004](./ANN-004-shared-element.md) | Define `@Pane` and `@PaneItem` Annotations | ⚪ Not Started | - | No dependencies |
@@ -24,7 +24,15 @@ This phase introduces the new annotation system that maps directly to NavNode ty
 
 ## Completed Tasks
 
-_None yet._
+### ANN-001: Define @Destination Annotation ✅
+- **Completed**: 2025-12-06
+- Created `Destination.kt` in `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/`
+- `@Destination(route: String = "")` annotation with:
+  - `@Target(AnnotationTarget.CLASS)` - applies to classes/objects
+  - `@Retention(AnnotationRetention.SOURCE)` - compile-time only
+  - Default empty route (not deep-linkable)
+  - Comprehensive KDoc with examples for path params, query params, and non-deep-linkable
+- Build verified: `:quo-vadis-annotations:build` ✓
 
 ---
 
@@ -42,9 +50,9 @@ _None - all tasks can start immediately._
 
 ## Ready to Start
 
-All annotation tasks can be started immediately as they have no dependencies:
+All remaining annotation tasks can be started immediately as they have no dependencies:
 
-1. **ANN-001**: Define `@Destination` Annotation (0.5 days)
+1. ~~**ANN-001**: Define `@Destination` Annotation (0.5 days)~~ ✅ Completed
 2. **ANN-002**: Define `@Stack` Container Annotation (0.5 days)
 3. **ANN-003**: Define `@Tab` and `@TabItem` Annotations (1 day)
 4. **ANN-004**: Define `@Pane` and `@PaneItem` Annotations (1 day)
