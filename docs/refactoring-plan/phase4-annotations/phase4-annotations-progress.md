@@ -1,8 +1,8 @@
 # Phase 4: Annotations Redesign - Progress
 
 > **Last Updated**: 2025-12-06  
-> **Phase Status**: 🟡 In Progress  
-> **Progress**: 4/5 tasks (80%)
+> **Phase Status**: � Completed  
+> **Progress**: 5/5 tasks (100%)
 
 ## Overview
 
@@ -18,7 +18,7 @@ This phase introduces the new annotation system that maps directly to NavNode ty
 | [ANN-002](./ANN-002-pane-graph.md) | Define `@Stack` Container Annotation | 🟢 Completed | 2025-12-06 | Created `Stack.kt` with name and startDestination |
 | [ANN-003](./ANN-003-route-transitions.md) | Define `@Tab` and `@TabItem` Annotations | 🟢 Completed | 2025-12-06 | Created `TabAnnotations.kt`, replaced old @TabGraph/@Tab |
 | [ANN-004](./ANN-004-shared-element.md) | Define `@Pane` and `@PaneItem` Annotations | 🟢 Completed | 2025-12-06 | Created `PaneAnnotations.kt` with enums and annotations |
-| [ANN-005](./ANN-005-screen.md) | Define `@Screen` Content Binding Annotation | ⚪ Not Started | - | No dependencies |
+| [ANN-005](./ANN-005-screen.md) | Define `@Screen` Content Binding Annotation | 🟢 Completed | 2025-12-06 | Created Screen.kt with destination KClass parameter |
 
 ---
 
@@ -79,6 +79,19 @@ This phase introduces the new annotation system that maps directly to NavNode ty
 - Comprehensive KDoc with examples for list-detail and three-pane patterns
 - Build verified: `:quo-vadis-annotations:build` ✓
 
+### ANN-005: Define @Screen Content Binding Annotation ✅
+- **Completed**: 2025-12-06
+- Created `Screen.kt` in `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/`
+- `@Screen(destination: KClass<*>)` annotation with:
+  - `destination` - the destination class this composable renders (must be @Destination annotated)
+  - `@Target(AnnotationTarget.FUNCTION)` - applies to functions only (@Composable)
+  - `@Retention(AnnotationRetention.SOURCE)` - compile-time only for KSP
+- Comprehensive KDoc with three function signature patterns:
+  - Simple destinations (data objects) - Navigator only
+  - Destinations with data (data classes) - Destination + Navigator
+  - With shared element scopes (optional parameters)
+- Build verified: `:quo-vadis-annotations:build` ✓
+
 ---
 
 ## In Progress Tasks
@@ -95,13 +108,13 @@ _None - all tasks can start immediately._
 
 ## Ready to Start
 
-All remaining annotation tasks can be started immediately as they have no dependencies:
+🎉 **Phase 4 Complete!** All annotation tasks finished:
 
 1. ~~**ANN-001**: Define `@Destination` Annotation (0.5 days)~~ ✅ Completed
 2. ~~**ANN-002**: Define `@Stack` Container Annotation (0.5 days)~~ ✅ Completed
 3. ~~**ANN-003**: Define `@Tab` and `@TabItem` Annotations (1 day)~~ ✅ Completed
 4. ~~**ANN-004**: Define `@Pane` and `@PaneItem` Annotations (1 day)~~ ✅ Completed
-5. **ANN-005**: Define `@Screen` Content Binding Annotation (0.5 days)
+5. ~~**ANN-005**: Define `@Screen` Content Binding Annotation (0.5 days)~~ ✅ Completed
 
 ---
 
