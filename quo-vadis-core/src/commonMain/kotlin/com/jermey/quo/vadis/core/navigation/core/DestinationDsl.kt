@@ -69,11 +69,11 @@ internal fun <T : Any> NavigationGraphBuilder.typedDestinationImpl(
         destination = BasicDestination(route, transition),
         transition = transition
     ) { dest, navigator ->
-        // Extract the data from the current destination in backstack
-        val currentDest = navigator.backStack.current.value
+        // Extract the data from the current destination in state tree
+        val currentDest = navigator.currentDestination.value
 
         // TypedDestination now requires non-null data, so it must be present
-        val data: T = when (val destData = currentDest?.destination?.data) {
+        val data: T = when (val destData = currentDest?.data) {
             null -> error("Error: TypedDestination requires non-null data for route '$route'")
             is String -> {
                 // Deserialize from JSON string (e.g., from state restoration)
@@ -147,16 +147,16 @@ internal fun <T : Any> NavigationGraphBuilder.typedDestinationWithScopesImpl(
         destination = BasicDestination(route, transition),
         transition = transition
     ) { dest, navigator, transitionScope ->
-        // Extract the data from the current destination in backstack
-        val currentDest = navigator.backStack.current.value
+        // Extract the data from the current destination in state tree
+        val currentDest = navigator.currentDestination.value
 
         println("DEBUG: typedDestinationWithScopesImpl - route=$route")
-        println("DEBUG: currentDest=${currentDest?.destination}")
-        println("DEBUG: currentDest.data=${currentDest?.destination?.data}")
-        println("DEBUG: currentDest.route=${currentDest?.destination?.route}")
+        println("DEBUG: currentDest=${currentDest}")
+        println("DEBUG: currentDest.data=${currentDest?.data}")
+        println("DEBUG: currentDest.route=${currentDest?.route}")
 
         // TypedDestination now requires non-null data, so it must be present
-        val data: T = when (val destData = currentDest?.destination?.data) {
+        val data: T = when (val destData = currentDest?.data) {
             null -> {
                 println("DEBUG: ERROR - No data found!")
                 error("Error: TypedDestination requires non-null data for route '$route'")

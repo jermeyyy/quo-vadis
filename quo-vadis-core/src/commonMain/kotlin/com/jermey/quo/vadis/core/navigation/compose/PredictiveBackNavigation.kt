@@ -34,6 +34,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 import com.jermey.quo.vadis.core.navigation.core.route
+import com.jermey.quo.vadis.core.navigation.core.backStack
 import kotlinx.coroutines.launch
 
 /**

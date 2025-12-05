@@ -36,7 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.PredictiveBackHandler
 import androidx.compose.ui.graphics.graphicsLayer
 import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
-import com.jermey.quo.vadis.core.navigation.core.DefaultNavigator
+import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.core.EXTRA_SELECTED_TAB_ROUTE
 import com.jermey.quo.vadis.core.navigation.core.getExtra
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
@@ -46,6 +46,7 @@ import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
+import com.jermey.quo.vadis.core.navigation.core.backStack
 import com.jermey.quo.vadis.core.navigation.compose.LocalPredictiveBackInProgress
 import kotlinx.coroutines.launch
 
@@ -684,6 +685,6 @@ fun rememberNavigator(
     deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler()
 ): Navigator {
     return remember {
-        DefaultNavigator(deepLinkHandler)
+        TreeNavigator(deepLinkHandler)
     }
 }

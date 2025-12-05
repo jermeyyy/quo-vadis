@@ -8,7 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.core.navigation.core.DefaultNavigator
+import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
@@ -16,6 +16,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TabDefinition
 import com.jermey.quo.vadis.core.navigation.core.TabNavigatorState
 import com.jermey.quo.vadis.core.navigation.core.TabScopedNavigator
+import com.jermey.quo.vadis.core.navigation.core.backStack
 
 /**
  * High-level composable for tabbed navigation with integrated back press handling.

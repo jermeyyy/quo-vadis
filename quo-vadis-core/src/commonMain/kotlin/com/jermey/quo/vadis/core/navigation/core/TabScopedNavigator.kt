@@ -1,8 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -18,11 +18,15 @@ import kotlinx.coroutines.SupervisorJob
  * All navigation operations are transparently delegated to the underlying
  * navigator while keeping the [TabNavigatorState] informed of changes.
  *
+ * **NOTE**: This class is being refactored to use tree-based navigation.
+ * Many methods are currently stubbed with [NotImplementedError] and will
+ * be properly implemented in Phase 2 (Renderer).
+ *
  * @param tab The tab definition this navigator is scoped to.
  * @param tabState The parent tab navigation state.
  * @param delegate The actual navigator instance to delegate operations to.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "NotImplementedDeclaration")
 internal class TabScopedNavigator(
     private val tab: TabDefinition,
     private val tabState: TabNavigatorState,
@@ -31,24 +35,166 @@ internal class TabScopedNavigator(
 
     // Tab navigators maintain their own graph registry separate from parent
     private val graphs = mutableMapOf<String, NavigationGraph>()
-    
-    // Tab navigators maintain their own backstack separate from parent
-    override val backStack: BackStack = MutableBackStack()
-    
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    override val currentDestination: StateFlow<Destination?> = 
-        backStack.current.map { it?.destination }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, null)
+    // =========================================================================
+    // TREE-BASED STATE (New API)
+    // =========================================================================
 
-    override val previousDestination: StateFlow<Destination?> = 
-        backStack.previous.map { it?.destination }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, null)
+    private val _state = MutableStateFlow<NavNode>(
+        ScreenNode(
+            key = NavKeyGenerator.generate(),
+            parentKey = null,
+            destination = tab.rootDestination
+        )
+    )
+    override val state: StateFlow<NavNode> = _state.asStateFlow()
+
+    private val _transitionState = MutableStateFlow<TransitionState>(TransitionState.Idle)
+    override val transitionState: StateFlow<TransitionState> = _transitionState.asStateFlow()
+
+    private val _canNavigateBack = MutableStateFlow(false)
+    override val canNavigateBack: StateFlow<Boolean> = _canNavigateBack.asStateFlow()
+
+    private val _currentDestination = MutableStateFlow<Destination?>(tab.rootDestination)
+    override val currentDestination: StateFlow<Destination?> = _currentDestination.asStateFlow()
+
+    private val _previousDestination = MutableStateFlow<Destination?>(null)
+    override val previousDestination: StateFlow<Destination?> = _previousDestination.asStateFlow()
 
     override val currentTransition: StateFlow<NavigationTransition?>
         get() = delegate.currentTransition
 
     override val activeChild: BackPressHandler?
         get() = delegate.activeChild
-    
+
+    // =========================================================================
+    // TAB NAVIGATION (Stubbed - N/A for tab-scoped navigator)
+    // =========================================================================
+
+    override fun switchTab(index: Int) {
+        // TabScopedNavigator doesn't handle tab switching directly
+        // This should be handled by the parent TabNavigatorState
+        throw NotImplementedError("Tab switching should be handled by TabNavigatorState, not TabScopedNavigator")
+    }
+
+    override val activeTabIndex: Int?
+        get() = null // Tab-scoped navigator doesn't manage tabs
+
+    // =========================================================================
+    // PANE NAVIGATION (Delegated to parent)
+    // =========================================================================
+
+    override fun navigateToPane(
+        role: PaneRole,
+        destination: Destination,
+        switchFocus: Boolean,
+        transition: NavigationTransition?
+    ) {
+        delegate.navigateToPane(role, destination, switchFocus, transition)
+    }
+
+    override fun switchPane(role: PaneRole) {
+        delegate.switchPane(role)
+    }
+
+    override fun isPaneAvailable(role: PaneRole): Boolean {
+        return delegate.isPaneAvailable(role)
+    }
+
+    override fun paneContent(role: PaneRole): NavNode? {
+        return delegate.paneContent(role)
+    }
+
+    override fun navigateBackInPane(role: PaneRole): Boolean {
+        return delegate.navigateBackInPane(role)
+    }
+
+    override fun clearPane(role: PaneRole) {
+        delegate.clearPane(role)
+    }
+
+    // =========================================================================
+    // STATE MANIPULATION
+    // =========================================================================
+
+    override fun updateState(newState: NavNode, transition: NavigationTransition?) {
+        _state.value = newState
+        updateDerivedState()
+    }
+
+    private fun updateDerivedState() {
+        val currentState = _state.value
+        val activeLeaf = currentState.activeLeaf()
+        _currentDestination.value = (activeLeaf as? ScreenNode)?.destination
+        
+        // Update canNavigateBack based on stack depth
+        val activeStack = currentState.activeStack()
+        _canNavigateBack.value = activeStack != null && activeStack.children.size > 1
+        
+        // Update previous destination
+        if (activeStack != null && activeStack.children.size > 1) {
+            val previousNode = activeStack.children.getOrNull(activeStack.children.size - 2)
+            _previousDestination.value = (previousNode as? ScreenNode)?.destination
+        } else {
+            _previousDestination.value = null
+        }
+    }
+
+    // =========================================================================
+    // TRANSITION CONTROL
+    // =========================================================================
+
+    override fun updateTransitionProgress(progress: Float) {
+        val current = _transitionState.value
+        when (current) {
+            is TransitionState.InProgress -> {
+                _transitionState.value = current.copy(progress = progress)
+            }
+            is TransitionState.PredictiveBack -> {
+                _transitionState.value = current.copy(progress = progress)
+            }
+            else -> { /* Ignore if not in transition */ }
+        }
+    }
+
+    override fun startPredictiveBack() {
+        _transitionState.value = TransitionState.PredictiveBack(
+            progress = 0f,
+            touchX = 0f,
+            touchY = 0f
+        )
+    }
+
+    override fun updatePredictiveBack(progress: Float, touchX: Float, touchY: Float) {
+        val current = _transitionState.value
+        if (current is TransitionState.PredictiveBack) {
+            _transitionState.value = current.copy(
+                progress = progress,
+                touchX = touchX,
+                touchY = touchY
+            )
+        }
+    }
+
+    override fun cancelPredictiveBack() {
+        _transitionState.value = TransitionState.Idle
+    }
+
+    override fun commitPredictiveBack() {
+        navigateBack()
+        _transitionState.value = TransitionState.Idle
+    }
+
+    override fun completeTransition() {
+        _transitionState.value = TransitionState.Idle
+    }
+
+    // =========================================================================
+    // NAVIGATION OPERATIONS
+    // =========================================================================
+
     /**
      * Check if destination is a root destination for any tab.
      * If so, switch to that tab instead of navigating within current tab.
@@ -56,7 +202,7 @@ internal class TabScopedNavigator(
     private fun isTabRootDestination(destination: Destination): TabDefinition? {
         return tabState.getAllTabs().find { it.rootDestination::class == destination::class }
     }
-    
+
     /**
      * Check if destination exists in this tab's registered graphs.
      */
@@ -68,7 +214,7 @@ internal class TabScopedNavigator(
 
     override fun navigate(destination: Destination, transition: NavigationTransition?) {
         println("DEBUG_TAB_NAV: TabScopedNavigator.navigate - tab: ${tab.route}, destination: ${destination::class.simpleName}")
-        
+
         // First check: Is this a tab root destination? If so, switch tabs
         val targetTab = isTabRootDestination(destination)
         if (targetTab != null) {
@@ -76,21 +222,71 @@ internal class TabScopedNavigator(
             tabState.selectTab(targetTab)
             return
         }
-        
+
         // Second check: Is this destination in the tab's graph?
         if (isDestinationInTabGraph(destination)) {
             println("DEBUG_TAB_NAV: TabScopedNavigator - Destination found in tab graph, navigating within tab")
-            backStack.push(destination, transition)
+            // Push to stack using tree-based state
+            val currentState = _state.value
+            val activeStack = currentState.activeStack()
+            if (activeStack != null) {
+                val newScreen = ScreenNode(
+                    key = NavKeyGenerator.generate(),
+                    parentKey = activeStack.key,
+                    destination = destination
+                )
+                val newStack = activeStack.copy(
+                    children = activeStack.children + newScreen
+                )
+                _state.value = replaceNode(currentState, activeStack.key, newStack)
+            } else {
+                // Create new stack with screen
+                val newScreen = ScreenNode(
+                    key = NavKeyGenerator.generate(),
+                    parentKey = null,
+                    destination = destination
+                )
+                _state.value = StackNode(
+                    key = NavKeyGenerator.generate(),
+                    parentKey = null,
+                    children = listOf(newScreen)
+                )
+            }
+            updateDerivedState()
         } else {
             println("DEBUG_TAB_NAV: TabScopedNavigator - Destination NOT in tab graph, delegating to parent navigator")
             delegate.navigate(destination, transition)
         }
     }
 
+    private fun replaceNode(root: NavNode, targetKey: String, newNode: NavNode): NavNode {
+        if (root.key == targetKey) return newNode
+        return when (root) {
+            is ScreenNode -> root
+            is StackNode -> root.copy(
+                children = root.children.map { replaceNode(it, targetKey, newNode) }
+            )
+            is TabNode -> root.copy(
+                stacks = root.stacks.map { replaceNode(it, targetKey, newNode) as StackNode }
+            )
+            is PaneNode -> root.copy(
+                paneConfigurations = root.paneConfigurations.mapValues { (_, config) ->
+                    config.copy(content = replaceNode(config.content, targetKey, newNode))
+                }
+            )
+        }
+    }
+
     override fun navigateBack(): Boolean {
-        val canGoBack = backStack.canGoBack.value
-        if (canGoBack) {
-            backStack.pop()
+        val currentState = _state.value
+        val activeStack = currentState.activeStack()
+        
+        if (activeStack != null && activeStack.children.size > 1) {
+            val newStack = activeStack.copy(
+                children = activeStack.children.dropLast(1)
+            )
+            _state.value = replaceNode(currentState, activeStack.key, newStack)
+            updateDerivedState()
             return true
         }
         // If can't pop, delegate to parent for cross-tab navigation
@@ -113,18 +309,12 @@ internal class TabScopedNavigator(
             tabState.selectTab(targetTab)
             return
         }
-        
-        // Second check: Is destination in tab's graph?
+
+        // For now, simplified implementation: just navigate
+        // TODO: Implement proper clear logic with tree-based state
         if (isDestinationInTabGraph(destination)) {
-            if (clearRoute != null) {
-                backStack.popUntil { it.route == clearRoute }
-                if (inclusive) {
-                    backStack.pop()
-                }
-            }
-            backStack.push(destination)
+            navigate(destination)
         } else {
-            // Delegate to parent if destination not in tab
             delegate.navigateAndClearTo(destination, clearRoute, inclusive)
         }
     }
@@ -137,13 +327,24 @@ internal class TabScopedNavigator(
             tabState.selectTab(targetTab)
             return
         }
-        
+
         // Second check: Is destination in tab's graph?
         if (isDestinationInTabGraph(destination)) {
-            backStack.pop()
-            backStack.push(destination, transition)
+            val currentState = _state.value
+            val activeStack = currentState.activeStack()
+            if (activeStack != null && activeStack.children.isNotEmpty()) {
+                val newScreen = ScreenNode(
+                    key = NavKeyGenerator.generate(),
+                    parentKey = activeStack.key,
+                    destination = destination
+                )
+                val newStack = activeStack.copy(
+                    children = activeStack.children.dropLast(1) + newScreen
+                )
+                _state.value = replaceNode(currentState, activeStack.key, newStack)
+                updateDerivedState()
+            }
         } else {
-            // Delegate to parent if destination not in tab
             delegate.navigateAndReplace(destination, transition)
         }
     }
@@ -156,20 +357,39 @@ internal class TabScopedNavigator(
             tabState.selectTab(targetTab)
             return
         }
-        
+
         // Second check: Is destination in tab's graph?
         if (isDestinationInTabGraph(destination)) {
-            backStack.clear()
-            backStack.push(destination)
+            _state.value = StackNode(
+                key = NavKeyGenerator.generate(),
+                parentKey = null,
+                children = listOf(
+                    ScreenNode(
+                        key = NavKeyGenerator.generate(),
+                        parentKey = null,
+                        destination = destination
+                    )
+                )
+            )
+            updateDerivedState()
         } else {
-            // Delegate to parent if destination not in tab
             delegate.navigateAndClearAll(destination)
         }
     }
 
     override fun setStartDestination(destination: Destination) {
-        backStack.clear()
-        backStack.push(destination)
+        _state.value = StackNode(
+            key = NavKeyGenerator.generate(),
+            parentKey = null,
+            children = listOf(
+                ScreenNode(
+                    key = NavKeyGenerator.generate(),
+                    parentKey = null,
+                    destination = destination
+                )
+            )
+        )
+        updateDerivedState()
     }
 
     override fun handleDeepLink(deepLink: DeepLink) {
@@ -191,6 +411,6 @@ internal class TabScopedNavigator(
     }
 
     override fun handleBackInternal(): Boolean {
-        return delegate.handleBackInternal()
+        return navigateBack()
     }
 }
