@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-05  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 1/12 tasks (8%)
+> **Progress**: 2/12 tasks (17%)
 
 ## Overview
 
@@ -15,7 +15,7 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
 | [RENDER-001](./RENDER-001-renderable-surface.md) | Define RenderableSurface Data Class | 🟢 Completed | 2025-12-05 | All types, builder, extensions |
-| [RENDER-002A](./RENDER-002A-core-flatten.md) | Core flattenState Algorithm (Screen/Stack) | ⚪ Not Started | - | Depends on RENDER-001 |
+| [RENDER-002A](./RENDER-002A-core-flatten.md) | Core flattenState Algorithm (Screen/Stack) | 🟢 Completed | 2025-12-05 | FlattenResult, TreeFlattener with Screen/Stack |
 | [RENDER-002B](./RENDER-002B-tab-flattening.md) | TabNode Flattening with User Wrapper | ⚪ Not Started | - | Depends on RENDER-002A |
 | [RENDER-002C](./RENDER-002C-pane-flattening.md) | PaneNode Adaptive Flattening | ⚪ Not Started | - | Depends on RENDER-002A |
 | [RENDER-003](./RENDER-003-transition-state.md) | Create TransitionState Sealed Class | ⚪ Not Started | - | Depends on Phase 1 |
@@ -37,6 +37,28 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 - **Summary**: Created all types (SurfaceNodeType, SurfaceRenderingMode, SurfaceTransitionState, SurfaceAnimationSpec, PaneStructure, RenderableSurface), builder pattern, and list extension functions
 - **Verified**: Compiles on Kotlin Metadata, Desktop (JVM), and JS targets
 
+### RENDER-002A: Core flattenState Algorithm (Screen/Stack) ✅
+- **Completed**: 2025-12-05
+- **Files Created**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/FlattenResult.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/TreeFlattener.kt`
+- **Summary**: 
+  - Created `TransitionType` enum (PUSH, POP, TAB_SWITCH, PANE_SWITCH, NONE)
+  - Created `AnimationPair` data class for transition coordination
+  - Created `CachingHints` data class for renderer caching optimization
+  - Created `FlattenResult` data class with computed properties (renderableSurfaces, sortedSurfaces, isEmpty, etc.)
+  - Created `TreeFlattener` class with:
+    - `ContentResolver` interface for resolving NavNode to composable content
+    - `AnimationResolver` interface for custom animations
+    - `flattenState()` main entry point
+    - `flattenScreen()` for ScreenNode → SINGLE_SCREEN surface
+    - `flattenStack()` for StackNode → STACK_CONTENT surfaces with animation pairing
+    - Placeholder `flattenTab()` and `flattenPane()` for RENDER-002B/C
+    - Helper methods: detectTransitionType, findPreviousSiblingId, getActivePath, getActiveLeaf
+    - DefaultAnimationResolver with slide animations
+  - Full KDoc documentation on all public APIs
+- **Verified**: Build passes on all targets (`:composeApp:assembleDebug`)
+
 ---
 
 ## In Progress Tasks
@@ -47,16 +69,17 @@ _None currently in progress._
 
 ## Blocked Tasks
 
-| Task | Blocked By | Status |
-|------|------------|--------|
-| RENDER-002A..010 | RENDER-001 | Ready to start |
+_None currently blocked._
 
 ---
 
 ## Ready to Start
 
-- **RENDER-002A**: Core flattenState Algorithm (Screen/Stack)
+- **RENDER-002B**: TabNode Flattening with User Wrapper
+- **RENDER-002C**: PaneNode Adaptive Flattening
 - **RENDER-003**: Create TransitionState Sealed Class
+- **RENDER-008**: User Wrapper API (TabNode/PaneNode)
+- **RENDER-009**: WindowSizeClass Integration
 
 ---
 

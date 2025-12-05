@@ -14,15 +14,15 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 | Phase | Status | Progress | Tasks Done | Tasks Total |
 |-------|--------|----------|------------|-------------|
-| [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | � Completed | 100% | 6 | 6 |
-| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟡 In Progress | 8% | 1 | 12 |
+| [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
+| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟡 In Progress | 17% | 2 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~14% | 7 | 52 |
+| **TOTAL** | 🟡 In Progress | ~15% | 8 | 52 |
 
 ---
 
@@ -41,6 +41,29 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-05 (Latest)
+- ✅ **RENDER-002A**: Core flattenState Algorithm (Screen/Stack) - **COMPLETED**
+  - Created `FlattenResult.kt` with all intermediate data structures:
+    - `TransitionType` enum (PUSH, POP, TAB_SWITCH, PANE_SWITCH, NONE)
+    - `AnimationPair` data class for transition coordination
+    - `CachingHints` data class for renderer caching optimization
+    - `FlattenResult` data class with computed properties
+  - Created `TreeFlattener.kt` with core flattening algorithm:
+    - `ContentResolver` interface for NavNode → composable resolution
+    - `AnimationResolver` interface for custom animations
+    - `flattenState()` entry point
+    - `flattenScreen()` producing SINGLE_SCREEN surfaces
+    - `flattenStack()` producing STACK_CONTENT surfaces with previousSurfaceId tracking
+    - Placeholder `flattenTab()` / `flattenPane()` for RENDER-002B/C
+    - Helper methods for transition detection and path traversal
+    - DefaultAnimationResolver with slide animations for push/pop
+  - Full KDoc documentation on all public APIs
+  - Build passes: `:composeApp:assembleDebug` ✓
+  
+  **Files Created:**
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/FlattenResult.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/TreeFlattener.kt`
+
+### 2025-12-05 (Earlier)
 - ✅ **RENDER-001**: Define RenderableSurface Data Class - **COMPLETED**
   - Created all intermediate representation types for the rendering pipeline
   - `SurfaceNodeType` enum (SCREEN, STACK, TAB, PANE)
