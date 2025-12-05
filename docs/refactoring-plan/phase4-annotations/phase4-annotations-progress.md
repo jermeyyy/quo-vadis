@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-06  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 2/5 tasks (40%)
+> **Progress**: 3/5 tasks (60%)
 
 ## Overview
 
@@ -16,7 +16,7 @@ This phase introduces the new annotation system that maps directly to NavNode ty
 |----|------|--------|-----------|-------|
 | [ANN-001](./ANN-001-graph-type.md) | Define `@Destination` Annotation | 🟢 Completed | 2025-12-06 | Created `Destination.kt` with route parameter |
 | [ANN-002](./ANN-002-pane-graph.md) | Define `@Stack` Container Annotation | 🟢 Completed | 2025-12-06 | Created `Stack.kt` with name and startDestination |
-| [ANN-003](./ANN-003-route-transitions.md) | Define `@Tab` and `@TabItem` Annotations | ⚪ Not Started | - | No dependencies |
+| [ANN-003](./ANN-003-route-transitions.md) | Define `@Tab` and `@TabItem` Annotations | 🟢 Completed | 2025-12-06 | Created `TabAnnotations.kt`, replaced old @TabGraph/@Tab |
 | [ANN-004](./ANN-004-shared-element.md) | Define `@Pane` and `@PaneItem` Annotations | ⚪ Not Started | - | No dependencies |
 | [ANN-005](./ANN-005-screen.md) | Define `@Screen` Content Binding Annotation | ⚪ Not Started | - | No dependencies |
 
@@ -45,6 +45,22 @@ This phase introduces the new annotation system that maps directly to NavNode ty
   - Comprehensive KDoc with examples for basic, default start, and complex destinations
 - Build verified: `:quo-vadis-annotations:build` ✓
 
+### ANN-003: Define @Tab and @TabItem Annotations ✅
+- **Completed**: 2025-12-06
+- Created `TabAnnotations.kt` in `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/`
+- Removed old `@TabGraph`, `@Tab`, `@TabContent` from `Annotations.kt` (no usages found)
+- `@Tab(name: String, initialTab: String = "")` annotation with:
+  - `name` - unique identifier for the tab container
+  - `initialTab` - optional, defaults to first declared subclass
+  - Maps to `TabNode` in NavNode hierarchy
+- `@TabItem(label: String, icon: String = "", rootGraph: KClass<*>)` annotation with:
+  - `label` - display label for the tab
+  - `icon` - platform-specific icon identifier (optional)
+  - `rootGraph` - root navigation graph class (must be @Stack annotated)
+- Both annotations have `@Target(AnnotationTarget.CLASS)`, `@Retention(AnnotationRetention.SOURCE)`
+- Comprehensive KDoc with examples for basic tabs, deep linking, and nested tabs
+- Build verified: `:quo-vadis-annotations:build` ✓
+
 ---
 
 ## In Progress Tasks
@@ -65,7 +81,7 @@ All remaining annotation tasks can be started immediately as they have no depend
 
 1. ~~**ANN-001**: Define `@Destination` Annotation (0.5 days)~~ ✅ Completed
 2. ~~**ANN-002**: Define `@Stack` Container Annotation (0.5 days)~~ ✅ Completed
-3. **ANN-003**: Define `@Tab` and `@TabItem` Annotations (1 day)
+3. ~~**ANN-003**: Define `@Tab` and `@TabItem` Annotations (1 day)~~ ✅ Completed
 4. **ANN-004**: Define `@Pane` and `@PaneItem` Annotations (1 day)
 5. **ANN-005**: Define `@Screen` Content Binding Annotation (0.5 days)
 

@@ -15,14 +15,14 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | Phase | Status | Progress | Tasks Done | Tasks Total |
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | � Completed | 100% | 12 | 12 |
+| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟡 In Progress | 40% | 2 | 5 |
+| [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟡 In Progress | 60% | 3 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~35% | 18 | 52 |
+| **TOTAL** | 🟡 In Progress | ~37% | 19 | 52 |
 
 ---
 
@@ -41,6 +41,28 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
+- ✅ **ANN-003**: Define @Tab and @TabItem Annotations - **COMPLETED**
+  - Created `TabAnnotations.kt` in `quo-vadis-annotations`
+  - **Replaced** old `@TabGraph`, `@Tab`, `@TabContent` from `Annotations.kt` (no usages, different design)
+  - `@Tab(name: String, initialTab: String = "")` annotation:
+    - `name` - unique identifier for the tab container
+    - `initialTab` - optional, defaults to first declared subclass
+    - Maps to `TabNode` in NavNode hierarchy
+  - `@TabItem(label: String, icon: String = "", rootGraph: KClass<*>)` annotation:
+    - `label` - display label for the tab
+    - `icon` - platform-specific icon identifier (optional)
+    - `rootGraph` - root navigation graph class (must be @Stack annotated)
+  - Both have `@Target(AnnotationTarget.CLASS)`, `@Retention(AnnotationRetention.SOURCE)`
+  - Comprehensive KDoc with examples for basic tabs, deep linking, nested tabs
+  
+  **Files Created:**
+  - `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/TabAnnotations.kt`
+  
+  **Files Modified:**
+  - `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/Annotations.kt` (removed old tab annotations)
+  
+  **Verified**: `:quo-vadis-annotations:build` ✓
+
 - ✅ **ANN-002**: Define @Stack Container Annotation - **COMPLETED**
   - Created `@Stack(name: String, startDestination: String = "")` annotation
   - Marks sealed classes/interfaces as stack-based navigation containers
