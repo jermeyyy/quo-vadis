@@ -191,11 +191,14 @@ private class QuoVadisHostScopeImpl(
  *   When enabled, users can preview the back navigation result while performing
  *   a back gesture (swipe on Android/iOS, system back on supported platforms).
  *   Defaults to `true`. Set to `false` to disable gesture-based back previews.
+ * @param animationRegistry Registry for transition animations. Defaults to [AnimationRegistry.Default]
+ *   which provides standard slide animations. Use [AnimationRegistry.None] for no animations.
  * @param tabWrapper User-provided wrapper for TabNode rendering (default: bottom navigation)
  * @param paneWrapper User-provided wrapper for PaneNode rendering (default: equal width row)
  * @param content Content resolver that maps [Destination] to composable content
  *
  * @see QuoVadisHostScope
+ * @see AnimationRegistry
  * @see TabWrapper
  * @see PaneWrapper
  * @see PredictiveBackHandler
@@ -205,6 +208,7 @@ public fun QuoVadisHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
     enablePredictiveBack: Boolean = true,
+    animationRegistry: AnimationRegistry = AnimationRegistry.Default,
     tabWrapper: TabWrapper = DefaultTabWrapper,
     paneWrapper: PaneWrapper = DefaultPaneWrapper,
     content: @Composable QuoVadisHostScope.(Destination) -> Unit
@@ -243,11 +247,11 @@ public fun QuoVadisHost(
         }
     }
 
-    // Create tree flattener
-    val flattener = remember(contentResolver) {
+    // Create tree flattener with animation registry
+    val flattener = remember(contentResolver, animationRegistry) {
         TreeFlattener(
             contentResolver = contentResolver,
-            animationResolver = TreeFlattener.DefaultAnimationResolver
+            animationResolver = animationRegistry.toAnimationResolver()
         )
     }
 
@@ -702,6 +706,7 @@ private fun Modifier.predictiveBackTransform(
  * @param enablePredictiveBack Whether to enable predictive back gesture handling.
  *   When enabled, users can preview the back navigation result while performing
  *   a back gesture. Defaults to `true`.
+ * @param animationRegistry Registry for transition animations. Defaults to [AnimationRegistry.Default].
  * @param tabWrapper User-provided wrapper for TabNode rendering
  * @param paneWrapper User-provided wrapper for PaneNode rendering
  * @param fallback Fallback content when no mapping exists for a destination
@@ -712,6 +717,7 @@ public fun <D : Destination> QuoVadisHost(
     contentMap: Map<KClass<out D>, @Composable QuoVadisHostScope.(D) -> Unit>,
     modifier: Modifier = Modifier,
     enablePredictiveBack: Boolean = true,
+    animationRegistry: AnimationRegistry = AnimationRegistry.Default,
     tabWrapper: TabWrapper = DefaultTabWrapper,
     paneWrapper: PaneWrapper = DefaultPaneWrapper,
     fallback: @Composable QuoVadisHostScope.(Destination) -> Unit = {
@@ -722,6 +728,7 @@ public fun <D : Destination> QuoVadisHost(
         navigator = navigator,
         modifier = modifier,
         enablePredictiveBack = enablePredictiveBack,
+        animationRegistry = animationRegistry,
         tabWrapper = tabWrapper,
         paneWrapper = paneWrapper
     ) { destination ->
@@ -756,6 +763,7 @@ public fun <D : Destination> QuoVadisHost(
  * @param enablePredictiveBack Whether to enable predictive back gesture handling.
  *   When enabled, users can preview the back navigation result while performing
  *   a back gesture. Defaults to `true`.
+ * @param animationRegistry Registry for transition animations. Defaults to [AnimationRegistry.Default].
  * @param tabWrapper User-provided wrapper for TabNode rendering
  * @param paneWrapper User-provided wrapper for PaneNode rendering
  */
@@ -765,6 +773,7 @@ public fun QuoVadisHost(
     graph: NavigationGraph,
     modifier: Modifier = Modifier,
     enablePredictiveBack: Boolean = true,
+    animationRegistry: AnimationRegistry = AnimationRegistry.Default,
     tabWrapper: TabWrapper = DefaultTabWrapper,
     paneWrapper: PaneWrapper = DefaultPaneWrapper
 ) {
@@ -772,6 +781,7 @@ public fun QuoVadisHost(
         navigator = navigator,
         modifier = modifier,
         enablePredictiveBack = enablePredictiveBack,
+        animationRegistry = animationRegistry,
         tabWrapper = tabWrapper,
         paneWrapper = paneWrapper
     ) { destination ->

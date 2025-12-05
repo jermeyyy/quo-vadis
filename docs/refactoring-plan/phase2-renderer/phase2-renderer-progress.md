@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-05  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 9/12 tasks (75%)
+> **Progress**: 10/12 tasks (83%)
 
 ## Overview
 
@@ -21,7 +21,7 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 | [RENDER-003](./RENDER-003-transition-state.md) | Create TransitionState Sealed Class | 🟢 Completed | 2025-12-05 | Tree-aware TransitionState with manager |
 | [RENDER-004](./RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | 🟢 Completed | 2025-12-05 | Main host, 3 API variants, predictive back |
 | [RENDER-005](./RENDER-005-predictive-back.md) | Integrate Predictive Back with Speculative Pop | 🟢 Completed | 2025-12-05 | Full platform support, speculative pop |
-| [RENDER-006](./RENDER-006-animation-registry.md) | Create AnimationRegistry | ⚪ Not Started | - | Depends on RENDER-004 |
+| [RENDER-006](./RENDER-006-animation-registry.md) | Create AnimationRegistry | 🟢 Completed | 2025-12-05 | AnimationRegistry, StandardAnimations |
 | [RENDER-007](./RENDER-007-saveable-state.md) | SaveableStateHolder Integration | ⚪ Not Started | - | Depends on RENDER-004 |
 | [RENDER-008](./RENDER-008-user-wrapper-api.md) | User Wrapper API (TabNode/PaneNode) | 🟢 Completed | 2025-12-05 | TabWrapper, PaneWrapper, DefaultWrappers |
 | [RENDER-009](./RENDER-009-window-size-integration.md) | WindowSizeClass Integration | 🟢 Completed | 2025-12-05 | expect/actual for all platforms |
@@ -30,6 +30,51 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 ---
 
 ## Completed Tasks
+
+### RENDER-006: Create AnimationRegistry ✅
+- **Completed**: 2025-12-05
+- **Files Created**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/AnimationRegistry.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/StandardAnimations.kt`
+- **Files Modified**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/QuoVadisHost.kt` (added `animationRegistry` parameter)
+- **Summary**:
+  - **AnimationRegistry class** - Centralized registry for navigation transition animations:
+    - Lookup by (from, to, transitionType) with priority: exact → wildcard target → wildcard source → wildcards → defaults → global
+    - `resolve()` method for animation lookup
+    - `toAnimationResolver()` for TreeFlattener integration
+    - `copy()` for extending existing registries
+    - `plus` operator for combining registries
+    - `Builder` class with `register()`, `registerDefault()`, convenience methods (`useSlideForward()`, `useSlideBackward()`, etc.)
+    - `AnimationRegistry.Default` with standard slide/fade animations
+    - `AnimationRegistry.None` for no animations
+  - **StandardAnimations object** - Built-in animations:
+    - `slideForward()` - slide in from right, push left out
+    - `slideBackward()` - slide in from left, push right out  
+    - `slideVertical()` - slide up to enter, slide down to exit
+    - `fade()` - simple crossfade animation
+    - `scale()` - zoom in/out animation
+    - `sharedAxis()` - Material Design shared axis (X, Y, Z)
+    - `containerTransform()` - Material container transform placeholder
+    - `SharedAxis` enum (X, Y, Z)
+  - **Animation combinators**:
+    - `SurfaceAnimationSpec.plus()` operator for combining animations
+    - `SurfaceAnimationSpec.reversed()` for backward animations
+  - **DSL extensions**:
+    - `animationRegistry { }` builder function
+    - `forwardTransition<From, To>()` - PUSH transitions
+    - `backwardTransition<From, To>()` - POP transitions
+    - `biDirectionalTransition<From, To>()` - both directions
+    - `tabSwitchTransition()`, `paneSwitchTransition()`
+  - **QuoVadisHost integration**:
+    - Added `animationRegistry: AnimationRegistry = AnimationRegistry.Default` parameter to all 3 overloads
+    - Uses `animationRegistry.toAnimationResolver()` when creating TreeFlattener
+  - Full KDoc documentation on all public APIs
+- **Verified**:
+  - `:quo-vadis-core:compileKotlinMetadata` ✓
+  - `:quo-vadis-core:desktopTest` ✓
+  - `:composeApp:assembleDebug` ✓
+  - No errors ✓
 
 ### RENDER-004: Build QuoVadisHost Composable ✅
 - **Completed**: 2025-12-05
@@ -271,8 +316,6 @@ _None currently blocked._
 
 ## Ready to Start
 
-- **RENDER-005**: Integrate Predictive Back with Speculative Pop (RENDER-004 complete)
-- **RENDER-006**: Create AnimationRegistry (RENDER-004 complete)
 - **RENDER-007**: SaveableStateHolder Integration (RENDER-004 complete)
 - **RENDER-010**: Animation Pair Tracking (RENDER-003 complete)
 
