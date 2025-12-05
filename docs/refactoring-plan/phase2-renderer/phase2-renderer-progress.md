@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-05  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 3/12 tasks (25%)
+> **Progress**: 4/12 tasks (33%)
 
 ## Overview
 
@@ -17,14 +17,14 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 | [RENDER-001](./RENDER-001-renderable-surface.md) | Define RenderableSurface Data Class | 🟢 Completed | 2025-12-05 | All types, builder, extensions |
 | [RENDER-002A](./RENDER-002A-core-flatten.md) | Core flattenState Algorithm (Screen/Stack) | 🟢 Completed | 2025-12-05 | FlattenResult, TreeFlattener with Screen/Stack |
 | [RENDER-002B](./RENDER-002B-tab-flattening.md) | TabNode Flattening with User Wrapper | 🟢 Completed | 2025-12-05 | TAB_WRAPPER/TAB_CONTENT surfaces, caching hints |
-| [RENDER-002C](./RENDER-002C-pane-flattening.md) | PaneNode Adaptive Flattening | ⚪ Not Started | - | Depends on RENDER-002A |
+| [RENDER-002C](./RENDER-002C-pane-flattening.md) | PaneNode Adaptive Flattening | 🟢 Completed | 2025-12-05 | WindowSizeClass types, adaptive flattening |
 | [RENDER-003](./RENDER-003-transition-state.md) | Create TransitionState Sealed Class | ⚪ Not Started | - | Depends on Phase 1 |
 | [RENDER-004](./RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | ⚪ Not Started | - | Depends on RENDER-001..003 |
 | [RENDER-005](./RENDER-005-predictive-back.md) | Integrate Predictive Back with Speculative Pop | ⚪ Not Started | - | Depends on RENDER-004 |
 | [RENDER-006](./RENDER-006-animation-registry.md) | Create AnimationRegistry | ⚪ Not Started | - | Depends on RENDER-004 |
 | [RENDER-007](./RENDER-007-saveable-state.md) | SaveableStateHolder Integration | ⚪ Not Started | - | Depends on RENDER-004 |
 | [RENDER-008](./RENDER-008-user-wrapper-api.md) | User Wrapper API (TabNode/PaneNode) | ⚪ Not Started | - | Depends on RENDER-002A |
-| [RENDER-009](./RENDER-009-window-size-integration.md) | WindowSizeClass Integration | ⚪ Not Started | - | Depends on RENDER-002A |
+| [RENDER-009](./RENDER-009-window-size-integration.md) | WindowSizeClass Integration | ⚪ Not Started | - | Depends on RENDER-002C |
 | [RENDER-010](./RENDER-010-animation-pair-tracking.md) | Animation Pair Tracking | ⚪ Not Started | - | Depends on RENDER-003 |
 
 ---
@@ -102,6 +102,56 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
   - Build passes: `:quo-vadis-core:build`, `:composeApp:assembleDebug` ✓
   - Tests pass: `:quo-vadis-core:desktopTest` ✓
 
+### RENDER-002C: PaneNode Adaptive Flattening ✅
+- **Completed**: 2025-12-05
+- **Files Created**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/WindowSizeClass.kt`
+  - `quo-vadis-core/src/commonTest/kotlin/com/jermey/quo/vadis/core/navigation/compose/TreeFlattenerPaneTest.kt`
+- **Files Modified**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/TreeFlattener.kt`
+- **Summary**:
+  - Created WindowSizeClass types (data structures only, no expect/actual):
+    - `WindowWidthSizeClass` enum: Compact (< 600dp), Medium (600-840dp), Expanded (> 840dp)
+    - `WindowHeightSizeClass` enum: Compact (< 480dp), Medium (480-900dp), Expanded (> 900dp)
+    - `WindowSizeClass` data class with companion factory methods (calculateFromSize)
+    - Helper properties: isCompactWidth, isAtLeastMediumWidth, isExpandedWidth
+  - Extended `FlattenContext` with `windowSizeClass` parameter
+  - Extended `flattenState()` to accept optional `windowSizeClass` parameter
+  - Implemented full `flattenPane()` method with adaptive behavior:
+    - Routes to `flattenPaneAsStack()` for Compact width
+    - Routes to `flattenPaneMultiPane()` for Medium/Expanded width
+  - Implemented `flattenPaneAsStack()`:
+    - Produces PANE_AS_STACK surface for single pane (stack-like behavior)
+    - Tracks previousSurfaceId for back navigation animations
+    - Generates PANE_SWITCH AnimationPair for pane switches
+    - Stack-like caching behavior
+  - Implemented `flattenPaneMultiPane()`:
+    - Produces PANE_WRAPPER surface with paneStructures list
+    - Produces PANE_CONTENT surfaces for each pane
+    - Links content surfaces via parentWrapperId
+    - Tab-like caching strategy (wrapper vs content)
+    - Cross-node navigation detection and animation pairs
+  - Added helper methods:
+    - `flattenPaneContent()` - Recursively flattens nested content
+    - `detectPreviousPaneRole()` - Detects pane switches
+    - `findPaneNodeByKey()` - DFS for PaneNode in tree
+    - `detectCrossNodePaneNavigation()` - Cross-node detection
+  - Created comprehensive test suite with 30+ tests covering:
+    - Compact width → PANE_AS_STACK surface
+    - Compact width → previousSurfaceId for back navigation
+    - Expanded width → PANE_WRAPPER + PANE_CONTENT surfaces
+    - paneStructures populated with PaneRole + content
+    - parentWrapperId linking
+    - PANE_SWITCH animation pair generation
+    - Caching hints for both modes
+    - Medium width also produces multi-pane output
+    - Cross-node navigation handling
+    - Window size class boundary tests
+  - Full KDoc documentation on all public APIs
+- **Verified**: 
+  - Build passes: `:quo-vadis-core:build -x detekt` ✓
+  - Tests pass: `:quo-vadis-core:desktopTest` ✓
+
 ---
 
 ## In Progress Tasks
@@ -118,19 +168,17 @@ _None currently blocked._
 
 ## Ready to Start
 
-- **RENDER-002B**: TabNode Flattening with User Wrapper
-- **RENDER-002C**: PaneNode Adaptive Flattening
 - **RENDER-003**: Create TransitionState Sealed Class
 - **RENDER-008**: User Wrapper API (TabNode/PaneNode)
-- **RENDER-009**: WindowSizeClass Integration
+- **RENDER-009**: WindowSizeClass Integration (platform-specific `calculateWindowSizeClass()` implementations)
 
 ---
 
 ## Dependencies
 
 ```
-Phase 1 ─► RENDER-001 ─► RENDER-002A ─┬─► RENDER-002B
-                │                      ├─► RENDER-002C
+Phase 1 ─► RENDER-001 ─► RENDER-002A ─┬─► RENDER-002B ✓
+                │                      ├─► RENDER-002C ✓
                 │                      ├─► RENDER-008
                 │                      └─► RENDER-009
                 │
@@ -150,6 +198,7 @@ Phase 1 ─► RENDER-001 ─► RENDER-002A ─┬─► RENDER-002B
 - Estimated 31-37.5 days total
 - Key architecture: User Wrapper API for TabNode/PaneNode customization
 - WindowSizeClass integration for adaptive layouts
+- RENDER-002C provides WindowSizeClass data types; RENDER-009 will add platform-specific `calculateWindowSizeClass()` implementations
 
 ---
 

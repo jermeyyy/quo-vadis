@@ -6,7 +6,9 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.core.NavNode
+import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.core.PaneNode
+import com.jermey.quo.vadis.core.navigation.core.PaneRole
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.StackNode
 import com.jermey.quo.vadis.core.navigation.core.TabNode
@@ -137,13 +139,15 @@ public class TreeFlattener(
      * @property previousSiblingId ID of the previous sibling for animation pairing
      * @property transitionType The type of transition being processed
      * @property previousRoot The previous navigation tree root for tab switch detection
+     * @property windowSizeClass The current window size classification for adaptive rendering
      */
     private data class FlattenContext(
         val baseZOrder: Int,
         val parentId: String?,
         val previousSiblingId: String?,
         val transitionType: TransitionType,
-        val previousRoot: NavNode? = null
+        val previousRoot: NavNode? = null,
+        val windowSizeClass: WindowSizeClass = WindowSizeClass.Compact
     )
 
     /**
@@ -206,7 +210,10 @@ public class TreeFlattener(
      * - For [ScreenNode]: Produces a single surface with [SurfaceRenderingMode.SINGLE_SCREEN]
      * - For [StackNode]: Produces surfaces with [SurfaceRenderingMode.STACK_CONTENT]
      *   for the active child, tracking previous child for animations
-     * - For [TabNode]/[PaneNode]: Placeholder behavior (full impl in RENDER-002B/C)
+     * - For [TabNode]: Produces [SurfaceRenderingMode.TAB_WRAPPER] and [SurfaceRenderingMode.TAB_CONTENT]
+     * - For [PaneNode]: Adaptive behavior based on [WindowSizeClass]:
+     *   - Compact width: [SurfaceRenderingMode.PANE_AS_STACK] (single pane, stack-like)
+     *   - Medium/Expanded: [SurfaceRenderingMode.PANE_WRAPPER] + [SurfaceRenderingMode.PANE_CONTENT]
      *
      * ## Example
      *
@@ -219,15 +226,20 @@ public class TreeFlattener(
      *
      * // After pop navigation - detects POP transition
      * val result3 = flattener.flattenState(poppedRootNode, newRootNode)
+     *
+     * // With window size class for adaptive pane rendering
+     * val result4 = flattener.flattenState(paneNode, null, WindowSizeClass.Expanded)
      * ```
      *
      * @param root The root of the navigation tree
      * @param previousRoot Optional previous root for transition detection
+     * @param windowSizeClass The window size classification for adaptive PaneNode rendering
      * @return FlattenResult containing surfaces, animation pairs, and caching hints
      */
     public fun flattenState(
         root: NavNode,
-        previousRoot: NavNode? = null
+        previousRoot: NavNode? = null,
+        windowSizeClass: WindowSizeClass = WindowSizeClass.Compact
     ): FlattenResult {
         val accumulator = FlattenAccumulator()
         val transitionType = detectTransitionType(previousRoot, root)
@@ -237,7 +249,8 @@ public class TreeFlattener(
             parentId = null,
             previousSiblingId = findPreviousSiblingId(previousRoot, root),
             transitionType = transitionType,
-            previousRoot = previousRoot
+            previousRoot = previousRoot,
+            windowSizeClass = windowSizeClass
         )
 
         flatten(root, context, accumulator)
@@ -693,22 +706,26 @@ public class TreeFlattener(
         }
     }
 
+    // =========================================================================
+    // PANE NODE FLATTENING
+    // =========================================================================
+
     /**
-     * Placeholder for PaneNode flattening.
+     * Flattens a PaneNode with adaptive rendering based on screen size.
      *
-     * This is a basic implementation that flattens only the active pane's content.
-     * Full implementation with PANE_WRAPPER, PANE_CONTENT, PANE_AS_STACK modes
-     * and proper adaptive behavior will be added in RENDER-002C.
+     * ## Compact Width (Small Screens)
      *
-     * ## Current Behavior
+     * Renders like StackNode - only active pane visible with back navigation support.
+     * Uses [SurfaceRenderingMode.PANE_AS_STACK] for stack-like behavior.
      *
-     * - Flattens only the active pane's content
-     * - Does not create PANE_WRAPPER surface
-     * - Does not handle multi-pane layouts
-     * - Does not handle adaptive morphing
+     * ## Medium/Expanded Width (Large Screens)
+     *
+     * Renders all panes with user wrapper composable controlling layout.
+     * Uses [SurfaceRenderingMode.PANE_WRAPPER] for the wrapper surface and
+     * [SurfaceRenderingMode.PANE_CONTENT] for individual pane content surfaces.
      *
      * @param pane The PaneNode to flatten
-     * @param context Current flattening context
+     * @param context Current flattening context (contains windowSizeClass)
      * @param accumulator Accumulator for results
      */
     private fun flattenPane(
@@ -716,16 +733,354 @@ public class TreeFlattener(
         context: FlattenContext,
         accumulator: FlattenAccumulator
     ) {
-        // Placeholder - will be fully implemented in RENDER-002C
-        // For now, flatten the active pane's content
-        val activePaneContent = pane.activePaneContent
-        if (activePaneContent != null) {
-            val paneContext = context.copy(
-                baseZOrder = context.baseZOrder + zOrderIncrement,
-                parentId = pane.key
-            )
-            flatten(activePaneContent, paneContext, accumulator)
+        if (context.windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
+            flattenPaneAsStack(pane, context, accumulator)
+        } else {
+            flattenPaneMultiPane(pane, context, accumulator)
         }
+    }
+
+    /**
+     * Flattens PaneNode for small screens (Compact width).
+     *
+     * Behaves like StackNode:
+     * - Only one pane visible at a time
+     * - Tracks previous pane for back navigation animations
+     * - Uses [SurfaceRenderingMode.PANE_AS_STACK] rendering mode
+     *
+     * @param pane The PaneNode to flatten
+     * @param context Current flattening context
+     * @param accumulator Accumulator for results
+     */
+    private fun flattenPaneAsStack(
+        pane: PaneNode,
+        context: FlattenContext,
+        accumulator: FlattenAccumulator
+    ) {
+        val activePaneRole = pane.activePaneRole
+        val activePaneConfig = pane.paneConfigurations[activePaneRole] ?: return
+        val activePaneContent = activePaneConfig.content
+
+        // Get the ordered list of pane roles for consistent indexing
+        val orderedRoles = pane.configuredRoles.toList()
+        val activePaneIndex = orderedRoles.indexOf(activePaneRole)
+
+        // Generate surface ID including pane role for uniqueness
+        val surfaceId = "${pane.key}-pane-${activePaneRole.name.lowercase()}"
+
+        // Detect previous pane for animation pairing
+        val previousPaneRole = detectPreviousPaneRole(pane, context.previousRoot)
+        val previousPaneId = if (previousPaneRole != null && previousPaneRole != activePaneRole) {
+            "${pane.key}-pane-${previousPaneRole.name.lowercase()}"
+        } else {
+            null
+        }
+
+        // Determine if this is cross-node navigation
+        val isCrossNodeNavigation = context.previousSiblingId != null &&
+            !context.previousSiblingId.startsWith(pane.key)
+
+        // Resolve animation spec
+        val animationSpec = when {
+            previousPaneId != null -> {
+                // Pane switch within the PaneNode
+                animationResolver.resolve(
+                    from = pane.paneConfigurations[previousPaneRole]?.content,
+                    to = activePaneContent,
+                    transitionType = TransitionType.PANE_SWITCH
+                )
+            }
+            isCrossNodeNavigation -> {
+                // Cross-node navigation (entering from different node type)
+                animationResolver.resolve(null, activePaneContent, context.transitionType)
+            }
+            else -> SurfaceAnimationSpec.None
+        }
+
+        val surface = RenderableSurface(
+            id = surfaceId,
+            zOrder = context.baseZOrder,
+            nodeType = SurfaceNodeType.PANE,
+            renderingMode = SurfaceRenderingMode.PANE_AS_STACK,
+            transitionState = SurfaceTransitionState.Visible,
+            animationSpec = animationSpec,
+            content = contentResolver.resolve(activePaneContent),
+            parentWrapperId = context.parentId,
+            previousSurfaceId = previousPaneId ?: context.previousSiblingId
+        )
+
+        accumulator.addSurface(surface)
+
+        // Add animation pair for pane navigation
+        if (previousPaneId != null) {
+            accumulator.addAnimationPair(
+                AnimationPair(
+                    currentId = surfaceId,
+                    previousId = previousPaneId,
+                    transitionType = TransitionType.PANE_SWITCH
+                )
+            )
+        }
+
+        // Add animation pair for cross-node navigation
+        if (isCrossNodeNavigation && context.previousSiblingId != null) {
+            accumulator.addAnimationPair(
+                AnimationPair(
+                    currentId = surfaceId,
+                    previousId = context.previousSiblingId,
+                    transitionType = context.transitionType
+                )
+            )
+            accumulator.isCrossNodeNavigation = true
+        }
+
+        // Update caching hints for stack-like behavior
+        accumulator.markCacheable(surfaceId)
+        if (previousPaneId != null) {
+            accumulator.markInvalidated(previousPaneId)
+        }
+
+        // Recursively flatten the active pane's content if it's a container
+        flattenPaneContent(activePaneContent, surfaceId, context, accumulator)
+    }
+
+    /**
+     * Flattens PaneNode for large screens (Medium/Expanded width).
+     *
+     * All panes visible with user-controlled wrapper layout:
+     * - [SurfaceRenderingMode.PANE_WRAPPER] surface contains user's layout composable
+     * - [SurfaceRenderingMode.PANE_CONTENT] surfaces for each pane
+     * - [PaneStructure] provides pane metadata to user wrapper
+     *
+     * @param pane The PaneNode to flatten
+     * @param context Current flattening context
+     * @param accumulator Accumulator for results
+     */
+    private fun flattenPaneMultiPane(
+        pane: PaneNode,
+        context: FlattenContext,
+        accumulator: FlattenAccumulator
+    ) {
+        val wrapperSurfaceId = "${pane.key}-wrapper"
+
+        // Determine if this is cross-node navigation
+        val isCrossNodeNavigation = detectCrossNodePaneNavigation(pane, context)
+
+        // Build pane structures for user wrapper
+        val paneStructures = pane.paneConfigurations.map { (role, config) ->
+            PaneStructure(
+                paneRole = role,
+                content = contentResolver.resolve(config.content)
+            )
+        }
+
+        // Resolve wrapper animation
+        val wrapperAnimationSpec = if (isCrossNodeNavigation) {
+            animationResolver.resolve(null, pane, context.transitionType)
+        } else {
+            SurfaceAnimationSpec.None
+        }
+
+        // 1. Create wrapper surface
+        val wrapperSurface = RenderableSurface(
+            id = wrapperSurfaceId,
+            zOrder = context.baseZOrder,
+            nodeType = SurfaceNodeType.PANE,
+            renderingMode = SurfaceRenderingMode.PANE_WRAPPER,
+            transitionState = SurfaceTransitionState.Visible,
+            animationSpec = wrapperAnimationSpec,
+            content = contentResolver.resolve(pane),
+            parentWrapperId = context.parentId,
+            previousSurfaceId = if (isCrossNodeNavigation) context.previousSiblingId else null,
+            paneStructures = paneStructures
+        )
+
+        accumulator.addSurface(wrapperSurface)
+
+        // 2. Create content surfaces for each pane
+        var contentZOrderOffset = zOrderIncrement
+        pane.paneConfigurations.forEach { (role, config) ->
+            val contentSurfaceId = "${pane.key}-content-${role.name.lowercase()}"
+
+            val contentSurface = RenderableSurface(
+                id = contentSurfaceId,
+                zOrder = context.baseZOrder + contentZOrderOffset,
+                nodeType = SurfaceNodeType.PANE,
+                renderingMode = SurfaceRenderingMode.PANE_CONTENT,
+                transitionState = SurfaceTransitionState.Visible,
+                animationSpec = SurfaceAnimationSpec.None, // Content doesn't animate independently
+                content = contentResolver.resolve(config.content),
+                parentWrapperId = wrapperSurfaceId,
+                previousSurfaceId = null
+            )
+
+            accumulator.addSurface(contentSurface)
+            accumulator.contentIds.add(contentSurfaceId)
+            contentZOrderOffset += zOrderIncrement
+        }
+
+        // 3. Add animation pair for cross-node navigation
+        if (isCrossNodeNavigation && context.previousSiblingId != null) {
+            accumulator.addAnimationPair(
+                AnimationPair(
+                    currentId = wrapperSurfaceId,
+                    previousId = context.previousSiblingId,
+                    transitionType = context.transitionType
+                )
+            )
+        }
+
+        // 4. Update caching hints
+        accumulator.wrapperIds.add(wrapperSurfaceId)
+        if (isCrossNodeNavigation) {
+            accumulator.isCrossNodeNavigation = true
+            // Cross-node: cache whole wrapper + content
+            accumulator.markCacheable(wrapperSurfaceId)
+            pane.paneConfigurations.keys.forEach { role ->
+                accumulator.markCacheable("${pane.key}-content-${role.name.lowercase()}")
+            }
+        } else {
+            // Intra-pane: only cache content surfaces
+            pane.paneConfigurations.keys.forEach { role ->
+                accumulator.markCacheable("${pane.key}-content-${role.name.lowercase()}")
+            }
+        }
+
+        // 5. Recursively flatten content within each pane
+        pane.paneConfigurations.forEach { (role, config) ->
+            val contentSurfaceId = "${pane.key}-content-${role.name.lowercase()}"
+            flattenPaneContent(config.content, contentSurfaceId, context, accumulator)
+        }
+    }
+
+    /**
+     * Recursively flattens content within a pane.
+     *
+     * Handles nested containers (StackNode, TabNode, etc.) within pane content.
+     *
+     * @param content The content node to flatten
+     * @param parentSurfaceId The parent surface ID for linking
+     * @param context Current flattening context
+     * @param accumulator Accumulator for results
+     */
+    private fun flattenPaneContent(
+        content: NavNode,
+        parentSurfaceId: String,
+        context: FlattenContext,
+        accumulator: FlattenAccumulator
+    ) {
+        when (content) {
+            is ScreenNode -> {
+                // Screen nodes within panes are already rendered as part of the pane content
+                // No additional surfaces needed
+            }
+            is StackNode -> {
+                // Flatten the stack's active child
+                val contentContext = context.copy(
+                    baseZOrder = context.baseZOrder + (2 * zOrderIncrement),
+                    parentId = parentSurfaceId,
+                    previousSiblingId = null,
+                    transitionType = TransitionType.NONE
+                )
+                flattenStackContent(content, contentContext, accumulator)
+            }
+            is TabNode -> {
+                // Handle nested tab within pane
+                val contentContext = context.copy(
+                    baseZOrder = context.baseZOrder + (2 * zOrderIncrement),
+                    parentId = parentSurfaceId,
+                    previousSiblingId = null,
+                    transitionType = TransitionType.NONE
+                )
+                flattenTab(content, contentContext, accumulator)
+            }
+            is PaneNode -> {
+                // Nested panes - flatten recursively with same window size
+                val contentContext = context.copy(
+                    baseZOrder = context.baseZOrder + (2 * zOrderIncrement),
+                    parentId = parentSurfaceId,
+                    previousSiblingId = null,
+                    transitionType = TransitionType.NONE
+                )
+                flattenPane(content, contentContext, accumulator)
+            }
+        }
+    }
+
+    /**
+     * Detects the previous pane role by comparing with the previous root state.
+     *
+     * If the previous root was a PaneNode with the same key, returns its activePaneRole.
+     * Otherwise, returns null (indicating this is either the initial render or
+     * a cross-node navigation).
+     *
+     * @param currentPane The current PaneNode
+     * @param previousRoot The previous navigation tree root
+     * @return The previous pane role, or null if not a pane switch
+     */
+    private fun detectPreviousPaneRole(
+        currentPane: PaneNode,
+        previousRoot: NavNode?
+    ): PaneRole? {
+        if (previousRoot == null) return null
+
+        // Find a PaneNode with the same key in the previous tree
+        val previousPane = findPaneNodeByKey(previousRoot, currentPane.key)
+        return previousPane?.activePaneRole
+    }
+
+    /**
+     * Finds a PaneNode with the given key in the navigation tree.
+     *
+     * Performs a depth-first search to locate the PaneNode.
+     *
+     * @param node The starting node for the search
+     * @param key The key to search for
+     * @return The matching PaneNode, or null if not found
+     */
+    private fun findPaneNodeByKey(node: NavNode, key: String): PaneNode? {
+        return when (node) {
+            is PaneNode -> if (node.key == key) node else {
+                node.paneConfigurations.values.asSequence()
+                    .mapNotNull { config -> findPaneNodeByKey(config.content, key) }
+                    .firstOrNull()
+            }
+            is StackNode -> node.children.asSequence()
+                .mapNotNull { child -> findPaneNodeByKey(child, key) }
+                .firstOrNull()
+            is TabNode -> node.stacks.asSequence()
+                .flatMap { stack -> stack.children.asSequence() }
+                .mapNotNull { child -> findPaneNodeByKey(child, key) }
+                .firstOrNull()
+            is ScreenNode -> null
+        }
+    }
+
+    /**
+     * Detects if this is a cross-node type navigation for PaneNode.
+     *
+     * Cross-node navigation occurs when:
+     * - There was a previous root that is not the same type as the current node
+     * - Or the previous root doesn't contain a matching PaneNode
+     *
+     * @param pane The current PaneNode
+     * @param context The flattening context
+     * @return True if this is cross-node navigation
+     */
+    private fun detectCrossNodePaneNavigation(
+        pane: PaneNode,
+        context: FlattenContext
+    ): Boolean {
+        val previousRoot = context.previousRoot ?: return false
+
+        // If the previous root was a different node type at the same level
+        if (context.previousSiblingId != null && !context.previousSiblingId.startsWith(pane.key)) {
+            return previousRoot !is PaneNode || previousRoot.key != pane.key
+        }
+
+        // Check if this PaneNode existed in the previous state
+        val previousPane = findPaneNodeByKey(previousRoot, pane.key)
+        return previousPane == null
     }
 
     // =========================================================================
