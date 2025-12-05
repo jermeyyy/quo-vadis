@@ -99,6 +99,7 @@ kotlin {
 
         androidMain {
             dependencies {
+                implementation(libs.androidx.material3.windowsizeclass)
             }
         }
 

@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.compose
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -225,3 +226,25 @@ public data class WindowSizeClass(
     public val isExpandedWidth: Boolean
         get() = widthSizeClass == WindowWidthSizeClass.Expanded
 }
+
+/**
+ * Calculates the current window size class.
+ *
+ * This is the main entry point for obtaining window size information.
+ * Each platform provides its own implementation that observes the
+ * actual window dimensions and converts them to a [WindowSizeClass].
+ *
+ * The returned value will automatically recompose when the window
+ * size changes (e.g., device rotation, window resize).
+ *
+ * ## Platform Implementations
+ *
+ * - **Android**: Uses `calculateWindowSizeClass()` from Material3
+ * - **iOS**: Calculates from `UIScreen.main.bounds`
+ * - **Desktop**: Calculates from window size state
+ * - **Web (JS/Wasm)**: Calculates from `window.innerWidth/innerHeight`
+ *
+ * @return The current [WindowSizeClass] for the window
+ */
+@Composable
+public expect fun calculateWindowSizeClass(): WindowSizeClass

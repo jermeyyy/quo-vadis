@@ -1039,4 +1039,4 @@ fun `QuoVadisHost preserves tab state`() {
 - [RENDER-007](./RENDER-007-saveable-state.md) - SaveableStateHolder details
 - [CORE-001](../phase1-core/CORE-001-navnode-hierarchy.md) - NavNode definitions
 - [CORE-003](../phase1-core/CORE-003-navigator-refactor.md) - Navigator refactoring
-- [Original Architecture Plan](../../Refactoring%20Quo-Vadis%20Navigation%20Architecture.md) - Section 3.2 "The Single Rendering Component"
+- [Original Architecture Plan](../../../Refactoring%20Quo-Vadis%20Navigation%20Architecture.md) - Section 3.2 "The Single Rendering Component"

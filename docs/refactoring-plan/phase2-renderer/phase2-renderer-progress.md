@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-05  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 5/12 tasks (42%)
+> **Progress**: 8/12 tasks (67%)
 
 ## Overview
 
@@ -19,17 +19,53 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 | [RENDER-002B](./RENDER-002B-tab-flattening.md) | TabNode Flattening with User Wrapper | 🟢 Completed | 2025-12-05 | TAB_WRAPPER/TAB_CONTENT surfaces, caching hints |
 | [RENDER-002C](./RENDER-002C-pane-flattening.md) | PaneNode Adaptive Flattening | 🟢 Completed | 2025-12-05 | WindowSizeClass types, adaptive flattening |
 | [RENDER-003](./RENDER-003-transition-state.md) | Create TransitionState Sealed Class | 🟢 Completed | 2025-12-05 | Tree-aware TransitionState with manager |
-| [RENDER-004](./RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | ⚪ Not Started | - | Depends on RENDER-001..003 |
+| [RENDER-004](./RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | 🟢 Completed | 2025-12-05 | Main host, 3 API variants, predictive back |
 | [RENDER-005](./RENDER-005-predictive-back.md) | Integrate Predictive Back with Speculative Pop | ⚪ Not Started | - | Depends on RENDER-004 |
 | [RENDER-006](./RENDER-006-animation-registry.md) | Create AnimationRegistry | ⚪ Not Started | - | Depends on RENDER-004 |
 | [RENDER-007](./RENDER-007-saveable-state.md) | SaveableStateHolder Integration | ⚪ Not Started | - | Depends on RENDER-004 |
-| [RENDER-008](./RENDER-008-user-wrapper-api.md) | User Wrapper API (TabNode/PaneNode) | ⚪ Not Started | - | Depends on RENDER-002A |
-| [RENDER-009](./RENDER-009-window-size-integration.md) | WindowSizeClass Integration | ⚪ Not Started | - | Depends on RENDER-002C |
+| [RENDER-008](./RENDER-008-user-wrapper-api.md) | User Wrapper API (TabNode/PaneNode) | 🟢 Completed | 2025-12-05 | TabWrapper, PaneWrapper, DefaultWrappers |
+| [RENDER-009](./RENDER-009-window-size-integration.md) | WindowSizeClass Integration | 🟢 Completed | 2025-12-05 | expect/actual for all platforms |
 | [RENDER-010](./RENDER-010-animation-pair-tracking.md) | Animation Pair Tracking | ⚪ Not Started | - | Depends on RENDER-003 |
 
 ---
 
 ## Completed Tasks
+
+### RENDER-004: Build QuoVadisHost Composable ✅
+- **Completed**: 2025-12-05
+- **File Created**: `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/QuoVadisHost.kt`
+- **Summary**:
+  - **QuoVadisHostScope interface** - Extends SharedTransitionScope with Navigator access
+  - **Main QuoVadisHost Composable** (~750 lines):
+    - Observes Navigator state via `collectAsState()`
+    - Calculates WindowSizeClass via `calculateWindowSizeClass()`
+    - Flattens NavNode tree via TreeFlattener
+    - Renders surfaces with proper z-ordering
+    - Uses SaveableStateHolder for tab/pane state preservation
+    - Wraps in SharedTransitionLayout for shared element transitions
+    - Supports tabWrapper and paneWrapper parameters
+  - **Internal rendering components**:
+    - `QuoVadisHostContent` - Renders flattened surfaces sorted by z-order
+    - `RenderableSurfaceContainer` - Single surface with AnimatedVisibility
+    - `RenderSurfaceContent` - Dispatches to correct renderer based on renderingMode
+    - `RenderTabWrapper` - TabNode rendering with user's tabWrapper
+    - `RenderPaneWrapper` - PaneNode rendering with user's paneWrapper
+  - **Helper functions**:
+    - `findScreenNodeByKey()` - DFS for ScreenNode
+    - `findTabNodeByKey()` - DFS for TabNode
+    - `findPaneNodeByKey()` - DFS for PaneNode
+    - `predictiveBackTransform` modifier - Scale/translate during gestures
+  - **Alternative APIs**:
+    - Content map variant: `QuoVadisHost(navigator, contentMap = mapOf(...))`
+    - Graph-based variant: `QuoVadisHost(navigator, graph = navigationGraph)`
+  - **Predictive back support** via `predictiveBackTransform` modifier
+  - Full KDoc documentation on all public APIs
+- **Verified**:
+  - `:quo-vadis-core:compileCommonMainKotlinMetadata` ✓
+  - `:quo-vadis-core:compileKotlinDesktop` ✓
+  - `:quo-vadis-core:compileKotlinJs` ✓
+  - `:quo-vadis-core:compileKotlinWasmJs` ✓
+  - `:composeApp:assembleDebug` ✓
 
 ### RENDER-001: Define RenderableSurface Data Class ✅
 - **Completed**: 2025-12-05
@@ -235,10 +271,86 @@ _None currently blocked._
 
 ## Ready to Start
 
-- **RENDER-004**: Build QuoVadisHost Composable (all dependencies met)
-- **RENDER-008**: User Wrapper API (TabNode/PaneNode)
-- **RENDER-009**: WindowSizeClass Integration (platform-specific `calculateWindowSizeClass()` implementations)
-- **RENDER-010**: Animation Pair Tracking (now unblocked by RENDER-003)
+- **RENDER-005**: Integrate Predictive Back with Speculative Pop (RENDER-004 complete)
+- **RENDER-006**: Create AnimationRegistry (RENDER-004 complete)
+- **RENDER-007**: SaveableStateHolder Integration (RENDER-004 complete)
+- **RENDER-010**: Animation Pair Tracking (RENDER-003 complete)
+
+---
+
+## Completed This Session
+
+### RENDER-004: Build QuoVadisHost Composable ✅
+- **Completed**: 2025-12-05
+- **File Created**: `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/QuoVadisHost.kt`
+- **Summary**: Main QuoVadisHost composable with SharedTransitionLayout, TreeFlattener integration, SaveableStateHolder, TabWrapper/PaneWrapper support, three API variants (lambda, contentMap, graph), predictive back transforms
+- **Verified**: All platform targets compile successfully, `:composeApp:assembleDebug` ✓
+
+### RENDER-009: WindowSizeClass Integration ✅
+- **Completed**: 2025-12-05
+- **Files Created**:
+  - `quo-vadis-core/src/androidMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/WindowSizeClass.android.kt`
+  - `quo-vadis-core/src/iosMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/WindowSizeClass.ios.kt`
+  - `quo-vadis-core/src/desktopMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/WindowSizeClass.desktop.kt`
+  - `quo-vadis-core/src/jsMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/WindowSizeClass.js.kt`
+  - `quo-vadis-core/src/wasmJsMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/WindowSizeClass.wasmJs.kt`
+- **Files Modified**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/WindowSizeClass.kt` (added expect fun)
+  - `quo-vadis-core/build.gradle.kts` (added M3 window-size-class dependency for Android)
+  - `gradle/libs.versions.toml` (added M3 window-size-class version)
+- **Summary**:
+  - Added `expect fun calculateWindowSizeClass(): WindowSizeClass` to commonMain
+  - **Android implementation**: Uses Material3 `calculateWindowSizeClass()` API, maps M3 enums to our enums
+  - **iOS implementation**: Uses UIScreen.mainScreen.bounds with orientation change observer via NSNotificationCenter
+  - **Desktop implementation**: Uses LocalWindowInfo.current.containerSize with LocalDensity conversion
+  - **JS/Browser implementation**: Uses window.innerWidth/innerHeight with resize event listener
+  - **WasmJS implementation**: Same as JS implementation
+  - All implementations automatically recompose on window size changes
+  - Full KDoc documentation on all implementations
+- **Verified**:
+  - `:quo-vadis-core:compileKotlinMetadata` ✓
+  - `:quo-vadis-core:compileAndroidMain` ✓
+  - `:quo-vadis-core:compileKotlinIosArm64` ✓
+  - `:quo-vadis-core:compileKotlinDesktop` ✓
+  - `:quo-vadis-core:compileKotlinJs` ✓
+  - `:quo-vadis-core:compileKotlinWasmJs` ✓
+
+### RENDER-008: User Wrapper API (TabNode/PaneNode) ✅
+- **Completed**: 2025-12-05
+- **Files Created**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/wrapper/TabWrapperScope.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/wrapper/TabWrapper.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/wrapper/PaneWrapperScope.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/wrapper/PaneWrapper.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/wrapper/DefaultWrappers.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/wrapper/internal/ScopeImpls.kt`
+- **Summary**:
+  - **TabWrapperScope interface** - Tab navigation scope:
+    - Properties: `navigator`, `activeTabIndex`, `tabCount`, `tabMetadata`, `isTransitioning`
+    - Methods: `switchTab(index)`, `switchTab(route)`
+  - **TabMetadata data class** - Tab info: `label`, `icon`, `route`, `contentDescription`, `badge`
+  - **TabWrapper typealias** - `@Composable TabWrapperScope.(tabContent: @Composable () -> Unit) -> Unit`
+  - **PaneWrapperScope interface** - Pane navigation scope:
+    - Properties: `navigator`, `activePaneRole`, `paneCount`, `visiblePaneCount`, `isExpanded`, `isTransitioning`
+    - Methods: `navigateToPane(role)`
+    - Uses existing `PaneRole` from NavNode.kt (Primary, Supporting, Extra)
+  - **PaneContent data class** - Pane info: `role`, `content`, `isVisible`
+  - **PaneWrapper typealias** - `@Composable PaneWrapperScope.(paneContents: List<PaneContent>) -> Unit`
+  - **Default implementations**:
+    - `DefaultTabWrapper` - Material 3 Scaffold with bottom NavigationBar
+    - `TopTabWrapper` - Column with TabRow at top
+    - `DefaultPaneWrapper` - Row with equal weight panes and VerticalDivider
+    - `WeightedPaneWrapper` - Row with role-based weights (Primary: 65%, Supporting: 35%, Extra: 25%)
+  - **Internal implementations**:
+    - `TabWrapperScopeImpl` - Validates index bounds, routes by route string
+    - `PaneWrapperScopeImpl` - Simple delegation to callbacks
+    - Factory functions: `createTabWrapperScope()`, `createPaneWrapperScope()`
+  - **Design Decision**: Reused existing `PaneRole` enum (Primary, Supporting, Extra) instead of spec's LIST, DETAIL, SUPPLEMENTARY values to avoid breaking changes
+  - Full KDoc documentation on all public APIs
+- **Verified**:
+  - Build passes: `:quo-vadis-core:compileKotlinMetadata` ✓
+  - Build passes: `:quo-vadis-core:compileKotlinDesktop` ✓
+  - No errors in created files ✓
 
 ---
 

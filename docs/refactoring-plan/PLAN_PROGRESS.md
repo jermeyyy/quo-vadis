@@ -15,14 +15,14 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | Phase | Status | Progress | Tasks Done | Tasks Total |
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟡 In Progress | 42% | 5 | 12 |
+| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟡 In Progress | 67% | 8 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~21% | 11 | 52 |
+| **TOTAL** | 🟡 In Progress | ~27% | 14 | 52 |
 
 ---
 
@@ -41,6 +41,74 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-05 (Latest)
+- ✅ **RENDER-004**: Build QuoVadisHost Composable - **COMPLETED**
+  - Created main `QuoVadisHost.kt` (~760 lines) with unified navigation rendering
+  - **QuoVadisHostScope interface** - Extends SharedTransitionScope with Navigator access
+  - **Main QuoVadisHost** - Observes Navigator state, flattens tree, renders surfaces
+  - **Internal rendering pipeline**:
+    - `QuoVadisHostContent` - Renders surfaces sorted by z-order
+    - `RenderableSurfaceContainer` - AnimatedVisibility per surface
+    - `RenderSurfaceContent` - Dispatches by renderingMode
+    - `RenderTabWrapper` / `RenderPaneWrapper` - User wrapper invocation
+  - **Three API variants**:
+    - Lambda: `QuoVadisHost(navigator) { destination -> ... }`
+    - Content map: `QuoVadisHost(navigator, contentMap = mapOf(...))`
+    - Graph: `QuoVadisHost(navigator, graph = navigationGraph)`
+  - **Key features**:
+    - SharedTransitionLayout wrapping for shared element transitions
+    - SaveableStateHolder for tab/pane state preservation
+    - WindowSizeClass integration for adaptive pane rendering
+    - Predictive back gesture transforms
+    - TabWrapper/PaneWrapper user customization
+  
+  **File Created:**
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/QuoVadisHost.kt`
+  
+  **Verified**: All platform compilations pass, `:composeApp:assembleDebug` ✓
+
+### 2025-12-05
+- ✅ **RENDER-009**: WindowSizeClass Integration - **COMPLETED**
+  - Added `expect fun calculateWindowSizeClass(): WindowSizeClass` to commonMain
+  - **Android implementation**: Uses Material3 `calculateWindowSizeClass()` API via new dependency
+  - **iOS implementation**: Uses UIScreen.mainScreen.bounds with orientation observer
+  - **Desktop implementation**: Uses LocalWindowInfo.current.containerSize with LocalDensity
+  - **JS/Browser implementation**: Uses window.innerWidth/innerHeight with resize listener
+  - **WasmJS implementation**: Same as JS implementation
+  - All implementations automatically recompose on window size changes
+  - Added `androidx-material3-windowsizeclass` dependency (v1.3.3) for Android
+  
+  **Files Created:**
+  - `WindowSizeClass.android.kt`, `WindowSizeClass.ios.kt`, `WindowSizeClass.desktop.kt`
+  - `WindowSizeClass.js.kt`, `WindowSizeClass.wasmJs.kt`
+  
+  **Files Modified:**
+  - `WindowSizeClass.kt` (added expect fun), `build.gradle.kts`, `libs.versions.toml`
+  
+  **Verified**: All 5 platform compilations pass
+
+### 2025-12-05
+- ✅ **RENDER-008**: User Wrapper API for TabNode and PaneNode - **COMPLETED**
+  - Created `wrapper` package under `compose` directory
+  - **TabWrapperScope interface**: `navigator`, `activeTabIndex`, `tabCount`, `tabMetadata`, `isTransitioning`, `switchTab(index)`, `switchTab(route)`
+  - **TabMetadata data class**: `label`, `icon` (ImageVector?), `route`, `contentDescription`, `badge`
+  - **TabWrapper typealias**: `@Composable TabWrapperScope.(tabContent: @Composable () -> Unit) -> Unit`
+  - **PaneWrapperScope interface**: `navigator`, `activePaneRole`, `paneCount`, `visiblePaneCount`, `isExpanded`, `isTransitioning`, `navigateToPane(role)`
+  - **PaneContent data class**: `role`, `content` (@Composable), `isVisible`
+  - **PaneWrapper typealias**: `@Composable PaneWrapperScope.(paneContents: List<PaneContent>) -> Unit`
+  - **Default implementations**:
+    - `DefaultTabWrapper` - Material 3 Scaffold with bottom NavigationBar
+    - `TopTabWrapper` - Column with TabRow at top
+    - `DefaultPaneWrapper` - Row with equal weight and VerticalDivider
+    - `WeightedPaneWrapper` - Role-based weights (Primary: 65%, Supporting: 35%, Extra: 25%)
+  - **Internal scope implementations**: `TabWrapperScopeImpl`, `PaneWrapperScopeImpl`
+  - **Factory functions**: `createTabWrapperScope()`, `createPaneWrapperScope()`
+  - Reused existing `PaneRole` enum (Primary, Supporting, Extra) from NavNode.kt
+  
+  **Files Created:**
+  - `TabWrapperScope.kt`, `TabWrapper.kt`, `PaneWrapperScope.kt`, `PaneWrapper.kt`
+  - `DefaultWrappers.kt`, `internal/ScopeImpls.kt`
+
+### 2025-12-05
 - ✅ **RENDER-003**: Create TransitionState Sealed Class - **COMPLETED**
   - Complete redesign of TransitionState for tree-aware navigation:
     - `TransitionDirection` enum: FORWARD, BACKWARD, NONE
