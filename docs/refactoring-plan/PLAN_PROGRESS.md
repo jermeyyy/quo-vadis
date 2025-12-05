@@ -15,14 +15,14 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | Phase | Status | Progress | Tasks Done | Tasks Total |
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟡 In Progress | 17% | 2 | 12 |
+| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟡 In Progress | 25% | 3 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~15% | 8 | 52 |
+| **TOTAL** | 🟡 In Progress | ~17% | 9 | 52 |
 
 ---
 
@@ -41,6 +41,32 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-05 (Latest)
+- ✅ **RENDER-002B**: TabNode Flattening with User Wrapper Support - **COMPLETED**
+  - Extended `CachingHints` with new properties:
+    - `wrapperIds: Set<String>` - IDs of wrapper surfaces
+    - `contentIds: Set<String>` - IDs of content surfaces
+    - `isCrossNodeTypeNavigation: Boolean` - Cross-node navigation flag
+  - Updated `FlattenAccumulator` with tracking fields and updated `toResult()`
+  - Implemented full `flattenTab()` method:
+    - Creates TAB_WRAPPER surface for user's wrapper composable
+    - Creates TAB_CONTENT surface for active tab's content
+    - Links content to wrapper via `parentWrapperId`
+    - Detects tab switches by comparing with previousRoot
+    - Generates AnimationPair for TAB_SWITCH transitions
+    - Dual caching strategy (cross-node vs intra-tab)
+    - Recursively flattens active stack's content
+  - Added helper methods: `detectPreviousTabIndex()`, `findTabNodeByKey()`, `detectCrossNodeNavigation()`, `flattenStackContent()`
+  - Created comprehensive test suite with 20+ tests
+  - Full KDoc documentation
+  
+  **Files Modified:**
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/FlattenResult.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/TreeFlattener.kt`
+  
+  **Files Created:**
+  - `quo-vadis-core/src/commonTest/kotlin/com/jermey/quo/vadis/core/navigation/compose/TreeFlattenerTabTest.kt`
+
+### 2025-12-05
 - ✅ **RENDER-002A**: Core flattenState Algorithm (Screen/Stack) - **COMPLETED**
   - Created `FlattenResult.kt` with all intermediate data structures:
     - `TransitionType` enum (PUSH, POP, TAB_SWITCH, PANE_SWITCH, NONE)

@@ -97,6 +97,11 @@ public data class AnimationPair(
  * - **Content caching**: Useful for individual screens that may be revisited.
  *   Tab content is a prime candidate for content caching.
  *
+ * ## Tab/Pane Navigation Behavior
+ *
+ * - **Cross-node navigation** (e.g., Stack → Tab): Cache entire wrapper + content
+ * - **Intra-tab navigation** (tab switch): Cache only content surfaces, not wrapper
+ *
  * ## Usage Example
  *
  * ```kotlin
@@ -104,7 +109,10 @@ public data class AnimationPair(
  *     shouldCacheWrapper = true,
  *     shouldCacheContent = true,
  *     cacheableIds = setOf("tab-wrapper", "tab-0-content", "tab-1-content"),
- *     invalidatedIds = setOf("old-screen")
+ *     invalidatedIds = setOf("old-screen"),
+ *     wrapperIds = setOf("tab-wrapper"),
+ *     contentIds = setOf("tab-0-content", "tab-1-content"),
+ *     isCrossNodeTypeNavigation = false
  * )
  * ```
  *
@@ -112,13 +120,19 @@ public data class AnimationPair(
  * @property shouldCacheContent Whether content surfaces should be cached
  * @property cacheableIds IDs of surfaces that are safe to cache
  * @property invalidatedIds IDs of surfaces whose cache should be invalidated
+ * @property wrapperIds IDs of wrapper surfaces (TAB_WRAPPER, PANE_WRAPPER)
+ * @property contentIds IDs of content surfaces (TAB_CONTENT, PANE_CONTENT)
+ * @property isCrossNodeTypeNavigation True if navigating between different node types (e.g., Stack → Tab)
  */
 @Immutable
 public data class CachingHints(
     val shouldCacheWrapper: Boolean = false,
     val shouldCacheContent: Boolean = true,
     val cacheableIds: Set<String> = emptySet(),
-    val invalidatedIds: Set<String> = emptySet()
+    val invalidatedIds: Set<String> = emptySet(),
+    val wrapperIds: Set<String> = emptySet(),
+    val contentIds: Set<String> = emptySet(),
+    val isCrossNodeTypeNavigation: Boolean = false
 ) {
     public companion object {
         /**

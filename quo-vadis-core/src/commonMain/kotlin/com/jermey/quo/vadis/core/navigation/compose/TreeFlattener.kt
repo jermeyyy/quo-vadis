@@ -136,12 +136,14 @@ public class TreeFlattener(
      * @property parentId The ID of the parent container, if any
      * @property previousSiblingId ID of the previous sibling for animation pairing
      * @property transitionType The type of transition being processed
+     * @property previousRoot The previous navigation tree root for tab switch detection
      */
     private data class FlattenContext(
         val baseZOrder: Int,
         val parentId: String?,
         val previousSiblingId: String?,
-        val transitionType: TransitionType
+        val transitionType: TransitionType,
+        val previousRoot: NavNode? = null
     )
 
     /**
@@ -155,6 +157,9 @@ public class TreeFlattener(
         val animationPairs = mutableListOf<AnimationPair>()
         val cacheableIds = mutableSetOf<String>()
         val invalidatedIds = mutableSetOf<String>()
+        val wrapperIds = mutableSetOf<String>()
+        val contentIds = mutableSetOf<String>()
+        var isCrossNodeNavigation = false
 
         fun addSurface(surface: RenderableSurface) {
             surfaces.add(surface)
@@ -172,15 +177,18 @@ public class TreeFlattener(
             invalidatedIds.add(id)
         }
 
-        fun toResult(shouldCacheWrapper: Boolean = false): FlattenResult {
+        fun toResult(): FlattenResult {
             return FlattenResult(
                 surfaces = surfaces.sortedBy { it.zOrder },
                 animationPairs = animationPairs.toList(),
                 cachingHints = CachingHints(
-                    shouldCacheWrapper = shouldCacheWrapper,
+                    shouldCacheWrapper = isCrossNodeNavigation,
                     shouldCacheContent = true,
                     cacheableIds = cacheableIds.toSet(),
-                    invalidatedIds = invalidatedIds.toSet()
+                    invalidatedIds = invalidatedIds.toSet(),
+                    wrapperIds = wrapperIds.toSet(),
+                    contentIds = contentIds.toSet(),
+                    isCrossNodeTypeNavigation = isCrossNodeNavigation
                 )
             )
         }
@@ -228,7 +236,8 @@ public class TreeFlattener(
             baseZOrder = 0,
             parentId = null,
             previousSiblingId = findPreviousSiblingId(previousRoot, root),
-            transitionType = transitionType
+            transitionType = transitionType,
+            previousRoot = previousRoot
         )
 
         flatten(root, context, accumulator)
@@ -403,17 +412,22 @@ public class TreeFlattener(
     }
 
     /**
-     * Placeholder for TabNode flattening.
+     * Flattens a TabNode into wrapper and content surfaces.
      *
-     * This is a basic implementation that flattens only the active stack.
-     * Full implementation with TAB_WRAPPER, TAB_CONTENT modes and proper
-     * tab switching animations will be added in RENDER-002B.
+     * Produces two surfaces:
+     * 1. TAB_WRAPPER - Contains user's wrapper composable (scaffold, nav bar, etc.)
+     * 2. TAB_CONTENT - Contains active tab's content
      *
-     * ## Current Behavior
+     * ## Caching Strategy
      *
-     * - Flattens only the active stack's content
-     * - Does not create TAB_WRAPPER surface
-     * - Does not handle tab switching transitions
+     * - **Cross-node navigation** (e.g., Stack → Tab): Cache WHOLE wrapper + content
+     * - **Intra-tab navigation** (tab switch): Cache ONLY content surfaces, not wrapper
+     *
+     * ## Animation Support
+     *
+     * Content surface tracks `previousSurfaceId` for tab switch animations.
+     * Tab switches are detected by comparing the current active index with
+     * the previous root's active index (if it was also a TabNode with the same key).
      *
      * @param tab The TabNode to flatten
      * @param context Current flattening context
@@ -424,14 +438,259 @@ public class TreeFlattener(
         context: FlattenContext,
         accumulator: FlattenAccumulator
     ) {
-        // Placeholder - will be fully implemented in RENDER-002B
-        // For now, just flatten the active stack
+        val activeStackIndex = tab.activeStackIndex
         val activeStack = tab.activeStack
-        val childContext = context.copy(
-            baseZOrder = context.baseZOrder + zOrderIncrement,
-            parentId = tab.key
+
+        // Detect previous tab index by comparing with previous root state
+        val previousTabIndex = detectPreviousTabIndex(tab, context.previousRoot)
+
+        // Generate wrapper surface ID
+        val wrapperSurfaceId = "${tab.key}-wrapper"
+
+        // Generate content surface ID (includes tab index for uniqueness)
+        val contentSurfaceId = "${tab.key}-content-$activeStackIndex"
+        val previousContentSurfaceId = if (previousTabIndex != null && previousTabIndex != activeStackIndex) {
+            "${tab.key}-content-$previousTabIndex"
+        } else {
+            null
+        }
+
+        // Determine if this is a cross-node type navigation
+        // Cross-node means we're navigating from a different node type (e.g., StackNode → TabNode)
+        val isCrossNodeNavigation = detectCrossNodeNavigation(tab, context)
+
+        // 1. Create wrapper surface
+        val wrapperAnimationSpec = if (isCrossNodeNavigation) {
+            animationResolver.resolve(null, tab, context.transitionType)
+        } else {
+            SurfaceAnimationSpec.None // No animation for wrapper during tab switches
+        }
+
+        val wrapperSurface = RenderableSurface(
+            id = wrapperSurfaceId,
+            zOrder = context.baseZOrder,
+            nodeType = SurfaceNodeType.TAB,
+            renderingMode = SurfaceRenderingMode.TAB_WRAPPER,
+            transitionState = SurfaceTransitionState.Visible,
+            animationSpec = wrapperAnimationSpec,
+            content = contentResolver.resolve(tab),
+            parentWrapperId = context.parentId,
+            previousSurfaceId = if (isCrossNodeNavigation) context.previousSiblingId else null
         )
-        flatten(activeStack, childContext, accumulator)
+
+        accumulator.addSurface(wrapperSurface)
+
+        // 2. Create content surface for active tab
+        val contentTransitionType = if (previousContentSurfaceId != null) {
+            TransitionType.TAB_SWITCH
+        } else {
+            TransitionType.NONE
+        }
+
+        val contentAnimationSpec = if (previousContentSurfaceId != null) {
+            animationResolver.resolve(
+                from = null,
+                to = activeStack,
+                transitionType = TransitionType.TAB_SWITCH
+            )
+        } else {
+            SurfaceAnimationSpec.None
+        }
+
+        val contentSurface = RenderableSurface(
+            id = contentSurfaceId,
+            zOrder = context.baseZOrder + zOrderIncrement,
+            nodeType = SurfaceNodeType.TAB,
+            renderingMode = SurfaceRenderingMode.TAB_CONTENT,
+            transitionState = SurfaceTransitionState.Visible,
+            animationSpec = contentAnimationSpec,
+            content = contentResolver.resolve(activeStack),
+            parentWrapperId = wrapperSurfaceId,
+            previousSurfaceId = previousContentSurfaceId
+        )
+
+        accumulator.addSurface(contentSurface)
+
+        // 3. Add animation pair for tab switch
+        if (previousContentSurfaceId != null) {
+            accumulator.addAnimationPair(
+                AnimationPair(
+                    currentId = contentSurfaceId,
+                    previousId = previousContentSurfaceId,
+                    transitionType = TransitionType.TAB_SWITCH
+                )
+            )
+        }
+
+        // 4. Add animation pair for cross-node navigation
+        if (isCrossNodeNavigation && context.previousSiblingId != null) {
+            accumulator.addAnimationPair(
+                AnimationPair(
+                    currentId = wrapperSurfaceId,
+                    previousId = context.previousSiblingId,
+                    transitionType = context.transitionType
+                )
+            )
+        }
+
+        // 5. Update caching hints tracking
+        accumulator.wrapperIds.add(wrapperSurfaceId)
+        accumulator.contentIds.add(contentSurfaceId)
+        if (isCrossNodeNavigation) {
+            accumulator.isCrossNodeNavigation = true
+        }
+
+        // 6. Set cacheable IDs based on navigation type
+        if (isCrossNodeNavigation) {
+            // Cross-node: cache whole wrapper + content
+            accumulator.markCacheable(wrapperSurfaceId)
+            accumulator.markCacheable(contentSurfaceId)
+        } else {
+            // Intra-tab: only cache content
+            accumulator.markCacheable(contentSurfaceId)
+            if (previousContentSurfaceId != null) {
+                accumulator.markInvalidated(previousContentSurfaceId)
+            }
+        }
+
+        // 7. Recursively flatten active stack's content
+        val contentContext = FlattenContext(
+            baseZOrder = context.baseZOrder + (2 * zOrderIncrement),
+            parentId = contentSurfaceId,
+            previousSiblingId = null, // Reset for nested content
+            transitionType = TransitionType.NONE,
+            previousRoot = context.previousRoot
+        )
+
+        // Flatten the active stack's children (screens within the tab)
+        flattenStackContent(activeStack, contentContext, accumulator)
+    }
+
+    /**
+     * Detects the previous tab index by comparing with the previous root state.
+     *
+     * If the previous root was a TabNode with the same key, returns its activeStackIndex.
+     * Otherwise, returns null (indicating this is either the initial render or
+     * a cross-node navigation).
+     *
+     * @param currentTab The current TabNode
+     * @param previousRoot The previous navigation tree root
+     * @return The previous tab index, or null if not a tab switch
+     */
+    private fun detectPreviousTabIndex(
+        currentTab: TabNode,
+        previousRoot: NavNode?
+    ): Int? {
+        if (previousRoot == null) return null
+
+        // Find a TabNode with the same key in the previous tree
+        val previousTab = findTabNodeByKey(previousRoot, currentTab.key)
+        return previousTab?.activeStackIndex
+    }
+
+    /**
+     * Finds a TabNode with the given key in the navigation tree.
+     *
+     * Performs a depth-first search to locate the TabNode.
+     *
+     * @param node The starting node for the search
+     * @param key The key to search for
+     * @return The matching TabNode, or null if not found
+     */
+    private fun findTabNodeByKey(node: NavNode, key: String): TabNode? {
+        return when (node) {
+            is TabNode -> if (node.key == key) node else {
+                node.stacks.asSequence()
+                    .flatMap { stack -> stack.children.asSequence() }
+                    .mapNotNull { child -> findTabNodeByKey(child, key) }
+                    .firstOrNull()
+            }
+            is StackNode -> node.children.asSequence()
+                .mapNotNull { child -> findTabNodeByKey(child, key) }
+                .firstOrNull()
+            is PaneNode -> node.paneConfigurations.values.asSequence()
+                .mapNotNull { config -> config.content?.let { findTabNodeByKey(it, key) } }
+                .firstOrNull()
+            is ScreenNode -> null
+        }
+    }
+
+    /**
+     * Detects if this is a cross-node type navigation.
+     *
+     * Cross-node navigation occurs when:
+     * - There was a previous root that is not the same type as the current node
+     * - Or the previous root doesn't contain a matching TabNode
+     *
+     * @param tab The current TabNode
+     * @param context The flattening context
+     * @return True if this is cross-node navigation
+     */
+    private fun detectCrossNodeNavigation(
+        tab: TabNode,
+        context: FlattenContext
+    ): Boolean {
+        val previousRoot = context.previousRoot ?: return false
+
+        // If the previous root was a different node type at the same level
+        if (context.previousSiblingId != null && !context.previousSiblingId.startsWith(tab.key)) {
+            return previousRoot !is TabNode || previousRoot.key != tab.key
+        }
+
+        // Check if this TabNode existed in the previous state
+        val previousTab = findTabNodeByKey(previousRoot, tab.key)
+        return previousTab == null
+    }
+
+    /**
+     * Flattens the content within a stack (for nested tab content).
+     *
+     * This handles the children of a StackNode within a TabNode,
+     * creating appropriate surfaces for each active screen.
+     *
+     * @param stack The StackNode to flatten
+     * @param context Current flattening context
+     * @param accumulator Accumulator for results
+     */
+    private fun flattenStackContent(
+        stack: StackNode,
+        context: FlattenContext,
+        accumulator: FlattenAccumulator
+    ) {
+        val children = stack.children
+        if (children.isEmpty()) return
+
+        val activeChild = children.last()
+        val previousChild = if (children.size > 1) children[children.size - 2] else null
+
+        when (activeChild) {
+            is ScreenNode -> {
+                val surface = RenderableSurface(
+                    id = activeChild.key,
+                    zOrder = context.baseZOrder,
+                    nodeType = SurfaceNodeType.SCREEN,
+                    renderingMode = SurfaceRenderingMode.STACK_CONTENT,
+                    transitionState = SurfaceTransitionState.Visible,
+                    animationSpec = SurfaceAnimationSpec.None,
+                    content = contentResolver.resolve(activeChild),
+                    parentWrapperId = context.parentId,
+                    previousSurfaceId = previousChild?.key
+                )
+                accumulator.addSurface(surface)
+
+                // Add animation pair if there's navigation within the stack
+                if (previousChild != null) {
+                    accumulator.addAnimationPair(
+                        AnimationPair(
+                            currentId = activeChild.key,
+                            previousId = previousChild.key,
+                            transitionType = TransitionType.PUSH
+                        )
+                    )
+                }
+            }
+            else -> flatten(activeChild, context, accumulator)
+        }
     }
 
     /**

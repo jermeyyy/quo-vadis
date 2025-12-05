@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-05  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 2/12 tasks (17%)
+> **Progress**: 3/12 tasks (25%)
 
 ## Overview
 
@@ -16,7 +16,7 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 |----|------|--------|-----------|-------|
 | [RENDER-001](./RENDER-001-renderable-surface.md) | Define RenderableSurface Data Class | 🟢 Completed | 2025-12-05 | All types, builder, extensions |
 | [RENDER-002A](./RENDER-002A-core-flatten.md) | Core flattenState Algorithm (Screen/Stack) | 🟢 Completed | 2025-12-05 | FlattenResult, TreeFlattener with Screen/Stack |
-| [RENDER-002B](./RENDER-002B-tab-flattening.md) | TabNode Flattening with User Wrapper | ⚪ Not Started | - | Depends on RENDER-002A |
+| [RENDER-002B](./RENDER-002B-tab-flattening.md) | TabNode Flattening with User Wrapper | 🟢 Completed | 2025-12-05 | TAB_WRAPPER/TAB_CONTENT surfaces, caching hints |
 | [RENDER-002C](./RENDER-002C-pane-flattening.md) | PaneNode Adaptive Flattening | ⚪ Not Started | - | Depends on RENDER-002A |
 | [RENDER-003](./RENDER-003-transition-state.md) | Create TransitionState Sealed Class | ⚪ Not Started | - | Depends on Phase 1 |
 | [RENDER-004](./RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | ⚪ Not Started | - | Depends on RENDER-001..003 |
@@ -58,6 +58,49 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
     - DefaultAnimationResolver with slide animations
   - Full KDoc documentation on all public APIs
 - **Verified**: Build passes on all targets (`:composeApp:assembleDebug`)
+
+### RENDER-002B: TabNode Flattening with User Wrapper Support ✅
+- **Completed**: 2025-12-05
+- **Files Modified**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/FlattenResult.kt`
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/TreeFlattener.kt`
+- **Files Created**:
+  - `quo-vadis-core/src/commonTest/kotlin/com/jermey/quo/vadis/core/navigation/compose/TreeFlattenerTabTest.kt`
+- **Summary**:
+  - Extended `CachingHints` with new properties:
+    - `wrapperIds: Set<String>` - IDs of wrapper surfaces (TAB_WRAPPER, PANE_WRAPPER)
+    - `contentIds: Set<String>` - IDs of content surfaces (TAB_CONTENT, PANE_CONTENT)
+    - `isCrossNodeTypeNavigation: Boolean` - Flag for cross-node type navigation
+  - Updated `FlattenAccumulator` with tracking fields:
+    - `wrapperIds`, `contentIds`, `isCrossNodeNavigation`
+    - Updated `toResult()` to populate new CachingHints fields
+  - Implemented full `flattenTab()` method:
+    - Creates TAB_WRAPPER surface for user's wrapper composable
+    - Creates TAB_CONTENT surface for active tab's content
+    - Links content to wrapper via `parentWrapperId`
+    - Detects tab switches by comparing with previousRoot
+    - Generates AnimationPair for TAB_SWITCH transitions
+    - Implements dual caching strategy:
+      - Cross-node navigation: cache whole wrapper + content
+      - Intra-tab navigation: cache only content (not wrapper)
+    - Recursively flattens active stack's content
+  - Added helper methods:
+    - `detectPreviousTabIndex()` - Compares with previous root to detect tab switches
+    - `findTabNodeByKey()` - Depth-first search for TabNode in tree
+    - `detectCrossNodeNavigation()` - Determines if cross-node navigation
+    - `flattenStackContent()` - Flattens nested stack content within tabs
+  - Created comprehensive test suite with 20+ tests covering:
+    - Wrapper and content surface creation
+    - Parent-child linking via parentWrapperId
+    - Tab switch animation pairing
+    - AnimationPair generation for TAB_SWITCH
+    - Caching strategy (intra-tab vs cross-node)
+    - Nested content flattening
+    - Edge cases (single tab, multiple tabs, empty stacks)
+  - Full KDoc documentation on all public changes
+- **Verified**: 
+  - Build passes: `:quo-vadis-core:build`, `:composeApp:assembleDebug` ✓
+  - Tests pass: `:quo-vadis-core:desktopTest` ✓
 
 ---
 
