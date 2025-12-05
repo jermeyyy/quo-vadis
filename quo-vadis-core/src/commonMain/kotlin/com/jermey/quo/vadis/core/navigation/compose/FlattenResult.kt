@@ -55,32 +55,95 @@ public enum class TransitionType {
 /**
  * Represents a pair of surfaces involved in a transition animation.
  *
- * This is used by the renderer to coordinate enter/exit animations
- * between the current and previous surfaces. The animation pair provides
- * the necessary context for the renderer to determine which animations
- * to apply and how to synchronize them.
+ * An animation pair captures the relationship between the entering (current)
+ * and exiting (previous) surfaces during navigation. This pairing is essential for:
  *
- * ## Usage Example
+ * 1. **Coordinated animations** - Enter and exit animations run together
+ * 2. **Shared element transitions** - Elements can match across the pair
+ * 3. **Predictive back** - Both surfaces move together with gesture
  *
+ * ## Lifecycle
+ *
+ * 1. Navigation event triggers state change
+ * 2. AnimationPairTracker detects the change
+ * 3. AnimationPair created with both surface references
+ * 4. Renderer uses pair to animate both surfaces
+ * 5. Animation completes, pair is disposed
+ *
+ * ## Usage Patterns
+ *
+ * ### Basic pair (TreeFlattener - transition tracking only)
  * ```kotlin
  * val pair = AnimationPair(
  *     currentId = "detail-screen",
  *     previousId = "list-screen",
  *     transitionType = TransitionType.PUSH
  * )
+ * ```
+ *
+ * ### Full pair (AnimationPairTracker - animation execution)
+ * ```kotlin
+ * val pair = AnimationPair(
+ *     currentId = "detail-screen",
+ *     previousId = "list-screen",
+ *     transitionType = TransitionType.PUSH,
+ *     currentSurface = detailSurface,
+ *     previousSurface = listSurface,
+ *     containerId = null
+ * )
  * // Renderer uses this to animate list sliding out and detail sliding in
  * ```
  *
- * @property currentId ID of the surface that is entering/becoming visible
- * @property previousId ID of the surface that is exiting (null if no previous)
- * @property transitionType Type of transition being performed
+ * @property currentId ID of the entering/current surface (always present)
+ * @property previousId ID of the exiting/previous surface (null for initial render)
+ * @property transitionType The type of navigation that triggered this pair
+ * @property currentSurface The entering [RenderableSurface] (null for basic pairs)
+ * @property previousSurface The exiting [RenderableSurface] (null if none or basic pair)
+ * @property containerId ID of the container where this transition occurs
  */
 @Immutable
 public data class AnimationPair(
     val currentId: String,
     val previousId: String?,
-    val transitionType: TransitionType
-)
+    val transitionType: TransitionType,
+    val currentSurface: RenderableSurface? = null,
+    val previousSurface: RenderableSurface? = null,
+    val containerId: String? = null
+) {
+    /**
+     * Returns true if this pair has both entering and exiting surfaces.
+     * Initial renders only have a current surface.
+     */
+    val hasBothSurfaces: Boolean
+        get() = previousSurface != null
+
+    /**
+     * Returns true if this pair has full surface references.
+     * Basic pairs from TreeFlattener only have IDs, not surface references.
+     */
+    val hasFullSurfaces: Boolean
+        get() = currentSurface != null
+
+    /**
+     * Returns true if this transition should animate.
+     * NONE transitions don't animate.
+     */
+    val shouldAnimate: Boolean
+        get() = transitionType != TransitionType.NONE && hasBothSurfaces
+
+    /**
+     * Returns true if this is a stack-based transition (PUSH or POP).
+     */
+    val isStackTransition: Boolean
+        get() = transitionType == TransitionType.PUSH || transitionType == TransitionType.POP
+
+    /**
+     * Returns true if this transition can support shared elements.
+     * Only stack transitions currently support shared elements.
+     */
+    val supportsSharedElements: Boolean
+        get() = isStackTransition && hasBothSurfaces
+}
 
 /**
  * Hints for the caching system about how to cache surfaces.
@@ -290,4 +353,39 @@ public data class FlattenResult(
     public fun bottomSurface(): RenderableSurface? {
         return surfaces.minByOrNull { it.zOrder }
     }
+
+    /**
+     * Returns surface IDs that are part of an active animation pair.
+     *
+     * These surfaces are currently animating and should be handled by the
+     * animation system rather than rendered statically.
+     */
+    val animatingSurfaces: Set<String>
+        get() = animationPairs.flatMap { pair ->
+            listOfNotNull(pair.currentId, pair.previousId)
+        }.toSet()
+
+    /**
+     * Finds the animation pair containing a specific surface.
+     *
+     * This is an alias for [findAnimationPair] with a different name
+     * to match the spec naming convention.
+     *
+     * @param surfaceId The ID of the surface to search for
+     * @return The [AnimationPair] involving this surface, or null if not found
+     */
+    public fun findPairForSurface(surfaceId: String): AnimationPair? {
+        return animationPairs.find {
+            it.currentId == surfaceId || it.previousId == surfaceId
+        }
+    }
+
+    /**
+     * Returns animation pairs that support shared elements.
+     *
+     * Only stack transitions (PUSH/POP) with both surfaces present
+     * can support shared element transitions.
+     */
+    val sharedElementPairs: List<AnimationPair>
+        get() = animationPairs.filter { it.supportsSharedElements }
 }
