@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-06  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 1/5 tasks (20%)
+> **Progress**: 2/5 tasks (40%)
 
 ## Overview
 
@@ -15,7 +15,7 @@ This phase introduces the new annotation system that maps directly to NavNode ty
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
 | [ANN-001](./ANN-001-graph-type.md) | Define `@Destination` Annotation | 🟢 Completed | 2025-12-06 | Created `Destination.kt` with route parameter |
-| [ANN-002](./ANN-002-pane-graph.md) | Define `@Stack` Container Annotation | ⚪ Not Started | - | No dependencies |
+| [ANN-002](./ANN-002-pane-graph.md) | Define `@Stack` Container Annotation | 🟢 Completed | 2025-12-06 | Created `Stack.kt` with name and startDestination |
 | [ANN-003](./ANN-003-route-transitions.md) | Define `@Tab` and `@TabItem` Annotations | ⚪ Not Started | - | No dependencies |
 | [ANN-004](./ANN-004-shared-element.md) | Define `@Pane` and `@PaneItem` Annotations | ⚪ Not Started | - | No dependencies |
 | [ANN-005](./ANN-005-screen.md) | Define `@Screen` Content Binding Annotation | ⚪ Not Started | - | No dependencies |
@@ -32,6 +32,17 @@ This phase introduces the new annotation system that maps directly to NavNode ty
   - `@Retention(AnnotationRetention.SOURCE)` - compile-time only
   - Default empty route (not deep-linkable)
   - Comprehensive KDoc with examples for path params, query params, and non-deep-linkable
+- Build verified: `:quo-vadis-annotations:build` ✓
+
+### ANN-002: Define @Stack Container Annotation ✅
+- **Completed**: 2025-12-06
+- Created `Stack.kt` in `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/`
+- `@Stack(name: String, startDestination: String = "")` annotation with:
+  - `name` - required unique name for the stack
+  - `startDestination` - optional, defaults to first declared subclass
+  - `@Target(AnnotationTarget.CLASS)` - applies to sealed classes/interfaces
+  - `@Retention(AnnotationRetention.SOURCE)` - compile-time only
+  - Comprehensive KDoc with examples for basic, default start, and complex destinations
 - Build verified: `:quo-vadis-annotations:build` ✓
 
 ---
@@ -53,7 +64,7 @@ _None - all tasks can start immediately._
 All remaining annotation tasks can be started immediately as they have no dependencies:
 
 1. ~~**ANN-001**: Define `@Destination` Annotation (0.5 days)~~ ✅ Completed
-2. **ANN-002**: Define `@Stack` Container Annotation (0.5 days)
+2. ~~**ANN-002**: Define `@Stack` Container Annotation (0.5 days)~~ ✅ Completed
 3. **ANN-003**: Define `@Tab` and `@TabItem` Annotations (1 day)
 4. **ANN-004**: Define `@Pane` and `@PaneItem` Annotations (1 day)
 5. **ANN-005**: Define `@Screen` Content Binding Annotation (0.5 days)
