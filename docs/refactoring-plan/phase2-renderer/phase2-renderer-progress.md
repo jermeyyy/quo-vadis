@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-05  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 10/12 tasks (83%)
+> **Progress**: 11/12 tasks (92%)
 
 ## Overview
 
@@ -22,7 +22,7 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 | [RENDER-004](./RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | 🟢 Completed | 2025-12-05 | Main host, 3 API variants, predictive back |
 | [RENDER-005](./RENDER-005-predictive-back.md) | Integrate Predictive Back with Speculative Pop | 🟢 Completed | 2025-12-05 | Full platform support, speculative pop |
 | [RENDER-006](./RENDER-006-animation-registry.md) | Create AnimationRegistry | 🟢 Completed | 2025-12-05 | AnimationRegistry, StandardAnimations |
-| [RENDER-007](./RENDER-007-saveable-state.md) | SaveableStateHolder Integration | ⚪ Not Started | - | Depends on RENDER-004 |
+| [RENDER-007](./RENDER-007-saveable-state.md) | SaveableStateHolder Integration | 🟢 Completed | 2025-12-05 | NavigationStateHolder wrapper, differentiated caching |
 | [RENDER-008](./RENDER-008-user-wrapper-api.md) | User Wrapper API (TabNode/PaneNode) | 🟢 Completed | 2025-12-05 | TabWrapper, PaneWrapper, DefaultWrappers |
 | [RENDER-009](./RENDER-009-window-size-integration.md) | WindowSizeClass Integration | 🟢 Completed | 2025-12-05 | expect/actual for all platforms |
 | [RENDER-010](./RENDER-010-animation-pair-tracking.md) | Animation Pair Tracking | ⚪ Not Started | - | Depends on RENDER-003 |
@@ -30,6 +30,48 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 ---
 
 ## Completed Tasks
+
+### RENDER-007: SaveableStateHolder Integration ✅
+- **Completed**: 2025-12-05
+- **Files Created**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/NavigationStateHolder.kt`
+  - `quo-vadis-core/src/commonTest/kotlin/com/jermey/quo/vadis/core/navigation/compose/NavigationStateHolderTest.kt`
+- **Files Modified**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/QuoVadisHost.kt` (uses NavigationStateHolder)
+- **Summary**:
+  - **CacheScope enum** - Differentiated caching strategies:
+    - `FULL_SCREEN` - Normal screen caching for ScreenNode/StackNode
+    - `WHOLE_WRAPPER` - Cache entire wrapper for TabNode/PaneNode during cross-node navigation
+    - `CONTENT_ONLY` - Cache only content for intra-tab/pane navigation
+  - **NavigationStateHolder class** - Wrapper for SaveableStateHolder with navigation-specific logic:
+    - `SaveableScreen(key, content)` - Wraps content in SaveableStateProvider
+    - `retain(key)` / `release(key)` - Marks keys as retained (survives cleanup)
+    - `removeState(key)` - Removes state if not retained
+    - `cleanup(activeKeys, previousKeys)` - Cleans up removed keys
+    - `determineCacheScope(transition, surfaceId, surfaceMode)` - Determines appropriate caching strategy
+    - `SaveableWithScope(key, scope, wrapperContent, content)` - Applies scope-based caching
+  - **Factory and Extension Functions**:
+    - `rememberNavigationStateHolder()` - Creates and remembers instance
+    - `NavigationStateHolder.PreserveTabStates(tabNode, content)` - Retains all tab states
+  - **Helper Functions**:
+    - `collectAllKeys(node)` - Traverses tree to collect all keys
+    - `findAllTabNodes(node)` - Finds all TabNodes in tree
+    - `findAllPaneNodes(node)` - Finds all PaneNodes in tree
+  - **QuoVadisHost Integration**:
+    - Replaced `rememberSaveableStateHolder()` with `rememberNavigationStateHolder()`
+    - Added state cleanup via `LaunchedEffect(activeKeys)` with `cleanup()`
+    - Added tab state preservation via `PreserveTabStates()` for all TabNodes
+    - Updated internal functions to use `NavigationStateHolder` instead of raw `SaveableStateHolder`
+  - **Comprehensive Test Suite** (30 tests):
+    - `collectAllKeys` tests for all node types (ScreenNode, StackNode, TabNode, PaneNode)
+    - `findAllTabNodes` / `findAllPaneNodes` tests
+    - `CacheScope` enum tests
+    - Complex nested structure tests
+    - Consistency tests between helpers
+  - Full KDoc documentation on all public APIs
+- **Verified**:
+  - `:composeApp:assembleDebug` ✓
+  - `:quo-vadis-core:desktopTest` ✓
 
 ### RENDER-006: Create AnimationRegistry ✅
 - **Completed**: 2025-12-05
@@ -316,7 +358,6 @@ _None currently blocked._
 
 ## Ready to Start
 
-- **RENDER-007**: SaveableStateHolder Integration (RENDER-004 complete)
 - **RENDER-010**: Animation Pair Tracking (RENDER-003 complete)
 
 ---

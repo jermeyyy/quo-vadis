@@ -9,14 +9,15 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.SaveableStateHolder
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
@@ -219,8 +220,24 @@ public fun QuoVadisHost(
     // Calculate window size class for adaptive pane rendering
     val windowSizeClass = calculateWindowSizeClass()
 
-    // State holder for preserving tab states
-    val saveableStateHolder = rememberSaveableStateHolder()
+    // State holder for preserving navigation states (tabs, screens)
+    val stateHolder = rememberNavigationStateHolder()
+
+    // Track active keys for state cleanup
+    val activeKeys = remember(navState) { collectAllKeys(navState) }
+    var previousKeys by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    // Cleanup state for removed screens
+    LaunchedEffect(activeKeys) {
+        stateHolder.cleanup(activeKeys, previousKeys)
+        previousKeys = activeKeys
+    }
+
+    // Preserve tab states for all TabNodes in the tree
+    val tabNodes = remember(navState) { findAllTabNodes(navState) }
+    tabNodes.forEach { tabNode ->
+        stateHolder.PreserveTabStates(tabNode) {}
+    }
 
     // Create content resolver for TreeFlattener
     val contentResolver = remember(content, navigator, tabWrapper, paneWrapper) {
@@ -302,7 +319,7 @@ public fun QuoVadisHost(
                 surfaces = flattenResult.surfaces,
                 navState = navState,
                 windowSizeClass = windowSizeClass,
-                saveableStateHolder = saveableStateHolder,
+                stateHolder = stateHolder,
                 tabWrapper = tabWrapper,
                 paneWrapper = paneWrapper,
                 content = content
@@ -320,7 +337,7 @@ private fun QuoVadisHostContent(
     surfaces: List<RenderableSurface>,
     navState: NavNode,
     windowSizeClass: WindowSizeClass,
-    saveableStateHolder: SaveableStateHolder,
+    stateHolder: NavigationStateHolder,
     tabWrapper: TabWrapper,
     paneWrapper: PaneWrapper,
     content: @Composable QuoVadisHostScope.(Destination) -> Unit
@@ -337,7 +354,7 @@ private fun QuoVadisHostContent(
                         scope = scope,
                         navState = navState,
                         windowSizeClass = windowSizeClass,
-                        saveableStateHolder = saveableStateHolder,
+                        stateHolder = stateHolder,
                         tabWrapper = tabWrapper,
                         paneWrapper = paneWrapper,
                         content = content
@@ -356,7 +373,7 @@ private fun RenderableSurfaceContainer(
     scope: QuoVadisHostScope,
     navState: NavNode,
     windowSizeClass: WindowSizeClass,
-    saveableStateHolder: SaveableStateHolder,
+    stateHolder: NavigationStateHolder,
     tabWrapper: TabWrapper,
     paneWrapper: PaneWrapper,
     content: @Composable QuoVadisHostScope.(Destination) -> Unit
@@ -371,8 +388,8 @@ private fun RenderableSurfaceContainer(
             .fillMaxSize()
             .zIndex(surface.zOrder.toFloat())
     ) {
-        // Wrap in SaveableStateProvider for state preservation
-        saveableStateHolder.SaveableStateProvider(key = surface.id) {
+        // Wrap in SaveableScreen for state preservation
+        stateHolder.SaveableScreen(key = surface.id) {
             // Animate enter/exit
             AnimatedVisibility(
                 visible = isVisible,
