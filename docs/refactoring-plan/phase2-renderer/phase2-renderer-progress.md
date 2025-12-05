@@ -1,8 +1,8 @@
 # Phase 2: Unified Renderer - Progress
 
 > **Last Updated**: 2025-12-05  
-> **Phase Status**: ⚪ Not Started  
-> **Progress**: 0/12 tasks (0%)
+> **Phase Status**: 🟡 In Progress  
+> **Progress**: 1/12 tasks (8%)
 
 ## Overview
 
@@ -14,7 +14,7 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
-| [RENDER-001](./RENDER-001-renderable-surface.md) | Define RenderableSurface Data Class | ⚪ Not Started | - | Depends on Phase 1 |
+| [RENDER-001](./RENDER-001-renderable-surface.md) | Define RenderableSurface Data Class | 🟢 Completed | 2025-12-05 | All types, builder, extensions |
 | [RENDER-002A](./RENDER-002A-core-flatten.md) | Core flattenState Algorithm (Screen/Stack) | ⚪ Not Started | - | Depends on RENDER-001 |
 | [RENDER-002B](./RENDER-002B-tab-flattening.md) | TabNode Flattening with User Wrapper | ⚪ Not Started | - | Depends on RENDER-002A |
 | [RENDER-002C](./RENDER-002C-pane-flattening.md) | PaneNode Adaptive Flattening | ⚪ Not Started | - | Depends on RENDER-002A |
@@ -31,7 +31,11 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 
 ## Completed Tasks
 
-_None yet._
+### RENDER-001: Define RenderableSurface Data Class ✅
+- **Completed**: 2025-12-05
+- **File**: `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/RenderableSurface.kt`
+- **Summary**: Created all types (SurfaceNodeType, SurfaceRenderingMode, SurfaceTransitionState, SurfaceAnimationSpec, PaneStructure, RenderableSurface), builder pattern, and list extension functions
+- **Verified**: Compiles on Kotlin Metadata, Desktop (JVM), and JS targets
 
 ---
 
@@ -45,13 +49,14 @@ _None currently in progress._
 
 | Task | Blocked By | Status |
 |------|------------|--------|
-| All tasks | Phase 1 completion | Waiting for core state |
+| RENDER-002A..010 | RENDER-001 | Ready to start |
 
 ---
 
 ## Ready to Start
 
-_None - Phase 1 Core must be completed first._
+- **RENDER-002A**: Core flattenState Algorithm (Screen/Stack)
+- **RENDER-003**: Create TransitionState Sealed Class
 
 ---
 
