@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
@@ -36,6 +37,8 @@ import com.jermey.quo.vadis.core.navigation.core.PaneNode
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.TabNode
+import com.jermey.quo.vadis.core.navigation.core.TransitionStateManager
+import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 import com.jermey.quo.vadis.core.navigation.core.activeLeaf
 import com.jermey.quo.vadis.core.navigation.core.route
 import kotlin.reflect.KClass
@@ -184,6 +187,10 @@ private class QuoVadisHostScopeImpl(
  *
  * @param navigator The Navigator instance managing navigation state
  * @param modifier Modifier for the root container
+ * @param enablePredictiveBack Whether to enable predictive back gesture handling.
+ *   When enabled, users can preview the back navigation result while performing
+ *   a back gesture (swipe on Android/iOS, system back on supported platforms).
+ *   Defaults to `true`. Set to `false` to disable gesture-based back previews.
  * @param tabWrapper User-provided wrapper for TabNode rendering (default: bottom navigation)
  * @param paneWrapper User-provided wrapper for PaneNode rendering (default: equal width row)
  * @param content Content resolver that maps [Destination] to composable content
@@ -191,11 +198,13 @@ private class QuoVadisHostScopeImpl(
  * @see QuoVadisHostScope
  * @see TabWrapper
  * @see PaneWrapper
+ * @see PredictiveBackHandler
  */
 @Composable
 public fun QuoVadisHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
+    enablePredictiveBack: Boolean = true,
     tabWrapper: TabWrapper = DefaultTabWrapper,
     paneWrapper: PaneWrapper = DefaultPaneWrapper,
     content: @Composable QuoVadisHostScope.(Destination) -> Unit
@@ -256,25 +265,45 @@ public fun QuoVadisHost(
         result
     }
 
-    // Root container with SharedTransitionLayout
-    SharedTransitionLayout(modifier = modifier) {
-        val scope = remember(this, navigator) {
-            QuoVadisHostScopeImpl(
-                sharedTransitionScope = this,
-                navigator = navigator
+    // Transition state manager for coordinating predictive back animations
+    val transitionManager = remember(navigator) {
+        TransitionStateManager(navState)
+    }
+
+    // Predictive back coordinator
+    val backCoordinator = remember(navigator, transitionManager) {
+        PredictiveBackCoordinator(navigator, transitionManager)
+    }
+
+    // Check if we can navigate back
+    val canGoBack by remember(navState) {
+        derivedStateOf { TreeMutator.pop(navState) != null }
+    }
+
+    // Root container with SharedTransitionLayout, wrapped with PredictiveBackHandler
+    PredictiveBackHandler(
+        enabled = enablePredictiveBack && canGoBack,
+        callback = backCoordinator
+    ) {
+        SharedTransitionLayout(modifier = modifier) {
+            val scope = remember(this, navigator) {
+                QuoVadisHostScopeImpl(
+                    sharedTransitionScope = this,
+                    navigator = navigator
+                )
+            }
+
+            QuoVadisHostContent(
+                scope = scope,
+                surfaces = flattenResult.surfaces,
+                navState = navState,
+                windowSizeClass = windowSizeClass,
+                saveableStateHolder = saveableStateHolder,
+                tabWrapper = tabWrapper,
+                paneWrapper = paneWrapper,
+                content = content
             )
         }
-
-        QuoVadisHostContent(
-            scope = scope,
-            surfaces = flattenResult.surfaces,
-            navState = navState,
-            windowSizeClass = windowSizeClass,
-            saveableStateHolder = saveableStateHolder,
-            tabWrapper = tabWrapper,
-            paneWrapper = paneWrapper,
-            content = content
-        )
     }
 }
 
@@ -670,6 +699,9 @@ private fun Modifier.predictiveBackTransform(
  * @param navigator The Navigator instance managing navigation state
  * @param contentMap Map from destination class to content composable
  * @param modifier Modifier for the root container
+ * @param enablePredictiveBack Whether to enable predictive back gesture handling.
+ *   When enabled, users can preview the back navigation result while performing
+ *   a back gesture. Defaults to `true`.
  * @param tabWrapper User-provided wrapper for TabNode rendering
  * @param paneWrapper User-provided wrapper for PaneNode rendering
  * @param fallback Fallback content when no mapping exists for a destination
@@ -679,6 +711,7 @@ public fun <D : Destination> QuoVadisHost(
     navigator: Navigator,
     contentMap: Map<KClass<out D>, @Composable QuoVadisHostScope.(D) -> Unit>,
     modifier: Modifier = Modifier,
+    enablePredictiveBack: Boolean = true,
     tabWrapper: TabWrapper = DefaultTabWrapper,
     paneWrapper: PaneWrapper = DefaultPaneWrapper,
     fallback: @Composable QuoVadisHostScope.(Destination) -> Unit = {
@@ -688,6 +721,7 @@ public fun <D : Destination> QuoVadisHost(
     QuoVadisHost(
         navigator = navigator,
         modifier = modifier,
+        enablePredictiveBack = enablePredictiveBack,
         tabWrapper = tabWrapper,
         paneWrapper = paneWrapper
     ) { destination ->
@@ -719,6 +753,9 @@ public fun <D : Destination> QuoVadisHost(
  * @param navigator The Navigator instance managing navigation state
  * @param graph The navigation graph containing destination-to-content mappings
  * @param modifier Modifier for the root container
+ * @param enablePredictiveBack Whether to enable predictive back gesture handling.
+ *   When enabled, users can preview the back navigation result while performing
+ *   a back gesture. Defaults to `true`.
  * @param tabWrapper User-provided wrapper for TabNode rendering
  * @param paneWrapper User-provided wrapper for PaneNode rendering
  */
@@ -727,12 +764,14 @@ public fun QuoVadisHost(
     navigator: Navigator,
     graph: NavigationGraph,
     modifier: Modifier = Modifier,
+    enablePredictiveBack: Boolean = true,
     tabWrapper: TabWrapper = DefaultTabWrapper,
     paneWrapper: PaneWrapper = DefaultPaneWrapper
 ) {
     QuoVadisHost(
         navigator = navigator,
         modifier = modifier,
+        enablePredictiveBack = enablePredictiveBack,
         tabWrapper = tabWrapper,
         paneWrapper = paneWrapper
     ) { destination ->

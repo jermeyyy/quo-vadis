@@ -15,14 +15,14 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | Phase | Status | Progress | Tasks Done | Tasks Total |
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟡 In Progress | 67% | 8 | 12 |
+| [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟡 In Progress | 75% | 9 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~27% | 14 | 52 |
+| **TOTAL** | 🟡 In Progress | ~29% | 15 | 52 |
 
 ---
 
@@ -41,6 +41,31 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-05 (Latest)
+- ✅ **RENDER-005**: Integrate Predictive Back with Speculative Pop - **COMPLETED**
+  - Full predictive back gesture support with speculative pop algorithm
+  - **Core Infrastructure** (`PredictiveBackIntegration.kt`):
+    - `PredictiveBackCallback` interface for gesture events
+    - `PredictiveBackCoordinator` class - manages speculative pop via TreeMutator.pop() and TransitionStateManager
+    - `expect fun PredictiveBackHandler` composable
+  - **Platform Implementations**:
+    - **Android**: Uses AndroidX `PredictiveBackHandler` API with Flow<BackEventCompat> (Android 14+ preview support)
+    - **iOS**: Custom edge swipe gesture (20dp edge threshold, 100dp complete threshold)
+    - **Desktop/Web**: No-op stubs (back via keyboard/browser)
+  - **QuoVadisHost Integration**:
+    - Added `enablePredictiveBack: Boolean = true` parameter to all 3 overloads
+    - Creates TransitionStateManager and PredictiveBackCoordinator
+    - Wraps content with PredictiveBackHandler
+  
+  **Files Created:**
+  - `PredictiveBackIntegration.kt`, `PredictiveBackHandler.android.kt`, `PredictiveBackHandler.ios.kt`
+  - `PredictiveBackHandler.desktop.kt`, `PredictiveBackHandler.js.kt`, `PredictiveBackHandler.wasmJs.kt`
+  
+  **Files Modified:**
+  - `QuoVadisHost.kt` (added enablePredictiveBack parameter)
+  
+  **Verified**: `:composeApp:assembleDebug` ✓, `test` ✓
+
+### 2025-12-05
 - ✅ **RENDER-004**: Build QuoVadisHost Composable - **COMPLETED**
   - Created main `QuoVadisHost.kt` (~760 lines) with unified navigation rendering
   - **QuoVadisHostScope interface** - Extends SharedTransitionScope with Navigator access

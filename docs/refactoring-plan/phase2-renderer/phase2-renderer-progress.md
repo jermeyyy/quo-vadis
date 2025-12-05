@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-05  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 8/12 tasks (67%)
+> **Progress**: 9/12 tasks (75%)
 
 ## Overview
 
@@ -20,7 +20,7 @@ This phase implements the single rendering component (`QuoVadisHost`) that proje
 | [RENDER-002C](./RENDER-002C-pane-flattening.md) | PaneNode Adaptive Flattening | 🟢 Completed | 2025-12-05 | WindowSizeClass types, adaptive flattening |
 | [RENDER-003](./RENDER-003-transition-state.md) | Create TransitionState Sealed Class | 🟢 Completed | 2025-12-05 | Tree-aware TransitionState with manager |
 | [RENDER-004](./RENDER-004-quovadis-host.md) | Build QuoVadisHost Composable | 🟢 Completed | 2025-12-05 | Main host, 3 API variants, predictive back |
-| [RENDER-005](./RENDER-005-predictive-back.md) | Integrate Predictive Back with Speculative Pop | ⚪ Not Started | - | Depends on RENDER-004 |
+| [RENDER-005](./RENDER-005-predictive-back.md) | Integrate Predictive Back with Speculative Pop | 🟢 Completed | 2025-12-05 | Full platform support, speculative pop |
 | [RENDER-006](./RENDER-006-animation-registry.md) | Create AnimationRegistry | ⚪ Not Started | - | Depends on RENDER-004 |
 | [RENDER-007](./RENDER-007-saveable-state.md) | SaveableStateHolder Integration | ⚪ Not Started | - | Depends on RENDER-004 |
 | [RENDER-008](./RENDER-008-user-wrapper-api.md) | User Wrapper API (TabNode/PaneNode) | 🟢 Completed | 2025-12-05 | TabWrapper, PaneWrapper, DefaultWrappers |
@@ -352,6 +352,34 @@ _None currently blocked._
   - Build passes: `:quo-vadis-core:compileKotlinDesktop` ✓
   - No errors in created files ✓
 
+### RENDER-005: Integrate Predictive Back with Speculative Pop ✅
+- **Completed**: 2025-12-05
+- **Files Created**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/PredictiveBackIntegration.kt` - Core infrastructure
+  - `quo-vadis-core/src/androidMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/PredictiveBackHandler.android.kt` - Android implementation
+  - `quo-vadis-core/src/iosMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/PredictiveBackHandler.ios.kt` - iOS implementation
+  - `quo-vadis-core/src/desktopMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/PredictiveBackHandler.desktop.kt` - Desktop stub
+  - `quo-vadis-core/src/jsMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/PredictiveBackHandler.js.kt` - JS stub
+  - `quo-vadis-core/src/wasmJsMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/PredictiveBackHandler.wasmJs.kt` - WasmJS stub
+- **Files Modified**:
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/QuoVadisHost.kt` - Added `enablePredictiveBack` parameter
+- **Summary**:
+  - **PredictiveBackCallback interface** - Gesture event callbacks (onBackStarted, onBackProgress, onBackCancelled, onBackCommitted)
+  - **PredictiveBackCoordinator class** - Manages speculative pop via TreeMutator.pop() and TransitionStateManager
+  - **expect/actual PredictiveBackHandler composable**:
+    - **Android**: Uses AndroidX `PredictiveBackHandler` API with Flow<BackEventCompat>
+    - **iOS**: Custom edge swipe gesture recognizer (20dp edge threshold, 100dp complete threshold)
+    - **Desktop/Web**: No-op stubs (back handled via keyboard or browser)
+  - **QuoVadisHost Integration**:
+    - Added `enablePredictiveBack: Boolean = true` parameter to all 3 overloads
+    - Creates TransitionStateManager and PredictiveBackCoordinator
+    - Wraps content with PredictiveBackHandler (enabled when canGoBack)
+  - Full KDoc documentation on all public APIs
+- **Verified**:
+  - `:composeApp:assembleDebug` ✓
+  - `test` ✓
+  - All platform targets compile successfully
+
 ---
 
 ## Dependencies
@@ -359,15 +387,15 @@ _None currently blocked._
 ```
 Phase 1 ─► RENDER-001 ─► RENDER-002A ─┬─► RENDER-002B ✓
                 │                      ├─► RENDER-002C ✓
-                │                      ├─► RENDER-008
-                │                      └─► RENDER-009
+                │                      ├─► RENDER-008 ✓
+                │                      └─► RENDER-009 ✓
                 │
                 └─► RENDER-003 ✓ ─► RENDER-010
                          │
                          ▼
-                    RENDER-004 ─┬─► RENDER-005
-                                ├─► RENDER-006
-                                └─► RENDER-007
+                    RENDER-004 ✓ ─┬─► RENDER-005 ✓
+                                  ├─► RENDER-006
+                                  └─► RENDER-007
 ```
 
 ---
