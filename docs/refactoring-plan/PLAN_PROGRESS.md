@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | � Completed | 100% | 7 | 7 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 9% | 1 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~56% | 30 | 53 |
+| **TOTAL** | 🟡 In Progress | ~58% | 31 | 53 |
 
 ---
 
@@ -41,6 +41,27 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
+- ✅ **MIG-001**: Simple Stack Navigation Example - **COMPLETED**
+  - Created comprehensive migration guide at `docs/migration-examples/01-simple-stack.md`
+  - **Contents**:
+    - Complete Before/After code examples showing old vs new API
+    - 8 numbered migration steps with diff examples
+    - KSP-generated code examples (SettingsNavNodeBuilder.kt, GeneratedScreenRegistry.kt)
+    - Common pitfalls table with symptoms and solutions
+    - Links to related migration guides and specs
+  - **Annotation changes documented**:
+    - `@Graph("name")` → `@Stack(name = "name", startDestination = "...")` 
+    - `@Route("path")` → `@Destination(route = "path")`
+    - `@Content(Dest::class)` → `@Screen(Dest::class)`
+    - `GraphNavHost(...)` → `QuoVadisHost(navigator, screenRegistry)`
+  - **Key clarification**: `startDestination` now uses class name ("Main") not route ("settings/main")
+  
+  **File Created:**
+  - `docs/migration-examples/01-simple-stack.md`
+  
+  **🎉 Phase 5: Migration is now In Progress (1/11 tasks)**
+
+### 2025-12-06
 - ✅ **KSP-007**: Remove Legacy TabGraphExtractor - **COMPLETED**
   - Removed all legacy KSP code that was causing build failures
   - **Files Deleted** (`quo-vadis-ksp/src/main/kotlin/.../ksp/`):
