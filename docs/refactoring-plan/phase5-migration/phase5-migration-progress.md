@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-06  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 4/11 tasks (36%)
+> **Progress**: 5/11 tasks (45%)
 
 ## Overview
 
@@ -30,7 +30,7 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 | [MIG-002](./MIG-002-master-detail-example.md) | Master-Detail Pattern Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/02-master-detail.md` |
 | [MIG-003](./MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/03-tabbed-navigation.md` |
 | [MIG-004](./MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/04-process-flow.md` |
-| [MIG-005](./MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | ⚪ Not Started | - | Depends on MIG-003 |
+| [MIG-005](./MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/05-nested-tabs-detail.md` |
 | [MIG-006](./MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | ⚪ Not Started | - | Depends on MIG-001, MIG-002 |
 
 ### Migration Tasks
@@ -43,6 +43,17 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 ---
 
 ## Completed Tasks
+
+- **MIG-005** (2025-12-06): Nested Tabs + Detail Example
+  - Created `docs/migration-examples/05-nested-tabs-detail.md`
+  - Complete before/after code examples for complex navigation hierarchies
+  - Z-ordering via flattening explanation with visual diagrams
+  - Predictive back across layers with speculative pop
+  - Shared element transitions across tab/detail boundary
+  - Deep navigation flow example with NavNode tree states
+  - 7 key migration steps with diff examples
+  - Comprehensive pitfalls table with 9 common issues
+  - Covers full-screen detail covering tabs pattern
 
 - **MIG-004** (2025-12-06): Process/Wizard Flow Example
   - Created `docs/migration-examples/04-process-flow.md`

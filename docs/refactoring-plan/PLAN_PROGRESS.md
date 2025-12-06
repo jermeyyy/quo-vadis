@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | � Completed | 100% | 7 | 7 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 36% | 4 | 11 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 45% | 5 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~62% | 33 | 53 |
+| **TOTAL** | 🟡 In Progress | ~64% | 34 | 53 |
 
 ---
 
@@ -41,6 +41,29 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
+- ✅ **MIG-005**: Nested Tabs + Detail Example - **COMPLETED**
+  - Created comprehensive migration guide at `docs/migration-examples/05-nested-tabs-detail.md`
+  - **Contents**:
+    - Complete Before/After code examples (nested hosts vs unified QuoVadisHost)
+    - Z-ordering via flattening with visual ASCII diagrams
+    - Predictive back across layers (unified speculative pop)
+    - Shared element transitions across tab/detail boundary
+    - Deep navigation flow example with NavNode tree state progression
+    - 7 key migration steps with diff examples
+    - Comprehensive pitfalls table with 9 common issues and solutions
+  - **Key patterns documented**:
+    - Root `@Graph` + Tab `@Graph` → `@Tab` + `@Stack` hierarchy
+    - Nested `GraphNavHost` + `TabbedNavHost` → Single `QuoVadisHost`
+    - `parentNavigator.navigate()` → Single `navigator.navigate()`
+    - Manual z-index management → Automatic flattening
+    - Separate `SharedTransitionLayout` → Built-in shared elements
+    - Multiple `BackHandler` coordination → Unified predictive back
+  
+  **File Created:**
+  - `docs/migration-examples/05-nested-tabs-detail.md`
+  
+  **🎉 Phase 5: Migration is now 45% complete (5/11 tasks)**
+
 - ✅ **MIG-004**: Process/Wizard Flow Example - **COMPLETED**
   - Created comprehensive migration guide at `docs/migration-examples/04-process-flow.md`
   - **Contents**:
