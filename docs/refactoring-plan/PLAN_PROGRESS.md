@@ -16,13 +16,13 @@ See [INDEX.md](./INDEX.md) for full plan details.
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
-| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟡 In Progress | 86% | 6 | 7 |
+| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | � Completed | 100% | 7 | 7 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~54% | 28 | 52 |
+| **TOTAL** | 🟡 In Progress | ~56% | 30 | 53 |
 
 ---
 
@@ -41,6 +41,31 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
+- ✅ **KSP-007**: Remove Legacy TabGraphExtractor - **COMPLETED**
+  - Removed all legacy KSP code that was causing build failures
+  - **Files Deleted** (`quo-vadis-ksp/src/main/kotlin/.../ksp/`):
+    - `TabGraphExtractor.kt`, `TabGraphInfo.kt`, `TabGraphGenerator.kt`
+    - `GraphInfoExtractor.kt`, `GraphInfo.kt`, `GraphGenerator.kt`
+    - `GraphBuilderGenerator.kt`, `RouteConstantsGenerator.kt`
+    - `RouteInitializationGenerator.kt`, `DestinationExtensionsGenerator.kt`
+  - **QuoVadisSymbolProcessor cleanup**:
+    - Removed legacy imports (`Content`, `Graph`, `KSFunctionDeclaration`, `KSType`)
+    - Removed legacy fields (`contentMappings`, `allGraphInfos`)
+    - Removed legacy methods (`processContentFunction()`, `processGraphClass()`, `processTabGraphClass()`, `finish()`)
+    - Removed legacy processing passes (first three) from `process()` method
+    - Removed `ContentFunctionInfo` data class
+    - Updated KDoc to reflect new NavNode-based architecture
+  - **Processor now has only two passes**:
+    - First: `processNavNodeBuilders()` - NavNode builder generation with validation
+    - Second: `processDeepLinkHandler()` - Deep link handler generation
+  
+  **Verified**: `:quo-vadis-ksp:build -x detekt` ✓
+  - NoSuchElementException error resolved
+  - Demo app compilation errors are expected (uses legacy generated code, will be fixed in Phase 5 Migration)
+  
+  **🎉 Phase 3: KSP is now COMPLETE (7/7 tasks)**
+
+### 2025-12-06
 - ✅ **KSP-006**: Validation and Error Reporting - **COMPLETED**
   - Created comprehensive ValidationEngine for compile-time annotation validation
   - **ValidationEngine** (`quo-vadis-ksp/src/main/kotlin/.../validation/ValidationEngine.kt` ~460 lines):
@@ -749,7 +774,8 @@ See [INDEX.md](./INDEX.md) for full plan details.
 - Phase 1 (Core State), Phase 2 (Renderer), Phase 3 (KSP), and Phase 4 (Annotations) are now complete
 - Compatibility layer (`NavigatorCompat.kt`) provides smooth migration path
 - 4 tests temporarily ignored - will be fixed in Phase 5 migration
-- Pre-existing TabGraphExtractor bug in legacy code blocks full app build
+- Legacy KSP code removed - NoSuchElementException resolved
+- Demo app requires migration to new annotations (Phase 5)
 - Phase 5 (Migration) is the logical next major work
 
 ---
