@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-06  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 5/11 tasks (45%)
+> **Progress**: 6/11 tasks (55%)
 
 ## Overview
 
@@ -18,7 +18,7 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
-| [PREP-001](./PREP-001-recipes-module.md) | Create quo-vadis-recipes Module | ⚪ Not Started | - | Can start immediately |
+| [PREP-001](./PREP-001-recipes-module.md) | Create quo-vadis-recipes Module | 🟢 Completed | 2025-12-06 | Module skeleton created |
 | [PREP-002](./PREP-002-deprecated-annotations.md) | Add @Deprecated Annotations | ⚪ Not Started | - | Depends on Phase 4 |
 | [PREP-003](./PREP-003-permalink-reference.md) | GitHub Permalink Reference Doc | ⚪ Not Started | - | Can start immediately |
 
@@ -43,6 +43,15 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 ---
 
 ## Completed Tasks
+
+- **PREP-001** (2025-12-06): Create quo-vadis-recipes Module
+  - Created `quo-vadis-recipes/` module skeleton
+  - Configured KMP build with all platforms (Android, iOS, Desktop, JS, WasmJS)
+  - Created package structure for all recipe categories
+  - Created `RecipeScaffold.kt` shared utilities
+  - Created README.md with module documentation
+  - Created package-info.kt files with LLM-optimized KDoc
+  - Verified: `:quo-vadis-recipes:compileKotlinMetadata` ✓
 
 - **MIG-005** (2025-12-06): Nested Tabs + Detail Example
   - Created `docs/migration-examples/05-nested-tabs-detail.md`
@@ -114,8 +123,9 @@ _None currently in progress._
 
 | Task | Notes |
 |------|-------|
-| PREP-001 | Can start immediately - module setup |
+| PREP-002 | @Deprecated annotations for legacy APIs |
 | PREP-003 | Can start immediately - documentation |
+| MIG-006 | Deep linking recipe |
 
 ---
 
