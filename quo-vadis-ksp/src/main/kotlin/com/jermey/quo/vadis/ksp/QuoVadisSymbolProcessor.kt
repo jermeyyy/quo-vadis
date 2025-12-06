@@ -12,7 +12,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.jermey.quo.vadis.annotations.Content
 import com.jermey.quo.vadis.annotations.Graph
-import com.jermey.quo.vadis.annotations.TabGraph
+import com.jermey.quo.vadis.annotations.Tab
 
 /**
  * KSP processor for Quo Vadis navigation annotations.
@@ -54,14 +54,14 @@ class QuoVadisSymbolProcessor(
             }
         }
         
-        // Third pass: process @TabGraph classes
-        val tabGraphSymbols = resolver.getSymbolsWithAnnotation(TabGraph::class.qualifiedName!!)
+        // Third pass: process @Tab classes
+        val tabGraphSymbols = resolver.getSymbolsWithAnnotation(Tab::class.qualifiedName!!)
         tabGraphSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
             try {
                 processTabGraphClass(classDeclaration)
             } catch (e: IllegalStateException) {
                 val className = classDeclaration.qualifiedName?.asString()
-                logger.error("Error processing @TabGraph $className: ${e.message}", classDeclaration)
+                logger.error("Error processing @Tab $className: ${e.message}", classDeclaration)
             }
         }
         
