@@ -2,6 +2,8 @@ package com.jermey.quo.vadis.ksp
 
 import com.jermey.quo.vadis.core.navigation.compose.TransitionScope
 import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
+import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraphBuilder
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
@@ -27,6 +29,8 @@ internal object QuoVadisClassNames {
     val ROUTE_REGISTRY: ClassName = RouteRegistry::class.toClassName()
     val DESTINATION: ClassName = Destination::class.toClassName()
     val SCREEN_REGISTRY: ClassName = ScreenRegistry::class.toClassName()
+    val GENERATED_DEEP_LINK_HANDLER: ClassName = GeneratedDeepLinkHandler::class.toClassName()
+    val DEEP_LINK_RESULT: ClassName = DeepLinkResult::class.toClassName()
     
     // Compose classes
     val TRANSITION_SCOPE: ClassName = TransitionScope::class.toClassName()

@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-06  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 3/6 tasks (50%)
+> **Progress**: 4/6 tasks (67%)
 
 ## Overview
 
@@ -17,13 +17,65 @@ This phase implements a complete rewrite of the KSP code generation for the new 
 | [KSP-001](./KSP-001-graph-type-enum.md) | Create Annotation Extractors | 🟢 Completed | 2025-12-06 | 11 files created |
 | [KSP-002](./KSP-002-class-references.md) | Create NavNode Builder Generator | 🟢 Completed | 2025-12-06 | Generator + processor wiring |
 | [KSP-003](./KSP-003-graph-extractor.md) | Create Screen Registry Generator | 🟢 Completed | 2025-12-06 | Generator + interface + processor wiring |
-| [KSP-004](./KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator | ⚪ Not Started | - | Depends on KSP-002, KSP-003 |
+| [KSP-004](./KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator | 🟢 Completed | 2025-12-06 | Generator + interface + processor wiring |
 | [KSP-005](./KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | ⚪ Not Started | - | Depends on KSP-002 |
 | [KSP-006](./KSP-006-validation.md) | Validation and Error Reporting | ⚪ Not Started | - | Depends on KSP-001 |
 
 ---
 
 ## Completed Tasks
+
+### KSP-004: Create Deep Link Handler Generator (2025-12-06)
+
+Created the deep link handler generator that maps URIs to destinations.
+
+**Files Created**:
+
+1. **Core Interface** (`quo-vadis-core/src/commonMain/kotlin/.../navigation/core/`):
+   - `GeneratedDeepLinkHandler.kt` - Interface for generated deep link handlers
+     - `handleDeepLink(uri: String): DeepLinkResult` - Parse URI and return destination
+     - `createDeepLinkUri(destination, scheme): String?` - Generate URI from destination
+   - `DeepLinkResult` sealed class with `Matched` and `NotMatched`
+
+2. **Generator** (`quo-vadis-ksp/src/main/kotlin/.../generators/`):
+   - `DeepLinkHandlerGenerator.kt` - Main generator class (~320 lines)
+     - Generates `GeneratedDeepLinkHandlerImpl.kt` implementing `GeneratedDeepLinkHandler`
+     - Generates private `RoutePattern` data class with regex matching
+     - `handleDeepLink()` iterates through routes and matches regex patterns
+     - `createDeepLinkUri()` with `when` expression generating URIs
+     - `extractPath()` helper to strip scheme from URIs
+     - Filters destinations to those with non-null routes
+     - Logs warning when no routable destinations found
+
+**Route Pattern Matching**:
+| Pattern | Example URI | Extracted Params |
+|---------|-------------|------------------|
+| `home/feed` | `myapp://home/feed` | (none) |
+| `home/detail/{id}` | `myapp://home/detail/123` | `id="123"` |
+| `user/{userId}/post/{postId}` | `myapp://user/42/post/99` | `userId="42"`, `postId="99"` |
+
+**Generated Code Features**:
+- Uses regex for pattern matching with `([^/]+)` capture groups
+- Escapes special regex characters in static route parts
+- Supports data objects (no params) and data classes (with params)
+- Fully qualified destination names for nested sealed class members
+- Comprehensive KDoc documentation
+
+**QuoVadisClassNames Additions**:
+- `GENERATED_DEEP_LINK_HANDLER` - Reference to `GeneratedDeepLinkHandler` interface
+- `DEEP_LINK_RESULT` - Reference to `DeepLinkResult` sealed class
+
+**Processor Integration** (modified `QuoVadisSymbolProcessor.kt`):
+- Added `deepLinkHandlerGenerator` field
+- Added `processDeepLinkHandler(resolver)` method (sixth pass)
+- Uses existing DestinationExtractor from KSP-001
+- Filters to @Destination annotations with routes
+
+**Verified**: `:quo-vadis-ksp:build -x detekt` ✓, `:quo-vadis-core:desktopTest` ✓
+
+**Note**: Full app build has pre-existing TabGraphExtractor error (unrelated to this task).
+
+---
 
 ### KSP-003: Create Screen Registry Generator (2025-12-06)
 

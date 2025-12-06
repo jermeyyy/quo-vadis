@@ -15,11 +15,13 @@ import com.jermey.quo.vadis.annotations.Graph
 import com.jermey.quo.vadis.annotations.Pane
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.Tab
+import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.ksp.extractors.DestinationExtractor
 import com.jermey.quo.vadis.ksp.extractors.PaneExtractor
 import com.jermey.quo.vadis.ksp.extractors.ScreenExtractor
 import com.jermey.quo.vadis.ksp.extractors.StackExtractor
 import com.jermey.quo.vadis.ksp.extractors.TabExtractor
+import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
 import com.jermey.quo.vadis.ksp.generators.NavNodeBuilderGenerator
 import com.jermey.quo.vadis.ksp.generators.ScreenRegistryGenerator
 import com.jermey.quo.vadis.ksp.models.StackInfo
@@ -54,6 +56,9 @@ class QuoVadisSymbolProcessor(
     // Extractor and generator for screen registry (KSP-003)
     private val screenExtractor = ScreenExtractor(logger)
     private val screenRegistryGenerator = ScreenRegistryGenerator(codeGenerator, logger)
+
+    // Generator for deep link handler (KSP-004)
+    private val deepLinkHandlerGenerator = DeepLinkHandlerGenerator(codeGenerator, logger)
 
     // Collected stack info for tab builder dependencies
     private val stackInfoMap = mutableMapOf<String, StackInfo>()
@@ -97,6 +102,9 @@ class QuoVadisSymbolProcessor(
 
         // Fifth pass: process @Screen annotations for screen registry generation
         processScreenRegistry(resolver)
+
+        // Sixth pass: process @Destination annotations for deep link handler generation
+        processDeepLinkHandler(resolver)
 
         return emptyList()
     }
@@ -282,6 +290,40 @@ class QuoVadisSymbolProcessor(
             screenRegistryGenerator.generate(screens)
         } catch (e: IllegalStateException) {
             logger.error("Error generating screen registry: ${e.message}")
+        }
+    }
+
+    // =========================================================================
+    // Deep Link Handler Generation (KSP-004)
+    // =========================================================================
+
+    /**
+     * Process @Destination annotations to generate the deep link handler.
+     *
+     * The deep link handler maps URI patterns to destination instances,
+     * enabling deep linking support for the navigation system.
+     *
+     * Only destinations with non-empty route patterns are included in generation.
+     */
+    private fun processDeepLinkHandler(resolver: Resolver) {
+        try {
+            val destinationSymbols = resolver.getSymbolsWithAnnotation(Destination::class.qualifiedName!!)
+            val destinations = destinationSymbols
+                .filterIsInstance<KSClassDeclaration>()
+                .mapNotNull { classDeclaration ->
+                    try {
+                        destinationExtractor.extract(classDeclaration)
+                    } catch (e: IllegalStateException) {
+                        val className = classDeclaration.qualifiedName?.asString()
+                        logger.error("Error extracting @Destination $className: ${e.message}", classDeclaration)
+                        null
+                    }
+                }
+                .toList()
+
+            deepLinkHandlerGenerator.generate(destinations)
+        } catch (e: IllegalStateException) {
+            logger.error("Error generating deep link handler: ${e.message}")
         }
     }
 }

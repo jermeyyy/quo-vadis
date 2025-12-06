@@ -1,6 +1,6 @@
 # Quo Vadis Architecture Refactoring - Progress Tracker
 
-> **Last Updated**: 2025-12-06 (Build Green)
+> **Last Updated**: 2025-12-06
 
 ## Overview
 
@@ -16,13 +16,13 @@ See [INDEX.md](./INDEX.md) for full plan details.
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
-| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟡 In Progress | 50% | 3 | 6 |
+| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟡 In Progress | 67% | 4 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~48% | 25 | 52 |
+| **TOTAL** | 🟡 In Progress | ~50% | 26 | 52 |
 
 ---
 
@@ -41,6 +41,47 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
+- ✅ **KSP-004**: Create Deep Link Handler Generator - **COMPLETED**
+  - Created deep link handler generator mapping URIs to destination instances
+  - **Core Interface** (`quo-vadis-core/src/commonMain/kotlin/.../navigation/core/GeneratedDeepLinkHandler.kt`):
+    - `handleDeepLink(uri: String): DeepLinkResult` - Parse URI and match route patterns
+    - `createDeepLinkUri(destination, scheme): String?` - Generate URI from destination
+    - `DeepLinkResult` sealed class with `Matched(destination)` and `NotMatched`
+  - **Generator** (`quo-vadis-ksp/src/main/kotlin/.../generators/DeepLinkHandlerGenerator.kt`):
+    - Generates `GeneratedDeepLinkHandlerImpl.kt` implementing `GeneratedDeepLinkHandler`
+    - Generates private `RoutePattern` data class with regex-based URI matching
+    - `handleDeepLink()` iterates routes and extracts params via capture groups
+    - `createDeepLinkUri()` with `when` expression generating URIs from destinations
+    - `extractPath()` helper to strip scheme from URIs
+    - Filters destinations to those with non-null routes
+    - Comprehensive KDoc documentation
+  - **Route Pattern Examples**:
+    - `home/feed` → matches `myapp://home/feed` (no params)
+    - `home/detail/{id}` → matches `myapp://home/detail/123`, extracts `id="123"`
+    - `user/{userId}/post/{postId}` → extracts multiple params
+  - **QuoVadisClassNames additions**:
+    - `GENERATED_DEEP_LINK_HANDLER` - Reference to interface
+    - `DEEP_LINK_RESULT` - Reference to result sealed class
+  - **Processor Integration**:
+    - Added `deepLinkHandlerGenerator` field
+    - Added `processDeepLinkHandler(resolver)` method (sixth pass)
+    - Uses existing DestinationExtractor from KSP-001
+  
+  **Files Created:**
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/core/GeneratedDeepLinkHandler.kt`
+  - `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/generators/DeepLinkHandlerGenerator.kt`
+  
+  **Files Modified:**
+  - `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/QuoVadisClassNames.kt`
+  - `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/QuoVadisSymbolProcessor.kt`
+  
+  **Verified**: `:quo-vadis-ksp:build -x detekt` ✓, `:quo-vadis-core:desktopTest` ✓
+  
+  **Note**: Full app build has pre-existing TabGraphExtractor error (unrelated to this task).
+  
+  **🎉 Phase 3: KSP is now 67% complete (4/6 tasks)**
+
+### 2025-12-06
 - ✅ **KSP-003**: Create Screen Registry Generator - **COMPLETED**
   - Created screen registry generator mapping destinations to composable screen functions
   - **Core Interface** (`quo-vadis-core/src/commonMain/kotlin/.../navigation/core/ScreenRegistry.kt`):
