@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-06  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 1/11 tasks (9%)
+> **Progress**: 2/11 tasks (18%)
 
 ## Overview
 
@@ -27,7 +27,7 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
 | [MIG-001](./MIG-001-simple-stack-example.md) | Simple Stack Navigation Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/01-simple-stack.md` |
-| [MIG-002](./MIG-002-master-detail-example.md) | Master-Detail Pattern Recipe | ⚪ Not Started | - | Depends on MIG-001 |
+| [MIG-002](./MIG-002-master-detail-example.md) | Master-Detail Pattern Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/02-master-detail.md` |
 | [MIG-003](./MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | ⚪ Not Started | - | Depends on MIG-001 |
 | [MIG-004](./MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | ⚪ Not Started | - | Depends on MIG-001 |
 | [MIG-005](./MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | ⚪ Not Started | - | Depends on MIG-003 |
@@ -43,6 +43,16 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 ---
 
 ## Completed Tasks
+
+- **MIG-002** (2025-12-06): Master-Detail Pattern Example
+  - Created `docs/migration-examples/02-master-detail.md`
+  - Complete before/after code examples with typed arguments
+  - 11 numbered migration steps with diff examples
+  - Route template parameters and deep linking
+  - AnimationRegistry for centralized transitions
+  - Shared element transitions (built-in vs manual wrapper)
+  - KSP-generated code examples (NavNodeBuilder, ScreenRegistry, DeepLinkHandler)
+  - Comprehensive pitfalls table with debugging tips
 
 - **MIG-001** (2025-12-06): Simple Stack Navigation Example
   - Created `docs/migration-examples/01-simple-stack.md`

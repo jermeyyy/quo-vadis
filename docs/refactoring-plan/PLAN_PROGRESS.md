@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | � Completed | 100% | 7 | 7 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 9% | 1 | 11 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 18% | 2 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~58% | 31 | 53 |
+| **TOTAL** | 🟡 In Progress | ~60% | 32 | 53 |
 
 ---
 
@@ -41,6 +41,27 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
+- ✅ **MIG-002**: Master-Detail Pattern Example - **COMPLETED**
+  - Created comprehensive migration guide at `docs/migration-examples/02-master-detail.md`
+  - **Contents**:
+    - Complete Before/After code examples with typed arguments pattern
+    - 11 numbered migration steps with diff examples
+    - Route template parameters (`{productId}`) for deep linking
+    - AnimationRegistry for centralized transition configuration
+    - Shared element transitions (CompositionLocal vs manual scope passing)
+    - KSP-generated code examples (NavNodeBuilder, ScreenRegistry, DeepLinkHandler)
+    - Comprehensive pitfalls table with debugging tips
+  - **Key patterns documented**:
+    - `@Argument` + `TypedDestination<T>` → Route template `{param}`
+    - `data: ProductDetailData` → `destination: ProductDetail` (direct access)
+    - `navigate(dest, transition)` → `AnimationRegistry` centralized config
+    - `SharedTransitionLayout` wrapper → Built-in via `QuoVadisHost`
+  
+  **File Created:**
+  - `docs/migration-examples/02-master-detail.md`
+  
+  **🎉 Phase 5: Migration is now 18% complete (2/11 tasks)**
+
 - ✅ **MIG-001**: Simple Stack Navigation Example - **COMPLETED**
   - Created comprehensive migration guide at `docs/migration-examples/01-simple-stack.md`
   - **Contents**:
