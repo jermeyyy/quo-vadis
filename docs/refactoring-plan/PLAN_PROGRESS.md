@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | � Completed | 100% | 7 | 7 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 27% | 3 | 11 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 36% | 4 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~60% | 32 | 53 |
+| **TOTAL** | 🟡 In Progress | ~62% | 33 | 53 |
 
 ---
 
@@ -41,6 +41,29 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
+- ✅ **MIG-004**: Process/Wizard Flow Example - **COMPLETED**
+  - Created comprehensive migration guide at `docs/migration-examples/04-process-flow.md`
+  - **Contents**:
+    - Complete Before/After code examples (onboarding flow with conditional branching)
+    - 11 numbered migration steps with diff examples
+    - Flow control patterns: sequential navigation, conditional branching, stack clearing
+    - Type-safe `popTo(DestinationInstance)` replacing string routes
+    - Type-safe `navigateAndClear(dest, FlowClass::class)` replacing string route clearing
+    - New `exitFlow(FlowClass::class)` convenience method
+    - AnimationRegistry configuration for consistent flow transitions
+    - Checkout flow example with conditional steps (physical vs digital products)
+    - Comprehensive pitfalls table with 9 common issues and solutions
+  - **Key patterns documented**:
+    - `popTo("route")` → `popTo(DestinationInstance)` (type-safe)
+    - `navigateAndClearTo(dest, "route", inclusive)` → `navigateAndClear(dest, FlowClass::class, inclusive)`
+    - Multiple `navigateBack()` → `exitFlow(FlowClass::class)`
+    - Per-call transitions → `AnimationRegistry.withinGraph(FlowClass::class)`
+  
+  **File Created:**
+  - `docs/migration-examples/04-process-flow.md`
+  
+  **🎉 Phase 5: Migration is now 36% complete (4/11 tasks)**
+
 - ✅ **MIG-003**: Tabbed Navigation Example - **COMPLETED**
   - Created comprehensive migration guide at `docs/migration-examples/03-tabbed-navigation.md`
   - **Contents**:

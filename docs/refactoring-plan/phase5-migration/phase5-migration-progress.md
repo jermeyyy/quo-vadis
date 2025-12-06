@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-06  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 3/11 tasks (27%)
+> **Progress**: 4/11 tasks (36%)
 
 ## Overview
 
@@ -29,7 +29,7 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 | [MIG-001](./MIG-001-simple-stack-example.md) | Simple Stack Navigation Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/01-simple-stack.md` |
 | [MIG-002](./MIG-002-master-detail-example.md) | Master-Detail Pattern Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/02-master-detail.md` |
 | [MIG-003](./MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/03-tabbed-navigation.md` |
-| [MIG-004](./MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | ⚪ Not Started | - | Depends on MIG-001 |
+| [MIG-004](./MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/04-process-flow.md` |
 | [MIG-005](./MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | ⚪ Not Started | - | Depends on MIG-003 |
 | [MIG-006](./MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | ⚪ Not Started | - | Depends on MIG-001, MIG-002 |
 
@@ -43,6 +43,16 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 ---
 
 ## Completed Tasks
+
+- **MIG-004** (2025-12-06): Process/Wizard Flow Example
+  - Created `docs/migration-examples/04-process-flow.md`
+  - Complete before/after code examples for onboarding and checkout flows
+  - 11 numbered migration steps with diff examples
+  - Sequential navigation, conditional branching, flow completion patterns
+  - Type-safe `popTo`, `navigateAndClear`, and new `exitFlow` API
+  - AnimationRegistry configuration for consistent flow transitions
+  - Checkout flow example with conditional steps (physical vs digital)
+  - Comprehensive pitfalls table with 9 common issues
 
 - **MIG-003** (2025-12-06): Tabbed Navigation Example
   - Created `docs/migration-examples/03-tabbed-navigation.md`
