@@ -18,7 +18,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | � Completed | 100% | 7 | 7 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 18% | 2 | 11 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 27% | 3 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
@@ -41,6 +41,29 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
+- ✅ **MIG-003**: Tabbed Navigation Example - **COMPLETED**
+  - Created comprehensive migration guide at `docs/migration-examples/03-tabbed-navigation.md`
+  - **Contents**:
+    - Complete Before/After code examples with `@TabGraph`/`@Tab` to `@Tab`/`@TabItem` migration
+    - 11 numbered migration steps with diff examples
+    - `tabWrapper` API pattern for user-controlled Scaffold and bottom navigation
+    - Tab state preservation via NavNode tree (automatic, no manual handling)
+    - KSP-generated code examples (TabNode builder, TabMetadata, ScreenRegistry)
+    - Comprehensive pitfalls table with debugging tips
+  - **Key patterns documented**:
+    - `@TabGraph` + `@Tab` → `@Tab` + `@TabItem` + `@Destination`
+    - `TabDefinition` interface → `Destination` base class
+    - `TabbedNavHost(tabState, tabGraphs, tabUI)` → `QuoVadisHost(navigator, tabWrapper)`
+    - `rememberTabNavigator(config)` → `rememberNavigator(navTree)`
+    - `tabState.selectTab(tab)` → `navigator.switchTab(tab)`
+    - `tabState.selectedTab.collectAsState()` → `tabNode.activeStackIndex`
+    - `TabNavigatorConfig.allTabs` → `MainTabsMetadata.tabs` (KSP-generated)
+  
+  **File Created:**
+  - `docs/migration-examples/03-tabbed-navigation.md`
+  
+  **🎉 Phase 5: Migration is now 27% complete (3/11 tasks)**
+
 - ✅ **MIG-002**: Master-Detail Pattern Example - **COMPLETED**
   - Created comprehensive migration guide at `docs/migration-examples/02-master-detail.md`
   - **Contents**:

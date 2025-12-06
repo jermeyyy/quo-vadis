@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-06  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 2/11 tasks (18%)
+> **Progress**: 3/11 tasks (27%)
 
 ## Overview
 
@@ -28,7 +28,7 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 |----|------|--------|-----------|-------|
 | [MIG-001](./MIG-001-simple-stack-example.md) | Simple Stack Navigation Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/01-simple-stack.md` |
 | [MIG-002](./MIG-002-master-detail-example.md) | Master-Detail Pattern Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/02-master-detail.md` |
-| [MIG-003](./MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | ⚪ Not Started | - | Depends on MIG-001 |
+| [MIG-003](./MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/03-tabbed-navigation.md` |
 | [MIG-004](./MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | ⚪ Not Started | - | Depends on MIG-001 |
 | [MIG-005](./MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | ⚪ Not Started | - | Depends on MIG-003 |
 | [MIG-006](./MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | ⚪ Not Started | - | Depends on MIG-001, MIG-002 |
@@ -43,6 +43,16 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 ---
 
 ## Completed Tasks
+
+- **MIG-003** (2025-12-06): Tabbed Navigation Example
+  - Created `docs/migration-examples/03-tabbed-navigation.md`
+  - Complete before/after code examples with `@Tab`, `@TabItem` annotations
+  - 11 numbered migration steps with diff examples  
+  - `tabWrapper` API pattern for user-controlled scaffold
+  - Tab state preservation via NavNode tree
+  - KSP-generated code examples (TabNode builder, TabMetadata, ScreenRegistry)
+  - Comprehensive pitfalls table with debugging tips
+  - Tab switching API (`navigator.switchTab()` vs old `tabState.selectTab()`)
 
 - **MIG-002** (2025-12-06): Master-Detail Pattern Example
   - Created `docs/migration-examples/02-master-detail.md`
