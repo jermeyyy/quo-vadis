@@ -1,47 +1,44 @@
 package com.jermey.quo.vadis.core.navigation.utils
 
-import com.jermey.quo.vadis.core.navigation.core.BackStack
-import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.ScreenNode
+import com.jermey.quo.vadis.core.navigation.core.allScreens
 
 /**
  * Extension functions and utilities for the navigation library.
  */
 
+// =========================================================================
+// NAVNODE TREE EXTENSIONS
+// =========================================================================
+
 /**
- * Extension to check if a destination is in the backstack.
+ * Extension to check if a destination is in the navigation tree.
  */
-fun BackStack.contains(route: String): Boolean {
-    return stack.value.any { it.destination.route == route }
+fun NavNode.containsRoute(route: String): Boolean {
+    return allScreens().any { it.destination.route == route }
 }
 
 /**
- * Extension to get a destination from the backstack by route.
+ * Extension to find a screen node by route.
  */
-fun BackStack.findByRoute(route: String): BackStackEntry? {
-    return stack.value.find { it.destination.route == route }
+fun NavNode.findByRoute(route: String): ScreenNode? {
+    return allScreens().find { it.destination.route == route }
 }
 
 /**
- * Extension to get all routes in the backstack.
+ * Extension to get all routes in the navigation tree.
  */
-val BackStack.routes: List<String>
-    get() = stack.value.map { it.destination.route }
+val NavNode.routes: List<String>
+    get() = allScreens().map { it.destination.route }
 
-/**
- * Pop multiple entries from the backstack.
- */
-fun BackStack.popCount(count: Int): Boolean {
-    if (count <= 0) return false
-
-    repeat(count) {
-        if (!pop()) return false
-    }
-    return true
-}
+// =========================================================================
+// NAVIGATOR EXTENSIONS
+// =========================================================================
 
 /**
  * Extension to navigate with a lambda for building the destination.
@@ -72,8 +69,8 @@ fun Navigator.navigateSingleTop(
     destination: Destination,
     transition: NavigationTransition? = null
 ) {
-    if (backStack.current.value?.destination?.route == destination.route) {
-        backStack.replace(destination)
+    if (currentDestination.value?.route == destination.route) {
+        navigateAndReplace(destination, transition)
     } else {
         navigate(destination, transition)
     }

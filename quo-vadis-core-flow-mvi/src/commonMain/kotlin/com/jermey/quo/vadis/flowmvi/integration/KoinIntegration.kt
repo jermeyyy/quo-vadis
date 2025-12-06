@@ -35,7 +35,7 @@ import pro.respawn.flowmvi.api.MVIState
 val flowMviNavigationModule = module {
     // Navigator (can be overridden by providing your own implementation)
     single<Navigator> {
-        com.jermey.quo.vadis.core.navigation.core.DefaultNavigator()
+        com.jermey.quo.vadis.core.navigation.core.TreeNavigator()
     }
     
     // FlowMVI NavigatorContainer

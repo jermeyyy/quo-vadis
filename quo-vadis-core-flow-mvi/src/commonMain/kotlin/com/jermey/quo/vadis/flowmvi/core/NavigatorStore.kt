@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.flowmvi.core
 
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.activeStack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -90,7 +91,7 @@ class NavigatorContainer(
                     updateState {
                         NavigatorState(
                             currentDestination = destination,
-                            backStackSize = navigator.backStack.stack.value.size
+                            backStackSize = navigator.state.value.activeStack()?.children?.size ?: 0
                         )
                     }
                 }
@@ -155,7 +156,7 @@ class NavigatorContainer(
      */
     private suspend fun PipelineContext<NavigationState, NavigationIntent, NavigationAction>.handleNavigateBack() {
         try {
-            if (navigator.backStack.stack.value.size > 1) {
+            if (navigator.canNavigateBack.value) {
                 navigator.navigateBack()
                 // State will be updated via Navigator.currentDestination flow
             } else {

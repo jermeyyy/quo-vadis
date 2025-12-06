@@ -96,9 +96,9 @@ class TabNavigatorState(
      */
     fun getNavigatorForTab(tab: TabDefinition): Navigator {
         require(tab in config.allTabs) { "Tab $tab is not in the configured tabs" }
-        
+
         return _tabNavigators.getOrPut(tab) {
-            DefaultNavigator().apply {
+            TreeNavigator().apply {
                 // Set the root destination for this tab
                 setStartDestination(tab.rootDestination)
             }
@@ -177,32 +177,32 @@ class TabNavigatorState(
     override fun onBack(): Boolean {
         val currentTab = _selectedTab.value
         val currentNavigator = getCurrentNavigator()
-        
+
         // Check if we can navigate back in the current tab
         // Only try to navigate back if the stack has more than 1 entry (can actually go back)
-        if (currentNavigator.backStack.canGoBack.value) {
+        if (currentNavigator.canNavigateBack.value) {
             currentNavigator.navigateBack()
             return true // Consumed by tab's navigator
         }
-        
+
         // Tab stack is at root (can't pop), check if we should switch to primary tab
         if (currentTab != config.primaryTab) {
             // Not on primary tab, switch to it
             selectTab(config.primaryTab)
             return true // Consumed by switching tabs
         }
-        
+
         // On primary tab at root, pass to parent
         return false
     }
-    
+
     /**
      * Get all tab definitions.
      *
      * @return List of all configured tabs.
      */
     fun getAllTabs(): List<TabDefinition> = config.allTabs
-    
+
     /**
      * Check if a tab has been visited (initialized).
      *
@@ -212,9 +212,9 @@ class TabNavigatorState(
     fun isTabInitialized(tab: TabDefinition): Boolean {
         return _tabInitialized[tab] == true
     }
-    
+
     /**
-     * Get the current backstack size for a tab.
+     * Get the current stack size for a tab.
      * Useful for debugging or UI indicators.
      *
      * @param tab The tab to check.
@@ -224,6 +224,8 @@ class TabNavigatorState(
         if (!isTabInitialized(tab)) {
             return 0
         }
-        return getNavigatorForTab(tab).backStack.stack.value.size
+        val navigator = getNavigatorForTab(tab)
+        val activeStack = navigator.state.value.activeStack()
+        return activeStack?.children?.size ?: 0
     }
 }
