@@ -1,8 +1,8 @@
 # Phase 3: KSP Processor Rewrite - Progress
 
 > **Last Updated**: 2025-12-06  
-> **Phase Status**: 🟡 In Progress  
-> **Progress**: 5/6 tasks (83%)
+> **Phase Status**: � Completed  
+> **Progress**: 6/6 tasks (100%)
 
 ## Overview
 
@@ -19,11 +19,73 @@ This phase implements a complete rewrite of the KSP code generation for the new 
 | [KSP-003](./KSP-003-graph-extractor.md) | Create Screen Registry Generator | 🟢 Completed | 2025-12-06 | Generator + interface + processor wiring |
 | [KSP-004](./KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator | 🟢 Completed | 2025-12-06 | Generator + interface + processor wiring |
 | [KSP-005](./KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | 🟢 Completed | 2025-12-06 | Generator + processor wiring |
-| [KSP-006](./KSP-006-validation.md) | Validation and Error Reporting | ⚪ Not Started | - | Depends on KSP-001 |
+| [KSP-006](./KSP-006-validation.md) | Validation and Error Reporting | 🟢 Completed | 2025-12-06 | ValidationEngine + processor integration |
 
 ---
 
 ## Completed Tasks
+
+### KSP-006: Validation and Error Reporting (2025-12-06)
+
+Created comprehensive validation engine that validates annotation usage and reports clear, actionable errors.
+
+**File Created** (`quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/validation/`):
+- `ValidationEngine.kt` - Main validation engine (~460 lines)
+
+**Validation Categories**:
+
+| Category | Validation | Severity | Description |
+|----------|------------|----------|-------------|
+| **Structural** | Orphan Destination | Error | `@Destination` not inside `@Stack`, `@Tab`, or `@Pane` |
+| **Structural** | Invalid Start Destination | Error | `@Stack(startDestination)` references non-existent destination |
+| **Structural** | Invalid Initial Tab | Error | `@Tab(initialTab)` references non-existent tab |
+| **Structural** | Empty Container | Error | `@Stack`, `@Tab`, or `@Pane` with no destinations |
+| **Route** | Route Parameter Mismatch | Error | Route param `{name}` has no matching constructor parameter |
+| **Route** | Missing Route Parameter | Warning | Constructor param not in route (data classes only) |
+| **Route** | Duplicate Routes | Error | Same route pattern on multiple destinations |
+| **Reference** | Invalid Root Graph | Error | `@TabItem`/`@PaneItem(rootGraph)` references class without `@Stack` |
+| **Reference** | Missing Screen Binding | Warning | Destination has no `@Screen` function |
+| **Reference** | Duplicate Screen Binding | Error | Multiple `@Screen` for same destination |
+| **Reference** | Invalid Destination Reference | Error | `@Screen(destination)` references non-destination class |
+| **Type** | Non-Sealed Container | Error | `@Stack`/`@Tab`/`@Pane` on non-sealed class |
+| **Type** | Non-Data Destination | Error | `@Destination` on class that's not data object/class |
+
+**Engine API**:
+```kotlin
+class ValidationEngine(logger: KSPLogger) {
+    fun validate(
+        stacks: List<StackInfo>,
+        tabs: List<TabInfo>,
+        panes: List<PaneInfo>,
+        screens: List<ScreenInfo>,
+        allDestinations: List<DestinationInfo>,
+        resolver: Resolver
+    ): Boolean  // true = no errors
+}
+```
+
+**Error Message Format**:
+```
+@Stack(startDestination = "Unknown") - No destination named "Unknown" found in HomeDestination. Available destinations: [Feed, Detail]
+```
+
+**Processor Integration** (modified `QuoVadisSymbolProcessor.kt`):
+- Added `ValidationEngine` import and property
+- Refactored `processNavNodeBuilders()` to separate extraction from generation:
+  1. Extract all stacks, tabs, panes
+  2. Extract screens and all destinations
+  3. Run validation
+  4. Generate code only if validation passes
+- Added helper methods: `extractStackInfo()`, `extractTabInfo()`, `extractPaneInfo()`
+- Added `collectAllDestinations()` to gather destinations from all containers
+- Added generation methods: `generateStackBuilders()`, `generateTabBuilders()`, `generatePaneBuilders()`
+- Screen registry generation now integrated into `processNavNodeBuilders()`
+
+**Verified**: `:quo-vadis-ksp:build -x detekt` ✓
+
+**Note**: Full app build has pre-existing TabGraphExtractor error in legacy code (unrelated to this task).
+
+---
 
 ### KSP-005: Create Navigator Extensions Generator (2025-12-06)
 

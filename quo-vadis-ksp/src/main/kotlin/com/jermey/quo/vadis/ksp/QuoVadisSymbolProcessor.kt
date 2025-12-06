@@ -25,9 +25,12 @@ import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
 import com.jermey.quo.vadis.ksp.generators.NavNodeBuilderGenerator
 import com.jermey.quo.vadis.ksp.generators.NavigatorExtGenerator
 import com.jermey.quo.vadis.ksp.generators.ScreenRegistryGenerator
+import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.PaneInfo
+import com.jermey.quo.vadis.ksp.models.ScreenInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
+import com.jermey.quo.vadis.ksp.validation.ValidationEngine
 
 /**
  * KSP processor for Quo Vadis navigation annotations.
@@ -65,6 +68,9 @@ class QuoVadisSymbolProcessor(
 
     // Generator for navigator extensions (KSP-005)
     private val navigatorExtGenerator = NavigatorExtGenerator(codeGenerator, logger)
+
+    // Validation engine (KSP-006)
+    private val validationEngine = ValidationEngine(logger)
 
     // Collected stack info for tab builder dependencies
     private val stackInfoMap = mutableMapOf<String, StackInfo>()
@@ -108,13 +114,10 @@ class QuoVadisSymbolProcessor(
             }
         }
 
-        // Fourth pass: generate NavNode builders for new architecture
+        // Fourth pass: generate NavNode builders for new architecture (includes validation and screen registry)
         processNavNodeBuilders(resolver)
 
-        // Fifth pass: process @Screen annotations for screen registry generation
-        processScreenRegistry(resolver)
-
-        // Sixth pass: process @Destination annotations for deep link handler generation
+        // Fifth pass: process @Destination annotations for deep link handler generation
         processDeepLinkHandler(resolver)
 
         return emptyList()
@@ -196,46 +199,184 @@ class QuoVadisSymbolProcessor(
      * - @Pane generates PaneNode builders with pane configurations
      *
      * Processing order matters:
-     * 1. Stack builders first (no dependencies)
-     * 2. Tab builders second (depend on stack builders)
-     * 3. Pane builders last (depend on stack builders)
+     * 1. Extract all containers first (stacks, tabs, panes)
+     * 2. Extract screens and all destinations for validation
+     * 3. Run validation (KSP-006) - stop if errors
+     * 4. Generate builders only if validation passes
      */
     private fun processNavNodeBuilders(resolver: Resolver) {
-        // Step 1: Extract and generate stack builders first (they have no dependencies)
+        // Step 1: Extract stack info (no dependencies)
         val stackSymbols = resolver.getSymbolsWithAnnotation(Stack::class.qualifiedName!!)
         stackSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
             try {
-                processStackNavNodeBuilder(classDeclaration)
+                extractStackInfo(classDeclaration)
             } catch (e: IllegalStateException) {
                 val className = classDeclaration.qualifiedName?.asString()
-                logger.error("Error generating NavNode builder for @Stack $className: ${e.message}", classDeclaration)
+                logger.error("Error extracting @Stack $className: ${e.message}", classDeclaration)
             }
         }
 
-        // Step 2: Extract and generate tab builders (depend on stack builders being available)
+        // Step 2: Extract tab info
         val tabSymbols = resolver.getSymbolsWithAnnotation(Tab::class.qualifiedName!!)
         tabSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
             try {
-                processTabNavNodeBuilder(classDeclaration)
+                extractTabInfo(classDeclaration)
             } catch (e: IllegalStateException) {
                 val className = classDeclaration.qualifiedName?.asString()
-                logger.error("Error generating NavNode builder for @Tab $className: ${e.message}", classDeclaration)
+                logger.error("Error extracting @Tab $className: ${e.message}", classDeclaration)
             }
         }
 
-        // Step 3: Extract and generate pane builders
+        // Step 3: Extract pane info
         val paneSymbols = resolver.getSymbolsWithAnnotation(Pane::class.qualifiedName!!)
         paneSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
             try {
-                processPaneNavNodeBuilder(classDeclaration)
+                extractPaneInfo(classDeclaration)
             } catch (e: IllegalStateException) {
                 val className = classDeclaration.qualifiedName?.asString()
-                logger.error("Error generating NavNode builder for @Pane $className: ${e.message}", classDeclaration)
+                logger.error("Error extracting @Pane $className: ${e.message}", classDeclaration)
             }
         }
 
-        // Step 4: Generate navigator extensions (KSP-005)
+        // Step 4: Extract screens and all destinations for validation
+        val screens = screenExtractor.extractAll(resolver)
+        val allDestinations = collectAllDestinations()
+
+        // Step 5: Run validation (KSP-006)
+        val isValid = validationEngine.validate(
+            stacks = collectedStacks,
+            tabs = collectedTabs,
+            panes = collectedPanes,
+            screens = screens,
+            allDestinations = allDestinations,
+            resolver = resolver
+        )
+
+        if (!isValid) {
+            logger.error("Validation failed - skipping code generation")
+            return
+        }
+
+        // Step 6: Generate NavNode builders (only if validation passes)
+        generateStackBuilders()
+        generateTabBuilders()
+        generatePaneBuilders()
+
+        // Step 7: Generate navigator extensions (KSP-005)
         generateNavigatorExtensions()
+
+        // Step 8: Generate screen registry (moved here to use already extracted screens)
+        generateScreenRegistry(screens)
+    }
+
+    /**
+     * Collect all destinations from stacks, tabs, and panes.
+     */
+    private fun collectAllDestinations(): List<DestinationInfo> {
+        val destinations = mutableListOf<DestinationInfo>()
+        collectedStacks.forEach { stack -> destinations.addAll(stack.destinations) }
+        collectedTabs.forEach { tab -> destinations.addAll(tab.tabs.map { it.destination }) }
+        collectedPanes.forEach { pane -> destinations.addAll(pane.panes.map { it.destination }) }
+        return destinations
+    }
+
+    /**
+     * Extract stack info without generating code.
+     */
+    private fun extractStackInfo(classDeclaration: KSClassDeclaration) {
+        val stackInfo = stackExtractor.extract(classDeclaration)
+        if (stackInfo == null) {
+            logger.warn("Could not extract StackInfo from ${classDeclaration.qualifiedName?.asString()}")
+            return
+        }
+
+        // Store for tab builder dependencies
+        val qualifiedName = classDeclaration.qualifiedName?.asString() ?: stackInfo.className
+        stackInfoMap[qualifiedName] = stackInfo
+
+        // Collect for validation and navigator extensions
+        collectedStacks.add(stackInfo)
+    }
+
+    /**
+     * Extract tab info without generating code.
+     */
+    private fun extractTabInfo(classDeclaration: KSClassDeclaration) {
+        val tabInfo = tabExtractor.extract(classDeclaration)
+        if (tabInfo == null) {
+            logger.warn("Could not extract TabInfo from ${classDeclaration.qualifiedName?.asString()}")
+            return
+        }
+
+        // Collect for validation and navigator extensions
+        collectedTabs.add(tabInfo)
+    }
+
+    /**
+     * Extract pane info without generating code.
+     */
+    private fun extractPaneInfo(classDeclaration: KSClassDeclaration) {
+        val paneInfo = paneExtractor.extract(classDeclaration)
+        if (paneInfo == null) {
+            logger.warn("Could not extract PaneInfo from ${classDeclaration.qualifiedName?.asString()}")
+            return
+        }
+
+        // Collect for validation and navigator extensions
+        collectedPanes.add(paneInfo)
+    }
+
+    /**
+     * Generate stack builders for all collected stacks.
+     */
+    private fun generateStackBuilders() {
+        collectedStacks.forEach { stackInfo ->
+            try {
+                navNodeBuilderGenerator.generateStackBuilder(stackInfo)
+                logger.info("Generated NavNode builder for @Stack: ${stackInfo.className}")
+            } catch (e: IllegalStateException) {
+                logger.error("Error generating NavNode builder for @Stack ${stackInfo.className}: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Generate tab builders for all collected tabs.
+     */
+    private fun generateTabBuilders() {
+        collectedTabs.forEach { tabInfo ->
+            try {
+                navNodeBuilderGenerator.generateTabBuilder(tabInfo, stackInfoMap)
+                logger.info("Generated NavNode builder for @Tab: ${tabInfo.className}")
+            } catch (e: IllegalStateException) {
+                logger.error("Error generating NavNode builder for @Tab ${tabInfo.className}: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Generate pane builders for all collected panes.
+     */
+    private fun generatePaneBuilders() {
+        collectedPanes.forEach { paneInfo ->
+            try {
+                navNodeBuilderGenerator.generatePaneBuilder(paneInfo)
+                logger.info("Generated NavNode builder for @Pane: ${paneInfo.className}")
+            } catch (e: IllegalStateException) {
+                logger.error("Error generating NavNode builder for @Pane ${paneInfo.className}: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Generate screen registry from extracted screens.
+     */
+    private fun generateScreenRegistry(screens: List<ScreenInfo>) {
+        try {
+            screenRegistryGenerator.generate(screens)
+        } catch (e: IllegalStateException) {
+            logger.error("Error generating screen registry: ${e.message}")
+        }
     }
 
     /**
@@ -260,84 +401,6 @@ class QuoVadisSymbolProcessor(
             navigatorExtGenerator.generate(collectedStacks, collectedTabs, collectedPanes, basePackage)
         } catch (e: IllegalStateException) {
             logger.error("Error generating navigator extensions: ${e.message}")
-        }
-    }
-
-    /**
-     * Process a @Stack annotated class to generate its NavNode builder.
-     */
-    private fun processStackNavNodeBuilder(classDeclaration: KSClassDeclaration) {
-        val stackInfo = stackExtractor.extract(classDeclaration)
-        if (stackInfo == null) {
-            logger.warn("Could not extract StackInfo from ${classDeclaration.qualifiedName?.asString()}")
-            return
-        }
-
-        // Store for tab builder dependencies
-        val qualifiedName = classDeclaration.qualifiedName?.asString() ?: stackInfo.className
-        stackInfoMap[qualifiedName] = stackInfo
-
-        // Collect for navigator extensions (KSP-005)
-        collectedStacks.add(stackInfo)
-
-        // Generate the builder
-        navNodeBuilderGenerator.generateStackBuilder(stackInfo)
-        logger.info("Generated NavNode builder for @Stack: ${stackInfo.className}")
-    }
-
-    /**
-     * Process a @Tab annotated class to generate its NavNode builder.
-     */
-    private fun processTabNavNodeBuilder(classDeclaration: KSClassDeclaration) {
-        val tabInfo = tabExtractor.extract(classDeclaration)
-        if (tabInfo == null) {
-            logger.warn("Could not extract TabInfo from ${classDeclaration.qualifiedName?.asString()}")
-            return
-        }
-
-        // Collect for navigator extensions (KSP-005)
-        collectedTabs.add(tabInfo)
-
-        // Generate the builder with stack dependencies
-        navNodeBuilderGenerator.generateTabBuilder(tabInfo, stackInfoMap)
-        logger.info("Generated NavNode builder for @Tab: ${tabInfo.className}")
-    }
-
-    /**
-     * Process a @Pane annotated class to generate its NavNode builder.
-     */
-    private fun processPaneNavNodeBuilder(classDeclaration: KSClassDeclaration) {
-        val paneInfo = paneExtractor.extract(classDeclaration)
-        if (paneInfo == null) {
-            logger.warn("Could not extract PaneInfo from ${classDeclaration.qualifiedName?.asString()}")
-            return
-        }
-
-        // Collect for navigator extensions (KSP-005)
-        collectedPanes.add(paneInfo)
-
-        // Generate the builder
-        navNodeBuilderGenerator.generatePaneBuilder(paneInfo)
-        logger.info("Generated NavNode builder for @Pane: ${paneInfo.className}")
-    }
-
-    // =========================================================================
-    // Screen Registry Generation (KSP-003)
-    // =========================================================================
-
-    /**
-     * Process @Screen annotations to generate the screen registry.
-     *
-     * The screen registry maps destinations to their corresponding composable
-     * screen functions, providing a central dispatch mechanism for rendering
-     * screen content.
-     */
-    private fun processScreenRegistry(resolver: Resolver) {
-        try {
-            val screens = screenExtractor.extractAll(resolver)
-            screenRegistryGenerator.generate(screens)
-        } catch (e: IllegalStateException) {
-            logger.error("Error generating screen registry: ${e.message}")
         }
     }
 

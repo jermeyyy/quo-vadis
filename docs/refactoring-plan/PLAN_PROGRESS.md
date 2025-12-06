@@ -16,13 +16,13 @@ See [INDEX.md](./INDEX.md) for full plan details.
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
-| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟡 In Progress | 83% | 5 | 6 |
+| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | � Completed | 100% | 6 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~52% | 27 | 52 |
+| **TOTAL** | 🟡 In Progress | ~56% | 29 | 52 |
 
 ---
 
@@ -41,40 +41,37 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
-- ✅ **KSP-005**: Create Navigator Extensions Generator - **COMPLETED**
-  - Created navigator extensions generator for type-safe navigation helpers
-  - **Generator** (`quo-vadis-ksp/src/main/kotlin/.../generators/NavigatorExtGenerator.kt`):
-    - `generate(stacks, tabs, panes, basePackage)` - Main entry point
-    - `addStackExtensions()` - Generates `to{Destination}()` extensions
-    - `addTabSwitchingExtensions()` - Generates `switchTo{Tab}Tab()` extensions
-    - `addPaneSwitchingExtensions()` - Generates `switchTo{Pane}Pane()` extensions
-  - **Generated Extensions**:
-    - Data object destinations → parameterless `to{Name}()` extensions
-    - Data class destinations → extensions with constructor parameters
-    - Tab destinations → `switchTo{Tab}Tab()` extensions
-    - Pane destinations → `switchTo{Pane}Pane()` extensions
-  - **Type Conversion**:
-    - `KSType.toTypeName()` extension for converting KSP types to KotlinPoet
-    - Handles primitives (String, Int, Long, Boolean, Float, Double)
-    - Falls back to `ClassName.bestGuess()` for complex types
-    - Supports nullable types via `copy(nullable = true)`
-  - **Processor Integration**:
-    - Added `navigatorExtGenerator` field
-    - Added `collectedStacks`, `collectedTabs`, `collectedPanes` lists
-    - Collects info during processing, generates at end of `processNavNodeBuilders()`
-    - Uses base package from first collected container
+- ✅ **KSP-006**: Validation and Error Reporting - **COMPLETED**
+  - Created comprehensive ValidationEngine for compile-time annotation validation
+  - **ValidationEngine** (`quo-vadis-ksp/src/main/kotlin/.../validation/ValidationEngine.kt` ~460 lines):
+    - `validate(stacks, tabs, panes, screens, allDestinations, resolver): Boolean`
+    - 13 validation rules across 4 categories
+    - Clear error messages with actionable suggestions (e.g., "Available destinations: [...]")
+    - Source location reporting via KSPLogger
+  - **Validation Categories**:
+    - **Structural**: Orphan destinations, invalid start/initial refs, empty containers
+    - **Route**: Parameter mismatches, duplicate routes
+    - **Reference**: Invalid rootGraph refs, missing/duplicate screen bindings
+    - **Type**: Non-sealed containers, non-data destinations
+  - **Processor Integration** (`QuoVadisSymbolProcessor.kt`):
+    - Refactored `processNavNodeBuilders()` to separate extraction from generation
+    - Added helper methods: `extractStackInfo()`, `extractTabInfo()`, `extractPaneInfo()`
+    - Added `collectAllDestinations()` for gathering all destinations
+    - Added generation methods: `generateStackBuilders()`, `generateTabBuilders()`, `generatePaneBuilders()`
+    - Screen registry generation integrated into `processNavNodeBuilders()`
+    - Validation runs after extraction, code generation only if validation passes
   
   **Files Created:**
-  - `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/generators/NavigatorExtGenerator.kt`
+  - `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/validation/ValidationEngine.kt`
   
   **Files Modified:**
   - `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/QuoVadisSymbolProcessor.kt`
   
   **Verified**: `:quo-vadis-ksp:build -x detekt` ✓
   
-  **Note**: Full app build has pre-existing TabGraphExtractor error (unrelated to this task).
+  **Note**: Full app build has pre-existing TabGraphExtractor error in legacy code (unrelated to this task).
   
-  **🎉 Phase 3: KSP is now 83% complete (5/6 tasks)**
+  **🎉 Phase 3: KSP is now COMPLETE (6/6 tasks)**
 
 ### 2025-12-06
 - ✅ **KSP-004**: Create Deep Link Handler Generator - **COMPLETED**
@@ -729,13 +726,15 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Next Up (Prioritized)
 
-1. **Phase 3: KSP** - Update annotation processors
-   - Update KSP processor for new NavNode-based architecture
-   - Generate code compatible with TreeNavigator
+1. **Phase 5: Migration** - Migrate composeApp to new architecture
+   - Update demo app to use new annotations and NavNode-based navigation
+   - Fix pre-existing TabGraphExtractor bug in legacy code
 
-2. **Phase 4: Annotations** - Update annotation definitions (can start in parallel)
+2. **Phase 6: Risks** - Handle edge cases and risks
 
-3. **Phase 5: Migration** - Migrate composeApp to new architecture
+3. **Phase 7: Docs** - Update documentation
+
+4. **Phase 8: Testing** - Add comprehensive test coverage
 
 ---
 
@@ -747,11 +746,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Notes
 
-- Phase 1 (Core State) and Phase 2 (Renderer) are now complete
+- Phase 1 (Core State), Phase 2 (Renderer), Phase 3 (KSP), and Phase 4 (Annotations) are now complete
 - Compatibility layer (`NavigatorCompat.kt`) provides smooth migration path
 - 4 tests temporarily ignored - will be fixed in Phase 5 migration
-- Phase 3 (KSP) is the logical next major work
-- Phase 3 (KSP) and Phase 4 (Annotations) can start in parallel
+- Pre-existing TabGraphExtractor bug in legacy code blocks full app build
+- Phase 5 (Migration) is the logical next major work
 
 ---
 
