@@ -1,11 +1,13 @@
 package com.jermey.quo.vadis.ksp
 
 import com.jermey.quo.vadis.core.navigation.compose.TransitionScope
+import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraphBuilder
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.RouteRegistry
+import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
 import com.squareup.kotlinpoet.ClassName
 import kotlin.reflect.KClass
 
@@ -23,6 +25,8 @@ internal object QuoVadisClassNames {
     val NAVIGATION_GRAPH_BUILDER: ClassName = NavigationGraphBuilder::class.toClassName()
     val NAVIGATION_TRANSITION: ClassName = NavigationTransition::class.toClassName()
     val ROUTE_REGISTRY: ClassName = RouteRegistry::class.toClassName()
+    val DESTINATION: ClassName = Destination::class.toClassName()
+    val SCREEN_REGISTRY: ClassName = ScreenRegistry::class.toClassName()
     
     // Compose classes
     val TRANSITION_SCOPE: ClassName = TransitionScope::class.toClassName()

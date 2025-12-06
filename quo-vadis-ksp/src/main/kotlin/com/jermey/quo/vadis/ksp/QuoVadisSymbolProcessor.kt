@@ -17,9 +17,11 @@ import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.Tab
 import com.jermey.quo.vadis.ksp.extractors.DestinationExtractor
 import com.jermey.quo.vadis.ksp.extractors.PaneExtractor
+import com.jermey.quo.vadis.ksp.extractors.ScreenExtractor
 import com.jermey.quo.vadis.ksp.extractors.StackExtractor
 import com.jermey.quo.vadis.ksp.extractors.TabExtractor
 import com.jermey.quo.vadis.ksp.generators.NavNodeBuilderGenerator
+import com.jermey.quo.vadis.ksp.generators.ScreenRegistryGenerator
 import com.jermey.quo.vadis.ksp.models.StackInfo
 
 /**
@@ -48,6 +50,10 @@ class QuoVadisSymbolProcessor(
 
     // Generator for NavNode builders (KSP-002)
     private val navNodeBuilderGenerator = NavNodeBuilderGenerator(codeGenerator, logger)
+
+    // Extractor and generator for screen registry (KSP-003)
+    private val screenExtractor = ScreenExtractor(logger)
+    private val screenRegistryGenerator = ScreenRegistryGenerator(codeGenerator, logger)
 
     // Collected stack info for tab builder dependencies
     private val stackInfoMap = mutableMapOf<String, StackInfo>()
@@ -88,6 +94,9 @@ class QuoVadisSymbolProcessor(
 
         // Fourth pass: generate NavNode builders for new architecture
         processNavNodeBuilders(resolver)
+
+        // Fifth pass: process @Screen annotations for screen registry generation
+        processScreenRegistry(resolver)
 
         return emptyList()
     }
@@ -254,6 +263,26 @@ class QuoVadisSymbolProcessor(
         // Generate the builder
         navNodeBuilderGenerator.generatePaneBuilder(paneInfo)
         logger.info("Generated NavNode builder for @Pane: ${paneInfo.className}")
+    }
+
+    // =========================================================================
+    // Screen Registry Generation (KSP-003)
+    // =========================================================================
+
+    /**
+     * Process @Screen annotations to generate the screen registry.
+     *
+     * The screen registry maps destinations to their corresponding composable
+     * screen functions, providing a central dispatch mechanism for rendering
+     * screen content.
+     */
+    private fun processScreenRegistry(resolver: Resolver) {
+        try {
+            val screens = screenExtractor.extractAll(resolver)
+            screenRegistryGenerator.generate(screens)
+        } catch (e: IllegalStateException) {
+            logger.error("Error generating screen registry: ${e.message}")
+        }
     }
 }
 

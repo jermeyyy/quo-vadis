@@ -16,13 +16,13 @@ See [INDEX.md](./INDEX.md) for full plan details.
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
-| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟡 In Progress | 33% | 2 | 6 |
+| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟡 In Progress | 50% | 3 | 6 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | ⚪ Not Started | 0% | 0 | 7 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~46% | 24 | 52 |
+| **TOTAL** | 🟡 In Progress | ~48% | 25 | 52 |
 
 ---
 
@@ -41,6 +41,42 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-06 (Latest)
+- ✅ **KSP-003**: Create Screen Registry Generator - **COMPLETED**
+  - Created screen registry generator mapping destinations to composable screen functions
+  - **Core Interface** (`quo-vadis-core/src/commonMain/kotlin/.../navigation/core/ScreenRegistry.kt`):
+    - `Content()` - Composable method dispatching to @Screen functions
+    - `hasContent()` - Check if destination is registered
+    - Supports SharedTransitionScope and AnimatedVisibilityScope parameters
+  - **Generator** (`quo-vadis-ksp/src/main/kotlin/.../generators/ScreenRegistryGenerator.kt`):
+    - Generates `GeneratedScreenRegistry.kt` implementing `ScreenRegistry`
+    - `Content()` with `when` expression dispatching to @Screen functions
+    - `hasContent()` returning boolean for all registered destinations
+    - Groups destinations by parent class in generated comments
+    - Handles 3 function signatures: simple, with destination, with shared scopes
+    - Logs warning when no @Screen annotations found (skips generation)
+  - **QuoVadisClassNames additions**:
+    - `DESTINATION` - Reference to `Destination` class
+    - `SCREEN_REGISTRY` - Reference to `ScreenRegistry` interface
+  - **Processor Integration**:
+    - Added `screenExtractor` and `screenRegistryGenerator` fields
+    - Added `processScreenRegistry(resolver)` method (fifth pass)
+    - Uses existing ScreenExtractor from KSP-001
+  
+  **Files Created:**
+  - `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/core/ScreenRegistry.kt`
+  - `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/generators/ScreenRegistryGenerator.kt`
+  
+  **Files Modified:**
+  - `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/QuoVadisClassNames.kt`
+  - `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/QuoVadisSymbolProcessor.kt`
+  
+  **Verified**: `:quo-vadis-ksp:compileKotlin` ✓, `:quo-vadis-core:compileKotlinDesktop` ✓
+  
+  **Note**: Full app build has pre-existing TabGraphExtractor error (unrelated to this task).
+  
+  **🎉 Phase 3: KSP is now 50% complete (3/6 tasks)**
+
+### 2025-12-06
 - ✅ **KSP-002**: Create NavNode Builder Generator - **COMPLETED**
   - Created `NavNodeBuilderGenerator.kt` in `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/generators/`
   - **Core Generator Features**:
