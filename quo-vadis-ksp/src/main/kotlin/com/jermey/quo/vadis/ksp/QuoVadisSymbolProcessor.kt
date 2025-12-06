@@ -23,8 +23,11 @@ import com.jermey.quo.vadis.ksp.extractors.StackExtractor
 import com.jermey.quo.vadis.ksp.extractors.TabExtractor
 import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
 import com.jermey.quo.vadis.ksp.generators.NavNodeBuilderGenerator
+import com.jermey.quo.vadis.ksp.generators.NavigatorExtGenerator
 import com.jermey.quo.vadis.ksp.generators.ScreenRegistryGenerator
+import com.jermey.quo.vadis.ksp.models.PaneInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
+import com.jermey.quo.vadis.ksp.models.TabInfo
 
 /**
  * KSP processor for Quo Vadis navigation annotations.
@@ -60,8 +63,16 @@ class QuoVadisSymbolProcessor(
     // Generator for deep link handler (KSP-004)
     private val deepLinkHandlerGenerator = DeepLinkHandlerGenerator(codeGenerator, logger)
 
+    // Generator for navigator extensions (KSP-005)
+    private val navigatorExtGenerator = NavigatorExtGenerator(codeGenerator, logger)
+
     // Collected stack info for tab builder dependencies
     private val stackInfoMap = mutableMapOf<String, StackInfo>()
+
+    // Collected infos for navigator extension generation
+    private val collectedStacks = mutableListOf<StackInfo>()
+    private val collectedTabs = mutableListOf<TabInfo>()
+    private val collectedPanes = mutableListOf<PaneInfo>()
     
     override fun process(resolver: Resolver): List<KSAnnotated> {
         // First pass: collect @Content functions
@@ -222,6 +233,34 @@ class QuoVadisSymbolProcessor(
                 logger.error("Error generating NavNode builder for @Pane $className: ${e.message}", classDeclaration)
             }
         }
+
+        // Step 4: Generate navigator extensions (KSP-005)
+        generateNavigatorExtensions()
+    }
+
+    /**
+     * Generate navigator convenience extensions for all collected containers.
+     *
+     * Creates extension functions on Navigator for type-safe navigation:
+     * - `to{Destination}()` for stack destinations
+     * - `switchTo{Tab}Tab()` for tab switching
+     * - `switchTo{Pane}Pane()` for pane switching
+     */
+    private fun generateNavigatorExtensions() {
+        if (collectedStacks.isEmpty() && collectedTabs.isEmpty() && collectedPanes.isEmpty()) {
+            return
+        }
+
+        val basePackage = collectedStacks.firstOrNull()?.packageName
+            ?: collectedTabs.firstOrNull()?.packageName
+            ?: collectedPanes.firstOrNull()?.packageName
+            ?: return
+
+        try {
+            navigatorExtGenerator.generate(collectedStacks, collectedTabs, collectedPanes, basePackage)
+        } catch (e: IllegalStateException) {
+            logger.error("Error generating navigator extensions: ${e.message}")
+        }
     }
 
     /**
@@ -238,6 +277,9 @@ class QuoVadisSymbolProcessor(
         val qualifiedName = classDeclaration.qualifiedName?.asString() ?: stackInfo.className
         stackInfoMap[qualifiedName] = stackInfo
 
+        // Collect for navigator extensions (KSP-005)
+        collectedStacks.add(stackInfo)
+
         // Generate the builder
         navNodeBuilderGenerator.generateStackBuilder(stackInfo)
         logger.info("Generated NavNode builder for @Stack: ${stackInfo.className}")
@@ -253,6 +295,9 @@ class QuoVadisSymbolProcessor(
             return
         }
 
+        // Collect for navigator extensions (KSP-005)
+        collectedTabs.add(tabInfo)
+
         // Generate the builder with stack dependencies
         navNodeBuilderGenerator.generateTabBuilder(tabInfo, stackInfoMap)
         logger.info("Generated NavNode builder for @Tab: ${tabInfo.className}")
@@ -267,6 +312,9 @@ class QuoVadisSymbolProcessor(
             logger.warn("Could not extract PaneInfo from ${classDeclaration.qualifiedName?.asString()}")
             return
         }
+
+        // Collect for navigator extensions (KSP-005)
+        collectedPanes.add(paneInfo)
 
         // Generate the builder
         navNodeBuilderGenerator.generatePaneBuilder(paneInfo)

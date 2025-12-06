@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-06  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 4/6 tasks (67%)
+> **Progress**: 5/6 tasks (83%)
 
 ## Overview
 
@@ -18,12 +18,63 @@ This phase implements a complete rewrite of the KSP code generation for the new 
 | [KSP-002](./KSP-002-class-references.md) | Create NavNode Builder Generator | 🟢 Completed | 2025-12-06 | Generator + processor wiring |
 | [KSP-003](./KSP-003-graph-extractor.md) | Create Screen Registry Generator | 🟢 Completed | 2025-12-06 | Generator + interface + processor wiring |
 | [KSP-004](./KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator | 🟢 Completed | 2025-12-06 | Generator + interface + processor wiring |
-| [KSP-005](./KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | ⚪ Not Started | - | Depends on KSP-002 |
+| [KSP-005](./KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | 🟢 Completed | 2025-12-06 | Generator + processor wiring |
 | [KSP-006](./KSP-006-validation.md) | Validation and Error Reporting | ⚪ Not Started | - | Depends on KSP-001 |
 
 ---
 
 ## Completed Tasks
+
+### KSP-005: Create Navigator Extensions Generator (2025-12-06)
+
+Created the navigator extensions generator that provides convenient type-safe navigation methods.
+
+**File Created** (`quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/generators/`):
+- `NavigatorExtGenerator.kt` - Main generator class (~300 lines)
+
+**Generator Features**:
+- `generate(stacks, tabs, panes, basePackage)` - Main entry point
+- `addStackExtensions()` - Generates `to{Destination}()` extensions
+- `addTabSwitchingExtensions()` - Generates `switchTo{Tab}Tab()` extensions
+- `addPaneSwitchingExtensions()` - Generates `switchTo{Pane}Pane()` extensions
+
+**Generated Code Features**:
+- Single file: `{package}.generated/NavigatorExtensions.kt`
+- Data object destinations → parameterless extensions
+- Data class destinations → extensions with constructor params
+- Full KDoc with `@param` documentation
+- Uses KotlinPoet for type-safe code generation
+- `KSType.toTypeName()` extension for param type conversion
+
+**Generated Extension Examples**:
+```kotlin
+// Data object destination
+fun Navigator.toFeed() = navigate(HomeDestination.Feed)
+
+// Data class destination
+fun Navigator.toDetail(id: String) = navigate(HomeDestination.Detail(id))
+
+// Tab switching
+fun Navigator.switchToHomeTab() = switchTab(MainTabs.Home)
+
+// Pane switching
+fun Navigator.switchToDetailPanePane() = switchPane(MainPanes.DetailPane)
+```
+
+**Processor Integration** (modified `QuoVadisSymbolProcessor.kt`):
+- Added `navigatorExtGenerator` field
+- Added `collectedStacks`, `collectedTabs`, `collectedPanes` lists
+- Modified `processStackNavNodeBuilder()` to collect StackInfo
+- Modified `processTabNavNodeBuilder()` to collect TabInfo
+- Modified `processPaneNavNodeBuilder()` to collect PaneInfo
+- Added `generateNavigatorExtensions()` method
+- Called at end of `processNavNodeBuilders()` (Step 4)
+
+**Verified**: `:quo-vadis-ksp:build -x detekt` ✓
+
+**Note**: Full app build has pre-existing TabGraphExtractor error (unrelated to this task).
+
+---
 
 ### KSP-004: Create Deep Link Handler Generator (2025-12-06)
 
