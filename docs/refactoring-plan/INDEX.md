@@ -126,36 +126,48 @@ Complete rewrite of code generation for the new annotation system.
 
 ---
 
-### Phase 5: Migration Examples & Demo App (7 Tasks)
-Provides practical migration examples and rewrites the demo app to showcase the new architecture.
+### Phase 5: Recipes Module, Migration & Demo App (10 Tasks)
+Creates `quo-vadis-recipes` module for LLM-assisted integration, marks legacy APIs as `@Deprecated`, and migrates demo app.
 
-> **Note**: No backward compatibility adapters are needed. The library is in development stage and breaking changes are acceptable. This phase focuses on **practical examples** that demonstrate how to migrate common navigation patterns.
+> **Note**: This phase creates a new `quo-vadis-recipes` module with pattern-based examples optimized for LLM consumption. All legacy APIs will be marked `@Deprecated` with `replaceWith` guidance. GitHub permalinks reference the main branch for stable "migrating from" code.
 
 | ID | Task | Complexity | Est. Time |
 |----|------|------------|-----------|
-| [MIG-001](./phase5-migration/MIG-001-simple-stack-example.md) | Simple Stack Navigation Example | Low | 1 day |
-| [MIG-002](./phase5-migration/MIG-002-master-detail-example.md) | Master-Detail Pattern Example | Medium | 1.5 days |
-| [MIG-003](./phase5-migration/MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Example | Medium | 2 days |
-| [MIG-004](./phase5-migration/MIG-004-process-flow-example.md) | Process/Wizard Flow Example | Low | 1 day |
-| [MIG-005](./phase5-migration/MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Example | Medium | 1.5 days |
-| [MIG-006](./phase5-migration/MIG-006-demo-app-rewrite.md) | Demo App Rewrite | High | 3-4 days |
-| [MIG-007](./phase5-migration/MIG-007-api-change-summary.md) | API Change Summary Document | Low | 0.5 days |
+| [PREP-001](./phase5-migration/PREP-001-recipes-module.md) | Create quo-vadis-recipes Module | Medium | 1.5 days |
+| [PREP-002](./phase5-migration/PREP-002-deprecated-annotations.md) | Add @Deprecated Annotations | Medium | 2 days |
+| [PREP-003](./phase5-migration/PREP-003-permalink-reference.md) | GitHub Permalink Reference Doc | Low | 0.5 days |
+| [MIG-001](./phase5-migration/MIG-001-simple-stack-example.md) | Simple Stack Navigation Recipe | Low | 1 day |
+| [MIG-002](./phase5-migration/MIG-002-master-detail-example.md) | Master-Detail Pattern Recipe | Medium | 1.5 days |
+| [MIG-003](./phase5-migration/MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | Medium | 2 days |
+| [MIG-004](./phase5-migration/MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | Low | 1 day |
+| [MIG-005](./phase5-migration/MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | Medium | 1.5 days |
+| [MIG-006](./phase5-migration/MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | Medium | 1 day |
+| [MIG-007](./phase5-migration/MIG-007-demo-app-rewrite.md) | Demo App Rewrite | High | 3-4 days |
+| [MIG-008](./phase5-migration/MIG-008-api-change-summary.md) | API Change Summary Document | Low | 0.5 days |
 
-**Phase 5 Total: ~10-12 days**
+**Phase 5 Total: ~14-17 days**
 
-**Migration Example Coverage:**
-| Example | Key Patterns Demonstrated |
-|---------|---------------------------|
-| Simple Stack | `@Stack`, `@Destination`, `@Screen`, basic `navigate()`/`navigateBack()` |
-| Master-Detail | Typed arguments via route templates, deep linking, shared elements |
-| Tabbed Navigation | `@Tab`, `@TabItem`, `tabWrapper`, `switchTab()`, tab state preservation |
-| Process/Wizard Flow | Sequential navigation, branching, `navigateAndClearTo()` |
-| Nested Tabs + Detail | Complex hierarchies, full-screen detail over tabs, cross-layer predictive back |
+**New Module Structure:**
+```
+quo-vadis-recipes/
+├── build.gradle.kts           # KMP module (NOT published)
+└── src/commonMain/.../recipes/
+    ├── stack/                 # Linear stack patterns
+    ├── tabs/                  # Tabbed navigation patterns
+    ├── masterdetail/          # Master-detail patterns
+    ├── wizard/                # Process/wizard patterns
+    ├── deeplink/              # Deep linking patterns
+    ├── pane/                  # Adaptive layout patterns
+    └── shared/                # Common utilities
+```
 
-**Key Changes from Old Phase 5:**
-- ~~Backward compatibility adapters~~ → **Practical code examples**
-- ~~Deprecation warnings~~ → **API change summary**
-- ~~State converters~~ → **Demo app rewrite**
+**Key Changes from Original Phase 5:**
+| Aspect | Original | Revised |
+|--------|----------|---------|
+| Example Location | `docs/migration-examples/*.md` | `quo-vadis-recipes/` module |
+| Legacy API Handling | Documentation only | `@Deprecated` with `replaceWith` |
+| Code References | Inline code blocks | GitHub permalinks to main |
+| LLM Support | None | Pattern-based packages, rich KDoc |
 
 ---
 
@@ -217,7 +229,10 @@ Phase 1 (Core) ─────────────────────�
     │                                                            │
     ├──► Phase 3 (Annotations) ──► Phase 4 (KSP) ───────────────┤
     │                                                            │
-    ├──► Phase 5 (Migration Examples) ──────────────────────────┤
+    ├──► Phase 5 (Recipes & Migration) ─────────────────────────┤
+    │    ├── PREP-001 (recipes module) ──► MIG-001..006         │
+    │    ├── PREP-002 (@Deprecated) ──► MIG-008                 │
+    │    └── MIG-001..006 ──► MIG-007 (Demo Rewrite)            │
     │                                                            │
     └──► Phase 6 (Risks) ───────────────────────────────────────┤
                                                                  │
@@ -230,6 +245,7 @@ Phase 1 (Core) ─────────────────────�
 1. **CORE-001** → **CORE-002** → **CORE-003** (Foundation)
 2. **ANN-001..005** → **KSP-001..006** (Code Generation)
 3. **RENDER-001** → **RENDER-002A** → **RENDER-004** (Renderer Core)
+4. **PREP-001** → **MIG-001..006** → **MIG-007** (Phase 5 Critical Path)
 
 ---
 
@@ -241,15 +257,15 @@ Phase 1 (Core) ─────────────────────�
 | Phase 2: Renderer | 12 | 31-37.5 |
 | Phase 3: Annotations | 5 | 3.5 |
 | Phase 4: KSP | 6 | 14-19 |
-| Phase 5: Migration Examples | 7 | 10-12 |
+| Phase 5: Recipes & Migration | 10 | 14-17 |
 | Phase 6: Risks | 5 | 11 |
 | Phase 7: Documentation | 4 | 7 |
 | Phase 8: Testing | 5 | 16 |
-| **TOTAL** | **49** | **106.5-125 days** |
+| **TOTAL** | **52** | **110.5-132 days** |
 
-> **Note**: Phase 5 focuses on **practical migration examples** rather than compatibility adapters. No backward compatibility is maintained - the library is in development stage.
+> **Note**: Phase 5 now includes `quo-vadis-recipes` module creation and `@Deprecated` annotations for all legacy APIs. All "migrating from" code references use GitHub permalinks to the main branch.
 >
-> **Note**: Many tasks can be parallelized. With 2-3 developers, timeline can be reduced to **7-9 weeks**.
+> **Note**: Many tasks can be parallelized. With 2-3 developers, timeline can be reduced to **8-10 weeks**.
 
 ---
 
@@ -260,7 +276,7 @@ Phase 1 (Core) ─────────────────────�
   - [Phase 2: Unified Renderer](./phase2-renderer/)
   - [Phase 3: Annotations](./phase4-annotations/)
   - [Phase 4: KSP Processor](./phase3-ksp/)
-  - [Phase 5: Migration Examples](./phase5-migration/)
+  - [Phase 5: Recipes & Migration](./phase5-migration/)
   - [Phase 6: Risk Mitigation](./phase6-risks/)
   - [Phase 7: Documentation](./phase7-docs/)
   - [Phase 8: Testing](./phase8-testing/)

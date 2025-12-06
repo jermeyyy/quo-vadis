@@ -1,10 +1,10 @@
-# MIG-006: Demo App Rewrite
+# MIG-007: Demo App Rewrite
 
 ## Overview
 
 | Attribute | Value |
 |-----------|-------|
-| **Task ID** | MIG-006 |
+| **Task ID** | MIG-007 |
 | **Complexity** | High |
 | **Estimated Time** | 3-4 days |
 | **Dependencies** | Phase 1-4 complete, MIG-001 through MIG-005 |

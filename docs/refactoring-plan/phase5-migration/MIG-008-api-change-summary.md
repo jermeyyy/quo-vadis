@@ -1,10 +1,10 @@
-# MIG-007: API Change Summary Document
+# MIG-008: API Change Summary Document
 
 ## Overview
 
 | Attribute | Value |
 |-----------|-------|
-| **Task ID** | MIG-007 |
+| **Task ID** | MIG-008 |
 | **Complexity** | Low |
 | **Estimated Time** | 0.5 days |
 | **Dependencies** | None |
@@ -199,5 +199,5 @@ After migration, KSP generates these files:
 
 ## Related Tasks
 
-- [MIG-001](./MIG-001-simple-stack-example.md) through [MIG-006](./MIG-006-demo-app-rewrite.md) - Detailed examples
+- [MIG-001](./MIG-001-simple-stack-example.md) through [MIG-007](./MIG-007-demo-app-rewrite.md) - Detailed examples
 - [ANN-001](../phase4-annotations/ANN-001-graph-type.md) through [ANN-005](../phase4-annotations/ANN-005-screen.md) - Annotation definitions
