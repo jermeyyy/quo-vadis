@@ -12,24 +12,45 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.jermey.quo.vadis.annotations.Content
 import com.jermey.quo.vadis.annotations.Graph
+import com.jermey.quo.vadis.annotations.Pane
+import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.Tab
+import com.jermey.quo.vadis.ksp.extractors.DestinationExtractor
+import com.jermey.quo.vadis.ksp.extractors.PaneExtractor
+import com.jermey.quo.vadis.ksp.extractors.StackExtractor
+import com.jermey.quo.vadis.ksp.extractors.TabExtractor
+import com.jermey.quo.vadis.ksp.generators.NavNodeBuilderGenerator
+import com.jermey.quo.vadis.ksp.models.StackInfo
 
 /**
  * KSP processor for Quo Vadis navigation annotations.
- * 
+ *
  * Processes:
  * - @Graph annotated sealed classes - generates route registry and typed destination helpers
  * - @Content annotated functions - generates complete graph DSL builders
  * - @TabGraph annotated sealed classes - generates tab configuration and containers
+ * - @Stack, @Tab, @Pane annotations - generates NavNode builder functions
  * - Route initialization - generates single initialization function for all routes
  */
 class QuoVadisSymbolProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger
 ) : SymbolProcessor {
-    
+
     private val contentMappings = mutableMapOf<String, ContentFunctionInfo>()
     private val allGraphInfos = mutableListOf<GraphInfo>()
+
+    // Extractors for new NavNode architecture (KSP-001)
+    private val destinationExtractor = DestinationExtractor(logger)
+    private val stackExtractor = StackExtractor(destinationExtractor, logger)
+    private val tabExtractor = TabExtractor(destinationExtractor, logger)
+    private val paneExtractor = PaneExtractor(destinationExtractor, logger)
+
+    // Generator for NavNode builders (KSP-002)
+    private val navNodeBuilderGenerator = NavNodeBuilderGenerator(codeGenerator, logger)
+
+    // Collected stack info for tab builder dependencies
+    private val stackInfoMap = mutableMapOf<String, StackInfo>()
     
     override fun process(resolver: Resolver): List<KSAnnotated> {
         // First pass: collect @Content functions
@@ -64,7 +85,10 @@ class QuoVadisSymbolProcessor(
                 logger.error("Error processing @Tab $className: ${e.message}", classDeclaration)
             }
         }
-        
+
+        // Fourth pass: generate NavNode builders for new architecture
+        processNavNodeBuilders(resolver)
+
         return emptyList()
     }
     
@@ -121,14 +145,115 @@ class QuoVadisSymbolProcessor(
     
     private fun processTabGraphClass(classDeclaration: KSClassDeclaration) {
         logger.info("Processing tab graph: ${classDeclaration.qualifiedName?.asString()}")
-        
+
         // Extract tab graph metadata
         val tabGraphInfo = TabGraphExtractor.extract(classDeclaration, logger)
-        
+
         // Generate tab configuration and container
         TabGraphGenerator.generate(tabGraphInfo, codeGenerator, logger)
-        
+
         logger.info("Completed processing tab graph: ${tabGraphInfo.className}")
+    }
+
+    // =========================================================================
+    // NavNode Builder Generation (KSP-002)
+    // =========================================================================
+
+    /**
+     * Process @Stack, @Tab, and @Pane annotations to generate NavNode builder functions.
+     *
+     * This implements the new tree-based navigation architecture where:
+     * - @Stack generates StackNode builders with start destination
+     * - @Tab generates TabNode builders referencing stack builders
+     * - @Pane generates PaneNode builders with pane configurations
+     *
+     * Processing order matters:
+     * 1. Stack builders first (no dependencies)
+     * 2. Tab builders second (depend on stack builders)
+     * 3. Pane builders last (depend on stack builders)
+     */
+    private fun processNavNodeBuilders(resolver: Resolver) {
+        // Step 1: Extract and generate stack builders first (they have no dependencies)
+        val stackSymbols = resolver.getSymbolsWithAnnotation(Stack::class.qualifiedName!!)
+        stackSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
+            try {
+                processStackNavNodeBuilder(classDeclaration)
+            } catch (e: IllegalStateException) {
+                val className = classDeclaration.qualifiedName?.asString()
+                logger.error("Error generating NavNode builder for @Stack $className: ${e.message}", classDeclaration)
+            }
+        }
+
+        // Step 2: Extract and generate tab builders (depend on stack builders being available)
+        val tabSymbols = resolver.getSymbolsWithAnnotation(Tab::class.qualifiedName!!)
+        tabSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
+            try {
+                processTabNavNodeBuilder(classDeclaration)
+            } catch (e: IllegalStateException) {
+                val className = classDeclaration.qualifiedName?.asString()
+                logger.error("Error generating NavNode builder for @Tab $className: ${e.message}", classDeclaration)
+            }
+        }
+
+        // Step 3: Extract and generate pane builders
+        val paneSymbols = resolver.getSymbolsWithAnnotation(Pane::class.qualifiedName!!)
+        paneSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
+            try {
+                processPaneNavNodeBuilder(classDeclaration)
+            } catch (e: IllegalStateException) {
+                val className = classDeclaration.qualifiedName?.asString()
+                logger.error("Error generating NavNode builder for @Pane $className: ${e.message}", classDeclaration)
+            }
+        }
+    }
+
+    /**
+     * Process a @Stack annotated class to generate its NavNode builder.
+     */
+    private fun processStackNavNodeBuilder(classDeclaration: KSClassDeclaration) {
+        val stackInfo = stackExtractor.extract(classDeclaration)
+        if (stackInfo == null) {
+            logger.warn("Could not extract StackInfo from ${classDeclaration.qualifiedName?.asString()}")
+            return
+        }
+
+        // Store for tab builder dependencies
+        val qualifiedName = classDeclaration.qualifiedName?.asString() ?: stackInfo.className
+        stackInfoMap[qualifiedName] = stackInfo
+
+        // Generate the builder
+        navNodeBuilderGenerator.generateStackBuilder(stackInfo)
+        logger.info("Generated NavNode builder for @Stack: ${stackInfo.className}")
+    }
+
+    /**
+     * Process a @Tab annotated class to generate its NavNode builder.
+     */
+    private fun processTabNavNodeBuilder(classDeclaration: KSClassDeclaration) {
+        val tabInfo = tabExtractor.extract(classDeclaration)
+        if (tabInfo == null) {
+            logger.warn("Could not extract TabInfo from ${classDeclaration.qualifiedName?.asString()}")
+            return
+        }
+
+        // Generate the builder with stack dependencies
+        navNodeBuilderGenerator.generateTabBuilder(tabInfo, stackInfoMap)
+        logger.info("Generated NavNode builder for @Tab: ${tabInfo.className}")
+    }
+
+    /**
+     * Process a @Pane annotated class to generate its NavNode builder.
+     */
+    private fun processPaneNavNodeBuilder(classDeclaration: KSClassDeclaration) {
+        val paneInfo = paneExtractor.extract(classDeclaration)
+        if (paneInfo == null) {
+            logger.warn("Could not extract PaneInfo from ${classDeclaration.qualifiedName?.asString()}")
+            return
+        }
+
+        // Generate the builder
+        navNodeBuilderGenerator.generatePaneBuilder(paneInfo)
+        logger.info("Generated NavNode builder for @Pane: ${paneInfo.className}")
     }
 }
 
