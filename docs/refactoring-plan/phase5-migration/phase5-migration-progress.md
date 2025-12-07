@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-07  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 8/11 tasks (73%)
+> **Progress**: 9/11 tasks (82%)
 
 ## Overview
 
@@ -31,7 +31,7 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 | [MIG-003](./MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/03-tabbed-navigation.md` |
 | [MIG-004](./MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/04-process-flow.md` |
 | [MIG-005](./MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/05-nested-tabs-detail.md` |
-| [MIG-006](./MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | ⚪ Not Started | - | Depends on MIG-001, MIG-002 |
+| [MIG-006](./MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | 🟢 Completed | 2025-12-07 | Created recipe files in `quo-vadis-recipes/deeplink/` |
 
 ### Migration Tasks
 
@@ -43,6 +43,23 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 ---
 
 ## Completed Tasks
+
+- **MIG-006** (2025-12-07): Deep Linking Recipe
+  - Created deep linking recipe files in `quo-vadis-recipes/src/commonMain/kotlin/.../deeplink/`:
+    - `package-info.kt` - Updated with comprehensive LLM-optimized documentation
+    - `DeepLinkDestinations.kt` - Shared destination definitions:
+      - `ProductsDestination` - Simple routes (`products`, `products/featured`, `products/{productId}`)
+      - `CategoryDestination` - Nested routes (`categories/{categoryId}/products/{productId}`)
+    - `BasicDeepLinkRecipe.kt` - Simple URI routing recipe
+    - `NestedDeepLinkRecipe.kt` - Nested deep links recipe
+  - Demonstrated patterns:
+    - Route template syntax with `@Destination(route = "...")`
+    - Path parameter extraction (`{param}`)
+    - Handling `DeepLinkResult.Matched` and `NotMatched`
+    - URI creation from destinations (reverse lookup)
+    - Migration from legacy API patterns
+  - Note: `@Stack` and `@Screen` annotations omitted due to KSP processor bug
+  - Verified: `:quo-vadis-recipes:compileKotlinMetadata` ✓
 
 - **PREP-003** (2025-12-07): GitHub Permalink Reference Document
   - Created `docs/migration-examples/LEGACY_API_REFERENCE.md`
@@ -148,7 +165,7 @@ _None currently in progress._
 
 | Task | Notes |
 |------|-------|
-| MIG-006 | Deep linking recipe |
+| MIG-007 | Demo app rewrite (all recipe dependencies complete) |
 | MIG-008 | API change summary (PREP-002 now complete) |
 
 ---

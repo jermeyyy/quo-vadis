@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 7 | 7 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 73% | 8 | 11 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 82% | 9 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~70% | 37 | 53 |
+| **TOTAL** | 🟡 In Progress | ~73% | 38 | 53 |
 
 ---
 
@@ -41,6 +41,36 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-07 (Latest)
+- ✅ **MIG-006**: Deep Linking Recipe - **COMPLETED**
+  - Created comprehensive deep linking recipe examples in `quo-vadis-recipes/src/commonMain/kotlin/com/jermey/quo/vadis/recipes/deeplink/`
+  - **Files Created/Updated**:
+    - `package-info.kt` - Updated with comprehensive LLM-optimized documentation including route pattern syntax table, migration guide, and integration steps
+    - `DeepLinkDestinations.kt` - Shared destination definitions demonstrating:
+      - `ProductsDestination` - Simple flat routes (`products`, `products/featured`, `products/{productId}`)
+      - `CategoryDestination` - Nested routes (`categories/{categoryId}/products/{productId}`)
+    - `BasicDeepLinkRecipe.kt` - Simple URI routing recipe demonstrating:
+      - Placeholder `GeneratedDeepLinkHandler` implementation showing KSP-generated code pattern
+      - Screens with `@Composable` functions (ProductListScreen, FeaturedProductsScreen, ProductDetailScreen)
+      - `handleBasicDeepLink()` function showing `DeepLinkResult.Matched`/`NotMatched` handling
+      - URI creation with `createDeepLinkUri(destination, scheme)`
+      - Platform integration examples (Android manifest, iOS Info.plist)
+    - `NestedDeepLinkRecipe.kt` - Nested deep links recipe demonstrating:
+      - Multi-parameter routes (`categories/{categoryId}/products/{productId}`)
+      - Path reconstruction concept (direct vs reconstructed back stack)
+      - Screens showing category and product context
+      - Testing deep links via UI simulation
+  - **Key Patterns Documented**:
+    - Route template syntax: `@Destination(route = "path/{param}")`
+    - Parameter extraction from URI path segments
+    - `DeepLinkResult` sealed class handling
+    - Reverse URI generation from destinations
+    - Migration from legacy `DefaultDeepLinkHandler` registration
+  - **Note**: `@Stack` and `@Screen` annotations omitted to avoid KSP processing in recipes module (KSP processor has known bug with `@Stack`). Annotations documented in comments for LLM consumption.
+  
+  **Verified**: `:quo-vadis-recipes:compileKotlinMetadata` ✓
+  
+  **🎉 Phase 5: Migration is now 82% complete (9/11 tasks)**
+
 - ✅ **PREP-003**: GitHub Permalink Reference Document - **COMPLETED**
   - Created `docs/migration-examples/LEGACY_API_REFERENCE.md`
   - **Contents**:

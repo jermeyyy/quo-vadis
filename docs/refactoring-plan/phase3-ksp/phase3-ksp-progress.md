@@ -1,8 +1,8 @@
 # Phase 3: KSP Processor Rewrite - Progress
 
-> **Last Updated**: 2025-12-06  
-> **Phase Status**: � Completed  
-> **Progress**: 7/7 tasks (100%)
+> **Last Updated**: 2025-12-07  
+> **Phase Status**: 🟡 In Progress  
+> **Progress**: 7/8 tasks (88%)
 
 ## Overview
 
@@ -21,6 +21,21 @@ This phase implements a complete rewrite of the KSP code generation for the new 
 | [KSP-005](./KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | 🟢 Completed | 2025-12-06 | Generator + processor wiring |
 | [KSP-006](./KSP-006-validation.md) | Validation and Error Reporting | 🟢 Completed | 2025-12-06 | ValidationEngine + processor integration |
 | [KSP-007](./KSP-007-remove-legacy-tabgraph.md) | Remove Legacy TabGraphExtractor | 🟢 Completed | 2025-12-06 | 10 legacy files removed, processor cleaned up |
+| [KSP-008](./KSP-008-deep-link-handler-imports.md) | Fix Deep Link Handler Generator Imports | ⚪ Not Started | - | Bug: missing imports for destination classes |
+
+---
+
+## Not Started Tasks
+
+### KSP-008: Fix Deep Link Handler Generator Imports
+
+**Issue**: The `DeepLinkHandlerGenerator` generates code that references destination classes (e.g., `ProductsDestination.List`) without importing them, causing "Unresolved reference" compilation errors.
+
+**Root Cause**: `buildDestinationClassName()` returns simple class names without package prefixes, and no imports are added to the generated file.
+
+**Solution**: Use KotlinPoet's `ClassName` with proper package to enable automatic import generation.
+
+**Blocked**: MIG-006 (Deep Linking Recipe) had to comment out `@Destination` annotations as workaround.
 
 ---
 

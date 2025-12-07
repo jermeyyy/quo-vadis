@@ -101,7 +101,7 @@ Introduces the new annotation system mapping directly to NavNode types.
 
 ---
 
-### Phase 4: KSP Processor Rewrite (6 Tasks)
+### Phase 4: KSP Processor Rewrite (8 Tasks)
 Complete rewrite of code generation for the new annotation system.
 
 | ID | Task | Complexity | Est. Time |
@@ -112,8 +112,10 @@ Complete rewrite of code generation for the new annotation system.
 | [KSP-004](./phase3-ksp/KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator | High | 3-4 days |
 | [KSP-005](./phase3-ksp/KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | Low | 1 day |
 | [KSP-006](./phase3-ksp/KSP-006-validation.md) | Validation and Error Reporting | Medium | 2-3 days |
+| [KSP-007](./phase3-ksp/KSP-007-remove-legacy-tabgraph.md) | Remove Legacy TabGraphExtractor | Low | 0.5 days |
+| [KSP-008](./phase3-ksp/KSP-008-deep-link-handler-imports.md) | Fix Deep Link Handler Generator Imports | Low | 0.5 days |
 
-**Phase 4 Total: ~14-19 days**
+**Phase 4 Total: ~15-20 days**
 
 **Generated Artifacts:**
 | Input | Output | Purpose |
