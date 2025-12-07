@@ -1,8 +1,8 @@
 # Phase 3: KSP Processor Rewrite - Progress
 
 > **Last Updated**: 2025-12-07  
-> **Phase Status**: 🟡 In Progress  
-> **Progress**: 7/8 tasks (88%)
+> **Phase Status**: � Completed  
+> **Progress**: 8/8 tasks (100%)
 
 ## Overview
 
@@ -21,25 +21,66 @@ This phase implements a complete rewrite of the KSP code generation for the new 
 | [KSP-005](./KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | 🟢 Completed | 2025-12-06 | Generator + processor wiring |
 | [KSP-006](./KSP-006-validation.md) | Validation and Error Reporting | 🟢 Completed | 2025-12-06 | ValidationEngine + processor integration |
 | [KSP-007](./KSP-007-remove-legacy-tabgraph.md) | Remove Legacy TabGraphExtractor | 🟢 Completed | 2025-12-06 | 10 legacy files removed, processor cleaned up |
-| [KSP-008](./KSP-008-deep-link-handler-imports.md) | Fix Deep Link Handler Generator Imports | ⚪ Not Started | - | Bug: missing imports for destination classes |
-
----
-
-## Not Started Tasks
-
-### KSP-008: Fix Deep Link Handler Generator Imports
-
-**Issue**: The `DeepLinkHandlerGenerator` generates code that references destination classes (e.g., `ProductsDestination.List`) without importing them, causing "Unresolved reference" compilation errors.
-
-**Root Cause**: `buildDestinationClassName()` returns simple class names without package prefixes, and no imports are added to the generated file.
-
-**Solution**: Use KotlinPoet's `ClassName` with proper package to enable automatic import generation.
-
-**Blocked**: MIG-006 (Deep Linking Recipe) had to comment out `@Destination` annotations as workaround.
+| [KSP-008](./KSP-008-deep-link-handler-imports.md) | Fix Deep Link Handler Generator Imports | 🟢 Completed | 2025-12-07 | Uses KotlinPoet ClassName with %T for auto-imports |
 
 ---
 
 ## Completed Tasks
+
+### KSP-008: Fix Deep Link Handler Generator Imports (2025-12-07)
+
+Fixed the `DeepLinkHandlerGenerator` to properly import destination classes in generated code.
+
+**Problem**: Generated `GeneratedDeepLinkHandlerImpl.kt` referenced destination classes (e.g., `ProductsDestination.List`) without importing them, causing "Unresolved reference" compilation errors.
+
+**Root Cause**: `buildDestinationClassName()` returned simple class names without package prefixes, and the generated file didn't include imports for these classes.
+
+**Solution**: Used KotlinPoet's `ClassName` with `%T` format specifier for automatic import generation:
+
+**Changes to `DeepLinkHandlerGenerator.kt`**:
+
+1. **`buildDestinationClassName()`** - Changed return type from `String` to `ClassName`:
+   ```kotlin
+   private fun buildDestinationClassName(dest: DestinationInfo): ClassName {
+       val packageName = dest.classDeclaration.packageName.asString()
+       return if (dest.parentSealedClass != null) {
+           ClassName(packageName, dest.parentSealedClass, dest.className)
+       } else {
+           ClassName(packageName, dest.className)
+       }
+   }
+   ```
+
+2. **`buildRoutePatternInitializer()`** - Changed from `%L` to `%T` for destination classes:
+   ```kotlin
+   CodeBlock.of("RoutePattern(%S, emptyList()) { %T }", route, destClassName)
+   CodeBlock.of("RoutePattern(%S, listOf(%L)) { params -> %T(%L) }", ...)
+   ```
+
+3. **`buildWhenCases()`** - Changed return type from `List<String>` to `List<CodeBlock>`:
+   ```kotlin
+   CodeBlock.of("%T -> %S", destClassName, "\$scheme://$route")
+   CodeBlock.of("is %T -> %P", destClassName, "\$scheme://$uriPath")
+   ```
+
+4. **`buildCreateDeepLinkUriFunction()`** - Updated to use `addCode()` instead of `addStatement()`:
+   ```kotlin
+   whenCases.forEach { caseBlock ->
+       addCode(caseBlock)
+       addCode("\n")
+   }
+   ```
+
+**Verification**:
+- `:quo-vadis-ksp:build -x detekt` ✓
+- `:quo-vadis-ksp:test` ✓
+- `:quo-vadis-recipes:compileKotlinDesktop` ✓
+
+**Note**: With this fix, the `@Destination` annotations in `quo-vadis-recipes` deep linking examples can now be uncommented in production code.
+
+**Unblocks**: MIG-006 (Deep Linking Recipe) - annotations can now be enabled in recipes module.
+
+---
 
 ### KSP-007: Remove Legacy TabGraphExtractor (2025-12-06)
 

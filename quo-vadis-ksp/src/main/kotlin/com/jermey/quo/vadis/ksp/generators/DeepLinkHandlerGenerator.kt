@@ -174,6 +174,9 @@ class DeepLinkHandlerGenerator(
 
     /**
      * Build a single RoutePattern initializer for a destination.
+     *
+     * Uses %T format specifier for destination class names to ensure
+     * KotlinPoet generates proper imports in the output file.
      */
     private fun buildRoutePatternInitializer(dest: DestinationInfo): CodeBlock {
         val route = dest.route ?: return CodeBlock.of("")
@@ -181,19 +184,19 @@ class DeepLinkHandlerGenerator(
         val destClassName = buildDestinationClassName(dest)
 
         return if (params.isEmpty()) {
-            // Data object - no parameters
+            // Data object - no parameters, use %T for auto-import
             CodeBlock.of(
-                "RoutePattern(%S, emptyList()) { %L }",
+                "RoutePattern(%S, emptyList()) { %T }",
                 route,
                 destClassName
             )
         } else {
-            // Data class - extract parameters
+            // Data class - extract parameters, use %T for auto-import
             val paramAssignments = params.joinToString(", ") { p ->
                 "$p = params[\"$p\"]!!"
             }
             CodeBlock.of(
-                "RoutePattern(%S, listOf(%L)) { params ->\n    %L(%L)\n}",
+                "RoutePattern(%S, listOf(%L)) { params ->\n    %T(%L)\n}",
                 route,
                 params.joinToString(", ") { "\"$it\"" },
                 destClassName,
@@ -203,16 +206,25 @@ class DeepLinkHandlerGenerator(
     }
 
     /**
-     * Build the fully qualified destination class name.
+     * Build the KotlinPoet ClassName for a destination.
      *
      * For nested sealed class members (e.g., HomeDestination.Detail),
-     * includes the parent class name.
+     * creates a properly nested ClassName that KotlinPoet can import.
+     *
+     * @param dest The destination info containing class metadata
+     * @return ClassName that will generate proper imports when used with %T
      */
-    private fun buildDestinationClassName(dest: DestinationInfo): String {
+    private fun buildDestinationClassName(dest: DestinationInfo): ClassName {
+        // Extract package from qualifiedName (e.g., "com.example.ProductsDestination.List")
+        val qualifiedName = dest.qualifiedName
+        val packageName = dest.classDeclaration.packageName.asString()
+
         return if (dest.parentSealedClass != null) {
-            "${dest.parentSealedClass}.${dest.className}"
+            // Nested class: ClassName(package, "Parent", "Nested")
+            ClassName(packageName, dest.parentSealedClass, dest.className)
         } else {
-            dest.className
+            // Top-level class: ClassName(package, "ClassName")
+            ClassName(packageName, dest.className)
         }
     }
 
@@ -245,6 +257,8 @@ class DeepLinkHandlerGenerator(
 
     /**
      * Build the createDeepLinkUri function implementation.
+     *
+     * Uses CodeBlock-based when cases to ensure proper destination class imports.
      */
     private fun buildCreateDeepLinkUriFunction(destinations: List<DestinationInfo>): FunSpec {
         val whenCases = buildWhenCases(destinations)
@@ -260,7 +274,10 @@ class DeepLinkHandlerGenerator(
             .returns(STRING.copy(nullable = true))
             .beginControlFlow("return when (destination)")
             .apply {
-                whenCases.forEach { addStatement(it) }
+                whenCases.forEach { caseBlock ->
+                    addCode(caseBlock)
+                    addCode("\n")
+                }
             }
             .addStatement("else -> null")
             .endControlFlow()
@@ -268,21 +285,23 @@ class DeepLinkHandlerGenerator(
     }
 
     /**
-     * Build when cases for createDeepLinkUri.
+     * Build when case CodeBlocks for createDeepLinkUri.
+     *
+     * Returns CodeBlocks with %T format specifiers to ensure proper imports.
      */
-    private fun buildWhenCases(destinations: List<DestinationInfo>): List<String> {
+    private fun buildWhenCases(destinations: List<DestinationInfo>): List<CodeBlock> {
         return destinations.mapNotNull { dest ->
             val route = dest.route ?: return@mapNotNull null
             val destClassName = buildDestinationClassName(dest)
             val params = dest.routeParams
 
             if (params.isEmpty()) {
-                // Data object - simple URI
-                "$destClassName -> \"\$scheme://$route\""
+                // Data object - simple URI, use %T for auto-import
+                CodeBlock.of("%T -> %S", destClassName, "\$scheme://$route")
             } else {
                 // Data class - interpolate parameters
                 val uriPath = buildUriPathWithParams(route, params)
-                "is $destClassName -> \"\$scheme://$uriPath\""
+                CodeBlock.of("is %T -> %P", destClassName, "\$scheme://$uriPath")
             }
         }
     }

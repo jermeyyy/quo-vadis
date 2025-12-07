@@ -16,13 +16,13 @@ See [INDEX.md](./INDEX.md) for full plan details.
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
-| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 7 | 7 |
+| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 8 | 8 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 82% | 9 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~73% | 38 | 53 |
+| **TOTAL** | 🟡 In Progress | ~74% | 40 | 54 |
 
 ---
 
@@ -41,6 +41,18 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-07 (Latest)
+- ✅ **KSP-008**: Fix Deep Link Handler Generator Imports - **COMPLETED**
+  - Fixed `DeepLinkHandlerGenerator` to properly import destination classes in generated code
+  - **Problem**: Generated code referenced destination classes without imports, causing "Unresolved reference" errors
+  - **Solution**: Changed `buildDestinationClassName()` to return KotlinPoet `ClassName` instead of `String`
+  - Updated `buildRoutePatternInitializer()` to use `%T` format specifier for auto-imports
+  - Updated `buildWhenCases()` to return `List<CodeBlock>` instead of `List<String>`
+  - Updated `buildCreateDeepLinkUriFunction()` to use `addCode()` for CodeBlock-based when cases
+  - **Verification**: `:quo-vadis-ksp:build`, `:quo-vadis-ksp:test`, `:quo-vadis-recipes:compileKotlinDesktop` all pass
+  - **Unblocks**: MIG-006 (Deep Linking Recipe) - `@Destination` annotations can now be enabled in recipes module
+  
+  **🎉 Phase 3: KSP is now 100% complete (8/8 tasks)**
+
 - ✅ **MIG-006**: Deep Linking Recipe - **COMPLETED**
   - Created comprehensive deep linking recipe examples in `quo-vadis-recipes/src/commonMain/kotlin/com/jermey/quo/vadis/recipes/deeplink/`
   - **Files Created/Updated**:
