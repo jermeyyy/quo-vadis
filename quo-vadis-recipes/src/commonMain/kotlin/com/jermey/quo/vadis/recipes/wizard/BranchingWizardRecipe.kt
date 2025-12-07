@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.annotations.Stack
@@ -104,9 +105,13 @@ sealed class CheckoutDestination : DestinationInterface {
      *
      * Route template: `checkout/confirmation/{orderId}`
      * Deep link: `myapp://checkout/confirmation/ORD-12345`
+     *
+     * @Argument annotation marks navigation arguments explicitly for KSP processing.
      */
     @Destination(route = "checkout/confirmation/{orderId}")
-    data class Confirmation(val orderId: String) : CheckoutDestination()
+    data class Confirmation(
+        @Argument val orderId: String
+    ) : CheckoutDestination()
 }
 
 // ============================================================

@@ -1,7 +1,8 @@
 package com.jermey.quo.vadis.recipes.deeplink
 
-// NOTE: @Destination annotation is imported but commented out in usage to avoid KSP processing.
-// In production code, the @Destination annotations would be active.
+// NOTE: @Destination and @Argument annotations are imported but commented out in usage
+// to avoid KSP processing. In production code, these annotations would be active.
+// import com.jermey.quo.vadis.annotations.Argument
 // import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.core.navigation.core.Destination as BaseDestination
 
@@ -131,17 +132,30 @@ sealed class ProductsDestination : BaseDestination {
      * The `{productId}` in the route template maps to the constructor parameter.
      * KSP matches parameter names between route and constructor.
      *
+     * ## @Argument Annotation
+     *
+     * In production code, use `@Argument` on constructor params to mark navigation arguments:
+     * ```kotlin
+     * @Destination(route = "products/{productId}")
+     * data class Detail(@Argument val productId: String) : ProductsDestination()
+     * ```
+     *
      * ## Example URIs
      *
      * - `myapp://products/abc-123` → `Detail(productId = "abc-123")`
      * - `https://example.com/products/xyz-789` → `Detail(productId = "xyz-789")`
      *
-     * In production code, add: @Destination(route = "products/{productId}")
+     * In production code, add:
+     * - @Destination(route = "products/{productId}")
+     * - @Argument on productId parameter
      *
      * @property productId The product identifier extracted from the URI path
      */
     // @Destination(route = "products/{productId}") - commented to avoid KSP processing in recipes module
-    data class Detail(val productId: String) : ProductsDestination()
+    data class Detail(
+        // @Argument - commented to avoid KSP processing in recipes module
+        val productId: String
+    ) : ProductsDestination()
 }
 
 // ============================================================
@@ -213,12 +227,17 @@ sealed class CategoryDestination : BaseDestination {
      *
      * **Deep link**: `myapp://categories/{categoryId}`
      *
-     * In production code, add: @Destination(route = "categories/{categoryId}")
+     * In production code, add:
+     * - @Destination(route = "categories/{categoryId}")
+     * - @Argument on categoryId parameter
      *
      * @property categoryId The category identifier from the URI path
      */
     // @Destination(route = "categories/{categoryId}") - commented to avoid KSP processing in recipes module
-    data class CategoryDetail(val categoryId: String) : CategoryDestination()
+    data class CategoryDetail(
+        // @Argument - commented to avoid KSP processing in recipes module
+        val categoryId: String
+    ) : CategoryDestination()
 
     /**
      * Product within a category context.
@@ -251,14 +270,18 @@ sealed class CategoryDestination : BaseDestination {
      * - Product display varies by category
      * - Analytics need category context
      *
-     * In production code, add: @Destination(route = "categories/{categoryId}/products/{productId}")
+     * In production code, add:
+     * - @Destination(route = "categories/{categoryId}/products/{productId}")
+     * - @Argument on both categoryId and productId parameters
      *
      * @property categoryId The category containing the product
      * @property productId The product identifier
      */
     // @Destination(route = "categories/{categoryId}/products/{productId}") - commented to avoid KSP processing in recipes module
     data class ProductInCategory(
+        // @Argument - commented to avoid KSP processing in recipes module
         val categoryId: String,
+        // @Argument - commented to avoid KSP processing in recipes module
         val productId: String
     ) : CategoryDestination()
 }

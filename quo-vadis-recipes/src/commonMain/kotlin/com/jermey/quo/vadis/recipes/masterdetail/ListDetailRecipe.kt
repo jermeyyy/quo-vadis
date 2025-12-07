@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.annotations.Stack
@@ -117,7 +118,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  *
  * ## Key Migration Steps
  *
- * 1. **Remove `@Argument`**: Use route template `{param}` instead
+ * 1. **Use `@Argument`**: Mark constructor params that are route parameters
  * 2. **Remove `TypedDestination<T>`**: Use data class properties directly
  * 3. **Screen signature**: Add destination as first parameter for data classes
  * 4. **Transition config**: Use `AnimationRegistry` instead of per-call transitions
@@ -197,7 +198,9 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  *     data object ProductList : CatalogDestination()
  *
  *     @Destination(route = "catalog/detail/{productId}")
- *     data class ProductDetail(val productId: String) : CatalogDestination()
+ *     data class ProductDetail(
+ *         @Argument val productId: String
+ *     ) : CatalogDestination()
  * }
  * ```
  *
@@ -205,7 +208,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  *
  * 1. No separate data class needed - destination IS the data
  * 2. No `TypedDestination<T>` interface
- * 3. No `@Argument` annotation - route template defines parameters
+ * 3. `@Argument` annotation marks navigation arguments for KSP processing
  * 4. `startDestination` uses class name ("ProductList") not route
  */
 @Stack(name = "catalog", startDestination = "ProductList")
@@ -247,10 +250,18 @@ sealed class CatalogDestination : DestinationInterface {
      * }
      * ```
      *
+     * ## @Argument Annotation
+     *
+     * The `@Argument` annotation on constructor params provides metadata for KSP:
+     * - Marks which params are navigation arguments
+     * - Enables type-safe argument extraction from routes
+     *
      * @property productId Unique identifier for the product to display
      */
     @Destination(route = "catalog/detail/{productId}")
-    data class ProductDetail(val productId: String) : CatalogDestination()
+    data class ProductDetail(
+        @Argument val productId: String
+    ) : CatalogDestination()
 }
 
 // ============================================================

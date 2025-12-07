@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.annotations.Stack
@@ -238,10 +239,14 @@ sealed class HomeDestination : DestinationInterface {
     /**
      * Article detail screen - navigated from feed items.
      *
+     * @Argument annotation marks navigation arguments explicitly for KSP processing.
+     *
      * @property articleId Unique identifier for the article
      */
     @Destination(route = "home/article/{articleId}")
-    data class ArticleDetail(val articleId: String) : HomeDestination()
+    data class ArticleDetail(
+        @Argument val articleId: String
+    ) : HomeDestination()
 }
 
 /**
@@ -267,10 +272,14 @@ sealed class SearchDestination : DestinationInterface {
     /**
      * Search results screen - shows results for a query.
      *
+     * @Argument annotation marks navigation arguments explicitly for KSP processing.
+     *
      * @property query The search query string
      */
     @Destination(route = "search/results/{query}")
-    data class SearchResults(val query: String) : SearchDestination()
+    data class SearchResults(
+        @Argument val query: String
+    ) : SearchDestination()
 }
 
 /**

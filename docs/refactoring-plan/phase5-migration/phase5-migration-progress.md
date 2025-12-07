@@ -1,14 +1,20 @@
 # Phase 5: Migration Examples - Progress
 
 > **Last Updated**: 2025-12-07  
-> **Phase Status**: � Completed  
-> **Progress**: 11/11 tasks (100%)
+> **Phase Status**: 🟡 In Progress  
+> **Progress**: 10/12 tasks (83%)
 
 ## Overview
 
 This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation examples, marks all legacy APIs with `@Deprecated` annotations, and rewrites the demo app to showcase all patterns.
 
 > **Note**: No backward compatibility adapters are needed. The library is in development stage and breaking changes are acceptable.
+
+### Recent Updates (2025-12-07)
+
+- ✅ **MIG-009 Added**: Type-Safe Arguments Recipe demonstrating `@Argument` annotation
+- ✅ **Recipes Updated**: All parameterized destinations now use `@Argument` annotation
+- 📦 **New Package**: `quo-vadis-recipes/arguments/` with comprehensive `@Argument` examples
 
 ---
 
@@ -27,11 +33,12 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
 | [MIG-001](./MIG-001-simple-stack-example.md) | Simple Stack Navigation Recipe | 🟢 Completed | 2025-12-07 | Created `SettingsStackRecipe.kt` in recipes module |
-| [MIG-002](./MIG-002-master-detail-example.md) | Master-Detail Pattern Recipe | 🟢 Completed | 2025-12-07 | Created `ListDetailRecipe.kt` in recipes module |
-| [MIG-003](./MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | 🟢 Completed | 2025-12-07 | Created `BottomTabsRecipe.kt` in recipes module |
-| [MIG-004](./MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | 🟢 Completed | 2025-12-07 | Created `LinearWizardRecipe.kt` & `BranchingWizardRecipe.kt` |
+| [MIG-002](./MIG-002-master-detail-example.md) | Master-Detail Pattern Recipe | 🟢 Completed | 2025-12-07 | Created `ListDetailRecipe.kt` + `@Argument` added |
+| [MIG-003](./MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | 🟢 Completed | 2025-12-07 | Created `BottomTabsRecipe.kt` + `@Argument` added |
+| [MIG-004](./MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | 🟢 Completed | 2025-12-07 | Created wizard recipes + `@Argument` added |
 | [MIG-005](./MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | 🟢 Completed | 2025-12-06 | Created `docs/migration-examples/05-nested-tabs-detail.md` |
-| [MIG-006](./MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | 🟢 Completed | 2025-12-07 | Created recipe files in `quo-vadis-recipes/deeplink/` |
+| [MIG-006](./MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | 🟢 Completed | 2025-12-07 | Created recipe files + `@Argument` in comments |
+| [MIG-009](./MIG-009-type-safe-arguments-recipe.md) | Type-Safe Arguments Recipe | 🟢 Completed | 2025-12-07 | **NEW**: Created `TypeSafeArgumentsRecipe.kt` |
 
 ### Migration Tasks
 
@@ -43,6 +50,32 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 ---
 
 ## Completed Tasks
+
+- **MIG-009** (2025-12-07): Type-Safe Arguments Recipe (NEW)
+  - Created `TypeSafeArgumentsRecipe.kt` in `quo-vadis-recipes/src/commonMain/kotlin/.../arguments/`:
+  - Created `package-info.kt` for the arguments package
+  
+  **Recipe demonstrates 6 key `@Argument` patterns** (~1260 lines):
+  1. **Basic @Argument** - `BasicArgumentsDestination` with single (`UserProfile`) and multiple (`UserPost`) path parameters
+  2. **Custom Key Mapping** - `CustomKeyDestination` with `SearchResults` (`key = "q"`) and `AdvancedSearch`
+  3. **Optional Arguments** - `OptionalArgumentsDestination` with `ProductList`, `ProductDetail`, and `FilteredProducts`
+  4. **Enum Types** - `EnumArgumentsDestination` with `SortField`, `SortDirection`, `AvailabilityStatus` enums
+  5. **Path vs Query Parameters** - `PathQueryDestination` demonstrating best practices
+  6. **Complex Types (Conceptual)** - `ComplexTypeDestination` with `FilterOptions`
+  
+  **Includes**:
+  - 2 `@Screen` annotated composables (`UserProfileScreen`, `ProductDetailScreen`)
+  - `TypeSafeArgumentsApp` entry point composable
+  - `TypeSafeArgumentsMigrationChecklist` object with checklist items and common mistakes
+  - Comprehensive KDoc with deep link examples, before/after migration patterns, and best practices
+  
+  Verified: `:quo-vadis-recipes:compileKotlinMetadata` ✓
+  
+  **@Argument Annotation Updated in Existing Recipes**:
+  - `ListDetailRecipe.kt`: Added `@Argument` to `ProductDetail.productId`
+  - `BottomTabsRecipe.kt`: Added `@Argument` to `ArticleDetail.articleId` and `SearchResults.query`
+  - `BranchingWizardRecipe.kt`: Added `@Argument` to `Confirmation.orderId`
+  - `DeepLinkDestinations.kt`: Added `@Argument` as comments (annotations disabled for KSP)
 
 - **MIG-004** (2025-12-07): Process/Wizard Flow Recipe (Recipes Module Implementation)
   - Created `LinearWizardRecipe.kt` and `BranchingWizardRecipe.kt` in `quo-vadis-recipes/src/commonMain/kotlin/.../wizard/`
@@ -323,10 +356,11 @@ PREP-003 (permalinks) ─────────── (can start anytime)
 | Package | Recipe | Key Patterns |
 |---------|--------|--------------|
 | `stack/` | MIG-001 | `@Stack`, `@Destination`, `@Screen`, basic navigation |
-| `masterdetail/` | MIG-002 | Route templates, typed arguments, shared elements |
-| `tabs/` | MIG-003, MIG-005 | `@Tab`, `@TabItem`, `tabWrapper`, nested stacks |
-| `wizard/` | MIG-004 | Sequential flow, branching, stack clearing |
+| `masterdetail/` | MIG-002 | Route templates, `@Argument`, shared elements |
+| `tabs/` | MIG-003, MIG-005 | `@Tab`, `@TabItem`, `tabWrapper`, nested stacks, `@Argument` |
+| `wizard/` | MIG-004 | Sequential flow, branching, stack clearing, `@Argument` |
 | `deeplink/` | MIG-006 | URI handling, path parameters, reconstruction |
+| `arguments/` | **MIG-009** | **`@Argument` showcase**: key mapping, optional, enums, complex types |
 | `pane/` | (Future) | Adaptive layouts (if time permits) |
 
 ---
@@ -347,3 +381,4 @@ PREP-003 (permalinks) ─────────── (can start anytime)
 - [PREP-001: Recipes Module](./PREP-001-recipes-module.md)
 - [PREP-002: Deprecated Annotations](./PREP-002-deprecated-annotations.md)
 - [PREP-003: Permalink Reference](./PREP-003-permalink-reference.md)
+- [MIG-009: Type-Safe Arguments Recipe](./MIG-009-type-safe-arguments-recipe.md) *(NEW)*
