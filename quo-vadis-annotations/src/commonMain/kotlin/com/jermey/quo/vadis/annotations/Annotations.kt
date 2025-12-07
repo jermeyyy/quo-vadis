@@ -110,65 +110,6 @@ annotation class Graph(val name: String, val startDestination: String = "")
 annotation class Route(val path: String)
 
 /**
- * Specifies typed, serializable arguments for a destination.
- * 
- * The destination must implement [TypedDestination]<T> and the data class must be
- * annotated with [@Serializable] from kotlinx.serialization. KSP generates a typed
- * destination extension function for automatic serialization/deserialization.
- * 
- * @param dataClass The [KClass] of the serializable data type. Must be annotated with @Serializable.
- * 
- * @sample Basic typed destination
- * ```kotlin
- * @Serializable
- * data class DetailData(val itemId: String, val mode: String = "view")
- * 
- * @Route("detail")
- * @Argument(DetailData::class)
- * data class Detail(val itemId: String, val mode: String = "view") 
- *     : Destination, TypedDestination<DetailData> {
- *     override val data = DetailData(itemId, mode)
- * }
- * 
- * // Content function receives typed data
- * @Content(Detail::class)
- * @Composable
- * fun DetailContent(data: DetailData, navigator: Navigator) {
- *     Text("Item: ${data.itemId}, Mode: ${data.mode}")
- * }
- * ```
- * 
- * @sample Complex typed destination
- * ```kotlin
- * @Serializable
- * data class FilterData(
- *     val categories: List<String> = emptyList(),
- *     val minPrice: Double? = null,
- *     val maxPrice: Double? = null,
- *     val sortBy: SortOption = SortOption.RELEVANCE
- * )
- * 
- * @Route("search/filter")
- * @Argument(FilterData::class)
- * data class FilterScreen(
- *     val categories: List<String> = emptyList(),
- *     val minPrice: Double? = null,
- *     val maxPrice: Double? = null,
- *     val sortBy: SortOption = SortOption.RELEVANCE
- * ) : SearchDestination(), TypedDestination<FilterData> {
- *     override val data = FilterData(categories, minPrice, maxPrice, sortBy)
- * }
- * ```
- * 
- * @see Route
- * @see Content
- * @see TypedDestination
- */
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class Argument(val dataClass: KClass<*>)
-
-/**
  * Marks a Composable function as the content renderer for a specific destination.
  * 
  * KSP automatically generates graph builder code that wires this Composable function

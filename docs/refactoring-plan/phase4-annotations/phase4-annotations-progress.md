@@ -1,8 +1,8 @@
 # Phase 4: Annotations Redesign - Progress
 
 > **Last Updated**: 2025-12-07  
-> **Phase Status**: 🚧 In Progress  
-> **Progress**: 5/6 tasks (83%)
+> **Phase Status**: � Completed  
+> **Progress**: 6/6 tasks (100%)
 
 ## Overview
 
@@ -19,7 +19,7 @@ This phase introduces the new annotation system that maps directly to NavNode ty
 | [ANN-003](./ANN-003-route-transitions.md) | Define `@Tab` and `@TabItem` Annotations | 🟢 Completed | 2025-12-06 | Created `TabAnnotations.kt`, replaced old @TabGraph/@Tab |
 | [ANN-004](./ANN-004-shared-element.md) | Define `@Pane` and `@PaneItem` Annotations | 🟢 Completed | 2025-12-06 | Created `PaneAnnotations.kt` with enums and annotations |
 | [ANN-005](./ANN-005-screen.md) | Define `@Screen` Content Binding Annotation | 🟢 Completed | 2025-12-06 | Created Screen.kt with destination KClass parameter |
-| [ANN-006](./ANN-006-argument.md) | Define `@Argument` Parameter Annotation | ⚪ Not Started | - | Type-safe navigation arguments (NEW) |
+| [ANN-006](./ANN-006-argument.md) | Define `@Argument` Parameter Annotation | 🟢 Completed | 2025-12-07 | New parameter-level annotation with key/optional, removed old class-level @Argument(dataClass) |
 
 ---
 
@@ -93,30 +93,35 @@ This phase introduces the new annotation system that maps directly to NavNode ty
   - With shared element scopes (optional parameters)
 - Build verified: `:quo-vadis-annotations:build` ✓
 
+### ANN-006: Define @Argument Parameter Annotation ✅
+- **Completed**: 2025-12-07
+- **Created** `Argument.kt` in `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/`
+- **Removed** old class-level `@Argument(dataClass: KClass<*>)` from `Annotations.kt`
+- New parameter-level `@Argument(key: String = "", optional: Boolean = false)` annotation:
+  - `@Target(AnnotationTarget.VALUE_PARAMETER)` - applies to constructor parameters
+  - `@Retention(AnnotationRetention.SOURCE)` - compile-time only for KSP
+  - `key` - custom URL parameter key (defaults to parameter name if empty)
+  - `optional` - whether argument can be omitted in deep links (requires default value)
+- **KSP Model Updates** (`ParamInfo.kt`):
+  - Added `SerializerType` enum: STRING, INT, LONG, FLOAT, DOUBLE, BOOLEAN, ENUM, JSON
+  - Added fields: `isArgument`, `argumentKey`, `isOptionalArgument`, `serializerType`
+- **KSP Extractor Updates** (`DestinationExtractor.kt`):
+  - Added `@Argument` annotation extraction from constructor parameters
+  - Added `determineSerializerType()` method for type-based serializer selection
+- **KSP Validation Updates** (`ValidationEngine.kt`):
+  - Added `validateArgumentAnnotations()` with 4 validation rules:
+    - Optional argument must have default value
+    - Path parameters cannot be optional
+    - Argument key should match route parameter (warning)
+    - No duplicate argument keys
+- **KSP Class Names** (`QuoVadisClassNames.kt`): Added `ARGUMENT_ANNOTATION` constant
+- Build verified: `:quo-vadis-annotations:build -x detekt` ✓, `:quo-vadis-ksp:build -x detekt` ✓
+
 ---
 
-## In Progress Tasks
+## Phase Complete 🎉
 
-_None currently in progress._
-
----
-
-## Blocked Tasks
-
-_None - all tasks can start immediately._
-
----
-
-## Ready to Start
-
-📋 **Next Task**:
-
-1. ~~**ANN-001**: Define `@Destination` Annotation (0.5 days)~~ ✅ Completed
-2. ~~**ANN-002**: Define `@Stack` Container Annotation (0.5 days)~~ ✅ Completed
-3. ~~**ANN-003**: Define `@Tab` and `@TabItem` Annotations (1 day)~~ ✅ Completed
-4. ~~**ANN-004**: Define `@Pane` and `@PaneItem` Annotations (1 day)~~ ✅ Completed
-5. ~~**ANN-005**: Define `@Screen` Content Binding Annotation (0.5 days)~~ ✅ Completed
-6. **ANN-006**: Define `@Argument` Parameter Annotation (1 day) ⚪ **NEXT**
+All Phase 4 tasks have been completed. The new annotation system is ready for use with KSP code generation.
 
 ---
 

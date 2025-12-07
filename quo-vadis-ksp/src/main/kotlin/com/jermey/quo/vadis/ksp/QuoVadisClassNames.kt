@@ -35,6 +35,12 @@ internal object QuoVadisClassNames {
     // Compose classes
     val TRANSITION_SCOPE: ClassName = TransitionScope::class.toClassName()
     
+    // Annotation classes (for KSP processing)
+    val ARGUMENT_ANNOTATION: ClassName = ClassName(
+        "com.jermey.quo.vadis.annotations",
+        "Argument"
+    )
+    
     /**
      * Convert KClass to KotlinPoet ClassName.
      */

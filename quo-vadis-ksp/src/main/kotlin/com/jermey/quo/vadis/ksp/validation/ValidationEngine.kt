@@ -102,6 +102,9 @@ class ValidationEngine(
         validateRouteParameters(allDestinations)
         validateDuplicateRoutes(allDestinations)
 
+        // Argument validations
+        validateArgumentAnnotations(allDestinations)
+
         // Reference validations
         validateRootGraphReferences(tabs, panes)
         validateScreenBindings(screens, allDestinations)
@@ -274,6 +277,90 @@ class ValidationEngine(
                 )
             }
         }
+    }
+
+    // =========================================================================
+    // Argument Validations
+    // =========================================================================
+
+    /**
+     * Validates @Argument annotation usage on constructor parameters.
+     *
+     * Checks:
+     * - Optional argument must have a default value
+     * - Path parameters cannot be marked as optional
+     * - Argument key must match route parameter if specified
+     * - No duplicate argument keys within a destination
+     */
+    private fun validateArgumentAnnotations(destinations: List<DestinationInfo>) {
+        destinations.forEach { destination ->
+            val argumentParams = destination.constructorParams.filter { it.isArgument }
+            val routeParams = destination.routeParams.toSet()
+            val pathParams = extractPathParams(destination.route)
+            val seenKeys = mutableSetOf<String>()
+
+            argumentParams.forEach { param ->
+                val key = param.argumentKey
+
+                // Check for duplicate keys
+                if (key in seenKeys) {
+                    reportError(
+                        destination.classDeclaration,
+                        "Duplicate argument key \"$key\" in ${destination.className}. " +
+                            "Each @Argument must have a unique key."
+                    )
+                }
+                seenKeys.add(key)
+
+                // Optional argument must have default value
+                if (param.isOptionalArgument && !param.hasDefault) {
+                    reportError(
+                        destination.classDeclaration,
+                        "@Argument(optional = true) on \"${param.name}\" in ${destination.className} " +
+                            "requires a default value"
+                    )
+                }
+
+                // Path parameter cannot be optional
+                if (param.isOptionalArgument && key in pathParams) {
+                    reportError(
+                        destination.classDeclaration,
+                        "Path parameter \"{$key}\" in ${destination.className} cannot be optional. " +
+                            "Only query parameters can be marked as @Argument(optional = true)"
+                    )
+                }
+
+                // If route exists and key is specified, it should match a route param
+                if (destination.route != null && key.isNotEmpty() && key !in routeParams) {
+                    // Only warn if there are route params - otherwise the argument might be
+                    // used for internal state without deep linking
+                    if (routeParams.isNotEmpty()) {
+                        reportWarning(
+                            destination.classDeclaration,
+                            "@Argument key \"$key\" on \"${param.name}\" in ${destination.className} " +
+                                "is not found in route pattern \"${destination.route}\". " +
+                                "This argument won't be available via deep linking."
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Extract path parameters (not query parameters) from a route pattern.
+     *
+     * Path parameters are those in the URL path, not after the '?' query separator.
+     * Example: "user/{userId}/post/{postId}?tab={tab}" → ["userId", "postId"]
+     *
+     * @param route The route pattern string or null
+     * @return Set of path parameter names
+     */
+    private fun extractPathParams(route: String?): Set<String> {
+        if (route == null) return emptySet()
+        val pathPart = route.substringBefore('?')
+        val regex = Regex("\\{([^}]+)\\}")
+        return regex.findAll(pathPart).map { it.groupValues[1] }.toSet()
     }
 
     // =========================================================================

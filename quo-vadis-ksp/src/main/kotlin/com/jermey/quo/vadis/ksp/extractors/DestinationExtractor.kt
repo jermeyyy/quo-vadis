@@ -3,9 +3,12 @@ package com.jermey.quo.vadis.ksp.extractors
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Modifier
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.ParamInfo
+import com.jermey.quo.vadis.ksp.models.SerializerType
 
 /**
  * Extracts @Destination annotations into DestinationInfo models.
@@ -110,11 +113,85 @@ class DestinationExtractor(
     private fun extractConstructorParams(classDeclaration: KSClassDeclaration): List<ParamInfo> {
         val primaryConstructor = classDeclaration.primaryConstructor ?: return emptyList()
         return primaryConstructor.parameters.map { param ->
+            val argumentAnnotation = param.annotations.find {
+                it.shortName.asString() == "Argument"
+            }
+
+            val isArgument = argumentAnnotation != null
+            val argumentKey = if (isArgument) {
+                val keyValue = argumentAnnotation?.arguments?.find {
+                    it.name?.asString() == "key"
+                }?.value as? String
+                keyValue?.takeIf { it.isNotEmpty() } ?: param.name?.asString() ?: ""
+            } else {
+                ""
+            }
+            val isOptionalArgument = if (isArgument) {
+                argumentAnnotation?.arguments?.find {
+                    it.name?.asString() == "optional"
+                }?.value as? Boolean ?: false
+            } else {
+                false
+            }
+            val paramType = param.type.resolve()
+            val serializerType = if (isArgument) {
+                determineSerializerType(paramType)
+            } else {
+                SerializerType.STRING
+            }
+
             ParamInfo(
                 name = param.name?.asString() ?: "",
-                type = param.type.resolve(),
-                hasDefault = param.hasDefault
+                type = paramType,
+                hasDefault = param.hasDefault,
+                isArgument = isArgument,
+                argumentKey = argumentKey,
+                isOptionalArgument = isOptionalArgument,
+                serializerType = serializerType
             )
+        }
+    }
+
+    /**
+     * Determine the SerializerType for a given KSType.
+     *
+     * Maps Kotlin types to their corresponding serialization strategy:
+     * - Primitives (String, Int, Long, Float, Double, Boolean) → Direct conversion
+     * - Enums → Enum name serialization
+     * - Complex types (@Serializable) → JSON serialization
+     *
+     * @param type The KSType to analyze
+     * @return The appropriate SerializerType for the type
+     */
+    private fun determineSerializerType(type: KSType): SerializerType {
+        val declaration = type.declaration
+        val qualifiedName = declaration.qualifiedName?.asString()
+
+        // Handle nullable types - use the underlying type
+        val nonNullType = if (type.isMarkedNullable) {
+            type.makeNotNullable()
+        } else {
+            type
+        }
+        val nonNullQualifiedName = nonNullType.declaration.qualifiedName?.asString()
+
+        return when (nonNullQualifiedName) {
+            "kotlin.String" -> SerializerType.STRING
+            "kotlin.Int" -> SerializerType.INT
+            "kotlin.Long" -> SerializerType.LONG
+            "kotlin.Float" -> SerializerType.FLOAT
+            "kotlin.Double" -> SerializerType.DOUBLE
+            "kotlin.Boolean" -> SerializerType.BOOLEAN
+            else -> {
+                // Check if it's an enum
+                val typeDeclaration = nonNullType.declaration as? KSClassDeclaration
+                if (typeDeclaration?.classKind == ClassKind.ENUM_CLASS) {
+                    SerializerType.ENUM
+                } else {
+                    // Complex type - assume JSON serialization
+                    SerializerType.JSON
+                }
+            }
         }
     }
 }

@@ -17,12 +17,12 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 8 | 8 |
-| [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
+| [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | � Completed | 100% | 11 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~78% | 42 | 54 |
+| **TOTAL** | 🟡 In Progress | ~80% | 43 | 54 |
 
 ---
 
@@ -41,6 +41,32 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-07 (Latest)
+- ✅ **ANN-006**: Define @Argument Parameter Annotation - **COMPLETED**
+  - Created new parameter-level `@Argument(key, optional)` annotation replacing old class-level `@Argument(dataClass)`
+  - **Files Created:**
+    - `quo-vadis-annotations/src/commonMain/kotlin/.../Argument.kt` - New annotation with comprehensive KDoc
+  - **Files Modified:**
+    - `quo-vadis-annotations/.../Annotations.kt` - Removed deprecated class-level `@Argument(dataClass: KClass<*>)`
+    - `quo-vadis-ksp/.../models/ParamInfo.kt` - Added `isArgument`, `argumentKey`, `isOptionalArgument`, `serializerType` fields + `SerializerType` enum
+    - `quo-vadis-ksp/.../extractors/DestinationExtractor.kt` - Extracts @Argument annotation data, determines SerializerType from parameter types
+    - `quo-vadis-ksp/.../validation/ValidationEngine.kt` - Added `validateArgumentAnnotations()` with 4 validation rules
+    - `quo-vadis-ksp/.../QuoVadisClassNames.kt` - Added `ARGUMENT_ANNOTATION` constant
+  - **New Annotation Features:**
+    - `@Target(AnnotationTarget.VALUE_PARAMETER)` - Applies to constructor parameters
+    - `@Retention(AnnotationRetention.SOURCE)` - Compile-time only for KSP
+    - `key: String = ""` - Custom URL parameter key (defaults to param name)
+    - `optional: Boolean = false` - Whether argument can be omitted in deep links
+  - **SerializerType enum:** STRING, INT, LONG, FLOAT, DOUBLE, BOOLEAN, ENUM, JSON
+  - **Validation Rules:**
+    - Optional argument must have default value
+    - Path parameters cannot be optional
+    - Argument key should match route parameter (warning)
+    - No duplicate argument keys
+  
+  **Verified**: `:quo-vadis-annotations:build -x detekt` ✓, `:quo-vadis-ksp:build -x detekt` ✓
+  
+  **🎉 Phase 4: Annotations updated (6/6 tasks)**
+
 - ✅ **MIG-004**: Process/Wizard Flow Recipe (Recipes Module) - **COMPLETED**
   - Created `LinearWizardRecipe.kt` and `BranchingWizardRecipe.kt` in `quo-vadis-recipes/src/commonMain/kotlin/.../wizard/`
   
