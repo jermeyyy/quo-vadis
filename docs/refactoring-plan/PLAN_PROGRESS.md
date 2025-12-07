@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 7 | 7 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 64% | 7 | 11 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 73% | 8 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~68% | 36 | 53 |
+| **TOTAL** | 🟡 In Progress | ~70% | 37 | 53 |
 
 ---
 
@@ -41,6 +41,25 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-07 (Latest)
+- ✅ **PREP-003**: GitHub Permalink Reference Document - **COMPLETED**
+  - Created `docs/migration-examples/LEGACY_API_REFERENCE.md`
+  - **Contents**:
+    - Stable main branch GitHub URLs for all legacy APIs
+    - Organized by module: Core Navigation, Compose Integration, Annotations, Demo App
+    - Key symbols documented for each file
+    - Migration mapping quick reference table (Old API → New API → Reference link)
+    - LLM usage notes for referencing legacy code patterns
+  - **Sections**:
+    - Core Navigation APIs: NavigationGraph, BackStack, Destinations, Navigator, Tab Navigation, Typed Destinations
+    - Compose Integration APIs: NavHost, GraphNavHost, TabbedNavHost, Tab Composables
+    - Annotation APIs: Legacy (@Graph, @Route, @Content) and New (@Stack, @Destination, @Screen, @Tab)
+    - Demo App: Entry point, Destinations, Screens, Graphs, Deep Linking
+  
+  **File Created:**
+  - `docs/migration-examples/LEGACY_API_REFERENCE.md`
+  
+  **🎉 Phase 5: Migration is now 73% complete (8/11 tasks)**
+
 - ✅ **PREP-002**: Add @Deprecated Annotations to Legacy APIs - **COMPLETED**
   - **quo-vadis-annotations** - Deprecated 4 legacy annotations:
     - `@Graph` → Use `@Stack`, `@Tab`, `@Pane` instead

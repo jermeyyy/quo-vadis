@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-07  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 7/11 tasks (64%)
+> **Progress**: 8/11 tasks (73%)
 
 ## Overview
 
@@ -20,7 +20,7 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 |----|------|--------|-----------|-------|
 | [PREP-001](./PREP-001-recipes-module.md) | Create quo-vadis-recipes Module | 🟢 Completed | 2025-12-06 | Module skeleton created |
 | [PREP-002](./PREP-002-deprecated-annotations.md) | Add @Deprecated Annotations | 🟢 Completed | 2025-12-07 | All legacy APIs deprecated |
-| [PREP-003](./PREP-003-permalink-reference.md) | GitHub Permalink Reference Doc | ⚪ Not Started | - | Can start immediately |
+| [PREP-003](./PREP-003-permalink-reference.md) | GitHub Permalink Reference Doc | 🟢 Completed | 2025-12-07 | Created LEGACY_API_REFERENCE.md |
 
 ### Recipe Tasks
 
@@ -43,6 +43,15 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 ---
 
 ## Completed Tasks
+
+- **PREP-003** (2025-12-07): GitHub Permalink Reference Document
+  - Created `docs/migration-examples/LEGACY_API_REFERENCE.md`
+  - Links all legacy APIs to stable main branch GitHub URLs
+  - Organized by module/category (Core, Compose, Annotations, Demo App)
+  - Migration mapping quick reference table (Old API → New API)
+  - LLM usage notes for referencing legacy code patterns
+  - Key symbols documented for each file
+  - Serves as authoritative "migrating from" reference
 
 - **PREP-002** (2025-12-07): Add @Deprecated Annotations to Legacy APIs
   - Deprecated 4 annotations in `quo-vadis-annotations`: `@Graph`, `@Route`, `@Argument`, `@Content`
@@ -139,7 +148,6 @@ _None currently in progress._
 
 | Task | Notes |
 |------|-------|
-| PREP-003 | Can start immediately - documentation |
 | MIG-006 | Deep linking recipe |
 | MIG-008 | API change summary (PREP-002 now complete) |
 
