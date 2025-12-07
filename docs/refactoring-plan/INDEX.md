@@ -148,6 +148,13 @@ Creates `quo-vadis-recipes` module for LLM-assisted integration, marks legacy AP
 | [MIG-005](./phase5-migration/MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | Medium | 1.5 days |
 | [MIG-006](./phase5-migration/MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | Medium | 1 day |
 | [MIG-007](./phase5-migration/MIG-007-demo-app-rewrite.md) | Demo App Rewrite | High | 3-4 days |
+| ↳ [MIG-007A](./phase5-migration/MIG-007A-foundation-destinations.md) | Foundation - Core Destinations | Medium | 3-4 hours |
+| ↳ [MIG-007B](./phase5-migration/MIG-007B-tab-system.md) | Tab System Migration | High | 4-5 hours |
+| ↳ [MIG-007C](./phase5-migration/MIG-007C-master-detail.md) | Master-Detail Pattern | Medium | 2-3 hours |
+| ↳ [MIG-007D](./phase5-migration/MIG-007D-process-wizard.md) | Process/Wizard Flow | Medium | 3-4 hours |
+| ↳ [MIG-007E](./phase5-migration/MIG-007E-settings-stack.md) | Settings Stack | Low | 1-2 hours |
+| ↳ [MIG-007F](./phase5-migration/MIG-007F-feature-screens.md) | Feature Screens | Medium | 3-4 hours |
+| ↳ [MIG-007G](./phase5-migration/MIG-007G-entry-point.md) | Entry Point Integration | High | 3-4 hours |
 | [MIG-008](./phase5-migration/MIG-008-api-change-summary.md) | API Change Summary Document | Low | 0.5 days |
 
 **Phase 5 Total: ~14-17 days**

@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-07  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 10/12 tasks (83%)
+> **Progress**: 10/18 tasks (56%)
 
 ## Overview
 
@@ -12,6 +12,14 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 
 ### Recent Updates (2025-12-07)
 
+- ✅ **MIG-007 Decomposed**: Task broken down into 7 subtasks by navigation pattern type
+  - MIG-007A: Foundation - Core Destinations
+  - MIG-007B: Tab System Migration
+  - MIG-007C: Master-Detail Pattern
+  - MIG-007D: Process/Wizard Flow
+  - MIG-007E: Settings Stack
+  - MIG-007F: Feature Screens
+  - MIG-007G: Entry Point Integration
 - ✅ **MIG-009 Added**: Type-Safe Arguments Recipe demonstrating `@Argument` annotation
 - ✅ **Recipes Updated**: All parameterized destinations now use `@Argument` annotation
 - 📦 **New Package**: `quo-vadis-recipes/arguments/` with comprehensive `@Argument` examples
@@ -44,7 +52,14 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
-| [MIG-007](./MIG-007-demo-app-rewrite.md) | Demo App Rewrite | ⚪ Not Started | - | Depends on MIG-001..006 |
+| [MIG-007](./MIG-007-demo-app-rewrite.md) | Demo App Rewrite (Parent) | 🟡 Decomposed | 2025-12-07 | Broken into subtasks |
+| ↳ [MIG-007A](./MIG-007A-foundation-destinations.md) | Foundation - Core Destinations | ⚪ Not Started | - | First subtask |
+| ↳ [MIG-007B](./MIG-007B-tab-system.md) | Tab System Migration | ⚪ Not Started | - | Depends on MIG-007A |
+| ↳ [MIG-007C](./MIG-007C-master-detail.md) | Master-Detail Pattern | ⚪ Not Started | - | Depends on MIG-007A |
+| ↳ [MIG-007D](./MIG-007D-process-wizard.md) | Process/Wizard Flow | ⚪ Not Started | - | Depends on MIG-007A |
+| ↳ [MIG-007E](./MIG-007E-settings-stack.md) | Settings Stack | ⚪ Not Started | - | Depends on MIG-007A |
+| ↳ [MIG-007F](./MIG-007F-feature-screens.md) | Feature Screens | ⚪ Not Started | - | Depends on MIG-007A, B |
+| ↳ [MIG-007G](./MIG-007G-entry-point.md) | Entry Point Integration | ⚪ Not Started | - | Depends on all above |
 | [MIG-008](./MIG-008-api-change-summary.md) | API Change Summary Document | ⚪ Not Started | - | Depends on PREP-002 |
 
 ---
@@ -305,7 +320,7 @@ _None currently in progress._
 
 | Task | Notes |
 |------|-------|
-| MIG-007 | Demo app rewrite (all recipe dependencies complete) |
+| MIG-007A | Foundation destinations (first step of demo app rewrite) |
 | MIG-008 | API change summary (PREP-002 now complete) |
 
 ---
@@ -345,6 +360,25 @@ Phase 1-4 ───────────────────────�
                                   │            │
                                   │            ▼
                                   └──────► MIG-007 (demo app)
+                                               │
+                                  ┌────────────┴────────────┐
+                                  │    MIG-007 Subtasks     │
+                                  ├─────────────────────────┤
+                                  │                         │
+                                  │  MIG-007A (foundation)  │
+                                  │      │                  │
+                                  │  ┌───┴───┬───┬───┐      │
+                                  │  ▼       ▼   ▼   ▼      │
+                                  │ 007B   007C 007D 007E   │
+                                  │ (tabs) (m-d)(wiz)(set)  │
+                                  │  │       │             │
+                                  │  └───┬───┘             │
+                                  │      ▼                 │
+                                  │   MIG-007F (features)   │
+                                  │      │                 │
+                                  │      ▼                 │
+                                  │   MIG-007G (entry)      │
+                                  └─────────────────────────┘
 
 PREP-003 (permalinks) ─────────── (can start anytime)
 ```

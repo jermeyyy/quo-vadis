@@ -46,6 +46,13 @@ Phase 5 provides comprehensive migration guidance and LLM-consumable documentati
 | MIG-005 | Nested Tabs + Detail Recipe | [MIG-005](./MIG-005-nested-tabs-detail-example.md) | Medium | 1.5 days |
 | MIG-006 | Deep Linking Recipe | [MIG-006](./MIG-006-deep-linking-recipe.md) | Medium | 1 day |
 | MIG-007 | Demo App Rewrite | [MIG-007](./MIG-007-demo-app-rewrite.md) | High | 3-4 days |
+| MIG-007A | Foundation - Core Destinations | [MIG-007A](./MIG-007A-foundation-destinations.md) | Medium | 3-4 hours |
+| MIG-007B | Tab System Migration | [MIG-007B](./MIG-007B-tab-system.md) | High | 4-5 hours |
+| MIG-007C | Master-Detail Pattern | [MIG-007C](./MIG-007C-master-detail.md) | Medium | 2-3 hours |
+| MIG-007D | Process/Wizard Flow | [MIG-007D](./MIG-007D-process-wizard.md) | Medium | 3-4 hours |
+| MIG-007E | Settings Stack | [MIG-007E](./MIG-007E-settings-stack.md) | Low | 1-2 hours |
+| MIG-007F | Feature Screens | [MIG-007F](./MIG-007F-feature-screens.md) | Medium | 3-4 hours |
+| MIG-007G | Entry Point Integration | [MIG-007G](./MIG-007G-entry-point.md) | High | 3-4 hours |
 | MIG-008 | API Change Summary Document | [MIG-008](./MIG-008-api-change-summary.md) | Low | 0.5 days |
 
 ---
@@ -351,14 +358,20 @@ Phase 5 provides comprehensive migration guidance and LLM-consumable documentati
 
 ---
 
-### MIG-007: Demo App Rewrite
+### MIG-007: Demo App Rewrite (Decomposed into Subtasks)
 
 | Attribute | Value |
 |-----------|-------|
 | **Complexity** | High |
-| **Estimated Time** | 3-4 days |
+| **Estimated Time** | 3-4 days (~20-25 hours) |
 | **Dependencies** | Phase 1-4 complete, MIG-001 through MIG-006 |
 | **Output** | Updated `composeApp/` module |
+| **Subtasks** | 7 (MIG-007A through MIG-007G) |
+
+**Subtask Dependency Graph:**
+```
+MIG-007A → MIG-007B, C, D, E (parallel) → MIG-007F → MIG-007G
+```
 
 **Purpose**: Complete rewrite of the demo application as reference implementation.
 
@@ -637,7 +650,7 @@ All links point to main branch for stable references:
 | **MIG-004**: Process/Wizard Recipe | Low | 1 day |
 | **MIG-005**: Nested Tabs + Detail Recipe | Medium | 1.5 days |
 | **MIG-006**: Deep Linking Recipe | Medium | 1 day |
-| **MIG-007**: Demo App Rewrite | High | 3-4 days |
+| **MIG-007**: Demo App Rewrite (7 subtasks) | High | 3-4 days |
 | **MIG-008**: API Change Summary | Low | 0.5 days |
 | **Total** | | **14-17 days** |
 

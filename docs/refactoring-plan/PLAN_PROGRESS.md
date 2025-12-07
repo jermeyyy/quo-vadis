@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 8 | 8 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | � Completed | 100% | 11 | 11 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | � In Progress | 58% | 11 | 19 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~80% | 43 | 54 |
+| **TOTAL** | 🟡 In Progress | ~76% | 43 | 62 |
 
 ---
 
@@ -41,6 +41,30 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-07 (Latest)
+- ✅ **MIG-007 Decomposed**: Demo App Rewrite split into 7 focused subtasks - **DECOMPOSITION COMPLETE**
+  - Created comprehensive subtask specifications for pattern-based migration
+  - **Subtasks Created**:
+    - [MIG-007A](./phase5-migration/MIG-007A-foundation-destinations.md) - Foundation - Core Destination Classes (Medium, 3-4 hours)
+    - [MIG-007B](./phase5-migration/MIG-007B-tab-system.md) - Tab System Migration (High, 4-5 hours)
+    - [MIG-007C](./phase5-migration/MIG-007C-master-detail.md) - Master-Detail Pattern (Medium, 2-3 hours)
+    - [MIG-007D](./phase5-migration/MIG-007D-process-wizard.md) - Process/Wizard Flow (Medium, 3-4 hours)
+    - [MIG-007E](./phase5-migration/MIG-007E-settings-stack.md) - Settings Stack (Low, 1-2 hours)
+    - [MIG-007F](./phase5-migration/MIG-007F-feature-screens.md) - Feature Screens (Medium, 3-4 hours)
+    - [MIG-007G](./phase5-migration/MIG-007G-entry-point.md) - Entry Point Integration (High, 3-4 hours)
+  - **Dependency Graph**: MIG-007A → MIG-007B/C/D/E (parallel) → MIG-007F → MIG-007G
+  - **Total Estimated Time**: 20-25 hours (~3-4 days)
+  - **Key Features**:
+    - Each subtask has detailed migration steps with OLD → NEW code examples
+    - Clear file references and GitHub permalinks to main branch
+    - Recipe cross-references for pattern validation
+    - Comprehensive checklists and verification commands
+    - No backward compatibility (library in development)
+  - **Files Created**: 7 new subtask documents (1400+ lines total)
+  - **Files Updated**: INDEX.md, phase5-migration-summary.md, phase5-migration-progress.md, MIG-007-demo-app-rewrite.md
+  - **Phase 5 Status**: Now at 11/18 recipe + migration tasks (61%). MIG-007 subtasks are ready for developer implementation.
+  
+  **🎉 Phase 5: Migration progress updated (recipes complete, demo app decomposed)**
+
 - ✅ **ANN-006**: Define @Argument Parameter Annotation - **COMPLETED**
   - Created new parameter-level `@Argument(key, optional)` annotation replacing old class-level `@Argument(dataClass)`
   - **Files Created:**

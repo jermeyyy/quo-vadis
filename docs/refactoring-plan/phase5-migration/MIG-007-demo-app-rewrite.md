@@ -6,9 +6,39 @@
 |-----------|-------|
 | **Task ID** | MIG-007 |
 | **Complexity** | High |
-| **Estimated Time** | 3-4 days |
+| **Estimated Time** | 20-25 hours (~3-4 days) |
 | **Dependencies** | Phase 1-4 complete, MIG-001 through MIG-005 |
 | **Output** | Updated `composeApp/` module |
+
+## Subtasks
+
+This task is broken down into the following subtasks:
+
+| Subtask | Description | Complexity | Time |
+|---------|-------------|------------|------|
+| [MIG-007A](./MIG-007A-foundation-destinations.md) | Foundation - Core Destination Classes | Medium | 3-4 hours |
+| [MIG-007B](./MIG-007B-tab-system-migration.md) | Tab System Migration | High | 4-5 hours |
+| [MIG-007C](./MIG-007C-master-detail-pattern.md) | Master-Detail Pattern | Medium | 2-3 hours |
+| [MIG-007D](./MIG-007D-process-wizard-flow.md) | Process/Wizard Flow | Medium | 3-4 hours |
+| [MIG-007E](./MIG-007E-settings-stack.md) | Settings Stack | Low | 1-2 hours |
+| [MIG-007F](./MIG-007F-feature-screens.md) | Feature Screens | Medium | 3-4 hours |
+| [MIG-007G](./MIG-007G-entry-point-integration.md) | Entry Point Integration | High | 3-4 hours |
+
+### Subtask Dependency Graph
+
+```
+MIG-007A (Foundation)
+    │
+    ├──► MIG-007B (Tabs) ──┬──► MIG-007F (Feature Screens) ──┐
+    │                      │                                  │
+    ├──► MIG-007C (Master-Detail) ─────────────────────────►─┼──► MIG-007G (Entry Point)
+    │                                                         │
+    ├──► MIG-007D (Process/Wizard) ─────────────────────────►─┤
+    │                                                         │
+    └──► MIG-007E (Settings) ──────────────────────────────►─┘
+```
+
+> **Note**: Subtasks MIG-007B, MIG-007C, MIG-007D, and MIG-007E can run in parallel after MIG-007A is complete.
 
 ## Objective
 
@@ -45,6 +75,8 @@ composeApp/src/commonMain/kotlin/com/jermey/navplayground/
 ## Rewrite Checklist
 
 ### Phase A: Destination Definitions (Day 1)
+
+> See [MIG-007A](./MIG-007A-foundation-destinations.md) for detailed implementation of core destination classes.
 
 #### A.1. Update Root Destinations
 
@@ -136,6 +168,8 @@ sealed class HomeDestination : Destination {
 
 ### Phase B: Screen Bindings (Day 1-2)
 
+> See [MIG-007B](./MIG-007B-tab-system-migration.md) for tab screen bindings and [MIG-007F](./MIG-007F-feature-screens.md) for feature screen implementations.
+
 #### B.1. Rename @Content to @Screen
 
 ```kotlin
@@ -186,6 +220,8 @@ fun ArticleScreen(
 ---
 
 ### Phase C: App Entry Point (Day 2)
+
+> See [MIG-007G](./MIG-007G-entry-point-integration.md) for detailed entry point integration.
 
 #### C.1. Update DemoApp.kt
 
@@ -300,6 +336,8 @@ val demoAnimations = AnimationRegistry {
 
 ### Phase D: Tab Navigation (Day 2-3)
 
+> See [MIG-007B](./MIG-007B-tab-system-migration.md) for detailed tab system migration.
+
 #### D.1. Remove TabbedNavHost Usage
 
 ```kotlin
@@ -348,6 +386,8 @@ navigator.switchTab(MainTabsDestination.Profile)
 ---
 
 ### Phase E: Navigation Calls (Day 3)
+
+> See [MIG-007C](./MIG-007C-master-detail-pattern.md) for master-detail navigation, [MIG-007D](./MIG-007D-process-wizard-flow.md) for wizard flow navigation, and [MIG-007E](./MIG-007E-settings-stack.md) for settings stack navigation.
 
 #### E.1. Update Navigate Calls
 
