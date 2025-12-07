@@ -8,8 +8,8 @@
 | **Task Name** | Create Deep Link Handler Generator |
 | **Phase** | Phase 4: KSP Processor Rewrite |
 | **Complexity** | High |
-| **Estimated Time** | 3-4 days |
-| **Dependencies** | KSP-001 (Annotation Extractors) |
+| **Estimated Time** | 4-5 days |
+| **Dependencies** | KSP-001 (Annotation Extractors with @Argument support) |
 | **Blocked By** | KSP-001 |
 | **Blocks** | None |
 
@@ -24,8 +24,24 @@ This task creates a KSP generator that produces `GeneratedDeepLinkHandler.kt` - 
 Enable deep linking support by:
 1. **Matching URIs** to route patterns (e.g., `myapp://home/detail/123`)
 2. **Extracting parameters** from URI paths (e.g., `{id}` → `"123"`)
-3. **Creating destinations** with extracted parameter values
-4. **Generating reverse URIs** from destination instances
+3. **Type-safe conversion** using `SerializerType` from `@Argument` metadata
+4. **Creating destinations** with properly typed parameter values
+5. **Generating reverse URIs** from destination instances
+
+### Type-Safe Argument Serialization (NEW)
+
+The generator now uses `ParamInfo.serializerType` to generate proper type conversions:
+
+| SerializerType | URL String → Kotlin Value | Kotlin Value → URL String |
+|----------------|--------------------------|---------------------------|
+| `STRING` | Direct use | Direct use |
+| `INT` | `toInt()` | `toString()` |
+| `LONG` | `toLong()` | `toString()` |
+| `FLOAT` | `toFloat()` | `toString()` |
+| `DOUBLE` | `toDouble()` | `toString()` |
+| `BOOLEAN` | `toBooleanStrict()` | `toString()` |
+| `ENUM` | `enumValueOf<T>()` | `.name` |
+| `JSON` | `json.decodeFromString<T>()` | `json.encodeToString()` |
 
 ### Data Flow
 
@@ -45,38 +61,82 @@ Enable deep linking support by:
 build/generated/ksp/commonMain/kotlin/{package}/generated/GeneratedDeepLinkHandler.kt
 ```
 
-### Generated Structure
+### Generated Structure (with Type-Safe Argument Conversion)
 
 ```kotlin
 // File: GeneratedDeepLinkHandler.kt
 package com.example.generated
 
 import com.jermey.quo.vadis.core.navigation.core.*
+import kotlinx.serialization.json.Json
 
 /**
  * KSP-generated deep link handler.
  * Parses deep link URIs and creates corresponding destination instances.
+ * 
+ * Supports type-safe argument conversion based on @Argument metadata:
+ * - Primitives (Int, Long, Float, Double, Boolean)
+ * - Enums (via enumValueOf)
+ * - @Serializable types (via kotlinx.serialization JSON)
  */
 object GeneratedDeepLinkHandler : DeepLinkHandler {
     
+    private val json = Json { 
+        ignoreUnknownKeys = true 
+        isLenient = true
+    }
+    
     private val routes = listOf(
+        // Data object - no parameters
         RoutePattern("home/feed", emptyList()) { HomeDestination.Feed },
+        
+        // String parameter (direct use)
         RoutePattern("home/detail/{id}", listOf("id")) { params ->
             HomeDestination.Detail(id = params["id"]!!)
         },
-        RoutePattern("profile/overview", emptyList()) { ProfileDestination.Overview },
-        RoutePattern("profile/edit/{section}", listOf("section")) { params ->
-            ProfileDestination.Edit(section = params["section"]!!)
+        
+        // Int parameter (type conversion)
+        RoutePattern("page/{pageNumber}", listOf("pageNumber")) { params ->
+            AppDestination.Page(pageNumber = params["pageNumber"]!!.toInt())
+        },
+        
+        // Boolean parameter (type conversion)
+        RoutePattern("settings/{section}", listOf("section")) { params ->
+            SettingsDestination.Section(
+                section = params["section"]!!,
+                darkMode = params["darkMode"]?.toBooleanStrictOrNull() ?: false
+            )
+        },
+        
+        // Enum parameter (enumValueOf)
+        RoutePattern("products/list", emptyList()) { params ->
+            ProductsDestination.List(
+                sortBy = params["sortBy"]?.let { enumValueOf<SortOption>(it) } 
+                    ?: SortOption.RELEVANCE
+            )
+        },
+        
+        // @Serializable parameter (JSON decode)
+        RoutePattern("search/results", emptyList()) { params ->
+            SearchDestination.Results(
+                query = params["q"]!!,
+                filters = params["filters"]?.let { 
+                    json.decodeFromString<SearchFilters>(it) 
+                } ?: SearchFilters()
+            )
         }
     )
     
     override fun handleDeepLink(uri: Uri): DeepLinkResult {
         val path = uri.path?.trimStart('/') ?: return DeepLinkResult.NotMatched
+        val queryParams = uri.queryParameterMap() // Extract query params
         
         for (route in routes) {
-            val params = route.match(path)
-            if (params != null) {
-                return DeepLinkResult.Matched(route.createDestination(params))
+            val pathParams = route.match(path)
+            if (pathParams != null) {
+                // Merge path params with query params
+                val allParams = pathParams + queryParams
+                return DeepLinkResult.Matched(route.createDestination(allParams))
             }
         }
         
@@ -87,8 +147,20 @@ object GeneratedDeepLinkHandler : DeepLinkHandler {
         return when (destination) {
             HomeDestination.Feed -> Uri.parse("$scheme://home/feed")
             is HomeDestination.Detail -> Uri.parse("$scheme://home/detail/${destination.id}")
-            ProfileDestination.Overview -> Uri.parse("$scheme://profile/overview")
-            is ProfileDestination.Edit -> Uri.parse("$scheme://profile/edit/${destination.section}")
+            
+            // Int serialization
+            is AppDestination.Page -> Uri.parse("$scheme://page/${destination.pageNumber}")
+            
+            // Enum serialization
+            is ProductsDestination.List -> 
+                Uri.parse("$scheme://products/list?sortBy=${destination.sortBy.name}")
+            
+            // JSON serialization for complex types
+            is SearchDestination.Results -> {
+                val filtersJson = json.encodeToString(SearchFilters.serializer(), destination.filters)
+                Uri.parse("$scheme://search/results?q=${destination.query}&filters=$filtersJson")
+            }
+            
             else -> null
         }
     }

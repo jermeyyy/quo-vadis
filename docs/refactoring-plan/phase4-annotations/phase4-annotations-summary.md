@@ -153,6 +153,45 @@ Phase 4 focuses on defining the annotation system for the Quo Vadis navigation l
 
 ---
 
+### ANN-006: Define @Argument Parameter Annotation (NEW)
+
+| Field | Value |
+|-------|-------|
+| **Complexity** | Low-Medium |
+| **Estimated Time** | 1 day |
+| **Dependencies** | ANN-001 |
+
+**Purpose**: Create the `@Argument` parameter-level annotation that explicitly marks constructor parameters of `@Destination` data classes as navigation arguments.
+
+**Key Features**:
+- Marks constructor parameters as navigation arguments
+- Custom key support for deep link URL parameters
+- Optional argument support with default values
+- Type-safe serialization for primitives, enums, and @Serializable types
+- Replaces deprecated class-level `@Argument(dataClass: KClass<*>)` from TypedDestination pattern
+
+**Parameters**:
+- `key: String = ""` - Custom URL parameter key (defaults to parameter name)
+- `optional: Boolean = false` - Whether argument is optional in deep links
+
+**Supported Types**:
+- Primitives: `String`, `Int`, `Long`, `Float`, `Double`, `Boolean`
+- Enums: Any enum class
+- Complex types: Any `@Serializable` class (via kotlinx.serialization JSON)
+- Collections: `List<T>`, `Set<T>` where T is serializable
+
+**Example**:
+```kotlin
+@Destination(route = "product/{id}")
+data class ProductDetail(
+    @Argument val id: String,
+    @Argument(key = "ref", optional = true) val referrer: String? = null,
+    @Argument(optional = true) val showReviews: Boolean = false
+) : ProductsDestination()
+```
+
+---
+
 ## Key Components/Features to Implement
 
 ### Annotations
@@ -166,6 +205,7 @@ Phase 4 focuses on defining the annotation system for the Quo Vadis navigation l
 | `@Pane` | CLASS | `quo-vadis-annotations/.../PaneAnnotations.kt` |
 | `@PaneItem` | CLASS | `quo-vadis-annotations/.../PaneAnnotations.kt` |
 | `@Screen` | FUNCTION | `quo-vadis-annotations/.../Screen.kt` |
+| `@Argument` | VALUE_PARAMETER | `quo-vadis-annotations/.../Argument.kt` |
 
 ### Supporting Types
 
@@ -208,6 +248,13 @@ Phase 4 focuses on defining the annotation system for the Quo Vadis navigation l
 | `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/TabAnnotations.kt` | @Tab and @TabItem annotations |
 | `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/PaneAnnotations.kt` | @Pane, @PaneItem annotations and enums |
 | `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/Screen.kt` | @Screen annotation |
+| `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/Argument.kt` | @Argument annotation (NEW) |
+
+### Files to Modify
+
+| File Path | Description |
+|-----------|-------------|
+| `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/Annotations.kt` | Remove deprecated `@Argument(dataClass: KClass<*>)` |
 
 ### Referenced Documentation
 
@@ -228,7 +275,8 @@ Phase 4 focuses on defining the annotation system for the Quo Vadis navigation l
 | ANN-003: @Tab/@TabItem | Medium | 1 day |
 | ANN-004: @Pane/@PaneItem | Medium | 1 day |
 | ANN-005: @Screen | Low | 0.5 days |
-| **Total** | **Low-Medium** | **3.5 days** |
+| ANN-006: @Argument | Low-Medium | 1 day |
+| **Total** | **Low-Medium** | **4.5 days** |
 
 ---
 

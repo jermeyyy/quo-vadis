@@ -85,8 +85,9 @@ Introduces the new annotation system mapping directly to NavNode types.
 | [ANN-003](./phase4-annotations/ANN-003-route-transitions.md) | Define `@Tab` and `@TabItem` Annotations | Medium | 1 day |
 | [ANN-004](./phase4-annotations/ANN-004-shared-element.md) | Define `@Pane` and `@PaneItem` Annotations | Medium | 1 day |
 | [ANN-005](./phase4-annotations/ANN-005-screen.md) | Define `@Screen` Content Binding Annotation | Low | 0.5 days |
+| [ANN-006](./phase4-annotations/ANN-006-argument.md) | Define `@Argument` Parameter Annotation | Low-Medium | 1 day |
 
-**Phase 3 Total: ~3.5 days**
+**Phase 3 Total: ~4.5 days**
 
 **New Annotation Summary:**
 | Annotation | Maps To | Purpose |
@@ -98,24 +99,25 @@ Introduces the new annotation system mapping directly to NavNode types.
 | `@Pane(name, backBehavior)` | `PaneNode` | Adaptive layout container |
 | `@PaneItem(role, adaptStrategy)` | Pane metadata | Pane behavior configuration |
 | `@Screen(destination)` | Registry entry | Composable-to-destination binding |
+| `@Argument(key, optional)` | `ParamInfo` | **Type-safe navigation argument (NEW)** |
 
 ---
 
 ### Phase 4: KSP Processor Rewrite (8 Tasks)
-Complete rewrite of code generation for the new annotation system.
+Complete rewrite of code generation for the new annotation system, including **type-safe argument serialization**.
 
 | ID | Task | Complexity | Est. Time |
 |----|------|------------|-----------|
-| [KSP-001](./phase3-ksp/KSP-001-graph-type-enum.md) | Create Annotation Extractors | Medium | 2-3 days |
+| [KSP-001](./phase3-ksp/KSP-001-graph-type-enum.md) | Create Annotation Extractors (with @Argument) | Medium-High | 3-4 days |
 | [KSP-002](./phase3-ksp/KSP-002-class-references.md) | Create NavNode Builder Generator | High | 4-5 days |
 | [KSP-003](./phase3-ksp/KSP-003-graph-extractor.md) | Create Screen Registry Generator | Medium | 2-3 days |
-| [KSP-004](./phase3-ksp/KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator | High | 3-4 days |
+| [KSP-004](./phase3-ksp/KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator (type conversion) | High | 4-5 days |
 | [KSP-005](./phase3-ksp/KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | Low | 1 day |
-| [KSP-006](./phase3-ksp/KSP-006-validation.md) | Validation and Error Reporting | Medium | 2-3 days |
+| [KSP-006](./phase3-ksp/KSP-006-validation.md) | Validation and Error Reporting (argument validation) | Medium | 2-3 days |
 | [KSP-007](./phase3-ksp/KSP-007-remove-legacy-tabgraph.md) | Remove Legacy TabGraphExtractor | Low | 0.5 days |
 | [KSP-008](./phase3-ksp/KSP-008-deep-link-handler-imports.md) | Fix Deep Link Handler Generator Imports | Low | 0.5 days |
 
-**Phase 4 Total: ~15-20 days**
+**Phase 4 Total: ~18-23 days**
 
 **Generated Artifacts:**
 | Input | Output | Purpose |
@@ -124,7 +126,8 @@ Complete rewrite of code generation for the new annotation system.
 | `@Tab` class | `build{Name}NavNode()` | Initial TabNode tree |
 | `@Pane` class | `build{Name}NavNode()` | Initial PaneNode tree |
 | All `@Screen` | `GeneratedScreenRegistry` | Destination → Composable mapping |
-| All `@Destination` | `GeneratedDeepLinkHandler` | URI → Destination parsing |
+| All `@Destination` | `GeneratedDeepLinkHandler` | URI → Destination parsing with type conversion |
+| `@Argument` params | Type converters | Primitive/Enum/JSON serialization |
 
 ---
 
@@ -257,17 +260,19 @@ Phase 1 (Core) ─────────────────────�
 |-------|-------|----------------|
 | Phase 1: Core State | 5 | 14-19 |
 | Phase 2: Renderer | 12 | 31-37.5 |
-| Phase 3: Annotations | 5 | 3.5 |
-| Phase 4: KSP | 6 | 14-19 |
+| Phase 3: Annotations | 6 | 4.5 |
+| Phase 4: KSP | 8 | 18-23 |
 | Phase 5: Recipes & Migration | 10 | 14-17 |
 | Phase 6: Risks | 5 | 11 |
 | Phase 7: Documentation | 4 | 7 |
 | Phase 8: Testing | 5 | 16 |
-| **TOTAL** | **52** | **110.5-132 days** |
+| **TOTAL** | **55** | **116-135.5 days** |
 
-> **Note**: Phase 5 now includes `quo-vadis-recipes` module creation and `@Deprecated` annotations for all legacy APIs. All "migrating from" code references use GitHub permalinks to the main branch.
+> **Note**: Phase 3 now includes `@Argument` annotation (ANN-006) for type-safe navigation arguments. Phase 4 KSP includes type conversion for deep linking.
 >
-> **Note**: Many tasks can be parallelized. With 2-3 developers, timeline can be reduced to **8-10 weeks**.
+> **Note**: Phase 5 includes `quo-vadis-recipes` module creation and `@Deprecated` annotations for all legacy APIs. All "migrating from" code references use GitHub permalinks to the main branch.
+>
+> **Note**: Many tasks can be parallelized. With 2-3 developers, timeline can be reduced to **9-11 weeks**.
 
 ---
 
@@ -300,7 +305,7 @@ Phase 1 (Core) ─────────────────────�
 
 ## New Annotation Examples
 
-### Basic Stack Navigation
+### Basic Stack Navigation with Type-Safe Arguments
 
 ```kotlin
 @Stack(name = "home", startDestination = "Feed")
@@ -310,13 +315,16 @@ sealed class HomeDestination : Destination {
     data object Feed : HomeDestination()
     
     @Destination(route = "home/article/{articleId}")
-    data class Article(val articleId: String) : HomeDestination()
+    data class Article(
+        @Argument val articleId: String,
+        @Argument(optional = true) val showComments: Boolean = false
+    ) : HomeDestination()
 }
 
 @Screen(HomeDestination.Feed::class)
 @Composable
 fun FeedScreen(navigator: Navigator) {
-    Button(onClick = { navigator.navigate(HomeDestination.Article("123")) }) {
+    Button(onClick = { navigator.navigate(HomeDestination.Article("123", showComments = true)) }) {
         Text("View Article")
     }
 }
@@ -324,8 +332,38 @@ fun FeedScreen(navigator: Navigator) {
 @Screen(HomeDestination.Article::class)
 @Composable
 fun ArticleScreen(destination: HomeDestination.Article, navigator: Navigator) {
+    // Type-safe argument access via destination object
     Text("Article: ${destination.articleId}")
+    if (destination.showComments) {
+        CommentsSection()
+    }
 }
+```
+
+### Complex Arguments with Serialization
+
+```kotlin
+@Serializable
+data class SearchFilters(
+    val categories: List<String> = emptyList(),
+    val priceRange: IntRange? = null
+)
+
+@Stack(name = "search", startDestination = "Home")
+sealed class SearchDestination : Destination {
+    
+    @Destination(route = "search")
+    data object Home : SearchDestination()
+    
+    @Destination(route = "search/results")
+    data class Results(
+        @Argument val query: String,
+        @Argument(optional = true) val filters: SearchFilters = SearchFilters(),
+        @Argument(key = "p", optional = true) val page: Int = 1
+    ) : SearchDestination()
+}
+
+// Deep link: myapp://search/results?q=kotlin&filters={"categories":["books"]}&p=2
 ```
 
 ### Tabbed Navigation

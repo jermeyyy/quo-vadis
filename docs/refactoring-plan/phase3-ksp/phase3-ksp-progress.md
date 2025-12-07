@@ -1,8 +1,8 @@
 # Phase 3: KSP Processor Rewrite - Progress
 
 > **Last Updated**: 2025-12-07  
-> **Phase Status**: � Completed  
-> **Progress**: 8/8 tasks (100%)
+> **Phase Status**: 🚧 In Progress  
+> **Progress**: 6/8 tasks (75%)
 
 ## Overview
 
@@ -14,10 +14,10 @@ This phase implements a complete rewrite of the KSP code generation for the new 
 
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
-| [KSP-001](./KSP-001-graph-type-enum.md) | Create Annotation Extractors | 🟢 Completed | 2025-12-06 | 11 files created |
+| [KSP-001](./KSP-001-graph-type-enum.md) | Create Annotation Extractors (with @Argument) | � Needs Update | 2025-12-06 | ParamInfo enhanced in docs, implementation pending |
 | [KSP-002](./KSP-002-class-references.md) | Create NavNode Builder Generator | 🟢 Completed | 2025-12-06 | Generator + processor wiring |
 | [KSP-003](./KSP-003-graph-extractor.md) | Create Screen Registry Generator | 🟢 Completed | 2025-12-06 | Generator + interface + processor wiring |
-| [KSP-004](./KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator | 🟢 Completed | 2025-12-06 | Generator + interface + processor wiring |
+| [KSP-004](./KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator (type conversion) | � Needs Update | 2025-12-06 | Type conversion enhanced in docs, implementation pending |
 | [KSP-005](./KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | 🟢 Completed | 2025-12-06 | Generator + processor wiring |
 | [KSP-006](./KSP-006-validation.md) | Validation and Error Reporting | 🟢 Completed | 2025-12-06 | ValidationEngine + processor integration |
 | [KSP-007](./KSP-007-remove-legacy-tabgraph.md) | Remove Legacy TabGraphExtractor | 🟢 Completed | 2025-12-06 | 10 legacy files removed, processor cleaned up |
@@ -236,6 +236,13 @@ fun Navigator.switchToDetailPanePane() = switchPane(MainPanes.DetailPane)
 
 Created the deep link handler generator that maps URIs to destinations.
 
+**Updated 2025-12-07**: Documentation enhanced with type-safe argument serialization:
+- Uses `SerializerType` from `ParamInfo` for type conversion
+- Supports primitives (Int, Long, Float, Double, Boolean)
+- Supports Enum types via `enumValueOf<T>()`
+- Supports `@Serializable` types via kotlinx.serialization JSON
+- Implementation pending for ANN-006 completion
+
 **Files Created**:
 
 1. **Core Interface** (`quo-vadis-core/src/commonMain/kotlin/.../navigation/core/`):
@@ -368,8 +375,14 @@ Created the core generator that transforms extracted annotation metadata into `b
 
 Created the extraction layer for parsing annotations into strongly-typed intermediate models.
 
+**Updated 2025-12-07**: Enhanced `ParamInfo` with `@Argument` annotation support:
+- `isArgument: Boolean` - whether parameter has @Argument annotation
+- `argumentKey: String` - custom key for URL serialization
+- `isOptionalArgument: Boolean` - whether argument is optional in deep links
+- `serializerType: SerializerType` - type conversion strategy (STRING, INT, LONG, BOOLEAN, ENUM, JSON)
+
 **Model Classes Created** (`quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/models/`):
-- `ParamInfo.kt` - Constructor parameter metadata
+- `ParamInfo.kt` - Constructor parameter metadata (enhanced with @Argument fields)
 - `DestinationInfo.kt` - @Destination annotation metadata
 - `StackInfo.kt` - @Stack annotation metadata
 - `TabInfo.kt` - @Tab/@TabItem annotation metadata
@@ -391,7 +404,25 @@ Created the extraction layer for parsing annotations into strongly-typed interme
 
 ## In Progress Tasks
 
-_None currently in progress._
+### Pending Implementation Updates
+
+**KSP-001**: Create Annotation Extractors (with @Argument)
+- **Status**: Documentation updated, implementation pending
+- **Depends on**: ANN-006 completion
+- **Changes needed**: 
+  - Update `ParamInfo.kt` with new fields (isArgument, argumentKey, isOptionalArgument, serializerType)
+  - Create `SerializerType.kt` enum
+  - Update `DestinationExtractor.kt` to extract @Argument annotations
+  - Add serializer type detection logic
+
+**KSP-004**: Create Deep Link Handler Generator (type conversion)
+- **Status**: Documentation updated, implementation pending
+- **Depends on**: ANN-006 and KSP-001 updates
+- **Changes needed**:
+  - Update `DeepLinkHandlerGenerator.kt` to use SerializerType
+  - Add type conversion code generation (toInt(), toLong(), enumValueOf, JSON)
+  - Add query parameter extraction support
+  - Update RoutePattern to handle typed parameters
 
 ---
 
@@ -403,9 +434,7 @@ _None - KSP-001 completed, unlocks remaining tasks._
 
 ## Ready to Start
 
-- **KSP-003**: Create Screen Registry Generator
-- **KSP-005**: Create Navigator Extensions Generator (depends on KSP-002 ✓)
-- **KSP-006**: Validation and Error Reporting
+_All remaining tasks completed. Waiting for ANN-006 to enable KSP-001 and KSP-004 implementation updates._
 
 ---
 
@@ -430,15 +459,17 @@ Phase 4 (Annotations) ─► KSP-001 ─┬─► KSP-002 ─┬─► KSP-004
 | `@Tab` class | `build{Name}NavNode()` | Initial TabNode tree |
 | `@Pane` class | `build{Name}NavNode()` | Initial PaneNode tree |
 | All `@Screen` | `GeneratedScreenRegistry` | Destination → Composable mapping |
-| All `@Destination` | `GeneratedDeepLinkHandler` | URI → Destination parsing |
+| All `@Destination` | `GeneratedDeepLinkHandler` | URI → Destination parsing with type conversion |
+| `@Argument` params | Type converters | Primitive/Enum/JSON serialization (pending ANN-006) |
 
 ---
 
 ## Notes
 
-- Estimated 14-19 days total
+- Estimated 18-23 days total (updated with @Argument support)
 - Can be started in parallel with Phase 2 (after Phase 4)
 - Focus on compile-time safety and helpful error messages
+- KSP-001 and KSP-004 ready for @Argument implementation once ANN-006 completed
 
 ---
 
