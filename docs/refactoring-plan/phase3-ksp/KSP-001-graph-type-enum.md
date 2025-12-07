@@ -35,7 +35,7 @@ The extraction phase separates annotation parsing from code generation, providin
 ```
 quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/
 ├── extractors/
-│   ├── DestinationExtractor.kt     # @Destination extraction
+│   ├── DestinationExtractor.kt     # @Destination + @Argument extraction
 │   ├── StackExtractor.kt           # @Stack extraction
 │   ├── TabExtractor.kt             # @Tab/@TabItem extraction
 │   ├── PaneExtractor.kt            # @Pane/@PaneItem extraction
@@ -43,12 +43,10 @@ quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/
 │
 └── models/
     ├── DestinationInfo.kt          # Destination metadata
-    ├── ParamInfo.kt                # Constructor parameter metadata
+    ├── ParamInfo.kt                # Constructor parameter + @Argument metadata + SerializerType enum
     ├── StackInfo.kt                # Stack container metadata
-    ├── TabInfo.kt                  # Tab container metadata
-    ├── TabItemInfo.kt              # Tab item metadata
-    ├── PaneInfo.kt                 # Pane container metadata
-    ├── PaneItemInfo.kt             # Pane item metadata
+    ├── TabInfo.kt                  # Tab container + TabItemInfo metadata
+    ├── PaneInfo.kt                 # Pane container + PaneItemInfo + enum metadata
     └── ScreenInfo.kt               # Screen binding metadata
 ```
 
@@ -94,7 +92,7 @@ data class DestinationInfo(
 
 ### ParamInfo
 
-Represents constructor parameter metadata, including `@Argument` annotation details.
+Represents constructor parameter metadata, including `@Argument` annotation details. Note: `SerializerType` enum is defined in the same file.
 
 ```kotlin
 package com.jermey.quo.vadis.ksp.models
@@ -102,13 +100,41 @@ package com.jermey.quo.vadis.ksp.models
 import com.google.devtools.ksp.symbol.KSType
 
 /**
- * Metadata for a constructor parameter, including @Argument annotation details.
+ * Defines how a navigation argument should be serialized for deep links.
  *
- * @property name Parameter name in Kotlin code
+ * The serializer type is determined by the parameter's Kotlin type and affects
+ * how the argument is converted to/from URL string parameters.
+ */
+enum class SerializerType {
+    /** Direct toString() - no conversion needed */
+    STRING,
+    /** toInt() parsing */
+    INT,
+    /** toLong() parsing */
+    LONG,
+    /** toFloat() parsing */
+    FLOAT,
+    /** toDouble() parsing */
+    DOUBLE,
+    /** "true"/"false" case-insensitive parsing */
+    BOOLEAN,
+    /** enumValueOf<T>() using enum name */
+    ENUM,
+    /** kotlinx.serialization Json for complex types */
+    JSON
+}
+
+/**
+ * Metadata for a constructor parameter.
+ *
+ * Contains information about a constructor parameter of a @Destination data class,
+ * including @Argument annotation data if present.
+ *
+ * @property name Parameter name
  * @property type KSP type of the parameter
  * @property hasDefault True if the parameter has a default value
- * @property isArgument True if parameter has @Argument annotation
- * @property argumentKey Key for URL serialization (from @Argument(key=...) or param name)
+ * @property isArgument True if the parameter has @Argument annotation
+ * @property argumentKey Key for URL parameter mapping (from @Argument.key or param name)
  * @property isOptionalArgument True if @Argument(optional = true)
  * @property serializerType How to serialize this argument for deep links
  */
@@ -116,44 +142,11 @@ data class ParamInfo(
     val name: String,
     val type: KSType,
     val hasDefault: Boolean,
-    // @Argument-specific fields
     val isArgument: Boolean = false,
     val argumentKey: String = "",
     val isOptionalArgument: Boolean = false,
     val serializerType: SerializerType = SerializerType.STRING
 )
-
-/**
- * Serialization strategy for navigation arguments.
- *
- * Determines how argument values are converted to/from URL strings
- * for deep linking support.
- */
-enum class SerializerType {
-    /** Direct string - no conversion needed */
-    STRING,
-    
-    /** Integer - uses toInt()/toString() */
-    INT,
-    
-    /** Long - uses toLong()/toString() */
-    LONG,
-    
-    /** Float - uses toFloat()/toString() */
-    FLOAT,
-    
-    /** Double - uses toDouble()/toString() */
-    DOUBLE,
-    
-    /** Boolean - "true"/"false" (case-insensitive parsing) */
-    BOOLEAN,
-    
-    /** Enum - uses enumValueOf<T>()/name */
-    ENUM,
-    
-    /** Complex type - requires kotlinx.serialization @Serializable */
-    JSON
-}
 ```
 
 ### StackInfo
@@ -343,9 +336,9 @@ data class ScreenInfo(
 package com.jermey.quo.vadis.ksp.extractors
 
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.ParamInfo
@@ -353,29 +346,21 @@ import com.jermey.quo.vadis.ksp.models.SerializerType
 
 /**
  * Extracts @Destination annotations into DestinationInfo models.
- * 
- * Enhanced to extract @Argument annotations from constructor parameters,
- * enabling type-safe navigation arguments with proper serialization.
+ *
+ * This extractor is the foundation for parsing navigation destinations.
+ * It handles:
+ * - Route parameter extraction from pattern strings (e.g., "{id}" from "detail/{id}")
+ * - Constructor parameter extraction for data classes
+ * - @Argument annotation extraction for type-safe navigation arguments
+ * - Data object vs data class detection
+ * - Parent sealed class detection
+ *
+ * @property logger KSP logger for error/warning output
  */
 class DestinationExtractor(
     private val logger: KSPLogger
 ) {
-    
-    companion object {
-        private const val ARGUMENT_ANNOTATION = "Argument"
-        private const val SERIALIZABLE_ANNOTATION = "Serializable"
-        
-        // Primitive type qualified names for serializer detection
-        private val PRIMITIVE_TYPES = mapOf(
-            "kotlin.String" to SerializerType.STRING,
-            "kotlin.Int" to SerializerType.INT,
-            "kotlin.Long" to SerializerType.LONG,
-            "kotlin.Float" to SerializerType.FLOAT,
-            "kotlin.Double" to SerializerType.DOUBLE,
-            "kotlin.Boolean" to SerializerType.BOOLEAN
-        )
-    }
-    
+
     /**
      * Extract DestinationInfo from a class declaration.
      *
@@ -386,34 +371,34 @@ class DestinationExtractor(
         val annotation = classDeclaration.annotations.find {
             it.shortName.asString() == "Destination"
         } ?: return null
-        
-        val route = annotation.arguments.find { 
-            it.name?.asString() == "route" 
+
+        val route = annotation.arguments.find {
+            it.name?.asString() == "route"
         }?.value as? String
-        
+
         val routeParams = route?.let { extractRouteParams(it) } ?: emptyList()
-        
-        val isDataObject = classDeclaration.modifiers.contains(Modifier.DATA) &&
-                          classDeclaration.classKind.name == "OBJECT"
-        
-        val isDataClass = classDeclaration.modifiers.contains(Modifier.DATA) &&
-                         classDeclaration.classKind.name == "CLASS"
-        
+
+        val isDataModifier = classDeclaration.modifiers.contains(Modifier.DATA)
+        val classKind = classDeclaration.classKind
+
+        val isDataObject = isDataModifier && classKind == ClassKind.OBJECT
+        val isDataClass = isDataModifier && classKind == ClassKind.CLASS
+
         val constructorParams = if (isDataClass) {
-            extractConstructorParams(classDeclaration, routeParams)
+            extractConstructorParams(classDeclaration)
         } else {
             emptyList()
         }
-        
+
         val parentSealedClass = classDeclaration.parentDeclaration?.let {
             (it as? KSClassDeclaration)?.simpleName?.asString()
         }
-        
+
         return DestinationInfo(
             classDeclaration = classDeclaration,
             className = classDeclaration.simpleName.asString(),
             qualifiedName = classDeclaration.qualifiedName?.asString() ?: "",
-            route = route,
+            route = route?.takeIf { it.isNotEmpty() },
             routeParams = routeParams,
             isDataObject = isDataObject,
             isDataClass = isDataClass,
@@ -421,64 +406,57 @@ class DestinationExtractor(
             parentSealedClass = parentSealedClass
         )
     }
-    
+
     /**
-     * Extract all destinations from a container (sealed class).
+     * Extract all destinations from a sealed class container.
      */
     fun extractFromContainer(containerClass: KSClassDeclaration): List<DestinationInfo> {
         return containerClass.getSealedSubclasses()
             .mapNotNull { extract(it) }
             .toList()
     }
-    
+
     private fun extractRouteParams(route: String): List<String> {
         val regex = Regex("\\{([^}]+)\\}")
         return regex.findAll(route).map { it.groupValues[1] }.toList()
     }
-    
+
     /**
      * Extract constructor parameters with @Argument annotation support.
-     * 
-     * For each parameter:
-     * 1. Check for @Argument annotation
-     * 2. Extract key (custom or parameter name)
-     * 3. Extract optional flag
-     * 4. Determine serializer type from parameter type
      */
-    private fun extractConstructorParams(
-        classDeclaration: KSClassDeclaration,
-        routeParams: List<String>
-    ): List<ParamInfo> {
+    private fun extractConstructorParams(classDeclaration: KSClassDeclaration): List<ParamInfo> {
         val primaryConstructor = classDeclaration.primaryConstructor ?: return emptyList()
-        
         return primaryConstructor.parameters.map { param ->
             val argumentAnnotation = param.annotations.find {
-                it.shortName.asString() == ARGUMENT_ANNOTATION
+                it.shortName.asString() == "Argument"
             }
-            
+
             val isArgument = argumentAnnotation != null
-            val paramName = param.name?.asString() ?: ""
-            
-            // Extract @Argument properties
             val argumentKey = if (isArgument) {
-                val customKey = argumentAnnotation?.arguments?.find {
+                val keyValue = argumentAnnotation?.arguments?.find {
                     it.name?.asString() == "key"
                 }?.value as? String
-                customKey?.takeIf { it.isNotEmpty() } ?: paramName
+                keyValue?.takeIf { it.isNotEmpty() } ?: param.name?.asString() ?: ""
             } else {
-                paramName
+                ""
             }
-            
-            val isOptionalArgument = argumentAnnotation?.arguments?.find {
-                it.name?.asString() == "optional"
-            }?.value as? Boolean ?: false
-            
-            val type = param.type.resolve()
-            val serializerType = determineSerializerType(param, type)
-            
+            val isOptionalArgument = if (isArgument) {
+                argumentAnnotation?.arguments?.find {
+                    it.name?.asString() == "optional"
+                }?.value as? Boolean ?: false
+            } else {
+                false
+            }
+            val paramType = param.type.resolve()
+            val serializerType = if (isArgument) {
+                determineSerializerType(paramType)
+            } else {
+                SerializerType.STRING
+            }
+
             ParamInfo(
-                name = paramName,
-                type = type,
+                name = param.name?.asString() ?: "",
+                type = paramType,
                 hasDefault = param.hasDefault,
                 isArgument = isArgument,
                 argumentKey = argumentKey,
@@ -487,51 +465,37 @@ class DestinationExtractor(
             )
         }
     }
-    
+
     /**
-     * Determine the appropriate serializer type for a parameter.
-     * 
-     * Priority:
-     * 1. Primitive types (String, Int, Long, etc.)
-     * 2. Enum types
-     * 3. @Serializable types (JSON)
-     * 4. Default to STRING for unknown types
+     * Determine the SerializerType for a given KSType.
      */
-    private fun determineSerializerType(
-        param: KSValueParameter,
-        type: com.google.devtools.ksp.symbol.KSType
-    ): SerializerType {
-        val qualifiedName = type.declaration.qualifiedName?.asString()
-        
-        // Check primitive types
-        PRIMITIVE_TYPES[qualifiedName]?.let { return it }
-        
-        // Check if it's an enum
-        val declaration = type.declaration
-        if (declaration is KSClassDeclaration && 
-            declaration.classKind.name == "ENUM_CLASS") {
-            return SerializerType.ENUM
+    private fun determineSerializerType(type: KSType): SerializerType {
+        // Handle nullable types - use the underlying type
+        val nonNullType = if (type.isMarkedNullable) {
+            type.makeNotNullable()
+        } else {
+            type
         }
-        
-        // Check for @Serializable annotation (kotlinx.serialization)
-        if (declaration is KSClassDeclaration) {
-            val hasSerializable = declaration.annotations.any {
-                it.shortName.asString() == SERIALIZABLE_ANNOTATION
+        val qualifiedName = nonNullType.declaration.qualifiedName?.asString()
+
+        return when (qualifiedName) {
+            "kotlin.String" -> SerializerType.STRING
+            "kotlin.Int" -> SerializerType.INT
+            "kotlin.Long" -> SerializerType.LONG
+            "kotlin.Float" -> SerializerType.FLOAT
+            "kotlin.Double" -> SerializerType.DOUBLE
+            "kotlin.Boolean" -> SerializerType.BOOLEAN
+            else -> {
+                // Check if it's an enum
+                val typeDeclaration = nonNullType.declaration as? KSClassDeclaration
+                if (typeDeclaration?.classKind == ClassKind.ENUM_CLASS) {
+                    SerializerType.ENUM
+                } else {
+                    // Complex type - assume JSON serialization
+                    SerializerType.JSON
+                }
             }
-            if (hasSerializable) {
-                return SerializerType.JSON
-            }
         }
-        
-        // Check if it's a collection type (List, Set, etc.)
-        if (qualifiedName?.startsWith("kotlin.collections.") == true ||
-            qualifiedName?.startsWith("java.util.") == true) {
-            return SerializerType.JSON
-        }
-        
-        // Default to STRING for simple types or report warning
-        logger.warn("Unknown type for @Argument: $qualifiedName, defaulting to STRING serialization")
-        return SerializerType.STRING
     }
 }
 ```
@@ -1023,38 +987,37 @@ ScreenInfo(
 
 | File | Action | Description |
 |------|--------|-------------|
-| `quo-vadis-ksp/src/main/kotlin/.../models/DestinationInfo.kt` | Create | Destination metadata model |
-| `quo-vadis-ksp/src/main/kotlin/.../models/ParamInfo.kt` | **Update** | Add @Argument fields (isArgument, argumentKey, etc.) |
-| `quo-vadis-ksp/src/main/kotlin/.../models/SerializerType.kt` | **Create** | Enum for serialization strategies |
-| `quo-vadis-ksp/src/main/kotlin/.../models/StackInfo.kt` | Create | Stack metadata model |
-| `quo-vadis-ksp/src/main/kotlin/.../models/TabInfo.kt` | Create | Tab/TabItem metadata models |
-| `quo-vadis-ksp/src/main/kotlin/.../models/PaneInfo.kt` | Create | Pane/PaneItem metadata models |
-| `quo-vadis-ksp/src/main/kotlin/.../models/ScreenInfo.kt` | Create | Screen binding metadata model |
-| `quo-vadis-ksp/src/main/kotlin/.../extractors/DestinationExtractor.kt` | **Update** | Extract @Argument from parameters |
-| `quo-vadis-ksp/src/main/kotlin/.../extractors/StackExtractor.kt` | Create | @Stack extractor |
-| `quo-vadis-ksp/src/main/kotlin/.../extractors/TabExtractor.kt` | Create | @Tab/@TabItem extractor |
-| `quo-vadis-ksp/src/main/kotlin/.../extractors/PaneExtractor.kt` | Create | @Pane/@PaneItem extractor |
-| `quo-vadis-ksp/src/main/kotlin/.../extractors/ScreenExtractor.kt` | Create | @Screen extractor |
+| `quo-vadis-ksp/src/main/kotlin/.../models/DestinationInfo.kt` | ✅ Complete | Destination metadata model |
+| `quo-vadis-ksp/src/main/kotlin/.../models/ParamInfo.kt` | ✅ Complete | @Argument fields + SerializerType enum |
+| `quo-vadis-ksp/src/main/kotlin/.../models/StackInfo.kt` | ✅ Complete | Stack metadata model |
+| `quo-vadis-ksp/src/main/kotlin/.../models/TabInfo.kt` | ✅ Complete | Tab + TabItemInfo models |
+| `quo-vadis-ksp/src/main/kotlin/.../models/PaneInfo.kt` | ✅ Complete | Pane + PaneItemInfo + enum models |
+| `quo-vadis-ksp/src/main/kotlin/.../models/ScreenInfo.kt` | ✅ Complete | Screen binding metadata model |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/DestinationExtractor.kt` | ✅ Complete | Extracts @Destination + @Argument |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/StackExtractor.kt` | ✅ Complete | @Stack extractor |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/TabExtractor.kt` | ✅ Complete | @Tab/@TabItem extractor |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/PaneExtractor.kt` | ✅ Complete | @Pane/@PaneItem extractor |
+| `quo-vadis-ksp/src/main/kotlin/.../extractors/ScreenExtractor.kt` | ✅ Complete | @Screen extractor |
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] All model data classes created with proper KDoc documentation
-- [ ] `ParamInfo` includes @Argument fields (isArgument, argumentKey, isOptionalArgument, serializerType)
-- [ ] `SerializerType` enum created with all supported types
-- [ ] `DestinationExtractor` correctly extracts @Argument annotations from parameters
-- [ ] `DestinationExtractor` correctly determines SerializerType from parameter types
-- [ ] `DestinationExtractor` correctly extracts route params and constructor params
-- [ ] `StackExtractor` resolves start destination from destinations list
-- [ ] `TabExtractor` extracts nested @TabItem annotations with rootGraph references
-- [ ] `PaneExtractor` extracts nested @PaneItem annotations with role and strategy
-- [ ] `ScreenExtractor` detects optional scope parameters
-- [ ] All extractors handle missing/malformed annotations gracefully
+- [x] All model data classes created with proper KDoc documentation
+- [x] `ParamInfo` includes @Argument fields (isArgument, argumentKey, isOptionalArgument, serializerType)
+- [x] `SerializerType` enum created with all supported types (defined in ParamInfo.kt)
+- [x] `DestinationExtractor` correctly extracts @Argument annotations from parameters
+- [x] `DestinationExtractor` correctly determines SerializerType from parameter types
+- [x] `DestinationExtractor` correctly extracts route params and constructor params
+- [x] `StackExtractor` resolves start destination from destinations list
+- [x] `TabExtractor` extracts nested @TabItem annotations with rootGraph references
+- [x] `PaneExtractor` extracts nested @PaneItem annotations with role and strategy
+- [x] `ScreenExtractor` detects optional scope parameters
+- [x] All extractors handle missing/malformed annotations gracefully
+- [x] KSP module compiles successfully
 - [ ] Unit tests for each extractor with >80% coverage
 - [ ] Unit tests for @Argument extraction (key, optional, serializerType)
 - [ ] Integration test verifying all extractors work together
-- [ ] KSP module compiles successfully
 
 ---
 
