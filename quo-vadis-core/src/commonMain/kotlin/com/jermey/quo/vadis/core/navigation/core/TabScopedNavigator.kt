@@ -26,6 +26,10 @@ import kotlinx.coroutines.SupervisorJob
  * @param tabState The parent tab navigation state.
  * @param delegate The actual navigator instance to delegate operations to.
  */
+@Deprecated(
+    message = "TabScopedNavigator is replaced by unified Navigator. A single Navigator handles all navigation including tabs. Use navigator.switchTab(tabDestination) for tab switching.",
+    level = DeprecationLevel.WARNING
+)
 @Suppress("TooManyFunctions", "NotImplementedDeclaration")
 internal class TabScopedNavigator(
     private val tab: TabDefinition,

@@ -61,6 +61,10 @@ import com.jermey.quo.vadis.core.navigation.core.backStack
  * @param enablePredictiveBack Whether to enable predictive back gestures.
  * @param maxCacheSize Maximum composable cache size per tab.
  */
+@Deprecated(
+    message = "TabbedNavHost is replaced by QuoVadisHost with tabWrapper parameter. Use QuoVadisHost(navigator, screenRegistry, tabWrapper = { tabNode, content -> ... }).",
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun TabbedNavHost(
     tabState: TabNavigatorState,
@@ -183,6 +187,10 @@ fun TabbedNavHost(
  * @param tabTransitionSpec Transition specification for tab switches.
  * @param navigator The parent navigator for back press delegation.
  */
+@Deprecated(
+    message = "TabbedNavHost is replaced by QuoVadisHost with tabWrapper parameter. Use QuoVadisHost(navigator, screenRegistry, tabWrapper = { tabNode, content -> ... }).",
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun TabbedNavHost(
     tabState: TabNavigatorState,

@@ -18,6 +18,14 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
  * @param defaultTransition Default transition to use when navigating between destinations
  * @param enablePredictiveBack Whether to enable predictive back gesture support (default: true)
  */
+@Deprecated(
+    message = "NavHost is replaced by QuoVadisHost. Use QuoVadisHost(navigator, screenRegistry) for all navigation types.",
+    replaceWith = ReplaceWith(
+        "QuoVadisHost(navigator, screenRegistry)",
+        "com.jermey.quo.vadis.core.navigation.compose.QuoVadisHost"
+    ),
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun NavHost(
     graph: NavigationGraph,

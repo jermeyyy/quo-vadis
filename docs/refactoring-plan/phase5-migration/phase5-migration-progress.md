@@ -1,8 +1,8 @@
 # Phase 5: Migration Examples - Progress
 
-> **Last Updated**: 2025-12-06  
+> **Last Updated**: 2025-12-07  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 6/11 tasks (55%)
+> **Progress**: 7/11 tasks (64%)
 
 ## Overview
 
@@ -19,7 +19,7 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
 | [PREP-001](./PREP-001-recipes-module.md) | Create quo-vadis-recipes Module | 🟢 Completed | 2025-12-06 | Module skeleton created |
-| [PREP-002](./PREP-002-deprecated-annotations.md) | Add @Deprecated Annotations | ⚪ Not Started | - | Depends on Phase 4 |
+| [PREP-002](./PREP-002-deprecated-annotations.md) | Add @Deprecated Annotations | 🟢 Completed | 2025-12-07 | All legacy APIs deprecated |
 | [PREP-003](./PREP-003-permalink-reference.md) | GitHub Permalink Reference Doc | ⚪ Not Started | - | Can start immediately |
 
 ### Recipe Tasks
@@ -43,6 +43,24 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 ---
 
 ## Completed Tasks
+
+- **PREP-002** (2025-12-07): Add @Deprecated Annotations to Legacy APIs
+  - Deprecated 4 annotations in `quo-vadis-annotations`: `@Graph`, `@Route`, `@Argument`, `@Content`
+  - Deprecated core APIs in `quo-vadis-core/core/`:
+    - `NavigationGraph.kt`: NavigationGraph, DestinationConfig, NavigationGraphBuilder, navigationGraph()
+    - `BackStack.kt`: BackStack, BackStackEntry, MutableBackStack, EXTRA_SELECTED_TAB_ROUTE
+    - `Destination.kt`: TypedDestination, RestoredTypedDestination, BasicDestination
+    - `TabDefinition.kt`: TabDefinition, TabNavigatorConfig
+    - `Navigator.kt`: registerGraph(), setStartDestination(), navigateAndClearTo(string)
+    - `TabNavigatorState.kt`: TabNavigatorState
+    - `TabScopedNavigator.kt`: TabScopedNavigator
+  - Deprecated Compose APIs in `quo-vadis-core/compose/`:
+    - `NavHost.kt`: NavHost
+    - `GraphNavHost.kt`: GraphNavHost, LocalBackStackEntry, rememberNavigator()
+    - `TabbedNavHost.kt`: TabbedNavHost
+    - `TabNavHostComposables.kt`: rememberTabNavigatorState(), rememberTabNavigator()
+  - Removed duplicate legacy tab annotations (TabGraph, Tab, TabContent) conflicting with new annotations
+  - Verified: `:quo-vadis-core:build -x detekt` ✓, `:quo-vadis-annotations:build` ✓
 
 - **PREP-001** (2025-12-06): Create quo-vadis-recipes Module
   - Created `quo-vadis-recipes/` module skeleton
@@ -113,9 +131,7 @@ _None currently in progress._
 
 | Task | Blocked By | Status |
 |------|------------|--------|
-| MIG-001 through MIG-006 | Phase 1-4 completion | Waiting for core implementation |
 | MIG-007 | MIG-001 through MIG-006 | Waiting for recipes |
-| PREP-002 | Phase 4 annotations | Waiting for new annotations |
 
 ---
 
@@ -123,9 +139,9 @@ _None currently in progress._
 
 | Task | Notes |
 |------|-------|
-| PREP-002 | @Deprecated annotations for legacy APIs |
 | PREP-003 | Can start immediately - documentation |
 | MIG-006 | Deep linking recipe |
+| MIG-008 | API change summary (PREP-002 now complete) |
 
 ---
 

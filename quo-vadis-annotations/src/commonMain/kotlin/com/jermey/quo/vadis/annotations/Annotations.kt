@@ -52,6 +52,12 @@ import kotlin.reflect.KClass
  * @see Argument
  * @see Content
  */
+@Deprecated(
+    message = "@Graph is replaced by container-type-specific annotations: " +
+              "@Stack for linear navigation, @Tab for tabbed navigation, @Pane for adaptive layouts.",
+    replaceWith = ReplaceWith("@Stack"),
+    level = DeprecationLevel.WARNING
+)
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class Graph(val name: String, val startDestination: String = "")
@@ -93,6 +99,12 @@ annotation class Graph(val name: String, val startDestination: String = "")
  * @see Graph
  * @see Argument
  */
+@Deprecated(
+    message = "@Route is replaced by @Destination. " +
+              "Use @Destination(route = \"path/{param}\") for routes with parameters.",
+    replaceWith = ReplaceWith("@Destination", "com.jermey.quo.vadis.annotations.Destination"),
+    level = DeprecationLevel.WARNING
+)
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class Route(val path: String)
@@ -232,6 +244,12 @@ annotation class Argument(val dataClass: KClass<*>)
  * @see Route
  * @see Argument
  */
+@Deprecated(
+    message = "@Content is replaced by @Screen. " +
+              "Use @Screen(DestinationClass::class) to bind composables to destinations.",
+    replaceWith = ReplaceWith("@Screen", "com.jermey.quo.vadis.annotations.Screen"),
+    level = DeprecationLevel.WARNING
+)
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.SOURCE)
 annotation class Content(val destination: KClass<*>)

@@ -134,6 +134,10 @@ interface Navigator : ParentNavigator {
      * @param clearRoute Route to clear up to (null clears nothing)
      * @param inclusive If true, also remove the destination matching clearRoute
      */
+    @Deprecated(
+        message = "navigateAndClearTo with string route is replaced by type-safe version. Use navigateAndClear(destination, clearUpTo::class, inclusive).",
+        level = DeprecationLevel.WARNING
+    )
     fun navigateAndClearTo(
         destination: Destination,
         clearRoute: String? = null,
@@ -261,6 +265,10 @@ interface Navigator : ParentNavigator {
      *
      * @param graph The navigation graph to register
      */
+    @Deprecated(
+        message = "registerGraph() is no longer needed. Use rememberNavigator(navTree) with KSP-generated tree.",
+        level = DeprecationLevel.WARNING
+    )
     fun registerGraph(graph: NavigationGraph)
 
     /**
@@ -270,6 +278,10 @@ interface Navigator : ParentNavigator {
      *
      * @param destination The starting destination
      */
+    @Deprecated(
+        message = "setStartDestination() is no longer needed. Start destination is defined in @Stack/@Tab/@Pane annotations.",
+        level = DeprecationLevel.WARNING
+    )
     fun setStartDestination(destination: Destination)
 
     /**

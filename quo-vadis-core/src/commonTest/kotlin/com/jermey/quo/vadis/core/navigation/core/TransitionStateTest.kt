@@ -632,7 +632,7 @@ class TransitionStateTest {
     }
 
     @Test
-    fun `TransitionStateManager enforces state machine - Proposed to Idle (cancel)`() {
+    fun `TransitionStateManager enforces state machine - Proposed to Idle - cancel`() {
         val screen = createScreenNode("screen1")
         val proposed = createScreenNode("screen2")
         val manager = TransitionStateManager(screen)

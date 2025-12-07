@@ -40,6 +40,10 @@ import kotlin.reflect.KClass
  * @param transition Optional default transition animation
  * @param content Composable content that receives the typed data and navigator
  */
+@Deprecated(
+    message = "typedDestination DSL is replaced by @Destination annotation. Define a data class destination with @Destination(route = \"path/{param}\").",
+    level = DeprecationLevel.WARNING
+)
 @Suppress("UNCHECKED_CAST")
 @OptIn(InternalSerializationApi::class)
 inline fun <reified DESTINATION: TypedDestination<TYPE>, reified TYPE: Any> NavigationGraphBuilder.typedDestination(
@@ -111,6 +115,10 @@ internal fun <T : Any> NavigationGraphBuilder.typedDestinationImpl(
  * @param transition Optional default transition animation
  * @param content Composable content that receives the typed data, navigator, and transition scope
  */
+@Deprecated(
+    message = "typedDestinationWithScopes is replaced by @Screen annotation with scopes parameter.",
+    level = DeprecationLevel.WARNING
+)
 @Suppress("UNCHECKED_CAST")
 @OptIn(InternalSerializationApi::class, ExperimentalSharedTransitionApi::class)
 inline fun <reified DESTINATION: TypedDestination<TYPE>, reified TYPE: Any>

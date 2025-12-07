@@ -71,6 +71,10 @@ private const val INITIAL_GESTURE_PROGRESS = 0.001f // Small non-zero value to t
  * }
  * ```
  */
+@Deprecated(
+    message = "LocalBackStackEntry is replaced by LocalScreenNode. Access the current screen via LocalScreenNode.current.",
+    level = DeprecationLevel.WARNING
+)
 val LocalBackStackEntry = compositionLocalOf<BackStackEntry?> { null }
 
 /**
@@ -82,6 +86,10 @@ val LocalBackStackEntry = compositionLocalOf<BackStackEntry?> { null }
  *
  * @return The current BackStackEntry or null if not within a navigation context
  */
+@Deprecated(
+    message = "currentBackStackEntry() is deprecated. Access current screen via LocalScreenNode.current.",
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun currentBackStackEntry(): BackStackEntry? = LocalBackStackEntry.current
 
@@ -103,6 +111,10 @@ fun currentBackStackEntry(): BackStackEntry? = LocalBackStackEntry.current
  * @param enablePredictiveBack Whether to enable predictive back gesture animations
  * @param maxCacheSize Maximum number of composables to keep in cache
  */
+@Deprecated(
+    message = "GraphNavHost is replaced by QuoVadisHost. Use QuoVadisHost(navigator = navigator, screenRegistry = screenRegistry, animationRegistry = animationRegistry).",
+    level = DeprecationLevel.WARNING
+)
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun GraphNavHost(
@@ -680,6 +692,10 @@ private fun ScreenContent(
 /**
  * Remember a Navigator instance with DI support.
  */
+@Deprecated(
+    message = "rememberNavigator() without arguments is deprecated. Use rememberNavigator(navTree) with KSP-generated NavNode tree.",
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun rememberNavigator(
     deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler()

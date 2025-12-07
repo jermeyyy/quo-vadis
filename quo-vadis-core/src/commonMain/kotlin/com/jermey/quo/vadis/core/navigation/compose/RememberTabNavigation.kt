@@ -40,8 +40,8 @@ import com.jermey.quo.vadis.core.navigation.core.TabNavigatorState
  *             restoration during predictive back gestures.
  */
 @Deprecated(
-    message = "Use rememberTabNavigator for proper back press handling and state restoration",
-    replaceWith = ReplaceWith("rememberTabNavigator(config, parentNavigator, parentEntry)")
+    message = "rememberTabNavigatorState() is replaced by NavNode tree state management. Tab state is automatically managed within the unified NavNode tree.",
+    level = DeprecationLevel.WARNING
 )
 @Composable
 fun rememberTabNavigatorState(
@@ -110,6 +110,10 @@ private fun tabNavigatorStateSaver(
  * )
  * ```
  */
+@Deprecated(
+    message = "rememberTabNavigator() is replaced by unified rememberNavigator(navTree). Use @Tab annotation and KSP-generated NavNode tree.",
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun rememberTabNavigator(
     config: TabNavigatorConfig,

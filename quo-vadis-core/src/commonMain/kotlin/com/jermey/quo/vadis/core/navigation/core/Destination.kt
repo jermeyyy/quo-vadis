@@ -66,6 +66,10 @@ val Destination.route: String
  * }
  * ```
  */
+@Deprecated(
+    message = "TypedDestination<T> is replaced by route templates. Use @Destination(route = \"path/{param}\") with data class properties. Access params directly on the destination instance.",
+    level = DeprecationLevel.WARNING
+)
 interface TypedDestination<T>: Destination {
     override val data: T
     override val transition: NavigationTransition?
@@ -79,6 +83,10 @@ interface TypedDestination<T>: Destination {
  * 
  * @internal This class is internal to the library.
  */
+@Deprecated(
+    message = "RestoredTypedDestination is replaced by NavNode state serialization. Destination restoration is handled automatically by the NavNode tree.",
+    level = DeprecationLevel.WARNING
+)
 internal data class RestoredTypedDestination<T>(
     private val routeString: String,
     override val data: T,
@@ -96,6 +104,10 @@ internal data class RestoredTypedDestination<T>(
  * 
  * @internal This class is internal to the library. Use the DSL functions to create destinations.
  */
+@Deprecated(
+    message = "BasicDestination is replaced by sealed class members.",
+    level = DeprecationLevel.WARNING
+)
 internal data class BasicDestination(
     internal val routeString: String,
     override val transition: NavigationTransition? = null

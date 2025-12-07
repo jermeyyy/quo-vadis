@@ -40,6 +40,10 @@ import kotlinx.coroutines.flow.update
  *                    restored from the entry's extras on initialization and synced
  *                    back when the tab selection changes.
  */
+@Deprecated(
+    message = "TabNavigatorState is replaced by TabNode in the NavNode tree. Tab state is managed automatically within the unified navigator.",
+    level = DeprecationLevel.WARNING
+)
 class TabNavigatorState(
     val config: TabNavigatorConfig,
     private val parentEntry: BackStackEntry? = null

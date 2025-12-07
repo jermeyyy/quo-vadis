@@ -9,6 +9,10 @@ import com.jermey.quo.vadis.core.navigation.compose.TransitionScope
  * Supports modularization by allowing each module to expose navigation entry points
  * while hiding internal navigation details (gray box pattern).
  */
+@Deprecated(
+    message = "NavigationGraph has been replaced by NavNode tree structure. Use @Stack, @Tab, or @Pane annotations with KSP-generated builders. See: https://github.com/jermeyyy/quo-vadis/blob/main/docs/migration-examples/",
+    level = DeprecationLevel.WARNING
+)
 interface NavigationGraph {
     /**
      * Unique identifier for this graph/module.
@@ -41,6 +45,10 @@ interface NavigationGraph {
  *
  * The scoped variant is preferred when both are provided.
  */
+@Deprecated(
+    message = "DestinationConfig is replaced by KSP-generated ScreenRegistry. Use @Screen annotation to bind composables to destinations.",
+    level = DeprecationLevel.WARNING
+)
 @OptIn(ExperimentalSharedTransitionApi::class)
 data class DestinationConfig(
     val destination: Destination,
@@ -52,6 +60,10 @@ data class DestinationConfig(
 /**
  * Builder for creating navigation graphs with DSL.
  */
+@Deprecated(
+    message = "NavigationGraphBuilder is replaced by @Stack/@Tab/@Pane annotations and KSP-generated NavNode builders.",
+    level = DeprecationLevel.WARNING
+)
 class NavigationGraphBuilder(private val graphRoute: String) {
     private var startDestination: Destination? = null
     private val destinationConfigs = mutableListOf<DestinationConfig>()
@@ -146,6 +158,10 @@ class NavigationGraphBuilder(private val graphRoute: String) {
 /**
  * DSL function to create navigation graphs.
  */
+@Deprecated(
+    message = "navigationGraph() DSL is replaced by @Stack annotation. Define a sealed class with @Stack and @Destination annotations.",
+    level = DeprecationLevel.WARNING
+)
 fun navigationGraph(
     graphRoute: String,
     block: NavigationGraphBuilder.() -> Unit
@@ -157,6 +173,10 @@ fun navigationGraph(
  * Module navigation interface - allows modules to expose their navigation graph
  * without exposing internal implementation details.
  */
+@Deprecated(
+    message = "ModuleNavigation is replaced by direct NavNode composition.",
+    level = DeprecationLevel.WARNING
+)
 interface ModuleNavigation {
     /**
      * The navigation graph for this module.
@@ -172,6 +192,10 @@ interface ModuleNavigation {
 /**
  * Base class for module navigation to simplify implementation.
  */
+@Deprecated(
+    message = "BaseModuleNavigation is replaced by direct NavNode composition.",
+    level = DeprecationLevel.WARNING
+)
 abstract class BaseModuleNavigation : ModuleNavigation {
     private val graph by lazy { buildGraph() }
 

@@ -1,6 +1,6 @@
 # Quo Vadis Architecture Refactoring - Progress Tracker
 
-> **Last Updated**: 2025-12-06
+> **Last Updated**: 2025-12-07
 
 ## Overview
 
@@ -16,13 +16,13 @@ See [INDEX.md](./INDEX.md) for full plan details.
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
-| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | � Completed | 100% | 7 | 7 |
+| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 7 | 7 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 55% | 6 | 11 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 64% | 7 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~66% | 35 | 53 |
+| **TOTAL** | 🟡 In Progress | ~68% | 36 | 53 |
 
 ---
 
@@ -40,7 +40,37 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Recent Updates
 
-### 2025-12-06 (Latest)
+### 2025-12-07 (Latest)
+- ✅ **PREP-002**: Add @Deprecated Annotations to Legacy APIs - **COMPLETED**
+  - **quo-vadis-annotations** - Deprecated 4 legacy annotations:
+    - `@Graph` → Use `@Stack`, `@Tab`, `@Pane` instead
+    - `@Route` → Use `@Destination(route = "...")` instead
+    - `@Argument` → No longer needed (route templates `{param}`)
+    - `@Content` → Use `@Screen(DestinationClass::class)` instead
+  - Removed duplicate conflicting tab annotations (TabGraph, Tab, TabContent)
+  
+  - **quo-vadis-core/core** - Deprecated core navigation APIs:
+    - `NavigationGraph.kt`: NavigationGraph, DestinationConfig, NavigationGraphBuilder, navigationGraph(), ModuleNavigation, BaseModuleNavigation
+    - `BackStack.kt`: BackStack, BackStackEntry, MutableBackStack, EXTRA_SELECTED_TAB_ROUTE
+    - `Destination.kt`: TypedDestination, RestoredTypedDestination, BasicDestination
+    - `TabDefinition.kt`: TabDefinition, TabNavigatorConfig
+    - `Navigator.kt`: registerGraph(), setStartDestination(), navigateAndClearTo(string)
+    - `TabNavigatorState.kt`: TabNavigatorState
+    - `TabScopedNavigator.kt`: TabScopedNavigator
+  
+  - **quo-vadis-core/compose** - Deprecated Compose APIs:
+    - `NavHost.kt`: NavHost → Use QuoVadisHost
+    - `GraphNavHost.kt`: GraphNavHost, LocalBackStackEntry, rememberNavigator() (no args)
+    - `TabbedNavHost.kt`: TabbedNavHost → Use QuoVadisHost with tabWrapper
+    - `RememberTabNavigation.kt`: rememberTabNavigatorState(), rememberTabNavigator()
+  
+  **Verified**: `:quo-vadis-core:build -x detekt` ✓, `:quo-vadis-annotations:build` ✓
+  
+  **Note**: Pre-existing test error in `quo-vadis-core-flow-mvi` (references non-existent `backStack` property on FakeNavigator) - unrelated to deprecation changes.
+  
+  **🎉 Phase 5: Migration is now 64% complete (7/11 tasks)**
+
+### 2025-12-06
 - ✅ **PREP-001**: Create quo-vadis-recipes Module - **COMPLETED**
   - Created `quo-vadis-recipes/` module skeleton for LLM-optimized navigation examples
   - **Module Configuration** (`build.gradle.kts`):
