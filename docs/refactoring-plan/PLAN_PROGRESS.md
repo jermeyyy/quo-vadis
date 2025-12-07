@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 8 | 8 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 5 | 5 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 82% | 9 | 11 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | � Completed | 100% | 11 | 11 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~74% | 40 | 54 |
+| **TOTAL** | 🟡 In Progress | ~78% | 42 | 54 |
 
 ---
 
@@ -41,6 +41,139 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-07 (Latest)
+- ✅ **MIG-004**: Process/Wizard Flow Recipe (Recipes Module) - **COMPLETED**
+  - Created `LinearWizardRecipe.kt` and `BranchingWizardRecipe.kt` in `quo-vadis-recipes/src/commonMain/kotlin/.../wizard/`
+  
+  **File 1: LinearWizardRecipe.kt** (~700 lines):
+  - `OnboardingDestination` sealed class with linear flow: Welcome → UserType → PersonalInfo → Preferences → Complete
+  - `AppDestination` placeholder for post-flow navigation target
+  - `OnboardingStep` enum with step tracking (index, title, fromDestination())
+  - `RecipeOnboardingScreenRegistry` - Placeholder showing KSP-generated registry
+  - **Type-Safe Navigator Extensions** (NEW API patterns):
+    - `navigateAndClear(destination, clearUpTo: KClass, inclusive)` - Type-safe stack clearing
+    - `popTo(destinationType: KClass, inclusive)` - Type-safe return to specific step
+    - `exitFlow(flowType: KClass)` - New convenience method for flow cancellation
+  - Screen composables: WelcomeScreen, UserTypeScreen, PersonalInfoScreen, PreferencesScreen, CompleteScreen
+  - `StepProgressIndicator` - Visual step tracker component
+  - `LinearWizardApp` - Entry point showing production setup
+  - `LinearWizardMigrationChecklist` - Comprehensive migration checklist
+  
+  **File 2: BranchingWizardRecipe.kt** (~1200 lines):
+  - `CartItem` and `CartState` data classes with `hasPhysicalProducts`/`isDigitalOnly` flags
+  - `CheckoutDestination` sealed class with conditional flow:
+    - Cart → Shipping → (DeliveryOptions OR Payment) → Review → Confirmation(orderId)
+    - `Confirmation` has route template `checkout/confirmation/{orderId}`
+  - `checkoutAnimations` AnimationRegistry with wizard-specific transitions (slide + fade for completion)
+  - `RecipeCheckoutScreenRegistry` - Placeholder with destination parameter injection
+  - Screen composables: CartScreen, ShippingScreen, DeliveryOptionsScreen, PaymentScreen, ReviewScreen, ConfirmationScreen
+  - **Conditional Branching Pattern**:
+    ```kotlin
+    val nextStep = if (cartState.hasPhysicalProducts) {
+        CheckoutDestination.DeliveryOptions
+    } else {
+        CheckoutDestination.Payment  // Skip delivery for digital-only
+    }
+    ```
+  - UI components: CartItemRow, DeliveryOption, PaymentOption
+  - `BranchingWizardApp` - Entry point showing production setup
+  - `BranchingWizardMigrationChecklist` - Migration checklist for branching flows
+  
+  **Key Migration Patterns Documented**:
+  - `navigateAndClearTo(dest, "route", inclusive)` → `navigateAndClear(dest, Dest::class, inclusive)`
+  - `popTo("route")` string-based → `popTo(Dest::class)` type-safe
+  - New `exitFlow()` convenience method for canceling multi-step flows
+  - Per-call transitions → `AnimationRegistry` centralized configuration
+  
+  **KMP Compatibility**:
+  - `formatPrice()` extension function (replaces `String.format`)
+  - `generateOrderId()` function (replaces `System.currentTimeMillis()`)
+  - Unique `MigrationChecklist` class names per file
+  
+  **Verified**: `:quo-vadis-recipes:assemble -x detekt` ✓, `:quo-vadis-recipes:check -x detekt` ✓
+  
+  **🎉 Phase 5: Migration is now COMPLETE (11/11 tasks)**
+
+- ✅ **MIG-003**: Tabbed Navigation Recipe (Recipes Module) - **COMPLETED**
+  - Created `BottomTabsRecipe.kt` in `quo-vadis-recipes/src/commonMain/kotlin/.../tabs/`
+  - **Contents**:
+    - `MainTabs` sealed class with Home, Search, Profile tab items
+    - `HomeDestination`, `SearchDestination`, `ProfileDestination` per-tab stack destinations
+    - `buildMainTabsNavNode()` - Placeholder showing KSP-generated TabNode builder
+    - `MainTabsMetadata` - Placeholder showing KSP-generated tab metadata for UI
+    - `RecipeMainTabsScreenRegistry` - Placeholder showing KSP-generated registry
+    - `TabWrapperDocumentation` - Comprehensive `tabWrapper` API documentation object
+    - `MainBottomNavigation`, `TypeSafeBottomNavigation` - Reusable navigation bar components
+    - Screen composables for all destinations (HomeFeedScreen, HomeArticleScreen, SearchMainScreen, etc.)
+    - `BottomTabsRecipeApp` - Entry point showing production setup pattern
+    - `TabNavigationDocumentation` - Tab switching patterns and state preservation docs
+    - `MigrationChecklist` - Comprehensive checklist for tabbed navigation migration
+  - **Key Patterns Documented**:
+    - `TabbedNavigatorConfig` object → `@Tab` + `@TabItem` annotations
+    - `TabbedNavHost` + `tabUI` → `QuoVadisHost` + `tabWrapper` parameter
+    - `rememberTabNavigator()` → State in NavNode tree
+    - `tabState.switchTab(tab)` → `navigator.switchTab(index)`
+    - `tabState.activeTab` → `tabNode.activeStackIndex`
+    - Per-tab stack preservation (automatic via NavNode tree)
+  - **`tabWrapper` API documentation**: What it receives (`tabNode`, `tabContent`), user vs library responsibilities
+  - **Rich KDoc documentation** for LLM consumption with before/after code examples
+  - **Note**: Annotations omitted to avoid KSP processing; uses emoji icons (🏠🔍👤) instead of Material Icons
+  
+  **Verified**: `:quo-vadis-recipes:build -x detekt` ✓
+  
+  **🎉 Phase 5: Migration remains at 91% (10/11 tasks)**
+
+- ✅ **MIG-002**: Master-Detail Pattern Recipe (Recipes Module) - **COMPLETED**
+  - Created `ListDetailRecipe.kt` in `quo-vadis-recipes/src/commonMain/kotlin/.../masterdetail/`
+  - **Contents**:
+    - `Product` data class and `sampleProducts()` helper for sample data
+    - `CatalogDestination` sealed class with ProductList and ProductDetail(productId) destinations
+    - `catalogAnimations` AnimationRegistry demonstrating centralized transition configuration
+    - `RecipeCatalogScreenRegistry` - Placeholder showing KSP-generated registry with destination parameter injection
+    - `RecipeCatalogDeepLinkHandler` - Placeholder showing KSP-generated deep link handler from route templates
+    - `ProductListScreen`, `ProductDetailScreen` composables
+    - `handleCatalogDeepLink()` function showing deep link handling pattern
+    - `MigrationChecklist` - Comprehensive checklist for master-detail migration
+  - **Key Patterns Documented**:
+    - `@Argument(Data::class)` + `TypedDestination<T>` → Route template `{param}`
+    - Separate data class → Direct destination parameter access (`destination.productId`)
+    - `@Content(data: T)` → `@Screen(destination: Dest)`
+    - `navigate(dest, transition)` → `AnimationRegistry` centralized config
+    - `SharedTransitionLayout` wrapper → Built-in via `QuoVadisHost`
+    - `LocalSharedTransitionScope.current` for shared element access
+    - Manual deep link parsing → KSP-generated handler from route templates
+  - **Rich KDoc documentation** for LLM consumption with before/after code examples
+  - **Note**: `@Stack`, `@Destination`, `@Screen` annotations omitted to avoid KSP processing
+  
+  **Verified**: `:quo-vadis-recipes:build -x detekt` ✓
+  
+  **🎉 Phase 5: Migration remains at 91% (10/11 tasks)**
+
+- ✅ **MIG-001**: Simple Stack Navigation Recipe (Recipes Module) - **COMPLETED**
+  - Created `SettingsStackRecipe.kt` in `quo-vadis-recipes/src/commonMain/kotlin/com/jermey/quo/vadis/recipes/stack/`
+  - **Contents**:
+    - `SettingsDestination` sealed class with Main, Account, Notifications destinations
+    - `RecipeSettingsScreenRegistry` - Placeholder showing KSP-generated registry pattern
+    - `SettingsMainScreen`, `AccountScreen`, `NotificationsScreen` composables
+    - `SettingsStackApp` - Entry point showing production setup pattern
+    - `MigrationChecklist` - Comprehensive checklist for migrating to new API
+  - **Key Patterns Documented**:
+    - `@Graph` → `@Stack` annotation migration
+    - `@Route` → `@Destination` annotation migration
+    - `@Content` → `@Screen` annotation migration
+    - `GraphNavHost` → `QuoVadisHost` migration
+    - Removal of `initializeQuoVadisRoutes()`, `registerGraph()`, `setStartDestination()`
+    - `startDestination` uses class name (`"Main"`) not route (`"settings/main"`)
+  - **Rich KDoc documentation** for LLM consumption with:
+    - Before/After code examples in all sections
+    - Migration summary tables
+    - Detailed explanations of what KSP generates
+    - Common pitfalls and solutions
+  - **Note**: `@Stack`, `@Destination`, `@Screen` annotations omitted to avoid KSP processing in recipes module (annotations documented in comments)
+  
+  **Verified**: `:quo-vadis-recipes:compileKotlinDesktop` ✓
+  
+  **🎉 Phase 5: Migration is now 91% complete (10/11 tasks)**
+
 - ✅ **KSP-008**: Fix Deep Link Handler Generator Imports - **COMPLETED**
   - Fixed `DeepLinkHandlerGenerator` to properly import destination classes in generated code
   - **Problem**: Generated code referenced destination classes without imports, causing "Unresolved reference" errors

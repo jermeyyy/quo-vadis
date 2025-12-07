@@ -3,7 +3,9 @@ plugins {
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.ksp)
+    // KSP disabled - recipes module is for documentation/patterns only
+    // The quo-vadis-ksp processor has a bug that needs to be fixed in the KSP module
+    // alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -64,20 +66,22 @@ kotlin {
     }
 }
 
-// KSP configuration for code generation
-dependencies {
-    add("kspCommonMainMetadata", project(":quo-vadis-ksp"))
-}
-
-// KSP generated sources directory
-kotlin.sourceSets.commonMain {
-    kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
-}
-
-afterEvaluate {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
-        if (!name.startsWith("ksp") && !name.contains("Test", ignoreCase = true)) {
-            dependsOn("kspCommonMainKotlinMetadata")
-        }
-    }
-}
+// KSP configuration disabled - recipes module is for documentation/patterns only
+// The annotations are used to show correct patterns, but KSP processing is not needed
+// Uncomment below when quo-vadis-ksp NavNodeBuilder bug is fixed
+//
+// dependencies {
+//     add("kspCommonMainMetadata", project(":quo-vadis-ksp"))
+// }
+// 
+// kotlin.sourceSets.commonMain {
+//     kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+// }
+// 
+// afterEvaluate {
+//     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+//         if (!name.startsWith("ksp") && !name.contains("Test", ignoreCase = true)) {
+//             dependsOn("kspCommonMainKotlinMetadata")
+//         }
+//     }
+// }
