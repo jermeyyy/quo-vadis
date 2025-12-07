@@ -153,28 +153,32 @@ class NavigatorExtGenerator(
     /**
      * Build a navigation extension function for a single destination.
      *
-     * For data objects: `fun Navigator.toFeed() = navigate(HomeDestination.Feed)`
-     * For data classes: `fun Navigator.toDetail(id: String) = navigate(HomeDestination.Detail(id))`
+     * For data objects: `fun Navigator.toHomeDestinationFeed() = navigate(HomeDestination.Feed)`
+     * For data classes: `fun Navigator.toHomeDestinationDetail(id: String) = navigate(HomeDestination.Detail(id))`
+     *
+     * Note: Function names include the stack class name to avoid conflicts when multiple
+     * stacks have destinations with the same name (e.g., Demo in multiple stacks).
      *
      * @param stack The parent stack containing this destination
      * @param destination The destination to generate an extension for
      * @return A FunSpec for the generated extension function
      */
     private fun buildDestinationExtension(stack: StackInfo, destination: DestinationInfo): FunSpec {
-        val functionName = "to${destination.className}"
+        // Include stack name to avoid conflicts when multiple stacks have same destination names
+        val functionName = "to${stack.className}${destination.className}"
         val destinationType = ClassName(stack.packageName, stack.className, destination.className)
 
         return if (destination.isDataObject) {
             // Data object - no parameters
             FunSpec.builder(functionName)
-                .addKdoc("Navigate to the ${destination.className} screen.")
+                .addKdoc("Navigate to the ${stack.className}.${destination.className} screen.")
                 .receiver(NAVIGATOR)
                 .addStatement("navigate(%T)", destinationType)
                 .build()
         } else {
             // Data class - parameters required
             val funBuilder = FunSpec.builder(functionName)
-                .addKdoc(buildDestinationKDoc(destination))
+                .addKdoc(buildDestinationKDoc(stack, destination))
                 .receiver(NAVIGATOR)
 
             // Add parameters from constructor
@@ -197,15 +201,16 @@ class NavigatorExtGenerator(
     /**
      * Build KDoc for a destination extension with parameters.
      *
+     * @param stack The parent stack
      * @param destination The destination to document
      * @return KDoc string with parameter documentation
      */
-    private fun buildDestinationKDoc(destination: DestinationInfo): String {
+    private fun buildDestinationKDoc(stack: StackInfo, destination: DestinationInfo): String {
         val paramDocs = destination.constructorParams.joinToString("\n") { param ->
             "@param ${param.name} ${param.name} parameter for ${destination.className}"
         }
         return """
-            |Navigate to the ${destination.className} screen.
+            |Navigate to the ${stack.className}.${destination.className} screen.
             |
             $paramDocs
         """.trimMargin()

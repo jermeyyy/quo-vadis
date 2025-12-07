@@ -1,9 +1,10 @@
 package com.jermey.navplayground.demo.tabs
 
 import com.jermey.navplayground.demo.destinations.TabsDestination
+import com.jermey.quo.vadis.annotations.Destination as DestinationAnnotation
 import com.jermey.quo.vadis.annotations.Tab
-import com.jermey.quo.vadis.annotations.TabGraph
-import com.jermey.quo.vadis.core.navigation.core.TabDefinition
+import com.jermey.quo.vadis.annotations.TabItem
+import com.jermey.quo.vadis.core.navigation.core.Destination
 
 /**
  * Demo tabs for the nested tabs example screen.
@@ -25,55 +26,27 @@ import com.jermey.quo.vadis.core.navigation.core.TabDefinition
  *
  * @see com.jermey.navplayground.demo.ui.screens.tabs.TabsMainScreen
  */
-@TabGraph(
-    name = "demo_tabs",
-    initialTab = "Tab1",
-    primaryTab = "Tab1"
-)
-sealed class DemoTabs : TabDefinition {
+@Tab(name = "demoTabs", initialTab = "Tab1")
+sealed class DemoTabs : Destination {
 
     /**
      * First tab - Star themed items.
      */
-    @Tab(
-        route = "demo_tab1",
-        label = "Tab 1",
-        icon = "star",
-        rootGraph = TabsDestination::class,
-        rootDestination = TabsDestination.Main::class
-    )
-    data object Tab1 : DemoTabs() {
-        override val route = "demo_tab1"
-        override val rootDestination = TabsDestination.Main
-    }
+    @TabItem(label = "Tab 1", icon = "star", rootGraph = TabsDestination::class)
+    @DestinationAnnotation(route = "demo/tab1")
+    data object Tab1 : DemoTabs()
 
     /**
      * Second tab - Heart themed items.
      */
-    @Tab(
-        route = "demo_tab2",
-        label = "Tab 2",
-        icon = "favorite",
-        rootGraph = TabsDestination::class,
-        rootDestination = TabsDestination.Main::class
-    )
-    data object Tab2 : DemoTabs() {
-        override val route = "demo_tab2"
-        override val rootDestination = TabsDestination.Main
-    }
+    @TabItem(label = "Tab 2", icon = "favorite", rootGraph = TabsDestination::class)
+    @DestinationAnnotation(route = "demo/tab2")
+    data object Tab2 : DemoTabs()
 
     /**
      * Third tab - Bookmark themed items.
      */
-    @Tab(
-        route = "demo_tab3",
-        label = "Tab 3",
-        icon = "bookmark",
-        rootGraph = TabsDestination::class,
-        rootDestination = TabsDestination.Main::class
-    )
-    data object Tab3 : DemoTabs() {
-        override val route = "demo_tab3"
-        override val rootDestination = TabsDestination.Main
-    }
+    @TabItem(label = "Tab 3", icon = "bookmark", rootGraph = TabsDestination::class)
+    @DestinationAnnotation(route = "demo/tab3")
+    data object Tab3 : DemoTabs()
 }

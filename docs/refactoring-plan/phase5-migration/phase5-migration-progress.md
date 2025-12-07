@@ -1,8 +1,8 @@
 # Phase 5: Migration Examples - Progress
 
-> **Last Updated**: 2025-12-07  
+> **Last Updated**: 2025-12-08  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 10/18 tasks (56%)
+> **Progress**: 12/19 tasks (63%)
 
 ## Overview
 
@@ -10,7 +10,15 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 
 > **Note**: No backward compatibility adapters are needed. The library is in development stage and breaking changes are acceptable.
 
-### Recent Updates (2025-12-07)
+### Recent Updates (2025-12-08)
+
+- 🔴 **MIG-007B BLOCKED**: Tab System Migration blocked by KSP-009
+  - Migration code complete (DemoTabs.kt, MainTabsUI.kt, BottomNavigationBar.kt)
+  - KSP cannot find `@TabItem` annotations on nested sealed subclasses in KMP metadata compilation
+  - Created KSP-009 spec for annotation redesign
+  - Waiting for KSP-009 completion before unblocking
+
+### Previous Updates (2025-12-07)
 
 - ✅ **MIG-007 Decomposed**: Task broken down into 7 subtasks by navigation pattern type
   - MIG-007A: Foundation - Core Destinations
@@ -54,9 +62,9 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 |----|------|--------|-----------|-------|
 | [MIG-007](./MIG-007-demo-app-rewrite.md) | Demo App Rewrite (Parent) | 🟡 Decomposed | 2025-12-07 | Broken into subtasks |
 | ↳ [MIG-007A](./MIG-007A-foundation-destinations.md) | Foundation - Core Destinations | ⚪ Not Started | - | First subtask |
-| ↳ [MIG-007B](./MIG-007B-tab-system.md) | Tab System Migration | ⚪ Not Started | - | Depends on MIG-007A |
-| ↳ [MIG-007C](./MIG-007C-master-detail.md) | Master-Detail Pattern | ⚪ Not Started | - | Depends on MIG-007A |
-| ↳ [MIG-007D](./MIG-007D-process-wizard.md) | Process/Wizard Flow | ⚪ Not Started | - | Depends on MIG-007A |
+| ↳ [MIG-007B](./MIG-007B-tab-system.md) | Tab System Migration | 🔴 Blocked | - | Blocked by KSP-009 |
+| ↳ [MIG-007C](./MIG-007C-master-detail.md) | Master-Detail Pattern | 🟢 Completed | 2025-12-08 | Screens migrated to @Screen pattern |
+| ↳ [MIG-007D](./MIG-007D-process-wizard.md) | Process/Wizard Flow | 🟢 Completed | 2025-12-08 | All 6 process screens migrated to @Screen |
 | ↳ [MIG-007E](./MIG-007E-settings-stack.md) | Settings Stack | ⚪ Not Started | - | Depends on MIG-007A |
 | ↳ [MIG-007F](./MIG-007F-feature-screens.md) | Feature Screens | ⚪ Not Started | - | Depends on MIG-007A, B |
 | ↳ [MIG-007G](./MIG-007G-entry-point.md) | Entry Point Integration | ⚪ Not Started | - | Depends on all above |

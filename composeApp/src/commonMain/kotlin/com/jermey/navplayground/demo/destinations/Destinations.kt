@@ -1,49 +1,38 @@
 package com.jermey.navplayground.demo.destinations
 
 import com.jermey.quo.vadis.annotations.Argument
-import com.jermey.quo.vadis.annotations.Graph
-import com.jermey.quo.vadis.annotations.Route
-import com.jermey.quo.vadis.core.navigation.core.Destination
-import com.jermey.quo.vadis.core.navigation.core.RouteRegistry
-import com.jermey.quo.vadis.core.navigation.core.TypedDestination
-import kotlinx.serialization.Serializable
+import com.jermey.quo.vadis.annotations.Destination
+import com.jermey.quo.vadis.annotations.Stack
 
 /**
  * # Quo Vadis Demo App - Navigation Destinations
  * 
- * This file demonstrates the **annotation-based API** for defining navigation destinations.
+ * This file demonstrates the **annotation-based API** for defining navigation destinations
+ * using the new NavNode architecture.
  * 
  * ## Key Annotations Used:
  * 
- * ### @Graph("name")
- * Marks a sealed class as a navigation graph. KSP generates:
- * - Route initializer: `{GraphName}RouteInitializer`
- * - Graph builder: `build{GraphName}Graph()`
+ * ### @Stack(name = "name", startDestination = "ClassName")
+ * Marks a sealed class as a navigation stack. KSP generates:
+ * - Stack builder: `build{StackName}Stack()`
+ * - Navigation extensions for destinations
  * 
- * ### @Route("path")
+ * ### @Destination(route = "path")
  * Specifies the route path for a destination.
- * Routes are automatically registered at initialization.
+ * Route templates support parameters: `"path/{param}"`
  * 
- * ### @Argument(DataClass::class)
- * Defines typed, serializable arguments for a destination.
- * - Data class must be annotated with @Serializable
- * - Destination must implement TypedDestination<T>
+ * ### @Argument
+ * Marks constructor parameters as route arguments.
+ * - Applied to constructor parameters directly
+ * - Supports optional arguments with `optional = true`
  * - KSP generates typed navigation extension functions
  * 
  * ## Generated Code:
  * 
- * For each graph, KSP generates:
+ * For each stack, KSP generates:
  * ```kotlin
- * // Route registration (automatic)
- * object MainDestinationRouteInitializer {
- *     init {
- *         MainDestination.Home.registerRoute("main/home")
- *         // ... other routes
- *     }
- * }
- * 
- * // Graph builder function
- * fun buildMainDestinationGraph(): NavigationGraph { /* ... */ }
+ * // Stack builder function
+ * fun buildAppStack(): NavNode { /* ... */ }
  * 
  * // Typed navigation extensions
  * fun Navigator.navigateToDetail(itemId: String) { /* ... */ }
@@ -51,7 +40,7 @@ import kotlinx.serialization.Serializable
  * 
  * ## Benefits:
  * - 50-70% less boilerplate code
- * - Automatic serialization/deserialization
+ * - Route template-based argument passing
  * - Type-safe navigation extensions
  * - Compile-time verification
  * - Better IDE support
@@ -63,20 +52,20 @@ import kotlinx.serialization.Serializable
 /**
  * Top-level destinations exposed by the demo application.
  */
-sealed class DemoDestination : Destination {
-    @Route("demo_root")
-    object Root : DemoDestination()
+sealed class DemoDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+    @Destination(route = "demo_root")
+    data object Root : DemoDestination()
 }
 
 /**
  * Top-level app destinations.
  * 
  * Contains only the main entry point of the application.
- * This is the root graph registered with the parent navigator.
+ * This is the root stack registered with the parent navigator.
  */
-@Graph("app", startDestination = "MainTabs")
-sealed class AppDestination : Destination {
-    @Route("app/main_tabs")
+@Stack(name = "app", startDestination = "MainTabs")
+sealed class AppDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+    @Destination(route = "app/main_tabs")
     data object MainTabs : AppDestination()
 }
 
@@ -91,18 +80,18 @@ sealed class AppDestination : Destination {
  * 
  * These destinations are used by tab navigators, not the parent navigator.
  */
-@Graph("tabs_content", startDestination = "Home")
-sealed class TabDestination : Destination {
-    @Route("tab/home")
+@Stack(name = "tabs_content", startDestination = "Home")
+sealed class TabDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+    @Destination(route = "tab/home")
     data object Home : TabDestination()
     
-    @Route("tab/explore")
+    @Destination(route = "tab/explore")
     data object Explore : TabDestination()
     
-    @Route("tab/profile")
+    @Destination(route = "tab/profile")
     data object Profile : TabDestination()
     
-    @Route("tab/settings")
+    @Destination(route = "tab/settings")
     data object Settings : TabDestination()
 }
 
@@ -112,9 +101,9 @@ sealed class TabDestination : Destination {
  * Accessible from anywhere via modal bottom sheet.
  * Allows navigation to all linked screens for testing deep links.
  */
-@Graph("deeplink", startDestination = "Demo")
-sealed class DeepLinkDestination : Destination {
-    @Route("deeplink/demo")
+@Stack(name = "deeplink", startDestination = "Demo")
+sealed class DeepLinkDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+    @Destination(route = "deeplink/demo")
     data object Demo : DeepLinkDestination()
 }
 
@@ -124,34 +113,34 @@ sealed class DeepLinkDestination : Destination {
  * Demonstrates Navigation 3-style state-driven navigation API with
  * direct backstack manipulation and Compose state observation.
  */
-@Graph("statedriven", startDestination = "Demo")
-sealed class StateDrivenDemoDestination : Destination {
-    @Route("statedriven/demo")
+@Stack(name = "statedriven", startDestination = "Demo")
+sealed class StateDrivenDemoDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+    @Destination(route = "statedriven/demo")
     data object Demo : StateDrivenDemoDestination()
 }
 
 /**
  * Master-Detail pattern destinations.
  * 
- * ANNOTATION PATTERN: Typed Destinations (With Arguments)
+ * ANNOTATION PATTERN: Destinations with Route Arguments
  * 
  * The Detail destination demonstrates:
- * - @Argument annotation with @Serializable data class
- * - Implementation of TypedDestination<T> interface
+ * - @Argument annotation on constructor parameters
+ * - Route template with parameter placeholders
  * - Type-safe argument passing
  * 
  * Generated code includes:
  * - Typed extension: navigator.navigateToDetail(itemId = "123")
- * - Automatic serialization/deserialization
- * - Content function receives DetailData directly (see ContentDefinitions.kt)
+ * - Automatic route parameter extraction
+ * - Content function receives arguments directly (see ContentDefinitions.kt)
  */
-@Graph("master_detail")
-sealed class MasterDetailDestination : Destination {
-    @Route("master_detail/list")
+@Stack(name = "master_detail", startDestination = "List")
+sealed class MasterDetailDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+    @Destination(route = "master_detail/list")
     data object List : MasterDetailDestination()
 
     /**
-     * Detail destination with typed argument.
+     * Detail destination with route argument.
      * 
      * KSP generates:
      * ```kotlin
@@ -161,98 +150,62 @@ sealed class MasterDetailDestination : Destination {
      * )
      * ```
      */
-    @Route("master_detail/detail")
-    @Argument(DetailData::class)
-    data class Detail(val itemId: String) : MasterDetailDestination(), TypedDestination<DetailData> {
-        override val data = DetailData(itemId)
-    }
+    @Destination(route = "master_detail/detail/{itemId}")
+    data class Detail(
+        @Argument val itemId: String
+    ) : MasterDetailDestination()
 }
-
-/**
- * Serializable data for Detail destination.
- */
-@Serializable
-data class DetailData(val itemId: String)
 
 /**
  * Tabs navigation destinations
  */
-@Graph("tabs")
-sealed class TabsDestination : Destination {
-    @Route("tabs/main")
+@Stack(name = "tabs", startDestination = "Main")
+sealed class TabsDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+    @Destination(route = "tabs/main")
     data object Main : TabsDestination()
 
     /**
-     * Serializable data for SubItem destination.
+     * Dynamic tab destination.
+     * Tab routes are handled dynamically based on tabId.
      */
-    @Serializable
-    data class SubItemData(val tabId: String, val itemId: String)
+    data class Tab(val tabId: String) : TabsDestination()
 
-    // Dynamic route - register manually at creation
-    data class Tab(val tabId: String) : TabsDestination() {
-        init {
-            RouteRegistry.register(this::class, "tabs_tab_$tabId")
-        }
-        override val data = tabId
-    }
-
-    @Route("tabs/subitem")
-    @Argument(SubItemData::class)
-    data class SubItem(val tabId: String, val itemId: String) : TabsDestination(), TypedDestination<SubItemData> {
-        override val data = SubItemData(tabId, itemId)
-    }
+    @Destination(route = "tabs/subitem/{tabId}/{itemId}")
+    data class SubItem(
+        @Argument val tabId: String,
+        @Argument val itemId: String
+    ) : TabsDestination()
 }
 
 /**
  * Process/Wizard flow destinations
  */
-@Graph("process")
-sealed class ProcessDestination : Destination {
-    @Route("process/start")
+@Stack(name = "process", startDestination = "Start")
+sealed class ProcessDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+    @Destination(route = "process/start")
     data object Start : ProcessDestination()
 
-    /**
-     * Serializable data for Step1 destination.
-     */
-    @Serializable
-    data class Step1Data(val userType: String? = null)
+    @Destination(route = "process/step1")
+    data class Step1(
+        @Argument(optional = true) val userType: String? = null
+    ) : ProcessDestination()
 
-    /**
-     * Serializable data for Step2A/Step2B destinations.
-     */
-    @Serializable
-    data class Step2Data(val stepData: String)
+    @Destination(route = "process/step2a/{stepData}")
+    data class Step2A(
+        @Argument val stepData: String
+    ) : ProcessDestination()
 
-    /**
-     * Serializable data for Step3 destination.
-     */
-    @Serializable
-    data class Step3Data(val previousData: String, val branch: String)
+    @Destination(route = "process/step2b/{stepData}")
+    data class Step2B(
+        @Argument val stepData: String
+    ) : ProcessDestination()
 
-    @Route("process/step1")
-    @Argument(Step1Data::class)
-    data class Step1(val userType: String? = null) : ProcessDestination(), TypedDestination<Step1Data> {
-        override val data = Step1Data(userType)
-    }
+    @Destination(route = "process/step3/{previousData}/{branch}")
+    data class Step3(
+        @Argument val previousData: String,
+        @Argument val branch: String
+    ) : ProcessDestination()
 
-    @Route("process/step2a")
-    @Argument(Step2Data::class)
-    data class Step2A(val stepData: String) : ProcessDestination(), TypedDestination<Step2Data> {
-        override val data = Step2Data(stepData)
-    }
-
-    @Route("process/step2b")
-    @Argument(Step2Data::class)
-    data class Step2B(val stepData: String) : ProcessDestination(), TypedDestination<Step2Data> {
-        override val data = Step2Data(stepData)
-    }
-
-    @Route("process/step3")
-    @Argument(Step3Data::class)
-    data class Step3(val previousData: String, val branch: String) : ProcessDestination(), TypedDestination<Step3Data> {
-        override val data = Step3Data(previousData, branch)
-    }
-
-    @Route("process/complete")
+    @Destination(route = "process/complete")
     data object Complete : ProcessDestination()
 }

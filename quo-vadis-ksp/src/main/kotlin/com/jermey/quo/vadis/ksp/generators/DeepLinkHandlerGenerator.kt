@@ -177,31 +177,47 @@ class DeepLinkHandlerGenerator(
      *
      * Uses %T format specifier for destination class names to ensure
      * KotlinPoet generates proper imports in the output file.
+     *
+     * Handles three cases:
+     * - Data objects: `DestinationClass.DataObject`
+     * - Data classes with route params: `DestinationClass.DataClass(param = params["param"]!!)`
+     * - Data classes without route params (optional/default params): `DestinationClass.DataClass()`
      */
     private fun buildRoutePatternInitializer(dest: DestinationInfo): CodeBlock {
         val route = dest.route ?: return CodeBlock.of("")
         val params = dest.routeParams
         val destClassName = buildDestinationClassName(dest)
 
-        return if (params.isEmpty()) {
-            // Data object - no parameters, use %T for auto-import
-            CodeBlock.of(
-                "RoutePattern(%S, emptyList()) { %T }",
-                route,
-                destClassName
-            )
-        } else {
-            // Data class - extract parameters, use %T for auto-import
-            val paramAssignments = params.joinToString(", ") { p ->
-                "$p = params[\"$p\"]!!"
+        return when {
+            dest.isDataObject -> {
+                // Data object - no parentheses needed
+                CodeBlock.of(
+                    "RoutePattern(%S, emptyList()) { %T }",
+                    route,
+                    destClassName
+                )
             }
-            CodeBlock.of(
-                "RoutePattern(%S, listOf(%L)) { params ->\n    %T(%L)\n}",
-                route,
-                params.joinToString(", ") { "\"$it\"" },
-                destClassName,
-                paramAssignments
-            )
+            params.isEmpty() -> {
+                // Data class with no route params (uses defaults) - needs parentheses
+                CodeBlock.of(
+                    "RoutePattern(%S, emptyList()) { %T() }",
+                    route,
+                    destClassName
+                )
+            }
+            else -> {
+                // Data class with route params - extract and pass parameters
+                val paramAssignments = params.joinToString(", ") { p ->
+                    "$p = params[\"$p\"]!!"
+                }
+                CodeBlock.of(
+                    "RoutePattern(%S, listOf(%L)) { params ->\n    %T(%L)\n}",
+                    route,
+                    params.joinToString(", ") { "\"$it\"" },
+                    destClassName,
+                    paramAssignments
+                )
+            }
         }
     }
 
@@ -259,6 +275,8 @@ class DeepLinkHandlerGenerator(
      * Build the createDeepLinkUri function implementation.
      *
      * Uses CodeBlock-based when cases to ensure proper destination class imports.
+     * Note: Override functions cannot have default parameter values, so scheme
+     * has no default here (defaults should be in the interface/base class).
      */
     private fun buildCreateDeepLinkUriFunction(destinations: List<DestinationInfo>): FunSpec {
         val whenCases = buildWhenCases(destinations)
@@ -266,11 +284,7 @@ class DeepLinkHandlerGenerator(
         return FunSpec.builder("createDeepLinkUri")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("destination", QuoVadisClassNames.DESTINATION)
-            .addParameter(
-                ParameterSpec.builder("scheme", STRING)
-                    .defaultValue("%S", "myapp")
-                    .build()
-            )
+            .addParameter("scheme", STRING)
             .returns(STRING.copy(nullable = true))
             .beginControlFlow("return when (destination)")
             .apply {
@@ -288,6 +302,10 @@ class DeepLinkHandlerGenerator(
      * Build when case CodeBlocks for createDeepLinkUri.
      *
      * Returns CodeBlocks with %T format specifiers to ensure proper imports.
+     * Handles three cases:
+     * - Data objects: `DestinationClass.DataObject -> "scheme://route"`
+     * - Data classes without route params: `is DestinationClass.DataClass -> "scheme://route"`
+     * - Data classes with route params: `is DestinationClass.DataClass -> "scheme://route/${destination.param}"`
      */
     private fun buildWhenCases(destinations: List<DestinationInfo>): List<CodeBlock> {
         return destinations.mapNotNull { dest ->
@@ -295,13 +313,20 @@ class DeepLinkHandlerGenerator(
             val destClassName = buildDestinationClassName(dest)
             val params = dest.routeParams
 
-            if (params.isEmpty()) {
-                // Data object - simple URI, use %T for auto-import
-                CodeBlock.of("%T -> %S", destClassName, "\$scheme://$route")
-            } else {
-                // Data class - interpolate parameters
-                val uriPath = buildUriPathWithParams(route, params)
-                CodeBlock.of("is %T -> %P", destClassName, "\$scheme://$uriPath")
+            when {
+                dest.isDataObject -> {
+                    // Data object - exact match, use %T for auto-import
+                    CodeBlock.of("%T -> %S", destClassName, "\$scheme://$route")
+                }
+                params.isEmpty() -> {
+                    // Data class without route params - use "is" check
+                    CodeBlock.of("is %T -> %S", destClassName, "\$scheme://$route")
+                }
+                else -> {
+                    // Data class with route params - interpolate parameters
+                    val uriPath = buildUriPathWithParams(route, params)
+                    CodeBlock.of("is %T -> %P", destClassName, "\$scheme://$uriPath")
+                }
             }
         }
     }

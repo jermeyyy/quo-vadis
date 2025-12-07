@@ -16,6 +16,14 @@ import com.jermey.quo.vadis.ksp.models.TabItemInfo
  * - Tab item extraction from @TabItem annotations on subclasses
  * - Root graph reference resolution for each tab
  *
+ * ## KSP KMP Workaround
+ *
+ * Due to KSP limitations with Kotlin Multiplatform metadata compilation,
+ * `getSealedSubclasses()` may return empty results. This extractor uses
+ * a two-phase approach:
+ * 1. Extract all @TabItem-annotated classes via `getSymbolsWithAnnotation()`
+ * 2. Match them to parent @Tab classes using `parentDeclaration`
+ *
  * @property destinationExtractor Extractor for @Destination metadata
  * @property logger KSP logger for error/warning output
  */
@@ -24,8 +32,14 @@ class TabExtractor(
     private val logger: KSPLogger
 ) {
 
+    // Cache of TabItem classes indexed by parent qualified name
+    private var tabItemCache: Map<String, List<KSClassDeclaration>>? = null
+
     /**
      * Extract TabInfo from a class declaration.
+     *
+     * Uses cached @TabItem classes if available to work around KSP
+     * sealed subclass resolution issues in KMP metadata compilation.
      *
      * @param classDeclaration The sealed class annotated with @Tab
      * @return TabInfo or null if extraction fails
@@ -43,9 +57,20 @@ class TabExtractor(
             it.name?.asString() == "initialTab"
         }?.value as? String ?: ""
 
-        val tabs = classDeclaration.getSealedSubclasses()
+        // Try getSealedSubclasses first (works in some KSP configurations)
+        var tabs = classDeclaration.getSealedSubclasses()
             .mapNotNull { extractTabItem(it) }
             .toList()
+
+        // Fallback to cached @TabItem classes if getSealedSubclasses returns empty
+        if (tabs.isEmpty() && tabItemCache != null) {
+            val parentQualifiedName = classDeclaration.qualifiedName?.asString()
+            if (parentQualifiedName != null) {
+                tabs = tabItemCache!![parentQualifiedName]
+                    ?.mapNotNull { extractTabItem(it) }
+                    ?: emptyList()
+            }
+        }
 
         return TabInfo(
             classDeclaration = classDeclaration,
@@ -55,6 +80,37 @@ class TabExtractor(
             initialTab = initialTab,
             tabs = tabs
         )
+    }
+
+    /**
+     * Populate the @TabItem cache from resolver.
+     *
+     * This must be called before extracting @Tab containers to ensure
+     * the fallback mechanism works correctly.
+     *
+     * @param resolver KSP resolver to query for @TabItem symbols
+     */
+    fun populateTabItemCache(resolver: Resolver) {
+        val tabItems = resolver.getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.TabItem")
+            .filterIsInstance<KSClassDeclaration>()
+            .toList()
+
+        logger.info("Found ${tabItems.size} @TabItem classes")
+        tabItems.forEach { item ->
+            val parentName = (item.parentDeclaration as? KSClassDeclaration)?.qualifiedName?.asString()
+            logger.info("  - ${item.simpleName.asString()} (parent: $parentName)")
+        }
+
+        tabItemCache = tabItems
+            .groupBy { tabItemClass ->
+                // Get the parent sealed class qualified name
+                (tabItemClass.parentDeclaration as? KSClassDeclaration)
+                    ?.qualifiedName?.asString()
+                    ?: ""
+            }
+            .filterKeys { it.isNotEmpty() }
+
+        logger.info("TabItem cache has ${tabItemCache?.size ?: 0} parent entries")
     }
 
     /**
@@ -99,10 +155,16 @@ class TabExtractor(
     /**
      * Extract all @Tab-annotated classes from the resolver.
      *
+     * Automatically populates the @TabItem cache before extraction
+     * to ensure sealed subclass resolution works in KMP metadata compilation.
+     *
      * @param resolver KSP resolver to query for symbols
      * @return List of TabInfo for all @Tab-annotated classes
      */
     fun extractAll(resolver: Resolver): List<TabInfo> {
+        // Populate cache first to work around KSP sealed subclass issues
+        populateTabItemCache(resolver)
+
         return resolver.getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.Tab")
             .filterIsInstance<KSClassDeclaration>()
             .mapNotNull { extract(it) }

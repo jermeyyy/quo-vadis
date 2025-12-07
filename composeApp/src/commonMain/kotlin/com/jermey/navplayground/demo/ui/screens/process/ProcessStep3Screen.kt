@@ -25,8 +25,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
 import com.jermey.navplayground.demo.ui.components.ReviewRow
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 private const val DATA_INDEX_NAME = 0
 private const val DATA_INDEX_SECOND_FIELD = 1
@@ -36,29 +39,34 @@ private const val DATA_INDEX_INDUSTRY = 3
 /**
  * Process Step 3 - Review and confirmation
  */
+@Screen(ProcessDestination.Step3::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProcessStep3Screen(
-    previousData: String,
-    branch: String,
-    onComplete: () -> Unit,
-    onBack: () -> Unit
+    destination: ProcessDestination.Step3,
+    navigator: Navigator
 ) {
-    val dataParts = previousData.split("|")
+    val dataParts = destination.previousData.split("|")
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Step 3: Review") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
             )
         }
     ) { padding ->
-        ProcessStep3Content(padding, branch, dataParts, onBack, onComplete)
+        ProcessStep3Content(
+            padding = padding,
+            branch = destination.branch,
+            dataParts = dataParts,
+            onBack = { navigator.navigateBack() },
+            onComplete = { navigator.navigate(ProcessDestination.Complete) }
+        )
     }
 }
 

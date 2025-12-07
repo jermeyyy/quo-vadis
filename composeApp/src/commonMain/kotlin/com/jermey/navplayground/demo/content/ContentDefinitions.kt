@@ -3,9 +3,6 @@
 package com.jermey.navplayground.demo.content
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import com.jermey.navplayground.demo.destinations.DetailData
 import com.jermey.navplayground.demo.destinations.TabsDestination
 import com.jermey.navplayground.demo.destinations.AppDestination
 import com.jermey.navplayground.demo.destinations.TabDestination
@@ -240,49 +237,29 @@ fun StateDrivenDemoContent(navigator: Navigator) {
 @Content(MasterDetailDestination.List::class)
 @Composable
 fun MasterListContent(navigator: Navigator) {
-    MasterListScreen(
-        onItemClick = { itemId ->
-            navigator.navigate(
-                MasterDetailDestination.Detail(itemId),
-                NavigationTransitions.SlideHorizontal
-            )
-        },
-        onBack = { navigator.navigateBack() }
-    )
+    MasterListScreen(navigator = navigator)
 }
 
 /**
  * TYPED DESTINATION EXAMPLE
  * 
  * This demonstrates @Content with a typed destination:
- * - First parameter is DetailData (the @Serializable data class from @Argument)
+ * - First parameter is the destination instance with arguments
  * - Navigator is second parameter
- * - KSP automatically deserializes DetailData from navigation arguments
- * - No manual argument extraction needed!
+ * - Arguments are accessed directly from the destination instance
  * 
- * Compare with manual approach:
+ * Compare with the old approach which required separate data classes:
  * ```kotlin
- * destination(MasterDetailDestination.Detail) { dest, navigator ->
- *     val detail = dest as MasterDetailDestination.Detail
- *     DetailScreen(itemId = detail.itemId, ...)  // Manual extraction
- * }
+ * fun DetailContent(data: DetailData, navigator: Navigator) // OLD
+ * fun DetailContent(destination: MasterDetailDestination.Detail, navigator: Navigator) // NEW
  * ```
- * 
- * With annotations, data is already deserialized and type-safe.
  */
 @Content(MasterDetailDestination.Detail::class)
 @Composable
-fun DetailContent(data: DetailData, navigator: Navigator) {
+fun DetailContent(destination: MasterDetailDestination.Detail, navigator: Navigator) {
     DetailScreen(
-        itemId = data.itemId,  // Data already deserialized!
-        onBack = { navigator.navigateBack() },
-        onNavigateToRelated = { relatedId ->
-            // Can still navigate manually, or use generated extension
-            navigator.navigate(
-                MasterDetailDestination.Detail(relatedId),
-                NavigationTransitions.SlideHorizontal
-            )
-        }
+        destination = destination,
+        navigator = navigator
     )
 }
 
@@ -307,10 +284,10 @@ fun TabsMainContent(navigator: Navigator) {
 
 @Content(TabsDestination.SubItem::class)
 @Composable
-fun TabSubItemContent(data: TabsDestination.SubItemData, navigator: Navigator) {
+fun TabSubItemContent(destination: TabsDestination.SubItem, navigator: Navigator) {
     TabSubItemScreen(
-        tabId = data.tabId,
-        itemId = data.itemId,
+        tabId = destination.tabId,
+        itemId = destination.itemId,
         onBack = { navigator.navigateBack() }
     )
 }
@@ -335,9 +312,9 @@ fun ProcessStartContent(navigator: Navigator) {
 
 @Content(ProcessDestination.Step1::class)
 @Composable
-fun ProcessStep1Content(data: ProcessDestination.Step1Data, navigator: Navigator) {
+fun ProcessStep1Content(destination: ProcessDestination.Step1, navigator: Navigator) {
     ProcessStep1Screen(
-        initialUserType = data.userType,
+        initialUserType = destination.userType,
         onNext = { selectedType, stepData ->
             // Branch based on user selection
             if (selectedType == "personal") {
@@ -358,9 +335,9 @@ fun ProcessStep1Content(data: ProcessDestination.Step1Data, navigator: Navigator
 
 @Content(ProcessDestination.Step2A::class)
 @Composable
-fun ProcessStep2AContent(data: ProcessDestination.Step2Data, navigator: Navigator) {
+fun ProcessStep2AContent(destination: ProcessDestination.Step2A, navigator: Navigator) {
     ProcessStep2AScreen(
-        previousData = data.stepData,
+        previousData = destination.stepData,
         onNext = { newData ->
             navigator.navigate(
                 ProcessDestination.Step3(newData, "personal"),
@@ -373,9 +350,9 @@ fun ProcessStep2AContent(data: ProcessDestination.Step2Data, navigator: Navigato
 
 @Content(ProcessDestination.Step2B::class)
 @Composable
-fun ProcessStep2BContent(data: ProcessDestination.Step2Data, navigator: Navigator) {
+fun ProcessStep2BContent(destination: ProcessDestination.Step2B, navigator: Navigator) {
     ProcessStep2BScreen(
-        previousData = data.stepData,
+        previousData = destination.stepData,
         onNext = { newData ->
             navigator.navigate(
                 ProcessDestination.Step3(newData, "business"),
@@ -388,10 +365,10 @@ fun ProcessStep2BContent(data: ProcessDestination.Step2Data, navigator: Navigato
 
 @Content(ProcessDestination.Step3::class)
 @Composable
-fun ProcessStep3Content(data: ProcessDestination.Step3Data, navigator: Navigator) {
+fun ProcessStep3Content(destination: ProcessDestination.Step3, navigator: Navigator) {
     ProcessStep3Screen(
-        previousData = data.previousData,
-        branch = data.branch,
+        previousData = destination.previousData,
+        branch = destination.branch,
         onComplete = {
             navigator.navigate(
                 ProcessDestination.Complete,

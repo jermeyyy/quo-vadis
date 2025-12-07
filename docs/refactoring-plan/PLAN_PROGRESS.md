@@ -1,6 +1,6 @@
 # Quo Vadis Architecture Refactoring - Progress Tracker
 
-> **Last Updated**: 2025-12-07
+> **Last Updated**: 2025-12-08
 
 ## Overview
 
@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 8 | 8 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | � In Progress | 58% | 11 | 19 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 63% | 12 | 19 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~76% | 43 | 62 |
+| **TOTAL** | 🟡 In Progress | ~78% | 44 | 62 |
 
 ---
 
@@ -40,7 +40,41 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Recent Updates
 
-### 2025-12-07 (Latest)
+### 2025-12-08 (Latest)
+- 🔴 **MIG-007B**: Tab System Migration - **BLOCKED by KSP-009**
+  - Migrated all files to new `@Tab`/`@TabItem`/`@Destination` pattern:
+    - `MainTabs.kt` - Already migrated (uses new annotations)
+    - `DemoTabs.kt` - Migrated from `@TabGraph`/`TabDefinition` to new pattern
+    - `MainTabsUI.kt` - Migrated from `TabbedNavHost` to `QuoVadisHost` with `TabWrapper` pattern
+    - `BottomNavigationBar.kt` - Migrated from route-based to index-based selection with `TabMetadata`
+  - **Blocker**: KSP cannot find `@TabItem` annotations on nested sealed subclasses during KMP metadata compilation
+    - `getSymbolsWithAnnotation("...TabItem")` returns 0 results
+    - This is a known KSP/KMP limitation
+  - **Resolution**: Created KSP-009 task to redesign annotation pattern
+    - `@Tab` will use `KClass<*>` for `initialTab` instead of String
+    - `@TabItem` will annotate top-level classes (not nested)
+    - Tab classes can simultaneously be `@Stack` classes
+  - **Files Created**: `docs/refactoring-plan/phase3-ksp/KSP-009-tab-annotation-fix.md`
+  - **INDEX.md Updated**: Added KSP-009 as blocker for MIG-007B
+  - **Status**: Migration code complete, waiting for KSP-009 annotation redesign
+
+- ✅ **MIG-007C**: Master-Detail Screens Migration - **COMPLETED**
+  - Migrated `MasterListScreen.kt` and `DetailScreen.kt` to new `@Screen` pattern
+  - **Changes Made**:
+    - Added `@Screen(MasterDetailDestination.List::class)` to `MasterListScreen`
+    - Changed signature from `onItemClick: (String), onBack: ()` to `navigator: Navigator`
+    - Added `@Screen(MasterDetailDestination.Detail::class)` to `DetailScreen`
+    - Changed signature from `itemId: String, onBack: (), onNavigateToRelated: (String)` to `destination: MasterDetailDestination.Detail, navigator: Navigator`
+    - Updated `ContentDefinitions.kt` to use new screen signatures
+  - **Key Transformations**:
+    - `onItemClick(item.id)` → `navigator.navigate(MasterDetailDestination.Detail(itemId = item.id))`
+    - `onBack()` → `navigator.navigateBack()`
+    - `onNavigateToRelated(relatedId)` → `navigator.navigate(MasterDetailDestination.Detail(itemId = relatedId))`
+    - `itemId: String` param → `destination.itemId` property access
+  - **Item.kt**: Verified unchanged (UI model, not navigation data)
+  - **Note**: Build has pre-existing KSP errors in MainTabs/DemoTabs (MIG-007B scope), Master-Detail migration is correct
+
+### 2025-12-07
 - ✅ **MIG-007 Decomposed**: Demo App Rewrite split into 7 focused subtasks - **DECOMPOSITION COMPLETE**
   - Created comprehensive subtask specifications for pattern-based migration
   - **Subtasks Created**:

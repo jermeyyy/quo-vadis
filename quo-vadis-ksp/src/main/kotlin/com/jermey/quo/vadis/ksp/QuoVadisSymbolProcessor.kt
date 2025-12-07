@@ -77,7 +77,15 @@ class QuoVadisSymbolProcessor(
     private val collectedTabs = mutableListOf<TabInfo>()
     private val collectedPanes = mutableListOf<PaneInfo>()
     
+    // Track if generation has already happened (to handle multi-round processing)
+    private var hasGenerated = false
+    
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        // Skip if we've already generated code in a previous round
+        if (hasGenerated) {
+            return emptyList()
+        }
+        
         // First pass: generate NavNode builders for new architecture (includes validation and screen registry)
         processNavNodeBuilders(resolver)
 
@@ -117,7 +125,9 @@ class QuoVadisSymbolProcessor(
             }
         }
 
-        // Step 2: Extract tab info
+        // Step 2: Populate @TabItem cache and extract tab info
+        // This must happen before extracting tabs due to KSP sealed subclass limitations in KMP
+        tabExtractor.populateTabItemCache(resolver)
         val tabSymbols = resolver.getSymbolsWithAnnotation(Tab::class.qualifiedName!!)
         tabSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
             try {
@@ -168,6 +178,9 @@ class QuoVadisSymbolProcessor(
 
         // Step 8: Generate screen registry (moved here to use already extracted screens)
         generateScreenRegistry(screens)
+        
+        // Mark generation as complete to prevent duplicate generation in multi-round processing
+        hasGenerated = true
     }
 
     /**

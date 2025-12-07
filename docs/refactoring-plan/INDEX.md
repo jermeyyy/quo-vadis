@@ -103,7 +103,7 @@ Introduces the new annotation system mapping directly to NavNode types.
 
 ---
 
-### Phase 4: KSP Processor Rewrite (8 Tasks)
+### Phase 4: KSP Processor Rewrite (9 Tasks)
 Complete rewrite of code generation for the new annotation system, including **type-safe argument serialization**.
 
 | ID | Task | Complexity | Est. Time |
@@ -116,8 +116,11 @@ Complete rewrite of code generation for the new annotation system, including **t
 | [KSP-006](./phase3-ksp/KSP-006-validation.md) | Validation and Error Reporting (argument validation) | Medium | 2-3 days |
 | [KSP-007](./phase3-ksp/KSP-007-remove-legacy-tabgraph.md) | Remove Legacy TabGraphExtractor | Low | 0.5 days |
 | [KSP-008](./phase3-ksp/KSP-008-deep-link-handler-imports.md) | Fix Deep Link Handler Generator Imports | Low | 0.5 days |
+| [**KSP-009**](./phase3-ksp/KSP-009-tab-annotation-fix.md) | **Tab Annotation Pattern Fix for KMP** ⚠️ | High | 3-4 days |
 
-**Phase 4 Total: ~18-23 days**
+**Phase 4 Total: ~21-27 days**
+
+> ⚠️ **KSP-009 BLOCKER**: The current `@Tab`/`@TabItem` pattern fails in KMP metadata compilation because KSP cannot discover annotations on nested sealed subclasses. KSP-009 introduces a new pattern where `@TabItem` annotates top-level `@Stack` classes, fixing this issue and improving type-safety.
 
 **Generated Artifacts:**
 | Input | Output | Purpose |
@@ -149,7 +152,7 @@ Creates `quo-vadis-recipes` module for LLM-assisted integration, marks legacy AP
 | [MIG-006](./phase5-migration/MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | Medium | 1 day |
 | [MIG-007](./phase5-migration/MIG-007-demo-app-rewrite.md) | Demo App Rewrite | High | 3-4 days |
 | ↳ [MIG-007A](./phase5-migration/MIG-007A-foundation-destinations.md) | Foundation - Core Destinations | Medium | 3-4 hours |
-| ↳ [MIG-007B](./phase5-migration/MIG-007B-tab-system.md) | Tab System Migration | High | 4-5 hours |
+| ↳ [MIG-007B](./phase5-migration/MIG-007B-tab-system.md) | Tab System Migration (**Blocked by KSP-009**) | High | 4-5 hours |
 | ↳ [MIG-007C](./phase5-migration/MIG-007C-master-detail.md) | Master-Detail Pattern | Medium | 2-3 hours |
 | ↳ [MIG-007D](./phase5-migration/MIG-007D-process-wizard.md) | Process/Wizard Flow | Medium | 3-4 hours |
 | ↳ [MIG-007E](./phase5-migration/MIG-007E-settings-stack.md) | Settings Stack | Low | 1-2 hours |
@@ -240,11 +243,14 @@ Phase 1 (Core) ─────────────────────�
     │    └── → RENDER-004 → 005, 006, 007                       │
     │                                                            │
     ├──► Phase 3 (Annotations) ──► Phase 4 (KSP) ───────────────┤
+    │                                 │                          │
+    │                                 └── KSP-009 ──► MIG-007B   │ ⚠️ BLOCKER
     │                                                            │
     ├──► Phase 5 (Recipes & Migration) ─────────────────────────┤
     │    ├── PREP-001 (recipes module) ──► MIG-001..006         │
     │    ├── PREP-002 (@Deprecated) ──► MIG-008                 │
     │    └── MIG-001..006 ──► MIG-007 (Demo Rewrite)            │
+    │         └── MIG-007A ──► MIG-007B (requires KSP-009)      │
     │                                                            │
     └──► Phase 6 (Risks) ───────────────────────────────────────┤
                                                                  │
@@ -255,9 +261,9 @@ Phase 1 (Core) ─────────────────────�
 ### Critical Path
 
 1. **CORE-001** → **CORE-002** → **CORE-003** (Foundation)
-2. **ANN-001..005** → **KSP-001..006** (Code Generation)
+2. **ANN-001..005** → **KSP-001..006** → **KSP-009** (Code Generation + Tab Fix)
 3. **RENDER-001** → **RENDER-002A** → **RENDER-004** (Renderer Core)
-4. **PREP-001** → **MIG-001..006** → **MIG-007** (Phase 5 Critical Path)
+4. **KSP-009** → **MIG-007B** → **MIG-007G** (Tab System Migration Path)
 
 ---
 
@@ -268,14 +274,16 @@ Phase 1 (Core) ─────────────────────�
 | Phase 1: Core State | 5 | 14-19 |
 | Phase 2: Renderer | 12 | 31-37.5 |
 | Phase 3: Annotations | 6 | 4.5 |
-| Phase 4: KSP | 8 | 18-23 |
+| Phase 4: KSP | 9 | 21-27 |
 | Phase 5: Recipes & Migration | 10 | 14-17 |
 | Phase 6: Risks | 5 | 11 |
 | Phase 7: Documentation | 4 | 7 |
 | Phase 8: Testing | 5 | 16 |
-| **TOTAL** | **55** | **116-135.5 days** |
+| **TOTAL** | **56** | **118.5-139 days** |
 
 > **Note**: Phase 3 now includes `@Argument` annotation (ANN-006) for type-safe navigation arguments. Phase 4 KSP includes type conversion for deep linking.
+>
+> **Note**: Phase 4 now includes **KSP-009** which fixes the `@Tab`/`@TabItem` annotation pattern for KMP metadata compilation. This is a **blocker for MIG-007B**.
 >
 > **Note**: Phase 5 includes `quo-vadis-recipes` module creation and `@Deprecated` annotations for all legacy APIs. All "migrating from" code references use GitHub permalinks to the main branch.
 >

@@ -342,3 +342,4 @@ data class TabMetadata(
 - [INDEX.md](../INDEX.md) - Overall refactoring plan
 - [CORE-001: NavNode Hierarchy](../phase1-core/CORE-001-navnode-hierarchy.md) - TabNode definition
 - [KSP-002: Class References Generator](../phase3-ksp/KSP-002-class-references.md) - Code generation details
+- [**KSP-009: Tab Annotation Pattern Fix**](../phase3-ksp/KSP-009-tab-annotation-fix.md) - ⚠️ **IMPORTANT**: Fixes KMP metadata compilation issues with nested `@TabItem` annotations

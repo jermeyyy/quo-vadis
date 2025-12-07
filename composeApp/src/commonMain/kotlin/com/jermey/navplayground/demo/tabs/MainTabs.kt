@@ -1,14 +1,15 @@
 package com.jermey.navplayground.demo.tabs
 
 import com.jermey.navplayground.demo.destinations.TabDestination
+import com.jermey.quo.vadis.annotations.Destination as DestinationAnnotation
 import com.jermey.quo.vadis.annotations.Tab
-import com.jermey.quo.vadis.annotations.TabGraph
-import com.jermey.quo.vadis.core.navigation.core.TabDefinition
+import com.jermey.quo.vadis.annotations.TabItem
+import com.jermey.quo.vadis.core.navigation.core.Destination
 
 /**
  * Main bottom navigation tabs for the Quo Vadis demo app.
  *
- * This demonstrates the **@TabGraph annotation** for defining tabbed navigation
+ * This demonstrates the **@Tab annotation** for defining tabbed navigation
  * with automatic code generation.
  *
  * ## Generated Code
@@ -38,12 +39,8 @@ import com.jermey.quo.vadis.core.navigation.core.TabDefinition
  *
  * @see MainTabsScreen for the UI implementation
  */
-@TabGraph(
-    name = "main_tabs",
-    initialTab = "Home",
-    primaryTab = "Home"
-)
-sealed class MainTabs : TabDefinition {
+@Tab(name = "mainTabs", initialTab = "Home")
+sealed class MainTabs : Destination {
 
     /**
      * Home tab - Main entry point and navigation patterns showcase.
@@ -51,17 +48,9 @@ sealed class MainTabs : TabDefinition {
      * Root destination: TabDestination.Home
      * Icon: "home" (material icon name)
      */
-    @Tab(
-        route = "tab_home",
-        label = "Home",
-        icon = "home",
-        rootGraph = TabDestination::class,
-        rootDestination = TabDestination.Home::class
-    )
-    data object Home : MainTabs() {
-        override val route = "tab_home"
-        override val rootDestination = TabDestination.Home
-    }
+    @TabItem(label = "Home", icon = "home", rootGraph = TabDestination::class)
+    @DestinationAnnotation(route = "tabs/home")
+    data object Home : MainTabs()
 
     /**
      * Explore tab - Master-detail patterns and deep navigation.
@@ -69,17 +58,9 @@ sealed class MainTabs : TabDefinition {
      * Root destination: TabDestination.Explore
      * Icon: "explore" (material icon name)
      */
-    @Tab(
-        route = "tab_explore",
-        label = "Explore",
-        icon = "explore",
-        rootGraph = TabDestination::class,
-        rootDestination = TabDestination.Explore::class
-    )
-    data object Explore : MainTabs() {
-        override val route = "tab_explore"
-        override val rootDestination = TabDestination.Explore
-    }
+    @TabItem(label = "Explore", icon = "explore", rootGraph = TabDestination::class)
+    @DestinationAnnotation(route = "tabs/explore")
+    data object Explore : MainTabs()
 
     /**
      * Profile tab - User profile and settings.
@@ -87,17 +68,9 @@ sealed class MainTabs : TabDefinition {
      * Root destination: TabDestination.Profile
      * Icon: "person" (material icon name)
      */
-    @Tab(
-        route = "tab_profile",
-        label = "Profile",
-        icon = "person",
-        rootGraph = TabDestination::class,
-        rootDestination = TabDestination.Profile::class
-    )
-    data object Profile : MainTabs() {
-        override val route = "tab_profile"
-        override val rootDestination = TabDestination.Profile
-    }
+    @TabItem(label = "Profile", icon = "person", rootGraph = TabDestination::class)
+    @DestinationAnnotation(route = "tabs/profile")
+    data object Profile : MainTabs()
 
     /**
      * Settings tab - App configuration.
@@ -105,15 +78,7 @@ sealed class MainTabs : TabDefinition {
      * Root destination: TabDestination.Settings
      * Icon: "settings" (material icon name)
      */
-    @Tab(
-        route = "tab_settings",
-        label = "Settings",
-        icon = "settings",
-        rootGraph = TabDestination::class,
-        rootDestination = TabDestination.Settings::class
-    )
-    data object Settings : MainTabs() {
-        override val route = "tab_settings"
-        override val rootDestination = TabDestination.Settings
-    }
+    @TabItem(label = "Settings", icon = "settings", rootGraph = TabDestination::class)
+    @DestinationAnnotation(route = "tabs/settings")
+    data object Settings : MainTabs()
 }

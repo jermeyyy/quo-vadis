@@ -20,19 +20,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.ItemCard
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 private const val MASTER_LIST_ITEMS_COUNT = 50
 
 /**
  * Master List Screen - Shows list of items (Master view)
  */
+@Screen(MasterDetailDestination.List::class)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun MasterListScreen(
-    onItemClick: (String) -> Unit,
-    onBack: () -> Unit
-) {
+fun MasterListScreen(navigator: Navigator) {
     val items = remember {
         (1..MASTER_LIST_ITEMS_COUNT).map {
             Item(
@@ -49,7 +50,7 @@ fun MasterListScreen(
             TopAppBar(
                 title = { Text("Master-Detail Pattern") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
@@ -75,7 +76,7 @@ fun MasterListScreen(
             items(items) { item ->
                 ItemCard(
                     item = item,
-                    onClick = { onItemClick(item.id) }
+                    onClick = { navigator.navigate(MasterDetailDestination.Detail(itemId = item.id)) }
                 )
             }
         }

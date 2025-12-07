@@ -213,25 +213,26 @@ class NavNodeBuilderGenerator(
         startDest: com.jermey.quo.vadis.ksp.models.DestinationInfo
     ): CodeBlock {
         val destinationClassName = ClassName(stackInfo.packageName, stackInfo.className)
+        val screenKey = "\$key/${startDest.className.lowercase()}"
 
         return CodeBlock.builder()
-            .addStatement("return %T(", STACK_NODE)
+            .add("return %T(\n", STACK_NODE)
             .indent()
-            .addStatement("key = key,")
-            .addStatement("parentKey = parentKey,")
-            .addStatement("children = listOf(")
+            .add("key = key,\n")
+            .add("parentKey = parentKey,\n")
+            .add("children = listOf(\n")
             .indent()
-            .addStatement("%T(", SCREEN_NODE)
+            .add("%T(\n", SCREEN_NODE)
             .indent()
-            .addStatement("key = %P,", "\$key/${startDest.className.lowercase()}")
-            .addStatement("parentKey = key,")
-            .addStatement("destination = %T.%L", destinationClassName, startDest.className)
+            .add("key = %S,\n", screenKey)
+            .add("parentKey = key,\n")
+            .add("destination = %T.%L\n", destinationClassName, startDest.className)
             .unindent()
-            .addStatement(")")
+            .add(")\n")
             .unindent()
-            .addStatement(")")
+            .add(")\n")
             .unindent()
-            .addStatement(")")
+            .add(")\n")
             .build()
     }
 
