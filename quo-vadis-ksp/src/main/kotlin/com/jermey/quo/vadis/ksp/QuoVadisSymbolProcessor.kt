@@ -189,7 +189,8 @@ class QuoVadisSymbolProcessor(
     private fun collectAllDestinations(): List<DestinationInfo> {
         val destinations = mutableListOf<DestinationInfo>()
         collectedStacks.forEach { stack -> destinations.addAll(stack.destinations) }
-        collectedTabs.forEach { tab -> destinations.addAll(tab.tabs.map { it.destination }) }
+        // Only collect destinations from legacy tabs (new pattern tabs don't have @Destination on @TabItem)
+        collectedTabs.forEach { tab -> destinations.addAll(tab.tabs.mapNotNull { it.destination }) }
         collectedPanes.forEach { pane -> destinations.addAll(pane.panes.map { it.destination }) }
         return destinations
     }

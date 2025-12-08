@@ -1,8 +1,8 @@
 # Phase 3: KSP Processor Rewrite - Progress
 
-> **Last Updated**: 2025-12-07  
-> **Phase Status**: � Completed  
-> **Progress**: 8/8 tasks (100%)
+> **Last Updated**: 2025-12-08  
+> **Phase Status**: 🟢 Completed  
+> **Progress**: 9/9 tasks (100%)
 
 ## Overview
 
@@ -22,10 +22,108 @@ This phase implements a complete rewrite of the KSP code generation for the new 
 | [KSP-006](./KSP-006-validation.md) | Validation and Error Reporting | 🟢 Completed | 2025-12-06 | ValidationEngine + processor integration |
 | [KSP-007](./KSP-007-remove-legacy-tabgraph.md) | Remove Legacy TabGraphExtractor | 🟢 Completed | 2025-12-06 | 10 legacy files removed, processor cleaned up |
 | [KSP-008](./KSP-008-deep-link-handler-imports.md) | Fix Deep Link Handler Generator Imports | 🟢 Completed | 2025-12-07 | Uses KotlinPoet ClassName with %T for auto-imports |
+| [KSP-009](./KSP-009-tab-annotation-fix.md) | Tab Annotation Pattern Fix for KMP Metadata | 🟢 Completed | 2025-12-08 | New pattern: @TabItem+@Stack on top-level classes |
 
 ---
 
 ## Completed Tasks
+
+### KSP-009: Tab Annotation Pattern Fix for KMP Metadata (2025-12-08)
+
+Fixed critical KSP limitation in KMP where `getSymbolsWithAnnotation()` returns empty results for annotations on nested sealed subclasses.
+
+**Problem**: In Kotlin Multiplatform metadata compilation (`kspCommonMainKotlinMetadata`), KSP cannot find `@TabItem` or `@Destination` annotations on nested sealed subclasses, causing `@Tab` processing to fail with "no valid tab items" errors.
+
+**Root Cause**: KSP's symbol resolution during metadata compilation doesn't reliably discover annotations on nested classes within sealed hierarchies.
+
+**Solution**: New annotation pattern where tabs are top-level classes with `@TabItem + @Stack`:
+
+**Before (Legacy Pattern - Failing)**:
+```kotlin
+@Tab(name = "mainTabs", initialTab = "Home")  // String-based initialTab
+sealed class MainTabs : Destination {
+    @TabItem(label = "Home", icon = "home", rootGraph = TabDestination::class)
+    @Destination(route = "tabs/home")
+    data object Home : MainTabs()  // ← Nested - KSP can't find annotations
+}
+```
+
+**After (New Pattern - Working)**:
+```kotlin
+// Each tab is a top-level @TabItem + @Stack class
+@TabItem(label = "Home", icon = "home")
+@Stack(name = "homeTabStack", startDestination = "Tab")
+sealed class HomeTab : Destination {
+    @Destination(route = "home/tab")
+    data object Tab : HomeTab()
+}
+
+// Container with type-safe class references
+@Tab(
+    name = "mainTabs",
+    initialTab = HomeTab::class,  // ← Type-safe KClass<*>
+    items = [HomeTab::class, ExploreTab::class, ProfileTab::class]
+)
+sealed class MainTabs : Destination
+```
+
+**Changes Made**:
+
+1. **Annotation Updates** (`quo-vadis-annotations/...TabAnnotations.kt`):
+   - `@Tab`: Added `initialTab: KClass<*>` (type-safe) and `items: Array<KClass<*>>`
+   - `@Tab`: Deprecated `initialTabLegacy: String` (for backward compat)
+   - `@TabItem`: Deprecated `rootGraph` parameter (class IS the stack in new pattern)
+
+2. **TabExtractor Updates** (`quo-vadis-ksp/.../TabExtractor.kt`):
+   - Added `extractFromItemsArray()` for new pattern
+   - Kept `extractFromSealedSubclasses()` for legacy fallback
+   - Added detection logic based on `items` array presence
+   - Logs info message for new pattern, warning for legacy
+
+3. **TabInfo Model Updates** (`quo-vadis-ksp/.../TabInfo.kt`):
+   - Added `isNewPattern: Boolean` flag
+   - Changed `initialTabClass: KSClassDeclaration?` (null = use first tab)
+
+4. **NavNodeBuilderGenerator Updates**:
+   - Generates `TabNode` with stack builders from `@TabItem/@Stack` classes
+   - Uses lowercase class names for stack keys
+
+5. **Demo App Migration**:
+   - `MainTabs.kt`: Migrated to 4 top-level tab classes (HomeTab, ExploreTab, ProfileTab, SettingsTab)
+   - `DemoTabs.kt`: Migrated to 3 top-level tab classes (DemoTab1, DemoTab2, DemoTab3)
+
+**Generated Code Example** (`MainTabsNavNodeBuilder.kt`):
+```kotlin
+fun buildMainTabsNavNode(
+    key: String = "mainTabs-tabs",
+    parentKey: String? = null,
+    initialTabIndex: Int = 0
+): TabNode = TabNode(
+    key = key,
+    parentKey = parentKey,
+    stacks = listOf(
+        buildHomeTabNavNode(key = "$key/hometab", parentKey = key),
+        buildExploreTabNavNode(key = "$key/exploretab", parentKey = key),
+        buildProfileTabNavNode(key = "$key/profiletab", parentKey = key),
+        buildSettingsTabNavNode(key = "$key/settingstab", parentKey = key)
+    ),
+    activeStackIndex = initialTabIndex
+)
+```
+
+**Verification**:
+- `:quo-vadis-ksp:build -x detekt` ✓
+- `:composeApp:kspCommonMainKotlinMetadata` ✓
+- Generated `MainTabsNavNodeBuilder.kt` and `DemoTabsNavNodeBuilder.kt` correct
+
+**Notes**:
+- Unit tests skipped due to kotlin-compile-testing Kotlin 2.0+ incompatibility
+- Demo app has pre-existing compilation errors from other missing generated code (unrelated to KSP-009)
+- Legacy pattern still supported with deprecation warning
+
+**Unblocks**: MIG-007B (Tab System Migration)
+
+---
 
 ### KSP-008: Fix Deep Link Handler Generator Imports (2025-12-07)
 

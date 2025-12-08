@@ -16,13 +16,13 @@ See [INDEX.md](./INDEX.md) for full plan details.
 |-------|--------|----------|------------|-------------|
 | [Phase 1: Core State](./phase1-core/phase1-core-progress.md) | 🟢 Completed | 100% | 6 | 6 |
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
-| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 8 | 8 |
+| [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 9 | 9 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 63% | 12 | 19 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 68% | 13 | 19 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~78% | 44 | 62 |
+| **TOTAL** | 🟡 In Progress | ~80% | 46 | 63 |
 
 ---
 
@@ -41,7 +41,27 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-08 (Latest)
-- 🔴 **MIG-007B**: Tab System Migration - **BLOCKED by KSP-009**
+- ✅ **KSP-009**: Tab Annotation Pattern Fix for KMP Metadata - **COMPLETED**
+  - Fixed critical KSP limitation where `getSymbolsWithAnnotation()` returns empty for nested sealed subclass annotations
+  - **New Pattern**: Each tab is a top-level `@TabItem + @Stack` class
+  - **Changes**:
+    - `@Tab`: Added type-safe `initialTab: KClass<*>` and `items: Array<KClass<*>>`
+    - `@TabItem`: Deprecated `rootGraph` (class IS the stack in new pattern)
+    - `TabExtractor`: Supports new pattern via items array, falls back to legacy with warning
+    - Demo app: Migrated `MainTabs.kt` and `DemoTabs.kt` to new pattern
+  - **Generated Code**: `MainTabsNavNodeBuilder.kt`, `DemoTabsNavNodeBuilder.kt` now correctly create TabNodes
+  - **Verification**: `:composeApp:kspCommonMainKotlinMetadata` passes ✓
+  - **Note**: Unit tests skipped due to kotlin-compile-testing Kotlin 2.0+ incompatibility
+
+- ✅ **MIG-007B**: Tab System Migration - **COMPLETED**
+  - **MainTabs.kt**: 4 top-level tab classes (HomeTab, ExploreTab, ProfileTab, SettingsTab)
+  - **DemoTabs.kt**: 3 top-level tab classes (DemoTab1, DemoTab2, DemoTab3)
+  - **MainTabsUI.kt**: Uses `TabWrapper` pattern with `QuoVadisHost`
+  - **BottomNavigationBar.kt**: Uses index-based selection with `TabMetadata`
+  - KSP generates correct `buildMainTabsNavNode()` and `buildDemoTabsNavNode()` functions
+
+### 2025-12-08 (Earlier)
+- 🔴 **MIG-007B**: Tab System Migration - ~~BLOCKED by KSP-009~~ → Now COMPLETED
   - Migrated all files to new `@Tab`/`@TabItem`/`@Destination` pattern:
     - `MainTabs.kt` - Already migrated (uses new annotations)
     - `DemoTabs.kt` - Migrated from `@TabGraph`/`TabDefinition` to new pattern

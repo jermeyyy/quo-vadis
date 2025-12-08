@@ -1,4 +1,4 @@
-```markdown
+n
 # Migration Guide: Nested Tabs + Detail
 
 > **Difficulty**: Medium-Advanced | **Time Estimate**: 60-120 minutes | **Prerequisites**: [02-master-detail.md](./02-master-detail.md), [03-tabbed-navigation.md](./03-tabbed-navigation.md) complete

@@ -1,4 +1,4 @@
-```markdown
+n
 # Migration Guide: Tabbed Navigation
 
 > **Difficulty**: Medium | **Time Estimate**: 45-90 minutes | **Prerequisites**: [01-simple-stack.md](./01-simple-stack.md) complete

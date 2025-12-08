@@ -37,7 +37,7 @@ docs/
 
 Create the following markdown document:
 
-```markdown
+n
 # Legacy API Reference (Main Branch)
 
 > **Note**: This document provides stable GitHub permalinks to all legacy APIs

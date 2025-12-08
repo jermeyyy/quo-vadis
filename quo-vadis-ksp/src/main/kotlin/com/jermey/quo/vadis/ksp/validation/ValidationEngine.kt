@@ -134,8 +134,11 @@ class ValidationEngine(
         stacks.forEach { stack ->
             stack.destinations.forEach { containedDestinations.add(it.qualifiedName) }
         }
+        // Only legacy tabs have destinations; new pattern tabs don't require @Destination
         tabs.forEach { tab ->
-            tab.tabs.forEach { containedDestinations.add(it.destination.qualifiedName) }
+            tab.tabs.forEach { tabItem ->
+                tabItem.destination?.let { containedDestinations.add(it.qualifiedName) }
+            }
         }
         panes.forEach { pane ->
             pane.panes.forEach { containedDestinations.add(it.destination.qualifiedName) }
@@ -174,15 +177,21 @@ class ValidationEngine(
      */
     private fun validateTabInitialTabs(tabs: List<TabInfo>) {
         tabs.forEach { tab ->
-            val initialTabExists = tab.tabs.any { it.destination.className == tab.initialTab }
-            if (!initialTabExists) {
-                val availableTabs = tab.tabs.map { it.destination.className }
-                reportError(
-                    tab.classDeclaration,
-                    "@Tab(initialTab = \"${tab.initialTab}\") - " +
-                        "No tab named \"${tab.initialTab}\" found in ${tab.className}. " +
-                        "Available tabs: $availableTabs"
-                )
+            // New pattern uses type-safe initialTabClass; null means use first tab
+            if (tab.initialTabClass != null) {
+                val initialQualifiedName = tab.initialTabClass.qualifiedName?.asString()
+                val initialTabExists = tab.tabs.any { 
+                    it.classDeclaration.qualifiedName?.asString() == initialQualifiedName 
+                }
+                if (!initialTabExists) {
+                    val availableTabs = tab.tabs.map { it.classDeclaration.simpleName.asString() }
+                    reportError(
+                        tab.classDeclaration,
+                        "@Tab(initialTab = ${tab.initialTabClass.simpleName.asString()}::class) - " +
+                            "Class not found in items/tabs. " +
+                            "Available tabs: $availableTabs"
+                    )
+                }
             }
         }
     }
@@ -369,6 +378,9 @@ class ValidationEngine(
 
     /**
      * Validates that rootGraph references in @TabItem and @PaneItem point to @Stack classes.
+     * 
+     * Note: In the new pattern, rootGraphClass is null because the @TabItem class itself
+     * IS the stack. This validation only applies to legacy pattern where rootGraph is explicit.
      */
     private fun validateRootGraphReferences(
         tabs: List<TabInfo>,
@@ -376,7 +388,12 @@ class ValidationEngine(
     ) {
         tabs.forEach { tab ->
             tab.tabs.forEach { tabItem ->
-                validateRootGraphClass(tabItem.rootGraphClass, tabItem.destination.classDeclaration)
+                // Only validate if rootGraphClass is set (legacy pattern)
+                // In new pattern, rootGraphClass is null and the class itself should have @Stack
+                tabItem.rootGraphClass?.let { rootGraph ->
+                    val usageSite = tabItem.destination?.classDeclaration ?: tabItem.classDeclaration
+                    validateRootGraphClass(rootGraph, usageSite)
+                }
             }
         }
 

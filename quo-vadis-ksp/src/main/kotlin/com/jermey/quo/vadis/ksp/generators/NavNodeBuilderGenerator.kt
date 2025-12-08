@@ -115,9 +115,11 @@ class NavNodeBuilderGenerator(
             .addFileComment(FILE_COMMENT)
             .apply {
                 // Add imports for tab root graph builders
+                // In new pattern, rootGraphClass is null and the @TabItem class itself IS the stack
                 tabInfo.tabs.forEach { tabItem ->
-                    val rootGraphName = tabItem.rootGraphClass.simpleName.asString()
-                    val rootGraphPackage = tabItem.rootGraphClass.packageName.asString()
+                    val rootGraph = tabItem.rootGraphClass ?: tabItem.classDeclaration
+                    val rootGraphName = rootGraph.simpleName.asString()
+                    val rootGraphPackage = rootGraph.packageName.asString()
                     addImport(
                         "$rootGraphPackage.$GENERATED_PACKAGE_SUFFIX",
                         "build${rootGraphName}NavNode"
@@ -241,9 +243,13 @@ class NavNodeBuilderGenerator(
     // =========================================================================
 
     private fun buildTabNodeFunction(tabInfo: TabInfo): FunSpec {
-        val initialTabIndex = tabInfo.tabs.indexOfFirst {
-            it.destination.className == tabInfo.initialTab
-        }.takeIf { it >= 0 } ?: 0
+        // Calculate initial tab index: if initialTabClass is set, find its index; otherwise 0
+        val initialTabIndex = tabInfo.initialTabClass?.let { initialClass ->
+            val initialQualifiedName = initialClass.qualifiedName?.asString()
+            tabInfo.tabs.indexOfFirst {
+                it.classDeclaration.qualifiedName?.asString() == initialQualifiedName
+            }.takeIf { it >= 0 }
+        } ?: 0
 
         return FunSpec.builder("build${tabInfo.className}NavNode")
             .addKdoc(
@@ -283,19 +289,22 @@ class NavNodeBuilderGenerator(
 
     private fun buildTabNodeCode(tabInfo: TabInfo): CodeBlock {
         val builder = CodeBlock.builder()
-            .addStatement("return %T(", TAB_NODE)
+            .add("return %T(\n", TAB_NODE)
             .indent()
-            .addStatement("key = key,")
-            .addStatement("parentKey = parentKey,")
-            .addStatement("stacks = listOf(")
+            .add("key = key,\n")
+            .add("parentKey = parentKey,\n")
+            .add("stacks = listOf(\n")
             .indent()
 
         tabInfo.tabs.forEachIndexed { index, tabItem ->
-            val rootGraphName = tabItem.rootGraphClass.simpleName.asString()
-            val tabKey = tabItem.destination.className.lowercase()
+            // In new pattern, rootGraphClass is null and classDeclaration IS the stack
+            val rootGraph = tabItem.rootGraphClass ?: tabItem.classDeclaration
+            val rootGraphName = rootGraph.simpleName.asString()
+            // For tab key: use destination className if available (legacy), otherwise classDeclaration (new)
+            val tabKey = (tabItem.destination?.className ?: tabItem.classDeclaration.simpleName.asString()).lowercase()
 
-            builder.addStatement(
-                "build${rootGraphName}NavNode(key = %P, parentKey = key)%L",
+            builder.add(
+                "build${rootGraphName}NavNode(key = %P, parentKey = key)%L\n",
                 "\$key/$tabKey",
                 if (index < tabInfo.tabs.size - 1) "," else ""
             )
@@ -303,10 +312,10 @@ class NavNodeBuilderGenerator(
 
         builder
             .unindent()
-            .addStatement("),")
-            .addStatement("activeStackIndex = initialTabIndex")
+            .add("),\n")
+            .add("activeStackIndex = initialTabIndex\n")
             .unindent()
-            .addStatement(")")
+            .add(")\n")
 
         return builder.build()
     }

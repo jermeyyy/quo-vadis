@@ -229,28 +229,30 @@ class NavigatorExtGenerator(
      * @param tab The tab container information
      */
     private fun addTabSwitchingExtensions(builder: FileSpec.Builder, tab: TabInfo) {
-        tab.tabs.forEach { tabItem ->
-            builder.addFunction(buildTabSwitchExtension(tab, tabItem))
+        tab.tabs.forEachIndexed { index, tabItem ->
+            builder.addFunction(buildTabSwitchExtension(tab, tabItem, index))
         }
     }
 
     /**
      * Build a tab switching extension function.
      *
-     * Example: `fun Navigator.switchToHomeTab() = switchTab(MainTabs.Home)`
+     * Example: `fun Navigator.switchToHomeTab() = switchTab(0)` // index-based
      *
      * @param tab The parent tab container
      * @param tabItem The tab item to generate an extension for
+     * @param tabIndex The index of this tab in the @Tab items array
      * @return A FunSpec for the generated extension function
      */
-    private fun buildTabSwitchExtension(tab: TabInfo, tabItem: TabItemInfo): FunSpec {
-        val functionName = "switchTo${tabItem.destination.className}Tab"
-        val tabType = ClassName(tab.packageName, tab.className, tabItem.destination.className)
+    private fun buildTabSwitchExtension(tab: TabInfo, tabItem: TabItemInfo, tabIndex: Int): FunSpec {
+        // For new pattern, use classDeclaration name; for legacy, use destination className
+        val tabClassName = tabItem.destination?.className ?: tabItem.classDeclaration.simpleName.asString()
+        val functionName = "switchTo${tabClassName}Tab"
 
         return FunSpec.builder(functionName)
-            .addKdoc("Switch to the ${tabItem.label} tab.")
+            .addKdoc("Switch to the ${tabItem.label} tab (index $tabIndex).")
             .receiver(NAVIGATOR)
-            .addStatement("switchTab(%T)", tabType)
+            .addStatement("switchTab(%L)", tabIndex)
             .build()
     }
 

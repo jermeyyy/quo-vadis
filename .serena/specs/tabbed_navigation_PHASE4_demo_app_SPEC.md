@@ -653,7 +653,7 @@ fun DemoApp() {
 
 **File**: `composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/tabs/README.md`
 
-```markdown
+n
 # Tabbed Navigation Demo
 
 This package demonstrates the Quo Vadis tabbed navigation API.
@@ -826,7 +826,7 @@ See `bottom_navigation_state_retention` memory for the old manual approach.
 
 **Add section**:
 
-```markdown
+n
 ## Tabbed Navigation
 
 The demo app now uses the Quo Vadis tabbed navigation API!

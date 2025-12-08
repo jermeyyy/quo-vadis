@@ -3,11 +3,11 @@ package com.jermey.quo.vadis.annotations
 import kotlin.reflect.KClass
 
 /**
- * Marks a sealed class or interface as a tabbed navigation container.
+ * Marks an object or class as a tabbed navigation container.
  *
- * Each sealed subclass represents a tab with its own independent navigation
- * stack. The container is transformed into a [TabNode] in the navigation tree,
- * with each tab maintaining its own [StackNode] for back navigation.
+ * This annotation defines a collection of tabs, each represented by a
+ * `@TabItem`-annotated `@Stack` class. The container manages tab state,
+ * including the active tab and per-tab back stacks.
  *
  * ## Features
  *
@@ -16,41 +16,44 @@ import kotlin.reflect.KClass
  * - State preservation when switching tabs
  * - Deep linking to specific tabs
  * - Configurable initial tab selection
+ * - Type-safe tab references
  *
- * ## Usage
+ * ## New Pattern (Recommended)
  *
- * Apply to a sealed class where each subclass represents a tab:
+ * Define each tab as a separate `@TabItem` + `@Stack` class at the top level:
  * ```kotlin
- * @Tab(name = "mainTabs", initialTab = "Home")
- * sealed class MainTabs : Destination {
+ * @TabItem(label = "Home", icon = "home")
+ * @Stack(name = "homeStack", startDestination = "Feed")
+ * sealed class HomeTab : Destination {
+ *     @Destination(route = "home/feed")
+ *     data object Feed : HomeTab()
  *
- *     @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
- *     @Destination(route = "tabs/home")
- *     data object Home : MainTabs()
- *
- *     @TabItem(label = "Search", icon = "search", rootGraph = SearchDestination::class)
- *     @Destination(route = "tabs/search")
- *     data object Search : MainTabs()
- *
- *     @TabItem(label = "Profile", icon = "person", rootGraph = ProfileDestination::class)
- *     @Destination(route = "tabs/profile")
- *     data object Profile : MainTabs()
+ *     @Destination(route = "home/article/{articleId}")
+ *     data class Article(val articleId: String) : HomeTab()
  * }
+ *
+ * @TabItem(label = "Explore", icon = "explore")
+ * @Stack(name = "exploreStack", startDestination = "ExploreRoot")
+ * sealed class ExploreTab : Destination {
+ *     @Destination(route = "explore/root")
+ *     data object ExploreRoot : ExploreTab()
+ * }
+ *
+ * @Tab(
+ *     name = "mainTabs",
+ *     initialTab = HomeTab::class,
+ *     items = [HomeTab::class, ExploreTab::class]
+ * )
+ * object MainTabs
  * ```
- *
- * ## Sealed Class Requirements
- *
- * - Must be a `sealed class` or `sealed interface`
- * - Each direct subclass must be annotated with [@TabItem] and [@Destination]
- * - Subclasses should be `data object` (tabs typically have no parameters)
  *
  * ## NavNode Mapping
  *
- * This annotation maps to [TabNode] in the NavNode hierarchy:
+ * This annotation maps to `TabNode` in the NavNode hierarchy:
  * ```
  * @Tab → TabNode(
  *     key = "{name}",
- *     stacks = [StackNode for each @TabItem subclass],
+ *     stacks = [StackNode for each @TabItem in items],
  *     activeStackIndex = <index of initialTab>
  * )
  * ```
@@ -64,63 +67,48 @@ import kotlin.reflect.KClass
  *     key = "mainTabs",
  *     parentKey = null,
  *     stacks = listOf(
- *         StackNode(key = "mainTabs/home", parentKey = "mainTabs", children = [...]),
- *         StackNode(key = "mainTabs/search", parentKey = "mainTabs", children = [...]),
- *         StackNode(key = "mainTabs/profile", parentKey = "mainTabs", children = [...])
+ *         buildHomeTabNavNode().copy(parentKey = "mainTabs"),
+ *         buildExploreTabNavNode().copy(parentKey = "mainTabs")
  *     ),
- *     activeStackIndex = 0  // Home is initial
+ *     activeStackIndex = 0,  // HomeTab is initial
+ *     tabMetadata = listOf(
+ *         TabMetadata(label = "Home", icon = "home"),
+ *         TabMetadata(label = "Explore", icon = "explore")
+ *     )
  * )
  * ```
  *
  * ## Initial Tab Resolution
  *
- * The [initialTab] is resolved by matching against sealed subclass simple names:
- * - `"Home"` matches `data object Home : MainTabs()`
- * - If [initialTab] is empty, the first tab in declaration order is selected
+ * The [initialTab] is resolved as follows:
+ * - If a `KClass<*>` is provided, it must match one of the classes in [items]
+ * - If `Unit::class` (default), the first tab in [items] order is selected
  *
- * ## Examples
+ * ## Legacy Pattern (Deprecated)
  *
- * ### Basic Tab Container
+ * The old pattern with nested sealed subclasses is deprecated due to
+ * KSP limitations in KMP metadata compilation:
  * ```kotlin
- * @Tab(name = "mainTabs", initialTab = "Home")
+ * // DEPRECATED - Do not use this pattern
+ * @Tab(name = "mainTabs", initialTabLegacy = "Home")
  * sealed class MainTabs : Destination {
- *
  *     @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
  *     @Destination(route = "tabs/home")
  *     data object Home : MainTabs()
- *
- *     @TabItem(label = "Search", icon = "search", rootGraph = SearchDestination::class)
- *     @Destination(route = "tabs/search")
- *     data object Search : MainTabs()
- *
- *     @TabItem(label = "Profile", icon = "person", rootGraph = ProfileDestination::class)
- *     @Destination(route = "tabs/profile")
- *     data object Profile : MainTabs()
- * }
- * ```
- *
- * ### Tab Container with Default Initial Tab
- * ```kotlin
- * // First tab (Dashboard) is selected when initialTab is empty
- * @Tab(name = "admin")
- * sealed class AdminTabs : Destination {
- *
- *     @TabItem(label = "Dashboard", icon = "dashboard", rootGraph = DashboardGraph::class)
- *     @Destination(route = "admin/dashboard")
- *     data object Dashboard : AdminTabs()  // ← Default initial tab
- *
- *     @TabItem(label = "Users", icon = "people", rootGraph = UsersGraph::class)
- *     @Destination(route = "admin/users")
- *     data object Users : AdminTabs()
  * }
  * ```
  *
  * @property name Unique identifier for this tab container. Used in route
  *   generation, key construction, and navigation tree identification
  *   (e.g., "mainTabs", "settingsTabs").
- * @property initialTab Simple name of the initially selected tab. Must match
- *   one of the sealed subclass names exactly. If empty, the first tab in
- *   declaration order is selected.
+ * @property initialTab Type-safe class reference to the initially selected tab.
+ *   Must be one of the classes in [items]. Use `Unit::class` (default) to
+ *   select the first tab in declaration order.
+ * @property items Array of `@TabItem`/`@Stack` classes that comprise this
+ *   tab container. The order determines tab order in the UI.
+ * @property initialTabLegacy **Deprecated**: Use [initialTab] with `KClass<*>`
+ *   instead. This string-based parameter is kept for backward compatibility
+ *   with the legacy nested subclass pattern.
  *
  * @see TabItem
  * @see Destination
@@ -130,54 +118,48 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.SOURCE)
 annotation class Tab(
     val name: String,
-    val initialTab: String = ""
+    val initialTab: KClass<*> = Unit::class,
+    val items: Array<KClass<*>> = [],
+    @Deprecated("Use initialTab: KClass<*> instead")
+    val initialTabLegacy: String = ""
 )
 
 /**
- * Provides metadata for a tab within a [@Tab] container.
+ * Provides UI metadata for a tab within a [@Tab] navigation container.
  *
- * Applied to sealed subclasses of a [@Tab]-annotated class to configure
- * the tab's display properties and navigation content. Each tab item
- * references a root graph (a [@Stack]-annotated sealed class) that defines
- * the navigation destinations available within that tab.
+ * Apply this annotation to a `@Stack`-annotated class to make it available
+ * as a tab. The annotated class serves dual purposes:
+ * 1. Defines the tab's UI properties (label, icon)
+ * 2. Defines the tab's navigation content (as a `@Stack`)
  *
- * ## Usage
+ * ## New Pattern (Recommended)
  *
- * Apply to each sealed subclass within a [@Tab] container:
+ * Apply `@TabItem` alongside `@Stack` on the same top-level class:
  * ```kotlin
- * @Tab(name = "main", initialTab = "Home")
- * sealed class MainTabs : Destination {
- *
- *     @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
- *     @Destination(route = "tab/home")
- *     data object Home : MainTabs()
- *
- *     @TabItem(label = "Favorites", icon = "favorite", rootGraph = FavoritesDestination::class)
- *     @Destination(route = "tab/favorites")
- *     data object Favorites : MainTabs()
- *
- *     @TabItem(label = "Settings", icon = "settings", rootGraph = SettingsDestination::class)
- *     @Destination(route = "tab/settings")
- *     data object Settings : MainTabs()
- * }
- * ```
- *
- * ## Root Graph Connection
- *
- * Each tab references a root graph that defines the navigation destinations
- * available within that tab. The root graph must be a sealed class annotated
- * with [@Stack]:
- * ```kotlin
- * // Referenced stack graph
- * @Stack(name = "home", startDestination = "Feed")
- * sealed class HomeDestination : Destination {
- *
+ * @TabItem(label = "Home", icon = "home")
+ * @Stack(name = "homeStack", startDestination = "Feed")
+ * sealed class HomeTab : Destination {
  *     @Destination(route = "home/feed")
- *     data object Feed : HomeDestination()
+ *     data object Feed : HomeTab()
  *
  *     @Destination(route = "home/article/{id}")
- *     data class Article(val id: String) : HomeDestination()
+ *     data class Article(val id: String) : HomeTab()
  * }
+ *
+ * @TabItem(label = "Explore", icon = "explore")
+ * @Stack(name = "exploreStack", startDestination = "ExploreRoot")
+ * sealed class ExploreTab : Destination {
+ *     @Destination(route = "explore/root")
+ *     data object ExploreRoot : ExploreTab()
+ * }
+ *
+ * // Then reference in @Tab container:
+ * @Tab(
+ *     name = "mainTabs",
+ *     initialTab = HomeTab::class,
+ *     items = [HomeTab::class, ExploreTab::class]
+ * )
+ * object MainTabs
  * ```
  *
  * ## Icon Platforms
@@ -192,30 +174,33 @@ annotation class Tab(
  *
  * Tabs support deep linking to specific tabs and their content:
  * ```kotlin
- * @Tab(name = "dashboard")
- * sealed class DashboardTabs : Destination {
- *
- *     @TabItem(label = "Overview", icon = "dashboard", rootGraph = OverviewGraph::class)
- *     @Destination(route = "dashboard/overview")
- *     data object Overview : DashboardTabs()
- *
- *     @TabItem(label = "Analytics", icon = "analytics", rootGraph = AnalyticsGraph::class)
- *     @Destination(route = "dashboard/analytics")
- *     data object Analytics : DashboardTabs()
- * }
- *
- * // Deep link: app://dashboard/analytics/report/123
- * // Opens Analytics tab with ReportDetail screen
+ * // Deep link: app://mainTabs/home/article/123
+ * // Opens Home tab with Article screen
  * ```
  *
  * ## Generated Metadata
  *
- * KSP generates [TabMetadata] for each tab item, used for UI rendering:
+ * KSP generates `TabMetadata` for each tab item, used for UI rendering:
  * ```kotlin
  * data class TabMetadata(
  *     val label: String,
  *     val icon: String
  * )
+ * ```
+ *
+ * ## Legacy Pattern (Deprecated)
+ *
+ * The old pattern applied `@TabItem` to nested sealed subclasses with a
+ * separate `rootGraph` reference. This is deprecated due to KSP limitations
+ * in KMP metadata compilation:
+ * ```kotlin
+ * // DEPRECATED - Do not use this pattern
+ * @Tab(name = "mainTabs")
+ * sealed class MainTabs : Destination {
+ *     @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
+ *     @Destination(route = "tabs/home")
+ *     data object Home : MainTabs()
+ * }
  * ```
  *
  * @property label Display label for the tab shown in the tab bar UI.
@@ -225,9 +210,11 @@ annotation class Tab(
  *   - iOS: SF Symbol name
  *   - Desktop/Web: Icon library identifier
  *   Empty string means no icon.
- * @property rootGraph The root navigation graph class for this tab's content.
- *   Must be a sealed class annotated with [@Stack]. The stack's start
- *   destination becomes the tab's initial screen.
+ * @property rootGraph **Deprecated**: When using the new pattern, the
+ *   `@TabItem` class itself should also be annotated with `@Stack`, making
+ *   the class itself the root graph. Use `Unit::class` (default) to indicate
+ *   that the annotated class IS the stack. This parameter is kept for
+ *   backward compatibility with the legacy nested subclass pattern.
  *
  * @see Tab
  * @see Stack
@@ -238,5 +225,6 @@ annotation class Tab(
 annotation class TabItem(
     val label: String,
     val icon: String = "",
-    val rootGraph: KClass<*>
+    @Deprecated("Use @TabItem + @Stack on the same class instead. The class itself becomes the root graph.")
+    val rootGraph: KClass<*> = Unit::class
 )

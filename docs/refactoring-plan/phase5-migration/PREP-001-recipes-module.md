@@ -130,7 +130,7 @@ include(":quo-vadis-recipes")
 
 ### 3. Module README (`quo-vadis-recipes/README.md`)
 
-```markdown
+n
 # Quo Vadis Recipes
 
 Pattern-based navigation examples for the Quo Vadis navigation library.

@@ -1,4 +1,4 @@
-````markdown
+`n
 # RENDER-002C: PaneNode Adaptive Flattening
 
 ## Task Metadata

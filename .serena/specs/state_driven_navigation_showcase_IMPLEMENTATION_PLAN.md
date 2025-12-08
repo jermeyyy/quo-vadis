@@ -713,7 +713,7 @@ Update `quo-vadis-core/docs/API_REFERENCE.md`:
 
 Create `quo-vadis-core/docs/STATE_DRIVEN_NAVIGATION.md`:
 
-```markdown
+n
 # State-Driven Navigation in Quo Vadis
 
 ## Overview

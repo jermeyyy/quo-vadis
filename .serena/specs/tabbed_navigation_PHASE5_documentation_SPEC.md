@@ -29,7 +29,7 @@
 
 **Structure**:
 
-```markdown
+n
 # Tabbed Navigation in Quo Vadis
 
 ## Overview
@@ -156,7 +156,7 @@ That's it! The container includes:
 
 **Add New Sections**:
 
-```markdown
+n
 ## Tabbed Navigation
 
 ### TabDefinition
@@ -259,7 +259,7 @@ annotation class TabGraph(
 
 **Contents**:
 
-```markdown
+n
 # Migrating to Tabbed Navigation
 
 This guide helps you migrate from manual tab implementations to the

@@ -1,4 +1,3 @@
-````markdown
 # KSP-009: Tab Annotation Pattern Fix for KMP Metadata Compilation
 
 ## Task Metadata

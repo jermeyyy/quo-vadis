@@ -358,7 +358,7 @@ fun MyScreen() {
 ## Markdown Documentation Style
 
 ### Headers
-```markdown
+n
 # Main Title (H1) - Only one per file
 ## Section (H2) - Major sections
 ### Subsection (H3) - Minor sections
@@ -366,14 +366,14 @@ fun MyScreen() {
 
 ### Code Blocks
 Use language-specific code fencing:
-```markdown
+n
 ```kotlin
 fun example() { }
 ```
 ```
 
 ### Lists
-```markdown
+n
 - Unordered list
 - Another item
 
@@ -382,7 +382,7 @@ fun example() { }
 ```
 
 ### Emphasis
-```markdown
+n
 **Bold** for important terms
 *Italic* for emphasis
 `code` for inline code

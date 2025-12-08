@@ -1,4 +1,4 @@
-````markdown
+`n
 # KSP-006: Validation and Error Reporting
 
 ## Task Metadata

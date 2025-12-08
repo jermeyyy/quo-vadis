@@ -39,8 +39,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.buildTabsDestinationGraph
+import com.jermey.navplayground.demo.tabs.DemoTab1
+import com.jermey.navplayground.demo.tabs.DemoTab2
+import com.jermey.navplayground.demo.tabs.DemoTab3
 import com.jermey.navplayground.demo.tabs.DemoTabs
-import com.jermey.navplayground.demo.tabs.DemoTabsConfig
+import com.jermey.navplayground.demo.tabs.generated.DemoTabsConfig
 import com.jermey.navplayground.demo.ui.components.DetailInfoRow
 import com.jermey.quo.vadis.core.navigation.compose.rememberTabNavigator
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
@@ -99,27 +102,27 @@ fun TabsMainScreen(
             // Custom tab bar UI
             PrimaryScrollableTabRow(
                 selectedTabIndex = when (selectedTab) {
-                    DemoTabs.Tab1 -> 0
-                    DemoTabs.Tab2 -> 1
-                    DemoTabs.Tab3 -> 2
+                    is DemoTab1 -> 0
+                    is DemoTab2 -> 1
+                    is DemoTab3 -> 2
                     else -> 0
                 }
             ) {
                 Tab(
-                    selected = selectedTab == DemoTabs.Tab1,
-                    onClick = { tabState.selectTab(DemoTabs.Tab1) },
+                    selected = selectedTab is DemoTab1,
+                    onClick = { tabState.selectTab(DemoTab1.Tab) },
                     text = { Text("Tab 1") },
                     icon = { Icon(Icons.Default.Star, null) }
                 )
                 Tab(
-                    selected = selectedTab == DemoTabs.Tab2,
-                    onClick = { tabState.selectTab(DemoTabs.Tab2) },
+                    selected = selectedTab is DemoTab2,
+                    onClick = { tabState.selectTab(DemoTab2.Tab) },
                     text = { Text("Tab 2") },
                     icon = { Icon(Icons.Default.Favorite, null) }
                 )
                 Tab(
-                    selected = selectedTab == DemoTabs.Tab3,
-                    onClick = { tabState.selectTab(DemoTabs.Tab3) },
+                    selected = selectedTab is DemoTab3,
+                    onClick = { tabState.selectTab(DemoTab3.Tab) },
                     text = { Text("Tab 3") },
                     icon = { Icon(Icons.Default.Bookmark, null) }
                 )
@@ -127,21 +130,21 @@ fun TabsMainScreen(
 
             // Tab content based on selected tab
             when (selectedTab) {
-                DemoTabs.Tab1 -> TabContent(
+                is DemoTab1 -> TabContent(
                     tabId = "tab1",
                     title = "First Tab",
                     items = (1..10).map { "Item $it in Tab 1" },
                     onItemClick = { onNavigateToSubItem("tab1", it) },
                     icon = Icons.Default.Star
                 )
-                DemoTabs.Tab2 -> TabContent(
+                is DemoTab2 -> TabContent(
                     tabId = "tab2",
                     title = "Second Tab",
                     items = (1..15).map { "Item $it in Tab 2" },
                     onItemClick = { onNavigateToSubItem("tab2", it) },
                     icon = Icons.Default.Favorite
                 )
-                DemoTabs.Tab3 -> TabContent(
+                is DemoTab3 -> TabContent(
                     tabId = "tab3",
                     title = "Third Tab",
                     items = (1..8).map { "Item $it in Tab 3" },

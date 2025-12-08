@@ -17,7 +17,7 @@ Document how deep linking works with the new tree-based navigation state.
 
 ## Document Structure
 
-```markdown
+n
 # Deep Linking Guide
 
 ## How Path Reconstruction Works

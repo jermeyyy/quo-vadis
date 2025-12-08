@@ -780,7 +780,7 @@ expect fun TabBackHandler(
 
 **File**: `quo-vadis-core/docs/TABBED_NAVIGATION.md` (documentation update)
 
-```markdown
+n
 ## Shared Elements Across Tab Content
 
 Shared element transitions work seamlessly within tab content:

@@ -165,7 +165,7 @@ Phase 5 provides comprehensive migration guidance and LLM-consumable documentati
 **Purpose**: Central document linking all legacy APIs to their main branch locations.
 
 **Content Structure**:
-```markdown
+n
 # Legacy API Reference (Main Branch)
 
 ## Core Navigation

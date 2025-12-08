@@ -1,4 +1,4 @@
-```markdown
+n
 # Task ANN-005: Define @Screen Content Binding Annotation
 
 ## Metadata
