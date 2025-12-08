@@ -299,102 +299,37 @@ fun TabSubItemContent(destination: TabsDestination.SubItem, navigator: Navigator
 @Content(ProcessDestination.Start::class)
 @Composable
 fun ProcessStartContent(navigator: Navigator) {
-    ProcessStartScreen(
-        onStart = {
-            navigator.navigate(
-                ProcessDestination.Step1(),
-                NavigationTransitions.SlideHorizontal
-            )
-        },
-        onCancel = { navigator.navigateBack() }
-    )
+    ProcessStartScreen(navigator = navigator)
 }
 
 @Content(ProcessDestination.Step1::class)
 @Composable
 fun ProcessStep1Content(destination: ProcessDestination.Step1, navigator: Navigator) {
-    ProcessStep1Screen(
-        initialUserType = destination.userType,
-        onNext = { selectedType, stepData ->
-            // Branch based on user selection
-            if (selectedType == "personal") {
-                navigator.navigate(
-                    ProcessDestination.Step2A(stepData),
-                    NavigationTransitions.SlideHorizontal
-                )
-            } else {
-                navigator.navigate(
-                    ProcessDestination.Step2B(stepData),
-                    NavigationTransitions.SlideHorizontal
-                )
-            }
-        },
-        onBack = { navigator.navigateBack() }
-    )
+    ProcessStep1Screen(destination = destination, navigator = navigator)
 }
 
 @Content(ProcessDestination.Step2A::class)
 @Composable
 fun ProcessStep2AContent(destination: ProcessDestination.Step2A, navigator: Navigator) {
-    ProcessStep2AScreen(
-        previousData = destination.stepData,
-        onNext = { newData ->
-            navigator.navigate(
-                ProcessDestination.Step3(newData, "personal"),
-                NavigationTransitions.SlideHorizontal
-            )
-        },
-        onBack = { navigator.navigateBack() }
-    )
+    ProcessStep2AScreen(destination = destination, navigator = navigator)
 }
 
 @Content(ProcessDestination.Step2B::class)
 @Composable
 fun ProcessStep2BContent(destination: ProcessDestination.Step2B, navigator: Navigator) {
-    ProcessStep2BScreen(
-        previousData = destination.stepData,
-        onNext = { newData ->
-            navigator.navigate(
-                ProcessDestination.Step3(newData, "business"),
-                NavigationTransitions.SlideHorizontal
-            )
-        },
-        onBack = { navigator.navigateBack() }
-    )
+    ProcessStep2BScreen(destination = destination, navigator = navigator)
 }
 
 @Content(ProcessDestination.Step3::class)
 @Composable
 fun ProcessStep3Content(destination: ProcessDestination.Step3, navigator: Navigator) {
-    ProcessStep3Screen(
-        previousData = destination.previousData,
-        branch = destination.branch,
-        onComplete = {
-            navigator.navigate(
-                ProcessDestination.Complete,
-                NavigationTransitions.SlideHorizontal
-            )
-        },
-        onBack = { navigator.navigateBack() }
-    )
+    ProcessStep3Screen(destination = destination, navigator = navigator)
 }
 
 @Content(ProcessDestination.Complete::class)
 @Composable
 fun ProcessCompleteContent(navigator: Navigator) {
-    ProcessCompleteScreen(
-        onDone = {
-            // Navigate back to root, clearing the process flow
-            navigator.navigateBack()
-        },
-        onRestart = {
-            // Restart the process
-            navigator.navigate(
-                ProcessDestination.Start,
-                NavigationTransitions.SlideHorizontal
-            )
-        }
-    )
+    ProcessCompleteScreen(navigator = navigator)
 }
 
 @Content(SettingsDestination.Profile::class)

@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2025-12-08  
 > **Phase Status**: 🟡 In Progress  
-> **Progress**: 13/19 tasks (68%)
+> **Progress**: 14/19 tasks (74%)
 
 ## Overview
 
@@ -70,8 +70,8 @@ This phase creates the `quo-vadis-recipes` module with LLM-optimized navigation 
 | ID | Task | Status | Completed | Notes |
 |----|------|--------|-----------|-------|
 | [MIG-007](./MIG-007-demo-app-rewrite.md) | Demo App Rewrite (Parent) | 🟡 Decomposed | 2025-12-07 | Broken into subtasks |
-| ↳ [MIG-007A](./MIG-007A-foundation-destinations.md) | Foundation - Core Destinations | ⚪ Not Started | - | First subtask |
-| ↳ [MIG-007B](./MIG-007B-tab-system.md) | Tab System Migration | � Completed | 2025-12-08 | MainTabs, DemoTabs migrated to new pattern |
+| ↳ [MIG-007A](./MIG-007A-foundation-destinations.md) | Foundation - Core Destinations | 🟢 Completed | 2025-12-08 | All destination classes defined in Destinations.kt |
+| ↳ [MIG-007B](./MIG-007B-tab-system.md) | Tab System Migration | 🟢 Completed | 2025-12-08 | MainTabs, DemoTabs migrated to new pattern |
 | ↳ [MIG-007C](./MIG-007C-master-detail.md) | Master-Detail Pattern | 🟢 Completed | 2025-12-08 | Screens migrated to @Screen pattern |
 | ↳ [MIG-007D](./MIG-007D-process-wizard.md) | Process/Wizard Flow | 🟢 Completed | 2025-12-08 | All 6 process screens migrated to @Screen |
 | ↳ [MIG-007E](./MIG-007E-settings-stack.md) | Settings Stack | ⚪ Not Started | - | Depends on MIG-007A |
