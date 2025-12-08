@@ -15,11 +15,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.jermey.navplayground.demo.destinations.SettingsDestination
+import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsDetailScreen(
+private fun SettingsDetailContent(
     title: String,
     navigator: Navigator
 ) {
@@ -48,4 +50,22 @@ fun SettingsDetailScreen(
             Text("This is the $title screen")
         }
     }
+}
+
+@Screen(SettingsDestination.Profile::class)
+@Composable
+fun ProfileSettingsScreen(navigator: Navigator) {
+    SettingsDetailContent(title = "Profile", navigator = navigator)
+}
+
+@Screen(SettingsDestination.Notifications::class)
+@Composable
+fun NotificationsSettingsScreen(navigator: Navigator) {
+    SettingsDetailContent(title = "Notifications", navigator = navigator)
+}
+
+@Screen(SettingsDestination.About::class)
+@Composable
+fun AboutSettingsScreen(navigator: Navigator) {
+    SettingsDetailContent(title = "About", navigator = navigator)
 }

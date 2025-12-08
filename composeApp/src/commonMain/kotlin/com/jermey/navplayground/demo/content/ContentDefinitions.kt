@@ -27,7 +27,9 @@ import com.jermey.navplayground.demo.tabs.MainTabsScreen
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileScreen
 import com.jermey.navplayground.demo.destinations.SettingsDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
-import com.jermey.navplayground.demo.ui.screens.SettingsDetailScreen
+import com.jermey.navplayground.demo.ui.screens.ProfileSettingsScreen
+import com.jermey.navplayground.demo.ui.screens.NotificationsSettingsScreen
+import com.jermey.navplayground.demo.ui.screens.AboutSettingsScreen
 import com.jermey.navplayground.demo.ui.screens.statedriven.StateDrivenDemoScreen
 import com.jermey.quo.vadis.annotations.Content
 import com.jermey.quo.vadis.core.navigation.compose.currentBackStackEntry
@@ -332,20 +334,26 @@ fun ProcessCompleteContent(navigator: Navigator) {
     ProcessCompleteScreen(navigator = navigator)
 }
 
+@Content(SettingsDestination.Main::class)
+@Composable
+fun MainSettingsContent(navigator: Navigator) {
+    SettingsScreen(navigator = navigator)
+}
+
 @Content(SettingsDestination.Profile::class)
 @Composable
 fun ProfileSettingsContent(navigator: Navigator) {
-    SettingsDetailScreen("Profile", navigator)
+    ProfileSettingsScreen(navigator)
 }
 
 @Content(SettingsDestination.Notifications::class)
 @Composable
 fun NotificationsSettingsContent(navigator: Navigator) {
-    SettingsDetailScreen("Notifications", navigator)
+    NotificationsSettingsScreen(navigator)
 }
 
 @Content(SettingsDestination.About::class)
 @Composable
 fun AboutSettingsContent(navigator: Navigator) {
-    SettingsDetailScreen("About", navigator)
+    AboutSettingsScreen(navigator)
 }

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Policy
 import com.jermey.navplayground.demo.destinations.SettingsDestination
+import com.jermey.quo.vadis.annotations.Screen
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +51,7 @@ import kotlinx.coroutines.launch
 /**
  * Settings Screen
  */
+@Screen(SettingsDestination.Main::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(

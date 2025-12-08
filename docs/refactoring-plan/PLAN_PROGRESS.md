@@ -18,7 +18,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 9 | 9 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 68% | 13 | 19 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 74% | 14 | 19 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
@@ -41,6 +41,17 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-08 (Latest)
+- ✅ **MIG-007E**: Settings Stack Navigation - **COMPLETED**
+  - Added `SettingsDestination.Main` with `@Destination(route = "settings/main")`
+  - Changed `startDestination` from `"Profile"` to `"Main"`
+  - **SettingsScreen.kt**: Added `@Screen(SettingsDestination.Main::class)` annotation
+  - **SettingsDetailScreens.kt**: Created 3 individual screen composables:
+    - `@Screen(SettingsDestination.Profile::class) fun ProfileSettingsScreen(...)`
+    - `@Screen(SettingsDestination.Notifications::class) fun NotificationsSettingsScreen(...)`
+    - `@Screen(SettingsDestination.About::class) fun AboutSettingsScreen(...)`
+  - Refactored generic `SettingsDetailScreen` to private `SettingsDetailContent` for code reuse
+  - All navigation calls unchanged (already correct)
+
 - ✅ **KSP-009**: Tab Annotation Pattern Fix for KMP Metadata - **COMPLETED**
   - Fixed critical KSP limitation where `getSymbolsWithAnnotation()` returns empty for nested sealed subclass annotations
   - **New Pattern**: Each tab is a top-level `@TabItem + @Stack` class
