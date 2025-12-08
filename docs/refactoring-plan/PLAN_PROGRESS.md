@@ -18,11 +18,11 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 9 | 9 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 74% | 14 | 19 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 79% | 15 | 19 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
-| **TOTAL** | 🟡 In Progress | ~80% | 46 | 63 |
+| **TOTAL** | 🟡 In Progress | ~82% | 47 | 63 |
 
 ---
 
@@ -41,6 +41,24 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-08 (Latest)
+- ✅ **MIG-007F**: Feature Screens - @Screen Annotations - **COMPLETED**
+  - Added `@Screen` annotations to all remaining feature screens, replacing centralized `@Content` wrapper pattern
+  - **Files Modified** (19 screens total):
+    - **Tab Root Screens**: `HomeScreen.kt`, `ExploreScreen.kt`, `ProfileScreen.kt`, `SettingsScreen.kt`
+    - **Deep Link Demo**: `DeepLinkDemoScreen.kt`
+    - **State-Driven Demo**: `StateDrivenDemoScreen.kt`
+    - **Tabs Demo**: `TabsMainScreen`, `TabSubItemScreen` in `TabsScreens.kt`
+    - **Master-Detail**: `MasterListScreen.kt`, `DetailScreen.kt` (from MIG-007C)
+    - **Process/Wizard**: All 6 screens (`ProcessStartScreen`, `ProcessStep1Screen`, `ProcessStep2AScreen`, `ProcessStep2BScreen`, `ProcessStep3Screen`, `ProcessCompleteScreen`)
+    - **Settings Detail**: `ProfileSettingsScreen`, `NotificationsSettingsScreen`, `AboutSettingsScreen` (from MIG-007E)
+  - **Key Transformations**:
+    - Replaced lambda callbacks (`onNavigateToX`, `onBack`) with direct `navigator` usage
+    - Typed destinations with `@Argument` parameters converted to `destination: DestinationType` pattern
+    - KSP generates `GeneratedScreenRegistry` with 19 screen bindings
+  - **Note**: `ContentDefinitions.kt` still exists but is now redundant - will be deleted after full migration verification
+  - **Verification**: `:composeApp:compileKotlinMetadata` passes ✓
+
+### 2025-12-08
 - ✅ **MIG-007E**: Settings Stack Navigation - **COMPLETED**
   - Added `SettingsDestination.Main` with `@Destination(route = "settings/main")`
   - Changed `startDestination` from `"Profile"` to `"Main"`

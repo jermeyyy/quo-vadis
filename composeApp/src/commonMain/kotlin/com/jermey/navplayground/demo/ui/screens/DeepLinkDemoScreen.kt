@@ -28,30 +28,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.DeepLinkDestination
 import com.jermey.navplayground.demo.ui.components.DeepLinkCard
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.DeepLink
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
  * DeepLink Demo Screen - Shows deep linking functionality
  */
+@Screen(DeepLinkDestination.Demo::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeepLinkDemoScreen(
-    onBack: () -> Unit,
-    onNavigateViaDeepLink: (String) -> Unit
+    navigator: Navigator
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Deep Link Demo") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
             )
         }
     ) { padding ->
-        DeepLinkDemoScreenContent(padding, onNavigateViaDeepLink)
+        DeepLinkDemoScreenContent(padding) { deepLinkUri ->
+            navigator.handleDeepLink(DeepLink.parse(deepLinkUri))
+        }
     }
 }
 

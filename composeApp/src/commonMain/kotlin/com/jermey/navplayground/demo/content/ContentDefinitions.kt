@@ -137,13 +137,10 @@ fun MainTabsContent(navigator: Navigator) {
     println("DEBUG_ANIM: MainTabsContent renderingEntry.id=${renderingEntry?.id}")
     println("DEBUG_ANIM: MainTabsContent selectedTabExtra=${renderingEntry?.getExtra(EXTRA_SELECTED_TAB_ROUTE)}")
     
-    // Only render when we have a valid entry (which should always be the case)
-    renderingEntry?.let { entry ->
-        MainTabsScreen(
-            parentNavigator = navigator,
-            parentEntry = entry
-        )
-    }
+    // Render the tabs screen
+    MainTabsScreen(
+        navigator = navigator
+    )
 }
 
 // ============================================================================
@@ -155,24 +152,6 @@ fun MainTabsContent(navigator: Navigator) {
 fun HomeContent(navigator: Navigator) {
     println("DEBUG_TAB_NAV: HomeContent - Composing")
     HomeScreen(
-        onNavigateToMasterDetail = {
-            navigator.navigate(
-                MasterDetailDestination.List,
-                NavigationTransitions.SlideHorizontal
-            )
-        },
-        onNavigateToTabs = {
-            navigator.navigate(TabsDestination.Main, NavigationTransitions.SlideHorizontal)
-        },
-        onNavigateToProcess = {
-            navigator.navigate(ProcessDestination.Start, NavigationTransitions.SlideHorizontal)
-        },
-        onNavigateToStateDriven = {
-            navigator.navigate(
-                StateDrivenDemoDestination.Demo,
-                NavigationTransitions.SlideHorizontal
-            )
-        },
         navigator = navigator
     )
     println("DEBUG_TAB_NAV: HomeContent - HomeScreen rendered")
@@ -182,12 +161,6 @@ fun HomeContent(navigator: Navigator) {
 @Composable
 fun ExploreContent(navigator: Navigator) {
     ExploreScreen(
-        onItemClick = { itemId ->
-            navigator.navigate(
-                MasterDetailDestination.Detail(itemId),
-                NavigationTransitions.SlideHorizontal
-            )
-        },
         navigator = navigator
     )
 }
@@ -213,10 +186,7 @@ fun SettingsContent(navigator: Navigator) {
 @Composable
 fun DeepLinkDemoContent(navigator: Navigator) {
     DeepLinkDemoScreen(
-        onBack = { navigator.navigateBack() },
-        onNavigateViaDeepLink = { deepLinkUri ->
-            navigator.handleDeepLink(DeepLink.parse(deepLinkUri))
-        }
+        navigator = navigator
     )
 }
 
@@ -228,7 +198,7 @@ fun DeepLinkDemoContent(navigator: Navigator) {
 @Composable
 fun StateDrivenDemoContent(navigator: Navigator) {
     StateDrivenDemoScreen(
-        onBack = { navigator.navigateBack() }
+        navigator = navigator
     )
 }
 
@@ -273,13 +243,6 @@ fun DetailContent(destination: MasterDetailDestination.Detail, navigator: Naviga
 @Composable
 fun TabsMainContent(navigator: Navigator) {
     TabsMainScreen(
-        onNavigateToSubItem = { tabId, itemId ->
-            navigator.navigate(
-                TabsDestination.SubItem(tabId, itemId),
-                NavigationTransitions.SlideHorizontal
-            )
-        },
-        onBack = { navigator.navigateBack() },
         navigator = navigator
     )
 }
@@ -288,9 +251,8 @@ fun TabsMainContent(navigator: Navigator) {
 @Composable
 fun TabSubItemContent(destination: TabsDestination.SubItem, navigator: Navigator) {
     TabSubItemScreen(
-        tabId = destination.tabId,
-        itemId = destination.itemId,
-        onBack = { navigator.navigateBack() }
+        destination = destination,
+        navigator = navigator
     )
 }
 

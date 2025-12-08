@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.TabsDestination
 import com.jermey.navplayground.demo.destinations.buildTabsDestinationGraph
 import com.jermey.navplayground.demo.tabs.DemoTab1
 import com.jermey.navplayground.demo.tabs.DemoTab2
@@ -45,8 +46,10 @@ import com.jermey.navplayground.demo.tabs.DemoTab3
 import com.jermey.navplayground.demo.tabs.DemoTabs
 import com.jermey.navplayground.demo.tabs.generated.DemoTabsConfig
 import com.jermey.navplayground.demo.ui.components.DetailInfoRow
+import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.compose.rememberTabNavigator
 import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
@@ -61,11 +64,10 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  * Each tab contains a list of items that can be clicked to navigate to detail screens,
  * demonstrating how tabs maintain independent navigation stacks.
  */
+@Screen(TabsDestination.Main::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabsMainScreen(
-    onNavigateToSubItem: (tabId: String, itemId: String) -> Unit,
-    onBack: () -> Unit,
     navigator: Navigator
 ) {
     // Use the generated config and tab navigator
@@ -87,7 +89,7 @@ fun TabsMainScreen(
             TopAppBar(
                 title = { Text("Tabs Navigation Demo") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
@@ -134,21 +136,36 @@ fun TabsMainScreen(
                     tabId = "tab1",
                     title = "First Tab",
                     items = (1..10).map { "Item $it in Tab 1" },
-                    onItemClick = { onNavigateToSubItem("tab1", it) },
+                    onItemClick = { itemId ->
+                        navigator.navigate(
+                            TabsDestination.SubItem("tab1", itemId),
+                            NavigationTransitions.SlideHorizontal
+                        )
+                    },
                     icon = Icons.Default.Star
                 )
                 is DemoTab2 -> TabContent(
                     tabId = "tab2",
                     title = "Second Tab",
                     items = (1..15).map { "Item $it in Tab 2" },
-                    onItemClick = { onNavigateToSubItem("tab2", it) },
+                    onItemClick = { itemId ->
+                        navigator.navigate(
+                            TabsDestination.SubItem("tab2", itemId),
+                            NavigationTransitions.SlideHorizontal
+                        )
+                    },
                     icon = Icons.Default.Favorite
                 )
                 is DemoTab3 -> TabContent(
                     tabId = "tab3",
                     title = "Third Tab",
                     items = (1..8).map { "Item $it in Tab 3" },
-                    onItemClick = { onNavigateToSubItem("tab3", it) },
+                    onItemClick = { itemId ->
+                        navigator.navigate(
+                            TabsDestination.SubItem("tab3", itemId),
+                            NavigationTransitions.SlideHorizontal
+                        )
+                    },
                     icon = Icons.Default.Bookmark
                 )
                 else -> {}
@@ -220,19 +237,22 @@ private fun TabContent(
 /**
  * Tab Sub-Item Screen - Shows details of an item from a specific tab
  */
+@Screen(TabsDestination.SubItem::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabSubItemScreen(
-    tabId: String,
-    itemId: String,
-    onBack: () -> Unit
+    destination: TabsDestination.SubItem,
+    navigator: Navigator
 ) {
+    val tabId = destination.tabId
+    val itemId = destination.itemId
+    
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Item Details") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
@@ -317,7 +337,7 @@ fun TabSubItemScreen(
             Spacer(Modifier.weight(1f))
 
             Button(
-                onClick = onBack,
+                onClick = { navigator.navigateBack() },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Back to Tabs")
