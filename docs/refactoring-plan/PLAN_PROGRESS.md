@@ -18,7 +18,7 @@ See [INDEX.md](./INDEX.md) for full plan details.
 | [Phase 2: Renderer](./phase2-renderer/phase2-renderer-progress.md) | 🟢 Completed | 100% | 12 | 12 |
 | [Phase 3: KSP](./phase3-ksp/phase3-ksp-progress.md) | 🟢 Completed | 100% | 9 | 9 |
 | [Phase 4: Annotations](./phase4-annotations/phase4-annotations-progress.md) | 🟢 Completed | 100% | 6 | 6 |
-| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 79% | 15 | 19 |
+| [Phase 5: Migration](./phase5-migration/phase5-migration-progress.md) | 🟡 In Progress | 84% | 16 | 19 |
 | [Phase 6: Risks](./phase6-risks/phase6-risks-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 7: Docs](./phase7-docs/phase7-docs-progress.md) | ⚪ Not Started | 0% | 0 | 5 |
 | [Phase 8: Testing](./phase8-testing/phase8-testing-progress.md) | ⚪ Not Started | 0% | 0 | 6 |
@@ -41,6 +41,34 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-08 (Latest)
+- ✅ **MIG-007G**: App Entry Point Integration - **COMPLETED**
+  - Rewrote `DemoApp.kt` to use new NavNode tree architecture
+  - **Key Changes**:
+    - Removed `initializeQuoVadisRoutes()` - KSP handles all registration
+    - Removed manual `appRootGraph()` and `NavigationGraph` usage
+    - Removed `LaunchedEffect` for graph registration and `setStartDestination`
+    - Removed deprecated `GraphNavHost` composable
+    - Added `buildMainTabsNavNode()` KSP-generated function for navigation tree
+    - Added `TreeNavigator(initialState = navTree)` for state management
+    - Added `QuoVadisHost` with `GeneratedScreenRegistry.Content()` for rendering
+  - **Files Deleted**:
+    - `graphs/NavigationGraphs.kt` - Obsolete with KSP generation
+  - **Files Updated**:
+    - `DemoApp.kt` - Complete rewrite using new architecture
+    - `ui/screens/tabs/TabsScreens.kt` - Updated to use new `QuoVadisHost` + `TreeNavigator` pattern for nested tabs
+  - **Architecture**:
+    ```
+    DemoApp
+    └── QuoVadisHost(navigator, GeneratedScreenRegistry)
+        └── MainTabs (TabNode via buildMainTabsNavNode())
+            ├── Home (StackNode)
+            ├── Explore (StackNode)
+            ├── Profile (StackNode)
+            └── Settings (StackNode)
+    ```
+  - **Verification**: `:composeApp:assembleDebug` passes ✓
+  - **Legacy Patterns Removed**: All `initializeQuoVadisRoutes`, `appRootGraph`, `GraphNavHost`, `registerGraph`, `setStartDestination` calls eliminated from demo folder
+
 - ✅ **MIG-007F**: Feature Screens - @Screen Annotations - **COMPLETED**
   - Added `@Screen` annotations to all remaining feature screens, replacing centralized `@Content` wrapper pattern
   - **Files Modified** (19 screens total):

@@ -68,10 +68,8 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text("Home") },
                 navigationIcon = {
                     IconButton(onClick = { showBottomSheet = true }) {

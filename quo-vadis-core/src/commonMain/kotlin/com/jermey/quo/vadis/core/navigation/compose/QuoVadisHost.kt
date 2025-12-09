@@ -750,7 +750,7 @@ public fun <D : Destination> QuoVadisHost(
         paneWrapper = paneWrapper
     ) { destination ->
         @Suppress("UNCHECKED_CAST")
-        val contentProvider = contentMap[destination::class] as? (@Composable QuoVadisHostScope.(D) -> Unit)
+        val contentProvider = contentMap[destination::class]
         if (contentProvider != null) {
             @Suppress("UNCHECKED_CAST")
             contentProvider(destination as D)

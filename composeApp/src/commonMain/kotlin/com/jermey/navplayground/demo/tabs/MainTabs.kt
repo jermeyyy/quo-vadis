@@ -4,7 +4,7 @@ import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.Tab
 import com.jermey.quo.vadis.annotations.TabItem
-import com.jermey.quo.vadis.core.navigation.core.Destination as DestinationInterface
+import com.jermey.quo.vadis.core.navigation.core.Destination as DestinationDefinition
 
 /**
  * Main bottom navigation tabs for the Quo Vadis demo app.
@@ -53,7 +53,7 @@ import com.jermey.quo.vadis.core.navigation.core.Destination as DestinationInter
  */
 @TabItem(label = "Home", icon = "home")
 @Stack(name = "homeTabStack", startDestination = "Tab")
-sealed class HomeTab : DestinationInterface {
+sealed class HomeTab : DestinationDefinition {
     /** Root destination for the Home tab. */
     @Destination(route = "home/tab")
     data object Tab : HomeTab()
@@ -66,7 +66,7 @@ sealed class HomeTab : DestinationInterface {
  */
 @TabItem(label = "Explore", icon = "explore")
 @Stack(name = "exploreTabStack", startDestination = "Tab")
-sealed class ExploreTab : DestinationInterface {
+sealed class ExploreTab : DestinationDefinition {
     /** Root destination for the Explore tab. */
     @Destination(route = "explore/tab")
     data object Tab : ExploreTab()
@@ -79,7 +79,7 @@ sealed class ExploreTab : DestinationInterface {
  */
 @TabItem(label = "Profile", icon = "person")
 @Stack(name = "profileTabStack", startDestination = "Tab")
-sealed class ProfileTab : DestinationInterface {
+sealed class ProfileTab : DestinationDefinition {
     /** Root destination for the Profile tab. */
     @Destination(route = "profile/tab")
     data object Tab : ProfileTab()
@@ -92,7 +92,7 @@ sealed class ProfileTab : DestinationInterface {
  */
 @TabItem(label = "Settings", icon = "settings")
 @Stack(name = "settingsTabStack", startDestination = "Tab")
-sealed class SettingsTab : DestinationInterface {
+sealed class SettingsTab : DestinationDefinition {
     /** Root destination for the Settings tab. */
     @Destination(route = "settings/tab")
     data object Tab : SettingsTab()
@@ -113,4 +113,4 @@ sealed class SettingsTab : DestinationInterface {
     initialTab = HomeTab::class,
     items = [HomeTab::class, ExploreTab::class, ProfileTab::class, SettingsTab::class]
 )
-sealed class MainTabs : DestinationInterface
+sealed class MainTabs : DestinationDefinition

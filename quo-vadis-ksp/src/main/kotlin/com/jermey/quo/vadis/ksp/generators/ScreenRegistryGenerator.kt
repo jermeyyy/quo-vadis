@@ -132,10 +132,7 @@ class ScreenRegistryGenerator(
             .apply {
                 whenCases.forEach { addStatement(it) }
             }
-            .addStatement(
-                "else -> error(%S)",
-                "No screen registered for destination: \$destination"
-            )
+            .addStatement("else -> error(%P)", "No screen registered for destination: \$destination")
             .endControlFlow()
             .build()
     }

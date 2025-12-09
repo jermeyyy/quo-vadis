@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Explore
@@ -44,6 +46,7 @@ fun mainTabsWrapper(): TabWrapper = { tabContent ->
         ),
         bottomBar = {
             MainBottomNavigationBar(
+                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                 activeTabIndex = activeTabIndex,
                 tabMetadata = tabMetadata,
                 onTabSelected = { index -> switchTab(index) },
@@ -103,12 +106,13 @@ fun MainTabsScreen(
  */
 @Composable
 private fun MainBottomNavigationBar(
+    modifier: Modifier = Modifier,
     activeTabIndex: Int,
     tabMetadata: List<TabMetadata>,
     onTabSelected: (Int) -> Unit,
     isTransitioning: Boolean = false
 ) {
-    NavigationBar {
+    NavigationBar(modifier = modifier) {
         tabMetadata.forEachIndexed { index, meta ->
             NavigationBarItem(
                 icon = {
