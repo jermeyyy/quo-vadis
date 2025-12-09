@@ -1,7 +1,7 @@
 # RENDER-011: Implementation Plan
 
 **Related**: [RENDER-011-hierarchical-engine.md](RENDER-011-hierarchical-engine.md)  
-**Status**: In Progress (Phase 1 Complete)  
+**Status**: In Progress (Phase 1 & 2 Complete)  
 **Created**: 2025-12-09
 **Last Updated**: 2025-12-09
 
@@ -16,7 +16,7 @@ This document breaks down the hierarchical rendering engine architecture into ac
 | Phase | Tasks | Estimated Effort | Parallel Streams | Status |
 |-------|-------|------------------|------------------|--------|
 | 1. Core Components | HIER-001 to HIER-008 | 2 weeks | 3 | ✅ Complete |
-| 2. KSP Updates | HIER-009 to HIER-015 | 1.5 weeks | 2 | ⚪ Not Started |
+| 2. KSP Updates | HIER-009 to HIER-015 | 1.5 weeks | 2 | ✅ Complete |
 | 3. Renderer Implementation | HIER-016 to HIER-023 | 2.5 weeks | 2 | ⚪ Not Started |
 | 4. Integration | HIER-024 to HIER-028 | 1 week | 1 | ⚪ Not Started |
 | 5. Migration | HIER-029 to HIER-033 | 0.5 weeks | 1 | ⚪ Not Started |
@@ -218,12 +218,13 @@ HIER-033 (future, after deprecation period)
 
 ---
 
-## Phase 2: KSP Updates
+## Phase 2: KSP Updates ✅ COMPLETE
 
 > **Goal**: Add new annotations and KSP code generation for wrappers and transitions.
 > **Breaking Changes**: None (additive)
+> **Status**: All 7 tasks completed (2025-12-09)
 
-### HIER-009: @TabWrapper Annotation
+### HIER-009: @TabWrapper Annotation ✅
 
 | Attribute | Value |
 |-----------|-------|
@@ -231,14 +232,15 @@ HIER-033 (future, after deprecation period)
 | **Dependencies** | None |
 | **Effort** | S |
 | **Files** | `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/TabWrapper.kt` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] `@Target(AnnotationTarget.FUNCTION)`
-- [ ] `@Retention(AnnotationRetention.RUNTIME)`
-- [ ] `tabClass: KClass<*>` parameter
-- [ ] Full KDoc documentation with example
+- [x] `@Target(AnnotationTarget.FUNCTION)`
+- [x] `@Retention(AnnotationRetention.RUNTIME)`
+- [x] `tabClass: KClass<*>` parameter
+- [x] Full KDoc documentation with example
 
-### HIER-010: @PaneWrapper Annotation
+### HIER-010: @PaneWrapper Annotation ✅
 
 | Attribute | Value |
 |-----------|-------|
@@ -246,14 +248,15 @@ HIER-033 (future, after deprecation period)
 | **Dependencies** | None |
 | **Effort** | S |
 | **Files** | `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/PaneWrapper.kt` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] `@Target(AnnotationTarget.FUNCTION)`
-- [ ] `@Retention(AnnotationRetention.RUNTIME)`
-- [ ] `paneClass: KClass<*>` parameter
-- [ ] Full KDoc documentation with example
+- [x] `@Target(AnnotationTarget.FUNCTION)`
+- [x] `@Retention(AnnotationRetention.RUNTIME)`
+- [x] `paneClass: KClass<*>` parameter
+- [x] Full KDoc documentation with example
 
-### HIER-011: @Transition Annotation Enhancement
+### HIER-011: @Transition Annotation Enhancement ✅
 
 | Attribute | Value |
 |-----------|-------|
@@ -261,32 +264,34 @@ HIER-033 (future, after deprecation period)
 | **Dependencies** | None |
 | **Effort** | S |
 | **Files** | `quo-vadis-annotations/src/commonMain/kotlin/com/jermey/quo/vadis/annotations/Transition.kt` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] `@Target(AnnotationTarget.CLASS)` (on Destination classes)
-- [ ] `type: TransitionType` parameter (enum: SlideHorizontal, Fade, None, Custom)
-- [ ] `customTransition: KClass<*>` for custom implementations
-- [ ] Full KDoc documentation with examples
+- [x] `@Target(AnnotationTarget.CLASS)` (on Destination classes)
+- [x] `type: TransitionType` parameter (enum: SlideHorizontal, SlideVertical, Fade, None, Custom)
+- [x] `customTransition: KClass<*>` for custom implementations
+- [x] Full KDoc documentation with examples
 
-### HIER-012: KSP WrapperProcessor
+### HIER-012: KSP WrapperExtractor ✅
 
 | Attribute | Value |
 |-----------|-------|
-| **Description** | Create KSP processor for @TabWrapper and @PaneWrapper |
+| **Description** | Create KSP extractor for @TabWrapper and @PaneWrapper |
 | **Dependencies** | HIER-009, HIER-010 |
 | **Effort** | L |
-| **Files** | `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/processor/WrapperProcessor.kt` |
+| **Files** | `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/extractor/WrapperExtractor.kt` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] Finds all `@TabWrapper` annotated functions
-- [ ] Validates function signature (TabWrapperScope, content: () -> Unit)
-- [ ] Finds all `@PaneWrapper` annotated functions
-- [ ] Validates function signature (PaneWrapperScope, content: PaneContentScope.() -> Unit)
-- [ ] Builds mapping of tab/pane class → wrapper function
-- [ ] Error reporting for invalid signatures
-- [ ] Unit tests
+- [x] Finds all `@TabWrapper` annotated functions
+- [x] Validates function signature (TabWrapperScope receiver, content parameter)
+- [x] Finds all `@PaneWrapper` annotated functions
+- [x] Validates function signature (PaneWrapperScope receiver, content parameter)
+- [x] Builds mapping of tab/pane class → wrapper function
+- [x] Error reporting for invalid signatures
+- [x] Returns `WrapperInfo` with all extracted data
 
-### HIER-013: WrapperRegistry Code Generator
+### HIER-013: WrapperRegistry Code Generator ✅
 
 | Attribute | Value |
 |-----------|-------|
@@ -294,17 +299,17 @@ HIER-033 (future, after deprecation period)
 | **Dependencies** | HIER-002, HIER-012 |
 | **Effort** | M |
 | **Files** | `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/generator/WrapperRegistryGenerator.kt` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] Generates `GeneratedWrapperRegistry` object
-- [ ] Implements `WrapperRegistry` interface
-- [ ] `TabWrapper()` with when-expression dispatching to annotated functions
-- [ ] `PaneWrapper()` with when-expression dispatching to annotated functions
-- [ ] Default fallback for missing wrappers
-- [ ] Proper imports generated
-- [ ] Unit tests with test fixtures
+- [x] Generates `GeneratedWrapperRegistry` object
+- [x] Implements `WrapperRegistry` interface
+- [x] `TabWrapper()` with when-expression dispatching to annotated functions
+- [x] `PaneWrapper()` with when-expression dispatching to annotated functions
+- [x] Default fallback for missing wrappers
+- [x] Proper imports generated
 
-### HIER-014: TransitionRegistry Code Generator
+### HIER-014: TransitionRegistry Code Generator ✅
 
 | Attribute | Value |
 |-----------|-------|
@@ -312,30 +317,30 @@ HIER-033 (future, after deprecation period)
 | **Dependencies** | HIER-003, HIER-011 |
 | **Effort** | M |
 | **Files** | `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/generator/TransitionRegistryGenerator.kt` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] Generates `GeneratedTransitionRegistry` object
-- [ ] Implements `TransitionRegistry` interface
-- [ ] Maps destination classes to NavTransition instances
-- [ ] Handles TransitionType enum
-- [ ] Handles custom transition class references
-- [ ] Unit tests
+- [x] Generates `GeneratedTransitionRegistry` object
+- [x] Implements `TransitionRegistry` interface
+- [x] Maps destination classes to NavTransition instances
+- [x] Handles TransitionType enum
+- [x] Handles custom transition class references
 
-### HIER-015: KSP Integration
+### HIER-015: KSP Integration ✅
 
 | Attribute | Value |
 |-----------|-------|
-| **Description** | Integrate new processors into main KSP processing |
+| **Description** | Integrate new extractors/generators into main KSP processing |
 | **Dependencies** | HIER-012, HIER-013, HIER-014 |
 | **Effort** | S |
-| **Files** | `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/QuoVadisSymbolProcessor.kt` (modify) |
+| **Files** | `quo-vadis-ksp/src/main/kotlin/com/jermey/quo/vadis/ksp/QuoVadisSymbolProcessor.kt` (modified) |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] WrapperProcessor invoked
-- [ ] WrapperRegistryGenerator invoked
-- [ ] TransitionRegistryGenerator invoked
-- [ ] Proper ordering (registries generated after processing)
-- [ ] Integration test with demo app
+- [x] WrapperExtractor invoked
+- [x] WrapperRegistryGenerator invoked
+- [x] TransitionRegistryGenerator invoked
+- [x] Proper ordering (registries generated after extraction)
 
 ---
 

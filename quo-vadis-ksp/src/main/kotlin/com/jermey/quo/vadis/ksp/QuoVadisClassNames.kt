@@ -1,6 +1,9 @@
 package com.jermey.quo.vadis.ksp
 
 import com.jermey.quo.vadis.core.navigation.compose.TransitionScope
+import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneWrapperScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
@@ -34,6 +37,11 @@ internal object QuoVadisClassNames {
     
     // Compose classes
     val TRANSITION_SCOPE: ClassName = TransitionScope::class.toClassName()
+    
+    // Wrapper registry classes (Phase 2: Hierarchical Rendering)
+    val WRAPPER_REGISTRY: ClassName = WrapperRegistry::class.toClassName()
+    val TAB_WRAPPER_SCOPE: ClassName = TabWrapperScope::class.toClassName()
+    val PANE_WRAPPER_SCOPE: ClassName = PaneWrapperScope::class.toClassName()
     
     // Annotation classes (for KSP processing)
     val ARGUMENT_ANNOTATION: ClassName = ClassName(

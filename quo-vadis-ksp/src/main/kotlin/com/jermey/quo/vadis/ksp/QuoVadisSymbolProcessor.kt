@@ -17,10 +17,14 @@ import com.jermey.quo.vadis.ksp.extractors.PaneExtractor
 import com.jermey.quo.vadis.ksp.extractors.ScreenExtractor
 import com.jermey.quo.vadis.ksp.extractors.StackExtractor
 import com.jermey.quo.vadis.ksp.extractors.TabExtractor
+import com.jermey.quo.vadis.ksp.extractors.TransitionExtractor
+import com.jermey.quo.vadis.ksp.extractors.WrapperExtractor
 import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
 import com.jermey.quo.vadis.ksp.generators.NavNodeBuilderGenerator
 import com.jermey.quo.vadis.ksp.generators.NavigatorExtGenerator
 import com.jermey.quo.vadis.ksp.generators.ScreenRegistryGenerator
+import com.jermey.quo.vadis.ksp.generators.TransitionRegistryGenerator
+import com.jermey.quo.vadis.ksp.generators.WrapperRegistryGenerator
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.PaneInfo
 import com.jermey.quo.vadis.ksp.models.ScreenInfo
@@ -59,6 +63,14 @@ class QuoVadisSymbolProcessor(
     // Extractor and generator for screen registry (KSP-003)
     private val screenExtractor = ScreenExtractor(logger)
     private val screenRegistryGenerator = ScreenRegistryGenerator(codeGenerator, logger)
+
+    // Extractor and generator for wrapper registry (HIER-015)
+    private val wrapperExtractor = WrapperExtractor(logger)
+    private val wrapperRegistryGenerator = WrapperRegistryGenerator(codeGenerator, logger)
+
+    // Extractor and generator for transition registry (HIER-015)
+    private val transitionExtractor = TransitionExtractor(logger)
+    private val transitionRegistryGenerator = TransitionRegistryGenerator(codeGenerator, logger)
 
     // Generator for deep link handler (KSP-004)
     private val deepLinkHandlerGenerator = DeepLinkHandlerGenerator(codeGenerator, logger)
@@ -178,6 +190,12 @@ class QuoVadisSymbolProcessor(
 
         // Step 8: Generate screen registry (moved here to use already extracted screens)
         generateScreenRegistry(screens)
+
+        // Step 9: Extract and generate wrapper registry (HIER-015)
+        generateWrapperRegistry(resolver)
+
+        // Step 10: Extract and generate transition registry (HIER-015)
+        generateTransitionRegistry(resolver)
         
         // Mark generation as complete to prevent duplicate generation in multi-round processing
         hasGenerated = true
@@ -291,6 +309,55 @@ class QuoVadisSymbolProcessor(
             screenRegistryGenerator.generate(screens)
         } catch (e: IllegalStateException) {
             logger.error("Error generating screen registry: ${e.message}")
+        }
+    }
+
+    /**
+     * Extract @TabWrapper and @PaneWrapper annotations and generate WrapperRegistry.
+     */
+    private fun generateWrapperRegistry(resolver: Resolver) {
+        val tabWrappers = wrapperExtractor.extractTabWrappers(resolver)
+        val paneWrappers = wrapperExtractor.extractPaneWrappers(resolver)
+
+        // Skip generation if no wrappers found
+        if (tabWrappers.isEmpty() && paneWrappers.isEmpty()) {
+            logger.info("No @TabWrapper or @PaneWrapper annotations found, skipping WrapperRegistry generation")
+            return
+        }
+
+        // Determine base package from first wrapper
+        val basePackage = tabWrappers.firstOrNull()?.packageName
+            ?: paneWrappers.firstOrNull()?.packageName
+            ?: return
+
+        try {
+            wrapperRegistryGenerator.generate(tabWrappers, paneWrappers, basePackage)
+            logger.info("Generated WrapperRegistry with ${tabWrappers.size} tab wrappers and ${paneWrappers.size} pane wrappers")
+        } catch (e: Exception) {
+            logger.error("Error generating WrapperRegistry: ${e.message}")
+        }
+    }
+
+    /**
+     * Extract @Transition annotations and generate TransitionRegistry.
+     */
+    private fun generateTransitionRegistry(resolver: Resolver) {
+        val transitions = transitionExtractor.extractAll(resolver)
+
+        // Skip generation if no transitions found
+        if (transitions.isEmpty()) {
+            logger.info("No @Transition annotations found, skipping TransitionRegistry generation")
+            return
+        }
+
+        // Determine base package from first transition
+        val basePackage = transitions.first().destinationQualifiedName.substringBeforeLast('.')
+
+        try {
+            transitionRegistryGenerator.generate(transitions, basePackage)
+            logger.info("Generated TransitionRegistry with ${transitions.size} transitions")
+        } catch (e: Exception) {
+            logger.error("Error generating TransitionRegistry: ${e.message}")
         }
     }
 
