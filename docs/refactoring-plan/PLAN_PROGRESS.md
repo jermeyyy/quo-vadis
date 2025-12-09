@@ -40,7 +40,63 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Recent Updates
 
-### 2025-12-08 (Latest)
+### 2025-12-09 (Latest)
+- ✅ **RENDER-011 Phase 1: Core Components** - **ALL 8 TASKS COMPLETED**
+  - Verified all HIER-001 through HIER-008 tasks are implemented:
+  - **HIER-001**: NavRenderScope Interface ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/hierarchical/NavRenderScope.kt`
+    - Interface with navigator, cache, animationCoordinator, predictiveBackController, sharedTransitionScope
+    - `screenRegistry` and `wrapperRegistry` properties
+    - `withAnimatedVisibilityScope()` composable function
+    - Full KDoc documentation
+  - **HIER-002**: WrapperRegistry Interface ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/registry/WrapperRegistry.kt`
+    - `TabWrapper()` and `PaneWrapper()` composable function signatures
+    - `hasTabWrapper()` and `hasPaneWrapper()` lookup functions
+    - `WrapperRegistry.Empty` default implementation
+    - Full KDoc documentation
+  - **HIER-003**: TransitionRegistry Interface ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/registry/TransitionRegistry.kt`
+    - `getTransition(destinationClass: KClass<*>): NavTransition?` function
+    - `TransitionRegistry.Empty` default implementation
+    - Full KDoc documentation
+  - **HIER-004**: NavTransition Data Class ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/animation/NavTransition.kt`
+    - Data class with `enter`, `exit`, `popEnter`, `popExit`
+    - `createTransitionSpec(isBack: Boolean): ContentTransform` function
+    - `reversed()` function for direction inversion
+    - Presets: `SlideHorizontal`, `Fade`, `None`, `SlideVertical`, `ScaleIn`
+    - Full KDoc documentation
+  - **HIER-005**: AnimationCoordinator Class ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/animation/AnimationCoordinator.kt`
+    - `getTransition(from: NavNode?, to: NavNode, isBack: Boolean): NavTransition`
+    - `getTabTransition(fromIndex: Int?, toIndex: Int): NavTransition`
+    - `getPaneTransition(fromRole: PaneRole?, toRole: PaneRole): NavTransition`
+    - Uses TransitionRegistry for annotation-based lookup with fallback defaults
+    - @Stable annotation, Full KDoc documentation
+  - **HIER-006**: PredictiveBackController Class ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/gesture/PredictiveBackController.kt`
+    - `isActive` and `progress` state properties
+    - `suspend fun handleGesture(backEvent: Flow<Float>, onNavigateBack: () -> Unit)`
+    - Internal `animateToCompletion()` and `animateToCancel()` with spring animations
+    - Progress clamping to GESTURE_MAX_PROGRESS (0.25f) during gesture
+    - @Stable annotation, Full KDoc documentation
+  - **HIER-007**: ComposableCache Enhancement ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/ComposableCache.kt`
+    - `CachedEntry(key: String, saveableStateHolder, content)` composable
+    - `lock(key)` and `unlock(key)` for animation protection
+    - LRU eviction that respects locked and priority entries
+    - Full KDoc documentation
+  - **HIER-008**: TabWrapperScope and PaneWrapperScope ✓
+    - Files: `wrapper/TabWrapperScope.kt`, `wrapper/PaneWrapperScope.kt`, `scope/PaneContentSlot.kt`
+    - `TabWrapperScope` with `navigator`, `activeTabIndex`, `tabs`, `switchTab()`
+    - `PaneWrapperScope` with `navigator`, `paneContents`, `activePaneRole`, `isExpanded`
+    - `TabMetadata` and `PaneContent` data classes
+    - @Stable annotations, Full KDoc documentation
+  - **Build Verified**: `:quo-vadis-core:compileKotlinMetadata` ✓
+  - **Ready for Phase 2**: KSP Updates (HIER-009 to HIER-015)
+
+### 2025-12-08
 - ✅ **MIG-007G**: App Entry Point Integration - **COMPLETED**
   - Rewrote `DemoApp.kt` to use new NavNode tree architecture
   - **Key Changes**:
