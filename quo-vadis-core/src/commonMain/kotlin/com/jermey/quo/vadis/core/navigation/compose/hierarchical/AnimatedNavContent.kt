@@ -1,0 +1,145 @@
+/*
+ * Copyright 2025 Jermey
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.jermey.quo.vadis.core.navigation.compose.hierarchical
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
+import com.jermey.quo.vadis.core.navigation.core.NavNode
+
+/**
+ * Custom AnimatedContent variant optimized for navigation transitions.
+ *
+ * This composable is the core animation component for the hierarchical rendering engine.
+ * It handles transitions between navigation states with support for both standard
+ * `AnimatedContent` animations and predictive back gesture-driven animations.
+ *
+ * ## Animation Direction Detection
+ *
+ * The component tracks both the currently displayed state and the previous state to
+ * determine navigation direction:
+ *
+ * - **Forward navigation**: New target differs from displayed, and is not the previous state
+ * - **Back navigation**: Target state matches the previous state (returning to where we were)
+ *
+ * This allows transitions to use appropriate enter/exit animations based on direction.
+ *
+ * ## Predictive Back Integration
+ *
+ * When predictive back gestures are enabled and active, this component bypasses
+ * `AnimatedContent` entirely and delegates to [PredictiveBackContent], which provides
+ * gesture-driven animations with proper state preservation.
+ *
+ * ## State Tracking
+ *
+ * The component maintains two internal states:
+ * - **displayedState**: The state currently shown on screen (may lag during animation)
+ * - **previousState**: The state that was displayed before the current one
+ *
+ * These are updated inside the `AnimatedContent` content lambda to ensure proper
+ * animation direction detection for subsequent navigations.
+ *
+ * ## Usage
+ *
+ * ```kotlin
+ * AnimatedNavContent(
+ *     targetState = currentNode,
+ *     transition = navTransition,
+ *     scope = renderScope,
+ *     predictiveBackEnabled = true
+ * ) { node ->
+ *     // Content is provided an AnimatedVisibilityScope
+ *     ScreenContent(node)
+ * }
+ * ```
+ *
+ * @param T The type of navigation node being animated (must extend [NavNode])
+ * @param targetState The current target state to animate to
+ * @param transition The [NavTransition] defining enter/exit animations for both directions
+ * @param scope The [NavRenderScope] providing access to predictive back controller,
+ *              animation scopes, and other rendering dependencies
+ * @param predictiveBackEnabled Whether predictive back gesture handling should be active.
+ *                              When `false`, always uses standard `AnimatedContent`
+ * @param modifier Optional [Modifier] applied to the container
+ * @param content The composable content to render for each state, receiving an
+ *                [AnimatedVisibilityScope] for enter/exit animation coordination
+ *
+ * @see NavTransition
+ * @see NavRenderScope
+ * @see PredictiveBackContent
+ * @see AnimatedContent
+ */
+@Composable
+internal fun <T : NavNode> AnimatedNavContent(
+    targetState: T,
+    transition: NavTransition,
+    scope: NavRenderScope,
+    predictiveBackEnabled: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable AnimatedVisibilityScope.(T) -> Unit
+) {
+    // Track displayed state for animation direction detection
+    var displayedState by remember { mutableStateOf(targetState) }
+    var previousState by remember { mutableStateOf<T?>(null) }
+
+    // Determine if predictive back gesture is currently active
+    val isPredictiveBackActive = predictiveBackEnabled &&
+        scope.predictiveBackController.isActive.value
+
+    if (isPredictiveBackActive) {
+        // Gesture-driven animation - bypass AnimatedContent
+        PredictiveBackContent(
+            current = displayedState,
+            previous = previousState,
+            progress = scope.predictiveBackController.progress.value,
+            scope = scope,
+            content = content
+        )
+    } else {
+        // Standard AnimatedContent transition
+        AnimatedContent(
+            targetState = targetState,
+            transitionSpec = {
+                // Determine navigation direction for proper animation selection
+                // Back navigation: target matches previous state (returning to where we were)
+                val isBack = targetState.key != displayedState.key &&
+                    previousState?.key == targetState.key
+                transition.createTransitionSpec(isBack = isBack)
+            },
+            modifier = modifier,
+            label = "AnimatedNavContent"
+        ) { animatingState ->
+            // Update state tracking when animation reaches target
+            // This ensures proper direction detection for the next navigation
+            if (animatingState == targetState && animatingState != displayedState) {
+                previousState = displayedState
+                displayedState = targetState
+            }
+
+            // Provide AnimatedVisibilityScope to content via NavRenderScope
+            scope.withAnimatedVisibilityScope(this) {
+                content(animatingState)
+            }
+        }
+    }
+}

@@ -5,6 +5,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.saveable.SaveableStateHolder
 import com.jermey.quo.vadis.core.navigation.compose.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackController
@@ -105,6 +106,32 @@ public interface NavRenderScope {
      * @see ComposableCache
      */
     public val cache: ComposableCache
+
+    /**
+     * State holder for preserving saveable state across navigation.
+     *
+     * The saveable state holder ensures that composable state marked with
+     * `rememberSaveable` is preserved during navigation transitions and
+     * can be restored after process death.
+     *
+     * ## Usage
+     *
+     * Used by [ComposableCache.CachedEntry] to wrap screen content with
+     * state preservation:
+     *
+     * ```kotlin
+     * cache.CachedEntry(
+     *     key = node.key,
+     *     saveableStateHolder = saveableStateHolder
+     * ) {
+     *     ScreenContent()
+     * }
+     * ```
+     *
+     * @see SaveableStateHolder
+     * @see ComposableCache.CachedEntry
+     */
+    public val saveableStateHolder: SaveableStateHolder
 
     /**
      * Coordinator for resolving and managing navigation transitions.

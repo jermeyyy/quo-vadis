@@ -41,6 +41,63 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ## Recent Updates
 
 ### 2025-12-09 (Latest)
+- ✅ **RENDER-011 Phase 3: Renderer Implementation** - **ALL 8 TASKS COMPLETED**
+  - Implemented the hierarchical rendering engine components
+  - **HIER-016**: NavTreeRenderer ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/hierarchical/NavTreeRenderer.kt`
+    - Core recursive renderer dispatching to node-specific renderers
+    - When expression routing by NavNode type (Screen, Stack, Tab, Pane)
+    - Full KDoc documentation
+  - **HIER-017**: ScreenRenderer ✓
+    - Integrated into `NavTreeRenderer.kt`
+    - Uses ComposableCache.CachedEntry for state preservation
+    - Provides LocalScreenNode and LocalAnimatedVisibilityScope
+    - Invokes ScreenRegistry.Content with all required parameters
+  - **HIER-018**: StackRenderer ✓
+    - Integrated into `NavTreeRenderer.kt`
+    - Renders only active child with animated transitions
+    - Detects back navigation via stack comparison
+    - Uses AnimatedNavContent, enables predictive back for root stacks only
+  - **HIER-019**: AnimatedNavContent ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/hierarchical/AnimatedNavContent.kt`
+    - Custom AnimatedContent variant for navigation
+    - Generic `<T : NavNode>` type parameter
+    - Tracks displayedState/previousState for animation direction
+    - Switches to PredictiveBackContent when gesture active
+    - Provides AnimatedVisibilityScope to content
+  - **HIER-020**: PredictiveBackContent ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/hierarchical/PredictiveBackContent.kt`
+    - Renders overlapping content during predictive back gesture
+    - Parallax transform for previous content
+    - Translate + scale transform for current content
+    - Uses CachedEntry and StaticAnimatedVisibilityScope
+  - **HIER-021**: TabRenderer ✓
+    - Integrated into `NavTreeRenderer.kt`
+    - Creates TabWrapperScope with current tab state
+    - Caches entire TabNode (wrapper + content)
+    - Uses AnimatedNavContent for tab switching
+    - Invokes WrapperRegistry.TabWrapper with content slot
+  - **HIER-022**: PaneRenderer ✓
+    - Integrated into `NavTreeRenderer.kt`
+    - Adaptive layout: expanded (multi-pane) vs compact (single-pane)
+    - Creates PaneWrapperScope with pane configuration
+    - Multi/Single pane helper renderers
+  - **HIER-023**: StaticAnimatedVisibilityScope ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/hierarchical/StaticAnimatedVisibilityScope.kt`
+    - Fake AnimatedVisibilityScope for predictive back rendering
+    - Returns stable/completed transition values
+    - Used when content is rendered outside AnimatedContent
+  - **Files Created**:
+    - `hierarchical/NavTreeRenderer.kt` - Core renderer + Screen/Stack/Tab/Pane renderers
+    - `hierarchical/AnimatedNavContent.kt` - Custom animation component
+    - `hierarchical/PredictiveBackContent.kt` - Predictive back gesture content
+    - `hierarchical/StaticAnimatedVisibilityScope.kt` - Static animation scope
+    - `hierarchical/HierarchicalCompositionLocals.kt` - LocalScreenNode, LocalAnimatedVisibilityScope
+  - **NavRenderScope Enhanced**: Added `saveableStateHolder` property
+  - **Build Verified**: `:quo-vadis-core:compileCommonMainKotlinMetadata` ✓, `:composeApp:assembleDebug` ✓
+  - **Ready for Phase 4**: Integration (HIER-024 to HIER-028)
+
+### 2025-12-09
 - ✅ **RENDER-011 Phase 1: Core Components** - **ALL 8 TASKS COMPLETED**
   - Verified all HIER-001 through HIER-008 tasks are implemented:
   - **HIER-001**: NavRenderScope Interface ✓
