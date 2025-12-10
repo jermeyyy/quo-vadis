@@ -365,7 +365,8 @@ class NavNodeBuilderGenerator(
         builder
             .unindent()
             .add("),\n")
-            .add("activeStackIndex = initialTabIndex\n")
+            .add("activeStackIndex = initialTabIndex,\n")
+            .add("wrapperKey = %S\n", tabInfo.className)
             .unindent()
             .add(")\n")
 

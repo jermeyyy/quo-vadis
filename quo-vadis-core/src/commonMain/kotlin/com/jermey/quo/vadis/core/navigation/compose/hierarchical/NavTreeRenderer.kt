@@ -416,8 +416,9 @@ internal fun TabRenderer(
         Box(modifier = modifier) {
             // Invoke the registered tab wrapper (KSP-generated or default)
             // The wrapper receives the scope and a content slot
+            // Use wrapperKey for registry lookup (class simple name), fallback to node.key
             scope.wrapperRegistry.TabWrapper(
-                tabNodeKey = node.key,
+                tabNodeKey = node.wrapperKey ?: node.key,
                 scope = updatedTabWrapperScope
             ) {
                 // Content slot: animate between tabs (within the wrapper)

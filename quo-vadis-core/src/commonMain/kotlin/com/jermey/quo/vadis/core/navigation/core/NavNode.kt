@@ -147,6 +147,10 @@ data class StackNode(
  * @property parentKey Key of the containing node (null if root)
  * @property stacks List of StackNodes, one per tab
  * @property activeStackIndex Index of the currently active tab (0-based)
+ * @property wrapperKey Key used to lookup the wrapper in [WrapperRegistry].
+ *   This is typically the simple name of the tab class (e.g., "MainTabs")
+ *   and is used by the hierarchical renderer to find the correct wrapper.
+ *   Defaults to null, which means no custom wrapper is registered.
  */
 @Serializable
 @SerialName("tab")
@@ -154,7 +158,8 @@ data class TabNode(
     override val key: String,
     override val parentKey: String?,
     val stacks: List<StackNode>,
-    val activeStackIndex: Int = 0
+    val activeStackIndex: Int = 0,
+    val wrapperKey: String? = null
 ) : NavNode {
 
     init {
