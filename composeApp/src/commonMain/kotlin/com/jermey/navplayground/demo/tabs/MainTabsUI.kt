@@ -23,10 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.jermey.quo.vadis.core.navigation.compose.QuoVadisHost
+import com.jermey.quo.vadis.core.navigation.compose.HierarchicalQuoVadisHost
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapper
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
@@ -66,12 +65,12 @@ fun mainTabsWrapper(): TabWrapper = { tabContent ->
 }
 
 /**
- * Main app tabs screen using QuoVadisHost with TabWrapper.
+ * Main app tabs screen using HierarchicalQuoVadisHost.
  *
  * This composable renders the main tab navigation with:
  * - Independent navigation stacks per tab
  * - State preservation across tab switches
- * - Custom bottom navigation bar via TabWrapper
+ * - Custom bottom navigation bar via @TabWrapper annotation
  * - Automatic back press handling
  *
  * @param navigator The navigator instance for this tab container
@@ -82,15 +81,11 @@ fun MainTabsScreen(
     navigator: Navigator,
     modifier: Modifier = Modifier
 ) {
-    QuoVadisHost(
+    HierarchicalQuoVadisHost(
         navigator = navigator,
-        tabWrapper = mainTabsWrapper(),
-        modifier = modifier
-    ) { destination ->
-        // Content rendering is handled by the generated screen registry
-        // This lambda is a placeholder for direct QuoVadisHost usage
-        // In the full migration, screenRegistry will resolve content
-    }
+        modifier = modifier,
+        enablePredictiveBack = true
+    )
 }
 
 /**

@@ -10,7 +10,6 @@ import com.jermey.quo.vadis.core.navigation.core.PaneNode
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.StackNode
 import com.jermey.quo.vadis.core.navigation.core.TabNode
-import com.jermey.quo.vadis.core.navigation.core.TransitionState
 
 /**
  * Defines the scope of state caching for navigation surfaces.
@@ -27,7 +26,6 @@ import com.jermey.quo.vadis.core.navigation.core.TransitionState
  * | StackNode | N/A | Standard screen caching |
  * | ScreenNode | N/A | Full screen caching |
  *
- * @see NavigationStateHolder.determineCacheScope
  * @see NavigationStateHolder.SaveableWithScope
  */
 public enum class CacheScope {
@@ -216,51 +214,6 @@ public class NavigationStateHolder internal constructor(
         val removedKeys = previousKeys - activeKeys - retainedKeys
         removedKeys.forEach { key ->
             saveableStateHolder.removeState(key)
-        }
-    }
-
-    /**
-     * Determines the appropriate cache scope based on navigation context.
-     *
-     * This method analyzes the transition state and surface rendering mode
-     * to decide the optimal caching strategy:
-     *
-     * | Condition | Scope |
-     * |-----------|-------|
-     * | Cross-node navigation + TAB_WRAPPER/PANE_WRAPPER | WHOLE_WRAPPER |
-     * | Intra-node navigation + TAB_CONTENT | CONTENT_ONLY |
-     * | Intra-node navigation + PANE_CONTENT | CONTENT_ONLY |
-     * | All other cases | FULL_SCREEN |
-     *
-     * @param transition Current transition state
-     * @param surfaceId Unique identifier for the surface (for debugging)
-     * @param surfaceMode The rendering mode of the surface
-     * @return The appropriate [CacheScope] for this navigation context
-     */
-    public fun determineCacheScope(
-        transition: TransitionState,
-        surfaceId: String,
-        surfaceMode: SurfaceRenderingMode
-    ): CacheScope {
-        @Suppress("UNUSED_PARAMETER") // surfaceId kept for debugging/logging
-        return when {
-            // Cross-node-type navigation: cache whole wrapper
-            transition.isCrossNodeTypeNavigation() &&
-                surfaceMode in listOf(SurfaceRenderingMode.TAB_WRAPPER, SurfaceRenderingMode.PANE_WRAPPER) ->
-                CacheScope.WHOLE_WRAPPER
-
-            // Intra-tab navigation: cache only content
-            !transition.isCrossNodeTypeNavigation() &&
-                surfaceMode == SurfaceRenderingMode.TAB_CONTENT ->
-                CacheScope.CONTENT_ONLY
-
-            // Intra-pane navigation: cache only pane content
-            !transition.isCrossNodeTypeNavigation() &&
-                surfaceMode == SurfaceRenderingMode.PANE_CONTENT ->
-                CacheScope.CONTENT_ONLY
-
-            // Default screen caching
-            else -> CacheScope.FULL_SCREEN
         }
     }
 

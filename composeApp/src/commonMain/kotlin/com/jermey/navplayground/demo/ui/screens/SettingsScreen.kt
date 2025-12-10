@@ -17,10 +17,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Policy
 import com.jermey.navplayground.demo.destinations.SettingsDestination
-import com.jermey.navplayground.demo.ui.theme.RenderingModeManager
-import com.jermey.navplayground.demo.ui.theme.rememberRenderingModeManager
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.compose.RenderingMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
-import com.jermey.navplayground.demo.ui.components.RenderingModeSettingItem
 import com.jermey.navplayground.demo.ui.components.SettingItem
 import com.jermey.navplayground.demo.ui.components.SettingsSection
 import com.jermey.navplayground.demo.ui.components.ThemeSettingItem
@@ -70,10 +66,6 @@ fun SettingsScreen(
     val themeManager = rememberThemeManager()
     val currentThemeMode by themeManager.themeMode.collectAsState()
 
-    // Rendering mode manager for toggling between Flattened and Hierarchical
-    val renderingModeManager = rememberRenderingModeManager()
-    val currentRenderingMode by renderingModeManager.renderingMode.collectAsState()
-
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
@@ -93,9 +85,7 @@ fun SettingsScreen(
             modifier,
             paddingValues,
             currentThemeMode,
-            themeManager,
-            currentRenderingMode,
-            renderingModeManager
+            themeManager
         )
     }
 
@@ -124,9 +114,7 @@ private fun SettingsScreenContent(
     modifier: Modifier,
     paddingValues: PaddingValues,
     currentThemeMode: ThemeMode,
-    themeManager: ThemeManager,
-    currentRenderingMode: RenderingMode,
-    renderingModeManager: RenderingModeManager
+    themeManager: ThemeManager
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize().padding(paddingValues),
@@ -178,17 +166,6 @@ private fun SettingsScreenContent(
                     }
                 )
                 SettingItem("Language", Icons.Default.Language)
-            }
-        }
-
-        item {
-            SettingsSection("Developer Options") {
-                RenderingModeSettingItem(
-                    currentMode = currentRenderingMode,
-                    onModeChange = { newMode ->
-                        renderingModeManager.setRenderingMode(newMode)
-                    }
-                )
             }
         }
 

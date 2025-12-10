@@ -42,7 +42,6 @@ import kotlinx.serialization.Serializable
  * }
  * ```
  *
- * @see TreeFlattener
  * @see QuoVadisHost
  */
 @Serializable
@@ -299,8 +298,7 @@ sealed class TransitionState {
     /**
      * Checks if this transition affects a specific stack.
      *
-     * Used by TreeFlattener to determine which stacks need
-     * enter/exit animation handling.
+     * Used to determine which stacks need enter/exit animation handling.
      *
      * @param stackKey The key of the stack to check
      * @return True if the transition involves this stack

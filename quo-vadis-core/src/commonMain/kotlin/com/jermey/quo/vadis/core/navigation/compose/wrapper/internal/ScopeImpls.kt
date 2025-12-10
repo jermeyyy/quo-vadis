@@ -10,8 +10,8 @@ import com.jermey.quo.vadis.core.navigation.core.PaneRole
 /**
  * Internal implementation of [TabWrapperScope].
  *
- * Created by the TreeFlattener when processing TabNode to provide
- * the wrapper composable with access to tab navigation state and actions.
+ * Created when processing TabNode to provide the wrapper composable
+ * with access to tab navigation state and actions.
  *
  * @property navigator The navigator instance for this tab container
  * @property activeTabIndex The currently selected tab index (0-based)
@@ -48,8 +48,8 @@ internal class TabWrapperScopeImpl(
 /**
  * Internal implementation of [PaneWrapperScope].
  *
- * Created by the TreeFlattener when processing PaneNode to provide
- * the wrapper composable with access to pane layout state and actions.
+ * Created when processing PaneNode to provide the wrapper composable
+ * with access to pane layout state and actions.
  *
  * @property navigator The navigator instance for this pane container
  * @property activePaneRole The currently active pane role
@@ -77,7 +77,7 @@ internal class PaneWrapperScopeImpl(
 /**
  * Creates a [TabWrapperScopeImpl] with the given parameters.
  *
- * Factory function for creating tab wrapper scopes in the TreeFlattener.
+ * Factory function for creating tab wrapper scopes.
  *
  * @param navigator The navigator instance
  * @param activeTabIndex Currently selected tab index
@@ -104,7 +104,7 @@ internal fun createTabWrapperScope(
 /**
  * Creates a [PaneWrapperScopeImpl] with the given parameters.
  *
- * Factory function for creating pane wrapper scopes in the TreeFlattener.
+ * Factory function for creating pane wrapper scopes.
  *
  * @param navigator The navigator instance
  * @param activePaneRole Currently active pane role

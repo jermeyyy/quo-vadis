@@ -23,12 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.jermey.navplayground.demo.destinations.TabsDestination
 import com.jermey.navplayground.demo.tabs.generated.buildDemoTabsNavNode
-import com.jermey.navplayground.demo.tabs.mainTabsWrapper
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.compose.QuoVadisHost
+import com.jermey.quo.vadis.core.navigation.compose.HierarchicalQuoVadisHost
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
-import com.jermey.quo.vadis.generated.GeneratedScreenRegistry
 
 /**
  * Tabs Main Screen - Demonstrates nested tabs navigation using the new NavNode architecture.
@@ -112,22 +110,12 @@ fun TabsMainScreen(
                 )
             }
 
-            // Render tab content using QuoVadisHost with the nested navigator
-            QuoVadisHost(
+            // Render tab content using HierarchicalQuoVadisHost with the nested navigator
+            HierarchicalQuoVadisHost(
                 navigator = tabNavigator,
                 modifier = Modifier.fillMaxSize(),
-                tabWrapper = mainTabsWrapper(),
                 enablePredictiveBack = true
-            ) { destination ->
-                // Use GeneratedScreenRegistry to render the destination content
-                // The tab screens (DemoTab1.Tab, etc.) will render TabContent
-                GeneratedScreenRegistry.Content(
-                    destination = destination,
-                    navigator = tabNavigator,
-                    sharedTransitionScope = this,
-                    animatedVisibilityScope = null
-                )
-            }
+            )
         }
     }
 }
