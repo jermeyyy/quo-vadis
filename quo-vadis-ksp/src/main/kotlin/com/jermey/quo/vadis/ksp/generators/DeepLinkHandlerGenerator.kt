@@ -148,9 +148,10 @@ class DeepLinkHandlerGenerator(
         val listOfRoutePattern = ClassName("kotlin.collections", "List")
             .parameterizedBy(routePatternType)
 
-        val routePatterns = destinations.map { dest ->
-            buildRoutePatternInitializer(dest)
-        }
+        // Filter out empty patterns (from sealed classes that can't be instantiated)
+        val routePatterns = destinations
+            .map { dest -> buildRoutePatternInitializer(dest) }
+            .filter { it.toString().isNotEmpty() }
 
         return PropertySpec.builder("routes", listOfRoutePattern)
             .addModifiers(KModifier.PRIVATE)
@@ -182,9 +183,18 @@ class DeepLinkHandlerGenerator(
      * - Data objects: `DestinationClass.DataObject`
      * - Data classes with route params: `DestinationClass.DataClass(param = params["param"]!!)`
      * - Data classes without route params (optional/default params): `DestinationClass.DataClass()`
+     * - Sealed classes: Skipped (cannot be instantiated directly)
      */
     private fun buildRoutePatternInitializer(dest: DestinationInfo): CodeBlock {
         val route = dest.route ?: return CodeBlock.of("")
+
+        // Skip sealed classes - they cannot be instantiated directly
+        // (their subclasses should be used as destinations instead)
+        if (dest.isSealedClass) {
+            logger.info("Skipping sealed class ${dest.className} in deep link handler - cannot be instantiated")
+            return CodeBlock.of("")
+        }
+
         val params = dest.routeParams
         val destClassName = buildDestinationClassName(dest)
 
@@ -226,22 +236,23 @@ class DeepLinkHandlerGenerator(
      *
      * For nested sealed class members (e.g., HomeDestination.Detail),
      * creates a properly nested ClassName that KotlinPoet can import.
+     * Handles arbitrary nesting depth (e.g., MainTabs.SettingsTab.SettingsMain).
      *
      * @param dest The destination info containing class metadata
      * @return ClassName that will generate proper imports when used with %T
      */
     private fun buildDestinationClassName(dest: DestinationInfo): ClassName {
-        // Extract package from qualifiedName (e.g., "com.example.ProductsDestination.List")
-        val qualifiedName = dest.qualifiedName
         val packageName = dest.classDeclaration.packageName.asString()
+        val simpleNames = mutableListOf<String>()
 
-        return if (dest.parentSealedClass != null) {
-            // Nested class: ClassName(package, "Parent", "Nested")
-            ClassName(packageName, dest.parentSealedClass, dest.className)
-        } else {
-            // Top-level class: ClassName(package, "ClassName")
-            ClassName(packageName, dest.className)
+        // Walk up the parent chain to collect all enclosing class names
+        var current: com.google.devtools.ksp.symbol.KSDeclaration? = dest.classDeclaration
+        while (current is com.google.devtools.ksp.symbol.KSClassDeclaration) {
+            simpleNames.add(0, current.simpleName.asString())
+            current = current.parentDeclaration
         }
+
+        return ClassName(packageName, simpleNames)
     }
 
     /**
@@ -306,10 +317,15 @@ class DeepLinkHandlerGenerator(
      * - Data objects: `DestinationClass.DataObject -> "scheme://route"`
      * - Data classes without route params: `is DestinationClass.DataClass -> "scheme://route"`
      * - Data classes with route params: `is DestinationClass.DataClass -> "scheme://route/${destination.param}"`
+     * - Sealed classes: Skipped (cannot be used as concrete destinations)
      */
     private fun buildWhenCases(destinations: List<DestinationInfo>): List<CodeBlock> {
         return destinations.mapNotNull { dest ->
             val route = dest.route ?: return@mapNotNull null
+
+            // Skip sealed classes - they cannot be used as concrete destinations
+            if (dest.isSealedClass) return@mapNotNull null
+
             val destClassName = buildDestinationClassName(dest)
             val params = dest.routeParams
 

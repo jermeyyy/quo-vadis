@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
@@ -28,25 +29,24 @@ import com.jermey.quo.vadis.core.navigation.core.PaneRole
  * - A [NavigationBar] at the bottom
  * - Tab content filling the remaining space
  *
- * For custom layouts, users should provide their own [TabWrapper].
+ * This is a standalone composable function that can be used as the default
+ * wrapper when no custom wrapper is registered for a TabNode.
  *
- * ## Usage
- *
- * ```kotlin
- * TabNode(
- *     tabs = listOf(homeTab, searchTab, profileTab),
- *     wrapper = DefaultTabWrapper
- * )
- * ```
+ * @param scope The TabWrapperScope providing access to tab state and navigation
+ * @param content The content slot where active tab content is rendered
  */
-public val DefaultTabWrapper: TabWrapper = { tabContent ->
+@Composable
+public fun DefaultTabWrapper(
+    scope: TabWrapperScope,
+    content: @Composable () -> Unit
+) {
     Scaffold(
         bottomBar = {
             NavigationBar {
-                tabMetadata.forEachIndexed { index, meta ->
+                scope.tabMetadata.forEachIndexed { index, meta ->
                     NavigationBarItem(
-                        selected = activeTabIndex == index,
-                        onClick = { switchTab(index) },
+                        selected = scope.activeTabIndex == index,
+                        onClick = { scope.switchTab(index) },
                         icon = {
                             meta.icon?.let { icon ->
                                 Icon(
@@ -56,14 +56,14 @@ public val DefaultTabWrapper: TabWrapper = { tabContent ->
                             }
                         },
                         label = { Text(meta.label) },
-                        enabled = !isTransitioning
+                        enabled = !scope.isTransitioning
                     )
                 }
             }
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
-            tabContent()
+            content()
         }
     }
 }
@@ -73,22 +73,20 @@ public val DefaultTabWrapper: TabWrapper = { tabContent ->
  *
  * Useful for tablet layouts or secondary tab navigation.
  *
- * ## Usage
- *
- * ```kotlin
- * TabNode(
- *     tabs = listOf(tab1, tab2, tab3),
- *     wrapper = TopTabWrapper
- * )
- * ```
+ * @param scope The TabWrapperScope providing access to tab state and navigation
+ * @param content The content slot where active tab content is rendered
  */
-public val TopTabWrapper: TabWrapper = { tabContent ->
+@Composable
+public fun TopTabWrapper(
+    scope: TabWrapperScope,
+    content: @Composable () -> Unit
+) {
     Column(modifier = Modifier.fillMaxSize()) {
-        PrimaryTabRow(selectedTabIndex = activeTabIndex) {
-            tabMetadata.forEachIndexed { index, meta ->
+        PrimaryTabRow(selectedTabIndex = scope.activeTabIndex) {
+            scope.tabMetadata.forEachIndexed { index, meta ->
                 Tab(
-                    selected = activeTabIndex == index,
-                    onClick = { switchTab(index) },
+                    selected = scope.activeTabIndex == index,
+                    onClick = { scope.switchTab(index) },
                     text = { Text(meta.label) },
                     icon = {
                         meta.icon?.let { icon ->
@@ -98,13 +96,13 @@ public val TopTabWrapper: TabWrapper = { tabContent ->
                             )
                         }
                     },
-                    enabled = !isTransitioning
+                    enabled = !scope.isTransitioning
                 )
             }
         }
         HorizontalDivider()
         Box(modifier = Modifier.weight(1f)) {
-            tabContent()
+            content()
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.jermey.quo.vadis.annotations
 
+import kotlin.reflect.KClass
+
 /**
  * Marks a sealed class or interface as a stack-based navigation container.
  *
@@ -40,10 +42,10 @@ package com.jermey.quo.vadis.annotations
  *
  * ## Start Destination Resolution
  *
- * The [startDestination] is resolved by matching against sealed subclass
- * simple names:
- * - `"Feed"` matches `data object Feed : HomeDestination()`
- * - `"Detail"` matches `data class Detail(...) : HomeDestination()`
+ * The start destination is resolved with the following priority:
+ * 1. Type-safe [startDestinationClass] (if not [Unit])
+ * 2. String-based [startDestination] (if not empty)
+ * 3. First destination in declaration order
  *
  * If [startDestination] is empty, the first destination in declaration
  * order is used as the initial screen.
@@ -66,6 +68,15 @@ package com.jermey.quo.vadis.annotations
  * }
  * ```
  *
+ * ### Type-Safe Start Destination
+ * ```kotlin
+ * @Stack(name = "home", startDestinationClass = HomeDestination.Feed::class)
+ * sealed class HomeDestination {
+ *     @Destination(route = "home/feed")
+ *     data object Feed : HomeDestination()
+ * }
+ * ```
+ *
  * ### Stack with Default Start Destination
  * ```kotlin
  * // First destination (Overview) is used as start when startDestination is empty
@@ -83,38 +94,23 @@ package com.jermey.quo.vadis.annotations
  * }
  * ```
  *
- * ### Stack with Complex Destinations
- * ```kotlin
- * @Stack(name = "product", startDestination = "List")
- * sealed class ProductDestination {
- *
- *     @Destination(route = "products")
- *     data object List : ProductDestination()
- *
- *     @Destination(route = "products/{productId}")
- *     data class Detail(val productId: String) : ProductDestination()
- *
- *     @Destination(route = "products/{productId}/reviews")
- *     data class Reviews(val productId: String) : ProductDestination()
- *
- *     @Destination(route = "products/compare?ids={productIds}")
- *     data class Compare(val productIds: List<String>) : ProductDestination()
- * }
- * ```
- *
  * @property name Unique name for this navigation stack. Used for key
  *   generation, debugging, and identification in the navigation tree.
- * @property startDestination Simple name of the initial destination subclass.
- *   Must match one of the sealed subclass names exactly. If empty, the
- *   first declared subclass is used.
+ * @property startDestination Simple class name of the initial destination
+ *   (e.g., "Feed" matches `data object Feed`). If empty and [startDestinationClass]
+ *   is [Unit], the first destination is used.
+ * @property startDestinationClass Type-safe KClass reference to the initial destination.
+ *   If not [Unit] (the default), this takes precedence over [startDestination].
+ *   Use `MyDestination.Feed::class` for type-safe start destination resolution.
  *
  * @see Destination
- * @see Tab
+ * @see Tabs
  * @see Pane
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class Stack(
     val name: String,
-    val startDestination: String = ""
+    val startDestination: String = "",
+    val startDestinationClass: KClass<*> = Unit::class
 )

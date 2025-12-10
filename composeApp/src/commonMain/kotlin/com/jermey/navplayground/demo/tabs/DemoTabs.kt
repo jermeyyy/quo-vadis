@@ -2,7 +2,7 @@ package com.jermey.navplayground.demo.tabs
 
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.annotations.Tab
+import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.annotations.TabItem
 import com.jermey.quo.vadis.core.navigation.core.Destination as DestinationInterface
 
@@ -78,7 +78,7 @@ sealed class DemoTab3 : DestinationInterface {
 /**
  * Demo tabs container that aggregates all tab definitions.
  */
-@Tab(
+@Tabs(
     name = "demoTabs",
     initialTab = DemoTab1::class,
     items = [DemoTab1::class, DemoTab2::class, DemoTab3::class]

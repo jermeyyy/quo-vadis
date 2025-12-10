@@ -4,8 +4,11 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.jermey.quo.vadis.ksp.models.DestinationInfo
+import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
 import com.jermey.quo.vadis.ksp.models.TabItemInfo
+import com.jermey.quo.vadis.ksp.models.TabItemType
 
 /**
  * Extracts @Tab and @TabItem annotations into TabInfo models.
@@ -38,11 +41,13 @@ import com.jermey.quo.vadis.ksp.models.TabItemInfo
  * ```
  *
  * @property destinationExtractor Extractor for @Destination metadata
+ * @property stackExtractor Extractor for @Stack metadata (optional, for NESTED_STACK tab extraction)
  * @property logger KSP logger for error/warning output
  */
 class TabExtractor(
     private val destinationExtractor: DestinationExtractor,
-    private val logger: KSPLogger
+    private val logger: KSPLogger,
+    private val stackExtractor: StackExtractor? = null
 ) {
 
     // Cache of TabItem classes indexed by parent qualified name (for legacy pattern)
@@ -55,12 +60,13 @@ class TabExtractor(
      * - If `items` array is non-empty → new pattern
      * - Otherwise → legacy pattern with sealed subclasses
      *
-     * @param classDeclaration The class annotated with @Tab
+     * @param classDeclaration The class annotated with @Tab or @Tabs
      * @return TabInfo or null if extraction fails
      */
     fun extract(classDeclaration: KSClassDeclaration): TabInfo? {
+        // Support both @Tab and @Tabs annotation names
         val annotation = classDeclaration.annotations.find {
-            it.shortName.asString() == "Tab"
+            it.shortName.asString() == "Tab" || it.shortName.asString() == "Tabs"
         } ?: return null
 
         val name = annotation.arguments.find {
@@ -200,13 +206,48 @@ class TabExtractor(
     }
 
     /**
+     * Detects whether a @TabItem is a flat screen or nested stack based on annotations.
+     *
+     * Detection rules:
+     * - @TabItem + @Stack + (sealed class) → NESTED_STACK
+     * - @TabItem + @Destination + (data object) → FLAT_SCREEN
+     *
+     * @param classDeclaration The class to analyze
+     * @return [TabItemType.NESTED_STACK] or [TabItemType.FLAT_SCREEN]
+     */
+    private fun detectTabItemType(classDeclaration: KSClassDeclaration): TabItemType {
+        val hasStack = classDeclaration.annotations.any {
+            it.shortName.asString() == "Stack"
+        }
+        val hasDestination = classDeclaration.annotations.any {
+            it.shortName.asString() == "Destination"
+        }
+
+        return when {
+            hasStack -> TabItemType.NESTED_STACK
+            hasDestination -> TabItemType.FLAT_SCREEN
+            else -> {
+                // Default to FLAT_SCREEN if neither (will be validated later)
+                logger.warn(
+                    "TabItem '${classDeclaration.simpleName.asString()}' has neither @Stack nor @Destination",
+                    classDeclaration
+                )
+                TabItemType.FLAT_SCREEN
+            }
+        }
+    }
+
+    /**
      * Extract TabItemInfo for new pattern (@TabItem on top-level class).
      *
      * In the new pattern:
      * - The class has @TabItem (label, icon)
-     * - The class typically also has @Stack (making it its own root graph)
-     * - No @Destination required on the @TabItem class itself
-     * - rootGraphClass is null (class IS the stack)
+     * - The class may have @Stack (NESTED_STACK) or @Destination (FLAT_SCREEN)
+     * - rootGraphClass is null (class IS the stack or destination)
+     *
+     * Tab type detection:
+     * - @TabItem + @Stack → [TabItemType.NESTED_STACK]
+     * - @TabItem + @Destination → [TabItemType.FLAT_SCREEN]
      *
      * @param classDeclaration The @TabItem class
      * @return TabItemInfo or null if not valid
@@ -232,8 +273,74 @@ class TabExtractor(
             it.name?.asString() == "icon"
         }?.value as? String ?: ""
 
-        // In new pattern, rootGraph should be Unit::class (meaning class IS the stack)
-        // We check if it's set to something else for validation
+        // Detect tab type and extract type-specific info
+        val tabType = detectTabItemType(classDeclaration)
+        val (destinationInfo, stackInfo) = extractTypeSpecificInfo(classDeclaration, tabType)
+        val rootGraphClass = extractRootGraphClass(tabItemAnnotation)
+
+        logger.info(
+            "Extracted @TabItem '${classDeclaration.simpleName.asString()}' " +
+                "(label='$label', icon='$icon', tabType=$tabType, " +
+                "rootGraph=${rootGraphClass?.simpleName?.asString() ?: "self"})"
+        )
+
+        @Suppress("DEPRECATION")
+        return TabItemInfo(
+            label = label,
+            icon = icon,
+            classDeclaration = classDeclaration,
+            tabType = tabType,
+            destinationInfo = destinationInfo,
+            stackInfo = stackInfo,
+            rootGraphClass = rootGraphClass,
+            destination = null // Not required for new pattern
+        )
+    }
+
+    /**
+     * Extract type-specific info based on tab type.
+     */
+    private fun extractTypeSpecificInfo(
+        classDeclaration: KSClassDeclaration,
+        tabType: TabItemType
+    ): Pair<DestinationInfo?, StackInfo?> = when (tabType) {
+        TabItemType.FLAT_SCREEN -> {
+            val destInfo = destinationExtractor.extract(classDeclaration)
+            if (destInfo == null) {
+                logger.warn(
+                    "FLAT_SCREEN TabItem '${classDeclaration.simpleName.asString()}' " +
+                        "has @Destination but extraction failed",
+                    classDeclaration
+                )
+            }
+            destInfo to null
+        }
+        TabItemType.NESTED_STACK -> {
+            val stackInfo = stackExtractor?.extract(classDeclaration)
+            if (stackInfo == null && stackExtractor != null) {
+                logger.warn(
+                    "NESTED_STACK TabItem '${classDeclaration.simpleName.asString()}' " +
+                        "has @Stack but extraction failed",
+                    classDeclaration
+                )
+            } else if (stackExtractor == null) {
+                logger.warn(
+                    "NESTED_STACK TabItem '${classDeclaration.simpleName.asString()}' " +
+                        "detected but no StackExtractor provided",
+                    classDeclaration
+                )
+            }
+            null to stackInfo
+        }
+    }
+
+    /**
+     * Extract rootGraphClass from annotation (for legacy compatibility).
+     */
+    @Suppress("DEPRECATION")
+    private fun extractRootGraphClass(
+        tabItemAnnotation: com.google.devtools.ksp.symbol.KSAnnotation
+    ): KSClassDeclaration? {
         val rootGraphType = tabItemAnnotation.arguments.find {
             it.name?.asString() == "rootGraph"
         }?.value as? KSType
@@ -241,26 +348,11 @@ class TabExtractor(
         val rootGraphQualifiedName = (rootGraphType?.declaration as? KSClassDeclaration)
             ?.qualifiedName?.asString()
 
-        val rootGraphClass = if (rootGraphQualifiedName == "kotlin.Unit" || rootGraphQualifiedName == null) {
-            // Unit::class or default → class IS its own stack (new pattern)
+        return if (rootGraphQualifiedName == "kotlin.Unit" || rootGraphQualifiedName == null) {
             null
         } else {
-            // Legacy style with explicit rootGraph reference
             rootGraphType?.declaration as? KSClassDeclaration
         }
-
-        logger.info(
-            "Extracted @TabItem '${classDeclaration.simpleName.asString()}' " +
-                "(label='$label', icon='$icon', rootGraph=${rootGraphClass?.simpleName?.asString() ?: "self"})"
-        )
-
-        return TabItemInfo(
-            label = label,
-            icon = icon,
-            classDeclaration = classDeclaration,
-            rootGraphClass = rootGraphClass,
-            destination = null // Not required for new pattern
-        )
     }
 
     /**
@@ -347,10 +439,16 @@ class TabExtractor(
             return null
         }
 
+        // Legacy pattern is always FLAT_SCREEN with explicit rootGraph
+        // (the destination is on the tab item, not on a nested stack)
+        @Suppress("DEPRECATION")
         return TabItemInfo(
             label = label,
             icon = icon,
             classDeclaration = classDeclaration,
+            tabType = TabItemType.FLAT_SCREEN,
+            destinationInfo = destination,
+            stackInfo = null,
             rootGraphClass = rootGraphClass,
             destination = destination
         )
@@ -389,20 +487,26 @@ class TabExtractor(
     }
 
     /**
-     * Extract all @Tab-annotated classes from the resolver.
+     * Extract all @Tab/@Tabs-annotated classes from the resolver.
      *
      * Automatically populates the @TabItem cache before extraction
      * to ensure sealed subclass resolution works for legacy pattern.
      *
      * @param resolver KSP resolver to query for symbols
-     * @return List of TabInfo for all @Tab-annotated classes
+     * @return List of TabInfo for all @Tab/@Tabs-annotated classes
      */
     fun extractAll(resolver: Resolver): List<TabInfo> {
         // Populate cache first to work around KSP sealed subclass issues (legacy pattern)
         populateTabItemCache(resolver)
 
-        return resolver.getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.Tab")
+        // Collect from both @Tab and @Tabs annotations
+        val tabAnnotated = resolver.getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.Tab")
             .filterIsInstance<KSClassDeclaration>()
+        val tabsAnnotated = resolver.getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.Tabs")
+            .filterIsInstance<KSClassDeclaration>()
+
+        return (tabAnnotated + tabsAnnotated)
+            .distinctBy { it.qualifiedName?.asString() }
             .mapNotNull { extract(it) }
             .toList()
     }

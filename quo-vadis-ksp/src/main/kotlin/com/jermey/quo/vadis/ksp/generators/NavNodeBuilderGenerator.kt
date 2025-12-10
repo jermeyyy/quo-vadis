@@ -9,11 +9,14 @@ import com.jermey.quo.vadis.ksp.models.PaneInfo
 import com.jermey.quo.vadis.ksp.models.PaneRole
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
+import com.jermey.quo.vadis.ksp.models.TabItemType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
 
@@ -69,6 +72,7 @@ class NavNodeBuilderGenerator(
         private val PANE_ROLE = ClassName(NAVNODE_PACKAGE, "PaneRole")
         private val ADAPT_STRATEGY = ClassName(NAVNODE_PACKAGE, "AdaptStrategy")
         private val PANE_BACK_BEHAVIOR = ClassName(NAVNODE_PACKAGE, "PaneBackBehavior")
+        private val GENERATED_TAB_METADATA = ClassName(NAVNODE_PACKAGE, "GeneratedTabMetadata")
     }
 
     /**
@@ -100,6 +104,10 @@ class NavNodeBuilderGenerator(
      * with all tab stacks initialized. Each tab references its root graph's
      * builder function.
      *
+     * Handles two tab types:
+     * - [TabItemType.NESTED_STACK]: Calls the stack's builder function
+     * - [TabItemType.FLAT_SCREEN]: Generates inline StackNode with single ScreenNode
+     *
      * @param tabInfo Extracted metadata from the @Tab annotation
      * @param stackBuilders Map of stack class names to their StackInfo (reserved for future
      *        cross-package validation; currently tab builders resolve imports dynamically)
@@ -114,19 +122,22 @@ class NavNodeBuilderGenerator(
         val fileSpec = FileSpec.builder(packageName, fileName)
             .addFileComment(FILE_COMMENT)
             .apply {
-                // Add imports for tab root graph builders
-                // In new pattern, rootGraphClass is null and the @TabItem class itself IS the stack
-                tabInfo.tabs.forEach { tabItem ->
-                    val rootGraph = tabItem.rootGraphClass ?: tabItem.classDeclaration
-                    val rootGraphName = rootGraph.simpleName.asString()
-                    val rootGraphPackage = rootGraph.packageName.asString()
-                    addImport(
-                        "$rootGraphPackage.$GENERATED_PACKAGE_SUFFIX",
-                        "build${rootGraphName}NavNode"
-                    )
-                }
+                // Add imports only for NESTED_STACK tab root graph builders
+                // FLAT_SCREEN tabs generate inline code, no imports needed
+                tabInfo.tabs
+                    .filter { it.tabType == TabItemType.NESTED_STACK }
+                    .forEach { tabItem ->
+                        val rootGraph = tabItem.rootGraphClass ?: tabItem.classDeclaration
+                        val rootGraphName = rootGraph.simpleName.asString()
+                        val rootGraphPackage = rootGraph.packageName.asString()
+                        addImport(
+                            "$rootGraphPackage.$GENERATED_PACKAGE_SUFFIX",
+                            "build${rootGraphName}NavNode"
+                        )
+                    }
             }
             .addFunction(buildTabNodeFunction(tabInfo))
+            .addFunction(buildTabMetadataFunction(tabInfo))
             .build()
 
         fileSpec.writeTo(codeGenerator, Dependencies(false))
@@ -177,6 +188,9 @@ class NavNodeBuilderGenerator(
                     "Ensure @Stack(startDestination = \"...\") matches a @Destination subclass."
             )
 
+        // Build proper ClassName for possibly nested stack class
+        val stackClassName = buildClassName(stackInfo.classDeclaration)
+
         return FunSpec.builder("build${stackInfo.className}NavNode")
             .addKdoc(
                 """
@@ -191,7 +205,7 @@ class NavNodeBuilderGenerator(
                 |@return A [%T] containing the initial navigation state
                 """.trimMargin(),
                 STACK_NODE,
-                ClassName(stackInfo.packageName, stackInfo.className),
+                stackClassName,
                 startDest.className,
                 STACK_NODE
             )
@@ -214,7 +228,8 @@ class NavNodeBuilderGenerator(
         stackInfo: StackInfo,
         startDest: com.jermey.quo.vadis.ksp.models.DestinationInfo
     ): CodeBlock {
-        val destinationClassName = ClassName(stackInfo.packageName, stackInfo.className)
+        // Build proper ClassName for possibly nested stack class
+        val destinationClassName = buildClassName(stackInfo.classDeclaration)
         val screenKey = "\$key/${startDest.className.lowercase()}"
 
         return CodeBlock.builder()
@@ -297,17 +312,54 @@ class NavNodeBuilderGenerator(
             .indent()
 
         tabInfo.tabs.forEachIndexed { index, tabItem ->
-            // In new pattern, rootGraphClass is null and classDeclaration IS the stack
-            val rootGraph = tabItem.rootGraphClass ?: tabItem.classDeclaration
-            val rootGraphName = rootGraph.simpleName.asString()
-            // For tab key: use destination className if available (legacy), otherwise classDeclaration (new)
-            val tabKey = (tabItem.destination?.className ?: tabItem.classDeclaration.simpleName.asString()).lowercase()
+            val tabKey = (tabItem.destination?.className
+                ?: tabItem.classDeclaration.simpleName.asString()).lowercase()
+            val isLast = index == tabInfo.tabs.size - 1
+            val comma = if (isLast) "" else ","
 
-            builder.add(
-                "build${rootGraphName}NavNode(key = %P, parentKey = key)%L\n",
-                "\$key/$tabKey",
-                if (index < tabInfo.tabs.size - 1) "," else ""
-            )
+            when (tabItem.tabType) {
+                TabItemType.FLAT_SCREEN -> {
+                    // Generate inline StackNode with single ScreenNode
+                    // For FLAT_SCREEN tabs, the tab class itself IS the destination
+                    val destInfo = tabItem.destinationInfo
+                    val screenKey = destInfo?.className?.lowercase() ?: tabKey
+
+                    // Build ClassName for possibly nested class
+                    val destClassName = buildClassName(tabItem.classDeclaration)
+
+                    builder.add(
+                        "%T(\n" +
+                            "    key = %P,\n" +
+                            "    parentKey = key,\n" +
+                            "    children = listOf(\n" +
+                            "        %T(\n" +
+                            "            key = %P,\n" +
+                            "            parentKey = %P,\n" +
+                            "            destination = %T\n" +
+                            "        )\n" +
+                            "    )\n" +
+                            ")%L\n",
+                        STACK_NODE,
+                        "\$key/$tabKey",
+                        SCREEN_NODE,
+                        "\$key/$tabKey/$screenKey",
+                        "\$key/$tabKey",
+                        destClassName,
+                        comma
+                    )
+                }
+                TabItemType.NESTED_STACK -> {
+                    // Use existing logic - call the stack's builder function
+                    val rootGraph = tabItem.rootGraphClass ?: tabItem.classDeclaration
+                    val rootGraphName = rootGraph.simpleName.asString()
+
+                    builder.add(
+                        "build${rootGraphName}NavNode(key = %P, parentKey = key)%L\n",
+                        "\$key/$tabKey",
+                        comma
+                    )
+                }
+            }
         }
 
         builder
@@ -317,6 +369,93 @@ class NavNodeBuilderGenerator(
             .unindent()
             .add(")\n")
 
+        return builder.build()
+    }
+
+    /**
+     * Builds a ClassName for a KSClassDeclaration, handling nested classes.
+     *
+     * For nested classes like `MainTabs.HomeTab`, this returns
+     * `ClassName(packageName, "MainTabs", "HomeTab")`.
+     */
+    private fun buildClassName(
+        classDeclaration: com.google.devtools.ksp.symbol.KSClassDeclaration
+    ): ClassName {
+        val packageName = classDeclaration.packageName.asString()
+        val simpleNames = mutableListOf<String>()
+
+        // Walk up the parent chain to collect all enclosing class names
+        var current: com.google.devtools.ksp.symbol.KSDeclaration? = classDeclaration
+        while (current is com.google.devtools.ksp.symbol.KSClassDeclaration) {
+            simpleNames.add(0, current.simpleName.asString())
+            current = current.parentDeclaration
+        }
+
+        return ClassName(packageName, simpleNames)
+    }
+
+    /**
+     * Builds the function that returns tab metadata for a @Tab container.
+     *
+     * The generated function returns a list of [GeneratedTabMetadata] containing
+     * label, icon string, and route for each tab. This can be used to build
+     * UI components like bottom navigation bars.
+     *
+     * @param tabInfo Extracted metadata from the @Tab annotation
+     * @return FunSpec for the `get{ClassName}Metadata()` function
+     */
+    private fun buildTabMetadataFunction(tabInfo: TabInfo): FunSpec {
+        return FunSpec.builder("get${tabInfo.className}Metadata")
+            .addKdoc(
+                """
+                |Returns metadata for all tabs in ${tabInfo.className}.
+                |
+                |This function provides tab display information (label, icon, route) that can
+                |be used to build navigation UI components like bottom bars or tab rows.
+                |
+                |@return List of [%T] for each tab in order
+                """.trimMargin(),
+                GENERATED_TAB_METADATA
+            )
+            .returns(List::class.asClassName().parameterizedBy(GENERATED_TAB_METADATA))
+            .addCode(buildTabMetadataCode(tabInfo))
+            .build()
+    }
+
+    /**
+     * Builds the code block that creates the list of GeneratedTabMetadata.
+     *
+     * For each tab, extracts:
+     * - label: Display name from @TabItem
+     * - icon: Icon identifier string from @TabItem
+     * - route: Route from destinationInfo (FLAT_SCREEN) or stackInfo.resolvedStartDestination (NESTED_STACK)
+     *
+     * @param tabInfo Extracted metadata from the @Tab annotation
+     * @return CodeBlock for the metadata list
+     */
+    private fun buildTabMetadataCode(tabInfo: TabInfo): CodeBlock {
+        val builder = CodeBlock.builder()
+            .add("return listOf(\n")
+            .indent()
+
+        tabInfo.tabs.forEachIndexed { index, tabItem ->
+            // Determine route based on tab type
+            val route = when (tabItem.tabType) {
+                TabItemType.FLAT_SCREEN -> tabItem.destinationInfo?.route ?: ""
+                TabItemType.NESTED_STACK -> tabItem.stackInfo?.resolvedStartDestination?.route ?: ""
+            }
+
+            builder.add(
+                "%T(label = %S, icon = %S, route = %S)%L\n",
+                GENERATED_TAB_METADATA,
+                tabItem.label,
+                tabItem.icon,
+                route,
+                if (index < tabInfo.tabs.size - 1) "," else ""
+            )
+        }
+
+        builder.unindent().add(")\n")
         return builder.build()
     }
 

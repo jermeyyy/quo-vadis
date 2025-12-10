@@ -23,7 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.ProcessDestination
-import com.jermey.navplayground.demo.tabs.HomeTab
+import com.jermey.navplayground.demo.tabs.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.utils.navigateTo
@@ -78,7 +78,7 @@ fun ProcessCompleteScreen(navigator: Navigator) {
                 onClick = {
                     // Navigate back to exit the process flow
                     // This will pop back through the entire wizard stack
-                    navigator.navigateTo { HomeTab.Tab }
+                    navigator.navigateTo { MainTabs.HomeTab }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

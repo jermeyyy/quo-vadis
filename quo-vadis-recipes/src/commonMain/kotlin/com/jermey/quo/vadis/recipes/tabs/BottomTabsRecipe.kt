@@ -22,9 +22,10 @@ import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.annotations.Tab
+import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.annotations.TabItem
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapper
+import com.jermey.quo.vadis.annotations.TabWrapper
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
 import com.jermey.quo.vadis.core.navigation.core.Destination as DestinationInterface
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
@@ -102,7 +103,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  * @see MainTabs Tab container definition
  * @see HomeDestination Per-tab stack example
  * @see bottomTabsWrapper TabWrapper implementation
- * @see com.jermey.quo.vadis.annotations.Tab
+ * @see com.jermey.quo.vadis.annotations.Tabs
  * @see com.jermey.quo.vadis.annotations.TabItem
  * @see com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
  */
@@ -152,7 +153,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  * @see SearchDestination
  * @see ProfileDestination
  */
-@Tab(name = "mainTabs", initialTab = "Home")
+@Tabs(name = "mainTabs", initialTab = "Home")
 sealed class MainTabs : DestinationInterface {
 
     /**
@@ -314,19 +315,18 @@ sealed class ProfileDestination : DestinationInterface {
 // =============================================================================
 
 /**
- * Creates a [TabWrapper] with Material 3 bottom navigation bar.
+ * Tab wrapper for MainTabs with Material 3 bottom navigation bar.
  *
- * ## TabWrapper Pattern
+ * ## @TabWrapper Annotation Pattern
  *
- * The tabWrapper pattern gives YOU full control over the scaffold while
- * the library handles content rendering. Inside the wrapper lambda,
- * `this` is a [TabWrapperScope] providing:
+ * The @TabWrapper annotation pattern gives full control over the scaffold while
+ * the library handles content rendering. The scope parameter provides:
  *
  * | Property/Method | Description |
  * |-----------------|-------------|
  * | `activeTabIndex` | Currently selected tab (0-based) |
  * | `tabCount` | Total number of tabs |
- * | `tabMetadata` | List of [TabMetadata] for UI |
+ * | `tabMetadata` | List of TabMetadata for UI |
  * | `isTransitioning` | Whether tab switch animation is in progress |
  * | `switchTab(index)` | Switch to tab by index |
  * | `switchTab(route)` | Switch to tab by route |
@@ -334,52 +334,37 @@ sealed class ProfileDestination : DestinationInterface {
  *
  * ## Example Usage
  *
+ * The wrapper is automatically discovered via KSP and registered in GeneratedWrapperRegistry.
+ *
  * ```kotlin
- * QuoVadisHost(
+ * HierarchicalQuoVadisHost(
  *     navigator = navigator,
- *     screenRegistry = GeneratedScreenRegistry,
- *     tabWrapper = bottomTabsWrapper()
+ *     enablePredictiveBack = true
  * )
  * ```
  *
- * ## Customization
- *
- * You can fully customize the wrapper:
- * - Add TopAppBar
- * - Use NavigationRail instead of NavigationBar
- * - Add FAB or other scaffold elements
- * - Apply custom themes/colors
- *
- * ```kotlin
- * val customWrapper: TabWrapper = { tabContent ->
- *     Scaffold(
- *         topBar = { TopAppBar(title = { Text("My App") }) },
- *         bottomBar = { /* your navigation bar */ },
- *         floatingActionButton = { /* your FAB */ }
- *     ) { padding ->
- *         Box(Modifier.padding(padding)) {
- *             tabContent()  // MUST call this!
- *         }
- *     }
- * }
- * ```
- *
- * @return TabWrapper for use with QuoVadisHost
+ * @param scope The TabWrapperScope providing access to tab state and navigation
+ * @param content The content slot where active tab content is rendered
  * @see TabWrapperScope
  * @see com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
  */
-fun bottomTabsWrapper(): TabWrapper = { tabContent ->
+@TabWrapper(MainTabs::class)
+@Composable
+fun BottomTabsWrapper(
+    scope: TabWrapperScope,
+    content: @Composable () -> Unit
+) {
     Scaffold(
         bottomBar = {
             NavigationBar {
                 // tabMetadata and activeTabIndex from TabWrapperScope
-                tabMetadata.forEachIndexed { index, meta ->
+                scope.tabMetadata.forEachIndexed { index, meta ->
                     NavigationBarItem(
                         icon = { Text(getTabIcon(index)) },
                         label = { Text(meta.label) },
-                        selected = activeTabIndex == index,
-                        onClick = { switchTab(index) },
-                        enabled = !isTransitioning
+                        selected = scope.activeTabIndex == index,
+                        onClick = { scope.switchTab(index) },
+                        enabled = !scope.isTransitioning
                     )
                 }
             }
@@ -387,7 +372,7 @@ fun bottomTabsWrapper(): TabWrapper = { tabContent ->
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             // Library renders active tab content here
-            tabContent()
+            content()
         }
     }
 }

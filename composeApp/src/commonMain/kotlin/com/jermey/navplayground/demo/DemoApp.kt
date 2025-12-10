@@ -8,6 +8,7 @@ import com.jermey.navplayground.demo.tabs.generated.buildMainTabsNavNode
 import com.jermey.quo.vadis.core.navigation.compose.HierarchicalQuoVadisHost
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.generated.GeneratedScreenRegistry
+import com.jermey.quo.vadis.generated.GeneratedWrapperRegistry
 
 /**
  * Main entry point for the demo application.
@@ -67,6 +68,7 @@ fun DemoApp() {
         navigator = navigator,
         modifier = Modifier.fillMaxSize(),
         screenRegistry = GeneratedScreenRegistry,
+        wrapperRegistry = GeneratedWrapperRegistry,
         enablePredictiveBack = true,
     )
 //    { destination ->

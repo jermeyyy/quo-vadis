@@ -30,9 +30,10 @@ import androidx.compose.ui.unit.dp
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.annotations.Tab
+import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.annotations.TabItem
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapper
+import com.jermey.quo.vadis.annotations.TabWrapper
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
 import com.jermey.quo.vadis.core.navigation.core.Destination as DestinationInterface
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
@@ -269,7 +270,7 @@ sealed class AppDestination : DestinationInterface {
  * @see ShopSearchDestination
  * @see ShopProfileDestination
  */
-@Tab(name = "shopTabs", initialTab = "Home")
+@Tabs(name = "shopTabs", initialTab = "Home")
 sealed class ShopTabs : DestinationInterface {
 
     /**
@@ -481,13 +482,13 @@ sealed class FullscreenDestination : DestinationInterface {
 // =============================================================================
 
 /**
- * Creates a [TabWrapper] for the shop app with bottom navigation.
+ * Tab wrapper for ShopTabs with bottom navigation.
  *
- * ## TabWrapper Responsibilities
+ * ## @TabWrapper Pattern
  *
  * 1. Render the scaffold structure (TopAppBar, BottomBar)
- * 2. Place `tabContent()` in the appropriate location
- * 3. Handle tab switching via `switchTab(index)`
+ * 2. Place `content()` in the appropriate location
+ * 3. Handle tab switching via `scope.switchTab(index)`
  *
  * ## Important: Fullscreen Content
  *
@@ -499,26 +500,32 @@ sealed class FullscreenDestination : DestinationInterface {
  * - TabNode renders: wrapper + content (z-index 0)
  * - FullscreenDestination renders: just content (z-index 1+)
  *
- * @return TabWrapper for use with QuoVadisHost
+ * @param scope The TabWrapperScope providing access to tab state and navigation
+ * @param content The content slot where active tab content is rendered
  */
-fun shopTabsWrapper(): TabWrapper = { tabContent ->
+@TabWrapper(ShopTabs::class)
+@Composable
+fun ShopTabsWrapper(
+    scope: TabWrapperScope,
+    content: @Composable () -> Unit
+) {
     Scaffold(
         bottomBar = {
             NavigationBar {
-                tabMetadata.forEachIndexed { index, meta ->
+                scope.tabMetadata.forEachIndexed { index, meta ->
                     NavigationBarItem(
                         icon = { Text(getShopTabIcon(index)) },
                         label = { Text(meta.label) },
-                        selected = activeTabIndex == index,
-                        onClick = { switchTab(index) },
-                        enabled = !isTransitioning
+                        selected = scope.activeTabIndex == index,
+                        onClick = { scope.switchTab(index) },
+                        enabled = !scope.isTransitioning
                     )
                 }
             }
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            tabContent()
+            content()
         }
     }
 }

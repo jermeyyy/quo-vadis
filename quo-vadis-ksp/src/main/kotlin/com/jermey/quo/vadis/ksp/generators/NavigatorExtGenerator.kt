@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.ksp.generators
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.PaneInfo
@@ -98,15 +99,18 @@ class NavigatorExtGenerator(
             .addFileComment(FILE_COMMENT)
             .addFileComment("\nNavigator convenience extensions for type-safe navigation")
             .apply {
-                // Add imports for all destination classes
+                // Add imports for all destination classes (top-level class only)
                 stacks.forEach { stack ->
-                    addImport(stack.packageName, stack.className)
+                    val topLevel = findTopLevelClass(stack.classDeclaration)
+                    addImport(topLevel.packageName.asString(), topLevel.simpleName.asString())
                 }
                 tabs.forEach { tab ->
-                    addImport(tab.packageName, tab.className)
+                    val topLevel = findTopLevelClass(tab.classDeclaration)
+                    addImport(topLevel.packageName.asString(), topLevel.simpleName.asString())
                 }
                 panes.forEach { pane ->
-                    addImport(pane.packageName, pane.className)
+                    val topLevel = findTopLevelClass(pane.classDeclaration)
+                    addImport(topLevel.packageName.asString(), topLevel.simpleName.asString())
                 }
             }
             .apply {
@@ -166,7 +170,9 @@ class NavigatorExtGenerator(
     private fun buildDestinationExtension(stack: StackInfo, destination: DestinationInfo): FunSpec {
         // Include stack name to avoid conflicts when multiple stacks have same destination names
         val functionName = "to${stack.className}${destination.className}"
-        val destinationType = ClassName(stack.packageName, stack.className, destination.className)
+        // Build proper ClassName for possibly nested stack class
+        val stackClassName = buildClassName(stack.classDeclaration)
+        val destinationType = stackClassName.nestedClass(destination.className)
 
         return if (destination.isDataObject) {
             // Data object - no parameters
@@ -334,5 +340,36 @@ class NavigatorExtGenerator(
             else -> ClassName.bestGuess(qualifiedName)
         }
         return baseType.copy(nullable = this.isMarkedNullable)
+    }
+
+    /**
+     * Build a ClassName for a KSClassDeclaration, handling nested classes.
+     *
+     * For nested classes like `MainTabs.SettingsTab`, this returns
+     * `ClassName(packageName, "MainTabs", "SettingsTab")`.
+     */
+    private fun buildClassName(classDeclaration: KSClassDeclaration): ClassName {
+        val packageName = classDeclaration.packageName.asString()
+        val simpleNames = mutableListOf<String>()
+
+        // Walk up the parent chain to collect all enclosing class names
+        var current: com.google.devtools.ksp.symbol.KSDeclaration? = classDeclaration
+        while (current is KSClassDeclaration) {
+            simpleNames.add(0, current.simpleName.asString())
+            current = current.parentDeclaration
+        }
+
+        return ClassName(packageName, simpleNames)
+    }
+
+    /**
+     * Find the top-level class in a nested class hierarchy.
+     */
+    private fun findTopLevelClass(decl: KSClassDeclaration): KSClassDeclaration {
+        var current = decl
+        while (current.parentDeclaration is KSClassDeclaration) {
+            current = current.parentDeclaration as KSClassDeclaration
+        }
+        return current
     }
 }

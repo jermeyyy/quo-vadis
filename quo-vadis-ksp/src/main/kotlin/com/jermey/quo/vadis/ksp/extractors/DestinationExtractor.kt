@@ -44,10 +44,12 @@ class DestinationExtractor(
         val routeParams = route?.let { extractRouteParams(it) } ?: emptyList()
 
         val isDataModifier = classDeclaration.modifiers.contains(Modifier.DATA)
+        val isSealedModifier = classDeclaration.modifiers.contains(Modifier.SEALED)
         val classKind = classDeclaration.classKind
 
         val isDataObject = isDataModifier && classKind == ClassKind.OBJECT
         val isDataClass = isDataModifier && classKind == ClassKind.CLASS
+        val isSealedClass = isSealedModifier && (classKind == ClassKind.CLASS || classKind == ClassKind.INTERFACE)
 
         val constructorParams = if (isDataClass) {
             extractConstructorParams(classDeclaration)
@@ -67,6 +69,7 @@ class DestinationExtractor(
             routeParams = routeParams,
             isDataObject = isDataObject,
             isDataClass = isDataClass,
+            isSealedClass = isSealedClass,
             constructorParams = constructorParams,
             parentSealedClass = parentSealedClass
         )

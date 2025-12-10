@@ -11,7 +11,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Pane
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.annotations.Tab
+import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.ksp.extractors.DestinationExtractor
 import com.jermey.quo.vadis.ksp.extractors.PaneExtractor
 import com.jermey.quo.vadis.ksp.extractors.ScreenExtractor
@@ -54,7 +54,7 @@ class QuoVadisSymbolProcessor(
     // Extractors for new NavNode architecture (KSP-001)
     private val destinationExtractor = DestinationExtractor(logger)
     private val stackExtractor = StackExtractor(destinationExtractor, logger)
-    private val tabExtractor = TabExtractor(destinationExtractor, logger)
+    private val tabExtractor = TabExtractor(destinationExtractor, logger, stackExtractor)
     private val paneExtractor = PaneExtractor(destinationExtractor, logger)
 
     // Generator for NavNode builders (KSP-002)
@@ -140,8 +140,8 @@ class QuoVadisSymbolProcessor(
         // Step 2: Populate @TabItem cache and extract tab info
         // This must happen before extracting tabs due to KSP sealed subclass limitations in KMP
         tabExtractor.populateTabItemCache(resolver)
-        val tabSymbols = resolver.getSymbolsWithAnnotation(Tab::class.qualifiedName!!)
-        tabSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
+        val tabsSymbols = resolver.getSymbolsWithAnnotation(Tabs::class.qualifiedName!!)
+        tabsSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
             try {
                 extractTabInfo(classDeclaration)
             } catch (e: IllegalStateException) {
@@ -207,8 +207,18 @@ class QuoVadisSymbolProcessor(
     private fun collectAllDestinations(): List<DestinationInfo> {
         val destinations = mutableListOf<DestinationInfo>()
         collectedStacks.forEach { stack -> destinations.addAll(stack.destinations) }
-        // Only collect destinations from legacy tabs (new pattern tabs don't have @Destination on @TabItem)
-        collectedTabs.forEach { tab -> destinations.addAll(tab.tabs.mapNotNull { it.destination }) }
+        // Collect destinations from tabs:
+        // - Legacy tabs: use it.destination
+        // - New FLAT_SCREEN tabs: use it.destinationInfo
+        // - NESTED_STACK tabs: destinations are in the stackInfo (already collected above)
+        collectedTabs.forEach { tab ->
+            tab.tabs.forEach { tabItem ->
+                // Prefer new destinationInfo field (for FLAT_SCREEN tabs)
+                tabItem.destinationInfo?.let { destinations.add(it) }
+                    // Fallback to legacy destination field
+                    ?: tabItem.destination?.let { destinations.add(it) }
+            }
+        }
         collectedPanes.forEach { pane -> destinations.addAll(pane.panes.map { it.destination }) }
         return destinations
     }

@@ -20,6 +20,6 @@
  * - [BottomTabsRecipe] - Simple bottom navigation with 3-4 tabs
  * - [TabWithNestedStackRecipe] - Tabs where each tab has its own navigation stack
  *
- * @see com.jermey.quo.vadis.annotations.Tab
+ * @see com.jermey.quo.vadis.annotations.Tabs
  */
 package com.jermey.quo.vadis.recipes.tabs

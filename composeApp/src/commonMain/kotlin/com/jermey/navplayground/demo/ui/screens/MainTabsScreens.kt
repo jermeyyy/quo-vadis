@@ -1,10 +1,7 @@
 package com.jermey.navplayground.demo.ui.screens
 
 import androidx.compose.runtime.Composable
-import com.jermey.navplayground.demo.tabs.ExploreTab
-import com.jermey.navplayground.demo.tabs.HomeTab
-import com.jermey.navplayground.demo.tabs.ProfileTab
-import com.jermey.navplayground.demo.tabs.SettingsTab
+import com.jermey.navplayground.demo.tabs.MainTabs
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileScreen
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -12,47 +9,47 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 /**
  * Screen mappings for MainTabs destinations.
  *
- * These wrapper functions map the MainTabs destinations (HomeTab.Tab, ExploreTab.Tab, etc.)
- * to the actual screen composables. This is necessary because the same screens are used
- * by both:
- * - TabDestination.* (used by some navigation flows)
- * - HomeTab.Tab, ExploreTab.Tab, etc. (used by the main tabs navigation tree)
+ * These wrapper functions map the MainTabs flat tab destinations to the actual
+ * screen composables. With the new mixed tab types pattern:
+ * - HomeTab, ExploreTab, ProfileTab are FLAT_SCREEN tabs (data objects with @Destination)
+ * - SettingsTab is a NESTED_STACK tab (sealed class with @Stack)
  *
- * The @Screen annotation cannot be applied multiple times to the same function,
- * so we create these thin wrapper functions to register the MainTabs destinations.
+ * The @Screen annotations bind these destinations to their composable content.
  */
 
 /**
- * Screen for HomeTab.Tab - delegates to HomeScreen.
+ * Screen for MainTabs.HomeTab - displays the home content.
  */
-@Screen(HomeTab.Tab::class)
+@Screen(MainTabs.HomeTab::class)
 @Composable
 fun HomeTabScreen(navigator: Navigator) {
     HomeScreen(navigator = navigator)
 }
 
 /**
- * Screen for ExploreTab.Tab - delegates to ExploreScreen.
+ * Screen for MainTabs.ExploreTab - displays the explore content.
  */
-@Screen(ExploreTab.Tab::class)
+@Screen(MainTabs.ExploreTab::class)
 @Composable
 fun ExploreTabScreen(navigator: Navigator) {
     ExploreScreen(navigator = navigator)
 }
 
 /**
- * Screen for ProfileTab.Tab - delegates to ProfileScreen.
+ * Screen for MainTabs.ProfileTab - displays the profile content.
  */
-@Screen(ProfileTab.Tab::class)
+@Screen(MainTabs.ProfileTab::class)
 @Composable
 fun ProfileTabScreen(navigator: Navigator) {
     ProfileScreen(navigator = navigator)
 }
 
 /**
- * Screen for SettingsTab.Tab - delegates to SettingsScreen.
+ * Screen for MainTabs.SettingsTab.SettingsMain - the root settings screen.
+ *
+ * Note: SettingsTab is a NESTED_STACK, so we bind to its start destination.
  */
-@Screen(SettingsTab.Tab::class)
+@Screen(MainTabs.SettingsTab.SettingsMain::class)
 @Composable
 fun SettingsTabScreen(navigator: Navigator) {
     SettingsScreen(navigator = navigator)

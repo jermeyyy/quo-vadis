@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.ksp.validation
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.Modifier
@@ -10,6 +11,7 @@ import com.jermey.quo.vadis.ksp.models.PaneInfo
 import com.jermey.quo.vadis.ksp.models.ScreenInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
+import com.jermey.quo.vadis.ksp.models.TabItemType
 
 /**
  * Comprehensive validation engine for Quo Vadis navigation annotations.
@@ -113,6 +115,11 @@ class ValidationEngine(
         validateContainerTypes(stacks, tabs, panes)
         validateDestinationTypes(allDestinations)
 
+        // Mixed tab type validations
+        validateTabItemAnnotations(tabs)
+        validateNestedStackTabs(tabs)
+        validateFlatScreenTabs(tabs)
+
         return !hasErrors
     }
 
@@ -134,9 +141,14 @@ class ValidationEngine(
         stacks.forEach { stack ->
             stack.destinations.forEach { containedDestinations.add(it.qualifiedName) }
         }
-        // Only legacy tabs have destinations; new pattern tabs don't require @Destination
+        // Collect destinations from tabs:
+        // - Legacy tabs: tabItem.destination
+        // - New FLAT_SCREEN tabs: tabItem.destinationInfo
         tabs.forEach { tab ->
             tab.tabs.forEach { tabItem ->
+                // New pattern: FLAT_SCREEN tabs have destinationInfo
+                tabItem.destinationInfo?.let { containedDestinations.add(it.qualifiedName) }
+                // Legacy pattern: tabs have destination field
                 tabItem.destination?.let { containedDestinations.add(it.qualifiedName) }
             }
         }
@@ -529,6 +541,117 @@ class ValidationEngine(
                     "@Destination on \"${destination.className}\" - " +
                         "Must be applied to a data object or data class"
                 )
+            }
+        }
+    }
+
+    // =========================================================================
+    // Mixed Tab Type Validations
+    // =========================================================================
+
+    /**
+     * Validates that each @TabItem has valid annotation combinations.
+     *
+     * A @TabItem must have exactly one of:
+     * - @Stack (for nested navigation with NESTED_STACK type)
+     * - @Destination (for flat screen with FLAT_SCREEN type)
+     *
+     * Having both or neither is an error.
+     */
+    private fun validateTabItemAnnotations(tabs: List<TabInfo>) {
+        tabs.forEach { tab ->
+            tab.tabs.forEach { tabItem ->
+                val hasStack = tabItem.stackInfo != null ||
+                    tabItem.classDeclaration.annotations.any { it.shortName.asString() == "Stack" }
+                val hasDestination = tabItem.destinationInfo != null ||
+                    tabItem.classDeclaration.annotations.any { it.shortName.asString() == "Destination" }
+
+                when {
+                    hasStack && hasDestination -> {
+                        reportError(
+                            tabItem.classDeclaration,
+                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' cannot have both " +
+                                "@Stack and @Destination. Use @Stack for nested navigation or @Destination for flat screen."
+                        )
+                    }
+                    !hasStack && !hasDestination -> {
+                        reportError(
+                            tabItem.classDeclaration,
+                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' must have either " +
+                                "@Stack (for nested navigation) or @Destination (for flat screen)."
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates that NESTED_STACK tabs have a valid @Stack with destinations.
+     *
+     * For tabs with [TabItemType.NESTED_STACK], the tab class must:
+     * - Be annotated with @Stack
+     * - Have at least one @Destination subclass
+     */
+    private fun validateNestedStackTabs(tabs: List<TabInfo>) {
+        tabs.forEach { tab ->
+            tab.tabs.filter { it.tabType == TabItemType.NESTED_STACK }.forEach { tabItem ->
+                val stackInfo = tabItem.stackInfo
+                if (stackInfo == null) {
+                    reportError(
+                        tabItem.classDeclaration,
+                        "NESTED_STACK tab '${tabItem.classDeclaration.simpleName.asString()}' " +
+                            "must be annotated with @Stack"
+                    )
+                } else if (stackInfo.destinations.isEmpty()) {
+                    reportError(
+                        tabItem.classDeclaration,
+                        "@Stack '${stackInfo.name}' on tab '${tabItem.classDeclaration.simpleName.asString()}' " +
+                            "has no @Destination subclasses"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates that FLAT_SCREEN tabs are data objects with valid destinations.
+     *
+     * For tabs with [TabItemType.FLAT_SCREEN], the tab class must:
+     * - Be a data object
+     * - Be annotated with @Destination
+     * - Have a route (warning if missing, for deep linking support)
+     */
+    private fun validateFlatScreenTabs(tabs: List<TabInfo>) {
+        tabs.forEach { tab ->
+            tab.tabs.filter { it.tabType == TabItemType.FLAT_SCREEN }.forEach { tabItem ->
+                val classDecl = tabItem.classDeclaration
+
+                // Must be data object
+                val isDataObject = classDecl.classKind == ClassKind.OBJECT &&
+                    classDecl.modifiers.contains(Modifier.DATA)
+
+                if (!isDataObject) {
+                    reportError(
+                        classDecl,
+                        "FLAT_SCREEN tab '${classDecl.simpleName.asString()}' must be a data object"
+                    )
+                }
+
+                // Must have @Destination with route
+                val destInfo = tabItem.destinationInfo
+                if (destInfo == null) {
+                    reportError(
+                        classDecl,
+                        "FLAT_SCREEN tab '${classDecl.simpleName.asString()}' must have @Destination"
+                    )
+                } else if (destInfo.route.isNullOrEmpty()) {
+                    reportWarning(
+                        classDecl,
+                        "@Destination on FLAT_SCREEN tab '${classDecl.simpleName.asString()}' " +
+                            "should have a route for deep linking"
+                    )
+                }
             }
         }
     }

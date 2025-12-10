@@ -1,8 +1,9 @@
 package com.jermey.navplayground.demo.tabs
 
+import com.jermey.navplayground.demo.tabs.MainTabs.*
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.annotations.Tab
+import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.annotations.TabItem
 import com.jermey.quo.vadis.core.navigation.core.Destination as DestinationDefinition
 
@@ -51,52 +52,7 @@ import com.jermey.quo.vadis.core.navigation.core.Destination as DestinationDefin
  *
  * Icon: "home" (material icon name)
  */
-@TabItem(label = "Home", icon = "home")
-@Stack(name = "homeTabStack", startDestination = "Tab")
-sealed class HomeTab : DestinationDefinition {
-    /** Root destination for the Home tab. */
-    @Destination(route = "home/tab")
-    data object Tab : HomeTab()
-}
 
-/**
- * Explore tab - Master-detail patterns and deep navigation.
- *
- * Icon: "explore" (material icon name)
- */
-@TabItem(label = "Explore", icon = "explore")
-@Stack(name = "exploreTabStack", startDestination = "Tab")
-sealed class ExploreTab : DestinationDefinition {
-    /** Root destination for the Explore tab. */
-    @Destination(route = "explore/tab")
-    data object Tab : ExploreTab()
-}
-
-/**
- * Profile tab - User profile and settings.
- *
- * Icon: "person" (material icon name)
- */
-@TabItem(label = "Profile", icon = "person")
-@Stack(name = "profileTabStack", startDestination = "Tab")
-sealed class ProfileTab : DestinationDefinition {
-    /** Root destination for the Profile tab. */
-    @Destination(route = "profile/tab")
-    data object Tab : ProfileTab()
-}
-
-/**
- * Settings tab - App configuration.
- *
- * Icon: "settings" (material icon name)
- */
-@TabItem(label = "Settings", icon = "settings")
-@Stack(name = "settingsTabStack", startDestination = "Tab")
-sealed class SettingsTab : DestinationDefinition {
-    /** Root destination for the Settings tab. */
-    @Destination(route = "settings/tab")
-    data object Tab : SettingsTab()
-}
 
 // ============================================================================
 // Tab Container - References the @TabItem classes
@@ -105,12 +61,50 @@ sealed class SettingsTab : DestinationDefinition {
 /**
  * Main tabs container that aggregates all tab definitions.
  *
- * The [Tab] annotation with [items] array provides type-safe tab references
+ * The [Tabs] annotation with [items] array provides type-safe tab references
  * and enables KSP to generate the complete navigation structure.
  */
-@Tab(
+@Tabs(
     name = "mainTabs",
     initialTab = HomeTab::class,
     items = [HomeTab::class, ExploreTab::class, ProfileTab::class, SettingsTab::class]
 )
-sealed class MainTabs : DestinationDefinition
+@Destination(route = "main/tabs")
+sealed class MainTabs : DestinationDefinition {
+
+    @TabItem(label = "Home", icon = "home")
+    @Destination(route = "main/home")
+    data object HomeTab : MainTabs()
+
+    /**
+     * Explore tab - Master-detail patterns and deep navigation.
+     *
+     * Icon: "explore" (material icon name)
+     */
+    @TabItem(label = "Explore", icon = "explore")
+    @Destination(route = "main/explore")
+    data object ExploreTab : MainTabs()
+
+    /**
+     * Profile tab - User profile and settings.
+     *
+     * Icon: "person" (material icon name)
+     */
+    @TabItem(label = "Profile", icon = "person")
+    @Destination(route = "main/profile")
+    data object ProfileTab : MainTabs()
+
+    /**
+     * Settings tab - App configuration.
+     *
+     * Icon: "settings" (material icon name)
+     */
+    @TabItem(label = "Settings", icon = "settings")
+    @Stack(name = "settingsTabStack", startDestinationClass = SettingsTab.SettingsMain::class)
+    sealed class SettingsTab : DestinationDefinition {
+        /** Root destination for the Settings tab. */
+        @Destination(route = "settings/tab")
+        data object SettingsMain : SettingsTab()
+    }
+
+}

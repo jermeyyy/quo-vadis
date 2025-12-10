@@ -72,7 +72,7 @@ package com.jermey.quo.vadis.annotations
  *   destination is not accessible via deep links.
  *
  * @see Stack
- * @see Tab
+ * @see Tabs
  * @see Pane
  * @see Screen
  */

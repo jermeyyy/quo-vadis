@@ -23,21 +23,27 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.jermey.quo.vadis.annotations.TabWrapper
 import com.jermey.quo.vadis.core.navigation.compose.HierarchicalQuoVadisHost
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapper
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
- * Creates a TabWrapper for the main tabs with bottom navigation.
+ * Tab wrapper for the main tabs with bottom navigation.
  *
- * The TabWrapper pattern gives full control over the scaffold structure
+ * The @TabWrapper annotation pattern gives full control over the scaffold structure
  * while the library handles tab content rendering and state management.
  *
- * @return A [TabWrapper] that renders a Scaffold with bottom navigation bar
+ * @param scope The TabWrapperScope providing access to tab state and navigation
+ * @param content The content slot where active tab content is rendered
  */
-fun mainTabsWrapper(): TabWrapper = { tabContent ->
-    // 'this' is TabWrapperScope - provides activeTabIndex, tabMetadata, switchTab()
+@TabWrapper(MainTabs::class)
+@Composable
+fun MainTabsWrapper(
+    scope: TabWrapperScope,
+    content: @Composable () -> Unit
+) {
     Scaffold(
         modifier = Modifier.consumeWindowInsets(
             WindowInsets()
@@ -46,10 +52,10 @@ fun mainTabsWrapper(): TabWrapper = { tabContent ->
         bottomBar = {
             MainBottomNavigationBar(
                 modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                activeTabIndex = activeTabIndex,
-                tabMetadata = tabMetadata,
-                onTabSelected = { index -> switchTab(index) },
-                isTransitioning = isTransitioning
+                activeTabIndex = scope.activeTabIndex,
+                tabMetadata = scope.tabMetadata,
+                onTabSelected = { index -> scope.switchTab(index) },
+                isTransitioning = scope.isTransitioning
             )
         }
     ) { paddingValues ->
@@ -59,7 +65,7 @@ fun mainTabsWrapper(): TabWrapper = { tabContent ->
                 .padding(paddingValues)
         ) {
             // Library renders active tab content
-            tabContent()
+            content()
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens.tabs
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,16 +18,71 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.TabsDestination
+import com.jermey.navplayground.demo.tabs.DemoTabs
 import com.jermey.navplayground.demo.tabs.generated.buildDemoTabsNavNode
 import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.annotations.TabWrapper
 import com.jermey.quo.vadis.core.navigation.compose.HierarchicalQuoVadisHost
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
+
+/**
+ * Tab wrapper for DemoTabs with scrollable tab row at the top.
+ *
+ * Uses @TabWrapper annotation pattern to provide custom tab UI chrome
+ * while the library handles tab content rendering and state management.
+ *
+ * @param scope The TabWrapperScope providing access to tab state and navigation
+ * @param content The content slot where active tab content is rendered
+ */
+@TabWrapper(DemoTabs::class)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DemoTabsWrapper(
+    scope: TabWrapperScope,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        PrimaryScrollableTabRow(
+            selectedTabIndex = scope.activeTabIndex
+        ) {
+            scope.tabMetadata.forEachIndexed { index, meta ->
+                Tab(
+                    selected = scope.activeTabIndex == index,
+                    onClick = { scope.switchTab(index) },
+                    text = { Text(meta.label) },
+                    icon = {
+                        Icon(
+                            imageVector = meta.icon ?: getDemoTabIconFallback(meta.route),
+                            contentDescription = null
+                        )
+                    }
+                )
+            }
+        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            content()
+        }
+    }
+}
+
+/**
+ * Maps route identifier to a fallback Material icon for demo tabs.
+ *
+ * @param route The tab route identifier
+ * @return An [ImageVector] icon for the route
+ */
+private fun getDemoTabIconFallback(route: String): ImageVector = when {
+    route.contains("tab1", ignoreCase = true) -> Icons.Default.Star
+    route.contains("tab2", ignoreCase = true) -> Icons.Default.Favorite
+    route.contains("tab3", ignoreCase = true) -> Icons.Default.Bookmark
+    else -> Icons.Default.Star // Fallback
+}
 
 /**
  * Tabs Main Screen - Demonstrates nested tabs navigation using the new NavNode architecture.
@@ -34,9 +90,9 @@ import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
  * This screen showcases the **new @Tab annotation pattern** and KSP-generated code:
  * - Uses `buildDemoTabsNavNode()` KSP-generated function to create a TabNode
  * - Nested `TreeNavigator` manages the tab navigation state
- * - Uses `QuoVadisHost` to render tab content
+ * - Uses `HierarchicalQuoVadisHost` to render tab content
  * - Three independent tabs (DemoTab1, DemoTab2, DemoTab3) with their own stacks
- * - Custom `PrimaryScrollableTabRow` for tab switching UI
+ * - Custom `@TabWrapper(DemoTabs::class)` provides the tab UI chrome
  *
  * ## Architecture
  *
@@ -65,10 +121,6 @@ fun TabsMainScreen(
     // Step 2: Create a nested TreeNavigator for the tabs
     val tabNavigator = remember { TreeNavigator(initialState = tabTree) }
 
-    // Step 3: Observe the active tab index for UI state
-    val navState by tabNavigator.state.collectAsState()
-    val activeTabIndex = tabNavigator.activeTabIndex ?: 0
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -81,41 +133,11 @@ fun TabsMainScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            // Custom tab bar UI - uses activeTabIndex from TreeNavigator
-            PrimaryScrollableTabRow(
-                selectedTabIndex = activeTabIndex
-            ) {
-                Tab(
-                    selected = activeTabIndex == 0,
-                    onClick = { tabNavigator.switchTab(0) },
-                    text = { Text("Tab 1") },
-                    icon = { Icon(Icons.Default.Star, null) }
-                )
-                Tab(
-                    selected = activeTabIndex == 1,
-                    onClick = { tabNavigator.switchTab(1) },
-                    text = { Text("Tab 2") },
-                    icon = { Icon(Icons.Default.Favorite, null) }
-                )
-                Tab(
-                    selected = activeTabIndex == 2,
-                    onClick = { tabNavigator.switchTab(2) },
-                    text = { Text("Tab 3") },
-                    icon = { Icon(Icons.Default.Bookmark, null) }
-                )
-            }
-
-            // Render tab content using HierarchicalQuoVadisHost with the nested navigator
-            HierarchicalQuoVadisHost(
-                navigator = tabNavigator,
-                modifier = Modifier.fillMaxSize(),
-                enablePredictiveBack = true
-            )
-        }
+        // HierarchicalQuoVadisHost uses @TabWrapper(DemoTabs::class) from registry
+        HierarchicalQuoVadisHost(
+            navigator = tabNavigator,
+            modifier = Modifier.fillMaxSize().padding(padding),
+            enablePredictiveBack = true
+        )
     }
 }

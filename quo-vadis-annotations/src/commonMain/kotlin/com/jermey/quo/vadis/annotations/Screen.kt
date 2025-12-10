@@ -76,7 +76,7 @@ import kotlin.reflect.KClass
  *
  * @see Destination
  * @see Stack
- * @see Tab
+ * @see Tabs
  * @see Pane
  */
 @Target(AnnotationTarget.FUNCTION)

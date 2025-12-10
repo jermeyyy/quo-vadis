@@ -107,7 +107,7 @@ import kotlin.reflect.KClass
  * @property tabClass The tab container class this wrapper wraps.
  *   Must be a class annotated with [@Tab].
  *
- * @see Tab
+ * @see Tabs
  * @see TabItem
  */
 @Target(AnnotationTarget.FUNCTION)

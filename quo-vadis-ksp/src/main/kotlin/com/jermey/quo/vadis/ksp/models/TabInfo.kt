@@ -3,6 +3,42 @@ package com.jermey.quo.vadis.ksp.models
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
 /**
+ * Distinguishes between flat screen tabs and nested stack tabs.
+ *
+ * Used to determine how a @TabItem should be processed and rendered:
+ * - [FLAT_SCREEN]: Tab is a single screen destination (data object with @Destination)
+ * - [NESTED_STACK]: Tab has its own navigation stack (sealed class with @Stack)
+ */
+enum class TabItemType {
+    /**
+     * Tab is a single screen destination.
+     *
+     * Pattern: `@TabItem` + `@Destination` on data object
+     * ```kotlin
+     * @TabItem(label = "Settings", icon = "settings")
+     * @Destination(route = "settings")
+     * data object SettingsTab : MainTabs
+     * ```
+     */
+    FLAT_SCREEN,
+
+    /**
+     * Tab has its own navigation stack.
+     *
+     * Pattern: `@TabItem` + `@Stack` on sealed class
+     * ```kotlin
+     * @TabItem(label = "Home", icon = "home")
+     * @Stack(name = "homeStack", startDestinationClass = HomeDestination.Feed::class)
+     * sealed class HomeTab : MainTabs {
+     *     @Destination(route = "home/feed")
+     *     data object Feed : HomeTab()
+     * }
+     * ```
+     */
+    NESTED_STACK
+}
+
+/**
  * Extracted metadata from a @Tab annotation.
  *
  * Supports two patterns:
@@ -51,38 +87,63 @@ data class TabInfo(
 /**
  * Extracted metadata from a @TabItem annotation.
  *
- * Supports two patterns:
+ * Supports two tab type patterns:
  *
- * ## New Pattern
+ * ## FLAT_SCREEN Pattern
+ * Tab is a single screen destination (data object with @Destination):
+ * ```kotlin
+ * @TabItem(label = "Settings", icon = "settings")
+ * @Destination(route = "settings")
+ * data object SettingsTab : MainTabs
+ * ```
+ * - [tabType] = [TabItemType.FLAT_SCREEN]
+ * - [destinationInfo] = DestinationInfo for this tab
+ * - [stackInfo] = null
+ *
+ * ## NESTED_STACK Pattern
+ * Tab has its own navigation stack (sealed class with @Stack):
  * ```kotlin
  * @TabItem(label = "Home", icon = "home")
- * data object HomeTab : MainTabs  // Class IS the navigation stack
+ * @Stack(name = "homeStack", startDestinationClass = HomeDestination.Feed::class)
+ * sealed class HomeTab : MainTabs {
+ *     @Destination(route = "home/feed")
+ *     data object Feed : HomeTab()
+ * }
  * ```
- * - [classDeclaration] = HomeTab class
- * - [rootGraphClass] = null (class itself is the stack)
- * - [destination] = null (not required)
+ * - [tabType] = [TabItemType.NESTED_STACK]
+ * - [destinationInfo] = null
+ * - [stackInfo] = StackInfo for this tab's stack
  *
- * ## Legacy Pattern
+ * ## Legacy Pattern (Deprecated)
  * ```kotlin
  * @TabItem(label = "Home", icon = "home", rootGraph = HomeGraph::class)
  * data object Home : MainTabs(), Destination  // Separate rootGraph
  * ```
- * - [classDeclaration] = Home class
- * - [rootGraphClass] = HomeGraph class reference
- * - [destination] = DestinationInfo for this tab item
+ * - [rootGraphClass] = HomeGraph class reference (legacy, use stackInfo instead)
+ * - [destination] = DestinationInfo for this tab item (legacy, use destinationInfo instead)
  *
  * @property label Display label for the tab (e.g., "Home")
  * @property icon Icon identifier for the tab (e.g., "home")
  * @property classDeclaration The KSP class declaration for this tab item
+ * @property tabType Type of tab: [TabItemType.FLAT_SCREEN] or [TabItemType.NESTED_STACK]
+ * @property destinationInfo Destination info for FLAT_SCREEN tabs. Null for NESTED_STACK.
+ * @property stackInfo Stack info for NESTED_STACK tabs. Null for FLAT_SCREEN.
  * @property rootGraphClass Class declaration for the root graph of this tab.
  *                          Null for new pattern where the class itself is the stack.
+ *                          Deprecated: Use [tabType] and [stackInfo] instead.
  * @property destination Destination info for this tab item.
  *                       Null for new pattern (doesn't require nested @Destination).
+ *                       Deprecated: Use [tabType] and [destinationInfo] instead.
  */
 data class TabItemInfo(
     val label: String,
     val icon: String,
     val classDeclaration: KSClassDeclaration,
-    val rootGraphClass: KSClassDeclaration?,
-    val destination: DestinationInfo?,
+    val tabType: TabItemType = TabItemType.FLAT_SCREEN,
+    val destinationInfo: DestinationInfo? = null,
+    val stackInfo: StackInfo? = null,
+    @Deprecated("Use tabType, destinationInfo, or stackInfo instead")
+    val rootGraphClass: KSClassDeclaration? = null,
+    @Deprecated("Use tabType and destinationInfo instead")
+    val destination: DestinationInfo? = null,
 )

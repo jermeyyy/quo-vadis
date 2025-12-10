@@ -116,7 +116,7 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class Tab(
+annotation class Tabs(
     val name: String,
     val initialTab: KClass<*> = Unit::class,
     val items: Array<KClass<*>> = [],
@@ -216,7 +216,7 @@ annotation class Tab(
  *   that the annotated class IS the stack. This parameter is kept for
  *   backward compatibility with the legacy nested subclass pattern.
  *
- * @see Tab
+ * @see Tabs
  * @see Stack
  * @see Destination
  */

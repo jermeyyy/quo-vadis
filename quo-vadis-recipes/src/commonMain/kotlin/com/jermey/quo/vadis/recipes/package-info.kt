@@ -29,7 +29,7 @@
  *
  * @see com.jermey.quo.vadis.core.navigation.compose.QuoVadisHost
  * @see com.jermey.quo.vadis.annotations.Stack
- * @see com.jermey.quo.vadis.annotations.Tab
+ * @see com.jermey.quo.vadis.annotations.Tabs
  * @see com.jermey.quo.vadis.annotations.Destination
  * @see com.jermey.quo.vadis.annotations.Screen
  */

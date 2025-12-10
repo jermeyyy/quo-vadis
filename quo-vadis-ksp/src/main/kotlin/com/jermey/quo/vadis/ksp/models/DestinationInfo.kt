@@ -12,6 +12,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
  * @property routeParams List of route parameter names extracted from the route pattern
  * @property isDataObject True if this is a `data object`
  * @property isDataClass True if this is a `data class`
+ * @property isSealedClass True if this is a `sealed class` or `sealed interface`
  * @property constructorParams List of constructor parameters (for data classes)
  * @property parentSealedClass Simple name of the parent sealed class, if any
  */
@@ -23,6 +24,7 @@ data class DestinationInfo(
     val routeParams: List<String>,
     val isDataObject: Boolean,
     val isDataClass: Boolean,
+    val isSealedClass: Boolean,
     val constructorParams: List<ParamInfo>,
     val parentSealedClass: String?
 )
