@@ -49,8 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.TabDestination
-import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.flowmvi.compose.StoreScreen
 import kotlinx.coroutines.launch
@@ -67,7 +65,6 @@ import org.koin.compose.koinInject
  * - Action handling for side effects (toasts, navigation)
  * - Koin dependency injection
  */
-@Screen(TabDestination.Profile::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(

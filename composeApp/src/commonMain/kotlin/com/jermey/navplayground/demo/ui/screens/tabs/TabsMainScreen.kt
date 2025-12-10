@@ -24,9 +24,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.TabsDestination
 import com.jermey.navplayground.demo.tabs.DemoTabs
 import com.jermey.navplayground.demo.tabs.generated.buildDemoTabsNavNode
+import com.jermey.navplayground.demo.tabs.generated.getMainTabsMetadata
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.annotations.TabWrapper
-import com.jermey.quo.vadis.core.navigation.compose.HierarchicalQuoVadisHost
+import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
@@ -51,14 +52,14 @@ fun DemoTabsWrapper(
         PrimaryScrollableTabRow(
             selectedTabIndex = scope.activeTabIndex
         ) {
-            scope.tabMetadata.forEachIndexed { index, meta ->
+            getMainTabsMetadata().forEachIndexed { index, meta ->
                 Tab(
                     selected = scope.activeTabIndex == index,
                     onClick = { scope.switchTab(index) },
                     text = { Text(meta.label) },
                     icon = {
                         Icon(
-                            imageVector = meta.icon ?: getDemoTabIconFallback(meta.route),
+                            imageVector = getDemoTabIconFallback(meta.route),
                             contentDescription = null
                         )
                     }
@@ -134,7 +135,7 @@ fun TabsMainScreen(
         }
     ) { padding ->
         // HierarchicalQuoVadisHost uses @TabWrapper(DemoTabs::class) from registry
-        HierarchicalQuoVadisHost(
+        NavigationHost(
             navigator = tabNavigator,
             modifier = Modifier.fillMaxSize().padding(padding),
             enablePredictiveBack = true

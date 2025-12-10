@@ -16,11 +16,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.TabDestination
 import com.jermey.navplayground.demo.destinations.DeepLinkDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.TabsDestination
+import com.jermey.navplayground.demo.tabs.MainTabs
 import com.jermey.quo.vadis.core.navigation.core.Destination
 
 @Composable
@@ -46,7 +46,7 @@ fun NavigationBottomSheetContent(
             label = "Home",
             description = "Main dashboard",
             selected = currentRoute == "home",
-            onClick = { onNavigate(TabDestination.Home) }
+            onClick = { onNavigate(MainTabs.HomeTab) }
         )
 
         BottomSheetNavigationItem(
@@ -86,7 +86,7 @@ fun NavigationBottomSheetContent(
             label = "Settings",
             description = "App settings",
             selected = currentRoute == "settings",
-            onClick = { onNavigate(TabDestination.Settings) }
+            onClick = { onNavigate(MainTabs.SettingsTab.SettingsMain) }
         )
     }
 }

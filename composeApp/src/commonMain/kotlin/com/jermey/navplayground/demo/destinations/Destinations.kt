@@ -50,52 +50,6 @@ import com.jermey.quo.vadis.annotations.Stack
  */
 
 /**
- * Top-level destinations exposed by the demo application.
- */
-sealed class DemoDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
-    @Destination(route = "demo_root")
-    data object Root : DemoDestination()
-}
-
-/**
- * Top-level app destinations.
- * 
- * Contains only the main entry point of the application.
- * This is the root stack registered with the parent navigator.
- */
-@Stack(name = "app", startDestination = "MainTabs")
-sealed class AppDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
-    @Destination(route = "app/main_tabs")
-    data object MainTabs : AppDestination()
-}
-
-/**
- * Tab content destinations - used as root destinations for each tab.
- * 
- * These are the 4 main tabs in the bottom navigation:
- * - Home: Showcase of navigation patterns
- * - Explore: Master-detail and deep navigation
- * - Profile: Profile management flows
- * - Settings: App configuration
- * 
- * These destinations are used by tab navigators, not the parent navigator.
- */
-@Stack(name = "tabs_content", startDestination = "Home")
-sealed class TabDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
-    @Destination(route = "tab/home")
-    data object Home : TabDestination()
-    
-    @Destination(route = "tab/explore")
-    data object Explore : TabDestination()
-    
-    @Destination(route = "tab/profile")
-    data object Profile : TabDestination()
-    
-    @Destination(route = "tab/settings")
-    data object Settings : TabDestination()
-}
-
-/**
  * Deep link demo destination.
  * 
  * Accessible from anywhere via modal bottom sheet.

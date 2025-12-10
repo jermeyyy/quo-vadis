@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.jermey.navplayground.demo.tabs.generated.buildMainTabsNavNode
-import com.jermey.quo.vadis.core.navigation.compose.HierarchicalQuoVadisHost
+import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.generated.GeneratedScreenRegistry
 import com.jermey.quo.vadis.generated.GeneratedWrapperRegistry
@@ -64,22 +64,11 @@ fun DemoApp() {
     // Step 4: Render with QuoVadisHost
     // The content lambda uses GeneratedScreenRegistry to map destinations to composables
     // renderingMode toggles between Flattened (stable) and Hierarchical (experimental)
-    HierarchicalQuoVadisHost(
+    NavigationHost(
         navigator = navigator,
         modifier = Modifier.fillMaxSize(),
         screenRegistry = GeneratedScreenRegistry,
         wrapperRegistry = GeneratedWrapperRegistry,
         enablePredictiveBack = true,
     )
-//    { destination ->
-//        // GeneratedScreenRegistry.Content renders the @Screen-annotated composable
-//        // for the given destination. 'this' provides QuoVadisHostScope which extends
-//        // SharedTransitionScope for shared element transitions.
-//        GeneratedScreenRegistry.Content(
-//            destination = destination,
-//            navigator = navigator,
-//            sharedTransitionScope = this,
-//            animatedVisibilityScope = null
-//        )
-//    }
 }

@@ -1,10 +1,10 @@
 package com.jermey.navplayground.demo
 
-import com.jermey.navplayground.demo.destinations.TabDestination
 import com.jermey.navplayground.demo.destinations.DeepLinkDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.TabsDestination
+import com.jermey.navplayground.demo.tabs.MainTabs
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
@@ -19,7 +19,7 @@ fun setupDemoDeepLinks(navigator: Navigator) {
     val handler = navigator.getDeepLinkHandler()
 
     handler.register("app://demo/home") { _, nav, _ ->
-        nav.navigate(TabDestination.Home)
+        nav.navigate(MainTabs.HomeTab)
     }
 
     handler.register("app://demo/item/{id}") { _, nav, params ->
@@ -35,7 +35,7 @@ fun setupDemoDeepLinks(navigator: Navigator) {
     }
 
     handler.register("app://demo/settings") { _, nav, _ ->
-        nav.navigate(TabDestination.Settings)
+        nav.navigate(MainTabs.SettingsTab.SettingsMain)
     }
 
     handler.register("app://demo/deeplink") { _, nav, _ ->

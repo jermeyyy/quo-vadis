@@ -24,7 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.quo.vadis.annotations.TabWrapper
-import com.jermey.quo.vadis.core.navigation.compose.HierarchicalQuoVadisHost
+import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -87,7 +87,7 @@ fun MainTabsScreen(
     navigator: Navigator,
     modifier: Modifier = Modifier
 ) {
-    HierarchicalQuoVadisHost(
+    NavigationHost(
         navigator = navigator,
         modifier = modifier,
         enablePredictiveBack = true

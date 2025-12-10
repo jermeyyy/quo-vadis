@@ -40,7 +40,7 @@ import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 /**
  * Provides access to the current [NavRenderScope] within the hierarchical navigation tree.
  *
- * This composition local is provided by [HierarchicalQuoVadisHost] and allows
+ * This composition local is provided by [NavigationHost] and allows
  * any composable within the navigation hierarchy to access shared resources
  * and state required for rendering, including:
  *
@@ -67,11 +67,11 @@ import com.jermey.quo.vadis.core.navigation.core.TreeMutator
  *
  * ## Availability
  *
- * This local is only available within content rendered by [HierarchicalQuoVadisHost].
+ * This local is only available within content rendered by [NavigationHost].
  * Accessing it outside of this context will return `null`.
  *
  * @see NavRenderScope
- * @see HierarchicalQuoVadisHost
+ * @see NavigationHost
  */
 public val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
 
@@ -148,7 +148,7 @@ public val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
  * @see LocalNavRenderScope
  */
 @Composable
-public fun HierarchicalQuoVadisHost(
+public fun NavigationHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
     screenRegistry: ScreenRegistry = EmptyScreenRegistry,

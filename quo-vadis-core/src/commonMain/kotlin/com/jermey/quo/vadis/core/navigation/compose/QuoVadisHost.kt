@@ -91,7 +91,7 @@ public interface QuoVadisHostScope : SharedTransitionScope {
  *   Defaults to `true`. Set to `false` to disable gesture-based back previews.
  *
  * @see QuoVadisHostScope
- * @see HierarchicalQuoVadisHost
+ * @see NavigationHost
  */
 @Composable
 public fun QuoVadisHost(
@@ -100,7 +100,7 @@ public fun QuoVadisHost(
     enablePredictiveBack: Boolean = true
 ) {
     // Delegate to hierarchical rendering
-    HierarchicalQuoVadisHost(
+    NavigationHost(
         navigator = navigator,
         modifier = modifier,
         enablePredictiveBack = enablePredictiveBack,
@@ -140,7 +140,7 @@ public fun QuoVadisHost(
     enablePredictiveBack: Boolean = true
 ) {
     // Delegate to hierarchical rendering
-    HierarchicalQuoVadisHost(
+    NavigationHost(
         navigator = navigator,
         modifier = modifier,
         enablePredictiveBack = enablePredictiveBack,

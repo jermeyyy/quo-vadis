@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,23 +39,19 @@ import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
-import com.jermey.navplayground.demo.destinations.TabDestination
 import com.jermey.navplayground.demo.destinations.TabsDestination
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.NavigationPatternCard
-import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
 import navplayground.composeapp.generated.resources.Res
-import navplayground.composeapp.generated.resources.compose_multiplatform
 import navplayground.composeapp.generated.resources.logo
 import org.jetbrains.compose.resources.imageResource
 
 /**
  * Home Screen - Main entry point with navigation to all patterns
  */
-@Screen(TabDestination.Home::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
