@@ -2,11 +2,16 @@ package com.jermey.navplayground.demo
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.jermey.navplayground.demo.tabs.generated.buildMainTabsNavNode
 import com.jermey.navplayground.demo.tabs.mainTabsWrapper
+import com.jermey.navplayground.demo.ui.theme.rememberRenderingModeManager
+import com.jermey.quo.vadis.core.navigation.compose.HierarchicalQuoVadisHost
 import com.jermey.quo.vadis.core.navigation.compose.QuoVadisHost
+import com.jermey.quo.vadis.core.navigation.compose.RenderingMode
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.generated.GeneratedScreenRegistry
 
@@ -61,22 +66,28 @@ fun DemoApp() {
     // TreeNavigator manages StateFlow<NavNode> and provides navigation operations
     val navigator = remember { TreeNavigator(initialState = navTree) }
 
-    // Step 3: Render with QuoVadisHost
+    // Step 3: Get rendering mode from manager (allows Settings toggle)
+//    val renderingModeManager = rememberRenderingModeManager()
+//    val renderingMode by renderingModeManager.renderingMode.collectAsState()
+
+    // Step 4: Render with QuoVadisHost
     // The content lambda uses GeneratedScreenRegistry to map destinations to composables
-    QuoVadisHost(
+    // renderingMode toggles between Flattened (stable) and Hierarchical (experimental)
+    HierarchicalQuoVadisHost(
         navigator = navigator,
         modifier = Modifier.fillMaxSize(),
-        tabWrapper = mainTabsWrapper(),
-        enablePredictiveBack = true
-    ) { destination ->
-        // GeneratedScreenRegistry.Content renders the @Screen-annotated composable
-        // for the given destination. 'this' provides QuoVadisHostScope which extends
-        // SharedTransitionScope for shared element transitions.
-        GeneratedScreenRegistry.Content(
-            destination = destination,
-            navigator = navigator,
-            sharedTransitionScope = this,
-            animatedVisibilityScope = null
-        )
-    }
+        screenRegistry = GeneratedScreenRegistry,
+        enablePredictiveBack = true,
+    )
+//    { destination ->
+//        // GeneratedScreenRegistry.Content renders the @Screen-annotated composable
+//        // for the given destination. 'this' provides QuoVadisHostScope which extends
+//        // SharedTransitionScope for shared element transitions.
+//        GeneratedScreenRegistry.Content(
+//            destination = destination,
+//            navigator = navigator,
+//            sharedTransitionScope = this,
+//            animatedVisibilityScope = null
+//        )
+//    }
 }

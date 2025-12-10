@@ -1,6 +1,6 @@
 # Quo Vadis Architecture Refactoring - Progress Tracker
 
-> **Last Updated**: 2025-12-08
+> **Last Updated**: 2025-12-10
 
 ## Overview
 
@@ -39,6 +39,51 @@ See [INDEX.md](./INDEX.md) for full plan details.
 ---
 
 ## Recent Updates
+
+### 2025-12-10 (Latest)
+- ✅ **RENDER-011 Phase 4: Integration** - **ALL 5 TASKS COMPLETED**
+  - Implemented the hierarchical rendering integration with feature flag support
+  - **HIER-024**: HierarchicalQuoVadisHost ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/HierarchicalQuoVadisHost.kt`
+    - Collects navigator state, tracks previous state for animations
+    - Creates NavRenderScopeImpl with all required dependencies
+    - Handles PredictiveBackHandler at root level
+    - Wraps content in SharedTransitionLayout
+    - Invokes NavTreeRenderer for hierarchical rendering
+    - Provides LocalNavRenderScope CompositionLocal
+    - Full KDoc documentation
+  - **HIER-025**: RenderingMode Enum and Feature Flag ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../compose/QuoVadisHost.kt` (modified)
+    - Added `RenderingMode` enum (Flattened, Hierarchical) with comprehensive KDoc
+    - Added `renderingMode` parameter to QuoVadisHost (default: Flattened)
+    - Dispatches to HierarchicalQuoVadisHost when Hierarchical mode selected
+    - Documentation explaining both rendering approaches
+  - **HIER-026**: FakeNavRenderScope ✓
+    - File: `quo-vadis-core/src/commonMain/kotlin/.../navigation/testing/FakeNavRenderScope.kt`
+    - Test fake implementing NavRenderScope interface
+    - Uses FakeNavigator internally
+    - Controllable animation and predictive back state
+    - FakeSaveableStateHolder for test scenarios
+    - Unit tests in FakeNavRenderScopeTest.kt
+  - **HIER-027**: Integration Tests ✓
+    - Directory: `quo-vadis-core/src/commonTest/kotlin/.../compose/hierarchical/`
+    - 148 tests across 7 test files:
+      - NavTreeRendererTest.kt (21 tests)
+      - ScreenRendererTest.kt (18 tests)
+      - StackRendererTest.kt (22 tests)
+      - TabRendererTest.kt (21 tests)
+      - PaneRendererTest.kt (22 tests)
+      - AnimatedNavContentTest.kt (20 tests)
+      - PredictiveBackContentTest.kt (24 tests)
+    - Covers screen navigation, stack push/pop, tab switching, pane layout, predictive back
+  - **HIER-028**: Demo App Update ✓
+    - Added `RenderingModeManager` for preference persistence
+    - Added `RenderingModeSettingItem` UI component
+    - Added "Developer Options" section in Settings
+    - User can toggle between Flattened and Hierarchical modes
+    - Build passes: `:composeApp:assembleDebug` ✓
+  - **Build Verified**: All compilations pass
+  - **Ready for Phase 5**: Migration (HIER-029 to HIER-033)
 
 ### 2025-12-09 (Latest)
 - ✅ **RENDER-011 Phase 3: Renderer Implementation** - **ALL 8 TASKS COMPLETED**

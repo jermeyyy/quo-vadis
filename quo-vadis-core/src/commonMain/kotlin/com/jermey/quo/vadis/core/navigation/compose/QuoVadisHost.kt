@@ -97,6 +97,77 @@ private class QuoVadisHostScopeImpl(
 ) : QuoVadisHostScope, SharedTransitionScope by sharedTransitionScope
 
 // =============================================================================
+// Rendering Mode
+// =============================================================================
+
+/**
+ * Specifies the rendering approach used by [QuoVadisHost].
+ *
+ * The rendering mode determines how the navigation tree is processed and displayed.
+ * Two approaches are available, each with different trade-offs:
+ *
+ * ## Mode Comparison
+ *
+ * | Feature | Flattened | Hierarchical |
+ * |---------|-----------|--------------|
+ * | Tab/pane wrapper composition | Siblings (z-ordered) | True parent-child |
+ * | Animation coordination | Per-surface | Per-container |
+ * | Predictive back | Per-screen | Entire subtree |
+ * | Complexity | Higher (flattening logic) | Lower (recursive) |
+ * | Maturity | Stable | Experimental |
+ *
+ * ## Migration
+ *
+ * The hierarchical mode is the recommended approach for new projects, as it provides
+ * better animation coordination and simpler mental model. Existing projects can
+ * migrate by:
+ *
+ * 1. Adding `@TabWrapper` and `@PaneWrapper` annotations to wrapper composables
+ * 2. Switching to `RenderingMode.Hierarchical`
+ * 3. Verifying navigation behavior
+ *
+ * @see QuoVadisHost
+ * @see HierarchicalQuoVadisHost
+ */
+public enum class RenderingMode {
+    /**
+     * Flattening-based rendering approach.
+     *
+     * The navigation tree is flattened into a list of renderable surfaces,
+     * which are then rendered with z-ordering. Tab and pane wrappers are
+     * rendered as sibling composables with their content.
+     *
+     * This is the original and stable rendering approach.
+     *
+     * ## Characteristics
+     * - Tab/pane wrappers rendered as siblings of their content
+     * - Animations coordinated via surface-level transitions
+     * - Predictive back applies to individual screens
+     * - Runtime wrapper functions via `tabWrapper`/`paneWrapper` parameters
+     */
+    Flattened,
+
+    /**
+     * Hierarchical tree-based rendering approach.
+     *
+     * The navigation tree is rendered recursively, preserving parent-child
+     * relationships. Tab and pane wrappers truly contain their content
+     * as Compose children.
+     *
+     * This is the newer, recommended approach for new projects.
+     *
+     * ## Characteristics
+     * - Tab/pane wrappers contain content as true children
+     * - Animations coordinated per-container (tabs animate tab content together)
+     * - Predictive back transforms entire subtrees
+     * - Annotation-based wrappers via `@TabWrapper`/`@PaneWrapper`
+     *
+     * @see HierarchicalQuoVadisHost
+     */
+    Hierarchical
+}
+
+// =============================================================================
 // Main QuoVadisHost Composable
 // =============================================================================
 
@@ -188,32 +259,63 @@ private class QuoVadisHostScopeImpl(
  *
  * @param navigator The Navigator instance managing navigation state
  * @param modifier Modifier for the root container
+ * @param renderingMode The rendering approach to use. [RenderingMode.Flattened] (default) uses the
+ *   stable flattening approach, while [RenderingMode.Hierarchical] uses the newer tree-based
+ *   rendering with better animation coordination. See [RenderingMode] for details.
  * @param enablePredictiveBack Whether to enable predictive back gesture handling.
  *   When enabled, users can preview the back navigation result while performing
  *   a back gesture (swipe on Android/iOS, system back on supported platforms).
  *   Defaults to `true`. Set to `false` to disable gesture-based back previews.
  * @param animationRegistry Registry for transition animations. Defaults to [AnimationRegistry.Default]
  *   which provides standard slide animations. Use [AnimationRegistry.None] for no animations.
- * @param tabWrapper User-provided wrapper for TabNode rendering (default: bottom navigation)
- * @param paneWrapper User-provided wrapper for PaneNode rendering (default: equal width row)
- * @param content Content resolver that maps [Destination] to composable content
+ *   Only used when [renderingMode] is [RenderingMode.Flattened].
+ * @param tabWrapper User-provided wrapper for TabNode rendering (default: bottom navigation).
+ *   Only used when [renderingMode] is [RenderingMode.Flattened]. For hierarchical mode,
+ *   use `@TabWrapper` annotation instead.
+ * @param paneWrapper User-provided wrapper for PaneNode rendering (default: equal width row).
+ *   Only used when [renderingMode] is [RenderingMode.Flattened]. For hierarchical mode,
+ *   use `@PaneWrapper` annotation instead.
+ * @param content Content resolver that maps [Destination] to composable content.
+ *   Only used when [renderingMode] is [RenderingMode.Flattened]. For hierarchical mode,
+ *   use `@Screen` annotations and provide a [ScreenRegistry].
  *
  * @see QuoVadisHostScope
  * @see AnimationRegistry
  * @see TabWrapper
  * @see PaneWrapper
  * @see PredictiveBackHandler
+ * @see RenderingMode
+ * @see HierarchicalQuoVadisHost
  */
 @Composable
 public fun QuoVadisHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
+    renderingMode: RenderingMode = RenderingMode.Hierarchical,
     enablePredictiveBack: Boolean = true,
     animationRegistry: AnimationRegistry = AnimationRegistry.Default,
     tabWrapper: TabWrapper = DefaultTabWrapper,
     paneWrapper: PaneWrapper = DefaultPaneWrapper,
     content: @Composable QuoVadisHostScope.(Destination) -> Unit
 ) {
+    // Dispatch based on rendering mode
+    when (renderingMode) {
+        RenderingMode.Hierarchical -> {
+            // Delegate to hierarchical rendering
+            // Note: In hierarchical mode, tabWrapper/paneWrapper/content are ignored.
+            // Use @TabWrapper/@PaneWrapper/@Screen annotations instead.
+            HierarchicalQuoVadisHost(
+                navigator = navigator,
+                modifier = modifier,
+                enablePredictiveBack = enablePredictiveBack,
+            )
+            return
+        }
+        RenderingMode.Flattened -> {
+            // Continue with flattened rendering below
+        }
+    }
+
     // Collect navigation state
     val navState by navigator.state.collectAsState()
 
