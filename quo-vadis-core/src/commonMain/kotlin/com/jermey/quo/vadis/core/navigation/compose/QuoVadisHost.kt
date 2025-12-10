@@ -144,7 +144,20 @@ public enum class RenderingMode {
      * - Animations coordinated via surface-level transitions
      * - Predictive back applies to individual screens
      * - Runtime wrapper functions via `tabWrapper`/`paneWrapper` parameters
+     *
+     * @deprecated Use [Hierarchical] mode instead. The flattened rendering approach
+     *   will be removed in a future version. Migrate by:
+     *   1. Adding `@TabWrapper`/`@PaneWrapper` annotations to wrapper composables
+     *   2. Using `@Screen` annotations for destination content
+     *   3. Switching to `RenderingMode.Hierarchical`
+     *   See migration guide: `quo-vadis-core/docs/MIGRATION_HIERARCHICAL_RENDERING.md`
      */
+    @Deprecated(
+        message = "Use RenderingMode.Hierarchical instead. The flattened rendering approach " +
+            "will be removed in a future version. Migrate by using @TabWrapper/@PaneWrapper " +
+            "annotations for wrappers and @Screen annotations for destination content.",
+        replaceWith = ReplaceWith("Hierarchical")
+    )
     Flattened,
 
     /**

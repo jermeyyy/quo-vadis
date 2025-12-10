@@ -13,7 +13,15 @@ import com.jermey.quo.vadis.core.navigation.core.PaneRole
  * - Selecting appropriate default animations
  * - Debugging and inspection
  * - Conditional rendering logic
+ *
+ * @deprecated This enum is part of the flattened rendering approach which will be removed
+ *   in a future version. Use [RenderingMode.Hierarchical] instead.
  */
+@Deprecated(
+    message = "SurfaceNodeType is part of the flattened rendering approach which will be removed. " +
+        "Use RenderingMode.Hierarchical instead.",
+    level = DeprecationLevel.WARNING
+)
 public enum class SurfaceNodeType {
     /** From a ScreenNode - leaf destination */
     SCREEN,
@@ -39,7 +47,15 @@ public enum class SurfaceNodeType {
  * - Differentiated caching strategies (wrapper vs content caching)
  * - Animation selection (cross-navigator vs intra-navigator)
  * - Predictive back gesture handling
+ *
+ * @deprecated This enum is part of the flattened rendering approach which will be removed
+ *   in a future version. Use [RenderingMode.Hierarchical] instead.
  */
+@Deprecated(
+    message = "SurfaceRenderingMode is part of the flattened rendering approach which will be removed. " +
+        "Use RenderingMode.Hierarchical instead.",
+    level = DeprecationLevel.WARNING
+)
 public enum class SurfaceRenderingMode {
     /** ScreenNode - just one composable */
     SINGLE_SCREEN,
@@ -71,7 +87,15 @@ public enum class SurfaceRenderingMode {
  * - [Entering] surfaces are animating into view
  * - [Exiting] surfaces are animating out of view
  * - [Hidden] surfaces should not be rendered
+ *
+ * @deprecated This interface is part of the flattened rendering approach which will be removed
+ *   in a future version. Use [RenderingMode.Hierarchical] instead.
  */
+@Deprecated(
+    message = "SurfaceTransitionState is part of the flattened rendering approach which will be removed. " +
+        "Use RenderingMode.Hierarchical instead.",
+    level = DeprecationLevel.WARNING
+)
 @Immutable
 public sealed interface SurfaceTransitionState {
 
@@ -117,7 +141,15 @@ public sealed interface SurfaceTransitionState {
  *
  * @property enter Animation to play when this surface enters the viewport.
  * @property exit Animation to play when this surface exits the viewport.
+ *
+ * @deprecated This class is part of the flattened rendering approach which will be removed
+ *   in a future version. Use [NavTransition] with [RenderingMode.Hierarchical] instead.
  */
+@Deprecated(
+    message = "SurfaceAnimationSpec is part of the flattened rendering approach which will be removed. " +
+        "Use NavTransition with RenderingMode.Hierarchical instead.",
+    level = DeprecationLevel.WARNING
+)
 @Immutable
 public data class SurfaceAnimationSpec(
     val enter: EnterTransition,
@@ -142,7 +174,15 @@ public data class SurfaceAnimationSpec(
  *
  * @property paneRole The role/identifier of this pane in the layout
  * @property content The composable content to render in this pane
+ *
+ * @deprecated This class is part of the flattened rendering approach which will be removed
+ *   in a future version. Use [PaneContentSlot] with [RenderingMode.Hierarchical] instead.
  */
+@Deprecated(
+    message = "PaneStructure is part of the flattened rendering approach which will be removed. " +
+        "Use PaneContentSlot with RenderingMode.Hierarchical instead.",
+    level = DeprecationLevel.WARNING
+)
 @Immutable
 public data class PaneStructure(
     val paneRole: PaneRole,
@@ -193,7 +233,17 @@ public data class PaneStructure(
  * @property parentWrapperId For TAB_CONTENT and PANE_CONTENT, identifies the wrapper this belongs to
  * @property previousSurfaceId For animations/predictive back: the previous surface in the same container
  * @property paneStructures For PANE_WRAPPER in multi-pane mode: pane structures provided to user
+ *
+ * @deprecated This class is part of the flattened rendering approach which will be removed
+ *   in a future version. Use [RenderingMode.Hierarchical] with annotation-based wrappers
+ *   (`@TabWrapper`, `@PaneWrapper`, `@Screen`) instead.
+ *   See migration guide: `quo-vadis-core/docs/MIGRATION_HIERARCHICAL_RENDERING.md`
  */
+@Deprecated(
+    message = "RenderableSurface is part of the flattened rendering approach which will be removed. " +
+        "Use RenderingMode.Hierarchical with @TabWrapper/@PaneWrapper/@Screen annotations instead.",
+    level = DeprecationLevel.WARNING
+)
 @Immutable
 public data class RenderableSurface(
     val id: String,

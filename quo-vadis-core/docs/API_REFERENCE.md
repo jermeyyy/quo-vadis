@@ -302,6 +302,180 @@ fun UserProfileContent(data: UserData, navigator: Navigator) {
 
 ---
 
+### @TabWrapper (Hierarchical Rendering)
+
+Marks a composable function as a tab wrapper for use with `RenderingMode.Hierarchical`.
+
+```kotlin
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class TabWrapper(val tabClass: KClass<*>)
+```
+
+**Signature Requirements:**
+- Receiver: `TabWrapperScope`
+- Parameter: `content: @Composable () -> Unit`
+
+**Example:**
+```kotlin
+@TabWrapper(tabClass = MainTabs::class)
+@Composable
+fun TabWrapperScope.MainTabWrapper(content: @Composable () -> Unit) {
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                tabs.forEachIndexed { index, tab ->
+                    NavigationBarItem(
+                        selected = activeIndex == index,
+                        onClick = { switchTab(index) },
+                        icon = { Icon(tab.metadata?.icon, tab.metadata?.label ?: "") },
+                        label = { Text(tab.metadata?.label ?: "") }
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            content()  // Library renders active tab content here
+        }
+    }
+}
+```
+
+**TabWrapperScope Properties:**
+- `navigator: Navigator` - Current navigator instance
+- `activeIndex: Int` - Currently selected tab index
+- `tabs: List<TabInfo>` - List of all tab configurations
+- `switchTab(index: Int)` - Function to change tabs
+
+---
+
+### @PaneWrapper (Hierarchical Rendering)
+
+Marks a composable function as a pane wrapper for adaptive layouts.
+
+```kotlin
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class PaneWrapper(val paneClass: KClass<*>)
+```
+
+**Signature Requirements:**
+- Receiver: `PaneWrapperScope`
+- Parameter: `content: @Composable () -> Unit`
+
+**Example:**
+```kotlin
+@PaneWrapper(paneClass = ListDetailPane::class)
+@Composable
+fun PaneWrapperScope.ListDetailWrapper(content: @Composable () -> Unit) {
+    if (isExpanded) {
+        // Multi-pane layout for larger screens
+        Row(modifier = Modifier.fillMaxSize()) {
+            paneContents.forEach { pane ->
+                val weight = when (pane.role) {
+                    PaneRole.Primary -> 0.65f
+                    PaneRole.Supporting -> 0.35f
+                    else -> 1f
+                }
+                if (pane.isVisible) {
+                    Box(modifier = Modifier.weight(weight)) {
+                        pane.content()
+                    }
+                }
+            }
+        }
+    } else {
+        // Single pane for compact screens
+        content()
+    }
+}
+```
+
+**PaneWrapperScope Properties:**
+- `navigator: Navigator` - Current navigator instance
+- `paneContents: List<PaneContentSlot>` - Pane configurations
+- `activePaneRole: PaneRole?` - Currently active pane (compact mode)
+- `isExpanded: Boolean` - True if multi-pane layout should be used
+
+---
+
+### @Transition (Hierarchical Rendering)
+
+Defines per-destination transition animations.
+
+```kotlin
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Transition(
+    val type: TransitionType,
+    val customTransition: KClass<*> = Unit::class
+)
+```
+
+**TransitionType Values:**
+- `SlideHorizontal` - Slide in/out from right
+- `SlideVertical` - Slide in/out from bottom
+- `Fade` - Fade in/out
+- `None` - No animation
+- `Custom` - Use custom transition class
+
+**Example:**
+```kotlin
+// Standard transition type
+@Destination(route = "details/{id}")
+@Transition(type = TransitionType.SlideHorizontal)
+data class DetailsDestination(val id: String)
+
+// Custom transition
+@Destination(route = "modal")
+@Transition(type = TransitionType.Custom, customTransition = ModalTransition::class)
+data class ModalDestination
+
+// Custom transition implementation
+object ModalTransition : CustomNavTransition {
+    override fun createNavTransition(): NavTransition = NavTransition(
+        enter = slideInVertically { it } + fadeIn(),
+        exit = fadeOut(),
+        popEnter = fadeIn(),
+        popExit = slideOutVertically { it } + fadeOut()
+    )
+}
+```
+
+---
+
+### @Screen (Hierarchical Rendering)
+
+Maps a destination to its screen composable for hierarchical rendering.
+
+```kotlin
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Screen(val destination: KClass<*>)
+```
+
+**Example:**
+```kotlin
+@Screen(destination = HomeDestination::class)
+@Composable
+fun HomeScreen() {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text("Welcome Home")
+    }
+}
+
+@Screen(destination = ProfileDestination::class)
+@Composable
+fun ProfileScreen(destination: ProfileDestination) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text("Profile: ${destination.userId}")
+    }
+}
+```
+
+---
+
 ### Generated Code
 
 #### Route Registration

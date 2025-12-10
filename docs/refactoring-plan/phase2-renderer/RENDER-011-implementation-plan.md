@@ -1,7 +1,7 @@
 # RENDER-011: Implementation Plan
 
 **Related**: [RENDER-011-hierarchical-engine.md](RENDER-011-hierarchical-engine.md)  
-**Status**: In Progress (Phase 1, 2, 3 & 4 Complete)  
+**Status**: ✅ Complete (All 5 Phases)  
 **Created**: 2025-12-09
 **Last Updated**: 2025-12-10
 
@@ -19,7 +19,7 @@ This document breaks down the hierarchical rendering engine architecture into ac
 | 2. KSP Updates | HIER-009 to HIER-015 | 1.5 weeks | 2 | ✅ Complete |
 | 3. Renderer Implementation | HIER-016 to HIER-023 | 2.5 weeks | 2 | ✅ Complete |
 | 4. Integration | HIER-024 to HIER-028 | 1 week | 1 | ✅ Complete |
-| 5. Migration | HIER-029 to HIER-033 | 0.5 weeks | 1 | ⚪ Not Started |
+| 5. Migration | HIER-029 to HIER-033 | 0.5 weeks | 1 | ✅ Complete |
 
 **Total Estimated Timeline**: ~7.5 weeks (with parallelization)
 
@@ -594,42 +594,46 @@ HIER-033 (future, after deprecation period)
 
 ---
 
-## Phase 5: Migration
+## Phase 5: Migration ✅ COMPLETE
 
 > **Goal**: Deprecate old API and provide migration guidance.
 > **Breaking Changes**: Deprecations (warnings only)
+> **Status**: All 4 active tasks completed (2025-12-10). HIER-033 deferred.
 
-### HIER-029: Deprecate Runtime Wrappers
+### HIER-029: Deprecate Runtime Wrappers ✅
 
 | Attribute | Value |
 |-----------|-------|
 | **Description** | Mark runtime wrapper parameters as deprecated |
 | **Dependencies** | HIER-028 |
 | **Effort** | S |
-| **Files** | `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/QuoVadisHost.kt` |
+| **Files** | `quo-vadis-core/.../compose/wrapper/TabWrapper.kt`, `PaneWrapper.kt`, `QuoVadisHost.kt` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] `@Deprecated` annotation on tabWrapper parameter
-- [ ] `@Deprecated` annotation on paneWrapper parameter
-- [ ] Deprecation message pointing to @TabWrapper/@PaneWrapper annotations
-- [ ] ReplaceWith hint where applicable
+- [x] `@Deprecated` annotation on `TabWrapper` type alias
+- [x] `@Deprecated` annotation on `PaneWrapper` type alias
+- [x] `@Deprecated` on `RenderingMode.Flattened` enum value
+- [x] Deprecation message pointing to @TabWrapper/@PaneWrapper annotations
+- [x] ReplaceWith hint on RenderingMode.Flattened
 
-### HIER-030: Deprecate RenderableSurface API
+### HIER-030: Deprecate RenderableSurface API ✅
 
 | Attribute | Value |
 |-----------|-------|
 | **Description** | Mark flattening API as deprecated |
 | **Dependencies** | HIER-028 |
 | **Effort** | S |
-| **Files** | `quo-vadis-core/src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/` (multiple) |
+| **Files** | `quo-vadis-core/.../compose/RenderableSurface.kt`, `TreeFlattener.kt` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] `@Deprecated` on RenderableSurface class
-- [ ] `@Deprecated` on TreeFlattener class
-- [ ] `@Deprecated` on RenderingMode.Flattened
-- [ ] Clear migration guidance in deprecation message
+- [x] `@Deprecated` on `RenderableSurface` data class
+- [x] `@Deprecated` on `TreeFlattener` class
+- [x] `@Deprecated` on `SurfaceNodeType`, `SurfaceRenderingMode`, `SurfaceTransitionState`, `SurfaceAnimationSpec`, `PaneStructure`
+- [x] Clear migration guidance in deprecation messages
 
-### HIER-031: Migration Guide Document
+### HIER-031: Migration Guide Document ✅
 
 | Attribute | Value |
 |-----------|-------|
@@ -637,32 +641,35 @@ HIER-033 (future, after deprecation period)
 | **Dependencies** | HIER-029, HIER-030 |
 | **Effort** | M |
 | **Files** | `quo-vadis-core/docs/MIGRATION_HIERARCHICAL_RENDERING.md` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] Overview of changes
-- [ ] Step-by-step migration instructions
-- [ ] Before/after code examples
-- [ ] Runtime wrapper → annotation migration
-- [ ] Common issues and solutions
-- [ ] FAQ section
+- [x] Overview of changes (mode comparison table)
+- [x] Step-by-step migration instructions (checklist)
+- [x] Before/after code examples for TabWrapper, PaneWrapper, Screen
+- [x] Runtime wrapper → annotation migration
+- [x] Custom animation migration (@Transition)
+- [x] Common issues and solutions (4 documented)
+- [x] Version timeline section
 
-### HIER-032: Documentation Update
+### HIER-032: Documentation Update ✅
 
 | Attribute | Value |
 |-----------|-------|
 | **Description** | Update all documentation to reflect new architecture |
 | **Dependencies** | HIER-031 |
 | **Effort** | M |
-| **Files** | `quo-vadis-core/docs/` (multiple), `README.md` |
+| **Files** | `quo-vadis-core/docs/ARCHITECTURE.md`, `API_REFERENCE.md`, `README.md` |
+| **Status** | ✅ Complete |
 
 **Acceptance Criteria**:
-- [ ] ARCHITECTURE.md updated
-- [ ] API_REFERENCE.md updated
-- [ ] All code examples updated
-- [ ] Deprecation notices added where relevant
-- [ ] New annotations documented
+- [x] ARCHITECTURE.md updated (Section 9: Hierarchical Rendering Architecture)
+- [x] API_REFERENCE.md updated (@TabWrapper, @PaneWrapper, @Transition, @Screen sections)
+- [x] README.md updated (Hierarchical Rendering in Key Features)
+- [x] New annotations documented with examples
+- [x] Link to migration guide from ARCHITECTURE.md
 
-### HIER-033: Cleanup Task (Future)
+### HIER-033: Cleanup Task (Future) ⏸️ DEFERRED
 
 | Attribute | Value |
 |-----------|-------|
@@ -670,6 +677,7 @@ HIER-033 (future, after deprecation period)
 | **Dependencies** | HIER-030 (after deprecation period) |
 | **Effort** | M |
 | **Files** | Multiple |
+| **Status** | ⏸️ Deferred to future major version |
 
 **Acceptance Criteria**:
 - [ ] Remove RenderableSurface and related classes

@@ -51,7 +51,17 @@ import com.jermey.quo.vadis.core.navigation.core.TabNode
  * @property contentResolver Function to resolve NavNode to @Composable content
  * @property animationResolver Function to resolve animations for node transitions
  * @property zOrderIncrement Z-order increment per depth level
+ *
+ * @deprecated This class is part of the flattened rendering approach which will be removed
+ *   in a future version. Use [RenderingMode.Hierarchical] with annotation-based wrappers
+ *   (`@TabWrapper`, `@PaneWrapper`, `@Screen`) instead.
+ *   See migration guide: `quo-vadis-core/docs/MIGRATION_HIERARCHICAL_RENDERING.md`
  */
+@Deprecated(
+    message = "TreeFlattener is part of the flattened rendering approach which will be removed. " +
+        "Use RenderingMode.Hierarchical with @TabWrapper/@PaneWrapper/@Screen annotations instead.",
+    level = DeprecationLevel.WARNING
+)
 public class TreeFlattener(
     private val contentResolver: ContentResolver,
     private val animationResolver: AnimationResolver = DefaultAnimationResolver,

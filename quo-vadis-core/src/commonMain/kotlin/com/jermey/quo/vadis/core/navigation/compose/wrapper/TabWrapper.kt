@@ -55,7 +55,18 @@ import androidx.compose.runtime.Composable
  *
  * @see TabWrapperScope
  * @see DefaultTabWrapper
+ *
+ * @deprecated Use the `@com.jermey.quo.vadis.annotations.TabWrapper` annotation instead.
+ *   This runtime type alias is part of the flattened rendering approach which will be removed
+ *   in a future version. Migrate by creating a composable function annotated with `@TabWrapper`
+ *   that has `TabWrapperScope` as receiver and a `content: @Composable () -> Unit` parameter.
+ *   See migration guide: `quo-vadis-core/docs/MIGRATION_HIERARCHICAL_RENDERING.md`
  */
+@Deprecated(
+    message = "Use @com.jermey.quo.vadis.annotations.TabWrapper annotation instead. " +
+        "This runtime type alias is part of the flattened rendering approach which will be removed.",
+    level = DeprecationLevel.WARNING
+)
 public typealias TabWrapper = @Composable TabWrapperScope.(
     tabContent: @Composable () -> Unit
 ) -> Unit

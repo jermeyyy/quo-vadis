@@ -72,7 +72,18 @@ import androidx.compose.runtime.Composable
  * @see PaneWrapperScope
  * @see PaneContent
  * @see DefaultPaneWrapper
+ *
+ * @deprecated Use the `@com.jermey.quo.vadis.annotations.PaneWrapper` annotation instead.
+ *   This runtime type alias is part of the flattened rendering approach which will be removed
+ *   in a future version. Migrate by creating a composable function annotated with `@PaneWrapper`
+ *   that has `PaneWrapperScope` as receiver and a `content: @Composable () -> Unit` parameter.
+ *   See migration guide: `quo-vadis-core/docs/MIGRATION_HIERARCHICAL_RENDERING.md`
  */
+@Deprecated(
+    message = "Use @com.jermey.quo.vadis.annotations.PaneWrapper annotation instead. " +
+        "This runtime type alias is part of the flattened rendering approach which will be removed.",
+    level = DeprecationLevel.WARNING
+)
 public typealias PaneWrapper = @Composable PaneWrapperScope.(
     paneContents: List<PaneContent>
 ) -> Unit

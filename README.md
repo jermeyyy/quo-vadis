@@ -32,6 +32,7 @@ This project consists of **two main components**:
 - ✅ **Tabbed Navigation** - Annotation-based generation of tabbed navigation with independent backstacks
 - ✅ **FlowMVI Integration** - Built-in support for FlowMVI state management via `quo-vadis-core-flow-mvi` module
 - ✅ **Transitions & Animations** - Built-in and custom transitions
+- ✅ **Hierarchical Rendering** - True parent-child composition with coordinated animations
 - ✅ **DI Framework Support** - Easy integration with Koin, Kodein, etc.
 - ✅ **Testable** - FakeNavigator for unit testing
 - ✅ **No External Dependencies** - Independent navigation library
