@@ -52,7 +52,7 @@ fun DemoTabsWrapper(
         PrimaryScrollableTabRow(
             selectedTabIndex = scope.activeTabIndex
         ) {
-            getMainTabsMetadata().forEachIndexed { index, meta ->
+            scope.tabMetadata.forEachIndexed { index, meta ->
                 Tab(
                     selected = scope.activeTabIndex == index,
                     onClick = { scope.switchTab(index) },

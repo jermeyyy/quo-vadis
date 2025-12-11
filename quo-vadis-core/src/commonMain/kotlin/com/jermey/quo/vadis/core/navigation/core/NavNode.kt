@@ -151,6 +151,9 @@ data class StackNode(
  *   This is typically the simple name of the tab class (e.g., "MainTabs")
  *   and is used by the hierarchical renderer to find the correct wrapper.
  *   Defaults to null, which means no custom wrapper is registered.
+ * @property tabMetadata Metadata for each tab (label, icon, route) from @TabItem annotations.
+ *   This is populated by KSP-generated code and used by the renderer to provide
+ *   proper tab information to wrapper composables. Empty list uses fallback generation.
  */
 @Serializable
 @SerialName("tab")
@@ -159,7 +162,8 @@ data class TabNode(
     override val parentKey: String?,
     val stacks: List<StackNode>,
     val activeStackIndex: Int = 0,
-    val wrapperKey: String? = null
+    val wrapperKey: String? = null,
+    val tabMetadata: List<GeneratedTabMetadata> = emptyList()
 ) : NavNode {
 
     init {

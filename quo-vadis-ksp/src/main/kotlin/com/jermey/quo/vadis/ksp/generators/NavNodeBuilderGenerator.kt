@@ -366,7 +366,30 @@ class NavNodeBuilderGenerator(
             .unindent()
             .add("),\n")
             .add("activeStackIndex = initialTabIndex,\n")
-            .add("wrapperKey = %S\n", tabInfo.className)
+            .add("wrapperKey = %S,\n", tabInfo.className)
+            .add("tabMetadata = listOf(\n")
+            .indent()
+
+        // Add inline tab metadata
+        tabInfo.tabs.forEachIndexed { index, tabItem ->
+            // Determine route based on tab type
+            val route = when (tabItem.tabType) {
+                TabItemType.FLAT_SCREEN -> tabItem.destinationInfo?.route ?: ""
+                TabItemType.NESTED_STACK -> tabItem.stackInfo?.resolvedStartDestination?.route ?: ""
+            }
+
+            builder.add(
+                "%T(label = %S, icon = %S, route = %S)%L\n",
+                GENERATED_TAB_METADATA,
+                tabItem.label,
+                tabItem.icon,
+                route,
+                if (index < tabInfo.tabs.size - 1) "," else ""
+            )
+        }
+
+        builder.unindent()
+            .add(")\n")
             .unindent()
             .add(")\n")
 

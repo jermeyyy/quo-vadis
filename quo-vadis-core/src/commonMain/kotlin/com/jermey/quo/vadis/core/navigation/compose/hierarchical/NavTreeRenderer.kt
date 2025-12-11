@@ -447,25 +447,35 @@ internal fun TabRenderer(
 }
 
 /**
- * Creates [TabMetadata] list from the stacks in a [TabNode].
+ * Creates [TabMetadata] list from a [TabNode].
  *
- * Since [TabNode] contains [StackNode]s which may not have explicit metadata,
- * this function generates default metadata based on the stack keys and indices.
- *
- * In a production scenario, metadata would typically come from:
- * - Annotations on destination classes
- * - A metadata registry populated during navigation graph setup
- * - The first screen in each stack (if it provides metadata)
+ * If the [TabNode.tabMetadata] list (from KSP-generated code) is non-empty,
+ * it is converted to runtime [TabMetadata] objects. Otherwise, fallback metadata
+ * is generated from stack keys and indices.
  *
  * @param node The TabNode to extract metadata from
  * @return List of [TabMetadata] for each tab in order
  */
 private fun createTabMetadataFromStacks(node: TabNode): List<TabMetadata> {
+    // Use KSP-generated metadata if available
+    if (node.tabMetadata.isNotEmpty()) {
+        return node.tabMetadata.map { generated ->
+            TabMetadata(
+                label = generated.label,
+                icon = null, // Icons are resolved by wrapper via route-based fallback
+                route = generated.route,
+                contentDescription = null,
+                badge = null
+            )
+        }
+    }
+
+    // Fallback: generate metadata from stack keys
     return node.stacks.mapIndexed { index, stack ->
         TabMetadata(
-            label = stack.key.substringAfterLast("_").takeIf { it.isNotEmpty() }
+            label = stack.key.substringAfterLast("/").takeIf { it.isNotEmpty() }
                 ?: "Tab ${index + 1}",
-            icon = null, // Icons would come from a registry or annotations
+            icon = null,
             route = stack.key,
             contentDescription = null,
             badge = null
