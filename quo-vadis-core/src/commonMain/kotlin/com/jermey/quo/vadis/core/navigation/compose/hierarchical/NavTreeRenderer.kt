@@ -99,7 +99,7 @@ import com.jermey.quo.vadis.core.navigation.core.TabNode
  * @see PaneNode
  */
 @Composable
-internal fun NavTreeRenderer(
+internal fun NavNodeRenderer(
     node: NavNode,
     previousNode: NavNode?,
     scope: NavRenderScope,
@@ -253,7 +253,7 @@ internal fun ScreenRenderer(
  *
  * @see StackNode
  * @see AnimatedNavContent
- * @see NavTreeRenderer
+ * @see NavNodeRenderer
  */
 @Composable
 internal fun StackRenderer(
@@ -290,7 +290,7 @@ internal fun StackRenderer(
         modifier = modifier
     ) { child ->
         // Recurse to render the active child
-        NavTreeRenderer(
+        NavNodeRenderer(
             node = child,
             previousNode = previousActiveChild,
             scope = scope
@@ -435,7 +435,7 @@ internal fun TabRenderer(
                     modifier = Modifier
                 ) { stack ->
                     // Recurse to render the active stack
-                    NavTreeRenderer(
+                    NavNodeRenderer(
                         node = stack,
                         previousNode = previousActiveStack,
                         scope = scope
@@ -627,7 +627,7 @@ internal fun PaneRenderer(
  * ## Content Slot Rendering
  *
  * Each [PaneContent] slot's content lambda recursively renders its [NavNode]
- * via [NavTreeRenderer]. This maintains the proper Compose hierarchy and enables:
+ * via [NavNodeRenderer]. This maintains the proper Compose hierarchy and enables:
  * - Independent state management per pane
  * - Proper animations within each pane
  * - Nested navigation support (stacks within panes)
@@ -661,7 +661,7 @@ private fun MultiPaneRenderer(
 
             if (paneNavNode != null) {
                 // Recurse to render the pane content
-                NavTreeRenderer(
+                NavNodeRenderer(
                     node = paneNavNode,
                     previousNode = previousPaneNavNode,
                     scope = scope
@@ -722,7 +722,7 @@ private fun SinglePaneRenderer(
         modifier = Modifier
     ) { paneNavNode ->
         // Recurse to render the active pane content
-        NavTreeRenderer(
+        NavNodeRenderer(
             node = paneNavNode,
             previousNode = previousActivePaneContent,
             scope = scope

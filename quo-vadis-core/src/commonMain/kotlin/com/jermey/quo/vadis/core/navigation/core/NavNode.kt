@@ -92,16 +92,27 @@ data class ScreenNode(
  * - **Pop**: Removes last node from [children]
  * - **Empty Stack**: May trigger cascading pop to parent (configurable)
  *
+ * ## Scope-Aware Navigation
+ *
+ * When [scopeKey] is set, [TreeMutator.push] with a [ScopeRegistry] will check
+ * if destinations belong to this stack's scope. Out-of-scope destinations
+ * navigate to the parent stack instead, preserving this stack for
+ * predictive back gestures.
+ *
  * @property key Unique identifier for this stack
  * @property parentKey Key of the containing TabNode or PaneNode (null if root)
  * @property children Ordered list of child nodes (last = active)
+ * @property scopeKey Identifier for scope-aware navigation. When set, destinations
+ *   not in this scope will navigate outside the stack. Typically the
+ *   sealed class simple name (e.g., "AuthFlow"). Defaults to null (no scope enforcement).
  */
 @Serializable
 @SerialName("stack")
 data class StackNode(
     override val key: String,
     override val parentKey: String?,
-    val children: List<NavNode> = emptyList()
+    val children: List<NavNode> = emptyList(),
+    val scopeKey: String? = null
 ) : NavNode {
 
     /**
@@ -143,6 +154,13 @@ data class StackNode(
  * - **Push**: Affects only the active stack
  * - **Pop**: Removes from active stack; if empty, may switch tabs (configurable)
  *
+ * ## Scope-Aware Navigation
+ *
+ * When [scopeKey] is set, [TreeMutator.push] with a [ScopeRegistry] will check
+ * if destinations belong to this container's scope. Out-of-scope destinations
+ * navigate to the parent stack instead, preserving the tab container for
+ * predictive back gestures.
+ *
  * @property key Unique identifier for this tab container
  * @property parentKey Key of the containing node (null if root)
  * @property stacks List of StackNodes, one per tab
@@ -154,6 +172,9 @@ data class StackNode(
  * @property tabMetadata Metadata for each tab (label, icon, route) from @TabItem annotations.
  *   This is populated by KSP-generated code and used by the renderer to provide
  *   proper tab information to wrapper composables. Empty list uses fallback generation.
+ * @property scopeKey Identifier for scope-aware navigation. When set, destinations
+ *   not in this scope will navigate outside the tab container. Typically the
+ *   sealed class simple name (e.g., "MainTabs"). Defaults to null (no scope enforcement).
  */
 @Serializable
 @SerialName("tab")
@@ -163,7 +184,8 @@ data class TabNode(
     val stacks: List<StackNode>,
     val activeStackIndex: Int = 0,
     val wrapperKey: String? = null,
-    val tabMetadata: List<GeneratedTabMetadata> = emptyList()
+    val tabMetadata: List<GeneratedTabMetadata> = emptyList(),
+    val scopeKey: String? = null
 ) : NavNode {
 
     init {
@@ -278,11 +300,21 @@ data class PaneConfiguration(
  * - **Supporting Pane**: Main content (Primary) + Context panel (Supporting)
  * - **Multi-Column**: Navigation rail + Content + Detail (all three roles)
  *
+ * ## Scope-Aware Navigation
+ *
+ * When [scopeKey] is set, [TreeMutator.push] with a [ScopeRegistry] will check
+ * if destinations belong to this container's scope. Out-of-scope destinations
+ * navigate to the parent stack instead, preserving the pane container for
+ * predictive back gestures.
+ *
  * @property key Unique identifier for this pane container
  * @property parentKey Key of containing node (null if root)
  * @property paneConfigurations Map of pane roles to their configurations
  * @property activePaneRole The pane that currently has navigation focus
  * @property backBehavior How back navigation should behave in this container
+ * @property scopeKey Identifier for scope-aware navigation. When set, destinations
+ *   not in this scope will navigate outside the pane container. Typically the
+ *   sealed class simple name. Defaults to null (no scope enforcement).
  */
 @Serializable
 @SerialName("pane")
@@ -291,7 +323,8 @@ data class PaneNode(
     override val parentKey: String?,
     val paneConfigurations: Map<PaneRole, PaneConfiguration>,
     val activePaneRole: PaneRole = PaneRole.Primary,
-    val backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange
+    val backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange,
+    val scopeKey: String? = null
 ) : NavNode {
 
     init {
@@ -512,6 +545,26 @@ fun NavNode.nodeCount(): Int {
         is PaneNode -> 1 + paneConfigurations.values.sumOf { it.content.nodeCount() }
     }
 }
+
+/**
+ * Determines if this node can handle back internally (has content to pop/switch).
+ * For StackNode: true if size > 1
+ * For TabNode: true if active stack can go back OR not on initial tab
+ * For PaneNode: true if any pane has content to pop
+ */
+fun NavNode.canHandleBackInternally(): Boolean = when (this) {
+    is ScreenNode -> false
+    is StackNode -> canGoBack
+    is TabNode -> activeStack.canGoBack || activeStackIndex != 0
+    is PaneNode -> paneConfigurations.values.any {
+        it.content.activeStack()?.canGoBack == true
+    }
+}
+
+/**
+ * Check if this is a root node (has no parent).
+ */
+fun NavNode.isRoot(): Boolean = parentKey == null
 
 // =============================================================================
 // Key Generation Utility

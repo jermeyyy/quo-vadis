@@ -9,18 +9,6 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-// Force Compose Multiplatform version alignment
-configurations.all {
-    resolutionStrategy {
-        force("org.jetbrains.compose.material3:material3:1.9.0")
-        force("org.jetbrains.compose.material3:material3-desktop:1.9.0")
-        force("org.jetbrains.compose.ui:ui:1.9.0")
-        force("org.jetbrains.compose.ui:ui-desktop:1.9.0")
-        force("org.jetbrains.compose.runtime:runtime:1.9.0")
-        force("org.jetbrains.compose.runtime:runtime-desktop:1.9.0")
-    }
-}
-
 kotlin {
     androidTarget {
         compilerOptions {

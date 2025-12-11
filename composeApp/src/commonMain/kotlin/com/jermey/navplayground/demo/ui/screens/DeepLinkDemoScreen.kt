@@ -114,9 +114,9 @@ private fun DeepLinkDemoScreenContent(
         item {
             DeepLinkCard(
                 title = "Navigate to Home",
-                deepLink = "app://demo/home",
+                deepLink = "app://main/home",
                 description = "Simple deep link to home screen",
-                onClick = { onNavigateViaDeepLink("app://demo/home") }
+                onClick = { onNavigateViaDeepLink("app://main/home") }
             )
         }
 
@@ -124,9 +124,9 @@ private fun DeepLinkDemoScreenContent(
         item {
             DeepLinkCard(
                 title = "Navigate to Item Detail",
-                deepLink = "app://demo/item/42",
+                deepLink = "app://master_detail/detail/42",
                 description = "Deep link with path parameter (item ID: 42)",
-                onClick = { onNavigateViaDeepLink("app://demo/item/42") }
+                onClick = { onNavigateViaDeepLink("app://master_detail/detail/42") }
             )
         }
 
@@ -134,9 +134,9 @@ private fun DeepLinkDemoScreenContent(
         item {
             DeepLinkCard(
                 title = "Start Process Flow",
-                deepLink = "app://demo/process/start",
+                deepLink = "app://process/start",
                 description = "Deep link to wizard process",
-                onClick = { onNavigateViaDeepLink("app://demo/process/start") }
+                onClick = { onNavigateViaDeepLink("app://process/start") }
             )
         }
 

@@ -15,7 +15,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.jermey.navplayground.demo.destinations.SettingsDestination
+import com.jermey.navplayground.demo.tabs.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
@@ -28,7 +28,6 @@ private fun SettingsDetailContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text(title) },
                 navigationIcon = {
                     IconButton(onClick = { navigator.navigateBack() }) {
@@ -52,19 +51,19 @@ private fun SettingsDetailContent(
     }
 }
 
-@Screen(SettingsDestination.Profile::class)
+@Screen(MainTabs.SettingsTab.Profile::class)
 @Composable
 fun ProfileSettingsScreen(navigator: Navigator) {
     SettingsDetailContent(title = "Profile", navigator = navigator)
 }
 
-@Screen(SettingsDestination.Notifications::class)
+@Screen(MainTabs.SettingsTab.Notifications::class)
 @Composable
 fun NotificationsSettingsScreen(navigator: Navigator) {
     SettingsDetailContent(title = "Notifications", navigator = navigator)
 }
 
-@Screen(SettingsDestination.About::class)
+@Screen(MainTabs.SettingsTab.About::class)
 @Composable
 fun AboutSettingsScreen(navigator: Navigator) {
     SettingsDetailContent(title = "About", navigator = navigator)

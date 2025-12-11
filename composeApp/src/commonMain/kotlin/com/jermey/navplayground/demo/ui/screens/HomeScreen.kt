@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.AssistantDirection
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.AuthFlowDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
@@ -94,6 +96,12 @@ fun HomeScreen(
                     StateDrivenDemoDestination.Demo,
                     NavigationTransitions.SlideHorizontal
                 )
+            },
+            onNavigateToAuthFlow = {
+                navigator.navigate(
+                    AuthFlowDestination.Login,
+                    NavigationTransitions.SlideHorizontal
+                )
             }
         )
     }
@@ -124,7 +132,8 @@ private fun HomeScreenContent(
     onNavigateToMasterDetail: () -> Unit,
     onNavigateToTabs: () -> Unit,
     onNavigateToProcess: () -> Unit,
-    onNavigateToStateDriven: () -> Unit
+    onNavigateToStateDriven: () -> Unit,
+    onNavigateToAuthFlow: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -181,6 +190,13 @@ private fun HomeScreenContent(
             title = "State-Driven Navigation",
             description = "Navigation 3-style backstack manipulation",
             onClick = onNavigateToStateDriven
+        )
+
+        NavigationPatternCard(
+            icon = Icons.Default.Lock,
+            title = "Auth Flow (Scoped Stack)",
+            description = "Scope-aware navigation with in/out of scope destinations",
+            onClick = onNavigateToAuthFlow
         )
 
         Spacer(Modifier.weight(1f))

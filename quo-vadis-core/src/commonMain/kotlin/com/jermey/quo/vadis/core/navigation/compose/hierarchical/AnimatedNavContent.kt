@@ -117,8 +117,13 @@ internal fun <T : NavNode> AnimatedNavContent(
         )
     } else {
         // Standard AnimatedContent transition
+        // Use contentKey to compare nodes by their key, not object reference.
+        // This prevents duplicate SaveableStateProvider keys when a node's
+        // internal state changes (e.g., TabNode.activeStackIndex) but its key
+        // stays the same.
         AnimatedContent(
             targetState = targetState,
+            contentKey = { it.key },
             transitionSpec = {
                 // Determine navigation direction for proper animation selection
                 // Back navigation: target matches previous state (returning to where we were)

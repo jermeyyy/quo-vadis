@@ -45,11 +45,11 @@ fun ProfileTabScreen(navigator: Navigator) {
 }
 
 /**
- * Screen for MainTabs.SettingsTab.SettingsMain - the root settings screen.
+ * Screen for MainTabs.SettingsTab.Main - the root settings screen.
  *
  * Note: SettingsTab is a NESTED_STACK, so we bind to its start destination.
  */
-@Screen(MainTabs.SettingsTab.SettingsMain::class)
+@Screen(MainTabs.SettingsTab.Main::class)
 @Composable
 fun SettingsTabScreen(navigator: Navigator) {
     SettingsScreen(navigator = navigator)

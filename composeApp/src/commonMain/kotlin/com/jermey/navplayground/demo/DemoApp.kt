@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import com.jermey.navplayground.demo.tabs.generated.buildMainTabsNavNode
 import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
+import com.jermey.quo.vadis.generated.GeneratedScopeRegistry
 import com.jermey.quo.vadis.generated.GeneratedScreenRegistry
 import com.jermey.quo.vadis.generated.GeneratedWrapperRegistry
 
@@ -29,6 +30,19 @@ import com.jermey.quo.vadis.generated.GeneratedWrapperRegistry
  * - **`GeneratedScreenRegistry`**: KSP-generated object that maps `Destination` types
  *   to `@Screen`-annotated composable functions.
  *
+ * - **`GeneratedScopeRegistry`**: KSP-generated object that enables scope-aware navigation.
+ *   When navigating from within a TabNode, destinations outside the tab's sealed class
+ *   hierarchy are pushed to the parent stack instead of the active tab stack.
+ *
+ * ## Scope-Aware Navigation
+ *
+ * With `GeneratedScopeRegistry`, the navigator intelligently routes destinations:
+ * - **In-scope destinations** (e.g., HomeTab, ExploreTab) stay within their tab container
+ * - **Out-of-scope destinations** (e.g., DetailScreen) navigate above the tab container
+ *
+ * This preserves the tab container during predictive back gestures, ensuring users
+ * can swipe back from detail screens to their original tab position.
+ *
  * ## Navigation Structure
  *
  * ```
@@ -46,9 +60,11 @@ import com.jermey.quo.vadis.generated.GeneratedWrapperRegistry
  * 3. **Automatic State Preservation**: Tab states preserved when switching
  * 4. **Predictive Back Support**: Built-in gesture handling with animations
  * 5. **Shared Element Transitions**: Available via `QuoVadisHostScope`
+ * 6. **Scope-Aware Routing**: Destinations automatically route to correct stack level
  *
  * @see buildMainTabsNavNode KSP-generated function from `@Tab` annotation
  * @see GeneratedScreenRegistry KSP-generated from `@Screen` annotations
+ * @see GeneratedScopeRegistry KSP-generated from sealed class hierarchies
  * @see QuoVadisHost Unified navigation host component
  */
 @Composable
@@ -57,18 +73,25 @@ fun DemoApp() {
     // This creates a TabNode with 4 child StackNodes (one per tab)
     val navTree = remember { buildMainTabsNavNode() }
 
-    // Step 2: Create TreeNavigator with the initial tree state
+    // Step 2: Create TreeNavigator with the initial tree state and scope registry
     // TreeNavigator manages StateFlow<NavNode> and provides navigation operations
-    val navigator = remember { TreeNavigator(initialState = navTree) }
+    // GeneratedScopeRegistry enables scope-aware navigation for tab containers
+    val navigator = remember {
+        TreeNavigator(
+            initialState = navTree,
+            scopeRegistry = GeneratedScopeRegistry
+        )
+    }
 
-    // Step 4: Render with QuoVadisHost
+    // Step 3: Render with NavigationHost
     // The content lambda uses GeneratedScreenRegistry to map destinations to composables
-    // renderingMode toggles between Flattened (stable) and Hierarchical (experimental)
+    // GeneratedScopeRegistry ensures out-of-scope destinations navigate above tabs
     NavigationHost(
         navigator = navigator,
         modifier = Modifier.fillMaxSize(),
         screenRegistry = GeneratedScreenRegistry,
         wrapperRegistry = GeneratedWrapperRegistry,
+        scopeRegistry = GeneratedScopeRegistry,
         enablePredictiveBack = true,
     )
 }

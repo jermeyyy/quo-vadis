@@ -22,6 +22,7 @@ import com.jermey.quo.vadis.ksp.extractors.WrapperExtractor
 import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
 import com.jermey.quo.vadis.ksp.generators.NavNodeBuilderGenerator
 import com.jermey.quo.vadis.ksp.generators.NavigatorExtGenerator
+import com.jermey.quo.vadis.ksp.generators.ScopeRegistryGenerator
 import com.jermey.quo.vadis.ksp.generators.ScreenRegistryGenerator
 import com.jermey.quo.vadis.ksp.generators.TransitionRegistryGenerator
 import com.jermey.quo.vadis.ksp.generators.WrapperRegistryGenerator
@@ -71,6 +72,9 @@ class QuoVadisSymbolProcessor(
     // Extractor and generator for transition registry (HIER-015)
     private val transitionExtractor = TransitionExtractor(logger)
     private val transitionRegistryGenerator = TransitionRegistryGenerator(codeGenerator, logger)
+
+    // Generator for scope registry (scoped navigation)
+    private val scopeRegistryGenerator = ScopeRegistryGenerator(codeGenerator, logger)
 
     // Generator for deep link handler (KSP-004)
     private val deepLinkHandlerGenerator = DeepLinkHandlerGenerator(codeGenerator, logger)
@@ -196,6 +200,9 @@ class QuoVadisSymbolProcessor(
 
         // Step 10: Extract and generate transition registry (HIER-015)
         generateTransitionRegistry(resolver)
+
+        // Step 11: Generate scope registry (scoped navigation)
+        generateScopeRegistry()
         
         // Mark generation as complete to prevent duplicate generation in multi-round processing
         hasGenerated = true
@@ -368,6 +375,30 @@ class QuoVadisSymbolProcessor(
             logger.info("Generated TransitionRegistry with ${transitions.size} transitions")
         } catch (e: Exception) {
             logger.error("Error generating TransitionRegistry: ${e.message}")
+        }
+    }
+
+    /**
+     * Generate scope registry for scoped navigation.
+     *
+     * Creates a registry that maps scope keys (sealed class names) to their
+     * member destinations. Used by TreeMutator for scope-aware navigation.
+     */
+    private fun generateScopeRegistry() {
+        if (collectedTabs.isEmpty() && collectedPanes.isEmpty() && collectedStacks.isEmpty()) {
+            logger.info("No @Tab, @Pane, or @Stack annotations found, skipping ScopeRegistry generation")
+            return
+        }
+
+        val basePackage = collectedTabs.firstOrNull()?.packageName
+            ?: collectedPanes.firstOrNull()?.packageName
+            ?: collectedStacks.firstOrNull()?.packageName
+            ?: return
+
+        try {
+            scopeRegistryGenerator.generate(collectedTabs, collectedPanes, collectedStacks, basePackage)
+        } catch (e: Exception) {
+            logger.error("Error generating ScopeRegistry: ${e.message}")
         }
     }
 

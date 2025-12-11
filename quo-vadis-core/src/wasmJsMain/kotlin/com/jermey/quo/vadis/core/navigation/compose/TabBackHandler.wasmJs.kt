@@ -1,7 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.compose
 
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.core.TabNavigatorState
 
 /**
  * WebAssembly-specific back handler for tab navigation.

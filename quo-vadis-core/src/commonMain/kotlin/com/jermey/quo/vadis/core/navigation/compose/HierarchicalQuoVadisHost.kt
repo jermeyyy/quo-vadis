@@ -8,6 +8,7 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
@@ -24,14 +25,16 @@ import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinat
 import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackController
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavRenderScope
-import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavTreeRenderer
+import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavNodeRenderer
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.core.TransitionStateManager
 import com.jermey.quo.vadis.core.navigation.core.TreeMutator
+import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 
 // =============================================================================
 // Composition Local for NavRenderScope
@@ -138,12 +141,20 @@ public val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
  *   Defaults to [WrapperRegistry.Empty] which renders content without custom wrappers.
  * @param transitionRegistry Registry for annotation-based transitions.
  *   Defaults to [TransitionRegistry.Empty] which uses default transitions.
+ * @param scopeRegistry Registry for scope-aware navigation. When navigating to a
+ *   destination outside the current container's scope, navigation pushes to the
+ *   parent stack. Defaults to [ScopeRegistry.Empty] for backward compatibility.
  * @param enablePredictiveBack Whether to enable predictive back gesture handling.
  *   When enabled, users can preview back navigation while performing a back gesture.
  *   Defaults to `true`. Set to `false` to disable gesture-based back previews.
+ * @param windowSizeClass Current window size class for adaptive pane back behavior.
+ *   When provided, pane back navigation adapts based on display mode:
+ *   - Compact mode (single pane): Back behaves like a simple stack
+ *   - Expanded mode (multiple panes): Configured [PaneBackBehavior] applies
+ *   Defaults to `null` which uses compact behavior for safety.
  *
  * @see NavRenderScope
- * @see NavTreeRenderer
+ * @see NavNodeRenderer
  * @see PredictiveBackController
  * @see LocalNavRenderScope
  */
@@ -154,7 +165,9 @@ public fun NavigationHost(
     screenRegistry: ScreenRegistry = EmptyScreenRegistry,
     wrapperRegistry: WrapperRegistry = WrapperRegistry.Empty,
     transitionRegistry: TransitionRegistry = TransitionRegistry.Empty,
-    enablePredictiveBack: Boolean = true
+    scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
+    enablePredictiveBack: Boolean = true,
+    windowSizeClass: WindowSizeClass? = null
 ) {
     // Collect navigation state
     val navState by navigator.state.collectAsState()
@@ -193,6 +206,27 @@ public fun NavigationHost(
         derivedStateOf { TreeMutator.pop(navState) != null }
     }
 
+    // Back handler registry for user-defined back handlers
+    val backHandlerRegistry = remember { BackHandlerRegistry() }
+
+    // Connect registry to navigator (if it's a TreeNavigator)
+    LaunchedEffect(navigator, backHandlerRegistry) {
+        (navigator as? TreeNavigator)?.backHandlerRegistry = backHandlerRegistry
+    }
+
+    // Update window size class on navigator for adaptive pane back behavior
+    LaunchedEffect(navigator, windowSizeClass) {
+        (navigator as? TreeNavigator)?.windowSizeClass = windowSizeClass
+    }
+
+    // Clean up registry connection on disposal
+    DisposableEffect(navigator) {
+        onDispose {
+            (navigator as? TreeNavigator)?.backHandlerRegistry = null
+            (navigator as? TreeNavigator)?.windowSizeClass = null
+        }
+    }
+
     // Root container with PredictiveBackHandler and SharedTransitionLayout
     PredictiveBackHandler(
         enabled = enablePredictiveBack && canGoBack,
@@ -223,9 +257,12 @@ public fun NavigationHost(
             }
 
             // Provide scope to children via CompositionLocal
-            CompositionLocalProvider(LocalNavRenderScope provides scope) {
+            CompositionLocalProvider(
+                LocalNavRenderScope provides scope,
+                LocalBackHandlerRegistry provides backHandlerRegistry
+            ) {
                 // Render the navigation tree
-                NavTreeRenderer(
+                NavNodeRenderer(
                     node = navState,
                     previousNode = previousState,
                     scope = scope,

@@ -12,6 +12,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationGraphBuilder
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.RouteRegistry
+import com.jermey.quo.vadis.core.navigation.core.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
 import com.squareup.kotlinpoet.ClassName
 import kotlin.reflect.KClass
@@ -34,6 +35,7 @@ internal object QuoVadisClassNames {
     val SCREEN_REGISTRY: ClassName = ScreenRegistry::class.toClassName()
     val GENERATED_DEEP_LINK_HANDLER: ClassName = GeneratedDeepLinkHandler::class.toClassName()
     val DEEP_LINK_RESULT: ClassName = DeepLinkResult::class.toClassName()
+    val SCOPE_REGISTRY: ClassName = ScopeRegistry::class.toClassName()
     
     // Compose classes
     val TRANSITION_SCOPE: ClassName = TransitionScope::class.toClassName()

@@ -35,7 +35,7 @@ fun setupDemoDeepLinks(navigator: Navigator) {
     }
 
     handler.register("app://demo/settings") { _, nav, _ ->
-        nav.navigate(MainTabs.SettingsTab.SettingsMain)
+        nav.navigate(MainTabs.SettingsTab.Main)
     }
 
     handler.register("app://demo/deeplink") { _, nav, _ ->

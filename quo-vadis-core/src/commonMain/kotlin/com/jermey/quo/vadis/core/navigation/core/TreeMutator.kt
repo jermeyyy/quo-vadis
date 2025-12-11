@@ -79,6 +79,20 @@ object TreeMutator {
         data object RequiresScaffoldChange : PopResult()
     }
 
+    /**
+     * Result of a tree-aware back operation.
+     */
+    sealed class BackResult {
+        /** Back was handled, new tree state returned */
+        data class Handled(val newState: NavNode) : BackResult()
+
+        /** Back should be delegated to system (e.g., close app) */
+        data object DelegateToSystem : BackResult()
+
+        /** Back could not be handled (internal error) */
+        data object CannotHandle : BackResult()
+    }
+
     // =========================================================================
     // PUSH OPERATIONS
     // =========================================================================
@@ -165,6 +179,203 @@ object TreeMutator {
         )
 
         return replaceNode(root, stackKey, newStack)
+    }
+
+    // =========================================================================
+    // SCOPE-AWARE PUSH OPERATIONS
+    // =========================================================================
+
+    /**
+     * Push a destination with scope awareness.
+     *
+     * If the destination is out of the active container's scope (TabNode/PaneNode),
+     * pushes to the parent stack instead of the deepest active stack. This preserves
+     * the container for predictive back gestures.
+     *
+     * ## Scope Resolution
+     *
+     * The method walks up from the deepest active stack, checking each container
+     * (TabNode/PaneNode) with a [scopeKey][TabNode.scopeKey]. If the destination
+     * is not in that scope (according to [scopeRegistry]), navigation targets
+     * the parent stack instead.
+     *
+     * ## Example
+     *
+     * ```kotlin
+     * // Given: Root -> Stack -> TabNode(scopeKey="MainTabs") -> Stack(active)
+     * // MainTabs contains: Home, Search, Profile
+     *
+     * // HomeDestination is in scope - pushes to active tab's stack
+     * TreeMutator.push(root, HomeDestination, scopeRegistry)
+     *
+     * // DetailDestination is NOT in scope - pushes to parent stack (above TabNode)
+     * TreeMutator.push(root, DetailDestination, scopeRegistry)
+     * ```
+     *
+     * @param root The root NavNode of the navigation tree
+     * @param destination The destination to navigate to
+     * @param scopeRegistry Registry to check scope membership
+     * @param generateKey Function to generate unique keys for new nodes
+     * @return New tree with the destination pushed appropriately
+     * @throws IllegalStateException if no suitable stack is found
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    fun push(
+        root: NavNode,
+        destination: Destination,
+        scopeRegistry: ScopeRegistry,
+        generateKey: () -> String = { Uuid.random().toString().take(8) }
+    ): NavNode {
+        // If no scope registry (or Empty), use the simple push
+        if (scopeRegistry === ScopeRegistry.Empty) {
+            return push(root, destination, generateKey)
+        }
+
+        val targetStack = findTargetStackForPush(root, destination, scopeRegistry)
+            ?: throw IllegalStateException("No suitable stack found for navigation")
+
+        val deepestActiveStack = root.activeStack()
+
+        return if (targetStack.key == deepestActiveStack?.key) {
+            // In-scope or no container: push directly to active stack
+            pushToActiveStack(root, targetStack, destination, generateKey)
+        } else {
+            // Out-of-scope: push as sibling to container
+            pushOutOfScope(root, targetStack, destination, generateKey)
+        }
+    }
+
+    /**
+     * Finds the appropriate target stack for a destination considering scope.
+     *
+     * Walks up from the deepest active stack, checking each container (TabNode/PaneNode)
+     * to see if the destination is in scope. Returns the first stack where the
+     * destination can be pushed.
+     *
+     * @param root The root NavNode of the navigation tree
+     * @param destination The destination to check
+     * @param scopeRegistry Registry for scope membership checks
+     * @return The target StackNode for the push, or null if none found
+     */
+    private fun findTargetStackForPush(
+        root: NavNode,
+        destination: Destination,
+        scopeRegistry: ScopeRegistry
+    ): StackNode? {
+        val activeStack = root.activeStack() ?: return null
+
+        // Walk the active path to find containers
+        val activePath = root.activePathToLeaf()
+
+        // Check containers from deepest to shallowest
+        for (node in activePath.reversed()) {
+            when (node) {
+                is StackNode -> {
+                    // Check if this stack has a scope and if destination is out of scope
+                    val stackScope = node.scopeKey
+                    if (stackScope != null && !scopeRegistry.isInScope(stackScope, destination)) {
+                        // Out of scope - find the stack that contains this StackNode
+                        val parentKey = node.parentKey ?: return null
+                        val parent = root.findByKey(parentKey)
+                        if (parent is StackNode) {
+                            return parent
+                        }
+                    }
+                }
+                is TabNode -> {
+                    val scopeKey = node.scopeKey
+                    if (scopeKey != null && !scopeRegistry.isInScope(scopeKey, destination)) {
+                        // Out of scope - find the stack that contains this TabNode
+                        val parentKey = node.parentKey ?: return null
+                        val parent = root.findByKey(parentKey)
+                        if (parent is StackNode) {
+                            return parent
+                        }
+                    }
+                }
+                is PaneNode -> {
+                    val scopeKey = node.scopeKey
+                    if (scopeKey != null && !scopeRegistry.isInScope(scopeKey, destination)) {
+                        // Out of scope - find the stack that contains this PaneNode
+                        val parentKey = node.parentKey ?: return null
+                        val parent = root.findByKey(parentKey)
+                        if (parent is StackNode) {
+                            return parent
+                        }
+                    }
+                }
+                else -> { /* Continue checking */ }
+            }
+        }
+
+        // All containers allow this destination, push to deepest active stack
+        return activeStack
+    }
+
+    /**
+     * Push directly to a specific stack (in-scope case).
+     *
+     * @param root The root NavNode of the navigation tree
+     * @param targetStack The stack to push to
+     * @param destination The destination to push
+     * @param generateKey Function to generate unique keys for new nodes
+     * @return New tree with the destination pushed to the target stack
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    private fun pushToActiveStack(
+        root: NavNode,
+        targetStack: StackNode,
+        destination: Destination,
+        generateKey: () -> String
+    ): NavNode {
+        val newScreen = ScreenNode(
+            key = generateKey(),
+            parentKey = targetStack.key,
+            destination = destination
+        )
+
+        val newStack = targetStack.copy(
+            children = targetStack.children + newScreen
+        )
+
+        return replaceNode(root, targetStack.key, newStack)
+    }
+
+    /**
+     * Push a destination outside the current container's scope.
+     *
+     * Creates a new ScreenNode as a child of the parent stack, effectively
+     * navigating "on top of" the container. This preserves the container
+     * (and its state) for back navigation.
+     *
+     * @param root The root NavNode of the navigation tree
+     * @param parentStack The stack to push to (parent of the scoped container)
+     * @param destination The destination to push
+     * @param generateKey Function to generate unique keys for new nodes
+     * @return New tree with the destination pushed to the parent stack
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    private fun pushOutOfScope(
+        root: NavNode,
+        parentStack: StackNode,
+        destination: Destination,
+        generateKey: () -> String
+    ): NavNode {
+        val screenKey = generateKey()
+
+        // Create new screen as direct child of parent stack
+        val newScreen = ScreenNode(
+            key = screenKey,
+            parentKey = parentStack.key,
+            destination = destination
+        )
+
+        // Add new screen to parent stack's children
+        val updatedParentStack = parentStack.copy(
+            children = parentStack.children + newScreen
+        )
+
+        return replaceNode(root, parentStack.key, updatedParentStack)
     }
 
     // =========================================================================
@@ -603,6 +814,75 @@ object TreeMutator {
     }
 
     /**
+     * Pop from a pane with awareness of window size.
+     *
+     * In compact mode (single pane visible), back behaves like a simple stack,
+     * ignoring the configured [PaneBackBehavior]. This ensures predictable
+     * back navigation when only one pane is shown.
+     *
+     * In expanded mode (multiple panes visible), the configured [PaneBackBehavior]
+     * applies, allowing for sophisticated multi-pane back behaviors.
+     *
+     * @param root The root NavNode
+     * @param isCompact Whether currently in compact/single-pane mode
+     * @return PopResult indicating the outcome
+     */
+    fun popPaneAdaptive(root: NavNode, isCompact: Boolean): PopResult {
+        // Find the active pane node if any
+        val activePath = root.activePathToLeaf()
+        val paneNode = activePath.filterIsInstance<PaneNode>().firstOrNull()
+
+        if (paneNode == null) {
+            // No pane node - use standard pop
+            val result = pop(root)
+            return if (result != null) PopResult.Popped(result) else PopResult.CannotPop
+        }
+
+        if (isCompact) {
+            // In compact mode, treat as simple stack
+            // Just pop from the active stack, ignoring pane configuration
+            return popFromActivePane(root, paneNode)
+        }
+
+        // In expanded mode, use configured behavior
+        return popWithPaneBehavior(root)
+    }
+
+    /**
+     * Simple pop from the active pane's stack.
+     *
+     * This is used in compact mode where we want simple stack-like
+     * back navigation regardless of pane configuration.
+     *
+     * @param root The root NavNode
+     * @param paneNode The PaneNode to pop from
+     * @return PopResult indicating the outcome
+     */
+    private fun popFromActivePane(root: NavNode, paneNode: PaneNode): PopResult {
+        val activeStack = paneNode.activePaneContent?.activeStack()
+
+        if (activeStack == null) {
+            return PopResult.PaneEmpty(paneNode.activePaneRole)
+        }
+
+        if (activeStack.children.size <= 1) {
+            // Stack would become empty - switch to Primary if not already there
+            return if (paneNode.activePaneRole != PaneRole.Primary) {
+                val newState = switchActivePane(root, paneNode.key, PaneRole.Primary)
+                PopResult.Popped(newState)
+            } else {
+                PopResult.PaneEmpty(paneNode.activePaneRole)
+            }
+        }
+
+        // Pop from the active stack
+        val newChildren = activeStack.children.dropLast(1)
+        val newStack = activeStack.copy(children = newChildren)
+        val newState = replaceNode(root, activeStack.key, newStack)
+        return PopResult.Popped(newState)
+    }
+
+    /**
      * Sets or updates the configuration for a pane role.
      *
      * @param root The root NavNode of the navigation tree
@@ -968,5 +1248,163 @@ object TreeMutator {
      */
     fun currentDestination(root: NavNode): Destination? {
         return root.activeLeaf()?.destination
+    }
+
+    // =========================================================================
+    // TREE-AWARE BACK HANDLING
+    // =========================================================================
+
+    /**
+     * Pop with intelligent tab handling.
+     *
+     * Handles back navigation with proper tab behavior:
+     * 1. If active tab's stack has > 1 items → pop from stack
+     * 2. If active tab's stack is at root AND not initial tab → switch to initial tab
+     * 3. If on initial tab at root → continue to next stack level
+     *
+     * @param root The root NavNode
+     * @return BackResult indicating the outcome
+     */
+    fun popWithTabBehavior(root: NavNode): BackResult {
+        val activeStack = root.activeStack() ?: return BackResult.CannotHandle
+
+        // Case 1: Stack has items to pop
+        if (activeStack.canGoBack) {
+            val newState = pop(root) ?: return BackResult.CannotHandle
+            return BackResult.Handled(newState)
+        }
+
+        // Find the parent tab node if any
+        val parentKey = activeStack.parentKey ?: return handleRootStackBack(root, activeStack)
+        val parent = root.findByKey(parentKey)
+
+        return when (parent) {
+            is TabNode -> handleTabBack(root, parent, activeStack)
+            is StackNode -> handleNestedStackBack(root, parent, activeStack)
+            is PaneNode -> handlePaneBack(root, parent, activeStack)
+            else -> BackResult.CannotHandle
+        }
+    }
+
+    /**
+     * Handle back when the active stack is a root stack.
+     */
+    private fun handleRootStackBack(root: NavNode, activeStack: StackNode): BackResult {
+        // Root stack at minimum size - delegate to system
+        return if (activeStack.children.size <= 1) {
+            BackResult.DelegateToSystem
+        } else {
+            val newState = pop(root) ?: return BackResult.CannotHandle
+            BackResult.Handled(newState)
+        }
+    }
+
+    /**
+     * Handle back when active stack is inside a TabNode.
+     */
+    private fun handleTabBack(root: NavNode, tabNode: TabNode, activeStack: StackNode): BackResult {
+        // Case 2: Not on initial tab → switch to initial tab
+        if (tabNode.activeStackIndex != 0) {
+            val newState = switchTab(root, tabNode.key, 0)
+            return BackResult.Handled(newState)
+        }
+
+        // Case 3: On initial tab at root → check if TabNode itself can be popped
+        val tabParentKey = tabNode.parentKey
+        if (tabParentKey == null) {
+            // TabNode is root - delegate to system
+            return BackResult.DelegateToSystem
+        }
+
+        // TabNode has a parent - try to pop the TabNode itself
+        val tabParent = root.findByKey(tabParentKey)
+        return when (tabParent) {
+            is StackNode -> {
+                if (tabParent.children.size > 1) {
+                    // Pop TabNode from parent stack
+                    val newState = removeNode(root, tabNode.key)
+                    if (newState != null) {
+                        BackResult.Handled(newState)
+                    } else {
+                        BackResult.CannotHandle
+                    }
+                } else if (tabParent.parentKey == null) {
+                    BackResult.DelegateToSystem
+                } else {
+                    // Nested stack with only TabNode - continue up
+                    BackResult.DelegateToSystem
+                }
+            }
+            else -> BackResult.DelegateToSystem
+        }
+    }
+
+    /**
+     * Handle back when active stack is nested inside another stack.
+     */
+    private fun handleNestedStackBack(
+        root: NavNode,
+        parentStack: StackNode,
+        childStack: StackNode
+    ): BackResult {
+        // Remove child from parent stack
+        return if (parentStack.children.size > 1) {
+            val newState = removeNode(root, childStack.key)
+            if (newState != null) BackResult.Handled(newState) else BackResult.CannotHandle
+        } else if (parentStack.parentKey == null) {
+            BackResult.DelegateToSystem
+        } else {
+            // Continue cascading up
+            BackResult.CannotHandle
+        }
+    }
+
+    /**
+     * Handle back when active stack is inside a PaneNode.
+     */
+    private fun handlePaneBack(root: NavNode, paneNode: PaneNode, activeStack: StackNode): BackResult {
+        val result = popWithPaneBehavior(root)
+        return when (result) {
+            is PopResult.Popped -> BackResult.Handled(result.newState)
+            is PopResult.CannotPop, is PopResult.PaneEmpty -> {
+                // Check if PaneNode itself can be popped
+                if (paneNode.parentKey == null) {
+                    BackResult.DelegateToSystem
+                } else {
+                    BackResult.CannotHandle
+                }
+            }
+            is PopResult.RequiresScaffoldChange -> BackResult.CannotHandle
+        }
+    }
+
+    /**
+     * Check if back navigation is possible, considering root constraints.
+     *
+     * Unlike [canGoBack], this method considers:
+     * - Root stack must keep at least one item (would delegate to system)
+     * - Tab switching as an alternative to popping
+     *
+     * @param root The root NavNode
+     * @return true if the navigation system can handle back (not delegated to system)
+     */
+    fun canHandleBackNavigation(root: NavNode): Boolean {
+        val activeStack = root.activeStack() ?: return false
+
+        // Can pop from active stack
+        if (activeStack.canGoBack) return true
+
+        // Check for tab switch opportunity
+        val parentKey = activeStack.parentKey ?: return false
+        val parent = root.findByKey(parentKey)
+
+        return when (parent) {
+            is TabNode -> parent.activeStackIndex != 0 // Can switch to initial tab
+            is StackNode -> parent.canGoBack
+            is PaneNode -> parent.paneConfigurations.values.any {
+                it.content.activeStack()?.canGoBack == true
+            }
+            else -> false
+        }
     }
 }

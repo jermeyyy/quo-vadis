@@ -86,7 +86,7 @@ fun NavigationBottomSheetContent(
             label = "Settings",
             description = "App settings",
             selected = currentRoute == "settings",
-            onClick = { onNavigate(MainTabs.SettingsTab.SettingsMain) }
+            onClick = { onNavigate(MainTabs.SettingsTab.Main) }
         )
     }
 }

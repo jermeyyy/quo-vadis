@@ -1,6 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.navigation.compose.BackHandlerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.WindowSizeClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -48,22 +50,25 @@ import kotlin.uuid.Uuid
  * @param deepLinkHandler Handler for deep link navigation
  * @param coroutineScope Scope for derived state computations
  * @param initialState Optional initial navigation state (defaults to empty stack)
+ * @property scopeRegistry Registry for scope-aware navigation. When a destination is
+ *   out of the current container's scope (TabNode/PaneNode), navigation pushes to
+ *   the parent stack instead of the deepest active stack. Defaults to [ScopeRegistry.Empty]
+ *   which allows all destinations in all scopes (backward compatible behavior).
  */
 @OptIn(ExperimentalUuidApi::class)
 @Stable
 class TreeNavigator(
     private val deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler(),
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
-    initialState: NavNode? = null
+    initialState: NavNode? = null,
+    private val scopeRegistry: ScopeRegistry = ScopeRegistry.Empty
 ) : Navigator {
 
     // =========================================================================
     // TREE-BASED STATE
     // =========================================================================
 
-    private val _state: MutableStateFlow<NavNode> = MutableStateFlow(
-        initialState ?: createEmptyRootStack()
-    )
+    private val _state: MutableStateFlow<NavNode> = MutableStateFlow(createRootStack(initialState))
 
     /**
      * The current navigation state as an immutable tree.
@@ -120,7 +125,7 @@ class TreeNavigator(
     override val previousDestination: StateFlow<Destination?> = _previousDestination.asStateFlow()
 
     private val _canNavigateBack = MutableStateFlow(
-        TreeMutator.canGoBack(_state.value)
+        TreeMutator.canHandleBackNavigation(_state.value)
     )
 
     /**
@@ -135,7 +140,7 @@ class TreeNavigator(
     private fun updateDerivedState(newState: NavNode) {
         _currentDestination.value = newState.activeLeaf()?.destination
         _previousDestination.value = computePreviousDestination(newState)
-        _canNavigateBack.value = TreeMutator.canGoBack(newState)
+        _canNavigateBack.value = TreeMutator.canHandleBackNavigation(newState)
     }
 
     /**
@@ -161,6 +166,31 @@ class TreeNavigator(
     // =========================================================================
 
     private val graphs = mutableMapOf<String, NavigationGraph>()
+
+    // =========================================================================
+    // BACK HANDLER REGISTRY
+    // =========================================================================
+
+    /**
+     * Optional back handler registry for user-defined back handlers.
+     * Set by the navigation host during composition.
+     *
+     * When set, [handleBackInternal] will first consult registered handlers
+     * before falling back to tree-based back navigation.
+     */
+    var backHandlerRegistry: BackHandlerRegistry? = null
+
+    /**
+     * Current window size class for adaptive pane behavior.
+     * Updated by the navigation host based on the current window size.
+     *
+     * When set, pane back behavior adapts:
+     * - In compact mode (single pane visible), back behaves like a simple stack
+     * - In expanded mode (multiple panes visible), the configured [PaneBackBehavior] applies
+     *
+     * When null, defaults to compact behavior for safety.
+     */
+    var windowSizeClass: WindowSizeClass? = null
 
     // =========================================================================
     // PARENT NAVIGATOR SUPPORT
@@ -193,7 +223,7 @@ class TreeNavigator(
         val fromKey = oldState.activeLeaf()?.key
 
         try {
-            val newState = TreeMutator.push(oldState, destination) { generateKey() }
+            val newState = TreeMutator.push(oldState, destination, scopeRegistry) { generateKey() }
             val toKey = newState.activeLeaf()?.key
 
             _state.value = newState
@@ -246,30 +276,41 @@ class TreeNavigator(
     /**
      * Handle back press for this navigator's state.
      * Implementation of ParentNavigator.handleBackInternal().
+     *
+     * Uses intelligent tree-based back handling:
+     * 1. Check user-defined handlers first (via BackHandlerRegistry)
+     * 2. Pop from active stack if possible
+     * 3. For tabs: switch to initial tab if not already there
+     * 4. For nested structures: cascade up the tree
+     * 5. Return false to delegate to system (e.g., close app)
      */
     override fun handleBackInternal(): Boolean {
-        val currentState = _state.value
-
-        // Try standard pop first
-        val newState = TreeMutator.pop(currentState)
-        if (newState != null) {
-            updateStateWithTransition(newState, null)
+        // 1. Check user-defined handlers first
+        if (backHandlerRegistry?.handleBack() == true) {
             return true
         }
 
-        // Check if we're in a PaneNode context
-        val popResult = TreeMutator.popWithPaneBehavior(currentState)
-        return when (popResult) {
-            is TreeMutator.PopResult.Popped -> {
-                updateStateWithTransition(popResult.newState, null)
+        val currentState = _state.value
+
+        // 2. Use tree-aware back handling
+        return when (val result = TreeMutator.popWithTabBehavior(currentState)) {
+            is TreeMutator.BackResult.Handled -> {
+                updateStateWithTransition(result.newState, null)
                 true
             }
-            is TreeMutator.PopResult.CannotPop -> false
-            is TreeMutator.PopResult.PaneEmpty -> false
-            is TreeMutator.PopResult.RequiresScaffoldChange -> {
-                // The renderer needs to handle this case
-                // For now, return false to indicate we couldn't handle it
-                false
+            is TreeMutator.BackResult.DelegateToSystem -> false
+            is TreeMutator.BackResult.CannotHandle -> {
+                // Fallback to pane-specific behavior with window size awareness
+                // In compact mode, treat as simple stack; in expanded mode, use configured behavior
+                val isCompact = windowSizeClass?.isCompactWidth ?: true
+                val popResult = TreeMutator.popPaneAdaptive(currentState, isCompact)
+                when (popResult) {
+                    is TreeMutator.PopResult.Popped -> {
+                        updateStateWithTransition(popResult.newState, null)
+                        true
+                    }
+                    else -> false
+                }
             }
         }
     }
@@ -292,7 +333,7 @@ class TreeNavigator(
             newState = TreeMutator.popToRoute(newState, clearRoute, inclusive)
         }
 
-        newState = TreeMutator.push(newState, destination) { generateKey() }
+        newState = TreeMutator.push(newState, destination, scopeRegistry) { generateKey() }
         updateStateWithTransition(newState, null)
     }
 
@@ -693,11 +734,34 @@ class TreeNavigator(
         return null
     }
 
-    private fun createEmptyRootStack(): NavNode {
+    /**
+     * Creates the root navigation state.
+     *
+     * If the initial state is already a StackNode with no parent (a valid root),
+     * it's used directly. Otherwise, the initial state is wrapped in a new root StackNode
+     * and the child's parentKey is updated to reference the new root.
+     * This ensures the navigation tree always has a StackNode as root for proper
+     * back handling behavior.
+     */
+    private fun createRootStack(initialState: NavNode?): NavNode {
+        // If initialState is already a root StackNode, use it directly
+        if (initialState is StackNode && initialState.parentKey == null) {
+            return initialState
+        }
+        // Otherwise, wrap it in a new root StackNode
+        val rootKey = generateKey()
+        val childWithUpdatedParent = initialState?.let { state ->
+            when (state) {
+                is ScreenNode -> state.copy(parentKey = rootKey)
+                is TabNode -> state.copy(parentKey = rootKey)
+                is PaneNode -> state.copy(parentKey = rootKey)
+                is StackNode -> state.copy(parentKey = rootKey)
+            }
+        }
         return StackNode(
-            key = generateKey(),
+            key = rootKey,
             parentKey = null,
-            children = emptyList()
+            children = listOfNotNull(childWithUpdatedParent)
         )
     }
 
@@ -728,6 +792,10 @@ fun <T : NavNode> NavNode.findFirstOfType(clazz: kotlin.reflect.KClass<T>): T? {
         is ScreenNode -> null
         is StackNode -> children.firstNotNullOfOrNull { it.findFirstOfType(clazz) }
         is TabNode -> stacks.firstNotNullOfOrNull { it.findFirstOfType(clazz) }
-        is PaneNode -> paneConfigurations.values.firstNotNullOfOrNull { it.content.findFirstOfType(clazz) }
+        is PaneNode -> paneConfigurations.values.firstNotNullOfOrNull {
+            it.content.findFirstOfType(
+                clazz
+            )
+        }
     }
 }

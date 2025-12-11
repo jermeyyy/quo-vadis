@@ -1,0 +1,140 @@
+package com.jermey.navplayground.demo.ui.screens.auth
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.AuthFlowDestination
+import com.jermey.navplayground.demo.tabs.MainTabs
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+
+/**
+ * Auth Register Screen - Part of the auth flow.
+ *
+ * Demonstrates:
+ * - In-scope navigation: Register → Login (back within AuthFlow stack)
+ * - Out-of-scope navigation: Register → MainTabs (navigates above AuthFlow stack)
+ */
+@Screen(AuthFlowDestination.Register::class)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AuthRegisterScreen(navigator: Navigator) {
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Create Account") },
+                navigationIcon = {
+                    IconButton(onClick = { navigator.navigateBack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                "Join Us",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Text(
+                "Register Screen (In AuthFlow Scope)",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Full Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirm Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // OUT-OF-SCOPE navigation: MainTabs is not in AuthFlow scope
+            Button(
+                onClick = {
+                    navigator.navigate(
+                        MainTabs.HomeTab,
+                        NavigationTransitions.SlideHorizontal
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Register (→ MainTabs - Out of Scope)")
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            Text(
+                "After registration, navigating to MainTabs\n" +
+                    "will exit the AuthFlow scope.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}

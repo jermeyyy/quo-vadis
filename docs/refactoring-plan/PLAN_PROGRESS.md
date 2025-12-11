@@ -1,6 +1,6 @@
 # Quo Vadis Architecture Refactoring - Progress Tracker
 
-> **Last Updated**: 2025-12-10
+> **Last Updated**: 2025-12-11
 
 ## Overview
 
@@ -40,7 +40,164 @@ See [INDEX.md](./INDEX.md) for full plan details.
 
 ## Recent Updates
 
-### 2025-12-10 (Latest)
+### 2025-12-11 (Latest)
+- ✅ **BACK HANDLING REFACTORING** - **COMPLETED**
+  - Implemented comprehensive back handling refactoring from `docs/refactoring-plan/BACK_HANDLING_REFACTORING_PLAN.md`
+  - Addresses root stack constraints, tab-aware back, user-defined handlers, and pane adaptive behavior
+  
+  **Phase 1: Core Back Handler Infrastructure** ✓
+  - Created `BackHandlerRegistry.kt` - LIFO registry for user-defined back handlers
+  - Created `NavBackHandler.kt` - Composable for intercepting back events
+  - Added `ConsumingNavBackHandler` variant that always consumes back events
+  
+  **Phase 2: Tree-Based Back Handling Refactor** ✓
+  - Added `canHandleBackInternally()` and `isRoot()` extension functions to `NavNode.kt`
+  - Created `BackResult` sealed class (Handled, DelegateToSystem, CannotHandle)
+  - Added `popWithTabBehavior()` - Intelligent tab-aware back handling
+  - Added `canHandleBackNavigation()` - Comprehensive back check with root constraints
+  - Updated `TreeNavigator.handleBackInternal()` to use new unified back handling
+  - Updated `canNavigateBack` derivation to use `canHandleBackNavigation()`
+  
+  **Phase 3: Renderer Integration** ✓
+  - Added `backHandlerRegistry` property to `TreeNavigator`
+  - Updated `handleBackInternal()` to check user handlers first
+  - Integrated registry into `NavigationHost` and `GraphNavHostContent`
+  - Uses `LaunchedEffect` and `DisposableEffect` for lifecycle management
+  
+  **Phase 4: Pane Adaptive Back Handling** ✓
+  - Added `windowSizeClass` property to `TreeNavigator`
+  - Created `popPaneAdaptive()` - Size-aware pane pop (compact vs expanded)
+  - Added `popFromActivePane()` helper for compact mode
+  - Added `windowSizeClass` parameter to `NavigationHost`
+  
+  **Phase 5: Deprecation and Cleanup** ✓
+  - Deprecated `TabNavigatorState.onBack()` with migration guidance
+  - Deprecated `TabScopedNavigator.navigateBack()` and `handleBackInternal()`
+  - Added `@Suppress("DEPRECATION")` for internal usage
+  
+  **Phase 6: Testing** ✓
+  - Created `BackHandlerRegistryTest.kt` - 14 tests for registry behavior
+  - Created `TreeMutatorBackHandlingTest.kt` - 21 tests for tree-aware back handling
+  - Fixed existing `TreeNavigatorTest.kt` tests for new behavior
+  - Fixed `TreeNavigator.createRootStack()` to handle StackNode pass-through
+  - Total: 35 new tests for back handling
+  
+  **Files Created:**
+  - `quo-vadis-core/.../compose/BackHandlerRegistry.kt`
+  - `quo-vadis-core/.../compose/NavBackHandler.kt`
+  - `quo-vadis-core/src/commonTest/.../compose/BackHandlerRegistryTest.kt`
+  - `quo-vadis-core/src/commonTest/.../core/TreeMutatorBackHandlingTest.kt`
+  
+  **Files Modified:**
+  - `quo-vadis-core/.../core/NavNode.kt` (extension functions)
+  - `quo-vadis-core/.../core/TreeMutator.kt` (BackResult, popWithTabBehavior, canHandleBackNavigation, popPaneAdaptive)
+  - `quo-vadis-core/.../core/TreeNavigator.kt` (unified back handling, registries)
+  - `quo-vadis-core/.../core/TabNavigatorState.kt` (deprecations)
+  - `quo-vadis-core/.../core/TabScopedNavigator.kt` (deprecations)
+  - `quo-vadis-core/.../compose/HierarchicalQuoVadisHost.kt` (registry integration, windowSizeClass)
+  - `quo-vadis-core/.../compose/GraphNavHost.kt` (registry integration)
+  
+  **Verified**: `:composeApp:assembleDebug` ✓, Tests pass ✓
+
+### 2025-12-11
+- ✅ **STACK SCOPE NAVIGATION** - **COMPLETED**
+  - Implemented scope-aware navigation for `StackNode`, extending the existing scope support for `TabNode` and `PaneNode`
+  - From spec: `docs/refactoring-plan/STACK_SCOPE_IMPLEMENTATION_PLAN.md`
+  
+  **Phase 1: Core Library Changes** ✓
+  - Added `scopeKey: String? = null` property to `StackNode` in `NavNode.kt`
+  - Added "Scope-Aware Navigation" KDoc section explaining behavior
+  - Added `is StackNode` case in `TreeMutator.findTargetStackForPush()` for scope checking
+  - Updated `ScopeRegistry.kt` KDoc to reference `StackNode.scopeKey`
+  
+  **Phase 2: KSP Generator Updates** ✓
+  - Updated `ScopeRegistryGenerator.kt` to accept `stackInfos` parameter
+  - Added stack scope generation loop creating entries like `"AuthFlow" to setOf(AuthFlow.Login::class, ...)`
+  - Updated `NavNodeBuilderGenerator.kt` to include `scopeKey` in generated `StackNode` builders
+  - Updated `QuoVadisSymbolProcessor.kt` to pass `stackInfos` to ScopeRegistry generation
+  
+  **Phase 3: Testing** ✓
+  - Created `TreeMutatorStackScopeTest.kt` with 15 tests:
+    - In-scope navigation stays in stack
+    - Out-of-scope navigation goes to parent stack
+    - Nested stacks respect innermost scope first
+    - Stack without scopeKey accepts all destinations (backward compatibility)
+    - Combined tab + stack scope scenarios
+  - Updated `ScopeRegistryTest.kt` with 8 new tests for stack scopes
+  
+  **Phase 4: Demo App** ✓
+  - Added `AuthFlowDestination` sealed class with `@Stack(name = "auth")` annotation
+  - Created 3 auth screens: `LoginScreen`, `RegisterScreen`, `ForgotPasswordScreen`
+  - Updated `HomeScreen` with navigation card for Auth Flow demo
+  - Demonstrates in-scope (Login → Register) and out-of-scope (AuthFlow → MainTabs) navigation
+  
+  **Files Created:**
+  - `quo-vadis-core/src/commonTest/.../TreeMutatorStackScopeTest.kt`
+  - `composeApp/.../ui/screens/auth/AuthScreens.kt`
+  
+  **Files Modified:**
+  - `quo-vadis-core/.../core/NavNode.kt` (StackNode.scopeKey)
+  - `quo-vadis-core/.../core/TreeMutator.kt` (StackNode scope checking)
+  - `quo-vadis-core/.../core/ScopeRegistry.kt` (KDoc update)
+  - `quo-vadis-ksp/.../generators/ScopeRegistryGenerator.kt` (stack support)
+  - `quo-vadis-ksp/.../generators/NavNodeBuilderGenerator.kt` (scopeKey in builders)
+  - `quo-vadis-ksp/.../QuoVadisSymbolProcessor.kt` (stackInfos passing)
+  - `quo-vadis-core/src/commonTest/.../ScopeRegistryTest.kt` (stack tests)
+  - `composeApp/.../navigation/destinations/AuthFlowDestination.kt`
+  - `composeApp/.../ui/screens/tabs/HomeScreen.kt`
+  
+  **Backward Compatible**: Default `scopeKey = null` preserves existing behavior
+
+### 2025-12-11
+- ✅ **SCOPED NAVIGATION REFACTORING** - **COMPLETED**
+  - Implemented scope-aware navigation from `docs/refactoring-plan/SCOPED_NAVIGATION_REFACTORING_PLAN.md`
+  - When navigating from within a tab/pane container, out-of-scope destinations now push to parent stack instead of deepest active stack
+  - Preserves container for predictive back gestures
+  
+  **Phase 1: Core Library Changes** ✓
+  - Created `ScopeRegistry.kt` interface with `isInScope()` and `getScopeKey()` methods
+  - Added `ScopeRegistry.Empty` companion object for backward compatibility
+  - Added `scopeKey: String? = null` property to `TabNode` and `PaneNode`
+  - Added scope-aware `TreeMutator.push()` overload with `ScopeRegistry` parameter
+  - Added helper methods: `findTargetStackForPush()`, `pushToActiveStack()`, `pushOutOfScope()`
+  
+  **Phase 2: KSP Generator Updates** ✓
+  - Created `ScopeRegistryGenerator.kt` - generates `GeneratedScopeRegistry` object
+  - Maps scope keys (e.g., "MainTabs") to sets of destination classes
+  - Updated `NavNodeBuilderGenerator.kt` to include `scopeKey` in TabNode/PaneNode generation
+  - Updated `QuoVadisSymbolProcessor.kt` to call `ScopeRegistryGenerator`
+  - Added `SCOPE_REGISTRY` constant to `QuoVadisClassNames.kt`
+  
+  **Phase 3: Compose Integration** ✓
+  - Added `scopeRegistry: ScopeRegistry = ScopeRegistry.Empty` to `TreeNavigator` constructor
+  - Updated `TreeNavigator.navigate()` to use scope-aware `TreeMutator.push()`
+  - Added `scopeRegistry` parameter to `NavigationHost` composable
+  
+  **Phase 4: Demo App & Testing** ✓
+  - Updated `DemoApp.kt` to use `GeneratedScopeRegistry`
+  - Created `ScopeRegistryTest.kt` with 12 test cases
+  - Created `TreeMutatorScopeTest.kt` with 14 test cases
+  - Total: 26 new unit tests for scope-aware navigation
+  
+  **Files Created:**
+  - `quo-vadis-core/.../core/ScopeRegistry.kt`
+  - `quo-vadis-ksp/.../generators/ScopeRegistryGenerator.kt`
+  - `quo-vadis-core/src/commonTest/.../ScopeRegistryTest.kt`
+  - `quo-vadis-core/src/commonTest/.../TreeMutatorScopeTest.kt`
+  
+  **Files Modified:**
+  - `quo-vadis-core/.../core/NavNode.kt` (TabNode, PaneNode scopeKey)
+  - `quo-vadis-core/.../core/TreeMutator.kt` (scope-aware push)
+  - `quo-vadis-core/.../core/TreeNavigator.kt` (scopeRegistry param)
+  - `quo-vadis-core/.../compose/HierarchicalQuoVadisHost.kt` (scopeRegistry param)
+  - `quo-vadis-ksp/.../generators/NavNodeBuilderGenerator.kt` (scopeKey generation)
+  - `quo-vadis-ksp/.../QuoVadisSymbolProcessor.kt` (ScopeRegistry generation)
+  - `quo-vadis-ksp/.../QuoVadisClassNames.kt` (SCOPE_REGISTRY constant)
+  - `composeApp/.../DemoApp.kt` (uses GeneratedScopeRegistry)
+  
+  **Verified**: `:composeApp:assembleDebug` ✓, `:quo-vadis-core:compileKotlinMetadata` ✓, `:quo-vadis-ksp:compileKotlin` ✓
+
+### 2025-12-10
 - ✅ **HIER-029**: Deprecate Runtime Wrappers - **COMPLETED**
   - Added `@Deprecated` to `TabWrapper` type alias in `wrapper/TabWrapper.kt`
   - Added `@Deprecated` to `PaneWrapper` type alias in `wrapper/PaneWrapper.kt`

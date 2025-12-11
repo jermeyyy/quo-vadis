@@ -247,7 +247,8 @@ class NavNodeBuilderGenerator(
             .unindent()
             .add(")\n")
             .unindent()
-            .add(")\n")
+            .add("),\n")
+            .add("scopeKey = %S\n", stackInfo.className)
             .unindent()
             .add(")\n")
             .build()
@@ -367,6 +368,7 @@ class NavNodeBuilderGenerator(
             .add("),\n")
             .add("activeStackIndex = initialTabIndex,\n")
             .add("wrapperKey = %S,\n", tabInfo.className)
+            .add("scopeKey = %S,\n", tabInfo.className)
             .add("tabMetadata = listOf(\n")
             .indent()
 
@@ -567,7 +569,8 @@ class NavNodeBuilderGenerator(
             .unindent()
             .addStatement("),")
             .addStatement("activePaneRole = activePaneRole,")
-            .addStatement("backBehavior = %T.%L", PANE_BACK_BEHAVIOR, coreBackBehavior)
+            .addStatement("backBehavior = %T.%L,", PANE_BACK_BEHAVIOR, coreBackBehavior)
+            .addStatement("scopeKey = %S", paneInfo.className)
             .unindent()
             .addStatement(")")
 

@@ -259,17 +259,17 @@ class TreeNavigatorTest {
     }
 
     @Test
-    fun `handleBackInternal returns false on empty stack`() {
+    fun `handleBackInternal returns false on single-item root stack`() {
         val navigator = TreeNavigator()
         navigator.setStartDestination(HomeDestination)
 
-        // First call pops the single screen, leaving empty stack but returning true
-        assertTrue(navigator.handleBackInternal())
-        assertNull(navigator.currentDestination.value)
-
-        // Second call on empty stack returns false
+        // Single screen at root - should delegate to system (close app)
+        // New back handling preserves root constraint: root stack always keeps 1 item
         val result = navigator.handleBackInternal()
-        assertFalse(result)
+        assertFalse(result, "Single item at root should delegate to system")
+        
+        // Current destination should still be there (not popped)
+        assertEquals(HomeDestination, navigator.currentDestination.value)
     }
 
     @Test
@@ -297,7 +297,7 @@ class TreeNavigatorTest {
     }
 
     @Test
-    fun `handleBackInternal multiple times until empty`() {
+    fun `handleBackInternal multiple times until single item at root`() {
         val navigator = TreeNavigator()
         navigator.setStartDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
@@ -311,12 +311,10 @@ class TreeNavigatorTest {
         assertTrue(navigator.handleBackInternal())
         assertEquals(HomeDestination, navigator.currentDestination.value)
 
-        // Pop HomeDestination - leaves empty stack but returns true
-        assertTrue(navigator.handleBackInternal())
-        assertNull(navigator.currentDestination.value)
-
-        // Stack is now empty - returns false
+        // HomeDestination is the last item - should delegate to system (return false)
+        // New back handling preserves root constraint: can't pop the last item at root
         assertFalse(navigator.handleBackInternal())
+        assertEquals(HomeDestination, navigator.currentDestination.value)
     }
 
     // =========================================================================
@@ -447,9 +445,10 @@ class TreeNavigatorTest {
 
     @Test
     fun `switchTab preserves all tab stacks`() {
-        val initialState = TabNode(
+        // Wrap TabNode in root StackNode for proper structure
+        val tabNode = TabNode(
             key = "tabs",
-            parentKey = null,
+            parentKey = "root",
             stacks = listOf(
                 StackNode("tab0", "tabs", listOf(
                     ScreenNode("s1", "tab0", HomeDestination),
@@ -461,22 +460,33 @@ class TreeNavigatorTest {
             ),
             activeStackIndex = 0
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(tabNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
         navigator.switchTab(1)
 
-        val tabs = navigator.state.value as TabNode
+        val root = navigator.state.value as StackNode
+        val tabs = root.children[0] as TabNode
         assertEquals(2, tabs.stacks[0].children.size) // tab0 unchanged
         assertEquals(1, tabs.stacks[1].children.size) // tab1 unchanged
     }
 
     @Test
     fun `switchTab throws for invalid index`() {
-        val initialState = TabNode(
+        val tabNode = TabNode(
             key = "tabs",
-            parentKey = null,
+            parentKey = "root",
             stacks = listOf(StackNode("tab0", "tabs", emptyList())),
             activeStackIndex = 0
+        )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(tabNode)
         )
         val navigator = TreeNavigator(initialState = initialState)
 
@@ -487,11 +497,16 @@ class TreeNavigatorTest {
 
     @Test
     fun `switchTab throws for negative index`() {
-        val initialState = TabNode(
+        val tabNode = TabNode(
             key = "tabs",
-            parentKey = null,
+            parentKey = "root",
             stacks = listOf(StackNode("tab0", "tabs", emptyList())),
             activeStackIndex = 0
+        )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(tabNode)
         )
         val navigator = TreeNavigator(initialState = initialState)
 
@@ -502,14 +517,19 @@ class TreeNavigatorTest {
 
     @Test
     fun `activeTabIndex returns current tab index`() {
-        val initialState = TabNode(
+        val tabNode = TabNode(
             key = "tabs",
-            parentKey = null,
+            parentKey = "root",
             stacks = listOf(
                 StackNode("tab0", "tabs", emptyList()),
                 StackNode("tab1", "tabs", emptyList())
             ),
             activeStackIndex = 1
+        )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(tabNode)
         )
         val navigator = TreeNavigator(initialState = initialState)
 
@@ -526,9 +546,9 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigate pushes to active tab stack`() {
-        val initialState = TabNode(
+        val tabNode = TabNode(
             key = "tabs",
-            parentKey = null,
+            parentKey = "root",
             stacks = listOf(
                 StackNode("tab0", "tabs", listOf(
                     ScreenNode("s1", "tab0", HomeDestination)
@@ -539,11 +559,17 @@ class TreeNavigatorTest {
             ),
             activeStackIndex = 0
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(tabNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
         navigator.navigate(SettingsDestination)
 
-        val tabs = navigator.state.value as TabNode
+        val root = navigator.state.value as StackNode
+        val tabs = root.children[0] as TabNode
         assertEquals(2, tabs.stacks[0].children.size) // Pushed to active tab
         assertEquals(1, tabs.stacks[1].children.size) // Other tab unchanged
     }
@@ -554,9 +580,9 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateToPane pushes to specified pane`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     StackNode("primary-stack", "panes", listOf(
@@ -569,11 +595,17 @@ class TreeNavigatorTest {
             ),
             activePaneRole = PaneRole.Primary
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
         navigator.navigateToPane(PaneRole.Supporting, DetailDestination)
 
-        val panes = navigator.state.value as PaneNode
+        val root = navigator.state.value as StackNode
+        val panes = root.children[0] as PaneNode
         val supportingStack = panes.paneContent(PaneRole.Supporting) as StackNode
         assertEquals(1, supportingStack.children.size)
         assertEquals(DetailDestination, (supportingStack.activeChild as ScreenNode).destination)
@@ -581,9 +613,9 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateToPane with switchFocus changes active pane`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     ScreenNode("list", "panes", ListDestination)
@@ -594,11 +626,17 @@ class TreeNavigatorTest {
             ),
             activePaneRole = PaneRole.Primary
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
         navigator.navigateToPane(PaneRole.Supporting, DetailDestination, switchFocus = true)
 
-        val panes = navigator.state.value as PaneNode
+        val root = navigator.state.value as StackNode
+        val panes = root.children[0] as PaneNode
         assertEquals(PaneRole.Supporting, panes.activePaneRole)
     }
 
@@ -614,9 +652,9 @@ class TreeNavigatorTest {
 
     @Test
     fun `switchPane changes active pane role`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     ScreenNode("list", "panes", ListDestination)
@@ -627,11 +665,17 @@ class TreeNavigatorTest {
             ),
             activePaneRole = PaneRole.Primary
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
         navigator.switchPane(PaneRole.Supporting)
 
-        val panes = navigator.state.value as PaneNode
+        val root = navigator.state.value as StackNode
+        val panes = root.children[0] as PaneNode
         assertEquals(PaneRole.Supporting, panes.activePaneRole)
         assertEquals(DetailDestination, navigator.currentDestination.value)
     }
@@ -648,9 +692,9 @@ class TreeNavigatorTest {
 
     @Test
     fun `isPaneAvailable returns true for configured role`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     ScreenNode("list", "panes", ListDestination)
@@ -661,6 +705,11 @@ class TreeNavigatorTest {
             ),
             activePaneRole = PaneRole.Primary
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
         assertTrue(navigator.isPaneAvailable(PaneRole.Primary))
@@ -669,15 +718,20 @@ class TreeNavigatorTest {
 
     @Test
     fun `isPaneAvailable returns false for unconfigured role`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     ScreenNode("list", "panes", ListDestination)
                 )
             ),
             activePaneRole = PaneRole.Primary
+        )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
         )
         val navigator = TreeNavigator(initialState = initialState)
 
@@ -696,32 +750,45 @@ class TreeNavigatorTest {
     fun `paneContent returns content for specified role`() {
         val primaryContent = ScreenNode("list", "panes", ListDestination)
         val supportingContent = ScreenNode("detail", "panes", DetailDestination)
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(primaryContent),
                 PaneRole.Supporting to PaneConfiguration(supportingContent)
             ),
             activePaneRole = PaneRole.Primary
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
-        assertEquals(primaryContent, navigator.paneContent(PaneRole.Primary))
-        assertEquals(supportingContent, navigator.paneContent(PaneRole.Supporting))
+        // Note: The actual content nodes may have updated parentKeys after wrapping
+        val primary = navigator.paneContent(PaneRole.Primary) as? ScreenNode
+        val supporting = navigator.paneContent(PaneRole.Supporting) as? ScreenNode
+        assertEquals(ListDestination, primary?.destination)
+        assertEquals(DetailDestination, supporting?.destination)
     }
 
     @Test
     fun `paneContent returns null for unconfigured role`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     ScreenNode("list", "panes", ListDestination)
                 )
             ),
             activePaneRole = PaneRole.Primary
+        )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
         )
         val navigator = TreeNavigator(initialState = initialState)
 
@@ -738,9 +805,9 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateBackInPane pops from specified pane`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     ScreenNode("list", "panes", ListDestination)
@@ -754,21 +821,27 @@ class TreeNavigatorTest {
             ),
             activePaneRole = PaneRole.Primary
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
         val result = navigator.navigateBackInPane(PaneRole.Supporting)
 
         assertTrue(result)
-        val panes = navigator.state.value as PaneNode
+        val root = navigator.state.value as StackNode
+        val panes = root.children[0] as PaneNode
         val supportingStack = panes.paneContent(PaneRole.Supporting) as StackNode
         assertEquals(1, supportingStack.children.size)
     }
 
     @Test
     fun `navigateBackInPane returns false when pane stack is empty`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     ScreenNode("list", "panes", ListDestination)
@@ -778,6 +851,11 @@ class TreeNavigatorTest {
                 )
             ),
             activePaneRole = PaneRole.Primary
+        )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
         )
         val navigator = TreeNavigator(initialState = initialState)
 
@@ -798,9 +876,9 @@ class TreeNavigatorTest {
 
     @Test
     fun `clearPane resets pane stack to root`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     ScreenNode("list", "panes", ListDestination)
@@ -815,11 +893,17 @@ class TreeNavigatorTest {
             ),
             activePaneRole = PaneRole.Primary
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
         navigator.clearPane(PaneRole.Supporting)
 
-        val panes = navigator.state.value as PaneNode
+        val root = navigator.state.value as StackNode
+        val panes = root.children[0] as PaneNode
         val supportingStack = panes.paneContent(PaneRole.Supporting) as StackNode
         assertEquals(1, supportingStack.children.size)
         assertEquals(DetailDestination, (supportingStack.activeChild as ScreenNode).destination)
@@ -1127,9 +1211,9 @@ class TreeNavigatorTest {
 
     @Test
     fun `derived states update after tab switch`() {
-        val initialState = TabNode(
+        val tabNode = TabNode(
             key = "tabs",
-            parentKey = null,
+            parentKey = "root",
             stacks = listOf(
                 StackNode("tab0", "tabs", listOf(
                     ScreenNode("s1", "tab0", HomeDestination)
@@ -1139,6 +1223,11 @@ class TreeNavigatorTest {
                 ))
             ),
             activeStackIndex = 0
+        )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(tabNode)
         )
         val navigator = TreeNavigator(initialState = initialState)
 
@@ -1153,10 +1242,10 @@ class TreeNavigatorTest {
 
     @Test
     fun `complex navigation flow with tabs`() {
-        // Start with tabs
-        val initialState = TabNode(
+        // Start with tabs wrapped in root stack
+        val tabNode = TabNode(
             key = "tabs",
-            parentKey = null,
+            parentKey = "root",
             stacks = listOf(
                 StackNode("home-tab", "tabs", listOf(
                     ScreenNode("home-screen", "home-tab", HomeDestination)
@@ -1166,6 +1255,11 @@ class TreeNavigatorTest {
                 ))
             ),
             activeStackIndex = 0
+        )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(tabNode)
         )
         val navigator = TreeNavigator(initialState = initialState)
 
@@ -1196,9 +1290,9 @@ class TreeNavigatorTest {
 
     @Test
     fun `complex navigation flow with panes`() {
-        val initialState = PaneNode(
+        val paneNode = PaneNode(
             key = "panes",
-            parentKey = null,
+            parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
                     StackNode("list-stack", "panes", listOf(
@@ -1211,6 +1305,11 @@ class TreeNavigatorTest {
             ),
             activePaneRole = PaneRole.Primary
         )
+        val initialState = StackNode(
+            key = "root",
+            parentKey = null,
+            children = listOf(paneNode)
+        )
         val navigator = TreeNavigator(initialState = initialState)
 
         // Navigate to detail pane
@@ -1221,13 +1320,15 @@ class TreeNavigatorTest {
         navigator.navigateToPane(PaneRole.Supporting, SettingsDestination, switchFocus = false)
 
         // Verify detail pane has 2 screens
-        val panes = navigator.state.value as PaneNode
+        val root = navigator.state.value as StackNode
+        val panes = root.children[0] as PaneNode
         val detailStack = panes.paneContent(PaneRole.Supporting) as StackNode
         assertEquals(2, detailStack.children.size)
 
         // Go back in detail pane
         navigator.navigateBackInPane(PaneRole.Supporting)
-        val panesAfterBack = navigator.state.value as PaneNode
+        val rootAfterBack = navigator.state.value as StackNode
+        val panesAfterBack = rootAfterBack.children[0] as PaneNode
         val detailStackAfterBack = panesAfterBack.paneContent(PaneRole.Supporting) as StackNode
         assertEquals(1, detailStackAfterBack.children.size)
     }

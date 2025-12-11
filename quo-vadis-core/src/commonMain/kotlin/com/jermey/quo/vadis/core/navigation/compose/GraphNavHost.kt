@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.collectAsState
@@ -544,10 +545,26 @@ private fun GraphNavHostContent(
         }
     }
 
+    // Back handler registry for user-defined back handlers
+    val backHandlerRegistry = remember { BackHandlerRegistry() }
+
+    // Connect registry to navigator (if it's a TreeNavigator)
+    LaunchedEffect(navigator, backHandlerRegistry) {
+        (navigator as? TreeNavigator)?.backHandlerRegistry = backHandlerRegistry
+    }
+
+    // Clean up registry connection on disposal
+    DisposableEffect(navigator) {
+        onDispose {
+            (navigator as? TreeNavigator)?.backHandlerRegistry = null
+        }
+    }
+
     // Provide predictive back state to child composables (e.g., TabContent)
     // so they can skip animations during the gesture and prevent visual glitches
     CompositionLocalProvider(
-        LocalPredictiveBackInProgress provides (isPredictiveGesture || justCompletedGesture)
+        LocalPredictiveBackInProgress provides (isPredictiveGesture || justCompletedGesture),
+        LocalBackHandlerRegistry provides backHandlerRegistry
     ) {
         NavigationContainer(
             displayedCurrent = displayedCurrent,

@@ -1,10 +1,13 @@
 package com.jermey.navplayground.demo.tabs
 
-import com.jermey.navplayground.demo.tabs.MainTabs.*
+import com.jermey.navplayground.demo.tabs.MainTabs.ExploreTab
+import com.jermey.navplayground.demo.tabs.MainTabs.HomeTab
+import com.jermey.navplayground.demo.tabs.MainTabs.ProfileTab
+import com.jermey.navplayground.demo.tabs.MainTabs.SettingsTab
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.annotations.TabItem
+import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.core.navigation.core.Destination as DestinationDefinition
 
 /**
@@ -100,11 +103,21 @@ sealed class MainTabs : DestinationDefinition {
      * Icon: "settings" (material icon name)
      */
     @TabItem(label = "Settings", icon = "settings")
-    @Stack(name = "settingsTabStack", startDestinationClass = SettingsTab.SettingsMain::class)
+    @Stack(name = "settingsTabStack", startDestinationClass = SettingsTab.Main::class)
     sealed class SettingsTab : DestinationDefinition {
         /** Root destination for the Settings tab. */
-        @Destination(route = "settings/tab")
-        data object SettingsMain : SettingsTab()
+
+        @Destination(route = "settings/main")
+        data object Main : SettingsTab()
+
+        @Destination(route = "settings/profile")
+        data object Profile : SettingsTab()
+
+        @Destination(route = "settings/notifications")
+        data object Notifications : SettingsTab()
+
+        @Destination(route = "settings/about")
+        data object About : SettingsTab()
     }
 
 }

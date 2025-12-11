@@ -1,6 +1,7 @@
 package com.jermey.navplayground.demo.tabs
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -44,29 +45,23 @@ fun MainTabsWrapper(
     scope: TabWrapperScope,
     content: @Composable () -> Unit
 ) {
-    Scaffold(
+    Column(
         modifier = Modifier.consumeWindowInsets(
             WindowInsets()
                 .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
-        ),
-        bottomBar = {
-            MainBottomNavigationBar(
-                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                activeTabIndex = scope.activeTabIndex,
-                tabMetadata = scope.tabMetadata,
-                onTabSelected = { index -> scope.switchTab(index) },
-                isTransitioning = scope.isTransitioning
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+        )
+    ) {
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             // Library renders active tab content
             content()
         }
+        MainBottomNavigationBar(
+            modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+            activeTabIndex = scope.activeTabIndex,
+            tabMetadata = scope.tabMetadata,
+            onTabSelected = { index -> scope.switchTab(index) },
+            isTransitioning = scope.isTransitioning
+        )
     }
 }
 
@@ -144,7 +139,8 @@ private fun getTabIconFallback(route: String): ImageVector = when {
     route.contains("home", ignoreCase = true) -> Icons.Default.Home
     route.contains("explore", ignoreCase = true) -> Icons.Default.Explore
     route.contains("person", ignoreCase = true) ||
-        route.contains("profile", ignoreCase = true) -> Icons.Default.Person
+            route.contains("profile", ignoreCase = true) -> Icons.Default.Person
+
     route.contains("settings", ignoreCase = true) -> Icons.Default.Settings
     else -> Icons.Default.Circle // Fallback
 }

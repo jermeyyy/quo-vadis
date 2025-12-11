@@ -234,7 +234,7 @@ class ProfileContainer(
      */
     private suspend fun PipelineContext<ProfileState, ProfileIntent, ProfileAction>.handleNavigateToSettings() {
         try {
-            navigator.navigate(MainTabs.SettingsTab.SettingsMain)
+            navigator.navigate(MainTabs.SettingsTab.Main)
         } catch (e: Exception) {
             action(ProfileAction.ShowError("Navigation failed"))
         }
