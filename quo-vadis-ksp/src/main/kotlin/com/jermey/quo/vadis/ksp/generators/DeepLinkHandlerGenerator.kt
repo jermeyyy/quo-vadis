@@ -74,6 +74,20 @@ class DeepLinkHandlerGenerator(
         )
         private val DEEP_LINK_RESULT_MATCHED = DEEP_LINK_RESULT.nestedClass("Matched")
         private val DEEP_LINK_RESULT_NOT_MATCHED = DEEP_LINK_RESULT.nestedClass("NotMatched")
+        
+        // DeepLinkHandler interface types
+        private val DEEP_LINK = ClassName(
+            "com.jermey.quo.vadis.core.navigation.core",
+            "DeepLink"
+        )
+        private val NAVIGATION_GRAPH = ClassName(
+            "com.jermey.quo.vadis.core.navigation.core",
+            "NavigationGraph"
+        )
+        private val NAVIGATOR = ClassName(
+            "com.jermey.quo.vadis.core.navigation.core",
+            "Navigator"
+        )
     }
 
     /**
@@ -137,6 +151,10 @@ class DeepLinkHandlerGenerator(
             .addFunction(buildHandleDeepLinkFunction())
             .addFunction(buildCreateDeepLinkUriFunction(destinations))
             .addFunction(buildExtractPathFunction())
+            // DeepLinkHandler interface methods
+            .addFunction(buildResolveFunction())
+            .addFunction(buildRegisterFunction())
+            .addFunction(buildHandleFunction())
             .build()
     }
 
@@ -329,14 +347,16 @@ class DeepLinkHandlerGenerator(
             val destClassName = buildDestinationClassName(dest)
             val params = dest.routeParams
 
+            // All cases use %P (string template) to properly interpolate $scheme at runtime.
+            // %S would escape the $ making it a literal string instead of interpolated.
             when {
                 dest.isDataObject -> {
                     // Data object - exact match, use %T for auto-import
-                    CodeBlock.of("%T -> %S", destClassName, "\$scheme://$route")
+                    CodeBlock.of("%T -> %P", destClassName, "\$scheme://$route")
                 }
                 params.isEmpty() -> {
                     // Data class without route params - use "is" check
-                    CodeBlock.of("is %T -> %S", destClassName, "\$scheme://$route")
+                    CodeBlock.of("is %T -> %P", destClassName, "\$scheme://$route")
                 }
                 else -> {
                     // Data class with route params - interpolate parameters
@@ -387,6 +407,78 @@ class DeepLinkHandlerGenerator(
                 |} else {
                 |    uri.trimStart('/')
                 |}
+                """.trimMargin()
+            )
+            .build()
+    }
+
+    /**
+     * Build the resolve function from DeepLinkHandler interface.
+     * 
+     * Uses the KSP-generated route patterns to resolve deep links.
+     */
+    private fun buildResolveFunction(): FunSpec {
+        val graphsType = MAP.parameterizedBy(STRING, NAVIGATION_GRAPH)
+        
+        return FunSpec.builder("resolve")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("deepLink", DEEP_LINK)
+            .addParameter("graphs", graphsType)
+            .returns(QuoVadisClassNames.DESTINATION.copy(nullable = true))
+            .addCode(
+                """
+                |val result = handleDeepLink(deepLink.uri)
+                |return when (result) {
+                |    is %T -> result.destination
+                |    is %T -> null
+                |}
+                """.trimMargin(),
+                DEEP_LINK_RESULT_MATCHED,
+                DEEP_LINK_RESULT_NOT_MATCHED
+            )
+            .build()
+    }
+
+    /**
+     * Build the register function from DeepLinkHandler interface.
+     * 
+     * This is a no-op for generated handlers since routes are determined at compile time.
+     */
+    private fun buildRegisterFunction(): FunSpec {
+        val actionType = LambdaTypeName.get(
+            parameters = listOf(
+                ParameterSpec.builder("destination", QuoVadisClassNames.DESTINATION).build(),
+                ParameterSpec.builder("navigator", NAVIGATOR).build(),
+                ParameterSpec.builder("parameters", MAP.parameterizedBy(STRING, STRING)).build()
+            ),
+            returnType = ClassName("kotlin", "Unit")
+        )
+        
+        return FunSpec.builder("register")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("pattern", STRING)
+            .addParameter("action", actionType)
+            .addComment("No-op: Generated handler uses compile-time routes from @Destination annotations")
+            .build()
+    }
+
+    /**
+     * Build the handle function from DeepLinkHandler interface.
+     * 
+     * Resolves the deep link and navigates if a destination is found.
+     */
+    private fun buildHandleFunction(): FunSpec {
+        val graphsType = MAP.parameterizedBy(STRING, NAVIGATION_GRAPH)
+        
+        return FunSpec.builder("handle")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("deepLink", DEEP_LINK)
+            .addParameter("navigator", NAVIGATOR)
+            .addParameter("graphs", graphsType)
+            .addCode(
+                """
+                |val destination = resolve(deepLink, graphs)
+                |destination?.let { navigator.navigate(it) }
                 """.trimMargin()
             )
             .build()

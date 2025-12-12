@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import com.jermey.navplayground.demo.tabs.generated.buildMainTabsNavNode
 import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
+import com.jermey.quo.vadis.generated.GeneratedDeepLinkHandlerImpl
 import com.jermey.quo.vadis.generated.GeneratedScopeRegistry
 import com.jermey.quo.vadis.generated.GeneratedScreenRegistry
 import com.jermey.quo.vadis.generated.GeneratedWrapperRegistry
@@ -79,7 +80,8 @@ fun DemoApp() {
     val navigator = remember {
         TreeNavigator(
             initialState = navTree,
-            scopeRegistry = GeneratedScopeRegistry
+            scopeRegistry = GeneratedScopeRegistry,
+            deepLinkHandler = GeneratedDeepLinkHandlerImpl
         )
     }
 
