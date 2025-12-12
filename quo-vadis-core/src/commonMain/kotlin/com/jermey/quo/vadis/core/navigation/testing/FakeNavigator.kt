@@ -197,6 +197,12 @@ class FakeNavigator : Navigator {
     // TAB NAVIGATION (Stubbed for testing)
     // =========================================================================
 
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        message = "switchTab() is deprecated. Use navigate() with a destination instead.",
+        replaceWith = ReplaceWith("navigate(destination)"),
+        level = DeprecationLevel.WARNING
+    )
     override fun switchTab(index: Int) {
         // No-op for fake navigator
     }

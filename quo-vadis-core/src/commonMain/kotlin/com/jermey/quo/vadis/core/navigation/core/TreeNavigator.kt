@@ -583,6 +583,13 @@ class TreeNavigator(
      * @throws IllegalStateException if no TabNode in the current state
      * @throws IndexOutOfBoundsException if index is invalid
      */
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        message = "switchTab() is deprecated. Use navigate() with a destination instead. " +
+            "Navigate will automatically switch to the tab containing the destination.",
+        replaceWith = ReplaceWith("navigate(destination)"),
+        level = DeprecationLevel.WARNING
+    )
     override fun switchTab(index: Int) {
         val newState = TreeMutator.switchActiveTab(_state.value, index)
         _state.value = newState

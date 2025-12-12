@@ -93,6 +93,23 @@ object TreeMutator {
         data object CannotHandle : BackResult()
     }
 
+    /**
+     * Result of a push operation with tab awareness.
+     *
+     * Used internally to determine how a push should be handled when
+     * navigating within a TabNode context.
+     */
+    sealed class PushStrategy {
+        /** Push to the specified stack normally */
+        data class PushToStack(val targetStack: StackNode) : PushStrategy()
+
+        /** Switch to an existing tab that contains the destination */
+        data class SwitchToTab(val tabNode: TabNode, val tabIndex: Int) : PushStrategy()
+
+        /** Destination is out of scope - push to parent stack */
+        data class PushOutOfScope(val parentStack: StackNode) : PushStrategy()
+    }
+
     // =========================================================================
     // PUSH OPERATIONS
     // =========================================================================
@@ -186,11 +203,13 @@ object TreeMutator {
     // =========================================================================
 
     /**
-     * Push a destination with scope awareness.
+     * Push a destination with scope awareness and tab switching.
      *
-     * If the destination is out of the active container's scope (TabNode/PaneNode),
-     * pushes to the parent stack instead of the deepest active stack. This preserves
-     * the container for predictive back gestures.
+     * Navigation logic for TabNode context:
+     * 1. First check if destination is in scope (using [scopeRegistry])
+     * 2. If in scope, check if destination already exists in any TabNode stack
+     *    - If found in another tab's stack, switch to that tab instead of pushing
+     * 3. If not found and out of scope, delegate to parent stack
      *
      * ## Scope Resolution
      *
@@ -199,14 +218,24 @@ object TreeMutator {
      * is not in that scope (according to [scopeRegistry]), navigation targets
      * the parent stack instead.
      *
+     * ## Tab Switching
+     *
+     * When navigating to a destination that already exists in a different tab's
+     * stack (within the same TabNode), the navigator will switch to that tab
+     * instead of creating a duplicate entry. This provides intuitive navigation
+     * where calling navigate() with a tab destination switches to that tab.
+     *
      * ## Example
      *
      * ```kotlin
      * // Given: Root -> Stack -> TabNode(scopeKey="MainTabs") -> Stack(active)
-     * // MainTabs contains: Home, Search, Profile
+     * // MainTabs contains: Home (tab 0), Search (tab 1), Profile (tab 2)
      *
-     * // HomeDestination is in scope - pushes to active tab's stack
+     * // HomeDestination is in scope AND exists in tab 0 - switches to tab 0
      * TreeMutator.push(root, HomeDestination, scopeRegistry)
+     *
+     * // NewScreen is in scope but doesn't exist - pushes to active stack
+     * TreeMutator.push(root, NewScreenDestination, scopeRegistry)
      *
      * // DetailDestination is NOT in scope - pushes to parent stack (above TabNode)
      * TreeMutator.push(root, DetailDestination, scopeRegistry)
@@ -216,7 +245,7 @@ object TreeMutator {
      * @param destination The destination to navigate to
      * @param scopeRegistry Registry to check scope membership
      * @param generateKey Function to generate unique keys for new nodes
-     * @return New tree with the destination pushed appropriately
+     * @return New tree with the destination pushed or tab switched appropriately
      * @throws IllegalStateException if no suitable stack is found
      */
     @OptIn(ExperimentalUuidApi::class)
@@ -231,22 +260,128 @@ object TreeMutator {
             return push(root, destination, generateKey)
         }
 
-        val targetStack = findTargetStackForPush(root, destination, scopeRegistry)
-            ?: throw IllegalStateException("No suitable stack found for navigation")
-
-        val deepestActiveStack = root.activeStack()
-
-        return if (targetStack.key == deepestActiveStack?.key) {
-            // In-scope or no container: push directly to active stack
-            pushToActiveStack(root, targetStack, destination, generateKey)
-        } else {
-            // Out-of-scope: push as sibling to container
-            pushOutOfScope(root, targetStack, destination, generateKey)
+        return when (val strategy = determinePushStrategy(root, destination, scopeRegistry)) {
+            is PushStrategy.PushToStack -> {
+                pushToActiveStack(root, strategy.targetStack, destination, generateKey)
+            }
+            is PushStrategy.SwitchToTab -> {
+                switchTab(root, strategy.tabNode.key, strategy.tabIndex)
+            }
+            is PushStrategy.PushOutOfScope -> {
+                pushOutOfScope(root, strategy.parentStack, destination, generateKey)
+            }
         }
     }
 
     /**
+     * Determines the push strategy for a destination considering scope and existing tabs.
+     *
+     * Walks up from the deepest active stack, checking each container (TabNode/PaneNode)
+     * to determine how the navigation should be handled.
+     *
+     * @param root The root NavNode of the navigation tree
+     * @param destination The destination to check
+     * @param scopeRegistry Registry for scope membership checks
+     * @return The appropriate PushStrategy for this navigation
+     * @throws IllegalStateException if no valid strategy can be determined
+     */
+    private fun determinePushStrategy(
+        root: NavNode,
+        destination: Destination,
+        scopeRegistry: ScopeRegistry
+    ): PushStrategy {
+        val activeStack = root.activeStack()
+            ?: throw IllegalStateException("No active stack found in tree")
+
+        // Walk the active path to find containers
+        val activePath = root.activePathToLeaf()
+
+        // Check containers from deepest to shallowest
+        for (node in activePath.reversed()) {
+            when (node) {
+                is StackNode -> {
+                    // Check if this stack has a scope and if destination is out of scope
+                    val stackScope = node.scopeKey
+                    if (stackScope != null && !scopeRegistry.isInScope(stackScope, destination)) {
+                        // Out of scope - find the stack that contains this StackNode
+                        val parentKey = node.parentKey ?: continue
+                        val parent = root.findByKey(parentKey)
+                        if (parent is StackNode) {
+                            return PushStrategy.PushOutOfScope(parent)
+                        }
+                    }
+                }
+                is TabNode -> {
+                    val scopeKey = node.scopeKey
+
+                    // First, check if destination is in scope
+                    if (scopeKey != null && !scopeRegistry.isInScope(scopeKey, destination)) {
+                        // Out of scope - find the stack that contains this TabNode
+                        val parentKey = node.parentKey ?: continue
+                        val parent = root.findByKey(parentKey)
+                        if (parent is StackNode) {
+                            return PushStrategy.PushOutOfScope(parent)
+                        }
+                        continue
+                    }
+
+                    // Destination is in scope - check if it exists in any tab's stack
+                    val existingTabIndex = findTabWithDestination(node, destination)
+                    if (existingTabIndex != null && existingTabIndex != node.activeStackIndex) {
+                        // Destination exists in a different tab - switch to it
+                        return PushStrategy.SwitchToTab(node, existingTabIndex)
+                    }
+
+                    // Destination is in scope but not in another tab - push to active stack
+                    // Continue checking other containers up the tree
+                }
+                is PaneNode -> {
+                    val scopeKey = node.scopeKey
+                    if (scopeKey != null && !scopeRegistry.isInScope(scopeKey, destination)) {
+                        // Out of scope - find the stack that contains this PaneNode
+                        val parentKey = node.parentKey ?: continue
+                        val parent = root.findByKey(parentKey)
+                        if (parent is StackNode) {
+                            return PushStrategy.PushOutOfScope(parent)
+                        }
+                    }
+                }
+                else -> { /* Continue checking */ }
+            }
+        }
+
+        // All containers allow this destination, push to deepest active stack
+        return PushStrategy.PushToStack(activeStack)
+    }
+
+    /**
+     * Finds the tab index containing a destination with matching type.
+     *
+     * Searches through all stacks in a TabNode to find one that contains
+     * a ScreenNode with a destination of the same type (class) as the target.
+     *
+     * @param tabNode The TabNode to search within
+     * @param destination The destination to find
+     * @return The tab index if found, null otherwise
+     */
+    private fun findTabWithDestination(tabNode: TabNode, destination: Destination): Int? {
+        val destinationClass = destination::class
+        tabNode.stacks.forEachIndexed { index, stack ->
+            // Check if this stack contains a screen with matching destination type
+            val hasDestination = stack.children.any { child ->
+                child is ScreenNode && child.destination::class == destinationClass
+            }
+            if (hasDestination) {
+                return index
+            }
+        }
+        return null
+    }
+
+    /**
      * Finds the appropriate target stack for a destination considering scope.
+     *
+     * @deprecated Use [determinePushStrategy] instead which provides more granular control.
      *
      * Walks up from the deepest active stack, checking each container (TabNode/PaneNode)
      * to see if the destination is in scope. Returns the first stack where the

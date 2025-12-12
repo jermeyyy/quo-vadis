@@ -34,6 +34,16 @@ class TreeMutatorScopeTest {
             override val transition: NavigationTransition? = null
             override fun toString(): String = "SettingsTab"
         }
+
+        /**
+         * An in-scope destination that is NOT pre-populated in any tab.
+         * Should be pushed to the active tab's stack.
+         */
+        data object ProfileTab : MainTabs {
+            override val data: Any? = null
+            override val transition: NavigationTransition? = null
+            override fun toString(): String = "ProfileTab"
+        }
     }
 
     /**
@@ -65,7 +75,11 @@ class TreeMutatorScopeTest {
      */
     private val testRegistry = object : ScopeRegistry {
         private val scopes = mapOf(
-            "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class)
+            "MainTabs" to setOf(
+                MainTabs.HomeTab::class,
+                MainTabs.SettingsTab::class,
+                MainTabs.ProfileTab::class
+            )
         )
 
         override fun isInScope(scopeKey: String, destination: Destination): Boolean {
@@ -151,23 +165,23 @@ class TreeMutatorScopeTest {
     // =========================================================================
 
     @Test
-    fun `push in-scope destination goes to active tab stack`() {
+    fun `push in-scope destination existing in another tab switches to that tab`() {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
+        // SettingsTab exists in tab 1, currently active is tab 0
         val result = TreeMutator.push(tree, MainTabs.SettingsTab, testRegistry, generateKey)
 
-        // Should push to the active HomeTab stack (tab0)
+        // Should switch to tab 1 where SettingsTab already exists
         val resultStack = result as StackNode
         val tabNode = resultStack.children[0] as TabNode
-        val activeStack = tabNode.stacks[tabNode.activeStackIndex]
 
-        // Active stack should now have 2 children: HomeTab + SettingsTab
-        assertEquals(2, activeStack.children.size)
+        // Active tab should now be tab 1 (settings tab)
+        assertEquals(1, tabNode.activeStackIndex)
 
-        val topScreen = activeStack.children.last()
-        assertIs<ScreenNode>(topScreen)
-        assertEquals(MainTabs.SettingsTab, topScreen.destination)
+        // No new screens should be pushed - just tab switch
+        assertEquals(1, tabNode.stacks[0].children.size) // Home tab still has 1
+        assertEquals(1, tabNode.stacks[1].children.size) // Settings tab still has 1
     }
 
     @Test
@@ -175,16 +189,41 @@ class TreeMutatorScopeTest {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
+        // HomeTab exists in tab 0 which is already active
         val result = TreeMutator.push(tree, MainTabs.HomeTab, testRegistry, generateKey)
 
         // TabNode should still exist with same structure
         val resultStack = result as StackNode
         val tabNode = resultStack.children[0] as TabNode
 
-        // Tab structure preserved
+        // Tab structure preserved - no change since already on HomeTab
         assertEquals(2, tabNode.stacks.size)
         assertEquals(0, tabNode.activeStackIndex)
         assertEquals("MainTabs", tabNode.scopeKey)
+    }
+
+    @Test
+    fun `push in-scope destination not in any tab goes to active stack`() {
+        val tree = buildTestTree()
+        val generateKey = createKeyGenerator()
+
+        // ProfileTab is in scope but not in any tab's stack
+        val result = TreeMutator.push(tree, MainTabs.ProfileTab, testRegistry, generateKey)
+
+        // Should push to the active tab's stack (tab 0)
+        val resultStack = result as StackNode
+        val tabNode = resultStack.children[0] as TabNode
+
+        // Active tab should still be tab 0
+        assertEquals(0, tabNode.activeStackIndex)
+
+        // Active stack should now have 2 children: HomeTab + ProfileTab
+        val activeStack = tabNode.stacks[tabNode.activeStackIndex]
+        assertEquals(2, activeStack.children.size)
+
+        val topScreen = activeStack.children.last()
+        assertIs<ScreenNode>(topScreen)
+        assertEquals(MainTabs.ProfileTab, topScreen.destination)
     }
 
     // =========================================================================

@@ -170,6 +170,12 @@ interface Navigator : ParentNavigator {
      * @throws IllegalStateException if no TabNode in current state
      * @throws IndexOutOfBoundsException if index is invalid
      */
+    @Deprecated(
+        message = "switchTab() is deprecated. Use navigate() with a destination instead. " +
+            "Navigate will automatically switch to the tab containing the destination.",
+        replaceWith = ReplaceWith("navigate(destination)"),
+        level = DeprecationLevel.WARNING
+    )
     fun switchTab(index: Int)
 
     /**

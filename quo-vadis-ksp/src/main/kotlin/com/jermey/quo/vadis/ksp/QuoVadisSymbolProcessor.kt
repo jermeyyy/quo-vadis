@@ -190,7 +190,7 @@ class QuoVadisSymbolProcessor(
         generatePaneBuilders()
 
         // Step 7: Generate navigator extensions (KSP-005)
-        generateNavigatorExtensions()
+//        generateNavigatorExtensions()
 
         // Step 8: Generate screen registry (moved here to use already extracted screens)
         generateScreenRegistry(screens)
