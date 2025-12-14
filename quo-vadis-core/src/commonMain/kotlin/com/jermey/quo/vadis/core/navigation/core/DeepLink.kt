@@ -51,10 +51,9 @@ interface DeepLinkHandler {
     /**
      * Resolve a deep link to a destination.
      * @param deepLink the deep link to resolve
-     * @param graphs available navigation graphs
      * @return the destination if resolved, null otherwise
      */
-    fun resolve(deepLink: DeepLink, graphs: Map<String, NavigationGraph>): Destination?
+    fun resolve(deepLink: DeepLink): Destination?
 
     /**
      * Register a deep link pattern with an action to execute when matched.
@@ -83,9 +82,8 @@ interface DeepLinkHandler {
      * 
      * @param deepLink The deep link to handle
      * @param navigator The navigator to pass to the action
-     * @param graphs Available navigation graphs for resolution
      */
-    fun handle(deepLink: DeepLink, navigator: Navigator, graphs: Map<String, NavigationGraph>)
+    fun handle(deepLink: DeepLink, navigator: Navigator)
 }
 
 /**
@@ -100,22 +98,13 @@ class DefaultDeepLinkHandler : DeepLinkHandler {
     
     private val registrations = mutableListOf<DeepLinkRegistration>()
 
-    override fun resolve(deepLink: DeepLink, graphs: Map<String, NavigationGraph>): Destination? {
+    override fun resolve(deepLink: DeepLink): Destination? {
         // Try pattern matching
         registrations.forEach { registration ->
             val pattern = registration.pattern
             if (deepLink.uri == pattern || matchesPattern(deepLink.uri, pattern)) {
                 val params = extractParameters(deepLink.uri, pattern) + deepLink.parameters
                 return registration.destinationFactory(params)
-            }
-        }
-
-        // Finally, search through registered graphs
-        graphs.values.forEach { graph ->
-            graph.destinations.forEach { destConfig ->
-                if (destConfig.destination.route == deepLink.uri) {
-                    return destConfig.destination
-                }
             }
         }
 
@@ -137,7 +126,7 @@ class DefaultDeepLinkHandler : DeepLinkHandler {
         registrations.add(DeepLinkRegistration(pattern, destinationFactory, action))
     }
     
-    override fun handle(deepLink: DeepLink, navigator: Navigator, graphs: Map<String, NavigationGraph>) {
+    override fun handle(deepLink: DeepLink, navigator: Navigator) {
         // Find matching registration
         registrations.forEach { registration ->
             val pattern = registration.pattern
@@ -150,8 +139,8 @@ class DefaultDeepLinkHandler : DeepLinkHandler {
             }
         }
         
-        // Fallback: try to find destination in graphs and navigate directly
-        val destination = resolve(deepLink, graphs)
+        // Fallback: try to find destination and navigate directly
+        val destination = resolve(deepLink)
         destination?.let { navigator.navigate(it) }
     }
 

@@ -7,8 +7,6 @@ import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
-import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
-import com.jermey.quo.vadis.core.navigation.core.NavigationGraphBuilder
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.RouteRegistry
@@ -27,8 +25,6 @@ internal object QuoVadisClassNames {
     
     // Core navigation classes
     val NAVIGATOR: ClassName = Navigator::class.toClassName()
-    val NAVIGATION_GRAPH: ClassName = NavigationGraph::class.toClassName()
-    val NAVIGATION_GRAPH_BUILDER: ClassName = NavigationGraphBuilder::class.toClassName()
     val NAVIGATION_TRANSITION: ClassName = NavigationTransition::class.toClassName()
     val ROUTE_REGISTRY: ClassName = RouteRegistry::class.toClassName()
     val DESTINATION: ClassName = Destination::class.toClassName()

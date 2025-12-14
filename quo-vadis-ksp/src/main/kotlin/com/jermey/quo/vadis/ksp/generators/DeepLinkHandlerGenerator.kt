@@ -80,10 +80,6 @@ class DeepLinkHandlerGenerator(
             "com.jermey.quo.vadis.core.navigation.core",
             "DeepLink"
         )
-        private val NAVIGATION_GRAPH = ClassName(
-            "com.jermey.quo.vadis.core.navigation.core",
-            "NavigationGraph"
-        )
         private val NAVIGATOR = ClassName(
             "com.jermey.quo.vadis.core.navigation.core",
             "Navigator"
@@ -418,12 +414,9 @@ class DeepLinkHandlerGenerator(
      * Uses the KSP-generated route patterns to resolve deep links.
      */
     private fun buildResolveFunction(): FunSpec {
-        val graphsType = MAP.parameterizedBy(STRING, NAVIGATION_GRAPH)
-        
         return FunSpec.builder("resolve")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("deepLink", DEEP_LINK)
-            .addParameter("graphs", graphsType)
             .returns(QuoVadisClassNames.DESTINATION.copy(nullable = true))
             .addCode(
                 """
@@ -468,16 +461,13 @@ class DeepLinkHandlerGenerator(
      * Resolves the deep link and navigates if a destination is found.
      */
     private fun buildHandleFunction(): FunSpec {
-        val graphsType = MAP.parameterizedBy(STRING, NAVIGATION_GRAPH)
-        
         return FunSpec.builder("handle")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("deepLink", DEEP_LINK)
             .addParameter("navigator", NAVIGATOR)
-            .addParameter("graphs", graphsType)
             .addCode(
                 """
-                |val destination = resolve(deepLink, graphs)
+                |val destination = resolve(deepLink)
                 |destination?.let { navigator.navigate(it) }
                 """.trimMargin()
             )

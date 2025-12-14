@@ -22,7 +22,7 @@ export const navigationData: NavItem[] = [
       { label: 'Annotation-Based API', path: '/features/annotation-api' },
       { label: 'Type-Safe Navigation', path: '/features/type-safe' },
       { label: 'Multiplatform Support', path: '/features/multiplatform' },
-      { label: 'BackStack Management', path: '/features/backstack' },
+      { label: 'Stack Management', path: '/features/stack-management' },
       { label: 'Deep Links', path: '/features/deep-links' },
       { label: 'Predictive Back', path: '/features/predictive-back' },
       { label: 'Shared Elements', path: '/features/shared-elements' },

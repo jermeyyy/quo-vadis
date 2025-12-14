@@ -25,7 +25,6 @@ This project consists of **two main components**:
 - ✅ **Type-Safe Navigation** - Compile-time safety with no string-based routing
 - ✅ **Multiplatform** - Works on Android, iOS, Desktop, and Web
 - ✅ **Modular Architecture** - Gray box pattern for feature modules
-- ✅ **Direct BackStack Access** - Full control over navigation stack
 - ✅ **Deep Link Support** - URI-based navigation with pattern matching
 - ✅ **Predictive Back Navigation** - Smooth animated back gestures (Android 13+ & iOS)
 - ✅ **Shared Element Transitions** - Material Design shared elements (forward & back!)
@@ -186,12 +185,10 @@ fun App() {
     val navigator = rememberNavigator()
     
     LaunchedEffect(Unit) {
-        navigator.registerGraph(rootGraph())
         navigator.setStartDestination(AppDestination.Home)
     }
     
-    GraphNavHost(
-        graph = rootGraph(),
+    NavigationHost(
         navigator = navigator,
         defaultTransition = NavigationTransitions.SlideHorizontal
     )
@@ -246,12 +243,10 @@ fun App() {
     val navigator = rememberNavigator()
     
     LaunchedEffect(Unit) {
-        navigator.registerGraph(appGraph)
         navigator.setStartDestination(AppDestination.Home)
     }
     
-    GraphNavHost(
-        graph = appGraph,
+    NavigationHost(
         navigator = navigator,
         defaultTransition = NavigationTransitions.SlideHorizontal
     )
@@ -267,11 +262,11 @@ fun App() {
 ### Predictive Back Navigation
 
 ```kotlin
-PredictiveBackNavigation(
+// Predictive back is automatically enabled in NavigationHost
+NavigationHost(
     navigator = navigator,
-    graph = appGraph,
-    animationType = PredictiveBackAnimationType.Material3,
-    enabled = true
+    defaultTransition = NavigationTransitions.Material3,
+    predictiveBackEnabled = true
 )
 ```
 
@@ -363,7 +358,7 @@ The **`composeApp`** module contains a comprehensive demo showcasing all navigat
 - **Transitions** - Various animation styles (Fade, Slide, Scale, Material3)
 - **Deep Links** - URI-based navigation examples
 - **FlowMVI Pattern** - FlowMVI architecture integration
-- **BackStack Manipulation** - Direct stack access examples
+- **Stack Manipulation** - Navigation state manipulation examples
 
 ### Running the Demo
 
@@ -427,11 +422,18 @@ open iosApp/iosApp.xcodeproj
 navigator.navigate(DetailsDestination("123"))
 ```
 
-### Direct BackStack Access
+### State-Driven Navigation
 ```kotlin
-navigator.backStack.pop()
-navigator.backStack.popTo("route")
-navigator.backStack.clear()
+// Access navigation state as StateFlow<NavNode>
+val currentState: StateFlow<NavNode> = navigator.state
+
+// Manipulate navigation with TreeMutator
+navigator.mutate { node ->
+    node.pop()
+}
+navigator.mutate { node ->
+    node.popTo { it.destination.route == "home" }
+}
 ```
 
 ### Modular Feature Navigation

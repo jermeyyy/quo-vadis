@@ -4,6 +4,8 @@
 
 A comprehensive navigation library for Kotlin Multiplatform and Compose Multiplatform has been successfully implemented with all requested features, including both annotation-based and manual DSL approaches.
 
+The library uses a **tree-based navigation state** model with `NavNode` for state representation and `TreeMutator` for immutable state transformations.
+
 ## 🚀 Two Approaches to Navigation
 
 ### Annotation-Based API (Recommended)
@@ -125,13 +127,19 @@ com.jermey.quo.vadis.core.navigation/
 ├── core/
 │   ├── Destination.kt              - Navigation targets
 │   ├── TypedDestination.kt         - Serializable destinations
-│   ├── BackStack.kt                - Direct backstack access
+│   ├── NavNode.kt                  - Tree-based state (StackNode, TabNode, etc.)
+│   ├── TreeMutator.kt              - Immutable state transformations
 │   ├── Navigator.kt                - Central navigation controller
-│   ├── NavigationGraph.kt          - Modular navigation graphs
+│   ├── TreeNavigator.kt            - NavNode-based Navigator implementation
 │   ├── NavigationTransition.kt     - Animation & transitions
 │   └── DeepLink.kt                 - Deep link handling
 ├── compose/
-│   └── NavHost.kt                  - Composable navigation hosts
+│   ├── NavigationHost.kt           - Unified navigation host
+│   ├── ComposableCache.kt          - Screen caching
+│   └── hierarchical/
+│       ├── NavTreeRenderer.kt      - Recursive node rendering
+│       ├── AnimatedNavContent.kt   - Animated transitions
+│       └── PredictiveBackContent.kt - Gesture-aware content
 ├── integration/
 │   └── KoinIntegration.kt          - DI framework support
 ├── utils/
@@ -139,7 +147,8 @@ com.jermey.quo.vadis.core.navigation/
 ├── testing/
 │   └── FakeNavigator.kt            - Testing support
 └── serialization/
-    └── StateSerializer.kt          - State persistence
+    ├── NavNodeSerializer.kt        - NavNode JSON serialization
+    └── StateRestoration.kt         - State persistence
 ```
 
 ### Annotations Module (`quo-vadis-annotations`)
@@ -177,75 +186,84 @@ quo-vadis-core/docs/
 - **@Route**: Automatic route registration
 - **@Argument**: Type-safe serializable arguments with kotlinx.serialization
 - **@Content**: Connects Composables to destinations
-- **KSP Code Generation**: Generates route initializers, graph builders, and typed extensions
+- **KSP Code Generation**: Generates route initializers, screen registries, and typed extensions
 - **TypedDestination<T>**: Interface for serializable destination data
 - **Zero Boilerplate**: 50-70% less code than manual DSL
 - **Full Type Safety**: Compile-time verification of all navigation operations
 
-### ✅ 1. Modularization Support (Gray Box Pattern)
-- **NavigationGraph**: Feature modules can expose navigation entry points
-- **BaseModuleNavigation**: Simple base class for feature navigation
-- **Entry Points**: Modules hide internal navigation details
-- **Graph Registration**: Dynamic graph registration with Navigator
+### ✅ 1. NavNode Tree-Based State
+- **NavNode**: Immutable tree structure for navigation state
+- **StackNode**: Container for back-stack navigation
+- **TabNode**: Container for tabbed navigation with independent stacks
+- **PaneNode**: Container for adaptive pane layouts (list-detail)
+- **ScreenNode**: Leaf node representing a destination
+- **Observable State**: StateFlow<NavNode> for reactive updates
 
-### ✅ 2. Direct Backstack Access
-- **BackStack Interface**: Full control over navigation stack
-- **Observable State**: StateFlow for reactive updates
-- **Operations**: push, pop, popUntil, popTo, replace, replaceAll, clear, popToRoot
-- **Query Methods**: contains, findByRoute, size, isEmpty, routes
+### ✅ 2. TreeMutator - Immutable State Transformations
+- **push/pop**: Stack operations
+- **replaceCurrent**: Replace current destination
+- **clearAndPush**: Clear and navigate
+- **switchActiveTab**: Tab switching
+- **navigateToPane**: Pane navigation
+- **popWithTabBehavior**: Smart back navigation
 
-### ✅ 3. Deep Link Support
+### ✅ 3. Modularization Support (Gray Box Pattern)
+- **Screen Registry**: Feature modules can register screens
+- **Scope Registry**: Control navigation scope boundaries
+- **Entry Points**: Modules expose navigation entry points
+
+### ✅ 4. Deep Link Support
 - **DeepLink**: URI-based navigation
 - **Pattern Matching**: Support for path parameters (`/user/{userId}`)
 - **Query Parameters**: Parse and extract URL parameters
 - **DeepLinkHandler**: Extensible handler with pattern registration
-- **Universal Links**: Framework for handling universal links
 
-### ✅ 4. Transitions & Animations
+### ✅ 5. Transitions & Animations
 - **NavigationTransition**: Declarative transition API
 - **Pre-built Transitions**: None, Fade, SlideHorizontal, SlideVertical, ScaleIn
 - **Custom Transitions**: Builder for custom animations
-- **Shared Elements**: Framework ready (SharedElementConfig, SharedElementDestination)
+- **Shared Elements**: Full support via `destinationWithScopes()`
 - **Bidirectional**: Separate enter/exit for forward and back navigation
 
-### ✅ 5. Predictive Back Navigation (Multiplatform)
+### ✅ 6. Predictive Back Navigation (Multiplatform)
 - **Gesture Tracking**: Real-time animation during back gesture
 - **Two-Phase Animation**: Separate gesture and exit animations
-- **Animation Types**: Material3, Scale, Slide (with matching exit animations)
 - **Screen Caching**: Automatic composable caching with locking
 - **Platform Support**: Android 13+ and iOS with same animations
-- **Deferred Navigation**: Navigation happens after animation completes
-- **Cache Management**: Smart locking prevents premature screen destruction
+- **Cascade Mode**: Full predictive back cascade for nested stacks
 
-### ✅ 6. Independent Implementation
+### ✅ 7. Independent Implementation
 - **No External Nav Libraries**: Built from scratch
 - **Clean APIs**: Inspired by best practices but independent
 - **Minimal Dependencies**: Only Compose and Kotlin stdlib
 
-### ✅ 7. FlowMVI Architecture Integration
-For MVI architecture, use the separate `quo-vadis-core-flow-mvi` module which provides integration with the [FlowMVI](https://github.com/respawn-app/FlowMVI) library. See [FLOW_MVI.md](FLOW_MVI.md) for details.
+### ✅ 8. FlowMVI Architecture Integration
+For MVI architecture, use the separate `quo-vadis-core-flow-mvi` module. See [FLOW_MVI.md](FLOW_MVI.md) for details.
 
-### ✅ 8. DI Framework Support (Koin)
+### ✅ 9. DI Framework Support (Koin)
 - **NavigationFactory**: Factory interface for DI
 - **DIContainer**: Abstract DI integration
 - **Composable Helpers**: rememberFromDI for easy injection
-- **Module Ready**: Example Koin module structure
 
 ## 🎯 Key Abstractions & APIs
 
 ### Core API (Both Approaches)
 ```kotlin
 // Navigation operations (same for both approaches)
-val navigator = rememberNavigator()
+val navigator = rememberNavigator(startDestination = HomeDestination)
 
 navigator.navigate(destination, transition)
 navigator.navigateBack()
 navigator.navigateAndClearAll(destination)
 
-// Access backstack
-navigator.backStack.pop()
-navigator.backStack.popTo("route")
-navigator.backStack.current.collectAsState()
+// Access navigation state
+navigator.state.collect { navNode ->
+    // React to navigation state changes
+}
+
+// TreeMutator for direct state manipulation
+val newState = TreeMutator.push(navigator.state.value, destination)
+navigator.updateState(newState)
 ```
 
 ### Annotation-Based Approach (Recommended)
@@ -390,16 +408,12 @@ The example is wired into `App.kt` and ready to run!
 ```kotlin
 @Composable
 fun App() {
-    val navigator = rememberNavigator()
+    val navigator = rememberNavigator(startDestination = MainDestination.Home)
     
-    // Use generated graph builder
-    val graph = remember { buildMainDestinationGraph() }
-    
-    GraphNavHost(
-        graph = graph,
+    NavigationHost(
         navigator = navigator,
-        defaultTransition = NavigationTransitions.SlideHorizontal,
-        enablePredictiveBack = true
+        screenRegistry = MainDestinationScreenRegistry,
+        predictiveBackMode = PredictiveBackMode.FULL_CASCADE
     )
 }
 ```
@@ -408,25 +422,19 @@ fun App() {
 ```kotlin
 @Composable
 fun App() {
-    val navigator = rememberNavigator()
-    val graph = remember { createAppGraph() }
+    val navigator = rememberNavigator(startDestination = HomeDestination)
     
-    LaunchedEffect(Unit) {
-        navigator.registerGraph(graph)
-        navigator.setStartDestination(HomeDestination)
+    val screenRegistry = remember {
+        ScreenRegistry {
+            screen(HomeDestination) { navigator -> HomeScreen(navigator) }
+            screen<DetailsDestination> { dest, navigator -> DetailsScreen(dest, navigator) }
+        }
     }
     
-    GraphNavHost(
-        graph = graph,
+    NavigationHost(
         navigator = navigator,
-        defaultTransition = NavigationTransitions.SlideHorizontal
+        screenRegistry = screenRegistry
     )
-}
-
-fun createAppGraph() = navigationGraph("app") {
-    startDestination(HomeDestination)
-    destination(HomeDestination) { _, nav -> HomeScreen(nav) }
-    destination(DetailsDestination) { dest, nav -> DetailsScreen(dest, nav) }
 }
 ```
 
@@ -445,12 +453,13 @@ The core library is complete. Future enhancements could include:
 ## ✅ Requirements Met
 
 - ✅ **Two navigation approaches**: Annotation-based (recommended) and Manual DSL (advanced)
-- ✅ **Code generation with KSP**: Automatic route registration, graph builders, typed extensions
+- ✅ **Code generation with KSP**: Automatic route registration, screen registries, typed extensions
 - ✅ **Type-safe serialization**: kotlinx.serialization integration for arguments
-- ✅ Supports modularization with gray box pattern
-- ✅ Direct backstack access and modification
+- ✅ **NavNode tree-based state**: Immutable navigation tree with StackNode, TabNode, PaneNode
+- ✅ **TreeMutator operations**: Pure functional state transformations
+- ✅ Supports modularization with screen registries
 - ✅ Deep link navigation support
-- ✅ Transition animations including shared element framework
+- ✅ Transition animations including shared element support
 - ✅ Independent of other navigation libraries
 - ✅ FlowMVI integration via separate module (`quo-vadis-core-flow-mvi`)
 - ✅ Easy integration with DI frameworks (Koin)
@@ -460,10 +469,13 @@ The core library is complete. Future enhancements could include:
 
 ## 🎉 Ready to Use!
 
-The navigation library is fully implemented with two complementary approaches:
+The navigation library is fully implemented with:
 
-1. **Annotation-Based API (Recommended)** - Modern, low-boilerplate approach with code generation
-2. **Manual DSL (Advanced)** - Full control for complex scenarios
+1. **NavNode Tree-Based State** - Immutable navigation tree with StackNode, TabNode, PaneNode
+2. **TreeMutator** - Pure functional state transformations
+3. **NavigationHost** - Unified hierarchical rendering
+4. **Annotation-Based API** - Modern, low-boilerplate approach with code generation
+5. **Manual DSL** - Full control for complex scenarios
 
-Both approaches provide complete type safety, work seamlessly together, and are production-ready with comprehensive documentation.
+All approaches provide complete type safety, work seamlessly together, and are production-ready with comprehensive documentation.
 

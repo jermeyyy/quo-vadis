@@ -181,9 +181,9 @@ fun App() {
         navigator.setStartDestination(FeatureDestination.Home)
     }
     
-    GraphNavHost(
-        graph = graph,
-        navigator = navigator
+    NavigationHost(
+        navigator = navigator,
+        screenRegistry = graphToScreenRegistry(graph)
     )
 }
 ```
@@ -192,22 +192,20 @@ fun App() {
 ```kotlin
 @Composable
 fun App() {
-    val navigator = rememberNavigator()
+    val navigator = rememberNavigator(startDestination = FeatureDestination.Home)
     
-    // Use generated graph builder
-    val graph = remember { buildFeatureDestinationGraph() }
-    
-    GraphNavHost(
-        graph = graph,
-        navigator = navigator
+    // Use generated screen registry
+    NavigationHost(
+        navigator = navigator,
+        screenRegistry = FeatureDestinationScreenRegistry
     )
 }
 ```
 
 **Key Changes:**
-- Replace manual graph creation with generated `build{GraphName}Graph()` function
-- No need for `LaunchedEffect` - graph is already configured
-- Start destination is automatically set
+- Replace manual graph creation with generated screen registry
+- Start destination passed to `rememberNavigator`
+- NavigationHost replaces GraphNavHost
 
 ## Step-by-Step Examples
 

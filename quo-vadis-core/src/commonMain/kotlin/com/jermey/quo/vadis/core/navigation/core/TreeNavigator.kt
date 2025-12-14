@@ -78,8 +78,8 @@ class TreeNavigator(
      */
     override val state: StateFlow<NavNode> = _state.asStateFlow()
 
-    private val _transitionState: MutableStateFlow<LegacyTransitionState> =
-        MutableStateFlow(LegacyTransitionState.Idle)
+    private val _transitionState: MutableStateFlow<TransitionState> =
+        MutableStateFlow(TransitionState.Idle)
 
     /**
      * The current transition state for animations.
@@ -96,7 +96,7 @@ class TreeNavigator(
      * }
      * ```
      */
-    override val transitionState: StateFlow<LegacyTransitionState> = _transitionState.asStateFlow()
+    override val transitionState: StateFlow<TransitionState> = _transitionState.asStateFlow()
 
     // =========================================================================
     // DERIVED CONVENIENCE PROPERTIES
@@ -149,10 +149,10 @@ class TreeNavigator(
     override val currentTransition: StateFlow<NavigationTransition?> = _transitionState
         .map { transitionState ->
             when (transitionState) {
-                is LegacyTransitionState.Idle -> null
-                is LegacyTransitionState.InProgress -> transitionState.transition
-                is LegacyTransitionState.PredictiveBack -> null
-                is LegacyTransitionState.Seeking -> transitionState.transition
+                is TransitionState.Idle -> null
+                is TransitionState.InProgress -> transitionState.transition
+                is TransitionState.PredictiveBack -> null
+                is TransitionState.Seeking -> transitionState.transition
             }
         }
         .stateIn(
@@ -160,12 +160,6 @@ class TreeNavigator(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
         )
-
-    // =========================================================================
-    // GRAPH AND DEEP LINK MANAGEMENT
-    // =========================================================================
-
-    private val graphs = mutableMapOf<String, NavigationGraph>()
 
     // =========================================================================
     // BACK HANDLER REGISTRY
@@ -231,7 +225,7 @@ class TreeNavigator(
 
             // Update transition state
             if (effectiveTransition != null) {
-                _transitionState.value = LegacyTransitionState.InProgress(
+                _transitionState.value = TransitionState.InProgress(
                     transition = effectiveTransition,
                     progress = 0f,
                     fromKey = fromKey,
@@ -253,7 +247,7 @@ class TreeNavigator(
             updateDerivedState(newState)
 
             if (effectiveTransition != null) {
-                _transitionState.value = LegacyTransitionState.InProgress(
+                _transitionState.value = TransitionState.InProgress(
                     transition = effectiveTransition,
                     progress = 0f,
                     fromKey = fromKey,
@@ -364,20 +358,7 @@ class TreeNavigator(
      * @param deepLink The deep link to handle
      */
     override fun handleDeepLink(deepLink: DeepLink) {
-        deepLinkHandler.handle(deepLink, this, graphs)
-    }
-
-    /**
-     * Register a navigation graph for modular navigation.
-     *
-     * @param graph The graph to register
-     */
-    @Deprecated(
-        "registerGraph() is no longer needed. Use rememberNavigator(navTree) with KSP-generated tree.",
-        level = DeprecationLevel.WARNING
-    )
-    override fun registerGraph(graph: NavigationGraph) {
-        graphs[graph.graphRoute] = graph
+        deepLinkHandler.handle(deepLink, this)
     }
 
     /**
@@ -405,7 +386,7 @@ class TreeNavigator(
         _state.value = newState
         updateDerivedState(newState)
 
-        _transitionState.value = LegacyTransitionState.Idle
+        _transitionState.value = TransitionState.Idle
     }
 
     /**
@@ -639,10 +620,10 @@ class TreeNavigator(
     override fun updateTransitionProgress(progress: Float) {
         val current = _transitionState.value
         _transitionState.value = when (current) {
-            is LegacyTransitionState.Idle -> current
-            is LegacyTransitionState.InProgress -> current.copy(progress = progress)
-            is LegacyTransitionState.PredictiveBack -> current.copy(progress = progress)
-            is LegacyTransitionState.Seeking -> current.copy(progress = progress)
+            is TransitionState.Idle -> current
+            is TransitionState.InProgress -> current.copy(progress = progress)
+            is TransitionState.PredictiveBack -> current.copy(progress = progress)
+            is TransitionState.Seeking -> current.copy(progress = progress)
         }
     }
 
@@ -660,7 +641,7 @@ class TreeNavigator(
             null
         }
 
-        _transitionState.value = LegacyTransitionState.PredictiveBack(
+        _transitionState.value = TransitionState.PredictiveBack(
             progress = 0f,
             currentKey = currentKey,
             previousKey = previousKey
@@ -676,7 +657,7 @@ class TreeNavigator(
      */
     override fun updatePredictiveBack(progress: Float, touchX: Float, touchY: Float) {
         val current = _transitionState.value
-        if (current is LegacyTransitionState.PredictiveBack) {
+        if (current is TransitionState.PredictiveBack) {
             _transitionState.value = current.copy(
                 progress = progress.coerceIn(0f, 1f),
                 touchX = touchX.coerceIn(0f, 1f),
@@ -691,7 +672,7 @@ class TreeNavigator(
      * Called when the user releases the gesture without completing it.
      */
     override fun cancelPredictiveBack() {
-        _transitionState.value = LegacyTransitionState.Idle
+        _transitionState.value = TransitionState.Idle
     }
 
     /**
@@ -701,10 +682,10 @@ class TreeNavigator(
      */
     override fun commitPredictiveBack() {
         val current = _transitionState.value
-        if (current is LegacyTransitionState.PredictiveBack) {
+        if (current is TransitionState.PredictiveBack) {
             _transitionState.value = current.copy(isCommitted = true)
             handleBackInternal()
-            _transitionState.value = LegacyTransitionState.Idle
+            _transitionState.value = TransitionState.Idle
         }
     }
 
@@ -714,7 +695,7 @@ class TreeNavigator(
      * Called when the animation finishes.
      */
     override fun completeTransition() {
-        _transitionState.value = LegacyTransitionState.Idle
+        _transitionState.value = TransitionState.Idle
     }
 
     // =========================================================================
@@ -729,14 +710,14 @@ class TreeNavigator(
         val toKey = newState.activeLeaf()?.key
 
         if (transition != null) {
-            _transitionState.value = LegacyTransitionState.InProgress(
+            _transitionState.value = TransitionState.InProgress(
                 transition = transition,
                 progress = 0f,
                 fromKey = fromKey,
                 toKey = toKey
             )
         } else {
-            _transitionState.value = LegacyTransitionState.Idle
+            _transitionState.value = TransitionState.Idle
         }
     }
 

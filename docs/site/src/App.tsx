@@ -11,7 +11,7 @@ import Demo from '@pages/Demo/Demo'
 import AnnotationAPI from '@pages/Features/AnnotationAPI/AnnotationAPI'
 import TypeSafe from '@pages/Features/TypeSafe/TypeSafe'
 import Multiplatform from '@pages/Features/Multiplatform/Multiplatform'
-import BackStack from '@pages/Features/BackStack/BackStack'
+import StackManagement from '@pages/Features/BackStack/BackStack'
 import DeepLinks from '@pages/Features/DeepLinks/DeepLinks'
 import PredictiveBack from '@pages/Features/PredictiveBack/PredictiveBack'
 import SharedElements from '@pages/Features/SharedElements/SharedElements'
@@ -39,7 +39,7 @@ function App() {
               <Route path="/features/annotation-api" element={<AnnotationAPI />} />
               <Route path="/features/type-safe" element={<TypeSafe />} />
               <Route path="/features/multiplatform" element={<Multiplatform />} />
-              <Route path="/features/backstack" element={<BackStack />} />
+              <Route path="/features/stack-management" element={<StackManagement />} />
               <Route path="/features/deep-links" element={<DeepLinks />} />
               <Route path="/features/predictive-back" element={<PredictiveBack />} />
               <Route path="/features/shared-elements" element={<SharedElements />} />

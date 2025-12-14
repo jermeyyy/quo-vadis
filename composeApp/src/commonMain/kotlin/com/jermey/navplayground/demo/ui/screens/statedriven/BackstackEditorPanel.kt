@@ -49,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.StateDrivenDestination
-import com.jermey.quo.vadis.core.navigation.core.BackStack
 
 /**
  * Panel for editing and viewing the backstack state.
@@ -64,11 +63,14 @@ import com.jermey.quo.vadis.core.navigation.core.BackStack
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BackstackEditorPanel(
-    backStack: BackStack,
+    backStack: DemoBackStack,
     modifier: Modifier = Modifier
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
-    val canGoBack by backStack.canGoBack.collectAsState()
+    // Re-read state to trigger recomposition
+    @Suppress("UNUSED_VARIABLE")
+    val stateValue = backStack.state.collectAsState()
+    val canGoBack = backStack.canNavigateBack
 
     Column(
         modifier = modifier.padding(12.dp),

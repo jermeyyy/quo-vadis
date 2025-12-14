@@ -1,5 +1,10 @@
 # Shared Element Transitions - Implementation Summary
 
+> ⚠️ **LEGACY DOCUMENTATION**: This file documents shared elements with the old `GraphNavHost` implementation.
+> The architecture has been refactored to use `QuoVadisHost` with NavNode tree-based navigation.
+> Shared element concepts remain valid, but implementation details have changed.
+> Key changes: `GraphNavHost` → `QuoVadisHost`, `BackStack` → `NavNode tree`.
+
 ## Overview
 Quo Vadis now includes **first-class support for shared element transitions** using Compose Multiplatform's `SharedTransitionLayout` API. This feature enables smooth Material Design-compliant transitions where UI elements animate between screens during navigation.
 

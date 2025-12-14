@@ -3,11 +3,6 @@
 package com.jermey.quo.vadis.core.navigation.compose
 
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.TransitionState
-import com.jermey.quo.vadis.core.navigation.core.TransitionStateManager
-import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 
 // =============================================================================
 // PREDICTIVE BACK CALLBACK INTERFACE
@@ -85,164 +80,6 @@ interface PredictiveBackCallback {
 }
 
 // =============================================================================
-// PREDICTIVE BACK COORDINATOR
-// =============================================================================
-
-/**
- * Coordinates predictive back gestures with navigation state.
- *
- * This class implements the speculative pop algorithm for predictive back:
- *
- * 1. When a gesture starts, compute the pop result via [TreeMutator.pop]
- * 2. Start a proposed transition with [TransitionStateManager.startProposed]
- * 3. Update progress as the gesture progresses
- * 4. On cancel, revert to original state via [TransitionStateManager.cancelProposed]
- * 5. On commit, apply the speculative state via [TransitionStateManager.commitProposed]
- *
- * ## State Flow
- *
- * ```
- * onBackStarted()
- *     │
- *     ▼
- * [Check if idle] ──No──► return false
- *     │
- *     Yes
- *     │
- *     ▼
- * [Compute speculative pop] ──null──► return false
- *     │
- *     non-null
- *     │
- *     ▼
- * [startProposed(speculativeState)]
- *     │
- *     return true
- *     │
- *     ▼
- * ┌───────────────────┐
- * │  Gesture active   │◄─────────────┐
- * └───────────────────┘              │
- *     │                              │
- * onBackProgress(progress)───────────┘
- *     │
- *     ▼
- * ┌───────────────────┬───────────────────┐
- * │                   │                   │
- * onBackCancelled()   onBackCommitted()
- * │                   │
- * cancelProposed()    commitProposed()
- * │                   updateState(speculative)
- * │                   │
- * └───────────────────┴───────────────────┘
- * ```
- *
- * ## Usage
- *
- * ```kotlin
- * val coordinator = PredictiveBackCoordinator(navigator, transitionManager)
- *
- * PredictiveBackHandler(
- *     enabled = true,
- *     callback = coordinator
- * ) {
- *     // Navigation content
- * }
- * ```
- *
- * @param navigator The navigator to update state on commit
- * @param transitionManager The transition state manager for gesture coordination
- *
- * @see PredictiveBackCallback
- * @see PredictiveBackHandler
- */
-class PredictiveBackCoordinator(
-    private val navigator: Navigator,
-    private val transitionManager: TransitionStateManager
-) : PredictiveBackCallback {
-
-    /**
-     * Holds the speculative pop result during an active gesture.
-     *
-     * This is computed in [onBackStarted] and used in [onBackCommitted]
-     * to update the navigator's state.
-     */
-    private var speculativeState: NavNode? = null
-
-    /**
-     * Handles the start of a back gesture.
-     *
-     * Checks if the transition manager is idle, computes the speculative
-     * pop result, and starts a proposed transition if valid.
-     *
-     * @return true if the gesture should be handled, false otherwise
-     */
-    override fun onBackStarted(): Boolean {
-        // Check if transition manager is in idle state
-        if (!transitionManager.currentState.isIdle) {
-            return false
-        }
-
-        // Get current navigation state
-        val currentState = navigator.state.value
-
-        // Compute speculative pop result
-        val popResult = TreeMutator.pop(currentState)
-        if (popResult == null) {
-            // Cannot pop - at root or empty stack
-            return false
-        }
-
-        // Store speculative state for later commit
-        speculativeState = popResult
-
-        // Start proposed transition
-        transitionManager.startProposed(popResult)
-
-        return true
-    }
-
-    /**
-     * Updates the transition progress during a back gesture.
-     *
-     * @param progress Gesture progress from 0.0 to 1.0
-     */
-    override fun onBackProgress(progress: Float) {
-        transitionManager.updateProgress(progress)
-    }
-
-    /**
-     * Cancels the back gesture and reverts to original state.
-     *
-     * Clears the speculative state and cancels the proposed transition,
-     * returning the transition manager to idle with the original state.
-     */
-    override fun onBackCancelled() {
-        speculativeState = null
-        transitionManager.cancelProposed()
-    }
-
-    /**
-     * Commits the back gesture and applies the navigation change.
-     *
-     * Commits the proposed transition and updates the navigator's
-     * state to the speculative pop result.
-     */
-    override fun onBackCommitted() {
-        val targetState = speculativeState ?: return
-
-        // Commit the proposed transition (moves to Animating state)
-        transitionManager.commitProposed()
-
-        // Update navigator state to the speculative result
-        navigator.updateState(targetState)
-
-        // Clear speculative state
-        speculativeState = null
-    }
-}
-
-// =============================================================================
 // PREDICTIVE BACK HANDLER (EXPECT)
 // =============================================================================
 
@@ -258,16 +95,18 @@ class PredictiveBackCoordinator(
  * ```kotlin
  * @Composable
  * fun NavigationContent() {
- *     val coordinator = remember { PredictiveBackCoordinator(navigator, transitionManager) }
+ *     val callback = object : PredictiveBackCallback {
+ *         override fun onBackStarted() = canNavigateBack
+ *         override fun onBackProgress(progress: Float) { /* Update UI */ }
+ *         override fun onBackCancelled() { /* Reset UI */ }
+ *         override fun onBackCommitted() { /* Complete navigation */ }
+ *     }
  *
  *     PredictiveBackHandler(
  *         enabled = true,
- *         callback = coordinator
+ *         callback = callback
  *     ) {
  *         // Your navigation content here
- *         QuoVadisHost(navigator = navigator) { destination ->
- *             // Render destinations
- *         }
  *     }
  * }
  * ```
@@ -283,7 +122,6 @@ class PredictiveBackCoordinator(
  * @param content The composable content to wrap
  *
  * @see PredictiveBackCallback
- * @see PredictiveBackCoordinator
  */
 @Composable
 expect fun PredictiveBackHandler(

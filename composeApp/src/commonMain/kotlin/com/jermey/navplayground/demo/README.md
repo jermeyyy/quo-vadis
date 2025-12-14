@@ -1,6 +1,24 @@
 # Navigation Demo Application
 
-This demo application showcases all common navigation patterns using our custom Kotlin Multiplatform navigation library.
+This demo application showcases all common navigation patterns using the Quo Vadis Kotlin Multiplatform navigation library with the new **NavNode tree-based architecture**.
+
+## Architecture Overview
+
+The navigation system is built on a **NavNode tree** structure:
+
+- **NavNode**: The base type for all navigation nodes
+- **ScreenNode**: Represents a screen/destination in the tree
+- **StackNode**: A container for stacked screens (back-stack)
+- **TabsNode**: A container for tabbed navigation
+- **PaneNode**: A container for split/pane-based navigation
+
+### Core Components
+
+| Component | Purpose |
+|-----------|---------|
+| `TreeNavigator` | Main navigator that manages the NavNode tree |
+| `TreeMutator` | Utility for immutable tree transformations |
+| `StateFlow<NavNode>` | Reactive state observation |
 
 ## Implemented Patterns
 
@@ -9,17 +27,22 @@ This demo application showcases all common navigation patterns using our custom 
 - **Features**:
   - 4 main tabs: Home, Explore, Profile, Settings
   - Persistent bottom navigation bar
-  - Tab selection state management
+  - Tab selection state management via `StateFlow`
   - Navigation between main sections
 
 **Key Implementation:**
 ```kotlin
+// Observe current destination from navigator's state
+val currentDestination by navigator.currentDestination.collectAsState()
+
 // Bottom navigation with 4 tabs
 NavigationBar {
-    NavigationBarItem(icon = Home, selected = currentRoute == "home", ...)
-    NavigationBarItem(icon = Explore, ...)
-    NavigationBarItem(icon = Profile, ...)
-    NavigationBarItem(icon = Settings, ...)
+    NavigationBarItem(
+        icon = Home, 
+        selected = currentDestination is MainDestination.Home,
+        onClick = { navigator.navigate(MainDestination.Home) }
+    )
+    // ... other tabs
 }
 ```
 
@@ -58,12 +81,8 @@ onNavigateToRelated = { relatedId ->
 
 **Key Implementation:**
 ```kotlin
-// Main tabs container
-TabRow(selectedTabIndex = selectedTabIndex) {
-    Tab(selected = ..., text = "Tab 1")
-    Tab(selected = ..., text = "Tab 2")
-    Tab(selected = ..., text = "Tab 3")
-}
+// Switch tabs using navigator
+navigator.switchTab(tabIndex)
 
 // Navigate to sub-item with vertical transition
 navigator.navigate(
@@ -119,13 +138,15 @@ Start → Step1 → Step2A (personal) → Step3 → Complete
 
 **Key Implementation:**
 ```kotlin
+val currentDestination by navigator.currentDestination.collectAsState()
+
 ModalNavigationDrawer(
     drawerState = drawerState,
     drawerContent = {
         NavigationDrawerItem(
             icon = { Icon(...) },
             label = { Text(...) },
-            selected = currentRoute == route,
+            selected = currentDestination is TargetDestination,
             onClick = {
                 navigator.navigate(destination)
                 scope.launch { drawerState.close() }
@@ -137,35 +158,79 @@ ModalNavigationDrawer(
 }
 ```
 
-## Navigation Graph Structure
+### 6. **State-Driven Navigation Demo**
+- **Location**: `ui/screens/statedriven/`
+- **Features**:
+  - Direct NavNode tree manipulation
+  - Real-time state observation via `StateFlow`
+  - Declarative navigation without NavController
+  - Interactive back-stack editor
 
-The demo uses a hierarchical graph structure:
+**Key Implementation:**
+```kotlin
+// Create a state-driven back-stack using NavNode tree
+class DemoBackStack {
+    private val _state = MutableStateFlow<NavNode>(
+        StackNode(key = NavKeyGenerator.generate(), parentKey = null, children = emptyList())
+    )
+    
+    val state: StateFlow<NavNode> = _state
+    
+    // Push using TreeMutator
+    fun push(destination: Destination) {
+        val newState = TreeMutator.push(_state.value, destination)
+        _state.value = newState
+    }
+    
+    // Pop using TreeMutator
+    fun pop(): Boolean {
+        val newState = TreeMutator.pop(_state.value)
+        if (newState != null) {
+            _state.value = newState
+            return true
+        }
+        return false
+    }
+}
+
+// Observe state changes
+val currentEntry = backStack.current
+val canGoBack = backStack.canNavigateBack
+```
+
+## NavNode Tree Structure
+
+The navigation uses a hierarchical **NavNode tree**:
 
 ```
-Main Graph (mainBottomNavGraph)
-├── Home
-├── Explore
-├── Profile
-├── Settings
-├── Master-Detail Graph (included)
-│   ├── List
-│   └── Detail
-├── Tabs Graph (included)
-│   ├── Main
-│   └── SubItem
-└── Process Graph (included)
-    ├── Start
-    ├── Step1
-    ├── Step2A / Step2B
-    ├── Step3
-    └── Complete
+StackNode (root)
+├── ScreenNode(Home)
+├── ScreenNode(Explore)
+├── StackNode (Master-Detail)
+│   ├── ScreenNode(List)
+│   └── ScreenNode(Detail)
+├── TabsNode (Tabs)
+│   ├── ScreenNode(Tab1)
+│   ├── ScreenNode(Tab2)
+│   └── ScreenNode(Tab3)
+└── StackNode (Process)
+    ├── ScreenNode(Start)
+    ├── ScreenNode(Step1)
+    └── ScreenNode(Complete)
 ```
 
 ## Key Navigation Features Demonstrated
 
-### 1. **State Management**
+### 1. **State Observation via StateFlow**
 ```kotlin
-val currentRoute by navigator.currentDestination.collectAsState()
+// Observe current destination
+val currentDestination by navigator.currentDestination.collectAsState()
+
+// Observe full navigation state
+val state by navigator.state.collectAsState()
+
+// Observe back navigation capability
+val canGoBack by navigator.canNavigateBack.collectAsState()
 ```
 
 ### 2. **Transitions**
@@ -175,7 +240,19 @@ NavigationTransitions.SlideVertical    // Tabs sub-items
 NavigationTransitions.Fade             // Default
 ```
 
-### 3. **Backstack Manipulation**
+### 3. **Stack Manipulation via TreeMutator**
+```kotlin
+// Push a new screen
+val newState = TreeMutator.push(currentState, destination)
+
+// Pop the top screen
+val newState = TreeMutator.pop(currentState)
+
+// Remove a specific node by key
+val newState = TreeMutator.removeNode(currentState, nodeKey)
+```
+
+### 4. **Navigator API**
 ```kotlin
 // Clear to specific route
 navigator.navigateAndClearTo(dest, clearRoute, inclusive)
@@ -191,38 +268,30 @@ navigator.navigate(dest)
 navigator.navigateBack()
 ```
 
-### 4. **Conditional UI**
+### 5. **Conditional UI**
 ```kotlin
 // Show bottom nav only on main screens
-if (shouldShowBottomNav(currentRoute)) {
+val currentDest by navigator.currentDestination.collectAsState()
+if (shouldShowBottomNav(currentDest)) {
     BottomNavigationBar(...)
 }
 
-// Dynamic title based on route
-TopAppBar(title = { Text(getScreenTitle(currentRoute)) })
+// Dynamic title based on destination
+TopAppBar(title = { Text(getScreenTitle(currentDest)) })
 ```
 
-### 5. **Data Passing**
+### 6. **Data Passing**
 ```kotlin
-// Via destination arguments
+// Via destination data classes
 data class Detail(val itemId: String) : Destination {
-    override val arguments = mapOf("itemId" to itemId)
+    override val route = "detail/$itemId"
 }
 
-// Retrieve in screen
-val itemId = dest.arguments["itemId"] as? String
-```
-
-### 6. **Graph Inclusion**
-```kotlin
-fun mainBottomNavGraph() = navigationGraph("main") {
-    // Main destinations
-    destination(Home) { ... }
-    
-    // Include other graphs
-    include(masterDetailGraph())
-    include(tabsGraph())
-    include(processGraph())
+// Used directly in screen
+@Screen(MasterDetailDestination.Detail::class)
+@Composable
+fun DetailScreen(destination: MasterDetailDestination.Detail) {
+    val itemId = destination.itemId  // Type-safe access
 }
 ```
 
@@ -254,40 +323,49 @@ fun mainBottomNavGraph() = navigationGraph("main") {
 - Review and complete
 - Notice the stack is cleared appropriately
 
-### Modal Drawer
-- Open drawer from any screen
-- Navigate to different sections
-- Drawer closes automatically
-- Current section is highlighted
+### State-Driven Demo
+- Navigate via drawer to "State-Driven Demo"
+- See real-time state display at top
+- Use the back-stack editor panel to:
+  - Push new destinations
+  - Pop entries from stack
+  - Remove entries at any position
+  - Swap entry positions
+- Observe how content updates reactively
 
 ## Code Organization
 
 ```
 demo/
 ├── DemoApp.kt                    # Main app with drawer & bottom nav
+├── DemoKoin.kt                   # Dependency injection setup
+├── DeepLinkSetup.kt              # Deep link configuration
 ├── destinations/
 │   └── Destinations.kt           # All destination definitions
-├── graphs/
-│   └── NavigationGraphs.kt       # All navigation graphs
 └── ui/
     ├── BottomNavigationBar.kt    # Bottom nav component
     └── screens/
         ├── MainScreens.kt        # Home, Explore, Profile, Settings
-        ├── Item.kt # Master list & detail views
+        ├── Item.kt               # Master list & detail views
         ├── TabsScreens.kt        # Tabs & sub-items
-        └── ProcessScreens.kt     # Wizard steps (6 screens)
+        ├── ProcessScreens.kt     # Wizard steps (6 screens)
+        └── statedriven/          # State-driven navigation demo
+            ├── StateDrivenDemoScreen.kt
+            ├── DemoBackStack.kt        # NavNode-based back-stack
+            ├── BackstackEditorPanel.kt
+            └── ContentScreens.kt
 ```
 
 ## Best Practices Demonstrated
 
-1. ✅ **Type-safe destinations** - Sealed classes with data
-2. ✅ **Modular graphs** - Separate graph per feature
-3. ✅ **Graph composition** - Include nested graphs
-4. ✅ **Reactive state** - StateFlow for current route
+1. ✅ **Type-safe destinations** - Sealed classes with typed data
+2. ✅ **NavNode tree structure** - Hierarchical navigation state
+3. ✅ **StateFlow observation** - Reactive UI updates
+4. ✅ **TreeMutator** - Immutable tree transformations
 5. ✅ **Transitions** - Appropriate animations per pattern
 6. ✅ **Stack management** - Clear, replace, pop operations
-7. ✅ **Data passing** - Arguments in destinations
-8. ✅ **Conditional UI** - Show/hide based on route
+7. ✅ **Data passing** - Type-safe destination arguments
+8. ✅ **Conditional UI** - Show/hide based on current destination
 9. ✅ **Branching flows** - Process with multiple paths
 10. ✅ **Deep navigation** - Stack detail screens
 
@@ -295,25 +373,34 @@ demo/
 
 To add a new pattern:
 
-1. Define destinations in `Destinations.kt`
-2. Create screens in `ui/screens/`
-3. Add navigation graph in `NavigationGraphs.kt`
-4. Include graph in main graph
-5. Add drawer/nav item in `DemoApp.kt`
+1. Define destinations in `Destinations.kt` as sealed class
+2. Create screens in `ui/screens/` with `@Screen` annotation
+3. Add navigation setup in `DemoApp.kt`
+4. Add drawer/nav item for access
 
 ## Testing Navigation
 
 Each pattern can be tested independently:
 
 ```kotlin
-val navigator = FakeNavigator()
+// Test with TreeNavigator
+val navigator = TreeNavigator(
+    deepLinkHandler = null,
+    coroutineScope = testScope,
+    scopeRegistry = ScopeRegistry()
+)
+
+// Set initial destination
+navigator.setStartDestination(MainDestination.Home)
 
 // Test navigation
 navigator.navigate(MasterDetailDestination.Detail("123"))
-assertTrue(navigator.verifyNavigateTo("master_detail_detail"))
+assertEquals(
+    MasterDetailDestination.Detail("123"),
+    navigator.currentDestination.value
+)
 
-// Test backstack
+// Test back navigation
 navigator.navigateBack()
-assertTrue(navigator.backStack.isEmpty)
+assertTrue(navigator.canNavigateBack.value)
 ```
-

@@ -261,7 +261,7 @@ Return: Analysis report with options and recommendation.
 |-----------------|--------------|
 | `List<Destination>` | `NavNode` tree |
 | Multiple hosts | `QuoVadisHost` |
-| BackStack class | `StateFlow<NavNode>` |
+| Navigator state | `StateFlow<NavNode>` |
 | Direct manipulation | `TreeMutator` |
 
 **During refactor**: Create new components, don't modify old unless spec says to.

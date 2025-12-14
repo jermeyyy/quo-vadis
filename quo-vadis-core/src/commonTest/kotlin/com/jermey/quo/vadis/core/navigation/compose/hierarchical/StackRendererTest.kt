@@ -95,7 +95,7 @@ class StackRendererTest {
     }
 
     @Test
-    fun `detectBackNavigation returns true when stack shrinks (pop)`() {
+    fun `detectBackNavigation returns true when stack shrinks - pop`() {
         // Given - previous stack has 3 screens
         val screenA = createScreen("a", "stack", HomeDestination)
         val screenB = createScreen("b", "stack", ProfileDestination)
@@ -114,7 +114,7 @@ class StackRendererTest {
     }
 
     @Test
-    fun `detectBackNavigation returns false when stack grows (push)`() {
+    fun `detectBackNavigation returns false when stack grows - push`() {
         // Given - previous stack has 1 screen
         val screenA = createScreen("a", "stack", HomeDestination)
         val previousStack = createStack("stack", null, screenA)

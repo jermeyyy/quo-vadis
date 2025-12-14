@@ -8,22 +8,20 @@ package com.jermey.quo.vadis.core.navigation
  * ## Core Components (navigation.core)
  * - Destination: Navigation targets
  * - Navigator: Central navigation controller
- * - BackStack: Direct backstack manipulation
- * - NavigationGraph: Modular navigation graphs
+ * - NavNode: Tree-based navigation state (StackNode, TabNode, PaneNode, ScreenNode)
  * - NavigationTransition: Animation support
  * - DeepLink: Deep link handling
  *
  * ## Compose Integration (navigation.compose)
- * - NavHost: Main navigation host composable
- * - GraphNavHost: Graph-specific navigation host
- * - rememberNavigator: Navigator factory
+ * - QuoVadisHost: Main navigation host composable
+ * - rememberTreeNavigator: Navigator factory
  *
  * ## DI Integration (navigation.integration)
  * - NavigationFactory: Factory for DI containers
  * - Koin integration helpers
  *
  * ## Utilities (navigation.utils)
- * - Extension functions for Navigator and BackStack
+ * - Extension functions for Navigator and NavNode
  * - Navigation scopes and builders
  *
  * ## Testing (navigation.testing)
