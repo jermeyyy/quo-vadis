@@ -85,6 +85,7 @@ kotlin {
                 implementation(libs.compose.backhandler)
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
+                implementation(libs.navigationevent.compose)
 
                 // Optional: annotations for users who want to use KSP
                 api(projects.quoVadisAnnotations)

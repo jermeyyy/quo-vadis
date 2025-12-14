@@ -160,6 +160,58 @@ public class PredictiveBackController {
     // region Public API
 
     /**
+     * Starts a predictive back gesture.
+     *
+     * Call this when a back gesture begins. This sets [isActive] to `true`
+     * and resets [progress] to 0. Use this for direct gesture control
+     * (e.g., from NavigationEvent callbacks) instead of [handleGesture].
+     *
+     * After calling this, use [updateGestureProgress], [completeGesture],
+     * or [cancelGesture] to manage the gesture lifecycle.
+     */
+    public fun startGesture() {
+        _isActive = true
+        _progress = 0f
+    }
+
+    /**
+     * Updates the progress of an active gesture.
+     *
+     * Call this during gesture dragging to update the visual progress.
+     * Has no effect if [isActive] is `false`.
+     *
+     * @param rawProgress The raw progress value from the gesture (0f-1f)
+     */
+    public fun updateGestureProgress(rawProgress: Float) {
+        if (_isActive) {
+            // Use the same progress clamping as handleGesture
+            _progress = rawProgress.coerceIn(0f, 1f)
+        }
+    }
+
+    /**
+     * Completes a gesture, signaling that navigation will occur.
+     *
+     * This immediately resets state without animation, as the actual
+     * navigation and exit animation are handled externally.
+     */
+    public fun completeGesture() {
+        _isActive = false
+        _progress = 0f
+    }
+
+    /**
+     * Cancels a gesture, reverting to idle state.
+     *
+     * This immediately resets state without animation, as cancellation
+     * animation is handled externally.
+     */
+    public fun cancelGesture() {
+        _isActive = false
+        _progress = 0f
+    }
+
+    /**
      * Handles a predictive back gesture flow from the platform.
      *
      * This method should be called from platform-specific back handlers

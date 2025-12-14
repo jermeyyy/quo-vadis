@@ -23,18 +23,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackController
+import com.jermey.quo.vadis.core.navigation.compose.hierarchical.BackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalAnimatedVisibilityScope
+import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalBackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavRenderScope
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavNodeRenderer
+import com.jermey.quo.vadis.core.navigation.compose.hierarchical.rememberBackAnimationController
+import com.jermey.quo.vadis.core.navigation.compose.navback.QuoVadisBackHandler
+import com.jermey.quo.vadis.core.navigation.compose.navback.ScreenNavigationInfo
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.core.TransitionState
 import com.jermey.quo.vadis.core.navigation.core.TransitionStateManager
 import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
+import com.jermey.quo.vadis.core.navigation.core.activeLeaf
+import com.jermey.quo.vadis.core.navigation.core.route
 
 // =============================================================================
 // Composition Local for NavRenderScope
@@ -191,19 +199,44 @@ public fun NavigationHost(
     // Predictive back controller for gesture handling
     val predictiveBackController = remember { PredictiveBackController() }
 
+    // Back animation controller for predictive back animations
+    val backAnimationController = rememberBackAnimationController()
+
     // Transition state manager for coordinating predictive back
     val transitionManager = remember(navigator) {
         TransitionStateManager(navState)
     }
 
-    // Predictive back coordinator
-    val backCoordinator = remember(navigator, transitionManager) {
-        PredictiveBackCoordinator(navigator, transitionManager)
-    }
-
     // Check if we can navigate back
     val canGoBack by remember(navState) {
         derivedStateOf { TreeMutator.pop(navState) != null }
+    }
+
+    // Get current and previous screen info for QuoVadisBackHandler
+    val currentScreenNode = remember(navState) { navState.activeLeaf() }
+    val previousScreenNode = remember(navState) {
+        TreeMutator.pop(navState)?.activeLeaf()
+    }
+
+    // Create ScreenNavigationInfo for predictive back
+    val currentScreenInfo = remember(currentScreenNode) {
+        currentScreenNode?.let {
+            ScreenNavigationInfo(
+                screenId = it.key,
+                displayName = it.destination::class.simpleName,
+                route = runCatching { it.destination.route }.getOrNull()
+            )
+        } ?: ScreenNavigationInfo(screenId = navState.key)
+    }
+
+    val previousScreenInfo = remember(previousScreenNode) {
+        previousScreenNode?.let {
+            ScreenNavigationInfo(
+                screenId = it.key,
+                displayName = it.destination::class.simpleName,
+                route = runCatching { it.destination.route }.getOrNull()
+            )
+        }
     }
 
     // Back handler registry for user-defined back handlers
@@ -227,10 +260,73 @@ public fun NavigationHost(
         }
     }
 
-    // Root container with PredictiveBackHandler and SharedTransitionLayout
-    PredictiveBackHandler(
+    // Speculative state for predictive back - computed when gesture starts
+    var speculativePopState by remember { mutableStateOf<NavNode?>(null) }
+
+    // Root container with QuoVadisBackHandler and SharedTransitionLayout
+    QuoVadisBackHandler(
         enabled = enablePredictiveBack && canGoBack,
-        callback = backCoordinator
+        currentScreenInfo = currentScreenInfo,
+        previousScreenInfo = previousScreenInfo,
+        onBackProgress = { event ->
+            // On first progress event, start the proposed transition
+            if (!backAnimationController.isAnimating) {
+                // Compute speculative pop result at gesture start
+                val popResult = TreeMutator.pop(navState)
+                if (popResult != null) {
+                    speculativePopState = popResult
+
+                    // Reset transition manager to idle if in animating state
+                    // This handles case where user starts new gesture during exit animation
+                    val currentState = transitionManager.currentState
+                    if (currentState is TransitionState.Animating) {
+                        transitionManager.forceIdle(navState)
+                    }
+
+                    // Start proposed transition BEFORE animation
+                    transitionManager.startProposed(popResult)
+                    backAnimationController.startAnimation(event)
+
+                    // CRITICAL: Update predictiveBackController so AnimatedNavContent
+                    // switches to PredictiveBackContent for visual animation
+                    predictiveBackController.startGesture()
+                }
+            } else {
+                backAnimationController.updateProgress(event)
+                // Update predictiveBackController progress for visual animation
+                predictiveBackController.updateGestureProgress(event.progress)
+            }
+            // Update transition manager progress for renderers
+            transitionManager.updateProgress(event.progress)
+        },
+        onBackCancelled = {
+            // Cancel animation and reset state
+            backAnimationController.cancelAnimation()
+            speculativePopState = null
+
+            // Reset predictiveBackController so AnimatedNavContent switches back
+            predictiveBackController.cancelGesture()
+
+            // Only cancel if we actually started a proposed transition
+            if (transitionManager.currentState is TransitionState.Proposed) {
+                transitionManager.cancelProposed()
+            }
+        },
+        onBackCompleted = {
+            // Complete animation and perform navigation
+            backAnimationController.completeAnimation()
+
+            // Use the speculative state computed at gesture start
+            val targetState = speculativePopState
+            if (targetState != null && transitionManager.currentState is TransitionState.Proposed) {
+                transitionManager.commitProposed()
+                navigator.updateState(targetState)
+            }
+            speculativePopState = null
+
+            // Reset predictiveBackController after navigation completes
+            predictiveBackController.completeGesture()
+        }
     ) {
         SharedTransitionLayout(modifier = modifier) {
             // Create the NavRenderScope implementation
@@ -259,7 +355,8 @@ public fun NavigationHost(
             // Provide scope to children via CompositionLocal
             CompositionLocalProvider(
                 LocalNavRenderScope provides scope,
-                LocalBackHandlerRegistry provides backHandlerRegistry
+                LocalBackHandlerRegistry provides backHandlerRegistry,
+                LocalBackAnimationController provides backAnimationController
             ) {
                 // Render the navigation tree
                 NavNodeRenderer(

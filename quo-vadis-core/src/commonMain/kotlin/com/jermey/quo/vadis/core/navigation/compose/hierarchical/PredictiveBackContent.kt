@@ -97,7 +97,8 @@ internal fun <T : NavNode> PredictiveBackContent(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         // Previous (incoming) content - static behind current with parallax effect
-        if (previous != null) {
+        // Guard: Only render previous if it exists AND has a different key than current
+        if (previous != null && previous.key != current.key) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -108,14 +109,11 @@ internal fun <T : NavNode> PredictiveBackContent(
                         translationX = -size.width * PARALLAX_FACTOR * (1f - progress)
                     }
             ) {
-                scope.cache.CachedEntry(
-                    key = previous.key,
-                    saveableStateHolder = scope.saveableStateHolder
-                ) {
-                    // Render previous with static AnimatedVisibilityScope
-                    StaticAnimatedVisibilityScope {
-                        content(previous)
-                    }
+                // Note: Do NOT use CachedEntry here - the content lambda goes through
+                // NavNodeRenderer → ScreenRenderer which already handles caching.
+                // Double-caching would cause "Key used multiple times" crashes.
+                StaticAnimatedVisibilityScope {
+                    content(previous)
                 }
             }
         }
@@ -133,14 +131,11 @@ internal fun <T : NavNode> PredictiveBackContent(
                     scaleY = scale
                 }
         ) {
-            scope.cache.CachedEntry(
-                key = current.key,
-                saveableStateHolder = scope.saveableStateHolder
-            ) {
-                // Render current with static AnimatedVisibilityScope
-                StaticAnimatedVisibilityScope {
-                    content(current)
-                }
+            // Note: Do NOT use CachedEntry here - the content lambda goes through
+            // NavNodeRenderer → ScreenRenderer which already handles caching.
+            // Double-caching would cause "Key used multiple times" crashes.
+            StaticAnimatedVisibilityScope {
+                content(current)
             }
         }
     }
@@ -154,7 +149,7 @@ internal fun <T : NavNode> PredictiveBackContent(
  * A value of 0.3 means the previous content moves at 30% of the speed of the
  * current content's translation.
  */
-private const val PARALLAX_FACTOR = 0.3f
+private const val PARALLAX_FACTOR = 0.1f
 
 /**
  * Scale factor for the current (exiting) content.

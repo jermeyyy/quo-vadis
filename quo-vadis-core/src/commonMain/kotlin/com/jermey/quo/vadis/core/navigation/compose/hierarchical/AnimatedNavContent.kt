@@ -102,6 +102,13 @@ internal fun <T : NavNode> AnimatedNavContent(
     var displayedState by remember { mutableStateOf(targetState) }
     var previousState by remember { mutableStateOf<T?>(null) }
 
+    // Update state tracking when targetState changes (outside of AnimatedContent)
+    // This ensures previousState is always up-to-date for predictive back
+    if (targetState.key != displayedState.key) {
+        previousState = displayedState
+        displayedState = targetState
+    }
+
     // Determine if predictive back gesture is currently active
     val isPredictiveBackActive = predictiveBackEnabled &&
         scope.predictiveBackController.isActive.value
@@ -134,13 +141,6 @@ internal fun <T : NavNode> AnimatedNavContent(
             modifier = modifier,
             label = "AnimatedNavContent"
         ) { animatingState ->
-            // Update state tracking when animation reaches target
-            // This ensures proper direction detection for the next navigation
-            if (animatingState == targetState && animatingState != displayedState) {
-                previousState = displayedState
-                displayedState = targetState
-            }
-
             // Provide AnimatedVisibilityScope to content via NavRenderScope
             scope.withAnimatedVisibilityScope(this) {
                 content(animatingState)

@@ -24,6 +24,7 @@ vanniktechMavenPublish = "0.34.0"
 flowmvi = "3.2.1"
 koin = "4.1.1"
 androidx-security = "1.1.0"
+navigationevent = "1.0.0-rc02"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -62,6 +63,8 @@ koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 # AndroidX Security
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "androidx-security" }
 
+# NavigationEvent
+navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

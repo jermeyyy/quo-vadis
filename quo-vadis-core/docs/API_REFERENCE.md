@@ -1124,6 +1124,270 @@ PredictiveBackNavigation(
 
 ---
 
+## NavigationEvent Back Handling (`navigation.compose.navback`)
+
+The `navback` package provides a modern, multiplatform back handling API that integrates with the AndroidX NavigationEvent library. This provides proper system animation support on Android 14+ and consistent gesture handling across all platforms.
+
+> 📖 **Full Guide**: See [MULTIPLATFORM_PREDICTIVE_BACK.md](MULTIPLATFORM_PREDICTIVE_BACK.md) for comprehensive documentation.
+
+### QuoVadisBackHandler
+
+**Primary composable for handling back gestures with NavigationEvent integration.**
+
+```kotlin
+@Composable
+fun QuoVadisBackHandler(
+    enabled: Boolean = true,
+    currentScreenInfo: ScreenNavigationInfo,
+    previousScreenInfo: ScreenNavigationInfo? = null,
+    onBackProgress: ((BackNavigationEvent) -> Unit)? = null,
+    onBackCancelled: (() -> Unit)? = null,
+    onBackCompleted: () -> Unit,
+    content: @Composable () -> Unit
+)
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `enabled` | `Boolean` | Whether back handling is enabled. When false, gestures pass through to the system. |
+| `currentScreenInfo` | `ScreenNavigationInfo` | Info about the currently displayed screen for system animation context. |
+| `previousScreenInfo` | `ScreenNavigationInfo?` | Info about the screen that will be revealed on back navigation. Pass null if at root. |
+| `onBackProgress` | `((BackNavigationEvent) -> Unit)?` | Called with progress updates during the back gesture (0.0 to 1.0). |
+| `onBackCancelled` | `(() -> Unit)?` | Called when the back gesture is cancelled. |
+| `onBackCompleted` | `() -> Unit` | Called when the back gesture completes and navigation should occur. |
+| `content` | `@Composable () -> Unit` | The content to display. |
+
+#### System Integration
+
+On Android 14+ (API 34+), `QuoVadisBackHandler` properly integrates with the system's `OnBackInvokedDispatcher` to provide:
+- System predictive back animations when closing the app
+- In-app predictive back animations during navigation
+- Proper priority handling for nested handlers
+
+On other platforms, the handler provides gesture detection without system animation.
+
+#### Example: Full Usage
+
+```kotlin
+QuoVadisBackHandler(
+    enabled = canGoBack,
+    currentScreenInfo = ScreenNavigationInfo(
+        screenId = "detail-${item.id}",
+        displayName = "Item Details",
+        route = "detail/{id}"
+    ),
+    previousScreenInfo = ScreenNavigationInfo(
+        screenId = "list",
+        displayName = "Item List",
+        route = "list"
+    ),
+    onBackProgress = { event ->
+        // Animate based on gesture progress
+        animatedOffset = event.progress * maxOffset
+    },
+    onBackCancelled = {
+        // Reset animation state
+        animatedOffset = 0f
+    },
+    onBackCompleted = {
+        navigator.goBack()
+    }
+) {
+    // Screen content
+    DetailScreen(item)
+}
+```
+
+#### Simplified Overload
+
+For simple back handling without progress tracking:
+
+```kotlin
+@Composable
+fun QuoVadisBackHandler(
+    enabled: Boolean = true,
+    onBack: () -> Unit,
+    content: @Composable () -> Unit
+)
+```
+
+**Example:**
+```kotlin
+QuoVadisBackHandler(
+    enabled = canGoBack,
+    onBack = { navigator.goBack() }
+) {
+    MyScreen()
+}
+```
+
+---
+
+### BackNavigationEvent
+
+**Platform-agnostic representation of a back navigation event.**
+
+```kotlin
+@Immutable
+data class BackNavigationEvent(
+    val progress: Float,
+    val touchX: Float = 0f,
+    val touchY: Float = 0f,
+    val swipeEdge: Int = EDGE_LEFT
+) {
+    companion object {
+        const val EDGE_LEFT: Int = 0
+        const val EDGE_RIGHT: Int = 1
+    }
+}
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `progress` | `Float` | Progress of the back gesture, 0.0 to 1.0 |
+| `touchX` | `Float` | X coordinate of the touch point |
+| `touchY` | `Float` | Y coordinate of the touch point |
+| `swipeEdge` | `Int` | Which edge the swipe started from (`EDGE_LEFT` or `EDGE_RIGHT`) |
+
+---
+
+### BackTransitionState
+
+**Represents the state of a back navigation transition.**
+
+```kotlin
+sealed interface BackTransitionState {
+    data object Idle : BackTransitionState
+    data class InProgress(val event: BackNavigationEvent) : BackTransitionState
+}
+```
+
+#### States
+
+| State | Description |
+|-------|-------------|
+| `Idle` | No back gesture in progress |
+| `InProgress` | Back gesture is active, contains the current `BackNavigationEvent` |
+
+---
+
+### ScreenNavigationInfo
+
+**NavigationEventInfo implementation for Quo Vadis screens.**
+
+```kotlin
+data class ScreenNavigationInfo(
+    val screenId: String,
+    val displayName: String? = null,
+    val route: String? = null
+) : NavigationEventInfo()
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `screenId` | `String` | Unique identifier for the screen |
+| `displayName` | `String?` | Optional display name for accessibility |
+| `route` | `String?` | Optional route pattern |
+
+---
+
+### NoScreenInfo
+
+**Represents "no screen" info for when at the root.**
+
+```kotlin
+data object NoScreenInfo : NavigationEventInfo()
+```
+
+Use this when there's no previous screen (at root of navigation).
+
+---
+
+### BackAnimationController
+
+**Controller for predictive back animations in the hierarchical navigation system.**
+
+```kotlin
+@Stable
+class BackAnimationController {
+    var isAnimating: Boolean
+    var progress: Float
+    var currentEvent: BackNavigationEvent?
+    
+    fun startAnimation(event: BackNavigationEvent)
+    fun updateProgress(event: BackNavigationEvent)
+    fun completeAnimation()
+    fun cancelAnimation()
+}
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `isAnimating` | `Boolean` | Whether a back gesture animation is currently in progress |
+| `progress` | `Float` | Current gesture progress (0.0 to 1.0) |
+| `currentEvent` | `BackNavigationEvent?` | Most recent event with full gesture details (null when idle) |
+
+#### Methods
+
+| Method | Description |
+|--------|-------------|
+| `startAnimation(event)` | Call when back gesture begins |
+| `updateProgress(event)` | Call repeatedly as gesture progresses |
+| `completeAnimation()` | Call when gesture completes (navigation occurs) |
+| `cancelAnimation()` | Call when gesture is cancelled (user didn't complete) |
+
+#### CompositionLocal Access
+
+```kotlin
+val LocalBackAnimationController = staticCompositionLocalOf<BackAnimationController?> { null }
+
+@Composable
+fun rememberBackAnimationController(): BackAnimationController
+```
+
+#### Example: Using in Renderers
+
+```kotlin
+@Composable
+fun StackRenderer(node: StackNode, scope: NavRenderScope) {
+    val backController = LocalBackAnimationController.current
+    
+    // Apply animation based on gesture progress
+    val offsetX = if (backController?.isAnimating == true) {
+        with(LocalDensity.current) {
+            (backController.progress * 100).dp.toPx()
+        }
+    } else 0f
+    
+    Box(modifier = Modifier.offset { IntOffset(offsetX.toInt(), 0) }) {
+        // Content
+    }
+}
+```
+
+---
+
+### Platform Behaviors
+
+| Platform | Behavior |
+|----------|----------|
+| **Android 14+** | Full predictive back with system animation (home preview when closing app) |
+| **Android 13** | Gesture detection with custom animation, no system preview |
+| **Android <13** | Falls back to immediate back |
+| **iOS** | Edge swipe gesture with custom animation |
+| **Desktop** | No gesture, back via keyboard/UI only |
+| **Web** | Browser back button, no gesture |
+
+---
+
 ## Integration Package (`navigation.integration`)
 
 ### DI Support

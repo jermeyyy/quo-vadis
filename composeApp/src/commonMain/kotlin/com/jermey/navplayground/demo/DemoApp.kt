@@ -66,7 +66,7 @@ import com.jermey.quo.vadis.generated.GeneratedWrapperRegistry
  * @see buildMainTabsNavNode KSP-generated function from `@Tab` annotation
  * @see GeneratedScreenRegistry KSP-generated from `@Screen` annotations
  * @see GeneratedScopeRegistry KSP-generated from sealed class hierarchies
- * @see QuoVadisHost Unified navigation host component
+ * @see NavigationHost Unified navigation host component
  */
 @Composable
 fun DemoApp() {
