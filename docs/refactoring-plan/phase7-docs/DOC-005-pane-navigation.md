@@ -17,7 +17,7 @@ Document PaneNode usage for tablets, foldables, and desktop applications.
 
 ## Document Structure
 
-```markdown
+n
 # Pane Navigation Guide
 
 ## Understanding PaneNode

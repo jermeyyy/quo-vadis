@@ -3,7 +3,6 @@ package com.jermey.navplayground.demo.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -43,7 +43,6 @@ private const val EXPLORE_ITEMS_COUNT = 20
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(
-    onItemClick: (String) -> Unit,
     navigator: Navigator,
     modifier: Modifier = Modifier
 ) {
@@ -56,10 +55,8 @@ fun ExploreScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text("Explore") },
                 navigationIcon = {
                     IconButton(onClick = { showBottomSheet = true }) {
@@ -69,7 +66,17 @@ fun ExploreScreen(
             )
         }
     ) { paddingValues ->
-        ExploreScreenContent(modifier, paddingValues, items, onItemClick)
+        ExploreScreenContent(
+            modifier = modifier, 
+            paddingValues = paddingValues, 
+            items = items,
+            onItemClick = { itemId ->
+                navigator.navigate(
+                    MasterDetailDestination.Detail(itemId),
+                    NavigationTransitions.SlideHorizontal
+                )
+            }
+        )
     }
 
     if (showBottomSheet) {

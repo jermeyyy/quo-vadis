@@ -320,6 +320,101 @@ Each type has matching gesture and exit animations for consistency.
 - `ComposableCache`: Caches screens with locking mechanism
 - Type-specific animations: `material3BackAnimation()`, `material3ExitAnimation()`, etc.
 
+### 9. Hierarchical Rendering Architecture
+
+The library supports two rendering modes for displaying navigation state. The **hierarchical mode** (recommended) provides better animation coordination and simpler mental model.
+
+#### Rendering Modes
+
+| Feature | Flattened (Deprecated) | Hierarchical (Recommended) |
+|---------|------------------------|---------------------------|
+| Tab/pane wrapper composition | Siblings (z-ordered) | True parent-child |
+| Animation coordination | Per-surface | Per-container |
+| Predictive back | Per-screen | Entire subtree |
+| Wrapper definition | Runtime lambdas | `@TabWrapper`/`@PaneWrapper` annotations |
+| Content definition | Runtime lambdas | `@Screen` annotations |
+
+#### Hierarchical Rendering Pipeline
+
+```
+NavNode Tree (State)
+       ↓
+NavTreeRenderer (Recursive dispatch)
+       ↓
+┌──────────────────────────────────────────────────────────┐
+│  Node-Specific Renderers                                 │
+├──────────────────────────────────────────────────────────┤
+│  ScreenRenderer    → Renders leaf destinations           │
+│  StackRenderer     → AnimatedNavContent for transitions  │
+│  TabRenderer       → @TabWrapper + AnimatedNavContent    │
+│  PaneRenderer      → @PaneWrapper + adaptive layout      │
+└──────────────────────────────────────────────────────────┘
+       ↓
+Composable Output with Proper Parent-Child Hierarchy
+```
+
+#### Key Components
+
+**NavRenderScope**: Central context provided to all renderers
+- `navigator`: Current Navigator instance
+- `cache`: ComposableCache for state preservation
+- `animationCoordinator`: Resolves transitions
+- `predictiveBackController`: Manages gesture state
+- `screenRegistry`: Maps destinations to composables
+- `wrapperRegistry`: Maps nodes to wrapper composables
+
+**AnimatedNavContent**: Custom AnimatedContent for navigation
+- Tracks displayed/previous state for direction detection
+- Switches to PredictiveBackContent during gestures
+- Provides AnimatedVisibilityScope for shared elements
+
+**ComposableCache**: Enhanced caching with locking
+- `CachedEntry()`: Cacheable composable with SaveableStateHolder
+- `lock()/unlock()`: Animation protection during transitions
+- LRU eviction respecting locked entries
+
+#### Wrapper Annotations
+
+Tab and pane wrappers are defined via annotations:
+
+```kotlin
+@TabWrapper(tabClass = MainTabs::class)
+@Composable
+fun TabWrapperScope.MainTabWrapper(content: @Composable () -> Unit) {
+    Scaffold(
+        bottomBar = { /* NavigationBar */ }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            content()  // Library renders active tab here
+        }
+    }
+}
+
+@PaneWrapper(paneClass = ListDetailPane::class)
+@Composable
+fun PaneWrapperScope.ListDetailWrapper(content: @Composable () -> Unit) {
+    if (isExpanded) {
+        Row { /* Multi-pane layout */ }
+    } else {
+        content()  // Single pane
+    }
+}
+```
+
+#### Transition Annotations
+
+Per-destination transitions via `@Transition`:
+
+```kotlin
+@Destination(route = "details")
+@Transition(type = TransitionType.SlideHorizontal)
+data class DetailsDestination(val id: String)
+```
+
+#### Migration
+
+See [MIGRATION_HIERARCHICAL_RENDERING.md](MIGRATION_HIERARCHICAL_RENDERING.md) for complete migration guide from flattened to hierarchical rendering.
+
 ## Modularization Strategy
 
 ### Feature Module Structure

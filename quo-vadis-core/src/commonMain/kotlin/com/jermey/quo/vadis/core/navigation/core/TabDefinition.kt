@@ -25,6 +25,10 @@ package com.jermey.quo.vadis.core.navigation.core
  * }
  * ```
  */
+@Deprecated(
+    message = "TabDefinition is replaced by @TabItem annotation. Define tabs using @Tab on a sealed class and @TabItem on each tab destination.",
+    level = DeprecationLevel.WARNING
+)
 interface TabDefinition {
     /**
      * Unique identifier for this tab. Used for navigation and state management.
@@ -62,6 +66,10 @@ interface TabDefinition {
  * @property primaryTab Primary tab for back navigation (defaults to initialTab).
  *                       When back is pressed and not on this tab, navigation switches to this tab.
  */
+@Deprecated(
+    message = "TabNavigatorConfig is replaced by @Tab annotation. Use @Tab(name, initialTab) on a sealed class with @TabItem destinations.",
+    level = DeprecationLevel.WARNING
+)
 data class TabNavigatorConfig(
     val allTabs: List<TabDefinition>,
     val initialTab: TabDefinition,

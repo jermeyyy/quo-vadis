@@ -85,8 +85,9 @@ Introduces the new annotation system mapping directly to NavNode types.
 | [ANN-003](./phase4-annotations/ANN-003-route-transitions.md) | Define `@Tab` and `@TabItem` Annotations | Medium | 1 day |
 | [ANN-004](./phase4-annotations/ANN-004-shared-element.md) | Define `@Pane` and `@PaneItem` Annotations | Medium | 1 day |
 | [ANN-005](./phase4-annotations/ANN-005-screen.md) | Define `@Screen` Content Binding Annotation | Low | 0.5 days |
+| [ANN-006](./phase4-annotations/ANN-006-argument.md) | Define `@Argument` Parameter Annotation | Low-Medium | 1 day |
 
-**Phase 3 Total: ~3.5 days**
+**Phase 3 Total: ~4.5 days**
 
 **New Annotation Summary:**
 | Annotation | Maps To | Purpose |
@@ -98,22 +99,28 @@ Introduces the new annotation system mapping directly to NavNode types.
 | `@Pane(name, backBehavior)` | `PaneNode` | Adaptive layout container |
 | `@PaneItem(role, adaptStrategy)` | Pane metadata | Pane behavior configuration |
 | `@Screen(destination)` | Registry entry | Composable-to-destination binding |
+| `@Argument(key, optional)` | `ParamInfo` | **Type-safe navigation argument (NEW)** |
 
 ---
 
-### Phase 4: KSP Processor Rewrite (6 Tasks)
-Complete rewrite of code generation for the new annotation system.
+### Phase 4: KSP Processor Rewrite (9 Tasks)
+Complete rewrite of code generation for the new annotation system, including **type-safe argument serialization**.
 
 | ID | Task | Complexity | Est. Time |
 |----|------|------------|-----------|
-| [KSP-001](./phase3-ksp/KSP-001-graph-type-enum.md) | Create Annotation Extractors | Medium | 2-3 days |
+| [KSP-001](./phase3-ksp/KSP-001-graph-type-enum.md) | Create Annotation Extractors (with @Argument) | Medium-High | 3-4 days |
 | [KSP-002](./phase3-ksp/KSP-002-class-references.md) | Create NavNode Builder Generator | High | 4-5 days |
 | [KSP-003](./phase3-ksp/KSP-003-graph-extractor.md) | Create Screen Registry Generator | Medium | 2-3 days |
-| [KSP-004](./phase3-ksp/KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator | High | 3-4 days |
+| [KSP-004](./phase3-ksp/KSP-004-deep-link-handler.md) | Create Deep Link Handler Generator (type conversion) | High | 4-5 days |
 | [KSP-005](./phase3-ksp/KSP-005-navigator-extensions.md) | Create Navigator Extensions Generator | Low | 1 day |
-| [KSP-006](./phase3-ksp/KSP-006-validation.md) | Validation and Error Reporting | Medium | 2-3 days |
+| [KSP-006](./phase3-ksp/KSP-006-validation.md) | Validation and Error Reporting (argument validation) | Medium | 2-3 days |
+| [KSP-007](./phase3-ksp/KSP-007-remove-legacy-tabgraph.md) | Remove Legacy TabGraphExtractor | Low | 0.5 days |
+| [KSP-008](./phase3-ksp/KSP-008-deep-link-handler-imports.md) | Fix Deep Link Handler Generator Imports | Low | 0.5 days |
+| [**KSP-009**](./phase3-ksp/KSP-009-tab-annotation-fix.md) | **Tab Annotation Pattern Fix for KMP** ⚠️ | High | 3-4 days |
 
-**Phase 4 Total: ~14-19 days**
+**Phase 4 Total: ~21-27 days**
+
+> ⚠️ **KSP-009 BLOCKER**: The current `@Tab`/`@TabItem` pattern fails in KMP metadata compilation because KSP cannot discover annotations on nested sealed subclasses. KSP-009 introduces a new pattern where `@TabItem` annotates top-level `@Stack` classes, fixing this issue and improving type-safety.
 
 **Generated Artifacts:**
 | Input | Output | Purpose |
@@ -122,40 +129,60 @@ Complete rewrite of code generation for the new annotation system.
 | `@Tab` class | `build{Name}NavNode()` | Initial TabNode tree |
 | `@Pane` class | `build{Name}NavNode()` | Initial PaneNode tree |
 | All `@Screen` | `GeneratedScreenRegistry` | Destination → Composable mapping |
-| All `@Destination` | `GeneratedDeepLinkHandler` | URI → Destination parsing |
+| All `@Destination` | `GeneratedDeepLinkHandler` | URI → Destination parsing with type conversion |
+| `@Argument` params | Type converters | Primitive/Enum/JSON serialization |
 
 ---
 
-### Phase 5: Migration Examples & Demo App (7 Tasks)
-Provides practical migration examples and rewrites the demo app to showcase the new architecture.
+### Phase 5: Recipes Module, Migration & Demo App (10 Tasks)
+Creates `quo-vadis-recipes` module for LLM-assisted integration, marks legacy APIs as `@Deprecated`, and migrates demo app.
 
-> **Note**: No backward compatibility adapters are needed. The library is in development stage and breaking changes are acceptable. This phase focuses on **practical examples** that demonstrate how to migrate common navigation patterns.
+> **Note**: This phase creates a new `quo-vadis-recipes` module with pattern-based examples optimized for LLM consumption. All legacy APIs will be marked `@Deprecated` with `replaceWith` guidance. GitHub permalinks reference the main branch for stable "migrating from" code.
 
 | ID | Task | Complexity | Est. Time |
 |----|------|------------|-----------|
-| [MIG-001](./phase5-migration/MIG-001-simple-stack-example.md) | Simple Stack Navigation Example | Low | 1 day |
-| [MIG-002](./phase5-migration/MIG-002-master-detail-example.md) | Master-Detail Pattern Example | Medium | 1.5 days |
-| [MIG-003](./phase5-migration/MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Example | Medium | 2 days |
-| [MIG-004](./phase5-migration/MIG-004-process-flow-example.md) | Process/Wizard Flow Example | Low | 1 day |
-| [MIG-005](./phase5-migration/MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Example | Medium | 1.5 days |
-| [MIG-006](./phase5-migration/MIG-006-demo-app-rewrite.md) | Demo App Rewrite | High | 3-4 days |
-| [MIG-007](./phase5-migration/MIG-007-api-change-summary.md) | API Change Summary Document | Low | 0.5 days |
+| [PREP-001](./phase5-migration/PREP-001-recipes-module.md) | Create quo-vadis-recipes Module | Medium | 1.5 days |
+| [PREP-002](./phase5-migration/PREP-002-deprecated-annotations.md) | Add @Deprecated Annotations | Medium | 2 days |
+| [PREP-003](./phase5-migration/PREP-003-permalink-reference.md) | GitHub Permalink Reference Doc | Low | 0.5 days |
+| [MIG-001](./phase5-migration/MIG-001-simple-stack-example.md) | Simple Stack Navigation Recipe | Low | 1 day |
+| [MIG-002](./phase5-migration/MIG-002-master-detail-example.md) | Master-Detail Pattern Recipe | Medium | 1.5 days |
+| [MIG-003](./phase5-migration/MIG-003-tabbed-navigation-example.md) | Tabbed Navigation Recipe | Medium | 2 days |
+| [MIG-004](./phase5-migration/MIG-004-process-flow-example.md) | Process/Wizard Flow Recipe | Low | 1 day |
+| [MIG-005](./phase5-migration/MIG-005-nested-tabs-detail-example.md) | Nested Tabs + Detail Recipe | Medium | 1.5 days |
+| [MIG-006](./phase5-migration/MIG-006-deep-linking-recipe.md) | Deep Linking Recipe | Medium | 1 day |
+| [MIG-007](./phase5-migration/MIG-007-demo-app-rewrite.md) | Demo App Rewrite | High | 3-4 days |
+| ↳ [MIG-007A](./phase5-migration/MIG-007A-foundation-destinations.md) | Foundation - Core Destinations | Medium | 3-4 hours |
+| ↳ [MIG-007B](./phase5-migration/MIG-007B-tab-system.md) | Tab System Migration (**Blocked by KSP-009**) | High | 4-5 hours |
+| ↳ [MIG-007C](./phase5-migration/MIG-007C-master-detail.md) | Master-Detail Pattern | Medium | 2-3 hours |
+| ↳ [MIG-007D](./phase5-migration/MIG-007D-process-wizard.md) | Process/Wizard Flow | Medium | 3-4 hours |
+| ↳ [MIG-007E](./phase5-migration/MIG-007E-settings-stack.md) | Settings Stack | Low | 1-2 hours |
+| ↳ [MIG-007F](./phase5-migration/MIG-007F-feature-screens.md) | Feature Screens | Medium | 3-4 hours |
+| ↳ [MIG-007G](./phase5-migration/MIG-007G-entry-point.md) | Entry Point Integration | High | 3-4 hours |
+| [MIG-008](./phase5-migration/MIG-008-api-change-summary.md) | API Change Summary Document | Low | 0.5 days |
 
-**Phase 5 Total: ~10-12 days**
+**Phase 5 Total: ~14-17 days**
 
-**Migration Example Coverage:**
-| Example | Key Patterns Demonstrated |
-|---------|---------------------------|
-| Simple Stack | `@Stack`, `@Destination`, `@Screen`, basic `navigate()`/`navigateBack()` |
-| Master-Detail | Typed arguments via route templates, deep linking, shared elements |
-| Tabbed Navigation | `@Tab`, `@TabItem`, `tabWrapper`, `switchTab()`, tab state preservation |
-| Process/Wizard Flow | Sequential navigation, branching, `navigateAndClearTo()` |
-| Nested Tabs + Detail | Complex hierarchies, full-screen detail over tabs, cross-layer predictive back |
+**New Module Structure:**
+```
+quo-vadis-recipes/
+├── build.gradle.kts           # KMP module (NOT published)
+└── src/commonMain/.../recipes/
+    ├── stack/                 # Linear stack patterns
+    ├── tabs/                  # Tabbed navigation patterns
+    ├── masterdetail/          # Master-detail patterns
+    ├── wizard/                # Process/wizard patterns
+    ├── deeplink/              # Deep linking patterns
+    ├── pane/                  # Adaptive layout patterns
+    └── shared/                # Common utilities
+```
 
-**Key Changes from Old Phase 5:**
-- ~~Backward compatibility adapters~~ → **Practical code examples**
-- ~~Deprecation warnings~~ → **API change summary**
-- ~~State converters~~ → **Demo app rewrite**
+**Key Changes from Original Phase 5:**
+| Aspect | Original | Revised |
+|--------|----------|---------|
+| Example Location | `docs/migration-examples/*.md` | `quo-vadis-recipes/` module |
+| Legacy API Handling | Documentation only | `@Deprecated` with `replaceWith` |
+| Code References | Inline code blocks | GitHub permalinks to main |
+| LLM Support | None | Pattern-based packages, rich KDoc |
 
 ---
 
@@ -216,8 +243,14 @@ Phase 1 (Core) ─────────────────────�
     │    └── → RENDER-004 → 005, 006, 007                       │
     │                                                            │
     ├──► Phase 3 (Annotations) ──► Phase 4 (KSP) ───────────────┤
+    │                                 │                          │
+    │                                 └── KSP-009 ──► MIG-007B   │ ⚠️ BLOCKER
     │                                                            │
-    ├──► Phase 5 (Migration Examples) ──────────────────────────┤
+    ├──► Phase 5 (Recipes & Migration) ─────────────────────────┤
+    │    ├── PREP-001 (recipes module) ──► MIG-001..006         │
+    │    ├── PREP-002 (@Deprecated) ──► MIG-008                 │
+    │    └── MIG-001..006 ──► MIG-007 (Demo Rewrite)            │
+    │         └── MIG-007A ──► MIG-007B (requires KSP-009)      │
     │                                                            │
     └──► Phase 6 (Risks) ───────────────────────────────────────┤
                                                                  │
@@ -228,8 +261,9 @@ Phase 1 (Core) ─────────────────────�
 ### Critical Path
 
 1. **CORE-001** → **CORE-002** → **CORE-003** (Foundation)
-2. **ANN-001..005** → **KSP-001..006** (Code Generation)
+2. **ANN-001..005** → **KSP-001..006** → **KSP-009** (Code Generation + Tab Fix)
 3. **RENDER-001** → **RENDER-002A** → **RENDER-004** (Renderer Core)
+4. **KSP-009** → **MIG-007B** → **MIG-007G** (Tab System Migration Path)
 
 ---
 
@@ -239,17 +273,21 @@ Phase 1 (Core) ─────────────────────�
 |-------|-------|----------------|
 | Phase 1: Core State | 5 | 14-19 |
 | Phase 2: Renderer | 12 | 31-37.5 |
-| Phase 3: Annotations | 5 | 3.5 |
-| Phase 4: KSP | 6 | 14-19 |
-| Phase 5: Migration Examples | 7 | 10-12 |
+| Phase 3: Annotations | 6 | 4.5 |
+| Phase 4: KSP | 9 | 21-27 |
+| Phase 5: Recipes & Migration | 10 | 14-17 |
 | Phase 6: Risks | 5 | 11 |
 | Phase 7: Documentation | 4 | 7 |
 | Phase 8: Testing | 5 | 16 |
-| **TOTAL** | **49** | **106.5-125 days** |
+| **TOTAL** | **56** | **118.5-139 days** |
 
-> **Note**: Phase 5 focuses on **practical migration examples** rather than compatibility adapters. No backward compatibility is maintained - the library is in development stage.
+> **Note**: Phase 3 now includes `@Argument` annotation (ANN-006) for type-safe navigation arguments. Phase 4 KSP includes type conversion for deep linking.
 >
-> **Note**: Many tasks can be parallelized. With 2-3 developers, timeline can be reduced to **7-9 weeks**.
+> **Note**: Phase 4 now includes **KSP-009** which fixes the `@Tab`/`@TabItem` annotation pattern for KMP metadata compilation. This is a **blocker for MIG-007B**.
+>
+> **Note**: Phase 5 includes `quo-vadis-recipes` module creation and `@Deprecated` annotations for all legacy APIs. All "migrating from" code references use GitHub permalinks to the main branch.
+>
+> **Note**: Many tasks can be parallelized. With 2-3 developers, timeline can be reduced to **9-11 weeks**.
 
 ---
 
@@ -260,7 +298,7 @@ Phase 1 (Core) ─────────────────────�
   - [Phase 2: Unified Renderer](./phase2-renderer/)
   - [Phase 3: Annotations](./phase4-annotations/)
   - [Phase 4: KSP Processor](./phase3-ksp/)
-  - [Phase 5: Migration Examples](./phase5-migration/)
+  - [Phase 5: Recipes & Migration](./phase5-migration/)
   - [Phase 6: Risk Mitigation](./phase6-risks/)
   - [Phase 7: Documentation](./phase7-docs/)
   - [Phase 8: Testing](./phase8-testing/)
@@ -282,7 +320,7 @@ Phase 1 (Core) ─────────────────────�
 
 ## New Annotation Examples
 
-### Basic Stack Navigation
+### Basic Stack Navigation with Type-Safe Arguments
 
 ```kotlin
 @Stack(name = "home", startDestination = "Feed")
@@ -292,13 +330,16 @@ sealed class HomeDestination : Destination {
     data object Feed : HomeDestination()
     
     @Destination(route = "home/article/{articleId}")
-    data class Article(val articleId: String) : HomeDestination()
+    data class Article(
+        @Argument val articleId: String,
+        @Argument(optional = true) val showComments: Boolean = false
+    ) : HomeDestination()
 }
 
 @Screen(HomeDestination.Feed::class)
 @Composable
 fun FeedScreen(navigator: Navigator) {
-    Button(onClick = { navigator.navigate(HomeDestination.Article("123")) }) {
+    Button(onClick = { navigator.navigate(HomeDestination.Article("123", showComments = true)) }) {
         Text("View Article")
     }
 }
@@ -306,8 +347,38 @@ fun FeedScreen(navigator: Navigator) {
 @Screen(HomeDestination.Article::class)
 @Composable
 fun ArticleScreen(destination: HomeDestination.Article, navigator: Navigator) {
+    // Type-safe argument access via destination object
     Text("Article: ${destination.articleId}")
+    if (destination.showComments) {
+        CommentsSection()
+    }
 }
+```
+
+### Complex Arguments with Serialization
+
+```kotlin
+@Serializable
+data class SearchFilters(
+    val categories: List<String> = emptyList(),
+    val priceRange: IntRange? = null
+)
+
+@Stack(name = "search", startDestination = "Home")
+sealed class SearchDestination : Destination {
+    
+    @Destination(route = "search")
+    data object Home : SearchDestination()
+    
+    @Destination(route = "search/results")
+    data class Results(
+        @Argument val query: String,
+        @Argument(optional = true) val filters: SearchFilters = SearchFilters(),
+        @Argument(key = "p", optional = true) val page: Int = 1
+    ) : SearchDestination()
+}
+
+// Deep link: myapp://search/results?q=kotlin&filters={"categories":["books"]}&p=2
 ```
 
 ### Tabbed Navigation

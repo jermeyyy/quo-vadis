@@ -40,8 +40,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.StateDrivenDestination
+import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
+import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.BackStack
 import com.jermey.quo.vadis.core.navigation.core.MutableBackStack
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
  * State-Driven Navigation Demo Screen.
@@ -56,10 +59,11 @@ import com.jermey.quo.vadis.core.navigation.core.MutableBackStack
  * - Real-time state observation using Compose's snapshot system
  * - Declarative navigation without NavController
  */
+@Screen(StateDrivenDemoDestination.Demo::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StateDrivenDemoScreen(
-    onBack: () -> Unit,
+    navigator: Navigator,
     modifier: Modifier = Modifier
 ) {
     val backStack = remember {
@@ -74,7 +78,7 @@ fun StateDrivenDemoScreen(
             TopAppBar(
                 title = { Text("State-Driven Navigation") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }

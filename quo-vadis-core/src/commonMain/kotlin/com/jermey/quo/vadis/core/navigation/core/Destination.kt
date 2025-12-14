@@ -43,59 +43,15 @@ val Destination.route: String
     }
 
 /**
- * Typed destination that can carry serializable data with type safety.
- *
- * @param T The type of data this destination carries (must be non-nullable).
- * Type should be serializable for state persistence.
- * 
- * This interface can be implemented to create custom typed destinations using sealed classes.
- * 
- * Example:
- * ```
- * @Serializable
- * data class ProductDetails(val id: String, val name: String)
- * 
- * @Graph("app")
- * sealed class AppDestination : Destination {
- *     @Route("product_detail")
- *     @Argument(ProductDetails::class)
- *     data class ProductDetail(val itemId: String) : 
- *         AppDestination(), TypedDestination<ProductDetails> {
- *         override val data = ProductDetails(itemId, "Product Name")
- *     }
- * }
- * ```
- */
-interface TypedDestination<T>: Destination {
-    override val data: T
-    override val transition: NavigationTransition?
-        get() = null
-}
-
-/**
- * Internal implementation of TypedDestination for state restoration.
- * This class is used by the serialization framework to reconstruct typed destinations
- * from saved state. Routes are resolved via RouteRegistry.
- * 
- * @internal This class is internal to the library.
- */
-internal data class RestoredTypedDestination<T>(
-    private val routeString: String,
-    override val data: T,
-    override val transition: NavigationTransition? = null
-) : TypedDestination<T> {
-    init {
-        // Register the route for this restored destination
-        RouteRegistry.register(this::class, routeString)
-    }
-}
-
-/**
  * Basic destination implementation for simple navigation without typed data.
  * Holds the route string directly, bypassing RouteRegistry to avoid conflicts.
  * 
  * @internal This class is internal to the library. Use the DSL functions to create destinations.
  */
+@Deprecated(
+    message = "BasicDestination is replaced by sealed class members.",
+    level = DeprecationLevel.WARNING
+)
 internal data class BasicDestination(
     internal val routeString: String,
     override val transition: NavigationTransition? = null

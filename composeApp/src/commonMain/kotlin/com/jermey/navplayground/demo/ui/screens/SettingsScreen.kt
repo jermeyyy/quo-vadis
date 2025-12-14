@@ -2,11 +2,11 @@ package com.jermey.navplayground.demo.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Policy
-import com.jermey.navplayground.demo.destinations.SettingsDestination
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.tabs.MainTabs
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.SettingItem
 import com.jermey.navplayground.demo.ui.components.SettingsSection
@@ -42,9 +42,7 @@ import com.jermey.navplayground.demo.ui.components.ThemeSettingItem
 import com.jermey.navplayground.demo.ui.theme.ThemeManager
 import com.jermey.navplayground.demo.ui.theme.ThemeMode
 import com.jermey.navplayground.demo.ui.theme.rememberThemeManager
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import androidx.compose.foundation.layout.WindowInsets
 import kotlinx.coroutines.launch
 
 /**
@@ -65,10 +63,8 @@ fun SettingsScreen(
     val currentThemeMode by themeManager.themeMode.collectAsState()
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = { showBottomSheet = true }) {
@@ -78,7 +74,13 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        SettingsScreenContent(navigator, modifier, paddingValues, currentThemeMode, themeManager)
+        SettingsScreenContent(
+            navigator,
+            modifier,
+            paddingValues,
+            currentThemeMode,
+            themeManager
+        )
     }
 
     if (showBottomSheet) {
@@ -126,17 +128,17 @@ private fun SettingsScreenContent(
                 SettingItem(
                     title = "Profile",
                     icon = Icons.Default.Person,
-                    onClick = { navigator.navigate(SettingsDestination.Profile) }
+                    onClick = { navigator.navigate(MainTabs.SettingsTab.Profile) }
                 )
                 SettingItem(
                     title = "Notifications",
                     icon = Icons.Default.Notifications,
-                    onClick = { navigator.navigate(SettingsDestination.Notifications) }
+                    onClick = { navigator.navigate(MainTabs.SettingsTab.Notifications) }
                 )
                 SettingItem(
                     title = "About",
                     icon = Icons.Default.Info,
-                    onClick = { navigator.navigate(SettingsDestination.About) }
+                    onClick = { navigator.navigate(MainTabs.SettingsTab.About) }
                 )
             }
         }

@@ -2,7 +2,7 @@ package com.jermey.navplayground.demo
 
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileContainer
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
-import com.jermey.quo.vadis.core.navigation.core.DefaultNavigator
+import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -25,7 +25,7 @@ fun initKoin() {
  * Navigation module - provides Navigator singleton.
  */
 val navigationModule = module {
-    single<Navigator> { DefaultNavigator() }
+    single<Navigator> { TreeNavigator() }
 }
 
 /**

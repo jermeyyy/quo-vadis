@@ -19,6 +19,10 @@ import kotlin.uuid.Uuid
  * The [entries] list can be directly observed in Compose UI without collecting flows,
  * enabling declarative navigation where the backstack state drives the UI.
  */
+@Deprecated(
+    message = "BackStack interface is replaced by NavNode tree state. Access navigation state via Navigator.state: StateFlow<NavNode>.",
+    level = DeprecationLevel.WARNING
+)
 @Stable
 interface BackStack {
     // ═══════════════════════════════════════════════════════════════
@@ -191,6 +195,10 @@ interface BackStack {
  * This constant is used to persist and restore the selected tab when navigating
  * back to a tabbed navigation destination.
  */
+@Deprecated(
+    message = "EXTRA_SELECTED_TAB_ROUTE is replaced by TabNode.activeStackIndex.",
+    level = DeprecationLevel.WARNING
+)
 const val EXTRA_SELECTED_TAB_ROUTE = "quo_vadis_selected_tab_route"
 
 /**
@@ -207,6 +215,10 @@ const val EXTRA_SELECTED_TAB_ROUTE = "quo_vadis_selected_tab_route"
  * @property isPopping Whether this entry is currently being popped from the stack
  * @property extras Mutable map for storing arbitrary data that persists with this entry
  */
+@Deprecated(
+    message = "BackStackEntry is replaced by ScreenNode in the NavNode tree. Navigation entries are now nodes in a tree structure.",
+    level = DeprecationLevel.WARNING
+)
 data class BackStackEntry(
     val id: String = generateId(),
     val destination: Destination,
@@ -264,6 +276,10 @@ fun BackStackEntry.setExtra(key: String, value: Any?) {
  * - **Flow interop**: Provides StateFlow properties that sync with the snapshot state
  * - **Rich manipulation API**: Supports push, pop, insert, remove, swap, move, and more
  */
+@Deprecated(
+    message = "MutableBackStack is replaced by TreeMutator operations on NavNode. Use Navigator methods like navigate(), navigateBack(), etc.",
+    level = DeprecationLevel.WARNING
+)
 class MutableBackStack : BackStack {
 
     // ═══════════════════════════════════════════════════════════════

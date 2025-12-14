@@ -302,6 +302,180 @@ fun UserProfileContent(data: UserData, navigator: Navigator) {
 
 ---
 
+### @TabWrapper (Hierarchical Rendering)
+
+Marks a composable function as a tab wrapper for use with `RenderingMode.Hierarchical`.
+
+```kotlin
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class TabWrapper(val tabClass: KClass<*>)
+```
+
+**Signature Requirements:**
+- Receiver: `TabWrapperScope`
+- Parameter: `content: @Composable () -> Unit`
+
+**Example:**
+```kotlin
+@TabWrapper(tabClass = MainTabs::class)
+@Composable
+fun TabWrapperScope.MainTabWrapper(content: @Composable () -> Unit) {
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                tabs.forEachIndexed { index, tab ->
+                    NavigationBarItem(
+                        selected = activeIndex == index,
+                        onClick = { switchTab(index) },
+                        icon = { Icon(tab.metadata?.icon, tab.metadata?.label ?: "") },
+                        label = { Text(tab.metadata?.label ?: "") }
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            content()  // Library renders active tab content here
+        }
+    }
+}
+```
+
+**TabWrapperScope Properties:**
+- `navigator: Navigator` - Current navigator instance
+- `activeIndex: Int` - Currently selected tab index
+- `tabs: List<TabInfo>` - List of all tab configurations
+- `switchTab(index: Int)` - Function to change tabs
+
+---
+
+### @PaneWrapper (Hierarchical Rendering)
+
+Marks a composable function as a pane wrapper for adaptive layouts.
+
+```kotlin
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class PaneWrapper(val paneClass: KClass<*>)
+```
+
+**Signature Requirements:**
+- Receiver: `PaneWrapperScope`
+- Parameter: `content: @Composable () -> Unit`
+
+**Example:**
+```kotlin
+@PaneWrapper(paneClass = ListDetailPane::class)
+@Composable
+fun PaneWrapperScope.ListDetailWrapper(content: @Composable () -> Unit) {
+    if (isExpanded) {
+        // Multi-pane layout for larger screens
+        Row(modifier = Modifier.fillMaxSize()) {
+            paneContents.forEach { pane ->
+                val weight = when (pane.role) {
+                    PaneRole.Primary -> 0.65f
+                    PaneRole.Supporting -> 0.35f
+                    else -> 1f
+                }
+                if (pane.isVisible) {
+                    Box(modifier = Modifier.weight(weight)) {
+                        pane.content()
+                    }
+                }
+            }
+        }
+    } else {
+        // Single pane for compact screens
+        content()
+    }
+}
+```
+
+**PaneWrapperScope Properties:**
+- `navigator: Navigator` - Current navigator instance
+- `paneContents: List<PaneContentSlot>` - Pane configurations
+- `activePaneRole: PaneRole?` - Currently active pane (compact mode)
+- `isExpanded: Boolean` - True if multi-pane layout should be used
+
+---
+
+### @Transition (Hierarchical Rendering)
+
+Defines per-destination transition animations.
+
+```kotlin
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Transition(
+    val type: TransitionType,
+    val customTransition: KClass<*> = Unit::class
+)
+```
+
+**TransitionType Values:**
+- `SlideHorizontal` - Slide in/out from right
+- `SlideVertical` - Slide in/out from bottom
+- `Fade` - Fade in/out
+- `None` - No animation
+- `Custom` - Use custom transition class
+
+**Example:**
+```kotlin
+// Standard transition type
+@Destination(route = "details/{id}")
+@Transition(type = TransitionType.SlideHorizontal)
+data class DetailsDestination(val id: String)
+
+// Custom transition
+@Destination(route = "modal")
+@Transition(type = TransitionType.Custom, customTransition = ModalTransition::class)
+data class ModalDestination
+
+// Custom transition implementation
+object ModalTransition : CustomNavTransition {
+    override fun createNavTransition(): NavTransition = NavTransition(
+        enter = slideInVertically { it } + fadeIn(),
+        exit = fadeOut(),
+        popEnter = fadeIn(),
+        popExit = slideOutVertically { it } + fadeOut()
+    )
+}
+```
+
+---
+
+### @Screen (Hierarchical Rendering)
+
+Maps a destination to its screen composable for hierarchical rendering.
+
+```kotlin
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Screen(val destination: KClass<*>)
+```
+
+**Example:**
+```kotlin
+@Screen(destination = HomeDestination::class)
+@Composable
+fun HomeScreen() {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text("Welcome Home")
+    }
+}
+
+@Screen(destination = ProfileDestination::class)
+@Composable
+fun ProfileScreen(destination: ProfileDestination) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text("Profile: ${destination.userId}")
+    }
+}
+```
+
+---
+
 ### Generated Code
 
 #### Route Registration
@@ -946,6 +1120,349 @@ PredictiveBackNavigation(
     animationType = PredictiveBackAnimationType.Scale,
     sensitivity = 1.2f  // More sensitive gesture
 )
+```
+
+---
+
+## NavigationEvent Back Handling (`navigation.compose.navback`)
+
+The `navback` package provides a modern, multiplatform back handling API that integrates with the AndroidX NavigationEvent library. This provides proper system animation support on Android 14+ and consistent gesture handling across all platforms.
+
+> 📖 **Full Guide**: See [MULTIPLATFORM_PREDICTIVE_BACK.md](MULTIPLATFORM_PREDICTIVE_BACK.md) for comprehensive documentation.
+
+### QuoVadisBackHandler
+
+**Primary composable for handling back gestures with NavigationEvent integration.**
+
+```kotlin
+@Composable
+fun QuoVadisBackHandler(
+    enabled: Boolean = true,
+    currentScreenInfo: ScreenNavigationInfo,
+    previousScreenInfo: ScreenNavigationInfo? = null,
+    onBackProgress: ((BackNavigationEvent) -> Unit)? = null,
+    onBackCancelled: (() -> Unit)? = null,
+    onBackCompleted: () -> Unit,
+    content: @Composable () -> Unit
+)
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `enabled` | `Boolean` | Whether back handling is enabled. When false, gestures pass through to the system. |
+| `currentScreenInfo` | `ScreenNavigationInfo` | Info about the currently displayed screen for system animation context. |
+| `previousScreenInfo` | `ScreenNavigationInfo?` | Info about the screen that will be revealed on back navigation. Pass null if at root. |
+| `onBackProgress` | `((BackNavigationEvent) -> Unit)?` | Called with progress updates during the back gesture (0.0 to 1.0). |
+| `onBackCancelled` | `(() -> Unit)?` | Called when the back gesture is cancelled. |
+| `onBackCompleted` | `() -> Unit` | Called when the back gesture completes and navigation should occur. |
+| `content` | `@Composable () -> Unit` | The content to display. |
+
+#### System Integration
+
+On Android 14+ (API 34+), `QuoVadisBackHandler` properly integrates with the system's `OnBackInvokedDispatcher` to provide:
+- System predictive back animations when closing the app
+- In-app predictive back animations during navigation
+- Proper priority handling for nested handlers
+
+On other platforms, the handler provides gesture detection without system animation.
+
+#### Example: Full Usage
+
+```kotlin
+QuoVadisBackHandler(
+    enabled = canGoBack,
+    currentScreenInfo = ScreenNavigationInfo(
+        screenId = "detail-${item.id}",
+        displayName = "Item Details",
+        route = "detail/{id}"
+    ),
+    previousScreenInfo = ScreenNavigationInfo(
+        screenId = "list",
+        displayName = "Item List",
+        route = "list"
+    ),
+    onBackProgress = { event ->
+        // Animate based on gesture progress
+        animatedOffset = event.progress * maxOffset
+    },
+    onBackCancelled = {
+        // Reset animation state
+        animatedOffset = 0f
+    },
+    onBackCompleted = {
+        navigator.goBack()
+    }
+) {
+    // Screen content
+    DetailScreen(item)
+}
+```
+
+#### Simplified Overload
+
+For simple back handling without progress tracking:
+
+```kotlin
+@Composable
+fun QuoVadisBackHandler(
+    enabled: Boolean = true,
+    onBack: () -> Unit,
+    content: @Composable () -> Unit
+)
+```
+
+**Example:**
+```kotlin
+QuoVadisBackHandler(
+    enabled = canGoBack,
+    onBack = { navigator.goBack() }
+) {
+    MyScreen()
+}
+```
+
+---
+
+### BackNavigationEvent
+
+**Platform-agnostic representation of a back navigation event.**
+
+```kotlin
+@Immutable
+data class BackNavigationEvent(
+    val progress: Float,
+    val touchX: Float = 0f,
+    val touchY: Float = 0f,
+    val swipeEdge: Int = EDGE_LEFT
+) {
+    companion object {
+        const val EDGE_LEFT: Int = 0
+        const val EDGE_RIGHT: Int = 1
+    }
+}
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `progress` | `Float` | Progress of the back gesture, 0.0 to 1.0 |
+| `touchX` | `Float` | X coordinate of the touch point |
+| `touchY` | `Float` | Y coordinate of the touch point |
+| `swipeEdge` | `Int` | Which edge the swipe started from (`EDGE_LEFT` or `EDGE_RIGHT`) |
+
+---
+
+### BackTransitionState
+
+**Represents the state of a back navigation transition.**
+
+```kotlin
+sealed interface BackTransitionState {
+    data object Idle : BackTransitionState
+    data class InProgress(val event: BackNavigationEvent) : BackTransitionState
+}
+```
+
+#### States
+
+| State | Description |
+|-------|-------------|
+| `Idle` | No back gesture in progress |
+| `InProgress` | Back gesture is active, contains the current `BackNavigationEvent` |
+
+---
+
+### ScreenNavigationInfo
+
+**NavigationEventInfo implementation for Quo Vadis screens.**
+
+```kotlin
+data class ScreenNavigationInfo(
+    val screenId: String,
+    val displayName: String? = null,
+    val route: String? = null
+) : NavigationEventInfo()
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `screenId` | `String` | Unique identifier for the screen |
+| `displayName` | `String?` | Optional display name for accessibility |
+| `route` | `String?` | Optional route pattern |
+
+---
+
+### NoScreenInfo
+
+**Represents "no screen" info for when at the root.**
+
+```kotlin
+data object NoScreenInfo : NavigationEventInfo()
+```
+
+Use this when there's no previous screen (at root of navigation).
+
+---
+
+### BackAnimationController
+
+**Controller for predictive back animations in the hierarchical navigation system.**
+
+```kotlin
+@Stable
+class BackAnimationController {
+    var isAnimating: Boolean
+    var progress: Float
+    var currentEvent: BackNavigationEvent?
+    
+    fun startAnimation(event: BackNavigationEvent)
+    fun updateProgress(event: BackNavigationEvent)
+    fun completeAnimation()
+    fun cancelAnimation()
+}
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `isAnimating` | `Boolean` | Whether a back gesture animation is currently in progress |
+| `progress` | `Float` | Current gesture progress (0.0 to 1.0) |
+| `currentEvent` | `BackNavigationEvent?` | Most recent event with full gesture details (null when idle) |
+
+#### Methods
+
+| Method | Description |
+|--------|-------------|
+| `startAnimation(event)` | Call when back gesture begins |
+| `updateProgress(event)` | Call repeatedly as gesture progresses |
+| `completeAnimation()` | Call when gesture completes (navigation occurs) |
+| `cancelAnimation()` | Call when gesture is cancelled (user didn't complete) |
+
+#### CompositionLocal Access
+
+```kotlin
+val LocalBackAnimationController = staticCompositionLocalOf<BackAnimationController?> { null }
+
+@Composable
+fun rememberBackAnimationController(): BackAnimationController
+```
+
+#### Example: Using in Renderers
+
+```kotlin
+@Composable
+fun StackRenderer(node: StackNode, scope: NavRenderScope) {
+    val backController = LocalBackAnimationController.current
+    
+    // Apply animation based on gesture progress
+    val offsetX = if (backController?.isAnimating == true) {
+        with(LocalDensity.current) {
+            (backController.progress * 100).dp.toPx()
+        }
+    } else 0f
+    
+    Box(modifier = Modifier.offset { IntOffset(offsetX.toInt(), 0) }) {
+        // Content
+    }
+}
+```
+
+---
+
+### Platform Behaviors
+
+| Platform | Behavior |
+|----------|----------|
+| **Android 14+** | Full predictive back with system animation (home preview when closing app) |
+| **Android 13** | Gesture detection with custom animation, no system preview |
+| **Android <13** | Falls back to immediate back |
+| **iOS** | Edge swipe gesture with custom animation |
+| **Desktop** | No gesture, back via keyboard/UI only |
+| **Web** | Browser back button, no gesture |
+
+---
+
+## Predictive Back Configuration
+
+### PredictiveBackMode
+
+Controls how predictive back gestures are handled across the navigation tree.
+
+```kotlin
+public enum class PredictiveBackMode {
+    ROOT_ONLY,
+    FULL_CASCADE
+}
+```
+
+| Mode | Description |
+|------|-------------|
+| `ROOT_ONLY` | Default. Only the root stack handles predictive back gestures. Nested stacks pop instantly after gesture completion. Recommended for simple navigation structures and performance-constrained devices. |
+| `FULL_CASCADE` | All stacks handle predictive back, including animated cascade when popping containers. When back would cascade (pop entire container), the gesture shows a preview of the target screen with the container animating away. Recommended for apps with complex nested navigation. |
+
+**Usage:**
+
+```kotlin
+NavigationHost(
+    navigator = navigator,
+    predictiveBackMode = PredictiveBackMode.FULL_CASCADE // Enable cascade animations
+)
+```
+
+---
+
+### CascadeBackState
+
+State information for predictive back gestures that may cascade through multiple container levels.
+
+```kotlin
+@Stable
+public data class CascadeBackState(
+    val sourceNode: NavNode,      // Node that initiated the back gesture
+    val exitingNode: NavNode,     // Node being removed (screen, stack, or tab)
+    val targetNode: NavNode?,     // Node revealed after back (null if closing app)
+    val cascadeDepth: Int,        // 0 = normal pop, 1+ = cascade levels
+    val delegatesToSystem: Boolean // True if back would close the app
+)
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `sourceNode` | `NavNode` | The node that initiated the back gesture (usually a ScreenNode) |
+| `exitingNode` | `NavNode` | The node that will be visually removed. Could be ScreenNode (normal pop), StackNode (cascade pop), or TabNode (tab cascade) |
+| `targetNode` | `NavNode?` | The node revealed after back completes. `null` if delegating to system |
+| `cascadeDepth` | `Int` | How many levels the cascade goes. 0 = normal pop, 1+ = deeper cascade |
+| `delegatesToSystem` | `Boolean` | Whether back would close the app |
+
+#### Factory Function
+
+```kotlin
+// Calculate cascade state for current navigation
+val cascadeState = calculateCascadeBackState(rootNode)
+
+// Check what will exit
+when (cascadeState.exitingNode) {
+    is ScreenNode -> // Normal screen pop
+    is StackNode -> // Entire stack will be popped
+    is TabNode -> // Entire tab container will be popped
+}
+```
+
+#### Helper Function
+
+```kotlin
+// Quick check if back would cascade
+if (wouldCascade(rootNode)) {
+    // Container will be popped, not just a screen
+}
 ```
 
 ---

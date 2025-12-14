@@ -124,7 +124,6 @@ fun ProfileScreen(
             topBar = {
                 TopAppBar(
                     title = { Text("Profile") },
-                    windowInsets = WindowInsets(0, 0, 0, 0),
                     actions = {
                         if (state is ProfileState.Content && !state.isEditing) {
                             IconButton(onClick = { intentReceiver.intent(ProfileIntent.NavigateToSettings) }) {

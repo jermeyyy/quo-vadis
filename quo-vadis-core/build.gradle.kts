@@ -23,6 +23,9 @@ kotlin {
         }.configure {
             instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
+        lint {
+            baseline = file("lint-baseline.xml")
+        }
     }
 
     val xcfName = "quo-vadis-coreKit"
@@ -82,6 +85,7 @@ kotlin {
                 implementation(libs.compose.backhandler)
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
+                implementation(libs.navigationevent.compose)
 
                 // Optional: annotations for users who want to use KSP
                 api(projects.quoVadisAnnotations)
@@ -96,6 +100,7 @@ kotlin {
 
         androidMain {
             dependencies {
+                implementation(libs.androidx.material3.windowsizeclass)
             }
         }
 
@@ -140,13 +145,13 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
-    
+
     pom {
         name.set("Quo Vadis Core")
         description.set("Type-safe, reactive navigation library for Kotlin Multiplatform with Compose support")
         url.set("https://github.com/jermeyyy/quo-vadis")
         inceptionYear.set("2024")
-        
+
         licenses {
             license {
                 name.set("MIT License")
@@ -154,7 +159,7 @@ mavenPublishing {
                 distribution.set("repo")
             }
         }
-        
+
         developers {
             developer {
                 id.set("jermeyyy")
@@ -162,7 +167,7 @@ mavenPublishing {
                 url.set("https://github.com/jermeyyy")
             }
         }
-        
+
         scm {
             url.set("https://github.com/jermeyyy/quo-vadis")
             connection.set("scm:git:git://github.com/jermeyyy/quo-vadis.git")

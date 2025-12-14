@@ -2,9 +2,340 @@
 
 ## Overview
 
-Successfully implemented a comprehensive predictive back navigation system that works on **both iOS and Android** with smooth animations and proper screen lifecycle management.
+Quo Vadis provides comprehensive predictive back navigation support across all platforms. The library offers two approaches:
 
-## Architecture
+1. **Legacy API** (`PredictiveBackNavigation`) - Works with the graph-based `GraphNavHost`
+2. **New NavigationEvent API** (`QuoVadisBackHandler`) - Modern API using AndroidX NavigationEvent library
+
+> **Recommendation**: For new development, use `QuoVadisBackHandler` from the `navback` package for proper Android 14+ system animation support.
+
+---
+
+## NavigationEvent API (Recommended)
+
+The new NavigationEvent-based API provides proper system integration on Android 14+ and consistent handling across platforms.
+
+### Key Benefits
+
+| Feature | Legacy API | NavigationEvent API |
+|---------|-----------|---------------------|
+| System predictive back animation (Android 14+) | ❌ No | ✅ Yes |
+| In-app gesture animations | ✅ Yes | ✅ Yes |
+| iOS edge swipe | ✅ Yes | ✅ Yes |
+| System back preview (closing app) | ❌ No | ✅ Yes |
+| OnBackInvokedDispatcher integration | ❌ No | ✅ Yes |
+
+### Quick Start
+
+```kotlin
+QuoVadisBackHandler(
+    enabled = canGoBack,
+    currentScreenInfo = ScreenNavigationInfo(screenId = "detail"),
+    previousScreenInfo = ScreenNavigationInfo(screenId = "list"),
+    onBackProgress = { event -> /* Animate with event.progress */ },
+    onBackCancelled = { /* Reset animation */ },
+    onBackCompleted = { navigator.goBack() }
+) {
+    // Screen content
+}
+```
+
+### API Components
+
+#### ScreenNavigationInfo
+
+Provides screen metadata for system animations:
+
+```kotlin
+data class ScreenNavigationInfo(
+    val screenId: String,         // Unique identifier
+    val displayName: String?,     // For accessibility
+    val route: String?            // Route pattern
+) : NavigationEventInfo()
+```
+
+#### BackNavigationEvent
+
+Platform-agnostic gesture event:
+
+```kotlin
+data class BackNavigationEvent(
+    val progress: Float,          // 0.0 to 1.0
+    val touchX: Float,            // X coordinate
+    val touchY: Float,            // Y coordinate
+    val swipeEdge: Int            // EDGE_LEFT or EDGE_RIGHT
+)
+```
+
+#### BackTransitionState
+
+Observable transition state:
+
+```kotlin
+sealed interface BackTransitionState {
+    data object Idle : BackTransitionState
+    data class InProgress(val event: BackNavigationEvent) : BackTransitionState
+}
+```
+
+### Usage Examples
+
+#### Basic Usage (No Custom Animation)
+
+```kotlin
+QuoVadisBackHandler(
+    enabled = canGoBack,
+    onBack = { navigator.goBack() }
+) {
+    DetailScreen()
+}
+```
+
+#### With Progress Animation
+
+```kotlin
+var animatedScale by remember { mutableFloatStateOf(1f) }
+var animatedOffset by remember { mutableFloatStateOf(0f) }
+
+QuoVadisBackHandler(
+    enabled = canGoBack,
+    currentScreenInfo = ScreenNavigationInfo(
+        screenId = currentScreen.key,
+        displayName = currentScreen.title
+    ),
+    previousScreenInfo = previousScreen?.let {
+        ScreenNavigationInfo(screenId = it.key)
+    },
+    onBackProgress = { event ->
+        // Scale down and slide right as user swipes
+        animatedScale = 1f - (event.progress * 0.1f)
+        animatedOffset = event.progress * 100f
+    },
+    onBackCancelled = {
+        // Reset to original state
+        animatedScale = 1f
+        animatedOffset = 0f
+    },
+    onBackCompleted = {
+        navigator.goBack()
+    }
+) {
+    Box(
+        modifier = Modifier
+            .graphicsLayer {
+                scaleX = animatedScale
+                scaleY = animatedScale
+                translationX = animatedOffset
+            }
+    ) {
+        CurrentScreen()
+    }
+}
+```
+
+#### With BackAnimationController
+
+For hierarchical navigation systems:
+
+```kotlin
+@Composable
+fun NavigationContainer(navigator: Navigator) {
+    val backController = rememberBackAnimationController()
+    
+    CompositionLocalProvider(
+        LocalBackAnimationController provides backController
+    ) {
+        QuoVadisBackHandler(
+            enabled = navigator.canGoBack,
+            currentScreenInfo = /* ... */,
+            previousScreenInfo = /* ... */,
+            onBackProgress = { event ->
+                backController.updateProgress(event)
+            },
+            onBackCancelled = {
+                backController.cancelAnimation()
+            },
+            onBackCompleted = {
+                backController.completeAnimation()
+                navigator.goBack()
+            }
+        ) {
+            NavTreeRenderer(navigator = navigator)
+        }
+    }
+}
+
+// In child renderers
+@Composable
+fun StackItemRenderer(item: StackItem) {
+    val backController = LocalBackAnimationController.current
+    
+    val modifier = if (backController?.isAnimating == true) {
+        Modifier.graphicsLayer {
+            alpha = 1f - (backController.progress * 0.3f)
+            translationX = backController.progress * 50f
+        }
+    } else {
+        Modifier
+    }
+    
+    Box(modifier = modifier) {
+        item.content()
+    }
+}
+```
+
+---
+
+## Platform-Specific Behaviors
+
+### Android 14+ (API 34+)
+
+Full predictive back support with system integration:
+
+- **System Preview Animation**: When closing the app (going to home), the system shows a preview of the home screen behind your app
+- **In-App Gestures**: Both system and custom animations play during navigation
+- **OnBackInvokedDispatcher**: Proper callback registration with correct priority
+- **Nested Handlers**: Multiple handlers coordinate via priority system
+
+```
+User swipe from edge
+     ↓
+System starts preview animation
+     ↓
+QuoVadisBackHandler receives NavigationEvent
+     ↓
+onBackProgress called with progress (0.0 → 1.0)
+     ↓
+Custom animation updates
+     ↓
+User releases → onBackCompleted
+     ↓
+Navigation occurs
+```
+
+### Android 13 (API 33)
+
+Gesture detection works, but no system preview animation:
+
+- In-app gestures and custom animations work normally
+- No system home preview when closing app
+- Falls back to standard back behavior for system navigation
+
+### Android < 13
+
+Standard back button behavior:
+
+- No gesture support
+- Back button triggers immediate navigation
+- `QuoVadisBackHandler` still works for intercepting back
+
+### iOS
+
+Native iOS-style edge swipe gesture:
+
+- Swipe from left edge (within 20dp threshold)
+- Progress calculated based on swipe distance
+- Commit threshold at 50% of swipe distance
+- Smooth gesture detection using `detectHorizontalDragGestures`
+
+```kotlin
+// iOS uses IOSEdgeSwipeGestureDetector internally
+// Gesture parameters:
+// - Edge threshold: 20dp (how close to edge to start)
+// - Complete threshold: 150dp (full gesture distance)
+// - Commit threshold: 50% (when to commit vs cancel)
+```
+
+### Desktop
+
+No gesture support:
+
+- Back navigation via keyboard (Escape, Back key) or UI buttons
+- `QuoVadisBackHandler` intercepts back commands
+- No visual gesture animations
+
+### Web (JS/WASM)
+
+Browser-based navigation:
+
+- Browser back button triggers navigation
+- No edge swipe gestures
+- History API integration for browser navigation
+
+---
+
+## Migration Guide
+
+### From PredictiveBackHandler (Compose UI)
+
+**Before (Old API):**
+```kotlin
+PredictiveBackHandler(enabled = canGoBack) { backEvent ->
+    backEvent.collect { event ->
+        animateProgress(event.progress)
+    }
+    navigator.goBack()
+}
+```
+
+**After (NavigationEvent API):**
+```kotlin
+QuoVadisBackHandler(
+    enabled = canGoBack,
+    currentScreenInfo = ScreenNavigationInfo(screenId = "current"),
+    onBackProgress = { event -> animateProgress(event.progress) },
+    onBackCompleted = { navigator.goBack() }
+) {
+    Content()
+}
+```
+
+### From PredictiveBackNavigation
+
+**Before:**
+```kotlin
+PredictiveBackNavigation(
+    navigator = navigator,
+    graph = graph,
+    animationType = PredictiveBackAnimationType.Material3
+)
+```
+
+**After:**
+```kotlin
+// For simple cases
+QuoVadisBackHandler(
+    enabled = navigator.canGoBack,
+    onBack = { navigator.goBack() }
+) {
+    GraphNavHost(graph = graph, navigator = navigator)
+}
+
+// For custom animations
+QuoVadisBackHandler(
+    enabled = navigator.canGoBack,
+    currentScreenInfo = ScreenNavigationInfo(screenId = currentEntry?.id ?: ""),
+    previousScreenInfo = previousEntry?.let { ScreenNavigationInfo(screenId = it.id) },
+    onBackProgress = { event ->
+        // Apply Material3-style animation
+        scale = 1f - (event.progress * 0.1f)
+        offset = event.progress * 80f
+    },
+    onBackCancelled = { resetAnimation() },
+    onBackCompleted = { navigator.goBack() }
+) {
+    GraphNavHost(graph = graph, navigator = navigator)
+}
+```
+
+---
+
+## Legacy API Reference
+
+The original `PredictiveBackNavigation` composable is still available and works for existing implementations. For new projects, prefer the NavigationEvent API above.
+
+### Architecture
 
 ### Animation Coordinator Pattern
 
@@ -356,5 +687,37 @@ Potential improvements:
 - Haptic feedback integration
 - Animation performance metrics
 - Platform-specific animation tuning
+
+---
+
+## Summary: Which API to Use?
+
+| Scenario | Recommended API |
+|----------|-----------------|
+| New project, needs Android 14+ system animation | `QuoVadisBackHandler` |
+| New project, simple back handling | `QuoVadisBackHandler` (simplified overload) |
+| Existing project with `GraphNavHost` | `PredictiveBackNavigation` (legacy) or migrate |
+| Hierarchical navigation with custom renderers | `QuoVadisBackHandler` + `BackAnimationController` |
+| Need gesture progress for animations | `QuoVadisBackHandler` with `onBackProgress` |
+| Simple intercept without animation | `QuoVadisBackHandler(onBack = {...})` |
+
+### Quick Decision Tree
+
+```
+Need Android 14+ system back animation?
+├── Yes → QuoVadisBackHandler
+│   ├── Need gesture progress? → Use onBackProgress callback
+│   └── Just need back intercept? → Use simplified overload
+└── No (legacy project)
+    └── Using GraphNavHost? → PredictiveBackNavigation works fine
+```
+
+---
+
+## References
+
+- [AndroidX NavigationEvent Releases](https://developer.android.com/jetpack/androidx/releases/navigationevent)
+- [Android Predictive Back Gesture](https://developer.android.com/guide/navigation/custom-back/predictive-back-gesture)
+- [API Reference - navback package](API_REFERENCE.md#navigationevent-back-handling-navigationcomposenavback)
 
 

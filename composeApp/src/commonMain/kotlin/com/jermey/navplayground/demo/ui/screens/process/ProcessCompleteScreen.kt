@@ -22,16 +22,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.ProcessDestination
+import com.jermey.navplayground.demo.tabs.MainTabs
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.utils.navigateTo
 
 /**
  * Process Complete Screen
  */
+@Screen(ProcessDestination.Complete::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProcessCompleteScreen(
-    onDone: () -> Unit,
-    onRestart: () -> Unit
-) {
+fun ProcessCompleteScreen(navigator: Navigator) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -72,7 +75,11 @@ fun ProcessCompleteScreen(
             Spacer(Modifier.height(48.dp))
 
             Button(
-                onClick = onDone,
+                onClick = {
+                    // Navigate back to exit the process flow
+                    // This will pop back through the entire wizard stack
+                    navigator.navigateTo { MainTabs.HomeTab }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Go to Home")
@@ -81,7 +88,10 @@ fun ProcessCompleteScreen(
             Spacer(Modifier.height(8.dp))
 
             TextButton(
-                onClick = onRestart,
+                onClick = {
+                    // Clear the process stack and restart from the beginning
+                    navigator.navigateAndClearAll(ProcessDestination.Start)
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Start Over")
