@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -21,8 +22,10 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackController
+import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackMode
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.BackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalBackAnimationController
@@ -39,6 +42,7 @@ import com.jermey.quo.vadis.core.navigation.core.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.core.TransitionState
 import com.jermey.quo.vadis.core.navigation.core.TransitionStateManager
+import com.jermey.quo.vadis.core.navigation.compose.gesture.calculateCascadeBackState
 import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.core.activeLeaf
@@ -175,6 +179,7 @@ public fun NavigationHost(
     transitionRegistry: TransitionRegistry = TransitionRegistry.Empty,
     scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
     enablePredictiveBack: Boolean = true,
+    predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY,
     windowSizeClass: WindowSizeClass? = null
 ) {
     // Collect navigation state
@@ -207,15 +212,17 @@ public fun NavigationHost(
         TransitionStateManager(navState)
     }
 
-    // Check if we can navigate back
+    // Check if we can navigate back using tab-aware logic
     val canGoBack by remember(navState) {
-        derivedStateOf { TreeMutator.pop(navState) != null }
+        derivedStateOf { TreeMutator.canHandleBackNavigation(navState) }
     }
 
     // Get current and previous screen info for QuoVadisBackHandler
     val currentScreenNode = remember(navState) { navState.activeLeaf() }
     val previousScreenNode = remember(navState) {
-        TreeMutator.pop(navState)?.activeLeaf()
+        // Use popWithTabBehavior to get the correct previous screen
+        val backResult = TreeMutator.popWithTabBehavior(navState)
+        (backResult as? TreeMutator.BackResult.Handled)?.newState?.activeLeaf()
     }
 
     // Create ScreenNavigationInfo for predictive back
@@ -271,10 +278,14 @@ public fun NavigationHost(
         onBackProgress = { event ->
             // On first progress event, start the proposed transition
             if (!backAnimationController.isAnimating) {
-                // Compute speculative pop result at gesture start
-                val popResult = TreeMutator.pop(navState)
+                // Compute speculative pop result at gesture start using tab-aware logic
+                val backResult = TreeMutator.popWithTabBehavior(navState)
+                val popResult = (backResult as? TreeMutator.BackResult.Handled)?.newState
                 if (popResult != null) {
                     speculativePopState = popResult
+
+                    // Calculate cascade state for proper animation targeting
+                    val cascadeState = calculateCascadeBackState(navState)
 
                     // Reset transition manager to idle if in animating state
                     // This handles case where user starts new gesture during exit animation
@@ -289,7 +300,8 @@ public fun NavigationHost(
 
                     // CRITICAL: Update predictiveBackController so AnimatedNavContent
                     // switches to PredictiveBackContent for visual animation
-                    predictiveBackController.startGesture()
+                    // Pass cascade state so renderers know what to animate
+                    predictiveBackController.startGestureWithCascade(cascadeState)
                 }
             } else {
                 backAnimationController.updateProgress(event)
@@ -316,6 +328,9 @@ public fun NavigationHost(
             // Complete animation and perform navigation
             backAnimationController.completeAnimation()
 
+            // Reset predictiveBackController BEFORE navigation to prevent flash
+            predictiveBackController.completeGesture()
+
             // Use the speculative state computed at gesture start
             val targetState = speculativePopState
             if (targetState != null && transitionManager.currentState is TransitionState.Proposed) {
@@ -323,9 +338,6 @@ public fun NavigationHost(
                 navigator.updateState(targetState)
             }
             speculativePopState = null
-
-            // Reset predictiveBackController after navigation completes
-            predictiveBackController.completeGesture()
         }
     ) {
         SharedTransitionLayout(modifier = modifier) {
@@ -338,7 +350,8 @@ public fun NavigationHost(
                 animationCoordinator,
                 predictiveBackController,
                 screenRegistry,
-                wrapperRegistry
+                wrapperRegistry,
+                predictiveBackMode
             ) {
                 NavRenderScopeImpl(
                     navigator = navigator,
@@ -348,7 +361,8 @@ public fun NavigationHost(
                     predictiveBackController = predictiveBackController,
                     screenRegistry = screenRegistry,
                     wrapperRegistry = wrapperRegistry,
-                    sharedTransitionScope = this
+                    sharedTransitionScope = this,
+                    predictiveBackMode = predictiveBackMode
                 )
             }
 
@@ -363,7 +377,7 @@ public fun NavigationHost(
                     node = navState,
                     previousNode = previousState,
                     scope = scope,
-                    modifier = Modifier
+                    modifier = Modifier.background(Color.Transparent)
                 )
 
                 // Update previous state after rendering to track state changes
@@ -402,6 +416,7 @@ public fun NavigationHost(
  * @property screenRegistry Registry for screen content lookup
  * @property wrapperRegistry Registry for wrapper lookup
  * @property sharedTransitionScope Scope for shared element transitions
+ * @property predictiveBackMode Mode for predictive back gesture handling
  */
 @Stable
 private class NavRenderScopeImpl(
@@ -412,7 +427,8 @@ private class NavRenderScopeImpl(
     override val predictiveBackController: PredictiveBackController,
     override val screenRegistry: ScreenRegistry,
     override val wrapperRegistry: WrapperRegistry,
-    override val sharedTransitionScope: SharedTransitionScope?
+    override val sharedTransitionScope: SharedTransitionScope?,
+    override val predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY
 ) : NavRenderScope {
 
     /**

@@ -7,6 +7,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import com.jermey.quo.vadis.core.navigation.compose.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.compose.WindowWidthSizeClass
 import com.jermey.quo.vadis.core.navigation.compose.calculateWindowSizeClass
@@ -277,9 +278,9 @@ internal fun StackRenderer(
         isBack = isBackNavigation
     )
 
-    // Enable predictive back only for root stacks (no parent container)
-    // Nested stacks within tabs/panes should not handle predictive back
-    val predictiveBackEnabled = node.parentKey == null
+    // Use configurable predictive back mode to determine if this stack
+    // should handle predictive back gestures
+    val predictiveBackEnabled = scope.shouldEnablePredictiveBack(node)
 
     // Animated content switching with transition
     AnimatedNavContent(
@@ -408,11 +409,13 @@ internal fun TabRenderer(
 
     // Cache the ENTIRE TabNode (wrapper + content) as a unit
     // This ensures the wrapper maintains state during navigation
+    // Note: During cascade back, the parent StackRenderer's PredictiveBackContent
+    // handles animating this TabNode - we just render content normally
     scope.cache.CachedEntry(
         key = node.key,
         saveableStateHolder = scope.saveableStateHolder
     ) {
-        // Apply the modifier to the wrapper
+        // No additional animation needed here - parent handles cascade animation
         Box(modifier = modifier) {
             // Invoke the registered tab wrapper (KSP-generated or default)
             // The wrapper receives the scope and a content slot
@@ -765,5 +768,9 @@ private fun buildPaneContentList(
         )
     }
 }
+
+// endregion
+
+// region Constants
 
 // endregion

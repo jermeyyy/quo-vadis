@@ -1388,6 +1388,85 @@ fun StackRenderer(node: StackNode, scope: NavRenderScope) {
 
 ---
 
+## Predictive Back Configuration
+
+### PredictiveBackMode
+
+Controls how predictive back gestures are handled across the navigation tree.
+
+```kotlin
+public enum class PredictiveBackMode {
+    ROOT_ONLY,
+    FULL_CASCADE
+}
+```
+
+| Mode | Description |
+|------|-------------|
+| `ROOT_ONLY` | Default. Only the root stack handles predictive back gestures. Nested stacks pop instantly after gesture completion. Recommended for simple navigation structures and performance-constrained devices. |
+| `FULL_CASCADE` | All stacks handle predictive back, including animated cascade when popping containers. When back would cascade (pop entire container), the gesture shows a preview of the target screen with the container animating away. Recommended for apps with complex nested navigation. |
+
+**Usage:**
+
+```kotlin
+NavigationHost(
+    navigator = navigator,
+    predictiveBackMode = PredictiveBackMode.FULL_CASCADE // Enable cascade animations
+)
+```
+
+---
+
+### CascadeBackState
+
+State information for predictive back gestures that may cascade through multiple container levels.
+
+```kotlin
+@Stable
+public data class CascadeBackState(
+    val sourceNode: NavNode,      // Node that initiated the back gesture
+    val exitingNode: NavNode,     // Node being removed (screen, stack, or tab)
+    val targetNode: NavNode?,     // Node revealed after back (null if closing app)
+    val cascadeDepth: Int,        // 0 = normal pop, 1+ = cascade levels
+    val delegatesToSystem: Boolean // True if back would close the app
+)
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `sourceNode` | `NavNode` | The node that initiated the back gesture (usually a ScreenNode) |
+| `exitingNode` | `NavNode` | The node that will be visually removed. Could be ScreenNode (normal pop), StackNode (cascade pop), or TabNode (tab cascade) |
+| `targetNode` | `NavNode?` | The node revealed after back completes. `null` if delegating to system |
+| `cascadeDepth` | `Int` | How many levels the cascade goes. 0 = normal pop, 1+ = deeper cascade |
+| `delegatesToSystem` | `Boolean` | Whether back would close the app |
+
+#### Factory Function
+
+```kotlin
+// Calculate cascade state for current navigation
+val cascadeState = calculateCascadeBackState(rootNode)
+
+// Check what will exit
+when (cascadeState.exitingNode) {
+    is ScreenNode -> // Normal screen pop
+    is StackNode -> // Entire stack will be popped
+    is TabNode -> // Entire tab container will be popped
+}
+```
+
+#### Helper Function
+
+```kotlin
+// Quick check if back would cascade
+if (wouldCascade(rootNode)) {
+    // Container will be popped, not just a screen
+}
+```
+
+---
+
 ## Integration Package (`navigation.integration`)
 
 ### DI Support

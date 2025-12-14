@@ -63,7 +63,7 @@ class BackHandlerRegistry {
  * CompositionLocal providing access to the back handler registry.
  *
  * The registry is used by [NavBackHandler] to register and unregister back handlers.
- * Navigation hosts (like [QuoVadisHost]) should provide a registry instance to enable
+ * Navigation hosts (like [NavigationHost]) should provide a registry instance to enable
  * user-defined back handling within their scope.
  *
  * The default value creates a new registry, but navigation hosts typically provide

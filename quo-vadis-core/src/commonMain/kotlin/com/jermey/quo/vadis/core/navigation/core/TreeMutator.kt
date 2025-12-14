@@ -1436,39 +1436,48 @@ object TreeMutator {
 
     /**
      * Handle back when active stack is inside a TabNode.
+     *
+     * Simplified behavior:
+     * - If active tab's stack has only 1 child: pop entire TabNode (regardless of which tab)
+     * - If parent also has only one child: cascade further up the tree
+     *
+     * Note: This does NOT switch tabs on back - it pops the entire TabNode.
      */
-    private fun handleTabBack(root: NavNode, tabNode: TabNode, activeStack: StackNode): BackResult {
-        // Case 2: Not on initial tab → switch to initial tab
-        if (tabNode.activeStackIndex != 0) {
-            val newState = switchTab(root, tabNode.key, 0)
-            return BackResult.Handled(newState)
-        }
-
-        // Case 3: On initial tab at root → check if TabNode itself can be popped
+    private fun handleTabBack(root: NavNode, tabNode: TabNode, activeStack: NavNode): BackResult {
+        // Active tab's stack has only 1 child → try to pop the entire TabNode
         val tabParentKey = tabNode.parentKey
         if (tabParentKey == null) {
             // TabNode is root - delegate to system
             return BackResult.DelegateToSystem
         }
 
-        // TabNode has a parent - try to pop the TabNode itself
-        val tabParent = root.findByKey(tabParentKey)
-        return when (tabParent) {
+        // TabNode has a parent - try to pop from it
+        return when (val tabParent = root.findByKey(tabParentKey)) {
             is StackNode -> {
                 if (tabParent.children.size > 1) {
-                    // Pop TabNode from parent stack
+                    // Parent stack has multiple children - can pop TabNode
                     val newState = removeNode(root, tabNode.key)
-                    if (newState != null) {
-                        BackResult.Handled(newState)
-                    } else {
-                        BackResult.CannotHandle
-                    }
+                    if (newState != null) BackResult.Handled(newState) else BackResult.CannotHandle
                 } else if (tabParent.parentKey == null) {
+                    // Parent is root stack with only TabNode - delegate to system
                     BackResult.DelegateToSystem
                 } else {
-                    // Nested stack with only TabNode - continue up
-                    BackResult.DelegateToSystem
+                    // CASCADE: Parent stack has only TabNode - try to pop parent from grandparent
+                    val grandparentKey = tabParent.parentKey
+                    val grandparent = root.findByKey(grandparentKey)
+
+                    when (grandparent) {
+                        is StackNode -> handleNestedStackBack(root, grandparent, tabParent)
+                        is TabNode -> handleTabBack(root, grandparent, tabParent)
+                        is PaneNode -> handlePaneBack(root, grandparent, tabParent)
+                        else -> BackResult.DelegateToSystem
+                    }
                 }
+            }
+            is TabNode -> {
+                // TabNode inside another TabNode (edge case)
+                // Treat parent TabNode as if we're on its stack
+                handleTabBack(root, tabParent, tabNode.activeStack)
             }
             else -> BackResult.DelegateToSystem
         }
@@ -1476,37 +1485,83 @@ object TreeMutator {
 
     /**
      * Handle back when active stack is nested inside another stack.
+     *
+     * Cascade behavior:
+     * - If parent can pop child (size > 1): pop child
+     * - If parent is root: delegate to system
+     * - If parent also has only 1 child: cascade to grandparent
      */
     private fun handleNestedStackBack(
         root: NavNode,
         parentStack: StackNode,
         childStack: StackNode
     ): BackResult {
-        // Remove child from parent stack
         return if (parentStack.children.size > 1) {
+            // Parent has multiple children - can remove the child stack
             val newState = removeNode(root, childStack.key)
             if (newState != null) BackResult.Handled(newState) else BackResult.CannotHandle
         } else if (parentStack.parentKey == null) {
+            // Parent is root with only one child - delegate to system
             BackResult.DelegateToSystem
         } else {
-            // Continue cascading up
-            BackResult.CannotHandle
+            // Parent has only one child and is not root - CASCADE UP
+            // Try to pop the parent stack from its grandparent
+            val grandparentKey = parentStack.parentKey
+            val grandparent = root.findByKey(grandparentKey)
+
+            when (grandparent) {
+                is StackNode -> handleNestedStackBack(root, grandparent, parentStack)
+                is TabNode -> handleTabBack(root, grandparent, parentStack)
+                is PaneNode -> handlePaneBack(root, grandparent, parentStack)
+                else -> BackResult.DelegateToSystem
+            }
         }
     }
 
     /**
      * Handle back when active stack is inside a PaneNode.
+     *
+     * Cascade behavior:
+     * - If pane can handle the pop: return handled
+     * - If PaneNode is root: delegate to system
+     * - If PaneNode's parent can pop it: pop PaneNode
+     * - If parent also has only one child: cascade further up the tree
      */
-    private fun handlePaneBack(root: NavNode, paneNode: PaneNode, activeStack: StackNode): BackResult {
+    private fun handlePaneBack(root: NavNode, paneNode: PaneNode, activeStack: NavNode): BackResult {
         val result = popWithPaneBehavior(root)
         return when (result) {
             is PopResult.Popped -> BackResult.Handled(result.newState)
             is PopResult.CannotPop, is PopResult.PaneEmpty -> {
                 // Check if PaneNode itself can be popped
-                if (paneNode.parentKey == null) {
+                val paneParentKey = paneNode.parentKey
+                if (paneParentKey == null) {
                     BackResult.DelegateToSystem
                 } else {
-                    BackResult.CannotHandle
+                    // CASCADE: Try to pop PaneNode from its parent
+                    val paneParent = root.findByKey(paneParentKey)
+                    when (paneParent) {
+                        is StackNode -> {
+                            if (paneParent.children.size > 1) {
+                                val newState = removeNode(root, paneNode.key)
+                                if (newState != null) BackResult.Handled(newState) else BackResult.CannotHandle
+                            } else if (paneParent.parentKey == null) {
+                                BackResult.DelegateToSystem
+                            } else {
+                                // Continue cascading
+                                val grandparentKey = paneParent.parentKey
+                                val grandparent = root.findByKey(grandparentKey)
+                                when (grandparent) {
+                                    is StackNode -> handleNestedStackBack(root, grandparent, paneParent)
+                                    is TabNode -> handleTabBack(root, grandparent, paneParent)
+                                    is PaneNode -> handlePaneBack(root, grandparent, paneParent)
+                                    else -> BackResult.DelegateToSystem
+                                }
+                            }
+                        }
+                        is TabNode -> handleTabBack(root, paneParent, activeStack)
+                        is PaneNode -> handlePaneBack(root, paneParent, activeStack)
+                        else -> BackResult.DelegateToSystem
+                    }
                 }
             }
             is PopResult.RequiresScaffoldChange -> BackResult.CannotHandle
@@ -1519,6 +1574,7 @@ object TreeMutator {
      * Unlike [canGoBack], this method considers:
      * - Root stack must keep at least one item (would delegate to system)
      * - Tab switching as an alternative to popping
+     * - Cascade back: removing TabNode from parent when on initial tab
      *
      * @param root The root NavNode
      * @return true if the navigation system can handle back (not delegated to system)
@@ -1529,17 +1585,32 @@ object TreeMutator {
         // Can pop from active stack
         if (activeStack.canGoBack) return true
 
-        // Check for tab switch opportunity
+        // Check for tab switch opportunity or cascade back
         val parentKey = activeStack.parentKey ?: return false
         val parent = root.findByKey(parentKey)
 
         return when (parent) {
-            is TabNode -> parent.activeStackIndex != 0 // Can switch to initial tab
+            is TabNode -> {
+                // TabNode can be popped if its parent stack has multiple children
+                val tabParentKey = parent.parentKey ?: return false
+                val tabParent = root.findByKey(tabParentKey)
+                (tabParent as? StackNode)?.children?.size?.let { it > 1 } ?: false
+            }
             is StackNode -> parent.canGoBack
             is PaneNode -> parent.paneConfigurations.values.any {
                 it.content.activeStack()?.canGoBack == true
             }
             else -> false
         }
+    }
+
+    /**
+     * Determines if back handling would result in a cascade pop.
+     *
+     * @return true if the back action would pop a container (stack/tab), not just a screen
+     */
+    fun wouldCascade(root: NavNode): Boolean {
+        val activeStack = root.activeStack() ?: return false
+        return activeStack.children.size <= 1 && activeStack.parentKey != null
     }
 }

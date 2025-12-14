@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.jermey.navplayground.demo.tabs.generated.buildMainTabsNavNode
 import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
+import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackMode
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.generated.GeneratedDeepLinkHandlerImpl
 import com.jermey.quo.vadis.generated.GeneratedScopeRegistry
@@ -95,5 +96,6 @@ fun DemoApp() {
         wrapperRegistry = GeneratedWrapperRegistry,
         scopeRegistry = GeneratedScopeRegistry,
         enablePredictiveBack = true,
+        predictiveBackMode = PredictiveBackMode.FULL_CASCADE
     )
 }

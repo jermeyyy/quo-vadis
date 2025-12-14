@@ -114,10 +114,16 @@ internal fun <T : NavNode> AnimatedNavContent(
         scope.predictiveBackController.isActive.value
 
     if (isPredictiveBackActive) {
+        // For predictive back, prefer cascadeState.targetNode over local previousState
+        // This ensures correct animation target even for deep links or restored state
+        val cascadeState = scope.predictiveBackController.cascadeState.value
+        @Suppress("UNCHECKED_CAST")
+        val backTarget = (cascadeState?.targetNode as? T) ?: previousState
+        
         // Gesture-driven animation - bypass AnimatedContent
         PredictiveBackContent(
             current = displayedState,
-            previous = previousState,
+            previous = backTarget,
             progress = scope.predictiveBackController.progress.value,
             scope = scope,
             content = content

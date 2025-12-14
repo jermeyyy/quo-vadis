@@ -9,9 +9,12 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import com.jermey.quo.vadis.core.navigation.compose.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackController
+import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackMode
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
+import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.core.StackNode
 
 /**
  * Core scope interface that provides context to all hierarchical renderers.
@@ -184,6 +187,17 @@ public interface NavRenderScope {
     public val wrapperRegistry: WrapperRegistry
 
     /**
+     * The predictive back mode for this navigation tree.
+     *
+     * Determines whether nested stacks receive predictive back gestures:
+     * - [PredictiveBackMode.ROOT_ONLY]: Only root stack handles predictive back (default)
+     * - [PredictiveBackMode.FULL_CASCADE]: All stacks handle predictive back
+     *
+     * @see PredictiveBackMode
+     */
+    public val predictiveBackMode: PredictiveBackMode
+
+    /**
      * Shared transition scope for coordinating shared element animations.
      *
      * When non-null, enables shared element transitions between screens.
@@ -199,6 +213,55 @@ public interface NavRenderScope {
      * @see SharedTransitionScope
      */
     public val sharedTransitionScope: SharedTransitionScope?
+
+    /**
+     * Determines if predictive back should be enabled for a given node.
+     *
+     * This method considers:
+     * 1. The [predictiveBackMode] configuration
+     * 2. Whether a cascade animation is currently active
+     * 3. Whether this stack can handle the back action internally
+     *
+     * For nested stacks inside tabs:
+     * - If the stack has > 1 children, back pops within the stack → enable predictive back
+     * - If the stack has 1 child and cascade is happening → only root handles animation
+     *
+     * @param node The node to check
+     * @return true if predictive back gestures should be enabled for this node
+     */
+    public fun shouldEnablePredictiveBack(node: NavNode): Boolean {
+        val cascadeState = predictiveBackController.cascadeState.value
+        val isGestureActive = predictiveBackController.isActive.value
+        
+        // During a CASCADE animation (cascadeDepth > 0), only the appropriate level
+        // should handle animation. For non-cascade (normal pop), any stack with
+        // children > 1 can handle its own animation.
+        if (cascadeState != null && isGestureActive) {
+            // Non-cascade case (normal pop within a stack): cascadeDepth == 0
+            // The exiting node's parent stack should handle the animation
+            if (cascadeState.cascadeDepth == 0) {
+                // Check if this node is the stack that contains the exiting node
+                // That stack should enable predictive back for its animation
+                val exitingNode = cascadeState.exitingNode
+                if (node is StackNode && node.children.any { it.key == exitingNode.key }) {
+                    return true
+                }
+                // Other stacks should not animate
+                return false
+            }
+            
+            // True cascade case (cascadeDepth > 0): only root handles animation
+            // because the entire container (TabNode etc.) is being removed
+            if (node.parentKey != null) {
+                return false
+            }
+        }
+
+        return when (predictiveBackMode) {
+            PredictiveBackMode.ROOT_ONLY -> node.parentKey == null
+            PredictiveBackMode.FULL_CASCADE -> true
+        }
+    }
 
     /**
      * Provides an [AnimatedVisibilityScope] to the given content.

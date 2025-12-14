@@ -11,6 +11,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.Flow
 
+// Cascade state is imported from the same package
+
 /**
  * Progress value representing the gesture threshold during predictive back.
  *
@@ -84,6 +86,11 @@ public class PredictiveBackController {
     private var _progress by mutableFloatStateOf(0f)
 
     /**
+     * Internal mutable state for cascade back state.
+     */
+    private var _cascadeState by mutableStateOf<CascadeBackState?>(null)
+
+    /**
      * Animatable for smooth completion and cancellation animations.
      */
     private val progressAnimatable = Animatable(0f)
@@ -155,6 +162,29 @@ public class PredictiveBackController {
             override val value: Float get() = _progress
         }
 
+    /**
+     * The cascade back state for the current gesture.
+     *
+     * This contains information about what will be removed and revealed
+     * during the back gesture, including cascade depth information.
+     * Null when no gesture is active.
+     *
+     * Use this to determine what to animate during predictive back,
+     * especially when the back action will cascade through multiple levels.
+     */
+    public val cascadeState: State<CascadeBackState?>
+        get() = object : State<CascadeBackState?> {
+            override val value: CascadeBackState? get() = _cascadeState
+        }
+
+    /**
+     * Whether the current gesture will result in a cascade pop.
+     *
+     * Returns true if [cascadeState] has a cascadeDepth > 0.
+     */
+    public val willCascade: Boolean
+        get() = _cascadeState?.cascadeDepth ?: 0 > 0
+
     // endregion
 
     // region Public API
@@ -172,6 +202,18 @@ public class PredictiveBackController {
     public fun startGesture() {
         _isActive = true
         _progress = 0f
+        _cascadeState = null
+    }
+
+    /**
+     * Starts a predictive back gesture with cascade awareness.
+     *
+     * @param cascadeState Pre-calculated cascade state from the navigation tree
+     */
+    public fun startGestureWithCascade(cascadeState: CascadeBackState) {
+        _isActive = true
+        _progress = 0f
+        _cascadeState = cascadeState
     }
 
     /**
@@ -198,6 +240,7 @@ public class PredictiveBackController {
     public fun completeGesture() {
         _isActive = false
         _progress = 0f
+        _cascadeState = null
     }
 
     /**
@@ -209,6 +252,7 @@ public class PredictiveBackController {
     public fun cancelGesture() {
         _isActive = false
         _progress = 0f
+        _cascadeState = null
     }
 
     /**
@@ -293,6 +337,7 @@ public class PredictiveBackController {
         // Reset state
         _isActive = false
         _progress = 0f
+        _cascadeState = null
         progressAnimatable.snapTo(0f)
     }
 
@@ -317,6 +362,7 @@ public class PredictiveBackController {
         // Animation complete - reset state
         _isActive = false
         _progress = 0f
+        _cascadeState = null
     }
 
     // endregion

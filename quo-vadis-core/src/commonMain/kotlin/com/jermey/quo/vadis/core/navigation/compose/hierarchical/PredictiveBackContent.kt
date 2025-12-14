@@ -17,10 +17,12 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 
@@ -95,7 +97,7 @@ internal fun <T : NavNode> PredictiveBackContent(
     scope: NavRenderScope,
     content: @Composable AnimatedVisibilityScope.(T) -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
         // Previous (incoming) content - static behind current with parallax effect
         // Guard: Only render previous if it exists AND has a different key than current
         if (previous != null && previous.key != current.key) {
@@ -122,6 +124,7 @@ internal fun <T : NavNode> PredictiveBackContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.Transparent)
                 .graphicsLayer {
                     // Slide right: at progress=0 no translation, at progress=1 fully off-screen right
                     translationX = size.width * progress
