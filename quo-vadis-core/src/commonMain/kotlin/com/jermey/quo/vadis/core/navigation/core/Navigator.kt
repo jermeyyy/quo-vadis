@@ -134,10 +134,6 @@ interface Navigator : ParentNavigator {
      * @param clearRoute Route to clear up to (null clears nothing)
      * @param inclusive If true, also remove the destination matching clearRoute
      */
-    @Deprecated(
-        message = "navigateAndClearTo with string route is replaced by type-safe version. Use navigateAndClear(destination, clearUpTo::class, inclusive).",
-        level = DeprecationLevel.WARNING
-    )
     fun navigateAndClearTo(
         destination: Destination,
         clearRoute: String? = null,
@@ -201,6 +197,12 @@ interface Navigator : ParentNavigator {
      * @throws IllegalStateException if no PaneNode found in current state
      * @throws IllegalArgumentException if role is not configured in the PaneNode
      */
+    @Deprecated(
+        message = "navigateToPane() is deprecated. Use navigate() with a destination instead. " +
+            "Navigate will automatically target the correct pane based on destination.",
+        replaceWith = ReplaceWith("navigate(destination)"),
+        level = DeprecationLevel.WARNING
+    )
     fun navigateToPane(
         role: PaneRole,
         destination: Destination,
@@ -218,6 +220,12 @@ interface Navigator : ParentNavigator {
      * @throws IllegalStateException if no PaneNode found
      * @throws IllegalArgumentException if role is not configured
      */
+    @Deprecated(
+        message = "switchPane() is deprecated. Use navigate() with a destination instead. " +
+            "Navigate will automatically switch to the pane containing the destination.",
+        replaceWith = ReplaceWith("navigate(destination)"),
+        level = DeprecationLevel.WARNING
+    )
     fun switchPane(role: PaneRole)
 
     /**

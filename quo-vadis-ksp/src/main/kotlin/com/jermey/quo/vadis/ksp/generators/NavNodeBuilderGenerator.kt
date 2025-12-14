@@ -241,7 +241,7 @@ class NavNodeBuilderGenerator(
             .indent()
             .add("%T(\n", SCREEN_NODE)
             .indent()
-            .add("key = %S,\n", screenKey)
+            .add("key = %P,\n", screenKey)
             .add("parentKey = key,\n")
             .add("destination = %T.%L\n", destinationClassName, startDest.className)
             .unindent()

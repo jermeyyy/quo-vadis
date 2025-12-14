@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.core.navigation.compose.animation
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -76,8 +77,16 @@ public data class NavTransition(
      *
      * ## Direction Handling
      *
-     * - **Forward (`isBack = false`)**: Uses [enter] with [exit]
-     * - **Back (`isBack = true`)**: Uses [popEnter] with [popExit]
+     * - **Forward (`isBack = false`)**: Uses [enter] with [exit], entering screen on top (zIndex = 1)
+     * - **Back (`isBack = true`)**: Uses [popEnter] with [popExit], exiting screen on top (zIndex = 1)
+     *
+     * ## Z-Index and Clipping
+     *
+     * The z-index ensures proper layering:
+     * - Forward: New screen slides over the old screen
+     * - Back: Old screen slides away revealing the new screen underneath
+     *
+     * Clipping is disabled to prevent visual artifacts during slide transitions.
      *
      * ## Example
      *
@@ -97,9 +106,23 @@ public data class NavTransition(
      */
     public fun createTransitionSpec(isBack: Boolean): ContentTransform {
         return if (isBack) {
-            popEnter togetherWith popExit
+            // Back navigation: exiting screen (current) should be on top, sliding away
+            // to reveal the entering screen (previous) underneath
+            ContentTransform(
+                targetContentEnter = popEnter,
+                initialContentExit = popExit,
+                targetContentZIndex = 0f, // Entering (previous) screen behind
+                sizeTransform = SizeTransform(clip = false)
+            )
         } else {
-            enter togetherWith exit
+            // Forward navigation: entering screen (new) should be on top, sliding over
+            // the exiting screen (current) which stays underneath
+            ContentTransform(
+                targetContentEnter = enter,
+                initialContentExit = exit,
+                targetContentZIndex = 1f, // Entering (new) screen on top
+                sizeTransform = SizeTransform(clip = false)
+            )
         }
     }
 

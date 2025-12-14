@@ -1,6 +1,8 @@
 package com.jermey.navplayground.demo
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -91,7 +93,9 @@ fun DemoApp() {
     // GeneratedScopeRegistry ensures out-of-scope destinations navigate above tabs
     NavigationHost(
         navigator = navigator,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         screenRegistry = GeneratedScreenRegistry,
         wrapperRegistry = GeneratedWrapperRegistry,
         scopeRegistry = GeneratedScopeRegistry,

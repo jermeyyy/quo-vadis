@@ -2,7 +2,6 @@ package com.jermey.quo.vadis.core.navigation.compose.navback
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -56,7 +55,7 @@ import kotlinx.coroutines.flow.collectLatest
  * @see BackNavigationEvent
  */
 @Composable
-public fun QuoVadisBackHandler(
+public fun NavigateBackHandler(
     enabled: Boolean = true,
     currentScreenInfo: ScreenNavigationInfo,
     previousScreenInfo: ScreenNavigationInfo? = null,
@@ -119,12 +118,12 @@ public fun QuoVadisBackHandler(
  * @param content The content to display.
  */
 @Composable
-public fun QuoVadisBackHandler(
+public fun NavigateBackHandler(
     enabled: Boolean = true,
     onBack: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    QuoVadisBackHandler(
+    NavigateBackHandler(
         enabled = enabled,
         currentScreenInfo = ScreenNavigationInfo(screenId = "current"),
         previousScreenInfo = null,

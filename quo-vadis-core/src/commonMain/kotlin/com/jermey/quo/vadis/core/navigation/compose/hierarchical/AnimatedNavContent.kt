@@ -98,31 +98,30 @@ internal fun <T : NavNode> AnimatedNavContent(
     modifier: Modifier = Modifier,
     content: @Composable AnimatedVisibilityScope.(T) -> Unit
 ) {
-    // Track displayed state for animation direction detection
-    var displayedState by remember { mutableStateOf(targetState) }
-    var previousState by remember { mutableStateOf<T?>(null) }
+    // Track the last committed state (what was fully displayed before current animation)
+    // and the state before that for back navigation detection
+    var lastCommittedState by remember { mutableStateOf(targetState) }
+    var stateBeforeLast by remember { mutableStateOf<T?>(null) }
 
-    // Update state tracking when targetState changes (outside of AnimatedContent)
-    // This ensures previousState is always up-to-date for predictive back
-    if (targetState.key != displayedState.key) {
-        previousState = displayedState
-        displayedState = targetState
-    }
+    // Detect if this is back navigation BEFORE updating tracking state
+    // Back navigation: we're returning to the state that was displayed before the current one
+    val isBackNavigation = targetState.key != lastCommittedState.key &&
+        stateBeforeLast?.key == targetState.key
 
     // Determine if predictive back gesture is currently active
     val isPredictiveBackActive = predictiveBackEnabled &&
         scope.predictiveBackController.isActive.value
 
     if (isPredictiveBackActive) {
-        // For predictive back, prefer cascadeState.targetNode over local previousState
+        // For predictive back, prefer cascadeState.targetNode over local stateBeforeLast
         // This ensures correct animation target even for deep links or restored state
         val cascadeState = scope.predictiveBackController.cascadeState.value
         @Suppress("UNCHECKED_CAST")
-        val backTarget = (cascadeState?.targetNode as? T) ?: previousState
+        val backTarget = (cascadeState?.targetNode as? T) ?: stateBeforeLast
         
         // Gesture-driven animation - bypass AnimatedContent
         PredictiveBackContent(
-            current = displayedState,
+            current = lastCommittedState,
             previous = backTarget,
             progress = scope.predictiveBackController.progress.value,
             scope = scope,
@@ -138,11 +137,8 @@ internal fun <T : NavNode> AnimatedNavContent(
             targetState = targetState,
             contentKey = { it.key },
             transitionSpec = {
-                // Determine navigation direction for proper animation selection
-                // Back navigation: target matches previous state (returning to where we were)
-                val isBack = targetState.key != displayedState.key &&
-                    previousState?.key == targetState.key
-                transition.createTransitionSpec(isBack = isBack)
+                // Use pre-computed direction for proper animation selection
+                transition.createTransitionSpec(isBack = isBackNavigation)
             },
             modifier = modifier,
             label = "AnimatedNavContent"
@@ -151,6 +147,13 @@ internal fun <T : NavNode> AnimatedNavContent(
             scope.withAnimatedVisibilityScope(this) {
                 content(animatingState)
             }
+        }
+
+        // Update state tracking AFTER AnimatedContent starts
+        // This ensures direction detection works for the next navigation
+        if (targetState.key != lastCommittedState.key) {
+            stateBeforeLast = lastCommittedState
+            lastCommittedState = targetState
         }
     }
 }

@@ -26,13 +26,12 @@ import androidx.compose.ui.graphics.Color
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackController
 import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackMode
-import com.jermey.quo.vadis.core.navigation.compose.hierarchical.BackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalBackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavRenderScope
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavNodeRenderer
 import com.jermey.quo.vadis.core.navigation.compose.hierarchical.rememberBackAnimationController
-import com.jermey.quo.vadis.core.navigation.compose.navback.QuoVadisBackHandler
+import com.jermey.quo.vadis.core.navigation.compose.navback.NavigateBackHandler
 import com.jermey.quo.vadis.core.navigation.compose.navback.ScreenNavigationInfo
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
@@ -271,7 +270,7 @@ public fun NavigationHost(
     var speculativePopState by remember { mutableStateOf<NavNode?>(null) }
 
     // Root container with QuoVadisBackHandler and SharedTransitionLayout
-    QuoVadisBackHandler(
+    NavigateBackHandler(
         enabled = enablePredictiveBack && canGoBack,
         currentScreenInfo = currentScreenInfo,
         previousScreenInfo = previousScreenInfo,

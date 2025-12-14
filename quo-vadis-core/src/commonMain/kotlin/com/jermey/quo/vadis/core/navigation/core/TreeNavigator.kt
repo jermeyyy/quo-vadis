@@ -372,6 +372,10 @@ class TreeNavigator(
      *
      * @param graph The graph to register
      */
+    @Deprecated(
+        "registerGraph() is no longer needed. Use rememberNavigator(navTree) with KSP-generated tree.",
+        level = DeprecationLevel.WARNING
+    )
     override fun registerGraph(graph: NavigationGraph) {
         graphs[graph.graphRoute] = graph
     }
@@ -383,6 +387,10 @@ class TreeNavigator(
      *
      * @param destination The starting destination
      */
+    @Deprecated(
+        "setStartDestination() is no longer needed. Start destination is defined in @Stack/@Tab/@Pane annotations.",
+        level = DeprecationLevel.WARNING
+    )
     override fun setStartDestination(destination: Destination) {
         val stackKey = generateKey()
         val screenKey = generateKey()

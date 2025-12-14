@@ -21,7 +21,7 @@ import androidx.compose.runtime.Composable
  *
  * ## Integration
  *
- * The [QuoVadisBackHandler] on iOS should use [IOSEdgeSwipeGestureDetector] internally
+ * The [NavigateBackHandler] on iOS should use [IOSEdgeSwipeGestureDetector] internally
  * to provide platform-appropriate back gesture handling while maintaining the same
  * callback interface as Android.
  *
@@ -29,7 +29,7 @@ import androidx.compose.runtime.Composable
  * level via [IOSEdgeSwipeGestureDetector], not through platform-level registration.
  *
  * @see IOSEdgeSwipeGestureDetector
- * @see QuoVadisBackHandler
+ * @see NavigateBackHandler
  */
 @Composable
 internal actual fun RegisterPlatformBackInput() {
