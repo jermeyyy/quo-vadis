@@ -110,60 +110,7 @@ class ComposableCache(
     }
 
     /**
-     * Renders a cached composable for the given entry.
-     *
-     * @param entry The backstack entry
-     * @param saveableStateHolder State holder for saveable state
-     * @param content The composable content provider
-     */
-    @Composable
-    fun Entry(
-        entry: BackStackEntry,
-        saveableStateHolder: SaveableStateHolder,
-        content: @Composable (BackStackEntry) -> Unit
-    ) {
-        // Track access
-        val entryId = entry.id
-
-        DisposableEffect(entryId) {
-            // Update access time on composition
-            accessTimeMap[entryId] = counter++
-
-            // Cleanup old entries if cache is full
-            if (accessTimeMap.size > maxCacheSize) {
-                val oldestEntry = accessTimeMap.entries
-                    .filter { it.key !in lockedEntries && it.key !in priorityEntries } // Don't evict locked or priority entries
-                    .minByOrNull { it.value }
-                oldestEntry?.let { (oldId, _) ->
-                    if (oldId != entryId) {
-                        accessTimeMap.remove(oldId)
-                        saveableStateHolder.removeState(oldId)
-                    }
-                }
-            }
-
-            onDispose {
-                // Don't remove on dispose - keep in cache
-            }
-        }
-
-        // Render with state preservation
-        saveableStateHolder.SaveableStateProvider(entryId) {
-            content(entry)
-        }
-    }
-
-    /**
      * Renders cached content for a NavNode key.
-     *
-     * This is the preferred method for hierarchical rendering, using
-     * string keys directly rather than BackStackEntry objects.
-     *
-     * ## Benefits over [Entry]
-     *
-     * - Direct key-based access without BackStackEntry dependency
-     * - Better suited for NavNode tree traversal
-     * - Simplified interface for the hierarchical renderer
      *
      * ## State Preservation
      *
@@ -225,7 +172,7 @@ class ComposableCache(
  * Remember a composable cache across recompositions.
  */
 @Composable
-fun rememberComposableCache(maxCacheSize: Int = 3): ComposableCache {
+fun rememberComposableCache(maxCacheSize: Int = 5): ComposableCache {
     return remember { ComposableCache(maxCacheSize) }
 }
 

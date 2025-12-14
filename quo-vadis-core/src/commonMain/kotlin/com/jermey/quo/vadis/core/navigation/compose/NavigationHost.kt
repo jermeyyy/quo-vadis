@@ -193,7 +193,7 @@ public fun NavigationHost(
     val saveableStateHolder = rememberSaveableStateHolder()
 
     // Composable cache for lifecycle management
-    val cache = remember { ComposableCache() }
+    val cache = rememberComposableCache()
 
     // Animation coordinator for transition resolution
     val animationCoordinator = remember(transitionRegistry) {
