@@ -1,5 +1,10 @@
 # Navigation Animation Implementation - Complete
 
+> ⚠️ **LEGACY DOCUMENTATION**: This file documents the old `GraphNavHost` implementation. 
+> The architecture has been refactored to use `QuoVadisHost` with NavNode tree-based navigation.
+> See `docs/refactoring-plan/` for current architecture.
+> Key changes: `GraphNavHost` → `QuoVadisHost`, `BackStack` → `NavNode tree`, `BackStackEntry` → `NavNode`.
+
 ## Status: ✅ FULLY IMPLEMENTED AND WORKING
 **Completed**: October 15, 2025  
 **Build Status**: Passing (`./gradlew :composeApp:assembleDebug` - Success)

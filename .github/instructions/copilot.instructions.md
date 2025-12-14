@@ -23,7 +23,6 @@ Type-safe Kotlin Multiplatform navigation library with Compose Multiplatform UI.
 - **`quo-vadis-annotations`** - KSP annotations (`@Stack`, `@Destination`, `@Screen`, `@Tab`, `@Pane`)
 - **`quo-vadis-ksp`** - KSP code generator
 - **`quo-vadis-core-flow-mvi`** - FlowMVI integration
-- **`quo-vadis-recipes`** - LLM-optimized migration examples
 - **`composeApp`** - Demo app (being migrated)
 
 ## New Architecture (NavNode Tree)
@@ -117,7 +116,6 @@ mcp_gradle-mcp_clean()
 | Pattern | Location |
 |---------|----------|
 | **Refactoring plan** | `docs/refactoring-plan/` |
-| **Migration recipes** | `quo-vadis-recipes/src/.../recipes/` |
 | NavNode tree types | `quo-vadis-core/.../navigation/core/NavNode.kt` |
 | QuoVadisHost | `quo-vadis-core/.../navigation/compose/QuoVadisHost.kt` |
 | TreeNavigator | `quo-vadis-core/.../navigation/core/TreeNavigator.kt` |

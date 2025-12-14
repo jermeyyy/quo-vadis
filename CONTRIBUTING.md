@@ -93,8 +93,8 @@ Follow the [official Kotlin coding conventions](https://kotlinlang.org/docs/codi
 
 | Type | Convention | Example |
 |------|-----------|---------|
-| Classes/Interfaces | `PascalCase` | `Navigator`, `BackStack` |
-| Functions/Properties | `camelCase` | `navigate()`, `navigateBack()` |
+| Classes/Interfaces | `PascalCase` | `Navigator`, `NavNode`, `TreeMutator` |
+| Functions/Properties | `camelCase` | `navigate()`, `navigateBack()`, `mutate()` |
 | Destinations | `PascalCase + Destination` | `HomeDestination` |
 | Test Fakes | `Fake + Name` | `FakeNavigator` |
 | Default Implementations | `Default + Name` | `DefaultNavigator` |
@@ -122,7 +122,10 @@ fun myFunction(paramName: String): Result
 ```
 com.jermey.quo.vadis.core.navigation/
 ├── core/          # Core navigation interfaces and classes
-├── compose/       # Compose-specific components
+├── node/          # NavNode types and tree structures
+├── tree/          # TreeMutator and tree operations
+├── compose/       # Compose-specific components (NavigationHost)
+├── render/        # Flattening and rendering logic
 ├── integration/   # External integrations
 ├── testing/       # Test utilities
 ├── utils/         # Utility functions

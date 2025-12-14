@@ -481,16 +481,12 @@ fun appRootGraph() = navigationGraph("app_root") {
 ```kotlin
 @Composable
 fun App() {
-    val navigator = rememberNavigator()
+    val navigator = rememberNavigator(startDestination = MainDestination.Home)
     
-    LaunchedEffect(Unit) {
-        navigator.registerGraph(appRootGraph())
-        navigator.setStartDestination(MainDestination.Home)
-    }
-    
-    GraphNavHost(
-        graph = appRootGraph(),
-        navigator = navigator
+    NavigationHost(
+        navigator = navigator,
+        screenRegistry = MainDestinationScreenRegistry,
+        predictiveBackMode = PredictiveBackMode.FULL_CASCADE
     )
 }
 ```
@@ -751,23 +747,23 @@ fun TaskSettingsContent(navigator: Navigator) {
 }
 ```
 
-**Include in root graph:**
+**Include in app:**
 
 ```kotlin
 package com.example.app.graphs
 
-import com.example.app.destinations.MainDestination
-import com.example.app.destinations.buildMainDestinationGraph
-import com.example.tasks.destinations.buildTasksDestinationGraph
-import com.jermey.quo.vadis.core.navigation.core.navigationGraph
+import com.example.tasks.destinations.TasksDestinationScreenRegistry
+import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 
-fun appRootGraph() = navigationGraph("app_root") {
-    startDestination(MainDestination.Home)
+@Composable
+fun App() {
+    val navigator = rememberNavigator(startDestination = TasksDestination.TaskList)
     
-    // Include all generated graphs
-    include(buildMainDestinationGraph())
-    include(buildTasksDestinationGraph())
-    // Add more as needed
+    NavigationHost(
+        navigator = navigator,
+        screenRegistry = TasksDestinationScreenRegistry,
+        predictiveBackMode = PredictiveBackMode.FULL_CASCADE
+    )
 }
 ```
 

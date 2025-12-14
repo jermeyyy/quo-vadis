@@ -79,17 +79,7 @@ open iosApp/iosApp.xcodeproj
 
 const mainAppCode = `@Composable
 fun DemoApp() {
-    val navigator = rememberNavigator()
-    
-    LaunchedEffect(Unit) {
-        // Register all feature graphs
-        navigator.registerGraph(homeGraph)
-        navigator.registerGraph(profileGraph)
-        navigator.registerGraph(settingsGraph)
-        
-        // Set initial destination
-        navigator.setStartDestination(MainDestination.Home)
-    }
+    val navigator = rememberNavigator(startDestination = MainDestination.Home)
     
     Scaffold(
         bottomBar = {
@@ -101,50 +91,53 @@ fun DemoApp() {
             )
         }
     ) { paddingValues ->
-        GraphNavHost(
-            graph = mainGraph,
+        NavigationHost(
             navigator = navigator,
+            screenRegistry = MainDestinationScreenRegistry,
             modifier = Modifier.padding(paddingValues),
             defaultTransition = NavigationTransitions.SlideHorizontal,
-            enablePredictiveBack = true
+            predictiveBackMode = PredictiveBackMode.FULL_CASCADE
         )
     }
 }`
 
-const featureModuleCode = `object ProductFeature {
-    // Public destinations (entry points)
-    sealed class Destination : com.jermey.quo.vadis.core.navigation.core.Destination {
-        object List : Destination() {
-            override val route = "products"
+const featureModuleCode = `// Using annotation-based API
+@Graph("products")
+sealed class ProductDestination : Destination
+
+@Route("products/list")
+data object ProductList : ProductDestination()
+
+@Serializable
+data class ProductDetailsData(val productId: String)
+
+@Route("products/details")
+@Argument(ProductDetailsData::class)
+data class ProductDetails(val productId: String) 
+    : ProductDestination(), TypedDestination<ProductDetailsData> {
+    override val data = ProductDetailsData(productId)
+}
+
+@Content(ProductList::class)
+@Composable
+fun ProductListContent(navigator: Navigator) {
+    ProductListScreen(
+        onProductClick = { id ->
+            navigator.navigateToProductDetails(productId = id)
         }
-        
-        data class Details(val productId: String) : Destination() {
-            override val route = "product_details"
-            override val arguments = mapOf("productId" to productId)
-        }
-    }
-    
-    // Navigation graph (internal structure hidden)
-    fun graph() = navigationGraph("products") {
-        startDestination(Destination.List)
-        
-        destination(Destination.List) { _, navigator ->
-            ProductListScreen(
-                onProductClick = { id ->
-                    navigator.navigate(Destination.Details(id))
-                }
-            )
-        }
-        
-        destination(SimpleDestination("product_details")) { dest, navigator ->
-            val productId = dest.arguments["productId"] as String
-            ProductDetailScreen(
-                productId = productId,
-                onBack = { navigator.navigateBack() }
-            )
-        }
-    }
-}`
+    )
+}
+
+@Content(ProductDetails::class)
+@Composable
+fun ProductDetailsContent(data: ProductDetailsData, navigator: Navigator) {
+    ProductDetailScreen(
+        productId = data.productId,
+        onBack = { navigator.navigateBack() }
+    )
+}
+
+// Use: ProductDestinationScreenRegistry`
 
 export default function Demo() {
   return (
@@ -161,7 +154,7 @@ export default function Demo() {
         <div className={styles.featuresGrid}>
           <div className={styles.featureCard}>
             <h3>Bottom Navigation</h3>
-            <p>Tab-based navigation between main sections with independent back stacks for each tab.</p>
+            <p>Tab-based navigation between main sections with independent navigation stacks via TabNode.</p>
           </div>
 
           <div className={styles.featureCard}>
@@ -176,7 +169,7 @@ export default function Demo() {
 
           <div className={styles.featureCard}>
             <h3>Multi-Step Process</h3>
-            <p>Wizard-style flow with complex backstack management and validation.</p>
+            <p>Wizard-style flow with TreeMutator-based stack management and validation.</p>
           </div>
 
           <div className={styles.featureCard}>
@@ -259,8 +252,8 @@ export default function Demo() {
         <h3 id="bottom-nav-pattern">1. Bottom Navigation Pattern</h3>
         <p>
           The demo uses bottom navigation for main app sections (Home, Profile, Settings). 
-          Each tab maintains its own independent back stack, allowing users to navigate 
-          deeply within a section without losing their place in other tabs.
+          Each tab is represented as a child of a TabNode in the NavNode tree, maintaining 
+          independent navigation stacks within each tab.
         </p>
         <CodeBlock code={bottomNavCode} language="kotlin" />
 
@@ -273,17 +266,17 @@ export default function Demo() {
 
         <h3 id="multi-step-process">3. Multi-Step Process</h3>
         <p>
-          Wizard-style flows are handled elegantly with backstack management. 
+          Wizard-style flows are handled elegantly with TreeMutator operations. 
           The demo includes validation, progress tracking, and the ability to jump 
-          to specific steps.
+          to specific steps using immutable state transformations.
         </p>
         <CodeBlock code={multiStepCode} language="kotlin" />
 
         <h3 id="nested-navigation">4. Nested Navigation</h3>
         <p>
-          The demo shows how to implement tabs within tabs - a common pattern in 
-          complex applications. Each level of navigation is independent and maintains 
-          its own state.
+          The demo shows how to implement tabs within tabs using nested TabNode and 
+          StackNode structures in the NavNode tree. Each level of navigation is independent 
+          and maintains its own state.
         </p>
 
         <h3 id="transition-showcase">5. Transition Showcase</h3>

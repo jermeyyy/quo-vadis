@@ -128,27 +128,21 @@ fun SettingsContent(navigator: Navigator) {
     )
 }`
 
-const graphCode = `import com.example.app.destinations.buildAppDestinationGraph
+const graphCode = `import com.example.app.destinations.AppDestinationScreenRegistry
 
-// Use the generated graph builder
-fun rootGraph() = navigationGraph("root") {
-    startDestination(AppDestination.Home)
-    include(buildAppDestinationGraph())  // Auto-generated!
-}`
+// KSP generates a ScreenRegistry for each @Graph
+// Use it with NavigationHost for hierarchical NavNode tree rendering
+val screenRegistry = AppDestinationScreenRegistry`
 
 const navHostCode = `@Composable
 fun App() {
-    val navigator = rememberNavigator()
+    val navigator = rememberNavigator(startDestination = AppDestination.Home)
     
-    LaunchedEffect(Unit) {
-        navigator.registerGraph(rootGraph())
-        navigator.setStartDestination(AppDestination.Home)
-    }
-    
-    GraphNavHost(
-        graph = rootGraph(),
+    NavigationHost(
         navigator = navigator,
-        defaultTransition = NavigationTransitions.SlideHorizontal
+        screenRegistry = AppDestinationScreenRegistry,
+        defaultTransition = NavigationTransitions.SlideHorizontal,
+        predictiveBackMode = PredictiveBackMode.FULL_CASCADE
     )
 }`
 
@@ -164,11 +158,9 @@ sealed class AppDestination : Destination {
     }
 }
 
-// Build graph manually
-val mainGraph = navigationGraph("main") {
-    startDestination(AppDestination.Home)
-    
-    destination(AppDestination.Home) { _, navigator ->
+// Create a ScreenRegistry manually
+val appScreenRegistry = ScreenRegistry {
+    screen(AppDestination.Home) { _, navigator ->
         HomeScreen(
             onNavigateToProfile = { userId ->
                 navigator.navigate(AppDestination.UserProfile(userId))
@@ -176,14 +168,19 @@ val mainGraph = navigationGraph("main") {
         )
     }
     
-    destination(SimpleDestination("profile")) { dest, navigator ->
-        val userId = dest.arguments["userId"] as String
+    screen<AppDestination.UserProfile> { dest, navigator ->
         ProfileScreen(
-            userId = userId,
+            userId = dest.userId,
             onBack = { navigator.navigateBack() }
         )
     }
-}`
+}
+
+// Use with NavigationHost
+NavigationHost(
+    navigator = navigator,
+    screenRegistry = appScreenRegistry
+)`
 
 const basicNavCode = `// Navigate to a destination
 navigator.navigate(AppDestination.UserProfile("user123"))
@@ -203,7 +200,7 @@ navigator.navigateUp()`
 const advancedNavCode = `// Navigate and replace current screen
 navigator.navigateAndReplace(AppDestination.Home)
 
-// Navigate and clear entire backstack
+// Navigate and clear entire navigation stack
 navigator.navigateAndClearAll(AppDestination.Home)
 
 // Navigate and clear to specific destination
@@ -300,16 +297,16 @@ fun \`test back navigation\`() {
     val fakeNavigator = FakeNavigator()
     val viewModel = MyViewModel(fakeNavigator)
     
-    viewModel.onBackPressed()
+    viewModel.onBack()
     
-    assertTrue(fakeNavigator.backPressed)
+    assertTrue(fakeNavigator.navigatedBack)
 }`
 
-const androidCode = `// Handle system back button
-GraphNavHost(
-    graph = mainGraph,
+const androidCode = `// Handle system back button with predictive back
+NavigationHost(
     navigator = navigator,
-    enablePredictiveBack = true  // Android 13+ predictive back
+    screenRegistry = MainScreenRegistry,
+    predictiveBackMode = PredictiveBackMode.FULL_CASCADE  // Android 13+ predictive back
 )`
 
 export default function GettingStarted() {
@@ -341,27 +338,27 @@ export default function GettingStarted() {
         <p>Use <code>@Content</code> to wire Composables to destinations:</p>
         <CodeBlock code={contentCode} language="kotlin" title="Screens.kt" />
 
-        <h3 id="step3">Step 3: Use Generated Graph</h3>
-        <p>KSP automatically generates a graph builder function:</p>
+        <h3 id="step3">Step 3: Use Generated ScreenRegistry</h3>
+        <p>KSP automatically generates a ScreenRegistry for NavigationHost:</p>
         <CodeBlock code={graphCode} language="kotlin" title="Navigation.kt" />
 
-        <h3 id="step4">Step 4: Setup NavHost</h3>
-        <p>Integrate the navigation host in your app:</p>
+        <h3 id="step4">Step 4: Setup NavigationHost</h3>
+        <p>Use NavigationHost for hierarchical NavNode tree rendering:</p>
         <CodeBlock code={navHostCode} language="kotlin" title="App.kt" />
 
         <div className={styles.note}>
           <p><strong>What KSP Generates:</strong></p>
           <ul>
             <li><code>AppDestinationRouteInitializer</code> - Automatic route registration</li>
-            <li><code>buildAppDestinationGraph()</code> - Complete graph with all destinations wired</li>
-            <li><code>typedDestinationXxx()</code> - Type-safe extensions for destinations with @Argument</li>
+            <li><code>AppDestinationScreenRegistry</code> - ScreenRegistry for NavigationHost</li>
+            <li><code>navigateToXxx()</code> - Type-safe extensions for destinations with @Argument</li>
           </ul>
         </div>
       </section>
 
       <section>
-        <h2 id="manual-dsl">Alternative: Manual DSL Approach</h2>
-        <p>For dynamic navigation or fine-grained control, use the manual DSL approach:</p>
+        <h2 id="manual-dsl">Alternative: Manual ScreenRegistry Approach</h2>
+        <p>For dynamic navigation or fine-grained control, create a ScreenRegistry manually:</p>
         <CodeBlock code={manualDSLCode} language="kotlin" />
       </section>
 

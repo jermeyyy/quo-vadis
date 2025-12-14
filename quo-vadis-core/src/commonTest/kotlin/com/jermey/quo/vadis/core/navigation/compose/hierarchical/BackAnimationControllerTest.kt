@@ -531,7 +531,7 @@ class BackAnimationControllerTest {
     }
 
     @Test
-    fun `gesture with backwards progress (dragging back)`() {
+    fun `gesture with backwards progress - dragging back`() {
         // Given
         val controller = BackAnimationController()
 

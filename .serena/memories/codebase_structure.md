@@ -87,7 +87,7 @@ quo-vadis-core/
     │           ├── core/                       # Core navigation components
     │           │   ├── Navigator.kt            # Central navigation controller
     │           │   ├── Destination.kt          # Navigation targets
-    │           │   ├── BackStack.kt            # Stack management
+    │           │   ├── NavNode.kt              # Tree-based navigation state
     │           │   ├── NavigationGraph.kt      # Modular graphs
     │           │   ├── NavigationTransition.kt # Animation support
     │           │   └── DeepLink.kt             # Deep link handling
@@ -115,7 +115,7 @@ quo-vadis-core/
 
 ### Library Package Organization
 
-- **core**: Core navigation components (Navigator, BackStack, Destination, etc.)
+- **core**: Core navigation components (Navigator, NavNode, Destination, etc.)
 - **compose**: Compose Multiplatform UI integration
 - **mvi**: MVI architecture pattern support
 - **integration**: DI framework integrations (Koin, etc.)

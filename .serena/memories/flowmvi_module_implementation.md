@@ -31,7 +31,7 @@ FlowMVI integration module for Quo Vadis navigation library. Provides MVI patter
    - Sequential intent processing (parallelIntents = false)
 
 3. **StateManager.kt** (`utils/`)
-   - `BackStack.toNavigationState()` - conversion utility
+   - `NavNode.toNavigationState()` - conversion utility
    - `NavigationState.isValid()` - state validation
    - `emptyNavigationState()`, `navigationStateOf()` - factory functions
    - `NavigationStateHistory` class - debug history tracking (max 50 entries)

@@ -36,18 +36,18 @@ This navigation library follows these key principles:
                           ↓
 ┌─────────────────────────────────────────────────────────┐
 │                    Compose Layer                         │
-│  - NavHost (Rendering)                                   │
-│  - GraphNavHost (Graph-based rendering)                 │
+│  - NavigationHost (Unified navigation rendering)         │
+│  - NavNodeRenderer (Hierarchical node rendering)         │
 │  - Animation/Transition support                          │
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
 │                     Core Layer                           │
 │  - Navigator (Controller)                                │
-│  - BackStack (State management)                          │
+│  - NavNode (Tree-based state: StackNode, TabNode, etc.) │
+│  - TreeMutator (Immutable state transformations)         │
 │  - Destination (Data model)                              │
 │  - TypedDestination (Serializable destinations)          │
-│  - NavigationGraph (Modular graphs)                      │
 │  - DeepLink (URL handling)                               │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -102,21 +102,45 @@ The `Navigator` is the central controller that manages all navigation operations
 
 **Responsibilities:**
 - Execute navigation commands
-- Manage the backstack
+- Manage the NavNode tree state
 - Handle deep links
-- Coordinate with navigation graphs
-- Provide observable state
+- Provide observable state via `StateFlow<NavNode>`
 
-### 3. BackStack
-Direct access to the navigation stack with reactive state.
+**Key Properties:**
+```kotlin
+val state: StateFlow<NavNode>           // Current navigation tree
+val currentDestination: StateFlow<Destination?>
+val canNavigateBack: StateFlow<Boolean>
+```
+
+### 3. NavNode Tree
+The navigation state is represented as an immutable tree of `NavNode` objects.
+
+**Node Types:**
+- `ScreenNode` - Leaf node representing a single destination
+- `StackNode` - Container for a back-stack of screens
+- `TabNode` - Container for tabbed navigation with multiple stacks
+- `PaneNode` - Container for adaptive pane layouts (list-detail, etc.)
 
 **Features:**
-- Observable via StateFlow
-- Direct manipulation (push, pop, replace, clear)
-- Advanced operations (popUntil, popToRoot)
-- Supports complex navigation patterns
+- Observable via `StateFlow<NavNode>`
+- Immutable transformations via `TreeMutator`
+- Supports complex hierarchical navigation patterns
+- Serializable for state persistence
 
-### 4. NavigationGraph
+### 4. TreeMutator
+Pure functional operations for transforming the NavNode tree.
+
+**Key Operations:**
+```kotlin
+TreeMutator.push(root, destination)     // Add destination to active stack
+TreeMutator.pop(root)                   // Remove top of active stack
+TreeMutator.replaceCurrent(root, dest)  // Replace current destination
+TreeMutator.clearAndPush(root, dest)    // Clear stack and push
+TreeMutator.switchActiveTab(root, index) // Switch tab in TabNode
+```
+
+### 5. NavigationGraph
 Enables modular architecture by allowing features to define their navigation independently.
 
 **Gray Box Pattern:**
@@ -138,7 +162,7 @@ Feature Module A          Feature Module B
 
 Modules expose entry points but hide internal navigation details.
 
-### 5. NavigationTransition
+### 6. NavigationTransition
 Declarative API for screen transitions.
 
 **Supported:**
@@ -148,7 +172,7 @@ Declarative API for screen transitions.
 - Custom compositions
 - Shared element transitions (framework ready)
 
-### 6. DeepLink
+### 7. DeepLink
 URI-based navigation with pattern matching.
 
 **Features:**
@@ -157,7 +181,7 @@ URI-based navigation with pattern matching.
 - Integration with navigation graphs
 - Universal link support
 
-### 7. Code Generation Layer (KSP)
+### 8. Code Generation Layer (KSP)
 
 The annotation-based API leverages Kotlin Symbol Processing (KSP) to generate navigation boilerplate automatically.
 
@@ -285,7 +309,7 @@ Compile errors are reported with clear messages and source locations.
 - Caching: Generated code cached until annotations change
 - Build time impact: Typically <1 second for dozens of destinations
 
-### 8. Predictive Back Navigation
+### 9. Predictive Back Navigation
 Provides smooth, animated back gestures on both iOS and Android with automatic screen caching.
 
 **Key Features:**
@@ -320,7 +344,7 @@ Each type has matching gesture and exit animations for consistency.
 - `ComposableCache`: Caches screens with locking mechanism
 - Type-specific animations: `material3BackAnimation()`, `material3ExitAnimation()`, etc.
 
-### 9. Hierarchical Rendering Architecture
+### 10. Hierarchical Rendering Architecture
 
 The library supports two rendering modes for displaying navigation state. The **hierarchical mode** (recommended) provides better animation coordination and simpler mental model.
 
@@ -488,119 +512,97 @@ fun navigateToFeature() {
 The library provides first-class MVI support:
 
 ```kotlin
-ViewModel → NavigationIntent → Navigator → BackStack → State
-                                              ↓
-                                      NavigationEffect
+ViewModel → NavigationIntent → Navigator → TreeMutator → NavNode Tree
+                                                    ↓
+                                            StateFlow<NavNode>
 ```
 
 **Flow:**
 1. User action triggers an Intent
 2. ViewModel handles Intent, creates NavigationIntent
-3. Navigator executes navigation
-4. BackStack updates state
-5. UI observes state changes
+3. Navigator executes navigation via TreeMutator
+4. NavNode tree updates immutably
+5. UI observes state changes via StateFlow
 6. Side effects emit NavigationEffect
 
 ## State Management
 
 All navigation state is reactive and observable:
 
-- `Navigator.currentDestination: StateFlow<Destination?>`
-- `BackStack.current: StateFlow<BackStackEntry?>`
-- `BackStack.stack: StateFlow<List<BackStackEntry>>`
-- `BackStack.canGoBack: StateFlow<Boolean>`
+- `Navigator.state: StateFlow<NavNode>` - Complete navigation tree
+- `Navigator.currentDestination: StateFlow<Destination?>` - Active destination
+- `Navigator.canNavigateBack: StateFlow<Boolean>` - Back navigation availability
+
+**NavNode Tree State:**
+```kotlin
+// Observe entire navigation tree
+navigator.state.collect { navNode ->
+    // React to any navigation change
+}
+
+// Observe current destination
+navigator.currentDestination.collect { destination ->
+    // React to destination changes
+}
+```
 
 This enables:
 - Reactive UI updates
 - Easy testing
-- State persistence
+- State persistence via NavNode serialization
 - Integration with any state management pattern
 
-### BackStackEntry Extras
+### State Persistence with NavNode
 
-`BackStackEntry` supports arbitrary key-value extras for persisting component-level state that needs to survive recomposition and configuration changes.
+`NavNode` trees are fully serializable for state restoration:
 
-**Property:**
 ```kotlin
-val extras: MutableMap<String, Any?>
-```
+// Serialize navigation state
+val json = NavNodeSerializer.toJson(navigator.state.value)
 
-**Extension Functions:**
-```kotlin
-// Type-safe getter with default value
-inline fun <reified T> BackStackEntry.getExtra(key: String, defaultValue: T): T
-
-// Type-safe setter
-inline fun <reified T> BackStackEntry.setExtra(key: String, value: T)
+// Restore navigation state
+val restoredState = NavNodeSerializer.fromJson(json)
+navigator.updateState(restoredState)
 ```
 
 **Use Cases:**
-- Preserving UI state (scroll position, selected items)
-- Caching component state between recompositions
-- Storing navigation-related metadata
-- Tab selection persistence (see below)
-
-**Example:**
-```kotlin
-// Store state in entry
-entry.setExtra("scrollPosition", scrollState.value)
-entry.setExtra("selectedItemId", selectedItem?.id)
-
-// Restore state from entry
-val savedScrollPosition = entry.getExtra("scrollPosition", 0)
-val savedSelectedId = entry.getExtra<String?>("selectedItemId", null)
-```
+- Process death restoration
+- Deep link state restoration
+- Navigation history persistence
 
 ### Tab State Persistence
 
-The library provides automatic tab selection persistence for tabbed navigation patterns. When using `rememberTabNavigator`, the selected tab is automatically preserved across recompositions and configuration changes.
+Tab navigation state is automatically maintained within the `TabNode` structure. When using tabbed navigation, the active tab index and each tab's stack state is preserved.
 
 **How It Works:**
 
-1. **Storage**: Tab selection state is stored in the parent `BackStackEntry.extras`
-2. **Restoration**: On recomposition, the previously selected tab is restored
-3. **Sync**: Tab selection changes are automatically synced to the entry
+1. **Storage**: Tab selection is part of the `TabNode.activeIndex` property
+2. **Per-Tab Stacks**: Each tab maintains its own `StackNode` with independent history
+3. **State Restoration**: Full NavNode tree serialization preserves all tab state
 
-**Constant:**
+**TabNode Structure:**
 ```kotlin
-const val EXTRA_SELECTED_TAB_ROUTE = "quo_vadis_selected_tab_route"
+val tabNode = TabNode(
+    key = "main_tabs",
+    children = listOf(homeStack, searchStack, profileStack),
+    activeIndex = 0  // Currently selected tab
+)
 ```
 
-**Integration Pattern:**
+**Switching Tabs:**
 ```kotlin
-@Composable
-fun TabbedScreen(
-    navigator: Navigator,
-    parentEntry: BackStackEntry
-) {
-    val tabState = rememberTabNavigator(
-        config = TabNavigatorConfig(
-            tabs = listOf(HomeTab, SearchTab, ProfileTab),
-            defaultTab = HomeTab
-        ),
-        parentNavigator = navigator,
-        parentEntry = parentEntry  // Entry for state persistence
-    )
-    
-    TabScaffold(tabState = tabState) { tab ->
-        when (tab) {
-            HomeTab -> HomeContent()
-            SearchTab -> SearchContent()
-            ProfileTab -> ProfileContent()
-        }
-    }
-}
+// Via Navigator
+navigator.switchTab(index = 1)
+
+// Via TreeMutator (for direct state manipulation)
+val newState = TreeMutator.switchActiveTab(currentState, newIndex = 1)
 ```
 
 **Behavior:**
-- When user switches tabs, the selection is saved to `parentEntry.extras`
-- When the composable is recreated (e.g., after predictive back gesture), the tab selection is restored
-- When navigating away and back to the tabbed screen, the previously selected tab is shown
-
-**Benefits:**
-- Seamless user experience during configuration changes
-- Consistent tab state during predictive back animations
-- No manual state management required
+- Each tab maintains independent back history
+- Switching tabs preserves each tab's stack state
+- Deep links can target specific tabs
+- Full tree serialization for state restoration
 
 ## Testing Strategy
 

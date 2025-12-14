@@ -1,5 +1,9 @@
 # Navigation Library - Complete Architecture & Implementation
 
+> ⚠️ **PARTIALLY UPDATED**: This file is being updated to reflect the new NavNode tree-based architecture.
+> Key terminology: `GraphNavHost` → `QuoVadisHost`, `BackStack` → `NavNode tree`, `navigator.backStack` → `navigator.state`.
+> See `docs/refactoring-plan/` for complete current architecture.
+
 ## Overview
 **Quo Vadis** (Latin for "Where are you going?") - A comprehensive, type-safe navigation library for Kotlin Multiplatform with Compose Multiplatform UI.
 
@@ -55,18 +59,17 @@
 com.jermey.quo.vadis.core.navigation/
 ├── core/
 │   ├── Destination.kt              - Navigation targets (type-safe)
-│   ├── BackStack.kt                - Stack manipulation & state
-│   ├── Navigator.kt                - Central controller
-│   ├── NavigationGraph.kt          - Modular graph definitions
+│   ├── NavNode.kt                  - Tree-based navigation state
+│   ├── TreeNavigator.kt            - Central controller
+│   ├── TreeMutator.kt              - Tree manipulation
 │   ├── NavigationTransition.kt     - Animation support + SharedElementConfig
 │   └── DeepLink.kt                 - URI-based navigation
 ├── compose/
-│   ├── NavHost.kt                  - Basic navigation host
-│   ├── GraphNavHost.kt             - Graph-based host with SharedTransitionLayout
+│   ├── QuoVadisHost.kt             - Unified navigation host
 │   ├── PredictiveBackNavigation.kt - Gesture navigation
 │   ├── ComposableCache.kt          - Screen caching
-│   ├── SharedElementScope.kt       - ✨ CompositionLocal providers (NEW)
-│   └── SharedElementModifiers.kt   - ✨ Convenience extensions (NEW)
+│   ├── SharedElementScope.kt       - ✨ CompositionLocal providers
+│   └── SharedElementModifiers.kt   - ✨ Convenience extensions
 ├── integration/
 │   └── KoinIntegration.kt          - DI support
 ├── utils/
@@ -86,20 +89,20 @@ For MVI architecture, use the separate FlowMVI integration module which provides
 
 ## Key Components
 
-### Navigator
+### TreeNavigator
 Central navigation controller with reactive state:
 - `navigate(destination, transition)` - Navigate to destination
 - `navigateBack()` - Go back
-- `navigateAndClearTo()` - Navigate and clear stack
-- `backStack` - Direct backstack access
+- `navigateAndClearTo()` - Navigate and clear to destination
+- `state` - NavNode tree state as StateFlow
 - `currentDestination` - Observable current destination
 
-### BackStack
-Direct stack manipulation with StateFlow:
-- `push()`, `pop()`, `replace()`, `clear()`
-- `popUntil()`, `popTo()`, `popToRoot()`
-- `current`, `previous`, `canGoBack` - Observable state
-- `stack` - Full stack as StateFlow
+### NavNode Tree
+Tree-based navigation state with StateFlow:
+- Immutable tree structure
+- `TreeMutator` for tree manipulation
+- `push()`, `pop()`, `replace()`, `clear()` operations
+- Observable state via StateFlow
 
 ### NavigationGraph
 Modular graph definitions with DSL:
@@ -141,10 +144,10 @@ Each type has matching gesture and exit animations.
 - `ComposableCache` - Caches screens with locking
 - Animation modifiers: `material3BackAnimation()`, etc.
 
-### Shared Element Transitions (NEW!)
+### Shared Element Transitions
 
 **Architecture:**
-- `GraphNavHost` always wraps content in `SharedTransitionLayout`
+- `QuoVadisHost` always wraps content in `SharedTransitionLayout`
 - Uses `AnimatedContent` for both forward AND backward navigation
 - Provides `AnimatedVisibilityScope` consistently in both directions
 - Per-destination opt-in via `destinationWithScopes()`
@@ -199,7 +202,7 @@ navigationGraph("app") {
 ### 2. Observer Pattern
 All state observable via StateFlow:
 ```kotlin
-val current by navigator.backStack.current.collectAsState()
+val currentNode by navigator.state.collectAsState()
 ```
 
 ### 3. Strategy Pattern
@@ -220,20 +223,20 @@ SharedTransitionLayout wraps navigation content, scopes propagate via Compositio
 ## State Management Flow
 
 ```
-User Action → Intent → Navigator → BackStack Update
-                                         ↓
-                                    State Change
-                                         ↓
-                                   UI Recomposition
-                                         ↓
-                              (Shared Elements Animate)
+User Action → Intent → TreeNavigator → NavNode Tree Update
+                                              ↓
+                                         State Change
+                                              ↓
+                                        UI Recomposition
+                                              ↓
+                               (Shared Elements Animate)
 ```
 
 For MVI:
 ```
-User Action → NavigationIntent → ViewModel → Navigator
+User Action → NavigationIntent → ViewModel → TreeNavigator
                                                   ↓
-                                             BackStack
+                                             NavNode Tree
                                                   ↓
                                          NavigationState
                                                   ↓
@@ -262,12 +265,12 @@ Coordinator finishes → Unlock cache
 New screen renders smoothly
 ```
 
-## Shared Element Transition Flow (NEW!)
+## Shared Element Transition Flow
 
 ```
 User initiates navigation (forward or back)
     ↓
-GraphNavHost uses AnimatedContent
+QuoVadisHost uses AnimatedContent
     ↓
 Provides AnimatedVisibilityScope via CompositionLocal
     ↓

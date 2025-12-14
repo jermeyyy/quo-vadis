@@ -8,13 +8,12 @@ import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.LegacyTransitionState
+import com.jermey.quo.vadis.core.navigation.core.TransitionState
 import com.jermey.quo.vadis.core.navigation.core.activeLeaf
 import com.jermey.quo.vadis.core.navigation.core.activeStack
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,8 +42,8 @@ class FakeNavigator : Navigator {
     )
     override val state: StateFlow<NavNode> = _state.asStateFlow()
 
-    private val _transitionState = MutableStateFlow<LegacyTransitionState>(LegacyTransitionState.Idle)
-    override val transitionState: StateFlow<LegacyTransitionState> = _transitionState.asStateFlow()
+    private val _transitionState = MutableStateFlow<TransitionState>(TransitionState.Idle)
+    override val transitionState: StateFlow<TransitionState> = _transitionState.asStateFlow()
 
     private val _canNavigateBack = MutableStateFlow(false)
     override val canNavigateBack: StateFlow<Boolean> = _canNavigateBack.asStateFlow()
@@ -171,10 +170,6 @@ class FakeNavigator : Navigator {
         // Default implementation does nothing in tests
     }
 
-    override fun registerGraph(graph: NavigationGraph) {
-        navigationCalls.add(NavigationCall.RegisterGraph(graph))
-    }
-
     override fun setStartDestination(destination: Destination) {
         navigationCalls.add(NavigationCall.SetStartDestination(destination))
         val stackKey = NavKeyGenerator.generate()
@@ -255,10 +250,10 @@ class FakeNavigator : Navigator {
     override fun updateTransitionProgress(progress: Float) {
         val current = _transitionState.value
         when (current) {
-            is LegacyTransitionState.InProgress -> {
+            is TransitionState.InProgress -> {
                 _transitionState.value = current.copy(progress = progress)
             }
-            is LegacyTransitionState.PredictiveBack -> {
+            is TransitionState.PredictiveBack -> {
                 _transitionState.value = current.copy(progress = progress)
             }
             else -> { /* Ignore if not in transition */ }
@@ -266,7 +261,7 @@ class FakeNavigator : Navigator {
     }
 
     override fun startPredictiveBack() {
-        _transitionState.value = LegacyTransitionState.PredictiveBack(
+        _transitionState.value = TransitionState.PredictiveBack(
             progress = 0f,
             touchX = 0f,
             touchY = 0f
@@ -275,7 +270,7 @@ class FakeNavigator : Navigator {
 
     override fun updatePredictiveBack(progress: Float, touchX: Float, touchY: Float) {
         val current = _transitionState.value
-        if (current is LegacyTransitionState.PredictiveBack) {
+        if (current is TransitionState.PredictiveBack) {
             _transitionState.value = current.copy(
                 progress = progress,
                 touchX = touchX,
@@ -285,16 +280,16 @@ class FakeNavigator : Navigator {
     }
 
     override fun cancelPredictiveBack() {
-        _transitionState.value = LegacyTransitionState.Idle
+        _transitionState.value = TransitionState.Idle
     }
 
     override fun commitPredictiveBack() {
         navigateBack()
-        _transitionState.value = LegacyTransitionState.Idle
+        _transitionState.value = TransitionState.Idle
     }
 
     override fun completeTransition() {
-        _transitionState.value = LegacyTransitionState.Idle
+        _transitionState.value = TransitionState.Idle
     }
 
     // =========================================================================
@@ -400,8 +395,6 @@ sealed class NavigationCall {
     data class NavigateAndClearAll(val destination: Destination) : NavigationCall()
 
     data class HandleDeepLink(val deepLink: DeepLink) : NavigationCall()
-
-    data class RegisterGraph(val graph: NavigationGraph) : NavigationCall()
 
     data class SetStartDestination(val destination: Destination) : NavigationCall()
 }

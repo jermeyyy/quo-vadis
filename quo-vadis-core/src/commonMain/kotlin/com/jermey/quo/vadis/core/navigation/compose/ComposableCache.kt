@@ -7,14 +7,12 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.SaveableStateHolder
-import com.jermey.quo.vadis.core.navigation.core.BackStackEntry
 
 /**
- * Cache for composables associated with backstack entries and NavNode keys.
+ * Cache for composables associated with NavNode keys.
  *
  * Keeps composables alive to enable smooth transitions and predictive back gestures.
- * Supports both legacy [BackStackEntry]-based caching and new NavNode key-based caching
- * for the hierarchical rendering system.
+ * Uses NavNode key-based caching for the hierarchical rendering system.
  *
  * The cache supports two protection mechanisms:
  * - **Locked entries**: Temporarily protected during animations (via [lockEntry]/[unlockEntry] or [lock]/[unlock])

@@ -139,7 +139,7 @@ navigator.navigateBack()
 
 ### How It Works
 
-1. **SharedTransitionLayout Wrapping**: `GraphNavHost` always wraps content in `SharedTransitionLayout`
+1. **SharedTransitionLayout Wrapping**: `NavigationHost` always wraps content in `SharedTransitionLayout`
 2. **AnimatedContent Integration**: Both forward and backward navigation use `AnimatedContent` to provide `AnimatedVisibilityScope`
 3. **Per-Destination Opt-In**: Use `destinationWithScopes()` to receive scopes; regular `destination()` won't have shared elements
 4. **CompositionLocal Propagation**: Scopes are provided via CompositionLocals for easy access
@@ -222,17 +222,16 @@ fun NavigationGraphBuilder.destinationWithScopes(
 )
 ```
 
-#### 4. GraphNavHost Integration
+#### 4. NavigationHost Integration
 Automatically enables SharedTransitionLayout:
 
 ```kotlin
 @Composable
-fun GraphNavHost(
-    graph: NavigationGraph,
+fun NavigationHost(
     navigator: Navigator,
-    defaultTransition: NavigationTransition = NavigationTransitions.None,
-    enablePredictiveBack: Boolean = false,
-    enableComposableCache: Boolean = true,
+    screenRegistry: ScreenRegistry = EmptyScreenRegistry,
+    wrapperRegistry: WrapperRegistry = EmptyWrapperRegistry,
+    predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY,
     modifier: Modifier = Modifier
 )
 // Note: SharedTransitionLayout is ALWAYS enabled internally
@@ -360,14 +359,11 @@ modifier = Modifier.quoVadisSharedElementOrNoop(
 4. **Don't Use Global Flags**: Per-destination opt-in is the correct pattern
    ```kotlin
    // ❌ No global enableSharedElements flag exists
-   GraphNavHost(enableSharedElements = true)  // Doesn't exist!
+   NavigationHost(enableSharedElements = true)  // Doesn't exist!
    
    // ✅ Use destinationWithScopes instead
    destinationWithScopes(Dest) { ... }
    ```
-
-## Platform Support
-
 Shared element transitions work on **all supported platforms**:
 
 - ✅ **Android** (all versions)
@@ -542,7 +538,7 @@ fun DetailScreen(
 
 **This is fixed!** Both forward and back navigation now use `AnimatedContent`, ensuring `AnimatedVisibilityScope` is always available. If you still see issues:
 1. Verify you're on the latest version
-2. Check that `enablePredictiveBack = true` in GraphNavHost (for gesture support)
+2. Check that `predictiveBackMode` is set in NavigationHost (for gesture support)
 3. Ensure both screens use `destinationWithScopes()`
 
 ## Performance Considerations
@@ -550,7 +546,7 @@ fun DetailScreen(
 1. **GPU Acceleration**: All animations use `graphicsLayer` for optimal performance
 2. **Minimal Overhead**: SharedTransitionLayout has negligible overhead when not animating
 3. **Selective Opt-In**: Only destinations using `destinationWithScopes()` participate
-4. **Cache-Friendly**: Works seamlessly with GraphNavHost's composable cache
+4. **Cache-Friendly**: Works seamlessly with NavigationHost's composable cache
 
 ## Migration from Old API
 

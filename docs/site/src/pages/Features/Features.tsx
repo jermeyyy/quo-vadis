@@ -96,24 +96,25 @@ sealed class FeatureDestination : Destination {
 // Navigate with destination instance
 navigator.navigate(FeatureDestination.Details("123", ViewMode.EDIT))`
 
-const backStackCode = `// Access current stack
-val backStack = navigator.backStack.value
+const stackManagementCode = `// Access current NavNode tree state
+val navState = navigator.state.value
 
-// Pop multiple destinations
-navigator.popBackStack(count = 3)
+// Pop from active stack
+navigator.navigateBack()
 
-// Clear to specific destination
-navigator.navigateAndClearTo(
-    destination = HomeDestination,
-    clearRoute = "onboarding",
-    inclusive = true
-)
+// Clear to specific destination using TreeMutator
+val newState = TreeMutator.clearAndPush(navState, HomeDestination)
+navigator.updateState(newState)
 
-// Replace current destination
+// Navigate and replace current screen
 navigator.navigateAndReplace(NewDestination)
 
 // Clear everything and start fresh
-navigator.navigateAndClearAll(StartDestination)`
+navigator.navigateAndClearAll(StartDestination)
+
+// Switch active tab (for TabNode)
+val tabState = TreeMutator.switchActiveTab(navState, newIndex = 1)
+navigator.updateState(tabState)`
 
 const deepLinkCode = `val graph = navigationGraph("main") {
     // Simple path
@@ -137,11 +138,10 @@ const deepLinkCode = `val graph = navigationGraph("main") {
     }
 }`
 
-const predictiveBackCode = `GraphNavHost(
-    graph = mainGraph,
+const predictiveBackCode = `NavigationHost(
     navigator = navigator,
-    enablePredictiveBack = true,
-    predictiveBackAnimationType = PredictiveBackAnimationType.Material3
+    screenRegistry = MainScreenRegistry,
+    predictiveBackMode = PredictiveBackMode.FULL_CASCADE
 )`
 
 const sharedElementCode = `// Define shared element configuration
@@ -190,7 +190,7 @@ fun \`navigates to details when item clicked\`() {
 }
 
 @Test
-fun \`clears backstack on logout\`() {
+fun \`clears navigation stack on logout\`() {
     // Arrange
     val navigator = FakeNavigator()
     val viewModel = SettingsViewModel(navigator)
@@ -199,7 +199,7 @@ fun \`clears backstack on logout\`() {
     viewModel.onLogout()
     
     // Assert
-    assertTrue(navigator.backStackCleared)
+    assertTrue(navigator.stackCleared)
     assertEquals(LoginDestination, navigator.lastDestination)
 }`
 
@@ -224,12 +224,19 @@ val mainGraph = navigationGraph("main") {
     navigator.navigate(ProfileFeature.entryPoint)
 }`
 
-const koinCode = `val graph = navigationGraph("app") {
-    destination(HomeDestination) { _, navigator ->
-        val viewModel: HomeViewModel = koinInject()
-        HomeScreen(viewModel, navigator)
-    }
-}`
+const koinCode = `// Define content with DI
+@Content(HomeDestination::class)
+@Composable
+fun HomeContent(navigator: Navigator) {
+    val viewModel: HomeViewModel = koinInject()
+    HomeScreen(viewModel, navigator)
+}
+
+// Use NavigationHost with generated registry
+NavigationHost(
+    navigator = navigator,
+    screenRegistry = AppScreenRegistry
+)`
 
 const customInjectionCode = `// Create custom destination factory
 interface DestinationFactory {
@@ -393,21 +400,22 @@ export default function Features() {
       </section>
 
       <section>
-        <h2 id="backstack">BackStack Management</h2>
+        <h2 id="backstack">Stack Management (NavNode Tree)</h2>
         <p>
-          Direct access to the navigation back stack provides unprecedented control over 
-          navigation state. Manipulate the stack programmatically for complex navigation flows.
+          Quo Vadis uses an immutable NavNode tree to represent navigation state. 
+          All state mutations are performed through TreeMutator operations, providing 
+          predictable and testable navigation behavior.
         </p>
 
         <h3>Operations</h3>
-        <CodeBlock code={backStackCode} language="kotlin" />
+        <CodeBlock code={stackManagementCode} language="kotlin" />
 
         <h3>Use Cases</h3>
         <ul>
-          <li>Multi-step wizards with complex navigation</li>
-          <li>Authentication flows that clear login screens</li>
-          <li>Tab-based navigation with independent stacks</li>
-          <li>Undo/redo functionality</li>
+          <li>Multi-step wizards with immutable state transformations</li>
+          <li>Authentication flows that clear navigation stacks</li>
+          <li>Tab-based navigation with independent TabNode children</li>
+          <li>State restoration via NavNode serialization</li>
         </ul>
       </section>
 
@@ -434,7 +442,8 @@ export default function Features() {
         <h2 id="predictive-back">Predictive Back Navigation</h2>
         <p>
           Modern, gesture-driven back navigation with smooth animations. Users can preview 
-          the previous screen before committing to navigation.
+          the previous screen before committing to navigation. Built into NavigationHost 
+          via the <code>predictiveBackMode</code> parameter.
         </p>
 
         <h3>Supported Platforms</h3>
@@ -450,6 +459,7 @@ export default function Features() {
           <li>Cross-fade between screens</li>
           <li>Scale and position transitions</li>
           <li>Cancelable gestures</li>
+          <li>Cascade pop support for TabNode structures</li>
         </ul>
 
         <CodeBlock code={predictiveBackCode} language="kotlin" />

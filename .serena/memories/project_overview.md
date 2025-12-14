@@ -59,13 +59,13 @@ NavPlayground/
 │       ├── commonMain/kotlin/com/jermey/quo/vadis/core/navigation/
 │       │   ├── core/        # Core navigation components
 │       │   │   ├── Destination.kt
-│       │   │   ├── BackStack.kt
+│       │   │   ├── NavNode.kt
 │       │   │   ├── Navigator.kt
 │       │   │   ├── NavigationGraph.kt
 │       │   │   └── NavigationTransition.kt
 │       │   ├── compose/     # Compose integration
 │       │   │   ├── NavHost.kt
-│       │   │   ├── GraphNavHost.kt
+│       │   │   ├── QuoVadisHost.kt
 │       │   │   ├── PredictiveBackNavigation.kt
 │       │   │   ├── SharedElementScope.kt         # ✨ NEW
 │       │   │   └── SharedElementModifiers.kt     # ✨ NEW

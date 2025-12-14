@@ -52,12 +52,11 @@ fun DetailsContent(data: DetailData, navigator: Navigator) {
 
 const step3Code = `@Composable
 fun App() {
-    val navigator = rememberNavigator()
-    val graph = remember { buildAppDestinationGraph() }
+    val navigator = rememberNavigator(startDestination = AppDestination.Home)
     
-    GraphNavHost(
-        graph = graph,
+    NavigationHost(
         navigator = navigator,
+        screenRegistry = AppDestinationScreenRegistry,
         defaultTransition = NavigationTransitions.SlideHorizontal
     )
 }`
@@ -186,7 +185,7 @@ export default function Home() {
 
           <div className={styles.featureCard}>
             <h4>Tabbed Navigation</h4>
-            <p>Generate complex tab layouts with independent backstacks using simple <code>@TabGraph</code> annotations.</p>
+            <p>Generate complex tab layouts with independent stacks via TabNode using simple <code>@TabGraph</code> annotations.</p>
           </div>
 
           <div className={styles.featureCard}>
@@ -249,7 +248,7 @@ export default function Home() {
             <p>Use the generated graph builder in your app:</p>
             <CodeBlock code={step3Code} language="kotlin" title="App.kt" />
             <div className={styles.stepNote}>
-              <strong>Success!</strong> You now have fully functional, type-safe navigation!
+              <strong>NavigationHost:</strong> Uses the generated ScreenRegistry for hierarchical NavNode tree rendering!
             </div>
           </div>
         </div>

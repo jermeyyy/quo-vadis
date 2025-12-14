@@ -1,6 +1,5 @@
 package com.jermey.quo.vadis.flowmvi.utils
 
-import com.jermey.quo.vadis.core.navigation.core.BackStack
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.flowmvi.core.NavigationState
 import kotlin.time.Clock
@@ -19,39 +18,6 @@ private fun getCurrentTimestamp(): Long = Clock.System.now().toEpochMilliseconds
  * Provides extension functions and helpers for working with NavigationState,
  * including validation, transformation, and history tracking.
  */
-
-/**
- * Converts a BackStack to a NavigationState.
- * 
- * @param backStack The Quo Vadis back stack
- * @return NavigationState representation
- */
-/**
- * Convert BackStack to NavigationState.
- */
-fun BackStack.toNavigationState(): NavigationState {
-    val currentDest = current.value?.destination
-    val stackSize = stack.value.size
-    val canNavigateBack = canGoBack.value
-    
-    return object : NavigationState {
-        override val currentDestination: Destination? = currentDest
-        override val backStackSize: Int = stackSize
-        override val canGoBack: Boolean = canNavigateBack
-        
-        override fun equals(other: Any?): Boolean = other is NavigationState && 
-            currentDestination == other.currentDestination &&
-            backStackSize == other.backStackSize &&
-            canGoBack == other.canGoBack
-            
-        override fun hashCode(): Int {
-            var result = currentDestination?.hashCode() ?: 0
-            result = 31 * result + backStackSize
-            result = 31 * result + canGoBack.hashCode()
-            return result
-        }
-    }
-}
 
 /**
  * Validates if a navigation state is consistent.

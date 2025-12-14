@@ -42,8 +42,6 @@ import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.StateDrivenDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.BackStack
-import com.jermey.quo.vadis.core.navigation.core.MutableBackStack
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
@@ -67,7 +65,7 @@ fun StateDrivenDemoScreen(
     modifier: Modifier = Modifier
 ) {
     val backStack = remember {
-        MutableBackStack().apply {
+        DemoBackStack().apply {
             push(StateDrivenDestination.Home)
         }
     }
@@ -99,7 +97,7 @@ private val WIDE_LAYOUT_BREAKPOINT = 600.dp
 
 @Composable
 private fun StateDrivenDemoContent(
-    backStack: BackStack,
+    backStack: DemoBackStack,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -181,10 +179,10 @@ private fun StateDrivenDemoContent(
 
 @Composable
 private fun ContentHost(
-    backStack: BackStack,
+    backStack: DemoBackStack,
     modifier: Modifier = Modifier
 ) {
-    val currentEntry = backStack.entries.lastOrNull()
+    val currentEntry = backStack.current
 
     Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)) {
         AnimatedContent(
@@ -215,11 +213,14 @@ private fun ContentHost(
 
 @Composable
 private fun StateInfoBar(
-    backStack: BackStack,
+    backStack: DemoBackStack,
     modifier: Modifier = Modifier
 ) {
-    val canGoBack by backStack.canGoBack.collectAsState()
-    val current by backStack.current.collectAsState()
+    // Re-read the state to trigger recomposition when backstack changes
+    @Suppress("UNUSED_VARIABLE")
+    val stateValue = backStack.state.collectAsState()
+    val canGoBack = backStack.canNavigateBack
+    val current = backStack.current
 
     Card(
         modifier = modifier.padding(8.dp),
@@ -250,8 +251,8 @@ private fun StateInfoBar(
 
             StateInfoItem(
                 label = "Current",
-                value = current?.destination?.let {
-                    StateDrivenDestination.getDisplayName(it as StateDrivenDestination)
+                value = (current?.destination as? StateDrivenDestination)?.let {
+                    StateDrivenDestination.getDisplayName(it)
                 } ?: "None"
             )
         }

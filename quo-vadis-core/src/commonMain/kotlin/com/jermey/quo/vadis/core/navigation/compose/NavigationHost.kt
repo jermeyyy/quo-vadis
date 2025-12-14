@@ -39,8 +39,6 @@ import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
-import com.jermey.quo.vadis.core.navigation.core.TransitionState
-import com.jermey.quo.vadis.core.navigation.core.TransitionStateManager
 import com.jermey.quo.vadis.core.navigation.compose.gesture.calculateCascadeBackState
 import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
@@ -206,11 +204,6 @@ public fun NavigationHost(
     // Back animation controller for predictive back animations
     val backAnimationController = rememberBackAnimationController()
 
-    // Transition state manager for coordinating predictive back
-    val transitionManager = remember(navigator) {
-        TransitionStateManager(navState)
-    }
-
     // Check if we can navigate back using tab-aware logic
     val canGoBack by remember(navState) {
         derivedStateOf { TreeMutator.canHandleBackNavigation(navState) }
@@ -275,7 +268,7 @@ public fun NavigationHost(
         currentScreenInfo = currentScreenInfo,
         previousScreenInfo = previousScreenInfo,
         onBackProgress = { event ->
-            // On first progress event, start the proposed transition
+            // On first progress event, start the animation
             if (!backAnimationController.isAnimating) {
                 // Compute speculative pop result at gesture start using tab-aware logic
                 val backResult = TreeMutator.popWithTabBehavior(navState)
@@ -286,15 +279,7 @@ public fun NavigationHost(
                     // Calculate cascade state for proper animation targeting
                     val cascadeState = calculateCascadeBackState(navState)
 
-                    // Reset transition manager to idle if in animating state
-                    // This handles case where user starts new gesture during exit animation
-                    val currentState = transitionManager.currentState
-                    if (currentState is TransitionState.Animating) {
-                        transitionManager.forceIdle(navState)
-                    }
-
-                    // Start proposed transition BEFORE animation
-                    transitionManager.startProposed(popResult)
+                    // Start animation
                     backAnimationController.startAnimation(event)
 
                     // CRITICAL: Update predictiveBackController so AnimatedNavContent
@@ -307,8 +292,6 @@ public fun NavigationHost(
                 // Update predictiveBackController progress for visual animation
                 predictiveBackController.updateGestureProgress(event.progress)
             }
-            // Update transition manager progress for renderers
-            transitionManager.updateProgress(event.progress)
         },
         onBackCancelled = {
             // Cancel animation and reset state
@@ -317,11 +300,6 @@ public fun NavigationHost(
 
             // Reset predictiveBackController so AnimatedNavContent switches back
             predictiveBackController.cancelGesture()
-
-            // Only cancel if we actually started a proposed transition
-            if (transitionManager.currentState is TransitionState.Proposed) {
-                transitionManager.cancelProposed()
-            }
         },
         onBackCompleted = {
             // Complete animation and perform navigation
@@ -332,8 +310,7 @@ public fun NavigationHost(
 
             // Use the speculative state computed at gesture start
             val targetState = speculativePopState
-            if (targetState != null && transitionManager.currentState is TransitionState.Proposed) {
-                transitionManager.commitProposed()
+            if (targetState != null) {
                 navigator.updateState(targetState)
             }
             speculativePopState = null

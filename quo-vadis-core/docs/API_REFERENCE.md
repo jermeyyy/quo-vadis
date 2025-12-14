@@ -79,42 +79,182 @@ fun navigateAndReplace(destination: Destination, transition: NavigationTransitio
 fun navigateAndClearAll(destination: Destination)
 fun navigateAndClearTo(destination: Destination, clearRoute: String?, inclusive: Boolean)
 
-// Setup
-fun registerGraph(graph: NavigationGraph)
-fun setStartDestination(destination: Destination)
-fun handleDeepLink(deepLink: DeepLink)
+// Tab navigation
+fun switchTab(index: Int)
+
+// Pane navigation (adaptive layouts)
+fun navigateToPane(role: PaneRole, destination: Destination)
+fun switchActivePane(role: PaneRole)
+fun paneContent(role: PaneRole): NavNode?
+
+// State management
+fun updateState(newState: NavNode, transition: NavigationTransition? = null)
 ```
 
 #### Properties
 ```kotlin
-val backStack: BackStack
-val currentDestination: StateFlow<Destination?>
+val state: StateFlow<NavNode>                    // Complete navigation tree
+val currentDestination: StateFlow<Destination?>  // Active destination
+val canNavigateBack: StateFlow<Boolean>          // Back navigation availability
 ```
 
 ---
 
-### BackStack
+### NavNode
 
-#### Methods
+Immutable tree structure representing navigation state.
+
+#### Node Types
 ```kotlin
-// Stack operations
-fun push(destination: Destination)
-fun pop(): Boolean
-fun replace(destination: Destination)
-fun replaceAll(destinations: List<Destination>)
-fun clear()
+sealed interface NavNode {
+    val key: String
+    val parentKey: String?
+}
 
-// Advanced operations
-fun popUntil(predicate: (Destination) -> Boolean): Boolean
-fun popTo(route: String): Boolean
-fun popToRoot(): Boolean
+// Leaf node for a single destination
+data class ScreenNode(
+    override val key: String,
+    override val parentKey: String? = null,
+    val destination: Destination
+) : NavNode
+
+// Stack container (back-stack)
+data class StackNode(
+    override val key: String,
+    override val parentKey: String? = null,
+    val children: List<NavNode> = emptyList(),
+    val scopeKey: String? = null
+) : NavNode {
+    val activeChild: NavNode?
+}
+
+// Tab container
+data class TabNode(
+    override val key: String,
+    override val parentKey: String? = null,
+    val children: List<StackNode> = emptyList(),
+    val activeIndex: Int = 0,
+    val scopeKey: String? = null
+) : NavNode {
+    val activeStack: StackNode?
+}
+
+// Pane container (adaptive layouts)
+data class PaneNode(
+    override val key: String,
+    override val parentKey: String? = null,
+    val paneConfigurations: Map<PaneRole, PaneContent> = emptyMap(),
+    val activePaneRole: PaneRole? = null,
+    val scopeKey: String? = null
+) : NavNode {
+    fun paneContent(role: PaneRole): NavNode?
+}
 ```
 
-#### Properties
+#### Extension Functions
 ```kotlin
-val stack: StateFlow<List<BackStackEntry>>
-val current: StateFlow<BackStackEntry?>
-val canGoBack: StateFlow<Boolean>
+fun NavNode.findByKey(key: String): NavNode?
+fun NavNode.activePathToLeaf(): List<NavNode>
+fun NavNode.activeLeaf(): ScreenNode?
+fun NavNode.activeStack(): StackNode?
+fun NavNode.allScreens(): List<ScreenNode>
+fun NavNode.depth(): Int
+fun NavNode.nodeCount(): Int
+fun NavNode.canHandleBackInternally(): Boolean
+```
+
+---
+
+### TreeMutator
+
+Pure functional operations for manipulating the NavNode tree.
+
+#### Stack Operations
+```kotlin
+object TreeMutator {
+    // Push destination to active stack
+    fun push(
+        root: NavNode,
+        destination: Destination,
+        scopeRegistry: ScopeRegistry? = null,
+        keyGenerator: () -> String = { UUID.randomUUID().toString() }
+    ): NavNode
+    
+    // Pop from active stack
+    fun pop(root: NavNode, behavior: PopBehavior = PopBehavior.STANDARD): NavNode?
+    
+    // Replace current destination
+    fun replaceCurrent(
+        root: NavNode,
+        destination: Destination,
+        keyGenerator: () -> String = { UUID.randomUUID().toString() }
+    ): NavNode
+    
+    // Clear stack and push
+    fun clearAndPush(
+        root: NavNode,
+        destination: Destination,
+        keyGenerator: () -> String = { UUID.randomUUID().toString() }
+    ): NavNode
+    
+    // Pop until predicate matches
+    fun popUntil(
+        root: NavNode,
+        inclusive: Boolean = false,
+        predicate: (NavNode) -> Boolean
+    ): NavNode
+    
+    // Pop to specific route
+    fun popToRoute(
+        root: NavNode,
+        route: String,
+        inclusive: Boolean = false
+    ): NavNode
+}
+```
+
+#### Tab Operations
+```kotlin
+object TreeMutator {
+    fun switchActiveTab(root: NavNode, newIndex: Int): NavNode
+}
+```
+
+#### Pane Operations
+```kotlin
+object TreeMutator {
+    fun navigateToPane(
+        root: NavNode,
+        role: PaneRole,
+        destination: Destination,
+        keyGenerator: () -> String = { UUID.randomUUID().toString() }
+    ): NavNode
+    
+    fun switchActivePane(root: NavNode, paneKey: String, role: PaneRole): NavNode
+    fun popPane(root: NavNode, paneKey: String, role: PaneRole): NavNode?
+}
+```
+
+#### Back Navigation
+```kotlin
+object TreeMutator {
+    sealed interface PopResult {
+        data object Empty : PopResult()
+        data class Popped(val newState: NavNode) : PopResult()
+    }
+    
+    sealed interface BackResult {
+        data class Handled(val newState: NavNode) : BackResult()
+        data object DelegateToSystem : BackResult()
+        data object CannotHandle : BackResult()
+    }
+    
+    fun popWithTabBehavior(root: NavNode): BackResult
+    fun canGoBack(root: NavNode): Boolean
+    fun currentDestination(root: NavNode): Destination?
+    fun canHandleBackNavigation(root: NavNode): Boolean
+    fun wouldCascade(root: NavNode): Boolean
+}
 ```
 
 ---
@@ -542,54 +682,60 @@ Called automatically by generated graph builder.
 
 ## Compose Package (`navigation.compose`)
 
-### NavHost
+### NavigationHost
+
+**Unified navigation host that renders NavNode trees using hierarchical rendering.**
 
 ```kotlin
 @Composable
-fun NavHost(
+fun NavigationHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
-    defaultTransition: NavigationTransition = NavigationTransitions.Fade
+    screenRegistry: ScreenRegistry = EmptyScreenRegistry,
+    wrapperRegistry: WrapperRegistry = EmptyWrapperRegistry,
+    predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY,
+    maxCacheSize: Int = 10
 )
 ```
 
-### GraphNavHost
+#### Parameters
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `navigator` | `Navigator` | The navigator instance providing NavNode state |
+| `modifier` | `Modifier` | Modifier for the root container |
+| `screenRegistry` | `ScreenRegistry` | Registry mapping destinations to composables |
+| `wrapperRegistry` | `WrapperRegistry` | Registry for tab/pane wrapper composables |
+| `predictiveBackMode` | `PredictiveBackMode` | How predictive back gestures are handled |
+| `maxCacheSize` | `Int` | Maximum cached composables |
+
+#### Features
+- ✅ **Hierarchical rendering** of NavNode trees
+- ✅ **Animated forward navigation** with enter transitions
+- ✅ **Animated back navigation** with popEnter/popExit (direction-aware)
+- ✅ **Predictive back gestures** with progressive animations
+- ✅ **Composable caching** for smooth transitions
+- ✅ **Entry locking** prevents cache eviction during animations
+- ✅ **Shared element transitions** support
+
+### PredictiveBackMode
 
 ```kotlin
-@Composable
-fun GraphNavHost(
-    graph: NavigationGraph,
-    navigator: Navigator,
-    modifier: Modifier = Modifier,
-    defaultTransition: NavigationTransition = NavigationTransitions.Fade
-)
-```
-
-### PredictiveBackNavigation
-
-**Multiplatform predictive back gesture handler with automatic screen caching.**
-
-```kotlin
-@Composable
-fun PredictiveBackNavigation(
-    navigator: Navigator,
-    graph: NavigationGraph,
-    enabled: Boolean = true,
-    modifier: Modifier = Modifier,
-    animationType: PredictiveBackAnimationType = PredictiveBackAnimationType.Material3,
-    sensitivity: Float = 1f,
-    maxCacheSize: Int = 3
-)
-```
-
-#### PredictiveBackAnimationType
-
-```kotlin
-enum class PredictiveBackAnimationType {
-    Material3,  // Scale + translate + rounded corners + shadow
-    Scale,      // Simple scale down with fade
-    Slide       // Slide right with fade
+enum class PredictiveBackMode {
+    ROOT_ONLY,     // Only root stack handles predictive back
+    FULL_CASCADE   // All stacks handle predictive back with cascade
 }
+```
+
+### Predictive Back in NavigationHost
+
+Predictive back is built into `NavigationHost` via the `predictiveBackMode` parameter:
+
+```kotlin
+NavigationHost(
+    navigator = navigator,
+    predictiveBackMode = PredictiveBackMode.FULL_CASCADE,
+    // ... other parameters
+)
 ```
 
 #### Features
@@ -597,62 +743,45 @@ enum class PredictiveBackAnimationType {
 - **Separate Animations**: Different animations for gesture phase vs exit phase
 - **Cache Locking**: Prevents premature screen destruction during animations
 - **Platform Support**: Works on both Android 13+ and iOS
-- **Configurable**: Adjust animation type, sensitivity, and cache size
 
 #### Animation Phases
 
 **Gesture Phase** (user dragging):
-- Applies selected animation type (Material3/Scale/Slide)
-- Shows screen transforming as user drags
+- Screen scales and translates as user drags
 - Previous screen visible underneath
-- Scrim layer between screens
 
 **Exit Phase** (after gesture completes):
-- Continues with same animation type for consistency
-- Smoothly completes the animation (scale down + fade out)
-- Defers navigation until animation completes
-- Prevents premature screen destruction
-
-#### Example
-
-```kotlin
-PredictiveBackNavigation(
-    navigator = navigator,
-    graph = appGraph,
-    enabled = true,
-    animationType = PredictiveBackAnimationType.Material3,
-    sensitivity = 1f
-)
-```
+- Smoothly completes the animation
+- Navigation deferred until animation completes
 
 ---
 
-## Unified GraphNavHost - Complete Animation Support
+## NavigationHost - Complete Animation Support
 
-### GraphNavHost
+### NavigationHost
 
 **PRIMARY navigation host with unified support for all animation scenarios.**
 
 ```kotlin
 @Composable
-fun GraphNavHost(
-    graph: NavigationGraph,
+fun NavigationHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
-    defaultTransition: NavigationTransition = NavigationTransitions.Fade,
-    enableComposableCache: Boolean = true,
-    enablePredictiveBack: Boolean = true,
-    maxCacheSize: Int = 3
+    screenRegistry: ScreenRegistry = EmptyScreenRegistry,
+    wrapperRegistry: WrapperRegistry = EmptyWrapperRegistry,
+    predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY,
+    maxCacheSize: Int = 10
 )
 ```
 
 #### Features
+- ✅ **Hierarchical NavNode rendering** with proper parent-child relationships
 - ✅ **Animated forward navigation** with enter transitions
 - ✅ **Animated back navigation** with popEnter/popExit (direction-aware)
 - ✅ **Predictive back gestures** with progressive animations
 - ✅ **Composable caching** for smooth transitions
 - ✅ **Entry locking** prevents cache eviction during animations
-- ✅ **Multiplatform logging** for debugging (NAV_DEBUG tag)
+- ✅ **Multiplatform support** (Android, iOS, Desktop, Web)
 
 #### Animation Behavior
 
@@ -662,43 +791,32 @@ navigator.navigate(DetailScreen, NavigationTransitions.SlideHorizontal)
 ```
 - New screen slides in from RIGHT using `enter` transition
 - Old screen fades out using `exit` transition
-- 300ms duration (NavigationTransitions.ANIMATION_DURATION)
 
 **Back Navigation (Programmatic):**
 ```kotlin
 navigator.navigateBack()
 ```
 - Current screen slides out to RIGHT using `popExit` transition
-- Previous screen fades in using `popEnter` transition  
-- Uses `animateFloatAsState` for frame-by-frame recomposition
-- Proper animation completes over full 300ms
+- Previous screen fades in using `popEnter` transition
 
 **Predictive Back Gesture:**
 - User swipe from edge starts gesture
-- Current screen translates RIGHT + scales down (90%)
-- Maximum drag limited to 25% of screen width (MAX_GESTURE_PROGRESS)
-- Previous screen static behind (no parallax effects)
+- Current screen translates RIGHT + scales down
+- Previous screen static behind
 - Complete gesture → navigation commits with exit animation
 - Cancel gesture → animates back to original position
-
-#### Transition Priority Chain
-1. **Explicit transition** - Passed to `navigate(destination, transition)`
-2. **Destination default** - From `TransitionDestination.defaultTransition`
-3. **Graph default** - From `destination(dest, transition) { ... }`
-4. **NavHost default** - From `GraphNavHost(defaultTransition = ...)`
 
 #### Example Usage
 
 ```kotlin
-// Basic usage with default transition
-GraphNavHost(
-    graph = appGraph,
+// Basic usage with NavigationHost
+NavigationHost(
     navigator = navigator,
-    defaultTransition = NavigationTransitions.SlideHorizontal,
-    enablePredictiveBack = true
+    screenRegistry = myScreenRegistry,
+    predictiveBackMode = PredictiveBackMode.FULL_CASCADE
 )
 
-// Navigate with explicit transition
+// Navigate with transition
 navigator.navigate(
     destination = DetailScreen("item-123"),
     transition = NavigationTransitions.SlideHorizontal
@@ -776,20 +894,11 @@ val customTransition = customTransition {
 
 ## Shared Element Transitions (Foundation)
 
-### SharedElementNavHost
+### Shared Elements in NavigationHost
 
-**Wrapper for shared element support (future):**
-```kotlin
-@OptIn(ExperimentalSharedTransitionApi::class)
-@Composable
-fun SharedElementNavHost(
-    graph: NavigationGraph,
-    navigator: Navigator,
-    modifier: Modifier = Modifier,
-    defaultTransition: NavigationTransition,
-    enablePredictiveBack: Boolean = true
-)
-```
+Shared element transitions are fully supported in `NavigationHost`. The hierarchical rendering system provides `SharedTransitionScope` and `AnimatedVisibilityScope` to destinations that opt-in via `destinationWithScopes()`.
+
+**See [SHARED_ELEMENT_TRANSITIONS.md](SHARED_ELEMENT_TRANSITIONS.md) for complete documentation.**
 
 ### SharedElementTransition API
 
@@ -811,8 +920,6 @@ navigator.navigate(DetailScreen, transition)
 SharedElementTransitions.slideWithHero(heroKey: String)
 SharedElementTransitions.fadeWithSharedBounds(vararg keys: String)
 ```
-
-**Status:** API foundation complete, implementation requires `SharedTransitionLayout` integration.
 
 ---
 
@@ -856,7 +963,7 @@ fun rememberNavigator(
 
 ### Overview
 
-Quo Vadis provides first-class support for shared element transitions that work in **both forward and backward** navigation, including predictive back gestures. SharedTransitionLayout is always enabled in GraphNavHost, and destinations opt-in via `destinationWithScopes()`.
+Quo Vadis provides first-class support for shared element transitions that work in **both forward and backward** navigation, including predictive back gestures. SharedTransitionLayout is always enabled in NavigationHost, and destinations opt-in via `destinationWithScopes()`.
 
 ### destinationWithScopes()
 
@@ -1061,20 +1168,21 @@ fun Navigator.navigateTo(transition, builder: () -> Destination)
 fun Navigator.navigateIfNotCurrent(destination, transition)
 fun Navigator.navigateSingleTop(destination, transition)
 fun Navigator.navigateSafely(destination, transition, onError)
-
-// Scope
-fun Navigator.inScope(block: NavigationScope.() -> Unit)
 ```
 
-### BackStack Extensions
+### NavNode Extensions
 
 ```kotlin
-fun BackStack.contains(route: String): Boolean
-fun BackStack.findByRoute(route: String): BackStackEntry?
-val BackStack.size: Int
-val BackStack.isEmpty: Boolean
-val BackStack.routes: List<String>
-fun BackStack.popCount(count: Int): Boolean
+fun NavNode.containsRoute(route: String): Boolean
+fun NavNode.findByRoute(route: String): ScreenNode?
+val NavNode.routes: List<String>
+fun NavNode.findByKey(key: String): NavNode?
+fun NavNode.activePathToLeaf(): List<NavNode>
+fun NavNode.activeLeaf(): ScreenNode?
+fun NavNode.activeStack(): StackNode?
+fun NavNode.allScreens(): List<ScreenNode>
+fun NavNode.depth(): Int
+fun NavNode.nodeCount(): Int
 ```
 
 ---
@@ -1599,11 +1707,9 @@ data class DetailScreen(val itemId: String) : Destination {
     override val arguments = mapOf("itemId" to itemId)
 }
 
-// 2. Create graph
-val appGraph = navigationGraph("app") {
-    startDestination(HomeScreen)
-    
-    destination(HomeScreen) { _, navigator ->
+// 2. Create screen registry
+val appScreenRegistry = ScreenRegistry {
+    screen(HomeScreen) { navigator ->
         HomeUI(onItemClick = { id ->
             navigator.navigate(
                 DetailScreen(id),
@@ -1612,9 +1718,9 @@ val appGraph = navigationGraph("app") {
         })
     }
     
-    destination(SimpleDestination("detail")) { dest, navigator ->
+    screen<DetailScreen> { destination, navigator ->
         DetailUI(
-            itemId = dest.arguments["itemId"] as String,
+            itemId = destination.itemId,
             onBack = { navigator.navigateBack() }
         )
     }
@@ -1623,16 +1729,12 @@ val appGraph = navigationGraph("app") {
 // 3. Setup navigation
 @Composable
 fun App() {
-    val navigator = rememberNavigator()
+    val navigator = rememberNavigator(startDestination = HomeScreen)
     
-    LaunchedEffect(Unit) {
-        navigator.registerGraph(appGraph)
-        navigator.setStartDestination(HomeScreen)
-    }
-    
-    GraphNavHost(
-        graph = appGraph,
-        navigator = navigator
+    NavigationHost(
+        navigator = navigator,
+        screenRegistry = appScreenRegistry,
+        predictiveBackMode = PredictiveBackMode.FULL_CASCADE
     )
 }
 ```

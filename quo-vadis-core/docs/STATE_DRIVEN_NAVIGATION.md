@@ -1,282 +1,269 @@
 # State-Driven Navigation Guide
 
-> **⚠️ DEPRECATION NOTICE:** The standalone `StateBackStack`, `StateNavigator`, and `StateNavHost` 
-> classes are deprecated. The unified `BackStack` interface now provides the same functionality.
-> Use `Navigator.backStack.entries` for Nav3-style state-driven navigation with full animation
-> and predictive back support.
-
 ## Overview
 
-State-driven navigation is an alternative navigation paradigm where **the UI is directly driven by observable backstack state**. Instead of calling imperative navigation methods, you manipulate a state-backed list and the UI automatically reflects the changes.
+State-driven navigation is the core paradigm of Quo Vadis where **the UI is directly driven by observable NavNode tree state**. The navigation state is represented as an immutable `NavNode` tree, and all mutations are performed through `TreeMutator` operations.
 
-This approach, inspired by Navigation 3 patterns, provides:
+This approach provides:
 
-- **Direct State Access**: The backstack's `entries` property is a `SnapshotStateList` that you can observe and manipulate directly
-- **Compose-Native Integration**: No flow collection needed - state changes trigger recomposition automatically
-- **Flexible Operations**: Insert, remove, swap, and reorder entries anywhere in the stack
-- **Predictable Behavior**: The UI always reflects the current state of the backstack
+- **Immutable State**: The NavNode tree is immutable - all changes create new trees
+- **Observable via StateFlow**: `Navigator.state: StateFlow<NavNode>` for reactive updates
+- **Pure Functional Mutations**: `TreeMutator` operations are pure functions
+- **Hierarchical Structure**: StackNode, TabNode, PaneNode for complex navigation patterns
+- **Predictable Behavior**: The UI always reflects the current state of the NavNode tree
 
-## Unified API (Recommended)
+## NavNode Tree Architecture
 
-The **unified API** is now the recommended approach. It provides all the state-driven capabilities
-while also supporting predictive back gestures, shared element transitions, and full animation support.
+The navigation state is represented as a tree of `NavNode` objects:
 
 ```kotlin
-// Create a navigator with the unified API
+sealed interface NavNode {
+    val key: String
+    val parentKey: String?
+}
+
+// Leaf node for a single destination
+data class ScreenNode(
+    override val key: String,
+    val destination: Destination
+) : NavNode
+
+// Stack container (back-stack)
+data class StackNode(
+    override val key: String,
+    val children: List<NavNode>
+) : NavNode
+
+// Tab container
+data class TabNode(
+    override val key: String,
+    val children: List<StackNode>,
+    val activeIndex: Int
+) : NavNode
+
+// Pane container (adaptive layouts)
+data class PaneNode(
+    override val key: String,
+    val paneConfigurations: Map<PaneRole, PaneContent>
+) : NavNode
+```
+
+## TreeMutator - Pure Functional State Transformations
+
+All navigation state mutations are performed through `TreeMutator`, which provides pure functional operations:
+
+```kotlin
+// Create a navigator
 val navigator = rememberNavigator(startDestination = HomeDestination)
 
-// Access entries directly for state-driven patterns
-navigator.backStack.entries  // SnapshotStateList<BackStackEntry>
-
-// Direct manipulation (Nav3-style)
-navigator.backStack.push(DetailDestination(id = "123"))
-navigator.backStack.insert(0, FilterDestination)
-navigator.backStack.removeAt(1)
-navigator.backStack.swap(0, 1)
-
-// Use with standard NavHost for full feature support
-NavHost(graph = graph, navigator = navigator)
-```
-
-## Migration from Deprecated API
-
-### Before (Deprecated)
-
-```kotlin
-val backStack = rememberStateBackStack(HomeDestination)
-backStack.push(DetailDestination(id = "123"))
-StateNavHost(stateBackStack = backStack) { destination ->
-    when (destination) { ... }
-}
-```
-
-### After (Recommended)
-
-```kotlin
-val navigator = rememberNavigator(startDestination = HomeDestination)
-navigator.backStack.push(DetailDestination(id = "123"))
-
-// For direct entry manipulation:
-navigator.backStack.entries  // SnapshotStateList for observation
-
-// Use with NavHost
-NavHost(graph = graph, navigator = navigator)
-
-// Or with AnimatedContent for simple cases:
-val currentEntry = navigator.backStack.entries.lastOrNull()
-AnimatedContent(targetState = currentEntry) { entry ->
-    when (entry?.destination) { ... }
-}
-```
-
-## Comparison with Traditional API
-
-| Aspect | Traditional API | State-Driven (Unified) |
-|--------|-----------------|------------------------|
-| **State Container** | `StateFlow<List<BackStackEntry>>` | `SnapshotStateList<BackStackEntry>` |
-| **Observation** | Requires `collectAsState()` | Direct property access via `entries` |
-| **Navigation** | Semantic methods (`navigate()`, `navigateBack()`) | Both methods AND direct list manipulation |
-| **Flexibility** | Predefined operations | Full list manipulation (insert, remove, swap, move) |
-| **Animations** | Full support | Full support |
-| **Predictive Back** | Full support | Full support |
-| **Testing** | `FakeNavigator` | `FakeNavigator` |
-
-### Code Comparison
-
-**Traditional API:**
-```kotlin
-val navigator = LocalNavigator.current
-
-// Navigate
+// Navigate using Navigator methods (uses TreeMutator internally)
 navigator.navigate(DetailDestination(id = "123"))
+navigator.navigateBack()
 
-// Observe current destination
-val currentDestination by navigator.currentDestination.collectAsState(null)
+// Or use TreeMutator directly for advanced scenarios
+val currentState = navigator.state.value
+val newState = TreeMutator.push(currentState, DetailDestination(id = "123"))
+navigator.updateState(newState)
 ```
 
-**State-Driven API (Unified):**
-```kotlin
-val navigator = rememberNavigator(startDestination = HomeDestination)
-
-// Navigate (use methods OR direct manipulation)
-navigator.navigate(DetailDestination(id = "123"))
-// OR
-navigator.backStack.push(DetailDestination(id = "123"))
-
-// Observe current entry directly (no collection needed!)
-val currentEntry = navigator.backStack.entries.lastOrNull()
-```
-
-## When to Use State-Driven Navigation
-
-State-driven navigation is ideal for:
-
-### ✅ Complex Navigation Patterns
-- Removing arbitrary entries from the middle of the stack
-- Reordering entries (e.g., bringing a background screen to front)
-- Conditional stack manipulation based on business logic
-
-### ✅ Highly Dynamic UIs
-- When navigation state needs to be visible and reactive
-- UIs that show multiple entries or navigation previews
-- Custom navigation chrome that depends on stack state
-
-### ✅ Testing Requirements
-- When you need to verify exact stack state
-- Testing complex navigation sequences
-- Snapshot testing of navigation state
-
-### ✅ State Management Integration
-- When backstack state is part of a larger state management solution
-- Integration with state machines or redux-like patterns
-
-### ❌ When Traditional Methods are Better
-- Simple linear navigation flows
-- When you don't need direct stack manipulation
-- Standard navigation patterns
-
-## Core Concepts
-
-### BackStack Interface (Unified)
-
-The `BackStack` interface now provides both flow-based and state-driven capabilities:
+### Key TreeMutator Operations
 
 ```kotlin
-@Stable
-interface BackStack {
-    // Direct state access (Nav3-style)
-    val entries: SnapshotStateList<BackStackEntry>
-    val size: Int
-    val isEmpty: Boolean
-    val isNotEmpty: Boolean
+object TreeMutator {
+    // Stack operations
+    fun push(root: NavNode, destination: Destination): NavNode
+    fun pop(root: NavNode): NavNode?
+    fun replaceCurrent(root: NavNode, destination: Destination): NavNode
+    fun clearAndPush(root: NavNode, destination: Destination): NavNode
     
-    // Flow-based observation (for non-Compose consumers)
-    val stack: StateFlow<List<BackStackEntry>>
-    val current: StateFlow<BackStackEntry?>
-    val previous: StateFlow<BackStackEntry?>
-    val canGoBack: StateFlow<Boolean>
+    // Navigation queries
+    fun canGoBack(root: NavNode): Boolean
+    fun currentDestination(root: NavNode): Destination?
     
-    // Standard operations
-    fun push(destination: Destination, transition: NavigationTransition? = null)
-    fun pop(): Boolean
-    fun popUntil(predicate: (Destination) -> Boolean): Boolean
-    fun replace(destination: Destination, transition: NavigationTransition? = null)
-    fun replaceAll(destinations: List<Destination>)
-    fun clear()
-    fun popToRoot(): Boolean
+    // Tab operations
+    fun switchActiveTab(root: NavNode, newIndex: Int): NavNode
     
-    // Advanced operations (Nav3-style)
-    fun insert(index: Int, destination: Destination, transition: NavigationTransition? = null)
-    fun removeAt(index: Int): BackStackEntry
-    fun removeById(id: String): Boolean
-    fun swap(indexA: Int, indexB: Int)
-    fun move(fromIndex: Int, toIndex: Int)
-    fun replaceAllWithEntries(entries: List<BackStackEntry>)
+    // Pane operations
+    fun navigateToPane(root: NavNode, role: PaneRole, destination: Destination): NavNode
+    fun switchActivePane(root: NavNode, paneKey: String, role: PaneRole): NavNode
+    
+    // Back handling
+    fun popWithTabBehavior(root: NavNode): BackResult
+    fun canHandleBackNavigation(root: NavNode): Boolean
 }
 ```
 
----
+## Observing Navigation State
 
-## Deprecated API Reference
-
-> The following classes are deprecated and will be removed in a future version.
-> Use the unified `Navigator`/`BackStack` API instead.
-
-### StateBackStack (Deprecated)
-
-**Key Design Decisions:**
-
-1. **`SnapshotStateList`**: Integrates with Compose's snapshot system for automatic recomposition
-2. **`derivedStateOf`**: Derived properties only trigger recomposition when their values actually change
-3. **`snapshotFlow`**: Bridges to coroutines for non-Compose code (ViewModels, etc.)
-
-### StateNavigator
-
-A higher-level wrapper around `StateBackStack` that provides semantic navigation methods while maintaining full state observability.
-
-```kotlin
-@Stable
-class StateNavigator(
-    private val backStack: StateBackStack = StateBackStack()
-) {
-    // Observable state
-    val entries: SnapshotStateList<BackStackEntry>
-    val currentDestination: Destination?
-    val previousDestination: Destination?
-    val canGoBack: Boolean
-    val currentEntry: BackStackEntry?
-    val stackSize: Int
-    
-    // Navigation methods
-    fun navigate(destination: Destination, transition: NavigationTransition? = null)
-    fun navigateBack(): Boolean
-    fun navigateAndReplace(destination: Destination, transition: NavigationTransition? = null)
-    fun navigateAndClearAll(destination: Destination, transition: NavigationTransition? = null)
-    fun clear()
-    
-    // Access underlying backstack for advanced operations
-    fun getBackStack(): StateBackStack
-}
-```
-
-### StateNavHost
-
-A Compose host that renders destinations based on the current `StateBackStack` state.
+### In Compose (Direct Observation)
 
 ```kotlin
 @Composable
-fun StateNavHost(
-    stateBackStack: StateBackStack,
-    modifier: Modifier = Modifier,
-    transitionSpec: AnimatedContentTransitionScope<BackStackEntry>.() -> ContentTransform,
-    entryProvider: @Composable AnimatedContentScope.(Destination) -> Unit
-)
-```
-
-**Features:**
-- Uses `AnimatedContent` for smooth transitions
-- `SaveableStateHolder` preserves screen state across configuration changes
-- Entry ID used as content key for correct animation targeting
-
-## Basic Usage
-
-### Setting Up with StateBackStack
-
-```kotlin
-@Composable
-fun App() {
-    // Create a remembered backstack with initial destination
-    val backStack = rememberStateBackStack(HomeDestination)
+fun NavigationInfo(navigator: Navigator) {
+    val navState by navigator.state.collectAsState()
+    val currentDest by navigator.currentDestination.collectAsState()
+    val canGoBack by navigator.canNavigateBack.collectAsState()
     
-    StateNavHost(
-        stateBackStack = backStack,
-        modifier = Modifier.fillMaxSize()
-    ) { destination ->
-        when (destination) {
-            is HomeDestination -> HomeScreen(
-                onNavigateToDetail = { id -> 
-                    backStack.push(DetailDestination(id)) 
-                }
-            )
-            is DetailDestination -> DetailScreen(
-                id = destination.id,
-                onBack = { backStack.pop() }
-            )
-            is SettingsDestination -> SettingsScreen(
-                onBack = { backStack.pop() }
-            )
+    Column {
+        Text("Current: ${currentDest?.route}")
+        Text("Can go back: $canGoBack")
+        Text("Tree depth: ${navState.depth()}")
+        
+        // List all screens in the tree
+        navState.allScreens().forEach { screen ->
+            Text("- ${screen.destination.route}")
         }
     }
 }
 ```
 
-### Setting Up with StateNavigator
+### In Non-Compose Code (ViewModel)
 
 ```kotlin
-@Composable
-fun App() {
-    // Create a remembered navigator with initial destination
-    val navigator = rememberStateNavigator(HomeDestination)
+class NavigationViewModel(
+    private val navigator: Navigator
+) : ViewModel() {
+    
+    val navigationState = navigator.state
+        .map { navNode ->
+            NavigationUiState(
+                currentRoute = navNode.activeLeaf()?.destination?.route,
+                canGoBack = TreeMutator.canGoBack(navNode),
+                stackDepth = navNode.depth()
+            )
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = NavigationUiState()
+        )
+}
+```
+
+## NavNode State Benefits
+
+| Aspect | Description |
+|--------|-------------|
+| **State Container** | `StateFlow<NavNode>` - immutable tree |
+| **Observation** | `collectAsState()` or `collect()` |
+| **Mutations** | Pure functions via `TreeMutator` |
+| **Hierarchy** | StackNode, TabNode, PaneNode support |
+| **Animations** | Full support |
+| **Predictive Back** | Full support with cascade |
+| **Serialization** | Full tree serialization via NavNodeSerializer |
+
+### Code Comparison
+
+**NavNode Tree Observation:**
+```kotlin
+val navigator = rememberNavigator(startDestination = HomeDestination)
+
+// Observe NavNode tree state
+val navState by navigator.state.collectAsState()
+val currentDest by navigator.currentDestination.collectAsState()
+
+// Navigate using Navigator methods
+navigator.navigate(DetailDestination(id = "123"))
+navigator.navigateBack()
+
+// Or use TreeMutator for direct state manipulation
+val newState = TreeMutator.push(navState, AnotherDestination)
+navigator.updateState(newState)
+```
+
+## When to Use TreeMutator Directly
+
+TreeMutator operations are useful for:
+
+### ✅ Complex Navigation Patterns
+- Custom navigation flows not covered by Navigator methods
+- Conditional navigation based on tree analysis
+- Advanced state restoration scenarios
+
+### ✅ State Analysis
+- Querying the current navigation tree
+- Finding specific nodes by key or route
+- Calculating navigation depth and paths
+
+### ✅ Testing
+- Unit testing navigation logic without UI
+- Creating specific navigation states for snapshot tests
+- Verifying tree structure after operations
+
+### ❌ When Navigator Methods are Better
+- Simple linear navigation flows
+- Standard push/pop operations
+- When you don't need direct tree manipulation
+
+## NavNode Tree Extensions
+
+Useful extension functions for working with NavNode trees:
+
+```kotlin
+// Find nodes
+fun NavNode.findByKey(key: String): NavNode?
+fun NavNode.findByRoute(route: String): ScreenNode?
+
+// Tree traversal
+fun NavNode.activePathToLeaf(): List<NavNode>
+fun NavNode.activeLeaf(): ScreenNode?
+fun NavNode.activeStack(): StackNode?
+fun NavNode.allScreens(): List<ScreenNode>
+
+// Tree analysis
+fun NavNode.depth(): Int
+fun NavNode.nodeCount(): Int
+fun NavNode.canHandleBackInternally(): Boolean
+fun NavNode.containsRoute(route: String): Boolean
+val NavNode.routes: List<String>
+```
+
+## State Serialization
+
+NavNode trees can be fully serialized for state persistence:
+
+```kotlin
+// Serialize navigation state
+val json = NavNodeSerializer.toJson(navigator.state.value)
+
+// Restore navigation state
+val restoredState = NavNodeSerializer.fromJson(json)
+navigator.updateState(restoredState)
+
+// Safe restoration with fallback
+val state = NavNodeSerializer.fromJsonOrNull(savedJson) 
+    ?: createDefaultState()
+```
+
+---
+
+## Testing with FakeNavigator
+
+`FakeNavigator` provides testing utilities for navigation verification:
+
+```kotlin
+@Test
+fun `navigate to detail screen`() {
+    val navigator = FakeNavigator()
+    
+    // Perform navigation
+    navigator.navigate(HomeDestination)
+    navigator.navigate(DetailDestination(id = "123"))
+    
+    // Verify using assertion helpers
+    assertTrue(navigator.verifyNavigateTo("detail"))
+    assertEquals(2, navigator.state.value.allScreens().size)
+}
+```
+
+---
+
+## See Also
+
+- [Architecture Overview](ARCHITECTURE.md) - Overall library architecture
+- [Navigation Implementation](NAVIGATION_IMPLEMENTATION.md) - Core navigation details
+- [API Reference](API_REFERENCE.md) - Complete API documentation
+- [Tab Navigation](TAB_NAVIGATION.md) - Tab-based navigation patterns
     
     StateNavHost(
         stateBackStack = navigator.getBackStack(),

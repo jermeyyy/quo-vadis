@@ -2,12 +2,30 @@
 
 ## Overview
 
-Quo Vadis provides comprehensive predictive back navigation support across all platforms. The library offers two approaches:
+Quo Vadis provides comprehensive predictive back navigation support across all platforms via the modern NavigationEvent API.
 
-1. **Legacy API** (`PredictiveBackNavigation`) - Works with the graph-based `GraphNavHost`
-2. **New NavigationEvent API** (`QuoVadisBackHandler`) - Modern API using AndroidX NavigationEvent library
+**Recommended Approach**: Use `NavigationHost` with `predictiveBackMode` parameter for automatic predictive back handling, or `QuoVadisBackHandler` from the `navback` package for custom implementations.
 
-> **Recommendation**: For new development, use `QuoVadisBackHandler` from the `navback` package for proper Android 14+ system animation support.
+---
+
+## NavigationHost Built-in Support
+
+Predictive back is built into `NavigationHost` via the `predictiveBackMode` parameter:
+
+```kotlin
+NavigationHost(
+    navigator = navigator,
+    screenRegistry = myScreenRegistry,
+    predictiveBackMode = PredictiveBackMode.FULL_CASCADE
+)
+```
+
+### PredictiveBackMode
+
+| Mode | Description |
+|------|-------------|
+| `ROOT_ONLY` | Default. Only the root stack handles predictive back gestures. |
+| `FULL_CASCADE` | All stacks handle predictive back, including animated cascade when popping containers. |
 
 ---
 
@@ -291,84 +309,71 @@ QuoVadisBackHandler(
 }
 ```
 
-### From PredictiveBackNavigation
+### From Previous API
 
-**Before:**
+**Before (If using separate predictive back setup):**
 ```kotlin
-PredictiveBackNavigation(
-    navigator = navigator,
+// Old approach with separate components
+GraphNavHost(
     graph = graph,
-    animationType = PredictiveBackAnimationType.Material3
+    navigator = navigator,
+    enablePredictiveBack = true
 )
 ```
 
-**After:**
+**After (Built into NavigationHost):**
 ```kotlin
-// For simple cases
-QuoVadisBackHandler(
-    enabled = navigator.canGoBack,
-    onBack = { navigator.goBack() }
-) {
-    GraphNavHost(graph = graph, navigator = navigator)
-}
+// Predictive back is now built-in
+NavigationHost(
+    navigator = navigator,
+    screenRegistry = myScreenRegistry,
+    predictiveBackMode = PredictiveBackMode.FULL_CASCADE
+)
+```
 
-// For custom animations
+**For Custom Animations (using QuoVadisBackHandler):**
+```kotlin
 QuoVadisBackHandler(
-    enabled = navigator.canGoBack,
-    currentScreenInfo = ScreenNavigationInfo(screenId = currentEntry?.id ?: ""),
-    previousScreenInfo = previousEntry?.let { ScreenNavigationInfo(screenId = it.id) },
+    enabled = navigator.canNavigateBack.collectAsState().value,
+    currentScreenInfo = ScreenNavigationInfo(screenId = currentEntry?.key ?: ""),
+    previousScreenInfo = previousEntry?.let { ScreenNavigationInfo(screenId = it.key) },
     onBackProgress = { event ->
-        // Apply Material3-style animation
+        // Apply animation based on progress
         scale = 1f - (event.progress * 0.1f)
         offset = event.progress * 80f
     },
     onBackCancelled = { resetAnimation() },
-    onBackCompleted = { navigator.goBack() }
+    onBackCompleted = { navigator.navigateBack() }
 ) {
-    GraphNavHost(graph = graph, navigator = navigator)
+    // Screen content
 }
 ```
 
 ---
 
-## Legacy API Reference
+## NavigationHost Animation Architecture
 
-The original `PredictiveBackNavigation` composable is still available and works for existing implementations. For new projects, prefer the NavigationEvent API above.
-
-### Architecture
-
-### Animation Coordinator Pattern
-
-The implementation uses a coordinator to separate logical backstack state from visual rendering state:
-
-```kotlin
-@Stable
-private class PredictiveBackAnimationCoordinator {
-    var displayedCurrentEntry: BackStackEntry?
-    var displayedPreviousEntry: BackStackEntry?
-    var isAnimating: Boolean
-    
-    fun startAnimation(current, previous)  // Freezes entries
-    fun finishAnimation()                   // Resumes normal rendering
-    fun cancelAnimation()                   // Cleans up on gesture cancel
-}
-```
+Predictive back animations in `NavigationHost` use a sophisticated coordination pattern:
 
 ### Key Components
 
-1. **PredictiveBackNavigation.kt** (~500 lines)
-   - Main composable handling gesture and animation
-   - Coordinates between gesture phase and exit phase
-   - Manages cache locking and unlocking
+1. **NavTreeRenderer** - Recursive renderer for NavNode tree
+   - Dispatches to node-specific renderers (StackRenderer, TabRenderer, etc.)
+   - Manages animation state across the tree
 
-2. **ComposableCache.kt** (~90 lines)
+2. **PredictiveBackContent** - Gesture-aware content wrapper
+   - Tracks gesture progress
+   - Switches between gesture and exit animation phases
+   - Coordinates with ComposableCache for screen preservation
+
+3. **ComposableCache** (~90 lines)
    - Caches composable screens during navigation
    - Locks entries during animation to prevent destruction
-   - Automatically cleans up old entries
+   - LRU eviction respecting locked entries
 
-3. **Animation Modifiers**
-   - Gesture animations: `material3BackAnimation()`, `scaleBackAnimation()`, `slideBackAnimation()`
-   - Exit animations: `material3ExitAnimation()`, `scaleExitAnimation()`, `slideExitAnimation()`
+4. **BackAnimationController** - Animation state management
+   - Tracks `isAnimating`, `progress`, `currentEvent`
+   - Methods: `startAnimation()`, `updateProgress()`, `completeAnimation()`, `cancelAnimation()`
 
 ## Animation Flow
 
@@ -694,22 +699,21 @@ Potential improvements:
 
 | Scenario | Recommended API |
 |----------|-----------------|
-| New project, needs Android 14+ system animation | `QuoVadisBackHandler` |
-| New project, simple back handling | `QuoVadisBackHandler` (simplified overload) |
-| Existing project with `GraphNavHost` | `PredictiveBackNavigation` (legacy) or migrate |
-| Hierarchical navigation with custom renderers | `QuoVadisBackHandler` + `BackAnimationController` |
-| Need gesture progress for animations | `QuoVadisBackHandler` with `onBackProgress` |
-| Simple intercept without animation | `QuoVadisBackHandler(onBack = {...})` |
+| New project | `NavigationHost` with `predictiveBackMode` |
+| Need custom gesture animations | `QuoVadisBackHandler` with `onBackProgress` |
+| Android 14+ system animation | Built into `NavigationHost` |
+| Hierarchical navigation with custom renderers | `BackAnimationController` |
+| Simple back intercept | `QuoVadisBackHandler(onBack = {...})` |
 
 ### Quick Decision Tree
 
 ```
-Need Android 14+ system back animation?
-├── Yes → QuoVadisBackHandler
-│   ├── Need gesture progress? → Use onBackProgress callback
-│   └── Just need back intercept? → Use simplified overload
-└── No (legacy project)
-    └── Using GraphNavHost? → PredictiveBackNavigation works fine
+Standard navigation setup?
+├── Yes → NavigationHost(predictiveBackMode = FULL_CASCADE)
+│         ├── Built-in predictive back
+│         └── Automatic animations
+└── Need custom animations?
+    └── QuoVadisBackHandler with onBackProgress
 ```
 
 ---

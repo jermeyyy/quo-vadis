@@ -2,34 +2,17 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:GraphNavHost.kt:@OptIn(ExperimentalComposeUiApi::class, ExperimentalSharedTransitionApi::class) @Composable @Suppress("LongMethod") private fun GraphNavHostContent( graph: NavigationGraph, navigator: Navigator, defaultTransition: NavigationTransition, enableComposableCache: Boolean, enablePredictiveBack: Boolean, maxCacheSize: Int, sharedTransitionScope: SharedTransitionScope, modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:TreeMutator.kt:TreeMutator$fun popWithPaneBehavior(root: NavNode): PopResult</ID>
     <ID>CyclomaticComplexMethod:TreeMutator.kt:TreeMutator$fun removeNode(root: NavNode, targetKey: String): NavNode?</ID>
     <ID>CyclomaticComplexMethod:TreeMutator.kt:TreeMutator$fun replaceNode(root: NavNode, targetKey: String, newNode: NavNode): NavNode</ID>
     <ID>ForbiddenComment:NavigatorChildDelegationTest.kt:NavigatorChildDelegationTest$// TODO: Fix in Phase 2 - TreeNavigator.currentDestination sync issue when used as child navigator</ID>
-    <ID>ForbiddenComment:PredictiveBackTabsTest.kt:PredictiveBackTabsTest$* Test 5: Back press handling with tabs and parent navigator * * Verifies the back press delegation chain: * TabNavigatorState -> handles if tab has stack or switches to primary tab * Parent Navigator -> handles if TabNavigatorState doesn't consume * * TODO: Fix in Phase 2 - TreeNavigator delegation with TabNavigatorState interaction * The back press is being consumed when it shouldn't (at primary tab root).</ID>
-    <ID>ForbiddenComment:TabScopedNavigator.kt:TabScopedNavigator$// TODO: Implement proper clear logic with tree-based state</ID>
-    <ID>LongMethod:PredictiveBackNavigation.kt:@OptIn(ExperimentalComposeUiApi::class) @Composable fun PredictiveBackNavigation( navigator: Navigator, graph: NavigationGraph, enabled: Boolean = true, modifier: Modifier = Modifier, animationType: PredictiveBackAnimationType = PredictiveBackAnimationType.Slide, sensitivity: Float = 1f, maxCacheSize: Int = 3 )</ID>
-    <ID>LongMethod:TabbedNavHost.kt:@Composable fun TabbedNavHost( tabState: TabNavigatorState, tabGraphs: Map&lt;TabDefinition, NavigationGraph>, modifier: Modifier = Modifier, tabUI: (@Composable (content: @Composable () -> Unit) -> Unit)? = null, defaultTransition: NavigationTransition = NavigationTransitions.Fade, tabTransitionSpec: TabTransitionSpec = TabTransitionSpec.Default, enableComposableCache: Boolean = true, enablePredictiveBack: Boolean = true, maxCacheSize: Int = 3, navigator : Navigator )</ID>
     <ID>MagicNumber:TreeMutator.kt:TreeMutator$8</ID>
     <ID>MagicNumber:TreeNavigator.kt:TreeNavigator$5000</ID>
     <ID>MagicNumber:TreeNavigator.kt:TreeNavigator$8</ID>
-    <ID>MatchingDeclarationName:NavigatorCompat.kt:NavigatorBackStackCompat : BackStack</ID>
     <ID>MaxLineLength:ComposableCache.kt:ComposableCache$.</ID>
-    <ID>MaxLineLength:TabScopedNavigator.kt:TabScopedNavigator$println("DEBUG_TAB_NAV: TabScopedNavigator - Destination is tab root for ${targetTab.route}, switching tabs")</ID>
-    <ID>MaxLineLength:TabScopedNavigator.kt:TabScopedNavigator$println("DEBUG_TAB_NAV: TabScopedNavigator.navigate - tab: ${tab.route}, destination: ${destination::class.simpleName}")</ID>
-    <ID>MaxLineLength:TabbedNavHost.kt:println("DEBUG_TAB_NAV: TabbedNavHost - Navigator backstack size: ${tabNavigator.backStack.stack.value.size}")</ID>
-    <ID>MaxLineLength:TabbedNavHost.kt:println("DEBUG_TAB_NAV: TabbedNavHost - Registered graph '${graph.graphRoute}' with tab navigator for ${tab.route}")</ID>
-    <ID>MaxLineLength:TabbedNavHost.kt:println("DEBUG_TAB_NAV: TabbedNavHost - Setting start destination for ${tab.route}: ${startDest::class.simpleName}")</ID>
-    <ID>MaxLineLength:TabbedNavHost.kt:println("DEBUG_TAB_NAV: TabbedNavHost - Tab ${tab.route} already has backstack: ${tabNavigator.backStack.stack.value.size} entries")</ID>
-    <ID>MaxLineLength:TabbedNavHost.kt:println("DEBUG_TAB_NAV: TabbedNavHost - Tab: ${tab.route}, Graph: ${graph?.graphRoute}, Destinations: ${graph?.destinations?.size}")</ID>
-    <ID>MaxLineLength:TabbedNavHost.kt:println("DEBUG_TAB_NAV: TabbedNavHost - Tab: ${tab.route}, Navigator: ${tabNavigator != null}, Graph: ${graph != null}")</ID>
-    <ID>MaxLineLength:TabbedNavHost.kt:println("DEBUG_TAB_NAV: TabbedNavHost - WARNING: Cannot render tab ${tab.route} - Navigator or Graph is null")</ID>
     <ID>MaxLineLength:TreeMutator.kt:TreeMutator$throw IllegalArgumentException("Cannot remove pane content '$targetKey' directly - use removePaneConfiguration instead")</ID>
     <ID>MaxLineLength:TreeMutator.kt:TreeMutator$throw IllegalArgumentException("Cannot remove stack '$targetKey' from TabNode - use switchTab instead")</ID>
     <ID>ReturnCount:DeepLink.kt:DefaultDeepLinkHandler$override fun resolve(deepLink: DeepLink, graphs: Map&lt;String, NavigationGraph>): Destination?</ID>
-    <ID>ReturnCount:NavigatorCompat.kt:NavigatorBackStackCompat$override fun popToRoot(): Boolean</ID>
-    <ID>ReturnCount:NavigatorCompat.kt:NavigatorBackStackCompat$override fun popUntil(predicate: (Destination) -> Boolean): Boolean</ID>
     <ID>ReturnCount:TreeMutator.kt:TreeMutator$fun pop( root: NavNode, behavior: PopBehavior = PopBehavior.PRESERVE_EMPTY ): NavNode?</ID>
     <ID>ReturnCount:TreeMutator.kt:TreeMutator$fun popPane( root: NavNode, nodeKey: String, role: PaneRole ): NavNode?</ID>
     <ID>ReturnCount:TreeMutator.kt:TreeMutator$fun popTo( root: NavNode, inclusive: Boolean = false, predicate: (NavNode) -> Boolean ): NavNode</ID>
@@ -42,11 +25,7 @@
     <ID>ThrowsCount:TreeMutator.kt:TreeMutator$fun removeNode(root: NavNode, targetKey: String): NavNode?</ID>
     <ID>ThrowsCount:TreeMutator.kt:TreeMutator$fun replaceNode(root: NavNode, targetKey: String, newNode: NavNode): NavNode</ID>
     <ID>TooGenericExceptionCaught:NavigationExtensions.kt:e: Exception</ID>
-    <ID>TooManyFunctions:BackStack.kt:BackStack</ID>
-    <ID>TooManyFunctions:BackStack.kt:MutableBackStack : BackStack</ID>
-    <ID>TooManyFunctions:GraphNavHost.kt:com.jermey.quo.vadis.core.navigation.compose.GraphNavHost.kt</ID>
     <ID>TooManyFunctions:Navigator.kt:Navigator : ParentNavigator</ID>
-    <ID>TooManyFunctions:PredictiveBackNavigation.kt:com.jermey.quo.vadis.core.navigation.compose.PredictiveBackNavigation.kt</ID>
     <ID>TooManyFunctions:TreeMutator.kt:TreeMutator</ID>
     <ID>TooManyFunctions:TreeNavigator.kt:TreeNavigator : Navigator</ID>
     <ID>WildcardImport:TreeNavigator.kt:import kotlinx.coroutines.flow.*</ID>

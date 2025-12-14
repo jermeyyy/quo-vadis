@@ -115,6 +115,7 @@ sealed class MasterDetailDestination : com.jermey.quo.vadis.core.navigation.core
  */
 @Stack(name = "tabs", startDestination = "Main")
 sealed class TabsDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+
     @Destination(route = "tabs/main")
     data object Main : TabsDestination()
 

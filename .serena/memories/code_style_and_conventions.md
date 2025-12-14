@@ -4,7 +4,7 @@
 
 ### Classes & Interfaces
 **PascalCase** - First letter of each word capitalized
-- `Navigator`, `BackStack`, `Destination`
+- `Navigator`, `NavNode`, `Destination`
 - `PredictiveBackNavigation`, `ComposableCache`
 - `NavigationGraph`, `DeepLinkHandler`
 
@@ -32,7 +32,7 @@
 
 ### Test Fakes
 **`Fake` prefix**
-- `FakeNavigator`, `FakeBackStack`
+- `FakeNavigator`, `FakeNavNode`
 - `FakeDeepLinkHandler`
 
 ### Default Implementations
@@ -155,8 +155,8 @@ fun setNavigationListener(listener: (Destination) -> Unit)
 ### Explicit Null Safety
 ```kotlin
 // ✅ Good - explicit handling
-val entry: BackStackEntry? = backStack.current.value
-entry?.let { handleEntry(it) }
+val currentNode by navigator.state.collectAsState()
+currentNode?.let { handleNode(it) }
 
 // ❌ Bad - nullable in public API when not needed
 fun navigate(destination: Destination?) // Should not be nullable

@@ -18,7 +18,7 @@ fun \`navigates to details when item clicked\`() {
 }
 
 @Test
-fun \`clears backstack on logout\`() {
+fun \`clears navigation stack on logout\`() {
     // Arrange
     val navigator = FakeNavigator()
     val viewModel = SettingsViewModel(navigator)
@@ -27,7 +27,7 @@ fun \`clears backstack on logout\`() {
     viewModel.onLogout()
     
     // Assert
-    assertTrue(navigator.backStackCleared)
+    assertTrue(navigator.stackCleared)
     assertEquals(LoginDestination, navigator.lastDestination)
 }`
 

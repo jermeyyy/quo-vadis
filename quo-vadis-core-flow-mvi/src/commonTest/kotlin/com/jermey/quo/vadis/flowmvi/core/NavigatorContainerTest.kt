@@ -83,7 +83,7 @@ class NavigatorContainerTest {
             assertFalse(states.value.canGoBack)
             
             // Verify navigator was called
-            assertEquals(1, fakeNavigator.backStack.stack.value.size)
+            assertEquals(1, fakeNavigator.getStackSize())
             assertEquals(HomeDestination, fakeNavigator.currentDestination.value)
         }
     }

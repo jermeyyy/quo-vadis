@@ -63,7 +63,7 @@ interface Navigator : ParentNavigator {
      * During navigation, this holds transition metadata for animation
      * coordination. Observe this to drive animations in the renderer.
      */
-    val transitionState: StateFlow<LegacyTransitionState>
+    val transitionState: StateFlow<TransitionState>
 
     // =========================================================================
     // DERIVED CONVENIENCE PROPERTIES
@@ -273,17 +273,6 @@ interface Navigator : ParentNavigator {
      * @param deepLink The deep link to process
      */
     fun handleDeepLink(deepLink: DeepLink)
-
-    /**
-     * Register a navigation graph for modular navigation.
-     *
-     * @param graph The navigation graph to register
-     */
-    @Deprecated(
-        message = "registerGraph() is no longer needed. Use rememberNavigator(navTree) with KSP-generated tree.",
-        level = DeprecationLevel.WARNING
-    )
-    fun registerGraph(graph: NavigationGraph)
 
     /**
      * Set the start destination (resets navigation state).
