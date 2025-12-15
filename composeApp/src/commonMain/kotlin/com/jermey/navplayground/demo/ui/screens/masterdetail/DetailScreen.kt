@@ -40,7 +40,7 @@ import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.DetailRow
 import com.jermey.navplayground.demo.ui.components.SpecificationRow
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.compose.quoVadisSharedElement
+import com.jermey.quo.vadis.core.navigation.compose.animation.quoVadisSharedElement
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.sharedBounds
 import com.jermey.quo.vadis.core.navigation.core.sharedElement

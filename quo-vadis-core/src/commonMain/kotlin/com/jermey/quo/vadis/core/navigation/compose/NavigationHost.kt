@@ -24,22 +24,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackMode
-import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalAnimatedVisibilityScope
-import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalBackAnimationController
-import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavRenderScope
-import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavNodeRenderer
-import com.jermey.quo.vadis.core.navigation.compose.hierarchical.rememberBackAnimationController
+import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
+import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackMode
+import com.jermey.quo.vadis.core.navigation.compose.render.LocalAnimatedVisibilityScope
+import com.jermey.quo.vadis.core.navigation.compose.animation.LocalBackAnimationController
+import com.jermey.quo.vadis.core.navigation.compose.render.NavRenderScope
+import com.jermey.quo.vadis.core.navigation.compose.render.NavNodeRenderer
+import com.jermey.quo.vadis.core.navigation.compose.animation.rememberBackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.navback.NavigateBackHandler
 import com.jermey.quo.vadis.core.navigation.compose.navback.ScreenNavigationInfo
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.ScopeRegistry
-import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
-import com.jermey.quo.vadis.core.navigation.compose.gesture.calculateCascadeBackState
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.compose.navback.calculateCascadeBackState
+import com.jermey.quo.vadis.core.navigation.compose.registry.BackHandlerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.LocalBackHandlerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
+import com.jermey.quo.vadis.core.navigation.compose.render.rememberComposableCache
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.core.activeLeaf
@@ -57,7 +62,7 @@ import com.jermey.quo.vadis.core.navigation.core.route
  * and state required for rendering, including:
  *
  * - [Navigator] for navigation operations
- * - [ComposableCache] for state preservation
+ * - [com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache] for state preservation
  * - [AnimationCoordinator] for transition resolution
  * - [PredictiveBackController] for gesture handling
  * - [ScreenRegistry] and [WrapperRegistry] for content resolution
@@ -85,7 +90,7 @@ import com.jermey.quo.vadis.core.navigation.core.route
  * @see NavRenderScope
  * @see NavigationHost
  */
-public val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
+val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
 
 // =============================================================================
 // HierarchicalQuoVadisHost
@@ -168,7 +173,7 @@ public val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
  * @see LocalNavRenderScope
  */
 @Composable
-public fun NavigationHost(
+fun NavigationHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
     screenRegistry: ScreenRegistry = EmptyScreenRegistry,

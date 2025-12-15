@@ -1,11 +1,12 @@
 package com.jermey.quo.vadis.core.navigation.compose
 
+import com.jermey.quo.vadis.core.navigation.compose.registry.BackHandlerRegistry
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * Unit tests for [BackHandlerRegistry].
+ * Unit tests for [com.jermey.quo.vadis.core.navigation.compose.registry.BackHandlerRegistry].
  *
  * Tests cover:
  * - Handler registration and unregistration

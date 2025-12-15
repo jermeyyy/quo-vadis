@@ -1,5 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.compose.gesture
 
+import com.jermey.quo.vadis.core.navigation.compose.navback.calculateCascadeBackState
+import com.jermey.quo.vadis.core.navigation.compose.navback.wouldCascade
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition

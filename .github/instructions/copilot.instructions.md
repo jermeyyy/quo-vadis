@@ -2,21 +2,6 @@
 
 Type-safe Kotlin Multiplatform navigation library with Compose Multiplatform UI.
 
-## 🚨 ACTIVE ARCHITECTURE REFACTOR (Branch: `arch-refactor-impl`)
-
-**Current State**: ~82% complete migrating from linear backstack to **tree-based NavNode architecture**.
-
-| Component | Old API | New API | Status |
-|-----------|---------|---------|--------|
-| State Model | `List<Destination>` | `NavNode` tree | ✅ Complete |
-| Hosts | `GraphNavHost`, `TabbedNavHost` | `QuoVadisHost` | ✅ Complete |
-| Annotations | `@Graph`, `@Route`, `@Content` | `@Stack`, `@Destination`, `@Screen` | ✅ Complete |
-| Demo App | Legacy patterns | New patterns | 🟡 In Progress |
-
-**IMPORTANT**: Legacy APIs are `@Deprecated`. Use new patterns from `docs/refactoring-plan/`.
-
-**Progress tracking**: [docs/refactoring-plan/PLAN_PROGRESS.md](docs/refactoring-plan/PLAN_PROGRESS.md)
-
 ## Project Structure
 
 - **`quo-vadis-core`** - Core navigation library (Maven Central)
@@ -106,10 +91,9 @@ mcp_gradle-mcp_clean()
 ## Critical Rules
 
 1. **Verify with Gradle** - IDE shows false KMP errors; Gradle is source of truth
-2. **Use NEW APIs** - Legacy `@Graph`, `@Route`, `@Content`, `GraphNavHost` are deprecated
-3. **KDoc required** for all public APIs in `quo-vadis-core`
-4. **Check refactoring plan** before modifying core/KSP - see `docs/refactoring-plan/`
-5. **No external nav libraries** in core module
+2. **KDoc required** for all public APIs in `quo-vadis-core`
+3**Check refactoring plan** before modifying core/KSP - see `docs/refactoring-plan/`
+4**No external nav libraries** in core module
 
 ## Key File Locations
 

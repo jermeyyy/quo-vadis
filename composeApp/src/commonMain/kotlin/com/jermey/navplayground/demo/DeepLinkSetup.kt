@@ -4,7 +4,7 @@ import com.jermey.navplayground.demo.destinations.DeepLinkDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.TabsDestination
-import com.jermey.navplayground.demo.tabs.MainTabs
+import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**

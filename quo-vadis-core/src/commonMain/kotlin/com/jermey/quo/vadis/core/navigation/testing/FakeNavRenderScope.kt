@@ -7,16 +7,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.SaveableStateHolder
-import com.jermey.quo.vadis.core.navigation.compose.ComposableCache
+import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackMode
-import com.jermey.quo.vadis.core.navigation.compose.hierarchical.LocalAnimatedVisibilityScope
-import com.jermey.quo.vadis.core.navigation.compose.hierarchical.NavRenderScope
+import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
+import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackMode
+import com.jermey.quo.vadis.core.navigation.compose.render.LocalAnimatedVisibilityScope
+import com.jermey.quo.vadis.core.navigation.compose.render.NavRenderScope
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 
 /**
  * Test fake implementation of [NavRenderScope] for composable testing.

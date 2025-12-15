@@ -108,3 +108,62 @@ public interface PaneWrapperScope {
      */
     public fun navigateToPane(role: PaneRole)
 }
+
+/**
+ * Internal implementation of [PaneWrapperScope].
+ *
+ * Created when processing PaneNode to provide the wrapper composable
+ * with access to pane layout state and actions.
+ *
+ * @property navigator The navigator instance for this pane container
+ * @property activePaneRole The currently active pane role
+ * @property paneCount Total number of configured panes
+ * @property visiblePaneCount Number of currently visible panes
+ * @property isExpanded Whether in expanded (multi-pane) mode
+ * @property isTransitioning Whether a pane transition is in progress
+ * @property onNavigateToPane Callback invoked when navigating to a pane
+ */
+internal class PaneWrapperScopeImpl(
+    override val navigator: Navigator,
+    override val activePaneRole: PaneRole,
+    override val paneCount: Int,
+    override val visiblePaneCount: Int,
+    override val isExpanded: Boolean,
+    override val isTransitioning: Boolean,
+    private val onNavigateToPane: (PaneRole) -> Unit
+) : PaneWrapperScope {
+
+    override fun navigateToPane(role: PaneRole) {
+        onNavigateToPane(role)
+    }
+}
+
+/**
+ * Creates a [PaneWrapperScopeImpl] with the given parameters.
+ *
+ * Factory function for creating pane wrapper scopes.
+ *
+ * @param navigator The navigator instance
+ * @param activePaneRole Currently active pane role
+ * @param paneContents List of pane contents with visibility
+ * @param isExpanded Whether in expanded mode
+ * @param isTransitioning Whether transitioning between panes
+ * @param onNavigateToPane Callback for pane navigation
+ * @return A new [PaneWrapperScope] implementation
+ */
+internal fun createPaneWrapperScope(
+    navigator: Navigator,
+    activePaneRole: PaneRole,
+    paneContents: List<PaneContent>,
+    isExpanded: Boolean,
+    isTransitioning: Boolean,
+    onNavigateToPane: (PaneRole) -> Unit
+): PaneWrapperScope = PaneWrapperScopeImpl(
+    navigator = navigator,
+    activePaneRole = activePaneRole,
+    paneCount = paneContents.size,
+    visiblePaneCount = paneContents.count { it.isVisible },
+    isExpanded = isExpanded,
+    isTransitioning = isTransitioning,
+    onNavigateToPane = onNavigateToPane
+)

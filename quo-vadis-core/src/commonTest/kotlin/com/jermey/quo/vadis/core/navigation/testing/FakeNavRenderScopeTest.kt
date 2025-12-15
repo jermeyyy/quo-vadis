@@ -1,8 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.testing
 
-import com.jermey.quo.vadis.core.navigation.compose.ComposableCache
+import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.compose.gesture.PredictiveBackController
+import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition

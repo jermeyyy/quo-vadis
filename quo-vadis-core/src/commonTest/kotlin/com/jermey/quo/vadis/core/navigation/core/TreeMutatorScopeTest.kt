@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,7 +10,7 @@ import kotlin.test.assertNotNull
 /**
  * Tests for scope-aware [TreeMutator] operations.
  *
- * These tests verify that `TreeMutator.push` with a [ScopeRegistry] correctly routes
+ * These tests verify that `TreeMutator.push` with a [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry] correctly routes
  * destinations based on whether they belong to a container's scope.
  */
 class TreeMutatorScopeTest {

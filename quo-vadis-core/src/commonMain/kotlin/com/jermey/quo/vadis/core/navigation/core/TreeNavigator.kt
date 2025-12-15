@@ -1,8 +1,9 @@
 package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.navigation.compose.BackHandlerRegistry
-import com.jermey.quo.vadis.core.navigation.compose.WindowSizeClass
+import com.jermey.quo.vadis.core.navigation.compose.registry.BackHandlerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -52,7 +53,7 @@ import kotlin.uuid.Uuid
  * @param initialState Optional initial navigation state (defaults to empty stack)
  * @property scopeRegistry Registry for scope-aware navigation. When a destination is
  *   out of the current container's scope (TabNode/PaneNode), navigation pushes to
- *   the parent stack instead of the deepest active stack. Defaults to [ScopeRegistry.Empty]
+ *   the parent stack instead of the deepest active stack. Defaults to [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry.Empty]
  *   which allows all destinations in all scopes (backward compatible behavior).
  */
 @OptIn(ExperimentalUuidApi::class)

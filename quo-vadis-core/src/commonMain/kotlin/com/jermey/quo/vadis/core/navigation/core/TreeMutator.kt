@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -376,75 +377,6 @@ object TreeMutator {
             }
         }
         return null
-    }
-
-    /**
-     * Finds the appropriate target stack for a destination considering scope.
-     *
-     * @deprecated Use [determinePushStrategy] instead which provides more granular control.
-     *
-     * Walks up from the deepest active stack, checking each container (TabNode/PaneNode)
-     * to see if the destination is in scope. Returns the first stack where the
-     * destination can be pushed.
-     *
-     * @param root The root NavNode of the navigation tree
-     * @param destination The destination to check
-     * @param scopeRegistry Registry for scope membership checks
-     * @return The target StackNode for the push, or null if none found
-     */
-    private fun findTargetStackForPush(
-        root: NavNode,
-        destination: Destination,
-        scopeRegistry: ScopeRegistry
-    ): StackNode? {
-        val activeStack = root.activeStack() ?: return null
-
-        // Walk the active path to find containers
-        val activePath = root.activePathToLeaf()
-
-        // Check containers from deepest to shallowest
-        for (node in activePath.reversed()) {
-            when (node) {
-                is StackNode -> {
-                    // Check if this stack has a scope and if destination is out of scope
-                    val stackScope = node.scopeKey
-                    if (stackScope != null && !scopeRegistry.isInScope(stackScope, destination)) {
-                        // Out of scope - find the stack that contains this StackNode
-                        val parentKey = node.parentKey ?: return null
-                        val parent = root.findByKey(parentKey)
-                        if (parent is StackNode) {
-                            return parent
-                        }
-                    }
-                }
-                is TabNode -> {
-                    val scopeKey = node.scopeKey
-                    if (scopeKey != null && !scopeRegistry.isInScope(scopeKey, destination)) {
-                        // Out of scope - find the stack that contains this TabNode
-                        val parentKey = node.parentKey ?: return null
-                        val parent = root.findByKey(parentKey)
-                        if (parent is StackNode) {
-                            return parent
-                        }
-                    }
-                }
-                is PaneNode -> {
-                    val scopeKey = node.scopeKey
-                    if (scopeKey != null && !scopeRegistry.isInScope(scopeKey, destination)) {
-                        // Out of scope - find the stack that contains this PaneNode
-                        val parentKey = node.parentKey ?: return null
-                        val parent = root.findByKey(parentKey)
-                        if (parent is StackNode) {
-                            return parent
-                        }
-                    }
-                }
-                else -> { /* Continue checking */ }
-            }
-        }
-
-        // All containers allow this destination, push to deepest active stack
-        return activeStack
     }
 
     /**
@@ -1528,8 +1460,7 @@ object TreeMutator {
      * - If parent also has only one child: cascade further up the tree
      */
     private fun handlePaneBack(root: NavNode, paneNode: PaneNode, activeStack: NavNode): BackResult {
-        val result = popWithPaneBehavior(root)
-        return when (result) {
+        return when (val result = popWithPaneBehavior(root)) {
             is PopResult.Popped -> BackResult.Handled(result.newState)
             is PopResult.CannotPop, is PopResult.PaneEmpty -> {
                 // Check if PaneNode itself can be popped
@@ -1604,13 +1535,4 @@ object TreeMutator {
         }
     }
 
-    /**
-     * Determines if back handling would result in a cascade pop.
-     *
-     * @return true if the back action would pop a container (stack/tab), not just a screen
-     */
-    fun wouldCascade(root: NavNode): Boolean {
-        val activeStack = root.activeStack() ?: return false
-        return activeStack.children.size <= 1 && activeStack.parentKey != null
-    }
 }

@@ -110,11 +110,62 @@ public interface TabWrapperScope {
      */
     public fun switchTab(index: Int)
 
-    /**
-     * Switch to the tab with the given route.
-     *
-     * @param route The route identifier of the tab to switch to
-     * @throws IllegalArgumentException if no tab with the given route exists
-     */
-    public fun switchTab(route: String)
 }
+
+/**
+ * Internal implementation of [TabWrapperScope].
+ *
+ * Created when processing TabNode to provide the wrapper composable
+ * with access to tab navigation state and actions.
+ *
+ * @property navigator The navigator instance for this tab container
+ * @property activeTabIndex The currently selected tab index (0-based)
+ * @property tabCount Total number of tabs
+ * @property tabMetadata Metadata for all tabs in order
+ * @property isTransitioning Whether a tab transition is in progress
+ * @property onSwitchTab Callback invoked when user switches tabs
+ */
+internal class TabWrapperScopeImpl(
+    override val navigator: Navigator,
+    override val activeTabIndex: Int,
+    override val tabCount: Int,
+    override val tabMetadata: List<TabMetadata>,
+    override val isTransitioning: Boolean,
+    private val onSwitchTab: (Int) -> Unit
+) : TabWrapperScope {
+
+    override fun switchTab(index: Int) {
+        require(index in 0 until tabCount) {
+            "Tab index $index out of bounds [0, $tabCount)"
+        }
+        onSwitchTab(index)
+    }
+
+}
+
+/**
+ * Creates a [TabWrapperScopeImpl] with the given parameters.
+ *
+ * Factory function for creating tab wrapper scopes.
+ *
+ * @param navigator The navigator instance
+ * @param activeTabIndex Currently selected tab index
+ * @param tabMetadata Metadata for all tabs
+ * @param isTransitioning Whether transitioning between tabs
+ * @param onSwitchTab Callback for tab switching
+ * @return A new [TabWrapperScope] implementation
+ */
+internal fun createTabWrapperScope(
+    navigator: Navigator,
+    activeTabIndex: Int,
+    tabMetadata: List<TabMetadata>,
+    isTransitioning: Boolean,
+    onSwitchTab: (Int) -> Unit
+): TabWrapperScope = TabWrapperScopeImpl(
+    navigator = navigator,
+    activeTabIndex = activeTabIndex,
+    tabCount = tabMetadata.size,
+    tabMetadata = tabMetadata,
+    isTransitioning = isTransitioning,
+    onSwitchTab = onSwitchTab
+)

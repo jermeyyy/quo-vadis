@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.ksp
 
-import com.jermey.quo.vadis.core.navigation.compose.TransitionScope
+import com.jermey.quo.vadis.core.navigation.compose.animation.TransitionScope
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneWrapperScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
@@ -9,9 +9,9 @@ import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.RouteRegistry
-import com.jermey.quo.vadis.core.navigation.core.ScopeRegistry
-import com.jermey.quo.vadis.core.navigation.core.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.RouteRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.squareup.kotlinpoet.ClassName
 import kotlin.reflect.KClass
 

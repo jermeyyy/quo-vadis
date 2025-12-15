@@ -341,7 +341,7 @@ demo/
 ├── DemoKoin.kt                   # Dependency injection setup
 ├── DeepLinkSetup.kt              # Deep link configuration
 ├── destinations/
-│   └── Destinations.kt           # All destination definitions
+│   └── StateDrivenDemoDestination.kt           # All destination definitions
 └── ui/
     ├── BottomNavigationBar.kt    # Bottom nav component
     └── screens/
@@ -373,7 +373,7 @@ demo/
 
 To add a new pattern:
 
-1. Define destinations in `Destinations.kt` as sealed class
+1. Define destinations in `StateDrivenDemoDestination.kt` as sealed class
 2. Create screens in `ui/screens/` with `@Screen` annotation
 3. Add navigation setup in `DemoApp.kt`
 4. Add drawer/nav item for access

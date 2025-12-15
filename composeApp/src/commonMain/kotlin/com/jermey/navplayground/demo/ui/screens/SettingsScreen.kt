@@ -2,7 +2,6 @@ package com.jermey.navplayground.demo.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,7 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.tabs.MainTabs
+import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.SettingItem
 import com.jermey.navplayground.demo.ui.components.SettingsSection
@@ -42,6 +41,7 @@ import com.jermey.navplayground.demo.ui.components.ThemeSettingItem
 import com.jermey.navplayground.demo.ui.theme.ThemeManager
 import com.jermey.navplayground.demo.ui.theme.ThemeMode
 import com.jermey.navplayground.demo.ui.theme.rememberThemeManager
+import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
 
@@ -49,6 +49,7 @@ import kotlinx.coroutines.launch
  * Settings Screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
+@Screen(MainTabs.SettingsTab.Main::class)
 @Composable
 fun SettingsScreen(
     navigator: Navigator,

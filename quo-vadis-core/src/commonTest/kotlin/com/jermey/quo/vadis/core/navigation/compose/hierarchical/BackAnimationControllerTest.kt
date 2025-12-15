@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
+import com.jermey.quo.vadis.core.navigation.compose.animation.BackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.navback.BackNavigationEvent
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,7 +10,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * Unit tests for [BackAnimationController].
+ * Unit tests for [com.jermey.quo.vadis.core.navigation.compose.animation.BackAnimationController].
  *
  * Tests cover:
  * - Initial state (not animating, progress = 0)

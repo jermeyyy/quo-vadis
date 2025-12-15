@@ -8,7 +8,6 @@ import com.jermey.quo.vadis.core.navigation.core.StackNode
 import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 
 /**
  * Entry in the demo backstack.

@@ -5,10 +5,6 @@ import com.jermey.quo.vadis.core.navigation.core.Destination
 /**
  * Destinations for the State-Driven Navigation Demo.
  *
- * This sealed class demonstrates simple destinations for use with [StateBackStack]
- * and [StateNavigator]. Unlike graph-based navigation, these destinations don't
- * require @Route annotations since they're used directly with the state-driven API.
- *
  * The demo showcases:
  * - Object destinations (Home, Settings) - no parameters
  * - Data class destinations (Profile, Detail) - with parameters

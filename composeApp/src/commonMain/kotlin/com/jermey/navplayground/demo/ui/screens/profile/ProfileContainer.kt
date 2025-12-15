@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens.profile
 
-import com.jermey.navplayground.demo.tabs.MainTabs
+import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import pro.respawn.flowmvi.api.Container
 import pro.respawn.flowmvi.api.PipelineContext

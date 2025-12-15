@@ -42,7 +42,7 @@ composeApp/
     │           ├── DemoApp.kt                  # Main demo app
     │           ├── README.md                   # Demo documentation
     │           ├── destinations/
-    │           │   └── Destinations.kt         # All destination definitions
+    │           │   └── StateDrivenDemoDestination.kt         # All destination definitions
     │           ├── graphs/
     │           │   └── NavigationGraphs.kt     # Navigation graph configs
     │           └── ui/

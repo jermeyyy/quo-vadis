@@ -29,8 +29,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
+import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
@@ -41,6 +43,7 @@ private const val EXPLORE_ITEMS_COUNT = 20
  * Explore Screen - Shows a grid/list of items
  */
 @OptIn(ExperimentalMaterial3Api::class)
+@Screen(MainTabs.ExploreTab::class)
 @Composable
 fun ExploreScreen(
     navigator: Navigator,

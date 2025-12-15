@@ -1,9 +1,10 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import com.jermey.quo.vadis.core.navigation.compose.registry.RouteRegistry
+
 /**
  * Marker interface for navigation destinations.
  * 
- * Use this interface with @Route annotations to define navigation targets.
  * The actual route resolution is handled internally by the library via RouteRegistry.
  * 
  * KSP generates the necessary code to register routes, so destinations remain simple POJOs.
