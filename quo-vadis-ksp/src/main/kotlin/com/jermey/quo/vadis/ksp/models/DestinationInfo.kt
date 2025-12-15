@@ -10,6 +10,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
  * @property qualifiedName Fully qualified name (e.g., "com.example.HomeDestination.Detail")
  * @property route Deep link route pattern (e.g., "home/detail/{id}"), null if not specified
  * @property routeParams List of route parameter names extracted from the route pattern
+ * @property isObject True if this is any kind of object (data object, companion object, regular object)
  * @property isDataObject True if this is a `data object`
  * @property isDataClass True if this is a `data class`
  * @property isSealedClass True if this is a `sealed class` or `sealed interface`
@@ -22,6 +23,7 @@ data class DestinationInfo(
     val qualifiedName: String,
     val route: String?,
     val routeParams: List<String>,
+    val isObject: Boolean,
     val isDataObject: Boolean,
     val isDataClass: Boolean,
     val isSealedClass: Boolean,

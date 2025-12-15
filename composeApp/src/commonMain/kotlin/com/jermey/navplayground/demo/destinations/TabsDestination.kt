@@ -1,27 +1,77 @@
 package com.jermey.navplayground.demo.destinations
 
+import com.jermey.navplayground.demo.destinations.DemoTabs.BooksTab
+import com.jermey.navplayground.demo.destinations.DemoTabs.MoviesTab
+import com.jermey.navplayground.demo.destinations.DemoTabs.MusicTab
 import com.jermey.quo.vadis.annotations.Argument
+import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.annotations.TabItem
+import com.jermey.quo.vadis.annotations.Tabs
 
 /**
- * Tabs navigation destinations
+ * Tabs Demo navigation destinations.
+ *
+ * Demonstrates nested tab navigation with:
+ * - 3 tabs (Music, Movies, Books)
+ * - Each tab has its own navigation stack
+ * - Clicking items navigates within the tab's stack
+ *
+ * Navigation to `DemoTabs.MusicTab.List` (or any tab's root) will show the
+ * tabs demo with the DemoTabsWrapper providing the tab strip UI.
  */
-@Stack(name = "tabs", startDestination = "Main")
-sealed class TabsDestination : Destination {
-
-    @com.jermey.quo.vadis.annotations.Destination(route = "tabs/main")
-    data object Main : TabsDestination()
+@Tabs(
+    name = "demoTabs",
+    initialTab = MusicTab::class,
+    items = [MusicTab::class, MoviesTab::class, BooksTab::class]
+)
+sealed class DemoTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
 
     /**
-     * Dynamic tab destination.
-     * Tab routes are handled dynamically based on tabId.
+     * Companion object used as the wrapper key for @TabWrapper.
+     * This allows the wrapper to be associated with the DemoTabs container.
      */
-    data class Tab(val tabId: String) : TabsDestination()
+    companion object
 
-    @com.jermey.quo.vadis.annotations.Destination(route = "tabs/subitem/{tabId}/{itemId}")
-    data class SubItem(
-        @Argument val tabId: String,
-        @Argument val itemId: String
-    ) : TabsDestination()
+    /**
+     * Music tab - shows a list of music items
+     */
+    @TabItem(label = "Music", icon = "music_note")
+    @Stack(name = "musicStack", startDestinationClass = MusicTab.List::class)
+    sealed class MusicTab : DemoTabs() {
+
+        @Destination(route = "demo/tabs/music/list")
+        data object List : MusicTab()
+
+        @Destination(route = "demo/tabs/music/detail/{itemId}")
+        data class Detail(@Argument val itemId: String) : MusicTab()
+    }
+
+    /**
+     * Movies tab - shows a list of movie items
+     */
+    @TabItem(label = "Movies", icon = "movie")
+    @Stack(name = "moviesStack", startDestinationClass = MoviesTab.List::class)
+    sealed class MoviesTab : DemoTabs() {
+
+        @Destination(route = "demo/tabs/movies/list")
+        data object List : MoviesTab()
+
+        @Destination(route = "demo/tabs/movies/detail/{itemId}")
+        data class Detail(@Argument val itemId: String) : MoviesTab()
+    }
+
+    /**
+     * Books tab - shows a list of book items
+     */
+    @TabItem(label = "Books", icon = "book")
+    @Stack(name = "booksStack", startDestinationClass = BooksTab.List::class)
+    sealed class BooksTab : DemoTabs() {
+
+        @Destination(route = "demo/tabs/books/list")
+        data object List : BooksTab()
+
+        @Destination(route = "demo/tabs/books/detail/{itemId}")
+        data class Detail(@Argument val itemId: String) : BooksTab()
+    }
 }

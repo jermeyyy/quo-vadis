@@ -120,8 +120,6 @@ annotation class Tabs(
     val name: String,
     val initialTab: KClass<*> = Unit::class,
     val items: Array<KClass<*>> = [],
-    @Deprecated("Use initialTab: KClass<*> instead")
-    val initialTabLegacy: String = ""
 )
 
 /**

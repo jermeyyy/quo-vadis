@@ -47,7 +47,8 @@ class DestinationExtractor(
         val isSealedModifier = classDeclaration.modifiers.contains(Modifier.SEALED)
         val classKind = classDeclaration.classKind
 
-        val isDataObject = isDataModifier && classKind == ClassKind.OBJECT
+        val isObject = classKind == ClassKind.OBJECT
+        val isDataObject = isDataModifier && isObject
         val isDataClass = isDataModifier && classKind == ClassKind.CLASS
         val isSealedClass = isSealedModifier && (classKind == ClassKind.CLASS || classKind == ClassKind.INTERFACE)
 
@@ -67,6 +68,7 @@ class DestinationExtractor(
             qualifiedName = classDeclaration.qualifiedName?.asString() ?: "",
             route = route?.takeIf { it.isNotEmpty() },
             routeParams = routeParams,
+            isObject = isObject,
             isDataObject = isDataObject,
             isDataClass = isDataClass,
             isSealedClass = isSealedClass,

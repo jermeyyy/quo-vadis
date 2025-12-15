@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.DeepLinkDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
-import com.jermey.navplayground.demo.destinations.TabsDestination
+import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.core.navigation.core.Destination
 
@@ -62,7 +62,7 @@ fun NavigationBottomSheetContent(
             label = "Tabs Example",
             description = "Nested tabs navigation",
             selected = currentRoute?.startsWith("tabs") == true,
-            onClick = { onNavigate(TabsDestination.Main) }
+            onClick = { onNavigate(DemoTabs.MusicTab.List) }
         )
 
         BottomSheetNavigationItem(

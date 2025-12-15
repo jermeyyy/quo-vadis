@@ -3,7 +3,7 @@ package com.jermey.navplayground.demo
 import com.jermey.navplayground.demo.destinations.DeepLinkDestination
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
-import com.jermey.navplayground.demo.destinations.TabsDestination
+import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
@@ -31,7 +31,7 @@ fun setupDemoDeepLinks(navigator: Navigator) {
     }
 
     handler.register("app://demo/tabs") { _, nav, _ ->
-        nav.navigate(TabsDestination.Main)
+        nav.navigate(DemoTabs.MusicTab.List)
     }
 
     handler.register("app://demo/settings") { _, nav, _ ->

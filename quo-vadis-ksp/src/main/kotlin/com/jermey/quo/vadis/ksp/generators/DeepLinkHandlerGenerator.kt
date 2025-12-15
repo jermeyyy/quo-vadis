@@ -194,7 +194,7 @@ class DeepLinkHandlerGenerator(
      * KotlinPoet generates proper imports in the output file.
      *
      * Handles three cases:
-     * - Data objects: `DestinationClass.DataObject`
+     * - Objects (data object, companion object, regular object): `DestinationClass.Object`
      * - Data classes with route params: `DestinationClass.DataClass(param = params["param"]!!)`
      * - Data classes without route params (optional/default params): `DestinationClass.DataClass()`
      * - Sealed classes: Skipped (cannot be instantiated directly)
@@ -213,8 +213,8 @@ class DeepLinkHandlerGenerator(
         val destClassName = buildDestinationClassName(dest)
 
         return when {
-            dest.isDataObject -> {
-                // Data object - no parentheses needed
+            dest.isObject -> {
+                // Any object (data object, companion object, regular object) - no parentheses needed
                 CodeBlock.of(
                     "RoutePattern(%S, emptyList()) { %T }",
                     route,
@@ -328,7 +328,7 @@ class DeepLinkHandlerGenerator(
      *
      * Returns CodeBlocks with %T format specifiers to ensure proper imports.
      * Handles three cases:
-     * - Data objects: `DestinationClass.DataObject -> "scheme://route"`
+     * - Objects (data object, companion object, regular object): `DestinationClass.Object -> "scheme://route"`
      * - Data classes without route params: `is DestinationClass.DataClass -> "scheme://route"`
      * - Data classes with route params: `is DestinationClass.DataClass -> "scheme://route/${destination.param}"`
      * - Sealed classes: Skipped (cannot be used as concrete destinations)
@@ -346,8 +346,8 @@ class DeepLinkHandlerGenerator(
             // All cases use %P (string template) to properly interpolate $scheme at runtime.
             // %S would escape the $ making it a literal string instead of interpolated.
             when {
-                dest.isDataObject -> {
-                    // Data object - exact match, use %T for auto-import
+                dest.isObject -> {
+                    // Any object (data object, companion object, regular object) - exact match, use %T for auto-import
                     CodeBlock.of("%T -> %P", destClassName, "\$scheme://$route")
                 }
                 params.isEmpty() -> {

@@ -42,7 +42,7 @@ import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
-import com.jermey.navplayground.demo.destinations.TabsDestination
+import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.NavigationPatternCard
 import com.jermey.quo.vadis.annotations.Screen
@@ -89,7 +89,9 @@ fun HomeScreen(
                 )
             },
             onNavigateToTabs = {
-                navigator.navigate(TabsDestination.Main, NavigationTransitions.SlideHorizontal)
+                // TODO: Implement Container-Aware Navigation (see CONTAINER_AWARE_NAVIGATION.md)
+                // For now, navigate directly to the first tab's screen
+                navigator.navigate(DemoTabs.MusicTab.List, NavigationTransitions.SlideHorizontal)
             },
             onNavigateToProcess = {
                 navigator.navigate(ProcessDestination.Start, NavigationTransitions.SlideHorizontal)
