@@ -1,8 +1,6 @@
 # Navigation Library - Complete Architecture & Implementation
 
 > ⚠️ **PARTIALLY UPDATED**: This file is being updated to reflect the new NavNode tree-based architecture.
-> Key terminology: `GraphNavHost` → `QuoVadisHost`, `BackStack` → `NavNode tree`, `navigator.backStack` → `navigator.state`.
-> See `docs/refactoring-plan/` for complete current architecture.
 
 ## Overview
 **Quo Vadis** (Latin for "Where are you going?") - A comprehensive, type-safe navigation library for Kotlin Multiplatform with Compose Multiplatform UI.
@@ -144,105 +142,6 @@ Each type has matching gesture and exit animations.
 - `ComposableCache` - Caches screens with locking
 - Animation modifiers: `material3BackAnimation()`, etc.
 
-### Shared Element Transitions
-
-**Architecture:**
-- `QuoVadisHost` always wraps content in `SharedTransitionLayout`
-- Uses `AnimatedContent` for both forward AND backward navigation
-- Provides `AnimatedVisibilityScope` consistently in both directions
-- Per-destination opt-in via `destinationWithScopes()`
-
-**Key Components:**
-1. **SharedElementScope.kt**: CompositionLocal providers
-   - `currentSharedTransitionScope()`
-   - `currentNavAnimatedVisibilityScope()`
-
-2. **SharedElementModifiers.kt**: Convenience extensions
-   - `quoVadisSharedElement()` - For visual elements (icons, images)
-   - `quoVadisSharedBounds()` - For text/containers (crossfades)
-   - `quoVadisSharedElementOrNoop()` - Graceful fallback
-
-3. **destinationWithScopes()**: New graph builder
-   - Provides 4 parameters: destination, navigator, sharedScope, animatedScope
-   - Per-destination shared element opt-in
-
-**Usage Pattern:**
-```kotlin
-// 1. Use destinationWithScopes in graph
-destinationWithScopes(Screen) { _, nav, shared, animated ->
-    ScreenUI(nav, shared, animated)
-}
-
-// 2. Apply modifiers with matching keys
-Icon(
-    modifier = Modifier.quoVadisSharedElement(
-        key = "icon-$id",  // MUST match on both screens
-        sharedTransitionScope = shared,
-        animatedVisibilityScope = animated
-    )
-)
-
-// 3. Navigate normally - transitions automatic
-nav.navigate(Detail)
-nav.navigateBack()  // Works in reverse!
-```
-
-## Design Patterns Used
-
-### 1. Builder Pattern (DSL)
-Navigation graphs use Kotlin DSL:
-```kotlin
-navigationGraph("app") {
-    startDestination(Home)
-    destination(Home) { _, nav -> HomeUI(nav) }
-    destinationWithScopes(Detail) { _, nav, s, a -> DetailUI(nav, s, a) }
-}
-```
-
-### 2. Observer Pattern
-All state observable via StateFlow:
-```kotlin
-val currentNode by navigator.state.collectAsState()
-```
-
-### 3. Strategy Pattern
-Transitions are swappable strategies:
-```kotlin
-navigator.navigate(dest, NavigationTransitions.Slide)
-```
-
-### 4. Coordinator Pattern
-PredictiveBackAnimationCoordinator separates logical and visual state
-
-### 5. Facade Pattern
-Navigator acts as facade for complex operations
-
-### 6. Composition Pattern (NEW!)
-SharedTransitionLayout wraps navigation content, scopes propagate via CompositionLocal
-
-## State Management Flow
-
-```
-User Action → Intent → TreeNavigator → NavNode Tree Update
-                                              ↓
-                                         State Change
-                                              ↓
-                                        UI Recomposition
-                                              ↓
-                               (Shared Elements Animate)
-```
-
-For MVI:
-```
-User Action → NavigationIntent → ViewModel → TreeNavigator
-                                                  ↓
-                                             NavNode Tree
-                                                  ↓
-                                         NavigationState
-                                                  ↓
-                                         NavigationEffect
-```
-
 ## Predictive Back Animation Flow
 
 ```
@@ -312,52 +211,17 @@ Animation completes → Navigation finishes
 - Browser back button (Web)
 - Keyboard shortcuts (Desktop)
 
-## Testing Strategy
-
-### Unit Testing
-```kotlin
-val fakeNavigator = FakeNavigator()
-viewModel.navigate(destination)
-assertTrue(fakeNavigator.verifyNavigateTo("details"))
-```
-
-### Shared Element Testing
-```kotlin
-// Verify scopes provided
-destinationWithScopes(Screen) { _, _, shared, animated ->
-    assertNotNull(shared)
-    assertNotNull(animated)
-}
-```
-
-### Integration Testing
-- Graph configurations
-- Deep link handling
-- Backstack operations
-- Shared element key matching
-
-### UI Testing
-- Screen transitions
-- Back button behavior
-- Gesture animations
-- Shared element animations (forward & back)
-
 ## Best Practices
 
 ### DO ✅
 - Use sealed classes for destinations
 - Keep destinations simple (data only)
-- One graph per feature module
 - Test with FakeNavigator
 - Observe state reactively
 - Use type-safe navigation
 - Document public APIs
 - Handle deep links early
 - Lock cache during animations
-- **NEW**: Use `destinationWithScopes()` for shared elements
-- **NEW**: Match keys exactly between screens
-- **NEW**: Use `quoVadisSharedElement()` for icons/images
-- **NEW**: Use `quoVadisSharedBounds()` for text/containers
 
 ### DON'T ❌
 - String-based navigation
@@ -394,20 +258,11 @@ Extendable via:
 5. Custom animation types (add to PredictiveBackAnimationType)
 6. **NEW**: Custom shared element animations (BoundsTransform, EnterTransition, ExitTransition)
 
-## Related Documentation
-
-- `API_REFERENCE.md` - Complete API documentation (includes shared elements)
-- `ARCHITECTURE.md` - Detailed architecture
-- `MULTIPLATFORM_PREDICTIVE_BACK.md` - Predictive back details
-- `NAVIGATION_IMPLEMENTATION.md` - Implementation summary
-- **NEW**: `SHARED_ELEMENT_TRANSITIONS.md` - Complete shared elements guide
-
 ## Recent Architectural Changes (December 2024)
 
 ### Shared Element Transitions Implementation
 1. **Always-On SharedTransitionLayout**: Removed global flag, always enabled (lightweight)
 2. **AnimatedContent Unification**: Both forward and back navigation use AnimatedContent
-3. **Per-Destination Opt-In**: `destinationWithScopes()` provides granular control
 4. **Graceful Degradation**: Elements render normally if scopes null
 5. **Type-Safe Keys**: String keys but typed at call sites
 

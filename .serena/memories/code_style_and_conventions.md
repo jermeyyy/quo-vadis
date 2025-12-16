@@ -108,41 +108,6 @@ isGesturing = false
 coordinator.startAnimation(currentEntry, previousEntry)
 ```
 
-## Kotlin Features & Idioms
-
-### Sealed Classes for Destination Hierarchies
-```kotlin
-sealed class FeatureDestination : Destination {
-    object Home : FeatureDestination()
-    data class Details(val id: String) : FeatureDestination()
-}
-```
-
-### Data Classes for Destinations with Arguments
-```kotlin
-data class UserDestination(val userId: String) : Destination {
-    override val route = "user"
-    override val arguments = mapOf("userId" to userId)
-}
-```
-
-### Extension Functions in Utils
-```kotlin
-fun Navigator.navigateIfNotCurrent(destination: Destination) {
-    if (currentDestination.value?.route != destination.route) {
-        navigate(destination)
-    }
-}
-```
-
-### DSL Builders with Lambda Receivers
-```kotlin
-fun navigationGraph(
-    route: String,
-    builder: NavigationGraphBuilder.() -> Unit
-): NavigationGraph
-```
-
 ### StateFlow over Callbacks
 ```kotlin
 // ✅ Good - reactive state
@@ -168,7 +133,7 @@ fun navigate(destination: Destination?) // Should not be nullable
 **PascalCase** for composables:
 ```kotlin
 @Composable
-fun NavHost(navigator: Navigator) { }
+fun NavigationHost(navigator: Navigator) { }
 
 @Composable
 fun PredictiveBackNavigation(navigator: Navigator) { }
@@ -178,7 +143,7 @@ fun PredictiveBackNavigation(navigator: Navigator) { }
 **Last parameter** with default value:
 ```kotlin
 @Composable
-fun NavHost(
+fun NavigationHost(
     navigator: Navigator,
     graph: NavigationGraph,
     modifier: Modifier = Modifier  // Last, with default
