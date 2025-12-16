@@ -112,7 +112,7 @@ class NavigationConfigBuilderTest {
     fun `nested tab creates proper stack structure`() {
         val config = navigationConfig {
             tabs<TestTabs> {
-                nestedTab(TestTabs.Tab1) {
+                tab(TestTabs.Tab1) {
                     screen(TestDestination.Screen1)
                     screen(TestDestination.Screen2)
                 }

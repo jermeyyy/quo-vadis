@@ -78,7 +78,7 @@ fun ProcessCompleteScreen(navigator: Navigator) {
                 onClick = {
                     // Navigate back to exit the process flow
                     // This will pop back through the entire wizard stack
-                    navigator.navigateTo { MainTabs.HomeTab }
+                    navigator.navigate(MainTabs.HomeTab)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

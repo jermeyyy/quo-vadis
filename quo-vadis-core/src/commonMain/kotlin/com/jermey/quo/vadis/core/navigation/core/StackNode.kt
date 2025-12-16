@@ -63,4 +63,6 @@ data class StackNode(
      */
     val size: Int
         get() = children.size
+
+    companion object
 }

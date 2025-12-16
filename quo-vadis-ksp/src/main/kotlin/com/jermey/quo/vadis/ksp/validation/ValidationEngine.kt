@@ -145,15 +145,11 @@ class ValidationEngine(
         stacks.forEach { stack ->
             stack.destinations.forEach { containedDestinations.add(it.qualifiedName) }
         }
-        // Collect destinations from tabs:
-        // - Legacy tabs: tabItem.destination
-        // - New FLAT_SCREEN tabs: tabItem.destinationInfo
+        // Collect destinations from FLAT_SCREEN tabs
         tabs.forEach { tab ->
             tab.tabs.forEach { tabItem ->
-                // New pattern: FLAT_SCREEN tabs have destinationInfo
+                // FLAT_SCREEN tabs have destinationInfo
                 tabItem.destinationInfo?.let { containedDestinations.add(it.qualifiedName) }
-                // Legacy pattern: tabs have destination field
-                tabItem.destination?.let { containedDestinations.add(it.qualifiedName) }
             }
         }
         panes.forEach { pane ->
@@ -396,25 +392,17 @@ class ValidationEngine(
     // =========================================================================
 
     /**
-     * Validates that rootGraph references in @TabItem and @PaneItem point to @Stack classes.
+     * Validates that rootGraph references in @PaneItem point to @Stack classes.
      * 
-     * Note: In the new pattern, rootGraphClass is null because the @TabItem class itself
-     * IS the stack. This validation only applies to legacy pattern where rootGraph is explicit.
+     * Note: For tabs in the new pattern, NESTED_STACK tabs have stackInfo which contains
+     * the @Stack class. Validation for tabs with @Stack is done separately in validateTabItems.
      */
     private fun validateRootGraphReferences(
         tabs: List<TabInfo>,
         panes: List<PaneInfo>
     ) {
-        tabs.forEach { tab ->
-            tab.tabs.forEach { tabItem ->
-                // Only validate if rootGraphClass is set (legacy pattern)
-                // In new pattern, rootGraphClass is null and the class itself should have @Stack
-                tabItem.rootGraphClass?.let { rootGraph ->
-                    val usageSite = tabItem.destination?.classDeclaration ?: tabItem.classDeclaration
-                    validateRootGraphClass(rootGraph, usageSite)
-                }
-            }
-        }
+        // Note: Tab validation for NESTED_STACK is handled via stackInfo in validateTabItems
+        // No legacy rootGraphClass validation needed anymore
 
         panes.forEach { pane ->
             pane.panes.forEach { paneItem ->

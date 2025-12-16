@@ -139,7 +139,7 @@ class FakeNavigator : Navigator {
     ) {
         navigationCalls.add(NavigationCall.NavigateAndClearTo(destination, clearRoute, inclusive))
         // Simplified: just set the destination as the only item
-        setStartDestination(destination)
+        initializeWithDestination(destination)
     }
 
     override fun navigateAndReplace(destination: Destination, transition: NavigationTransition?) {
@@ -162,7 +162,7 @@ class FakeNavigator : Navigator {
 
     override fun navigateAndClearAll(destination: Destination) {
         navigationCalls.add(NavigationCall.NavigateAndClearAll(destination))
-        setStartDestination(destination)
+        initializeWithDestination(destination)
     }
 
     override fun handleDeepLink(deepLink: DeepLink) {
@@ -170,7 +170,13 @@ class FakeNavigator : Navigator {
         // Default implementation does nothing in tests
     }
 
-    override fun setStartDestination(destination: Destination) {
+    /**
+     * Internal method for test setup. Sets the start destination.
+     * Creates a fresh stack with the given destination as root.
+     *
+     * @param destination The starting destination
+     */
+    internal fun initializeWithDestination(destination: Destination) {
         navigationCalls.add(NavigationCall.SetStartDestination(destination))
         val stackKey = NavKeyGenerator.generate()
         val screenKey = NavKeyGenerator.generate()
@@ -189,18 +195,8 @@ class FakeNavigator : Navigator {
     }
 
     // =========================================================================
-    // TAB NAVIGATION (Stubbed for testing)
+    // TAB NAVIGATION
     // =========================================================================
-
-    @Suppress("DEPRECATION")
-    @Deprecated(
-        message = "switchTab() is deprecated. Use navigate() with a destination instead.",
-        replaceWith = ReplaceWith("navigate(destination)"),
-        level = DeprecationLevel.WARNING
-    )
-    override fun switchTab(index: Int) {
-        // No-op for fake navigator
-    }
 
     override val activeTabIndex: Int?
         get() = null
@@ -367,6 +363,21 @@ class FakeNavigator : Navigator {
     fun getStackSize(): Int {
         val activeStack = _state.value.activeStack()
         return activeStack?.children?.size ?: 0
+    }
+
+    companion object {
+        /**
+         * Creates a FakeNavigator initialized with a single destination.
+         * Useful for simple test cases that don't need complex navigation state.
+         *
+         * @param destination The initial destination to navigate to
+         * @return A FakeNavigator with the destination as its initial state
+         */
+        fun withDestination(destination: Destination): FakeNavigator {
+            return FakeNavigator().apply {
+                initializeWithDestination(destination)
+            }
+        }
     }
 }
 

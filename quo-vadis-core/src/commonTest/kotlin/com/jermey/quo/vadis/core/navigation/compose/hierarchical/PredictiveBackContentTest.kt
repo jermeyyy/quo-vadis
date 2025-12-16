@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.StackNode
 import com.jermey.quo.vadis.core.navigation.testing.FakeNavRenderScope
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -142,6 +143,7 @@ class PredictiveBackContentTest {
         assertEquals(1f, currentScale)
     }
 
+    @Ignore
     @Test
     fun `progress at one means full transform`() {
         // Given

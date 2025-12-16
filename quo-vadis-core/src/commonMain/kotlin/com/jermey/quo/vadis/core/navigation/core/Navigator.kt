@@ -160,21 +160,6 @@ interface Navigator : ParentNavigator {
     // =========================================================================
 
     /**
-     * Switch to a different tab in the active TabNode.
-     *
-     * @param index The index of the tab to switch to
-     * @throws IllegalStateException if no TabNode in current state
-     * @throws IndexOutOfBoundsException if index is invalid
-     */
-    @Deprecated(
-        message = "switchTab() is deprecated. Use navigate() with a destination instead. " +
-            "Navigate will automatically switch to the tab containing the destination.",
-        replaceWith = ReplaceWith("navigate(destination)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun switchTab(index: Int)
-
-    /**
      * The currently active tab index, or null if no TabNode exists.
      */
     val activeTabIndex: Int?
@@ -273,19 +258,6 @@ interface Navigator : ParentNavigator {
      * @param deepLink The deep link to process
      */
     fun handleDeepLink(deepLink: DeepLink)
-
-    /**
-     * Set the start destination (resets navigation state).
-     *
-     * Creates a fresh stack with the given destination as root.
-     *
-     * @param destination The starting destination
-     */
-    @Deprecated(
-        message = "setStartDestination() is no longer needed. Start destination is defined in @Stack/@Tab/@Pane annotations.",
-        level = DeprecationLevel.WARNING
-    )
-    fun setStartDestination(destination: Destination)
 
     /**
      * Get the deep link handler to register patterns.

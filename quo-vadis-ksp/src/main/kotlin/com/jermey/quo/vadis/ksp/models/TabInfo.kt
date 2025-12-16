@@ -114,26 +114,12 @@ data class TabInfo(
  * - [destinationInfo] = null
  * - [stackInfo] = StackInfo for this tab's stack
  *
- * ## Legacy Pattern (Deprecated)
- * ```kotlin
- * @TabItem(label = "Home", icon = "home", rootGraph = HomeGraph::class)
- * data object Home : MainTabs(), Destination  // Separate rootGraph
- * ```
- * - [rootGraphClass] = HomeGraph class reference (legacy, use stackInfo instead)
- * - [destination] = DestinationInfo for this tab item (legacy, use destinationInfo instead)
- *
  * @property label Display label for the tab (e.g., "Home")
  * @property icon Icon identifier for the tab (e.g., "home")
  * @property classDeclaration The KSP class declaration for this tab item
  * @property tabType Type of tab: [TabItemType.FLAT_SCREEN] or [TabItemType.NESTED_STACK]
  * @property destinationInfo Destination info for FLAT_SCREEN tabs. Null for NESTED_STACK.
  * @property stackInfo Stack info for NESTED_STACK tabs. Null for FLAT_SCREEN.
- * @property rootGraphClass Class declaration for the root graph of this tab.
- *                          Null for new pattern where the class itself is the stack.
- *                          Deprecated: Use [tabType] and [stackInfo] instead.
- * @property destination Destination info for this tab item.
- *                       Null for new pattern (doesn't require nested @Destination).
- *                       Deprecated: Use [tabType] and [destinationInfo] instead.
  */
 data class TabItemInfo(
     val label: String,
@@ -142,8 +128,4 @@ data class TabItemInfo(
     val tabType: TabItemType = TabItemType.FLAT_SCREEN,
     val destinationInfo: DestinationInfo? = null,
     val stackInfo: StackInfo? = null,
-    @Deprecated("Use tabType, destinationInfo, or stackInfo instead")
-    val rootGraphClass: KSClassDeclaration? = null,
-    @Deprecated("Use tabType and destinationInfo instead")
-    val destination: DestinationInfo? = null,
 )

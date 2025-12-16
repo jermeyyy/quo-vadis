@@ -12,6 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Tests for [ContainerRegistry] interface and [ContainerInfo] sealed class.
@@ -390,11 +391,11 @@ class ContainerRegistryTest {
 
         val homeResult = registry.getContainerInfo(MainTabs.HomeTab)
         assertEquals(tabInfo, homeResult)
-        assert(homeResult is ContainerInfo.TabContainer)
+        assertTrue(homeResult is ContainerInfo.TabContainer)
 
         val detailResult = registry.getContainerInfo(DetailPane.ListItem)
         assertEquals(paneInfo, detailResult)
-        assert(detailResult is ContainerInfo.PaneContainer)
+        assertTrue(detailResult is ContainerInfo.PaneContainer)
 
         assertNull(registry.getContainerInfo(StandaloneDestination))
     }

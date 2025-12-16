@@ -22,7 +22,7 @@ val config = navigationConfig {
     tabs<MainTabs>(scopeKey = "main") {
         initialTab = 0
         tab(MainTabs.Home, title = "Home", icon = Icons.Home)
-        nestedTab(MainTabs.Search, title = "Search") {
+        tab(MainTabs.Search, title = "Search") {
             screen(SearchDestination.List)
         }
     }
@@ -224,7 +224,7 @@ class NavigationConfigBuilder {
      *     
      *     tab(MainTabs.Home, title = "Home", icon = Icons.Home)
      *     
-     *     nestedTab(MainTabs.Search, title = "Search") {
+     *     tab(MainTabs.Search, title = "Search") {
      *         screen(SearchDestination.Root)
      *     }
      * }
@@ -539,7 +539,7 @@ import kotlin.reflect.KClass
  *     tab(MainTabs.Home, title = "Home", icon = Icons.Home)
  *     
  *     // Tab with nested stack
- *     nestedTab(MainTabs.Search, title = "Search") {
+ *     tab(MainTabs.Search, title = "Search") {
  *         screen(SearchDestination.Root)
  *     }
  *     
@@ -591,7 +591,7 @@ class TabsBuilder {
      * @param icon Icon for the tab
      * @param builder Stack builder for nested screens
      */
-    fun nestedTab(
+    fun tab(
         destination: Destination,
         title: String? = null,
         icon: Any? = null,
@@ -991,7 +991,7 @@ fun PanesBuilder.build(): BuiltPanesConfig {
 
 ### TabsBuilder
 - [ ] `tab()` method for flat screen tabs
-- [ ] `nestedTab()` method for tabs with nested stacks
+- [ ] `tab()` method for tabs with nested stacks
 - [ ] `containerTab()` method for container references
 - [ ] `initialTab` property
 - [ ] `TabEntry` sealed class hierarchy defined
@@ -1087,7 +1087,7 @@ navigationConfig {
 navigationConfig {
     tabs<MainTabs> {
         screen<SomeDestination> { } // Error: Can't call 'screen' in this context
-        // Must use tab() or nestedTab() instead
+        // Must use tab()
     }
 }
 ```

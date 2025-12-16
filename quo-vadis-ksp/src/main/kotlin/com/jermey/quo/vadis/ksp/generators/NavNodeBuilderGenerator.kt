@@ -127,7 +127,8 @@ class NavNodeBuilderGenerator(
                 tabInfo.tabs
                     .filter { it.tabType == TabItemType.NESTED_STACK }
                     .forEach { tabItem ->
-                        val rootGraph = tabItem.rootGraphClass ?: tabItem.classDeclaration
+                        // For NESTED_STACK, use stackInfo class or fall back to tab class itself
+                        val rootGraph = tabItem.stackInfo?.classDeclaration ?: tabItem.classDeclaration
                         val rootGraphName = rootGraph.simpleName.asString()
                         val rootGraphPackage = rootGraph.packageName.asString()
                         addImport(
@@ -313,8 +314,8 @@ class NavNodeBuilderGenerator(
             .indent()
 
         tabInfo.tabs.forEachIndexed { index, tabItem ->
-            val tabKey = (tabItem.destination?.className
-                ?: tabItem.classDeclaration.simpleName.asString()).lowercase()
+            // Always use classDeclaration for tab key - it's the tab item class name
+            val tabKey = tabItem.classDeclaration.simpleName.asString().lowercase()
             val isLast = index == tabInfo.tabs.size - 1
             val comma = if (isLast) "" else ","
 
@@ -351,7 +352,8 @@ class NavNodeBuilderGenerator(
                 }
                 TabItemType.NESTED_STACK -> {
                     // Use existing logic - call the stack's builder function
-                    val rootGraph = tabItem.rootGraphClass ?: tabItem.classDeclaration
+                    // For NESTED_STACK, use stackInfo class or fall back to tab class itself
+                    val rootGraph = tabItem.stackInfo?.classDeclaration ?: tabItem.classDeclaration
                     val rootGraphName = rootGraph.simpleName.asString()
 
                     builder.add(

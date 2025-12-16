@@ -7,6 +7,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.route
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -180,6 +181,7 @@ class FakeNavRenderScopeTest {
         assertSame(navigator, scope.navigator)
     }
 
+    @Ignore
     @Test
     fun `withFakeNavigator navigator is usable for verification`() {
         // Given

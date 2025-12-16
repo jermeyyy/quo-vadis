@@ -10,7 +10,6 @@ import com.jermey.quo.vadis.ksp.models.PaneInfo
 import com.jermey.quo.vadis.ksp.models.PaneItemInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
-import com.jermey.quo.vadis.ksp.models.TabItemInfo
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.ClassName
@@ -72,11 +71,13 @@ class NavigatorExtGenerator(
      *
      * Creates a single `NavigatorExtensions.kt` file containing:
      * - `to{Destination}()` extensions for stack navigation
-     * - `switchTo{Tab}Tab()` extensions for tab switching
      * - `switchTo{Pane}Pane()` extensions for pane switching
      *
+     * Note: Tab switching extensions are no longer generated as `Navigator.switchTab()`
+     * has been removed. Tab navigation is now handled through the NavNode tree architecture.
+     *
      * @param stacks List of stack container information
-     * @param tabs List of tab container information
+     * @param tabs List of tab container information (kept for API compatibility)
      * @param panes List of pane container information
      * @param basePackage Base package for the generated file
      */
@@ -104,10 +105,7 @@ class NavigatorExtGenerator(
                     val topLevel = findTopLevelClass(stack.classDeclaration)
                     addImport(topLevel.packageName.asString(), topLevel.simpleName.asString())
                 }
-                tabs.forEach { tab ->
-                    val topLevel = findTopLevelClass(tab.classDeclaration)
-                    addImport(topLevel.packageName.asString(), topLevel.simpleName.asString())
-                }
+                // Note: Tab imports removed - switchTo*Tab() extensions no longer generated
                 panes.forEach { pane ->
                     val topLevel = findTopLevelClass(pane.classDeclaration)
                     addImport(topLevel.packageName.asString(), topLevel.simpleName.asString())
@@ -119,10 +117,7 @@ class NavigatorExtGenerator(
                     addStackExtensions(this, stack)
                 }
 
-                // Generate tab switching extensions
-                tabs.forEach { tab ->
-                    addTabSwitchingExtensions(this, tab)
-                }
+                // Note: Tab switching extensions removed - Navigator.switchTab() no longer exists
 
                 // Generate pane switching extensions
                 panes.forEach { pane ->
@@ -223,46 +218,6 @@ class NavigatorExtGenerator(
     }
 
     // =========================================================================
-    // Tab Switching Extensions
-    // =========================================================================
-
-    /**
-     * Add tab switching extensions for all tabs in a tab container.
-     *
-     * Generates `switchTo{Tab}Tab()` functions that call `switchTab()` on the Navigator.
-     *
-     * @param builder The FileSpec builder to add functions to
-     * @param tab The tab container information
-     */
-    private fun addTabSwitchingExtensions(builder: FileSpec.Builder, tab: TabInfo) {
-        tab.tabs.forEachIndexed { index, tabItem ->
-            builder.addFunction(buildTabSwitchExtension(tab, tabItem, index))
-        }
-    }
-
-    /**
-     * Build a tab switching extension function.
-     *
-     * Example: `fun Navigator.switchToHomeTab() = switchTab(0)` // index-based
-     *
-     * @param tab The parent tab container
-     * @param tabItem The tab item to generate an extension for
-     * @param tabIndex The index of this tab in the @Tab items array
-     * @return A FunSpec for the generated extension function
-     */
-    private fun buildTabSwitchExtension(tab: TabInfo, tabItem: TabItemInfo, tabIndex: Int): FunSpec {
-        // For new pattern, use classDeclaration name; for legacy, use destination className
-        val tabClassName = tabItem.destination?.className ?: tabItem.classDeclaration.simpleName.asString()
-        val functionName = "switchTo${tabClassName}Tab"
-
-        return FunSpec.builder(functionName)
-            .addKdoc("Switch to the ${tabItem.label} tab (index $tabIndex).")
-            .receiver(NAVIGATOR)
-            .addStatement("switchTab(%L)", tabIndex)
-            .build()
-    }
-
-    // =========================================================================
     // Pane Switching Extensions
     // =========================================================================
 
@@ -306,16 +261,18 @@ class NavigatorExtGenerator(
 
     /**
      * Count total number of extensions that will be generated.
+     * Note: Tab extensions are no longer generated.
      */
+    @Suppress("UNUSED_PARAMETER") // tabs kept for API compatibility
     private fun countExtensions(
         stacks: List<StackInfo>,
         tabs: List<TabInfo>,
         panes: List<PaneInfo>
     ): Int {
         val stackExtensions = stacks.sumOf { it.destinations.size }
-        val tabExtensions = tabs.sumOf { it.tabs.size }
+        // Tab extensions removed - Navigator.switchTab() no longer exists
         val paneExtensions = panes.sumOf { it.panes.size }
-        return stackExtensions + tabExtensions + paneExtensions
+        return stackExtensions + paneExtensions
     }
 
     /**

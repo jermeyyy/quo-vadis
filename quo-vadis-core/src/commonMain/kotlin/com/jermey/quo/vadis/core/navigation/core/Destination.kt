@@ -26,36 +26,14 @@ interface Destination {
 
 /**
  * Extension to get the route for any Destination.
- * For BasicDestination, returns the stored route directly.
- * For other destinations, routes are resolved from RouteRegistry (populated by KSP-generated code).
+ * Routes are resolved from RouteRegistry (populated by KSP-generated code).
  */
 val Destination.route: String
     get() {
-        // BasicDestination holds its route directly
-        if (this is BasicDestination) {
-            return this.routeString
-        }
-        
-        // For user-defined destinations, use RouteRegistry
         val kClass = this::class
         val route = RouteRegistry.getRoute(kClass)
         println("DEBUG: Destination.route - class=$kClass, simpleName=${kClass.simpleName}, route=$route")
         return route ?: error("Route not registered for ${kClass.simpleName}. Ensure @Route annotation is present.")
     }
-
-/**
- * Basic destination implementation for simple navigation without typed data.
- * Holds the route string directly, bypassing RouteRegistry to avoid conflicts.
- * 
- * @internal This class is internal to the library. Use the DSL functions to create destinations.
- */
-@Deprecated(
-    message = "BasicDestination is replaced by sealed class members.",
-    level = DeprecationLevel.WARNING
-)
-internal data class BasicDestination(
-    internal val routeString: String,
-    override val transition: NavigationTransition? = null
-) : Destination
 
 

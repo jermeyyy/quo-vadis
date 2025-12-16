@@ -625,7 +625,7 @@ import com.squareup.kotlinpoet.ksp.toClassName
  * tabs<MainTabs>(scopeKey = "MainTabs", wrapperKey = "mainWrapper") {
  *     initialTab = 0
  *     tab(MainTabs.HomeTab, title = "Home", icon = Icons.Home)
- *     nestedTab(MainTabs.ExploreTab, title = "Explore") {
+ *     tab(MainTabs.ExploreTab, title = "Explore") {
  *         screen(ExploreDestination.List)
  *     }
  * }
@@ -729,16 +729,16 @@ class ContainerBlockGenerator(
     }
     
     /**
-     * Generates a single tab entry (tab or nestedTab).
+     * Generates a single tab entry (tab).
      */
     private fun generateTabEntry(item: TabInfo.TabItem, parentTab: TabInfo): CodeBlock {
         val destClass = item.destination.toClassName()
         val destExpression = "${parentTab.containerClass.simpleName.asString()}.${item.destination.simpleName.asString()}"
         
         return if (item.hasNestedStack) {
-            // nestedTab with nested stack
+            // tab with nested stack
             CodeBlock.builder()
-                .beginControlFlow("nestedTab(%L, title = %S)", destExpression, item.title ?: item.destination.simpleName.asString())
+                .beginControlFlow("tab(%L, title = %S)", destExpression, item.title ?: item.destination.simpleName.asString())
                 .apply {
                     item.nestedScreens.forEach { nestedScreen ->
                         addStatement("screen(%T)", nestedScreen.toClassName())

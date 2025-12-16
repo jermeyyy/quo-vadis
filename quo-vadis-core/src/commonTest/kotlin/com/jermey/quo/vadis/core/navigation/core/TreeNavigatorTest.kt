@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import com.jermey.quo.vadis.core.navigation.testing.withDestination
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -97,31 +98,6 @@ class TreeNavigatorTest {
     }
 
     @Test
-    fun `setStartDestination initializes state with single screen`() {
-        val navigator = TreeNavigator()
-
-        navigator.setStartDestination(HomeDestination)
-
-        val state = navigator.state.value
-        assertTrue(state is StackNode)
-        assertEquals(1, (state as StackNode).children.size)
-        assertEquals(HomeDestination, navigator.currentDestination.value)
-    }
-
-    @Test
-    fun `setStartDestination clears existing state`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
-        navigator.navigate(ProfileDestination)
-
-        navigator.setStartDestination(SettingsDestination)
-
-        val state = navigator.state.value as StackNode
-        assertEquals(1, state.children.size)
-        assertEquals(SettingsDestination, navigator.currentDestination.value)
-    }
-
-    @Test
     fun `constructor with initial state uses provided state`() {
         val initialState = StackNode(
             key = "root",
@@ -142,8 +118,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `transitionState starts as Idle`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         val transitionState = navigator.transitionState.value
 
@@ -152,16 +127,14 @@ class TreeNavigatorTest {
 
     @Test
     fun `canNavigateBack initially false with single screen`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         assertFalse(navigator.canNavigateBack.value)
     }
 
     @Test
     fun `previousDestination is null with single screen`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         assertNull(navigator.previousDestination.value)
     }
@@ -172,8 +145,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigate pushes to active stack`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         navigator.navigate(ProfileDestination)
 
@@ -184,8 +156,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigate updates previousDestination`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         navigator.navigate(ProfileDestination)
 
@@ -194,8 +165,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigate updates canNavigateBack`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         assertFalse(navigator.canNavigateBack.value)
 
         navigator.navigate(ProfileDestination)
@@ -205,8 +175,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigate multiple screens builds stack correctly`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.navigate(SettingsDestination)
 
@@ -218,8 +187,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigate with transition updates transitionState`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         navigator.navigate(ProfileDestination, TestTransition)
 
@@ -246,8 +214,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateBack pops from active stack`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
 
         val result = navigator.navigateBack()
@@ -260,8 +227,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `handleBackInternal returns false on single-item root stack`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         // Single screen at root - should delegate to system (close app)
         // New back handling preserves root constraint: root stack always keeps 1 item
@@ -274,8 +240,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateBack updates previousDestination`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.navigate(SettingsDestination)
 
@@ -286,8 +251,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateBack updates canNavigateBack`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         assertTrue(navigator.canNavigateBack.value)
 
@@ -298,8 +262,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `handleBackInternal multiple times until single item at root`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.navigate(SettingsDestination)
 
@@ -323,8 +286,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateAndReplace replaces current screen`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
 
         navigator.navigateAndReplace(SettingsDestination)
@@ -337,8 +299,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateAndReplace at root replaces root`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         navigator.navigateAndReplace(ProfileDestination)
 
@@ -349,8 +310,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateAndReplace with transition updates transitionState`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         navigator.navigateAndReplace(ProfileDestination, TestTransition)
 
@@ -364,8 +324,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateAndClearAll resets to single destination`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.navigate(SettingsDestination)
 
@@ -379,8 +338,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateAndClearAll updates derived states`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
 
         navigator.navigateAndClearAll(SettingsDestination)
@@ -395,8 +353,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateAndClearTo pops to specified route and pushes`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.navigate(SettingsDestination)
 
@@ -414,7 +371,7 @@ class TreeNavigatorTest {
     // =========================================================================
 
     @Test
-    fun `switchTab changes active tab`() {
+    fun `switchActiveTab changes active tab`() {
         val initialState = StackNode(
             key = "root",
             parentKey = null,
@@ -436,7 +393,8 @@ class TreeNavigatorTest {
         )
         val navigator = TreeNavigator(initialState = initialState)
 
-        navigator.switchTab(1)
+        val newState = TreeMutator.switchActiveTab(navigator.state.value, 1)
+        navigator.updateState(newState)
 
         val tabs = (navigator.state.value as StackNode).children[0] as TabNode
         assertEquals(1, tabs.activeStackIndex)
@@ -444,7 +402,7 @@ class TreeNavigatorTest {
     }
 
     @Test
-    fun `switchTab preserves all tab stacks`() {
+    fun `switchActiveTab preserves all tab stacks`() {
         // Wrap TabNode in root StackNode for proper structure
         val tabNode = TabNode(
             key = "tabs",
@@ -467,7 +425,8 @@ class TreeNavigatorTest {
         )
         val navigator = TreeNavigator(initialState = initialState)
 
-        navigator.switchTab(1)
+        val newState = TreeMutator.switchActiveTab(navigator.state.value, 1)
+        navigator.updateState(newState)
 
         val root = navigator.state.value as StackNode
         val tabs = root.children[0] as TabNode
@@ -476,7 +435,7 @@ class TreeNavigatorTest {
     }
 
     @Test
-    fun `switchTab throws for invalid index`() {
+    fun `switchActiveTab throws for invalid index`() {
         val tabNode = TabNode(
             key = "tabs",
             parentKey = "root",
@@ -491,12 +450,12 @@ class TreeNavigatorTest {
         val navigator = TreeNavigator(initialState = initialState)
 
         assertFailsWith<IllegalArgumentException> {
-            navigator.switchTab(5)
+            TreeMutator.switchActiveTab(navigator.state.value, 5)
         }
     }
 
     @Test
-    fun `switchTab throws for negative index`() {
+    fun `switchActiveTab throws for negative index`() {
         val tabNode = TabNode(
             key = "tabs",
             parentKey = "root",
@@ -511,7 +470,7 @@ class TreeNavigatorTest {
         val navigator = TreeNavigator(initialState = initialState)
 
         assertFailsWith<IllegalArgumentException> {
-            navigator.switchTab(-1)
+            TreeMutator.switchActiveTab(navigator.state.value, -1)
         }
     }
 
@@ -538,8 +497,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `activeTabIndex returns null when no TabNode exists`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         assertNull(navigator.activeTabIndex)
     }
@@ -642,8 +600,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateToPane throws when no PaneNode exists`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         assertFailsWith<IllegalStateException> {
             navigator.navigateToPane(PaneRole.Supporting, DetailDestination)
@@ -682,8 +639,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `switchPane throws when no PaneNode exists`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         assertFailsWith<IllegalStateException> {
             navigator.switchPane(PaneRole.Supporting)
@@ -740,8 +696,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `isPaneAvailable returns false when no PaneNode exists`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         assertFalse(navigator.isPaneAvailable(PaneRole.Primary))
     }
@@ -797,8 +752,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `paneContent returns null when no PaneNode exists`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         assertNull(navigator.paneContent(PaneRole.Primary))
     }
@@ -866,8 +820,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigateBackInPane returns false when no PaneNode exists`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         val result = navigator.navigateBackInPane(PaneRole.Supporting)
 
@@ -911,8 +864,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `clearPane throws when no PaneNode exists`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         assertFailsWith<IllegalStateException> {
             navigator.clearPane(PaneRole.Supporting)
@@ -925,8 +877,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `updateTransitionProgress updates InProgress state`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination, TestTransition)
 
         navigator.updateTransitionProgress(0.5f)
@@ -937,8 +888,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `updateTransitionProgress does nothing when Idle`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         navigator.updateTransitionProgress(0.5f)
 
@@ -947,8 +897,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `completeTransition sets state to Idle`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination, TestTransition)
 
         navigator.completeTransition()
@@ -958,8 +907,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `startPredictiveBack initiates PredictiveBack state`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
 
         navigator.startPredictiveBack()
@@ -971,8 +919,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `startPredictiveBack sets correct keys`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
 
         navigator.startPredictiveBack()
@@ -984,8 +931,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `updatePredictiveBack updates progress and touch coordinates`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.startPredictiveBack()
 
@@ -999,8 +945,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `updatePredictiveBack clamps progress to valid range`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.startPredictiveBack()
 
@@ -1012,8 +957,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `updatePredictiveBack clamps touch coordinates to valid range`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.startPredictiveBack()
 
@@ -1026,8 +970,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `cancelPredictiveBack sets state to Idle`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.startPredictiveBack()
 
@@ -1038,8 +981,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `commitPredictiveBack completes navigation and sets Idle`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.startPredictiveBack()
 
@@ -1104,8 +1046,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `updateState directly sets new state`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         val newState = StackNode(
             key = "new-root",
@@ -1126,8 +1067,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `updateState with transition sets transition state`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         val newState = StackNode(
             key = "new-root",
@@ -1145,8 +1085,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `updateState without transition sets Idle`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination, TestTransition)
 
         val newState = navigator.state.value
@@ -1162,8 +1101,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `derived states update synchronously after navigation`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
 
         // Before navigation
         assertEquals(HomeDestination, navigator.currentDestination.value)
@@ -1180,8 +1118,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `derived states update after back navigation`() {
-        val navigator = TreeNavigator()
-        navigator.setStartDestination(HomeDestination)
+        val navigator = TreeNavigator.withDestination(HomeDestination)
         navigator.navigate(ProfileDestination)
         navigator.navigate(SettingsDestination)
 
@@ -1214,7 +1151,8 @@ class TreeNavigatorTest {
         )
         val navigator = TreeNavigator(initialState = initialState)
 
-        navigator.switchTab(1)
+        val newState = TreeMutator.switchActiveTab(navigator.state.value, 1)
+        navigator.updateState(newState)
 
         assertEquals(ProfileDestination, navigator.currentDestination.value)
     }
@@ -1251,7 +1189,8 @@ class TreeNavigatorTest {
         assertEquals(DetailDestination, navigator.currentDestination.value)
 
         // Switch to profile tab
-        navigator.switchTab(1)
+        var newState = TreeMutator.switchActiveTab(navigator.state.value, 1)
+        navigator.updateState(newState)
         assertEquals(ProfileDestination, navigator.currentDestination.value)
 
         // Navigate in profile tab
@@ -1263,7 +1202,8 @@ class TreeNavigatorTest {
         assertEquals(ProfileDestination, navigator.currentDestination.value)
 
         // Switch back to home tab - should preserve navigation state
-        navigator.switchTab(0)
+        newState = TreeMutator.switchActiveTab(navigator.state.value, 0)
+        navigator.updateState(newState)
         assertEquals(DetailDestination, navigator.currentDestination.value)
 
         // Go back in home tab

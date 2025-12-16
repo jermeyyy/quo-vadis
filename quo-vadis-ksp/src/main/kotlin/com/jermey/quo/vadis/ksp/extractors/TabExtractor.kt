@@ -276,24 +276,20 @@ class TabExtractor(
         // Detect tab type and extract type-specific info
         val tabType = detectTabItemType(classDeclaration)
         val (destinationInfo, stackInfo) = extractTypeSpecificInfo(classDeclaration, tabType)
-        val rootGraphClass = extractRootGraphClass(tabItemAnnotation)
 
         logger.info(
             "Extracted @TabItem '${classDeclaration.simpleName.asString()}' " +
                 "(label='$label', icon='$icon', tabType=$tabType, " +
-                "rootGraph=${rootGraphClass?.simpleName?.asString() ?: "self"})"
+                "stackClass=${stackInfo?.classDeclaration?.simpleName?.asString() ?: "self"})"
         )
 
-        @Suppress("DEPRECATION")
         return TabItemInfo(
             label = label,
             icon = icon,
             classDeclaration = classDeclaration,
             tabType = tabType,
             destinationInfo = destinationInfo,
-            stackInfo = stackInfo,
-            rootGraphClass = rootGraphClass,
-            destination = null // Not required for new pattern
+            stackInfo = stackInfo
         )
     }
 
@@ -335,27 +331,6 @@ class TabExtractor(
     }
 
     /**
-     * Extract rootGraphClass from annotation (for legacy compatibility).
-     */
-    @Suppress("DEPRECATION")
-    private fun extractRootGraphClass(
-        tabItemAnnotation: com.google.devtools.ksp.symbol.KSAnnotation
-    ): KSClassDeclaration? {
-        val rootGraphType = tabItemAnnotation.arguments.find {
-            it.name?.asString() == "rootGraph"
-        }?.value as? KSType
-
-        val rootGraphQualifiedName = (rootGraphType?.declaration as? KSClassDeclaration)
-            ?.qualifiedName?.asString()
-
-        return if (rootGraphQualifiedName == "kotlin.Unit" || rootGraphQualifiedName == null) {
-            null
-        } else {
-            rootGraphType?.declaration as? KSClassDeclaration
-        }
-    }
-
-    /**
      * Extract tabs from sealed subclasses (legacy pattern).
      *
      * This may fail in KMP metadata compilation due to KSP limitations
@@ -389,7 +364,7 @@ class TabExtractor(
      * In the legacy pattern:
      * - The class is a nested sealed subclass with @TabItem
      * - The class must also have @Destination
-     * - rootGraph points to a separate @Stack class
+     * - rootGraph parameter is deprecated and ignored
      *
      * @param classDeclaration The nested @TabItem subclass
      * @return TabItemInfo or null if not valid
@@ -417,40 +392,30 @@ class TabExtractor(
             it.name?.asString() == "icon"
         }?.value as? String ?: ""
 
+        // Note: rootGraph parameter is deprecated and no longer supported
+        // Check if it's set and warn the user
         val rootGraphType = tabItemAnnotation.arguments.find {
             it.name?.asString() == "rootGraph"
         }?.value as? KSType
-
-        val rootGraphClass = rootGraphType?.declaration as? KSClassDeclaration
-        if (rootGraphClass == null) {
+        val rootGraphQualifiedName = (rootGraphType?.declaration as? KSClassDeclaration)
+            ?.qualifiedName?.asString()
+        if (rootGraphQualifiedName != null && rootGraphQualifiedName != "kotlin.Unit") {
             logger.warn(
-                "Could not resolve rootGraph for legacy tab item ${classDeclaration.simpleName.asString()}",
+                "Legacy @TabItem '${classDeclaration.simpleName.asString()}' uses deprecated " +
+                    "'rootGraph' parameter. Please migrate to the new pattern using @Stack " +
+                    "annotation directly on the tab class.",
                 classDeclaration
             )
-            return null
         }
 
-        // Ensure rootGraph is not Unit::class for legacy pattern
-        if (rootGraphClass.qualifiedName?.asString() == "kotlin.Unit") {
-            logger.error(
-                "Legacy @TabItem '${classDeclaration.simpleName.asString()}' must specify rootGraph",
-                classDeclaration
-            )
-            return null
-        }
-
-        // Legacy pattern is always FLAT_SCREEN with explicit rootGraph
-        // (the destination is on the tab item, not on a nested stack)
-        @Suppress("DEPRECATION")
+        // Legacy pattern is now treated as FLAT_SCREEN with the destination info
         return TabItemInfo(
             label = label,
             icon = icon,
             classDeclaration = classDeclaration,
             tabType = TabItemType.FLAT_SCREEN,
             destinationInfo = destination,
-            stackInfo = null,
-            rootGraphClass = rootGraphClass,
-            destination = destination
+            stackInfo = null
         )
     }
 

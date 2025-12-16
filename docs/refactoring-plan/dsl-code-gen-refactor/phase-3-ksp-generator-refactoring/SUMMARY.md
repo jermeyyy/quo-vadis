@@ -160,7 +160,7 @@ object GeneratedNavigationConfig : NavigationConfig {
         tabs<MainTabs>(scopeKey = "MainTabs") {
             initialTab = 0
             tab(MainTabs.HomeTab, title = "Home", icon = Icons.Home)
-            nestedTab(MainTabs.ExploreTab, title = "Explore") {
+            tab(MainTabs.ExploreTab, title = "Explore") {
                 screen(ExploreDestination.List)
             }
         }

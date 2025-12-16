@@ -573,34 +573,6 @@ class TreeNavigator(
     }
 
     /**
-     * Set the start destination.
-     *
-     * Clears all existing state and sets up a fresh stack with the given destination.
-     *
-     * @param destination The starting destination
-     */
-    @Deprecated(
-        "setStartDestination() is no longer needed. Start destination is defined in @Stack/@Tab/@Pane annotations.",
-        level = DeprecationLevel.WARNING
-    )
-    override fun setStartDestination(destination: Destination) {
-        val stackKey = generateKey()
-        val screenKey = generateKey()
-
-        val newState = StackNode(
-            key = stackKey,
-            parentKey = null,
-            children = listOf(
-                ScreenNode(key = screenKey, parentKey = stackKey, destination = destination)
-            )
-        )
-        _state.value = newState
-        updateDerivedState(newState)
-
-        _transitionState.value = TransitionState.Idle
-    }
-
-    /**
      * Get the deep link handler to register patterns.
      *
      * @return The configured DeepLinkHandler
@@ -775,26 +747,6 @@ class TreeNavigator(
     // =========================================================================
     // TAB OPERATIONS
     // =========================================================================
-
-    /**
-     * Switch to a specific tab.
-     *
-     * @param index The tab index to switch to
-     * @throws IllegalStateException if no TabNode in the current state
-     * @throws IndexOutOfBoundsException if index is invalid
-     */
-    @Suppress("DEPRECATION")
-    @Deprecated(
-        message = "switchTab() is deprecated. Use navigate() with a destination instead. " +
-            "Navigate will automatically switch to the tab containing the destination.",
-        replaceWith = ReplaceWith("navigate(destination)"),
-        level = DeprecationLevel.WARNING
-    )
-    override fun switchTab(index: Int) {
-        val newState = TreeMutator.switchActiveTab(_state.value, index)
-        _state.value = newState
-        updateDerivedState(newState)
-    }
 
     /**
      * Get the current active tab index.
@@ -973,6 +925,8 @@ class TreeNavigator(
     }
 
     private fun generateKey(): String = Uuid.random().toString().take(8)
+
+    companion object
 }
 
 // =========================================================================

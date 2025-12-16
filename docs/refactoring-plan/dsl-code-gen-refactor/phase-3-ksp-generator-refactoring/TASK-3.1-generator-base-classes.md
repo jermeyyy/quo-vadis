@@ -385,7 +385,7 @@ object CodeBlockBuilders {
     }
     
     /**
-     * Builds a `nestedTab()` entry with nested stack.
+     * Builds a `tab()` entry with nested stack.
      * 
      * @param destination The destination instance expression
      * @param title Optional tab title
@@ -406,7 +406,7 @@ object CodeBlockBuilders {
         }.joinToString(", ")
         
         return CodeBlock.builder()
-            .addStatement("nestedTab($params) {")
+            .addStatement("tab($params) {")
             .indent()
             .add(stackContent)
             .unindent()

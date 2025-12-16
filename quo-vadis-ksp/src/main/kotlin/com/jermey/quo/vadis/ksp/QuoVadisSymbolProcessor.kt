@@ -239,15 +239,15 @@ class QuoVadisSymbolProcessor(
         }
 
         // Collect destinations from tabs:
-        // - Legacy tabs: use it.destination
-        // - New FLAT_SCREEN tabs: use it.destinationInfo
+        // - FLAT_SCREEN tabs: use destinationInfo
         // - NESTED_STACK tabs: destinations are in the stackInfo (already collected above)
         collectedTabs.forEach { tab ->
             tab.tabs.forEach { tabItem ->
-                // Prefer new destinationInfo field (for FLAT_SCREEN tabs)
-                val dest = tabItem.destinationInfo ?: tabItem.destination
-                if (dest != null && seenQualifiedNames.add(dest.qualifiedName)) {
-                    destinations.add(dest)
+                // For FLAT_SCREEN tabs, destinationInfo contains the destination
+                tabItem.destinationInfo?.let { dest ->
+                    if (seenQualifiedNames.add(dest.qualifiedName)) {
+                        destinations.add(dest)
+                    }
                 }
             }
         }
@@ -471,8 +471,9 @@ class QuoVadisSymbolProcessor(
      *
      * Creates extension functions on Navigator for type-safe navigation:
      * - `to{Destination}()` for stack destinations
-     * - `switchTo{Tab}Tab()` for tab switching
      * - `switchTo{Pane}Pane()` for pane switching
+     *
+     * Note: Tab switching extensions are no longer generated.
      */
     private fun generateNavigatorExtensions() {
         if (collectedStacks.isEmpty() && collectedTabs.isEmpty() && collectedPanes.isEmpty()) {

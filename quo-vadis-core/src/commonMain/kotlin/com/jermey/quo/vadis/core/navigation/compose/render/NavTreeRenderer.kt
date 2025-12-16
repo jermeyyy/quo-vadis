@@ -22,6 +22,7 @@ import com.jermey.quo.vadis.core.navigation.core.PaneRole
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.StackNode
 import com.jermey.quo.vadis.core.navigation.core.TabNode
+import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 
 /**
  * Core recursive renderer that dispatches to node-specific renderers based on [NavNode] type.
@@ -370,6 +371,7 @@ private fun detectBackNavigation(current: StackNode, previous: StackNode?): Bool
  * @see WrapperRegistry.TabWrapper
  * @see AnimatedNavContent
  */
+@Suppress("DEPRECATION") // Internal usage - deprecation is for public API users
 @Composable
 internal fun TabRenderer(
     node: TabNode,
@@ -389,7 +391,10 @@ internal fun TabRenderer(
             activeTabIndex = node.activeStackIndex,
             tabMetadata = createTabMetadataFromStacks(node),
             isTransitioning = false, // Transition state is tracked by AnimatedNavContent
-            onSwitchTab = { index -> scope.navigator.switchTab(index) }
+            onSwitchTab = { index ->
+                val newState = TreeMutator.switchActiveTab(scope.navigator.state.value, index)
+                scope.navigator.updateState(newState)
+            }
         )
     }
 
@@ -401,7 +406,10 @@ internal fun TabRenderer(
                 activeTabIndex = node.activeStackIndex,
                 tabMetadata = createTabMetadataFromStacks(node),
                 isTransitioning = false,
-                onSwitchTab = { index -> scope.navigator.switchTab(index) }
+                onSwitchTab = { index ->
+                    val newState = TreeMutator.switchActiveTab(scope.navigator.state.value, index)
+                    scope.navigator.updateState(newState)
+                }
             )
         }
     }

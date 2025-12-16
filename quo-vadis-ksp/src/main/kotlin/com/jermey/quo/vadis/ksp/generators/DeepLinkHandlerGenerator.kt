@@ -5,6 +5,7 @@ import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
 import com.jermey.quo.vadis.ksp.QuoVadisClassNames
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -149,7 +150,7 @@ class DeepLinkHandlerGenerator(
             .addFunction(buildExtractPathFunction())
             // DeepLinkHandler interface methods
             .addFunction(buildResolveFunction())
-            .addFunction(buildRegisterFunction())
+            .addFunction(buildSimpleRegisterFunction())
             .addFunction(buildHandleFunction())
             .build()
     }
@@ -433,7 +434,7 @@ class DeepLinkHandlerGenerator(
     }
 
     /**
-     * Build the register function from DeepLinkHandler interface.
+     * Build the register function from DeepLinkHandler interface (deprecated 3-param version).
      * 
      * This is a no-op for generated handlers since routes are determined at compile time.
      */
@@ -441,6 +442,33 @@ class DeepLinkHandlerGenerator(
         val actionType = LambdaTypeName.get(
             parameters = listOf(
                 ParameterSpec.builder("destination", QuoVadisClassNames.DESTINATION).build(),
+                ParameterSpec.builder("navigator", NAVIGATOR).build(),
+                ParameterSpec.builder("parameters", MAP.parameterizedBy(STRING, STRING)).build()
+            ),
+            returnType = ClassName("kotlin", "Unit")
+        )
+        
+        return FunSpec.builder("register")
+            .addModifiers(KModifier.OVERRIDE)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlin", "Suppress"))
+                    .addMember("%S", "DEPRECATION")
+                    .build()
+            )
+            .addParameter("pattern", STRING)
+            .addParameter("action", actionType)
+            .addComment("No-op: Generated handler uses compile-time routes from @Destination annotations")
+            .build()
+    }
+
+    /**
+     * Build the new simplified register function from DeepLinkHandler interface (2-param version).
+     * 
+     * This is a no-op for generated handlers since routes are determined at compile time.
+     */
+    private fun buildSimpleRegisterFunction(): FunSpec {
+        val actionType = LambdaTypeName.get(
+            parameters = listOf(
                 ParameterSpec.builder("navigator", NAVIGATOR).build(),
                 ParameterSpec.builder("parameters", MAP.parameterizedBy(STRING, STRING)).build()
             ),

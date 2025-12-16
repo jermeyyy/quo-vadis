@@ -321,7 +321,7 @@ class TabsBuilder {
     /**
      * Add a tab with nested stack navigation.
      */
-    inline fun <reified D : Destination> nestedTab(
+    inline fun <reified D : Destination> tab(
         destination: D,
         title: String? = null,
         icon: Any? = null,
@@ -498,7 +498,7 @@ object GeneratedNavigationConfig : NavigationConfig {
             )
             
             // Nested stack tab
-            nestedTab(
+            tab(
                 destination = MainTabs.ExploreTab,
                 title = "Explore",
                 icon = Icons.Explore
@@ -1006,7 +1006,7 @@ object GeneratedNavigationConfig : NavigationConfig {
         tabs<MainTabs>(scopeKey = "MainTabs") {
             initialTab = 0
             tab(MainTabs.HomeTab, title = "Home", icon = Icons.Home)
-            nestedTab(MainTabs.ExploreTab, title = "Explore", icon = Icons.Explore) {
+            tab(MainTabs.ExploreTab, title = "Explore", icon = Icons.Explore) {
                 screen(ExploreDestination.List)
             }
             containerTab<MainTabs.ProfileTab>(ProfileStack::class, "Profile", Icons.Person)
@@ -1199,7 +1199,7 @@ containerBlock := tabsBlock | stackBlock | panesBlock
 
 tabsBlock := 'tabs' '<' DestinationType '>' '(' containerParams ')' '{' tabsContent '}'
 tabsContent := ('initialTab' '=' INT)? tabEntry*
-tabEntry := 'tab' '(' tabParams ')' | 'nestedTab' '(' tabParams ')' '{' stackContent '}' | 'containerTab' '<' DestinationType '>' '(' containerClass ',' tabParams ')'
+tabEntry := 'tab' '(' tabParams ')' | 'tab' '(' tabParams ')' '{' stackContent '}' | 'containerTab' '<' DestinationType '>' '(' containerClass ',' tabParams ')'
 
 stackBlock := 'stack' '<' DestinationType '>' '(' containerParams ')' '{' stackContent '}'
 stackContent := screenEntry*
