@@ -2,6 +2,8 @@ package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.navigation.compose.registry.BackHandlerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerInfo
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import kotlinx.coroutines.CoroutineScope
@@ -55,6 +57,10 @@ import kotlin.uuid.Uuid
  *   out of the current container's scope (TabNode/PaneNode), navigation pushes to
  *   the parent stack instead of the deepest active stack. Defaults to [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry.Empty]
  *   which allows all destinations in all scopes (backward compatible behavior).
+ * @property containerRegistry Registry for container-aware navigation. When navigating
+ *   to a destination that belongs to a @Tabs or @Pane container, this registry provides
+ *   the builder function to create the appropriate container node. Defaults to
+ *   [ContainerRegistry.Empty] which never creates containers (backward compatible behavior).
  */
 @OptIn(ExperimentalUuidApi::class)
 @Stable
@@ -62,7 +68,8 @@ class TreeNavigator(
     private val deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler(),
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
     initialState: NavNode? = null,
-    private val scopeRegistry: ScopeRegistry = ScopeRegistry.Empty
+    private val scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
+    private val containerRegistry: ContainerRegistry = ContainerRegistry.Empty
 ) : Navigator {
 
     // =========================================================================
@@ -208,6 +215,9 @@ class TreeNavigator(
      * Navigate to a destination with optional transition.
      *
      * Pushes the destination onto the deepest active stack in the tree.
+     * Uses container-aware navigation logic:
+     * 1. Check if destination needs a container AND we're not already inside one
+     * 2. Default - push as ScreenNode (TreeMutator handles scope-aware navigation)
      *
      * @param destination The destination to navigate to
      * @param transition Optional transition animation
@@ -217,6 +227,111 @@ class TreeNavigator(
         val oldState = _state.value
         val fromKey = oldState.activeLeaf()?.key
 
+        // Step 1: Check if destination needs a container
+        val containerInfo = containerRegistry.getContainerInfo(destination)
+        if (containerInfo != null) {
+            // Check if we're already inside a container with the same scope
+            val currentScopeKey = getCurrentScopeKey(oldState)
+            if (currentScopeKey != containerInfo.scopeKey) {
+                // Not inside the required container - create it
+                navigateWithContainer(oldState, containerInfo, effectiveTransition, fromKey)
+                return
+            }
+            // Already inside the container - fall through to normal navigation
+        }
+
+        // Step 2: Default - push as ScreenNode (TreeMutator handles scope-aware navigation)
+        navigateDefault(oldState, destination, effectiveTransition, fromKey)
+    }
+
+    /**
+     * Get the current scope key from the navigation state.
+     *
+     * Traverses to the active container (TabNode or PaneNode) and returns its scopeKey.
+     */
+    private fun getCurrentScopeKey(state: NavNode): String? {
+        return when (state) {
+            is TabNode -> state.scopeKey
+            is PaneNode -> state.scopeKey
+            is StackNode -> {
+                // Check if the active child is a container
+                state.children.lastOrNull()?.let { activeChild ->
+                    getCurrentScopeKey(activeChild)
+                }
+            }
+            is ScreenNode -> null
+        }
+    }
+
+    /**
+     * Navigate by creating a container structure.
+     */
+    private fun navigateWithContainer(
+        oldState: NavNode,
+        containerInfo: ContainerInfo,
+        effectiveTransition: NavigationTransition?,
+        fromKey: String?
+    ) {
+        try {
+            val newState = pushContainer(oldState, containerInfo)
+            val toKey = newState.activeLeaf()?.key
+
+            _state.value = newState
+            updateDerivedState(newState)
+
+            if (effectiveTransition != null) {
+                _transitionState.value = TransitionState.InProgress(
+                    transition = effectiveTransition,
+                    progress = 0f,
+                    fromKey = fromKey,
+                    toKey = toKey
+                )
+            }
+        } catch (e: IllegalStateException) {
+            // If no active stack, create root stack with container
+            val rootKey = generateKey()
+            val containerKey = generateKey()
+            
+            val containerNode = when (containerInfo) {
+                is ContainerInfo.TabContainer -> containerInfo.builder(
+                    containerKey,
+                    rootKey,
+                    containerInfo.initialTabIndex
+                )
+                is ContainerInfo.PaneContainer -> containerInfo.builder(
+                    containerKey,
+                    rootKey
+                )
+            }
+            
+            val newState = StackNode(
+                key = rootKey,
+                parentKey = null,
+                children = listOf(containerNode)
+            )
+            _state.value = newState
+            updateDerivedState(newState)
+
+            if (effectiveTransition != null) {
+                _transitionState.value = TransitionState.InProgress(
+                    transition = effectiveTransition,
+                    progress = 0f,
+                    fromKey = fromKey,
+                    toKey = newState.activeLeaf()?.key
+                )
+            }
+        }
+    }
+
+    /**
+     * Default navigation - push destination as ScreenNode.
+     */
+    private fun navigateDefault(
+        oldState: NavNode,
+        destination: Destination,
+        effectiveTransition: NavigationTransition?,
+        fromKey: String?
+    ) {
         try {
             val newState = TreeMutator.push(oldState, destination, scopeRegistry) { generateKey() }
             val toKey = newState.activeLeaf()?.key
@@ -255,6 +370,101 @@ class TreeNavigator(
                     toKey = screenKey
                 )
             }
+        }
+    }
+
+    /**
+     * Push a container onto the appropriate stack.
+     *
+     * When navigating to a new container (like DemoTabs from MainTabs), we need to
+     * push onto the stack that CONTAINS the current container, not the stack INSIDE it.
+     *
+     * For example, if tree is:
+     * ```
+     * RootStack
+     *   └── TabNode (MainTabs)
+     *         └── StackNode (HomeTab) <- activeStack()
+     * ```
+     *
+     * We should push DemoTabs onto RootStack, not HomeTab's stack.
+     *
+     * @param root The current navigation state
+     * @param containerInfo Information about the container to create
+     * @return New navigation state with container pushed onto appropriate stack
+     * @throws IllegalStateException if no appropriate stack is found
+     */
+    private fun pushContainer(
+        root: NavNode,
+        containerInfo: ContainerInfo
+    ): NavNode {
+        // Find the stack that should receive the new container
+        // This is the stack containing the current container, or root if no container
+        val targetStack = findContainerParentStack(root)
+            ?: throw IllegalStateException("No appropriate stack found for container navigation")
+
+        return when (containerInfo) {
+            is ContainerInfo.TabContainer -> {
+                val containerKey = generateKey()
+                val tabNode = containerInfo.builder(
+                    containerKey,
+                    targetStack.key,
+                    containerInfo.initialTabIndex
+                )
+                val newStack = targetStack.copy(
+                    children = targetStack.children + tabNode
+                )
+                TreeMutator.replaceNode(root, targetStack.key, newStack)
+            }
+            is ContainerInfo.PaneContainer -> {
+                val containerKey = generateKey()
+                val paneNode = containerInfo.builder(containerKey, targetStack.key)
+                val newStack = targetStack.copy(
+                    children = targetStack.children + paneNode
+                )
+                TreeMutator.replaceNode(root, targetStack.key, newStack)
+            }
+        }
+    }
+
+    /**
+     * Find the stack that should receive a new container.
+     *
+     * This finds the stack that contains a TabNode or PaneNode in the active path,
+     * or returns the root stack if no container exists.
+     *
+     * @param root The current navigation state
+     * @return The stack that should receive new containers
+     */
+    private fun findContainerParentStack(root: NavNode): StackNode? {
+        return when (root) {
+            is StackNode -> {
+                // Check if any child in the active path is a container
+                val activeChild = root.activeChild
+                when (activeChild) {
+                    is TabNode, is PaneNode -> {
+                        // This stack contains a container - return it
+                        root
+                    }
+                    is StackNode -> {
+                        // Recurse into nested stack
+                        findContainerParentStack(activeChild) ?: root
+                    }
+                    else -> {
+                        // No container found, return this stack
+                        root
+                    }
+                }
+            }
+            is TabNode -> {
+                // Inside a tab - return null to indicate we need to go up
+                // The parent call will return the containing stack
+                null
+            }
+            is PaneNode -> {
+                // Inside a pane - return null to indicate we need to go up
+                null
+            }
+            is ScreenNode -> null
         }
     }
 

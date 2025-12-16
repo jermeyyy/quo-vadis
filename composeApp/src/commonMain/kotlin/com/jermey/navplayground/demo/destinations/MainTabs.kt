@@ -8,6 +8,8 @@ import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.TabItem
 import com.jermey.quo.vadis.annotations.Tabs
+import com.jermey.quo.vadis.annotations.Transition
+import com.jermey.quo.vadis.annotations.TransitionType
 
 /**
  * Home tab - Main entry point and navigation patterns showcase.
@@ -67,6 +69,7 @@ sealed class MainTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
 
     @TabItem(label = "Home", icon = "home")
     @Destination(route = "main/home")
+    @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
     /**
@@ -76,6 +79,7 @@ sealed class MainTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
      */
     @TabItem(label = "Explore", icon = "explore")
     @Destination(route = "main/explore")
+    @Transition(type = TransitionType.Fade)
     data object ExploreTab : MainTabs()
 
     /**
@@ -85,6 +89,7 @@ sealed class MainTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
      */
     @TabItem(label = "Profile", icon = "person")
     @Destination(route = "main/profile")
+    @Transition(type = TransitionType.Fade)
     data object ProfileTab : MainTabs()
 
     /**
@@ -94,19 +99,24 @@ sealed class MainTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
      */
     @TabItem(label = "Settings", icon = "settings")
     @Stack(name = "settingsTabStack", startDestinationClass = SettingsTab.Main::class)
+    @Transition(type = TransitionType.Fade)
     sealed class SettingsTab : com.jermey.quo.vadis.core.navigation.core.Destination {
         /** Root destination for the Settings tab. */
 
         @Destination(route = "settings/main")
+        @Transition(type = TransitionType.Fade)
         data object Main : SettingsTab()
 
         @Destination(route = "settings/profile")
+        @Transition(type = TransitionType.SlideHorizontal)
         data object Profile : SettingsTab()
 
         @Destination(route = "settings/notifications")
+        @Transition(type = TransitionType.SlideHorizontal)
         data object Notifications : SettingsTab()
 
         @Destination(route = "settings/about")
+        @Transition(type = TransitionType.SlideHorizontal)
         data object About : SettingsTab()
     }
 

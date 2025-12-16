@@ -55,7 +55,7 @@ import kotlinx.coroutines.flow.collectLatest
  * @see BackNavigationEvent
  */
 @Composable
-public fun NavigateBackHandler(
+fun NavigateBackHandler(
     enabled: Boolean = true,
     currentScreenInfo: ScreenNavigationInfo,
     previousScreenInfo: ScreenNavigationInfo? = null,
@@ -118,7 +118,7 @@ public fun NavigateBackHandler(
  * @param content The content to display.
  */
 @Composable
-public fun NavigateBackHandler(
+fun NavigateBackHandler(
     enabled: Boolean = true,
     onBack: () -> Unit,
     content: @Composable () -> Unit

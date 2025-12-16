@@ -97,7 +97,7 @@ internal fun <T : NavNode> PredictiveBackContent(
     scope: NavRenderScope,
     content: @Composable AnimatedVisibilityScope.(T) -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
+    Box(modifier = Modifier.fillMaxSize()) {
         // Previous (incoming) content - static behind current with parallax effect
         // Guard: Only render previous if it exists AND has a different key than current
         if (previous != null && previous.key != current.key) {
@@ -124,7 +124,6 @@ internal fun <T : NavNode> PredictiveBackContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Transparent)
                 .graphicsLayer {
                     // Slide right: at progress=0 no translation, at progress=1 fully off-screen right
                     translationX = size.width * progress

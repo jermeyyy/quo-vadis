@@ -1,6 +1,8 @@
 package com.jermey.quo.vadis.ksp
 
 import com.jermey.quo.vadis.core.navigation.compose.animation.TransitionScope
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerInfo
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneWrapperScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
@@ -9,6 +11,7 @@ import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.core.PaneRole
 import com.jermey.quo.vadis.core.navigation.compose.registry.RouteRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
@@ -40,6 +43,13 @@ internal object QuoVadisClassNames {
     val WRAPPER_REGISTRY: ClassName = WrapperRegistry::class.toClassName()
     val TAB_WRAPPER_SCOPE: ClassName = TabWrapperScope::class.toClassName()
     val PANE_WRAPPER_SCOPE: ClassName = PaneWrapperScope::class.toClassName()
+    
+    // Container registry classes (Container-Aware Navigation)
+    val CONTAINER_REGISTRY: ClassName = ContainerRegistry::class.toClassName()
+    val CONTAINER_INFO: ClassName = ContainerInfo::class.toClassName()
+    val CONTAINER_INFO_TAB_CONTAINER: ClassName = ContainerInfo.TabContainer::class.toClassName()
+    val CONTAINER_INFO_PANE_CONTAINER: ClassName = ContainerInfo.PaneContainer::class.toClassName()
+    val PANE_ROLE: ClassName = PaneRole::class.toClassName()
     
     // Annotation classes (for KSP processing)
     val ARGUMENT_ANNOTATION: ClassName = ClassName(

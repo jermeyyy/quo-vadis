@@ -1,9 +1,8 @@
 package com.jermey.navplayground.demo.ui.screens.tabs
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -12,7 +11,7 @@ import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -41,41 +40,52 @@ fun DemoTabsWrapper(
     scope: TabWrapperScope,
     content: @Composable () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Top app bar with back navigation
-        TopAppBar(
-            title = { Text("Tabs Demo") },
-            navigationIcon = {
-                IconButton(onClick = { scope.navigator.navigateBack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text("Tabs Demo") },
+                navigationIcon = {
+                    IconButton(onClick = { scope.navigator.navigateBack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        // Tab strip + content inside scaffold padding
+        androidx.compose.foundation.layout.Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Tab strip
+            TabRow(
+                selectedTabIndex = scope.activeTabIndex,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                scope.tabMetadata.forEachIndexed { index, meta ->
+                    Tab(
+                        selected = scope.activeTabIndex == index,
+                        onClick = { scope.switchTab(index) },
+                        enabled = !scope.isTransitioning,
+                        text = { Text(meta.label) },
+                        icon = {
+                            Icon(
+                                imageVector = getTabIcon(meta.route),
+                                contentDescription = meta.contentDescription ?: meta.label
+                            )
+                        }
+                    )
                 }
             }
-        )
 
-        // Tab strip
-        TabRow(
-            selectedTabIndex = scope.activeTabIndex,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            scope.tabMetadata.forEachIndexed { index, meta ->
-                Tab(
-                    selected = scope.activeTabIndex == index,
-                    onClick = { scope.switchTab(index) },
-                    enabled = !scope.isTransitioning,
-                    text = { Text(meta.label) },
-                    icon = {
-                        Icon(
-                            imageVector = getTabIcon(meta.route),
-                            contentDescription = meta.contentDescription ?: meta.label
-                        )
-                    }
-                )
+            // Tab content
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier.weight(1f).fillMaxWidth()
+            ) {
+                content()
             }
-        }
-
-        // Tab content
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            content()
         }
     }
 }

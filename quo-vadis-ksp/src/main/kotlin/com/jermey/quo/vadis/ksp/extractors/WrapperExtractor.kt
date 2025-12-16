@@ -154,13 +154,24 @@ public class WrapperExtractor(
         // Get containing file path for incremental compilation
         val containingFile = functionDeclaration.containingFile?.filePath ?: ""
 
+        // For companion objects, use the enclosing class name instead of "Companion"
+        // This handles cases like @TabWrapper(DemoTabs.Companion::class)
+        val simpleName = targetClass.simpleName.asString()
+        val effectiveSimpleName = if (simpleName == "Companion") {
+            // Get parent class declaration
+            val parentClass = targetClass.parentDeclaration as? KSClassDeclaration
+            parentClass?.simpleName?.asString() ?: simpleName
+        } else {
+            simpleName
+        }
+
         return WrapperInfo(
             functionDeclaration = functionDeclaration,
             functionName = functionName,
             packageName = functionDeclaration.packageName.asString(),
             targetClass = targetClass,
             targetClassQualifiedName = targetQualifiedName,
-            targetClassSimpleName = targetClass.simpleName.asString(),
+            targetClassSimpleName = effectiveSimpleName,
             containingFile = containingFile,
             wrapperType = wrapperType
         )

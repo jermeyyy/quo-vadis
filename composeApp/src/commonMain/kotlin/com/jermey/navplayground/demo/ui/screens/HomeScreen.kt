@@ -91,7 +91,7 @@ fun HomeScreen(
             onNavigateToTabs = {
                 // TODO: Implement Container-Aware Navigation (see CONTAINER_AWARE_NAVIGATION.md)
                 // For now, navigate directly to the first tab's screen
-                navigator.navigate(DemoTabs.MusicTab.List, NavigationTransitions.SlideHorizontal)
+                navigator.navigate(DemoTabs.BooksTab.List, NavigationTransitions.SlideHorizontal)
             },
             onNavigateToProcess = {
                 navigator.navigate(ProcessDestination.Start, NavigationTransitions.SlideHorizontal)

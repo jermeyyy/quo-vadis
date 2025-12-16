@@ -8,7 +8,7 @@ import androidx.compose.runtime.Immutable
  * that can be used across all platforms.
  */
 @Immutable
-public data class BackNavigationEvent(
+data class BackNavigationEvent(
     /** Progress of the back gesture, 0.0 to 1.0 */
     val progress: Float,
     /** X coordinate of the touch point */
@@ -18,21 +18,21 @@ public data class BackNavigationEvent(
     /** Which edge the swipe started from */
     val swipeEdge: Int = EDGE_LEFT
 ) {
-    public companion object {
-        public const val EDGE_LEFT: Int = 0
-        public const val EDGE_RIGHT: Int = 1
+    companion object {
+        const val EDGE_LEFT: Int = 0
+        const val EDGE_RIGHT: Int = 1
     }
 }
 
 /**
  * Represents the state of a back navigation transition.
  */
-public sealed interface BackTransitionState {
+sealed interface BackTransitionState {
     /** No back gesture in progress */
-    public data object Idle : BackTransitionState
+    data object Idle : BackTransitionState
 
     /** Back gesture is in progress with the given event */
-    public data class InProgress(
+    data class InProgress(
         val event: BackNavigationEvent
     ) : BackTransitionState
 }

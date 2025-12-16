@@ -128,7 +128,11 @@ class ValidationEngine(
     // =========================================================================
 
     /**
-     * Validates that all @Destination classes are contained within a @Stack, @Tab, or @Pane.
+     * Validates that @Destination classes are contained within a @Stack, @Tab, or @Pane.
+     *
+     * Note: Standalone destinations (not inside any container) are allowed but produce
+     * a warning. These are useful for destinations that can be navigated to from
+     * anywhere (e.g., detail screens that can be pushed onto any stack).
      */
     private fun validateOrphanDestinations(
         destinations: List<DestinationInfo>,
@@ -158,10 +162,13 @@ class ValidationEngine(
 
         destinations.forEach { destination ->
             if (destination.qualifiedName !in containedDestinations) {
-                reportError(
+                // Standalone destinations are allowed but produce a warning
+                // These can be navigated to from any stack
+                reportWarning(
                     destination.classDeclaration,
-                    "@Destination on \"${destination.className}\" - " +
-                        "Must be inside a sealed class annotated with @Stack, @Tab, or @Pane"
+                    "@Destination \"${destination.className}\" is a standalone destination " +
+                        "(not inside @Stack, @Tab, or @Pane). This is allowed but ensure it " +
+                        "has a valid @Screen binding."
                 )
             }
         }
@@ -532,9 +539,22 @@ class ValidationEngine(
 
     /**
      * Validates that @Destination is applied to data objects or data classes.
+     *
+     * Sealed classes that are also containers (@Tabs, @Stack, @Pane) are allowed
+     * to have @Destination for deep linking purposes but are not validated here.
      */
     private fun validateDestinationTypes(destinations: List<DestinationInfo>) {
         destinations.forEach { destination ->
+            // Skip sealed classes that are also containers - they're valid with @Destination
+            val isContainer = destination.classDeclaration.annotations.any {
+                val name = it.shortName.asString()
+                name == "Tabs" || name == "Tab" || name == "Stack" || name == "Pane"
+            }
+            if (isContainer) return@forEach
+
+            // Also skip plain sealed classes - they may be container markers
+            if (destination.isSealedClass) return@forEach
+
             if (!destination.isDataObject && !destination.isDataClass) {
                 reportError(
                     destination.classDeclaration,

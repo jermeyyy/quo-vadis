@@ -322,8 +322,8 @@ class NavNodeBuilderGenerator(
                 TabItemType.FLAT_SCREEN -> {
                     // Generate inline StackNode with single ScreenNode
                     // For FLAT_SCREEN tabs, the tab class itself IS the destination
-                    val destInfo = tabItem.destinationInfo
-                    val screenKey = destInfo?.className?.lowercase() ?: tabKey
+                    // Use "root" as screen key suffix to avoid duplicate keys
+                    // (stack key is $key/tabKey, screen key is $key/tabKey/root)
 
                     // Build ClassName for possibly nested class
                     val destClassName = buildClassName(tabItem.classDeclaration)
@@ -343,7 +343,7 @@ class NavNodeBuilderGenerator(
                         STACK_NODE,
                         "\$key/$tabKey",
                         SCREEN_NODE,
-                        "\$key/$tabKey/$screenKey",
+                        "\$key/$tabKey/root",
                         "\$key/$tabKey",
                         destClassName,
                         comma

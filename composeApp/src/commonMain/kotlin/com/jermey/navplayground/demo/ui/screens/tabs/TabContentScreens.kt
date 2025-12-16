@@ -15,8 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +27,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.BooksDetail
 import com.jermey.navplayground.demo.destinations.DemoTabs
+import com.jermey.navplayground.demo.destinations.MoviesDetail
+import com.jermey.navplayground.demo.destinations.MusicDetail
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
@@ -72,7 +75,7 @@ fun MusicTabListScreen(
         headerText = "Music Library",
         headerDescription = "Tap a song to view details",
         onItemClick = { item ->
-            navigator.navigate(DemoTabs.MusicTab.Detail(itemId = item.id))
+            navigator.navigate(MusicDetail(itemId = item.id))
         }
     )
 }
@@ -141,7 +144,7 @@ fun MoviesTabListScreen(
         headerText = "Movie Collection",
         headerDescription = "Tap a movie to view details",
         onItemClick = { item ->
-            navigator.navigate(DemoTabs.MoviesTab.Detail(itemId = item.id))
+            navigator.navigate(MoviesDetail(itemId = item.id))
         }
     )
 }
@@ -210,7 +213,7 @@ fun BooksTabListScreen(
         headerText = "Book Library",
         headerDescription = "Tap a book to view details",
         onItemClick = { item ->
-            navigator.navigate(DemoTabs.BooksTab.Detail(itemId = item.id))
+            navigator.navigate(BooksDetail(itemId = item.id))
         }
     )
 }

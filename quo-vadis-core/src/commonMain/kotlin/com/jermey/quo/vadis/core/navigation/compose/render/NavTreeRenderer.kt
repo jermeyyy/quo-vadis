@@ -426,9 +426,10 @@ internal fun TabRenderer(
                 // Content slot: animate between tabs (within the wrapper)
                 AnimatedNavContent(
                     targetState = activeStack,
-                    transition = scope.animationCoordinator.getTabTransition(
-                        fromIndex = previousNode?.activeStackIndex,
-                        toIndex = node.activeStackIndex
+                    transition = scope.animationCoordinator.getTransition(
+                        from =  previousNode,
+                        to = node,
+                        isBack = false
                     ),
                     scope = scope,
                     // Tab switching is NOT via predictive back

@@ -18,7 +18,7 @@ import com.jermey.quo.vadis.core.navigation.core.findByKey
  * - How many levels the cascade goes
  */
 @Stable
-public data class CascadeBackState(
+data class CascadeBackState(
     /**
      * The node that initiated the back gesture (usually a ScreenNode).
      */
@@ -63,7 +63,7 @@ public data class CascadeBackState(
  * @param root The root of the navigation tree
  * @return CascadeBackState describing what the back action will do
  */
-public fun calculateCascadeBackState(root: NavNode): CascadeBackState {
+fun calculateCascadeBackState(root: NavNode): CascadeBackState {
     val activeStack = root.activeStack()
     val activeChild = activeStack?.activeChild
 
@@ -258,7 +258,7 @@ private fun findActiveDescendant(node: NavNode): NavNode? {
  *
  * @return true if the back action would pop a container (stack/tab), not just a screen
  */
-public fun wouldCascade(root: NavNode): Boolean {
+fun wouldCascade(root: NavNode): Boolean {
     val activeStack = root.activeStack() ?: return false
     return activeStack.children.size <= 1 && activeStack.parentKey != null
 }

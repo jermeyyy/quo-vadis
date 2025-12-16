@@ -10,9 +10,11 @@ import com.jermey.navplayground.demo.destinations.generated.buildMainTabsNavNode
 import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackMode
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
+import com.jermey.quo.vadis.generated.GeneratedContainerRegistry
 import com.jermey.quo.vadis.generated.GeneratedDeepLinkHandlerImpl
 import com.jermey.quo.vadis.generated.GeneratedScopeRegistry
 import com.jermey.quo.vadis.generated.GeneratedScreenRegistry
+import com.jermey.quo.vadis.generated.GeneratedTransitionRegistry
 import com.jermey.quo.vadis.generated.GeneratedWrapperRegistry
 
 /**
@@ -84,6 +86,7 @@ fun DemoApp() {
         TreeNavigator(
             initialState = navTree,
             scopeRegistry = GeneratedScopeRegistry,
+            containerRegistry = GeneratedContainerRegistry,
             deepLinkHandler = GeneratedDeepLinkHandlerImpl
         )
     }
@@ -99,6 +102,7 @@ fun DemoApp() {
         screenRegistry = GeneratedScreenRegistry,
         wrapperRegistry = GeneratedWrapperRegistry,
         scopeRegistry = GeneratedScopeRegistry,
+        transitionRegistry = GeneratedTransitionRegistry,
         enablePredictiveBack = true,
         predictiveBackMode = PredictiveBackMode.FULL_CASCADE
     )

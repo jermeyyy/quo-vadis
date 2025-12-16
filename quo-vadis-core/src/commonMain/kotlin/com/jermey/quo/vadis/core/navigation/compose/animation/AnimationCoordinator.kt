@@ -133,44 +133,6 @@ public class AnimationCoordinator(
     }
 
     /**
-     * Gets transition for tab switching.
-     *
-     * Determines the appropriate transition based on the direction of tab
-     * index change. Moving to a higher index slides left-to-right, while
-     * moving to a lower index slides right-to-left.
-     *
-     * ## Direction Logic
-     *
-     * - `fromIndex < toIndex`: Slide forward (left-to-right)
-     * - `fromIndex > toIndex`: Slide backward (right-to-left)
-     * - Initial selection (`fromIndex = null`): Fade in
-     *
-     * ## Example
-     *
-     * ```kotlin
-     * // Switching from tab 0 to tab 2 - slides left
-     * val transition = coordinator.getTabTransition(fromIndex = 0, toIndex = 2)
-     *
-     * // Switching from tab 2 to tab 1 - slides right
-     * val transition = coordinator.getTabTransition(fromIndex = 2, toIndex = 1)
-     * ```
-     *
-     * @param fromIndex Previous tab index (`null` for initial selection)
-     * @param toIndex New tab index
-     * @return [NavTransition] for tab switch animation
-     */
-    public fun getTabTransition(fromIndex: Int?, toIndex: Int): NavTransition {
-        // Determine direction for slide based on indices
-        return if (fromIndex != null && fromIndex < toIndex) {
-            NavTransition.SlideHorizontal
-        } else if (fromIndex != null && fromIndex > toIndex) {
-            NavTransition.SlideHorizontal.reversed()
-        } else {
-            NavTransition.Fade
-        }
-    }
-
-    /**
      * Gets transition for pane role changes.
      *
      * Used when the visible panes in an adaptive layout change, such as

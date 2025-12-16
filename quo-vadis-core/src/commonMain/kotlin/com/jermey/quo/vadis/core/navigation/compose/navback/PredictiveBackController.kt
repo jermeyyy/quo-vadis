@@ -312,7 +312,7 @@ class PredictiveBackController {
      * @param onComplete Callback invoked when animation completes
      */
     private suspend fun animateToCompletion(onComplete: () -> Unit) {
-        progressAnimatable.snapTo(_progress)
+//        progressAnimatable.snapTo(_progress)
         progressAnimatable.animateTo(
             targetValue = 1f,
             animationSpec = spring(
@@ -340,7 +340,7 @@ class PredictiveBackController {
      * when the user cancels the back gesture.
      */
     private suspend fun animateToCancel() {
-        progressAnimatable.snapTo(_progress)
+//        progressAnimatable.snapTo(_progress)
         progressAnimatable.animateTo(
             targetValue = 0f,
             animationSpec = spring(

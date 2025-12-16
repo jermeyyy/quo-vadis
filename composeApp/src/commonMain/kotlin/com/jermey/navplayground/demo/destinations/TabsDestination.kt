@@ -31,7 +31,7 @@ sealed class DemoTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
      * Companion object used as the wrapper key for @TabWrapper.
      * This allows the wrapper to be associated with the DemoTabs container.
      */
-    companion object
+    companion object: com.jermey.quo.vadis.core.navigation.core.Destination
 
     /**
      * Music tab - shows a list of music items
@@ -42,9 +42,6 @@ sealed class DemoTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
 
         @Destination(route = "demo/tabs/music/list")
         data object List : MusicTab()
-
-        @Destination(route = "demo/tabs/music/detail/{itemId}")
-        data class Detail(@Argument val itemId: String) : MusicTab()
     }
 
     /**
@@ -56,9 +53,6 @@ sealed class DemoTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
 
         @Destination(route = "demo/tabs/movies/list")
         data object List : MoviesTab()
-
-        @Destination(route = "demo/tabs/movies/detail/{itemId}")
-        data class Detail(@Argument val itemId: String) : MoviesTab()
     }
 
     /**
@@ -71,7 +65,15 @@ sealed class DemoTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
         @Destination(route = "demo/tabs/books/list")
         data object List : BooksTab()
 
-        @Destination(route = "demo/tabs/books/detail/{itemId}")
-        data class Detail(@Argument val itemId: String) : BooksTab()
+
     }
 }
+
+@Destination(route = "demo/tabs/music/detail/{itemId}")
+data class MusicDetail(@Argument val itemId: String): com.jermey.quo.vadis.core.navigation.core.Destination
+
+@Destination(route = "demo/tabs/movies/detail/{itemId}")
+data class MoviesDetail(@Argument val itemId: String) : com.jermey.quo.vadis.core.navigation.core.Destination
+
+@Destination(route = "demo/tabs/books/detail/{itemId}")
+data class BooksDetail(@Argument val itemId: String) : com.jermey.quo.vadis.core.navigation.core.Destination

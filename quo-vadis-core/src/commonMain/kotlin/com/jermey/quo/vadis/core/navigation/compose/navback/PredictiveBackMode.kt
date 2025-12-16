@@ -3,7 +3,7 @@ package com.jermey.quo.vadis.core.navigation.compose.navback
 /**
  * Defines how predictive back gestures are handled in the navigation tree.
  */
-public enum class PredictiveBackMode {
+enum class PredictiveBackMode {
     /**
      * Predictive back gestures are only enabled for the root stack.
      *

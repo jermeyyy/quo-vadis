@@ -34,7 +34,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.BooksDetail
 import com.jermey.navplayground.demo.destinations.DemoTabs
+import com.jermey.navplayground.demo.destinations.MoviesDetail
+import com.jermey.navplayground.demo.destinations.MusicDetail
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
@@ -49,10 +52,10 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  * onto the Music tab's stack.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Screen(DemoTabs.MusicTab.Detail::class)
+@Screen(MusicDetail::class)
 @Composable
 fun MusicDetailScreen(
-    destination: DemoTabs.MusicTab.Detail,
+    destination: MusicDetail,
     navigator: Navigator,
     modifier: Modifier = Modifier
 ) {
@@ -118,10 +121,10 @@ private fun getMusicArtistById(index: Int): String {
  * onto the Movies tab's stack.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Screen(DemoTabs.MoviesTab.Detail::class)
+@Screen(MoviesDetail::class)
 @Composable
 fun MoviesDetailScreen(
-    destination: DemoTabs.MoviesTab.Detail,
+    destination: MoviesDetail,
     navigator: Navigator,
     modifier: Modifier = Modifier
 ) {
@@ -200,10 +203,10 @@ private fun getMovieGenreById(index: Int): String {
  * onto the Books tab's stack.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Screen(DemoTabs.BooksTab.Detail::class)
+@Screen(BooksDetail::class)
 @Composable
 fun BooksDetailScreen(
-    destination: DemoTabs.BooksTab.Detail,
+    destination: BooksDetail,
     navigator: Navigator,
     modifier: Modifier = Modifier
 ) {

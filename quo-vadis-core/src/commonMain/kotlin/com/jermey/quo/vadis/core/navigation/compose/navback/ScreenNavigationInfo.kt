@@ -6,7 +6,7 @@ import androidx.navigationevent.NavigationEventInfo
  * NavigationEventInfo implementation for Quo Vadis screens.
  * Provides metadata about the current screen for predictive back animations.
  */
-public data class ScreenNavigationInfo(
+data class ScreenNavigationInfo(
     /** Unique identifier for the screen */
     val screenId: String,
     /** Optional display name for the screen */
@@ -18,4 +18,4 @@ public data class ScreenNavigationInfo(
 /**
  * Represents "no screen" info for when we're at the root.
  */
-public data object NoScreenInfo : NavigationEventInfo()
+data object NoScreenInfo : NavigationEventInfo()

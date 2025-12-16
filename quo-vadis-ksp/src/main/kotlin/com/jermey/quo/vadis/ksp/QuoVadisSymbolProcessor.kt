@@ -19,6 +19,7 @@ import com.jermey.quo.vadis.ksp.extractors.StackExtractor
 import com.jermey.quo.vadis.ksp.extractors.TabExtractor
 import com.jermey.quo.vadis.ksp.extractors.TransitionExtractor
 import com.jermey.quo.vadis.ksp.extractors.WrapperExtractor
+import com.jermey.quo.vadis.ksp.generators.ContainerRegistryGenerator
 import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
 import com.jermey.quo.vadis.ksp.generators.NavNodeBuilderGenerator
 import com.jermey.quo.vadis.ksp.generators.NavigatorExtGenerator
@@ -75,6 +76,9 @@ class QuoVadisSymbolProcessor(
 
     // Generator for scope registry (scoped navigation)
     private val scopeRegistryGenerator = ScopeRegistryGenerator(codeGenerator, logger)
+
+    // Generator for container registry (container-aware navigation)
+    private val containerRegistryGenerator = ContainerRegistryGenerator(codeGenerator, logger)
 
     // Generator for deep link handler (KSP-004)
     private val deepLinkHandlerGenerator = DeepLinkHandlerGenerator(codeGenerator, logger)
@@ -167,7 +171,7 @@ class QuoVadisSymbolProcessor(
 
         // Step 4: Extract screens and all destinations for validation
         val screens = screenExtractor.extractAll(resolver)
-        val allDestinations = collectAllDestinations()
+        val allDestinations = collectAllDestinations(resolver)
 
         // Step 5: Run validation (KSP-006)
         val isValid = validationEngine.validate(
@@ -203,17 +207,37 @@ class QuoVadisSymbolProcessor(
 
         // Step 11: Generate scope registry (scoped navigation)
         generateScopeRegistry()
+
+        // Step 12: Generate container registry (container-aware navigation)
+        generateContainerRegistry()
         
         // Mark generation as complete to prevent duplicate generation in multi-round processing
         hasGenerated = true
     }
 
     /**
-     * Collect all destinations from stacks, tabs, and panes.
+     * Collect all destinations from stacks, tabs, panes, and standalone @Destination classes.
+     *
+     * This includes:
+     * - Destinations inside @Stack containers
+     * - FLAT_SCREEN tab destinations (from destinationInfo)
+     * - Legacy tab destinations
+     * - Pane destinations
+     * - Standalone @Destination classes not inside any container
      */
-    private fun collectAllDestinations(): List<DestinationInfo> {
+    private fun collectAllDestinations(resolver: Resolver): List<DestinationInfo> {
         val destinations = mutableListOf<DestinationInfo>()
-        collectedStacks.forEach { stack -> destinations.addAll(stack.destinations) }
+        val seenQualifiedNames = mutableSetOf<String>()
+
+        // Collect from stacks
+        collectedStacks.forEach { stack ->
+            stack.destinations.forEach { dest ->
+                if (seenQualifiedNames.add(dest.qualifiedName)) {
+                    destinations.add(dest)
+                }
+            }
+        }
+
         // Collect destinations from tabs:
         // - Legacy tabs: use it.destination
         // - New FLAT_SCREEN tabs: use it.destinationInfo
@@ -221,12 +245,32 @@ class QuoVadisSymbolProcessor(
         collectedTabs.forEach { tab ->
             tab.tabs.forEach { tabItem ->
                 // Prefer new destinationInfo field (for FLAT_SCREEN tabs)
-                tabItem.destinationInfo?.let { destinations.add(it) }
-                    // Fallback to legacy destination field
-                    ?: tabItem.destination?.let { destinations.add(it) }
+                val dest = tabItem.destinationInfo ?: tabItem.destination
+                if (dest != null && seenQualifiedNames.add(dest.qualifiedName)) {
+                    destinations.add(dest)
+                }
             }
         }
-        collectedPanes.forEach { pane -> destinations.addAll(pane.panes.map { it.destination }) }
+
+        // Collect from panes
+        collectedPanes.forEach { pane ->
+            pane.panes.forEach { paneItem ->
+                if (seenQualifiedNames.add(paneItem.destination.qualifiedName)) {
+                    destinations.add(paneItem.destination)
+                }
+            }
+        }
+
+        // Also scan for standalone @Destination classes (not inside containers)
+        // These are used for navigation targets that don't belong to a specific container
+        val destinationSymbols = resolver.getSymbolsWithAnnotation(Destination::class.qualifiedName!!)
+        destinationSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
+            val destInfo = destinationExtractor.extract(classDeclaration)
+            if (destInfo != null && seenQualifiedNames.add(destInfo.qualifiedName)) {
+                destinations.add(destInfo)
+            }
+        }
+
         return destinations
     }
 
@@ -399,6 +443,26 @@ class QuoVadisSymbolProcessor(
             scopeRegistryGenerator.generate(collectedTabs, collectedPanes, collectedStacks, basePackage)
         } catch (e: Exception) {
             logger.error("Error generating ScopeRegistry: ${e.message}")
+        }
+    }
+
+    /**
+     * Generate container registry for container-aware navigation.
+     *
+     * Creates a registry that maps destinations within @Tab and @Pane containers
+     * to their builder functions. Used by TreeNavigator for automatic container creation.
+     */
+    private fun generateContainerRegistry() {
+        if (collectedTabs.isEmpty() && collectedPanes.isEmpty()) {
+            logger.info("No @Tab or @Pane annotations found, skipping ContainerRegistry generation")
+            return
+        }
+
+        try {
+            containerRegistryGenerator.generate(collectedTabs, collectedPanes)
+            logger.info("Generated ContainerRegistry with ${collectedTabs.size} tab containers and ${collectedPanes.size} pane containers")
+        } catch (e: Exception) {
+            logger.error("Error generating ContainerRegistry: ${e.message}")
         }
     }
 
