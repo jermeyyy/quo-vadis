@@ -15,12 +15,12 @@ This directory contains the detailed implementation plan for refactoring KSP-gen
 | Phase | Name | Status | Progress | Duration |
 |-------|------|--------|----------|----------|
 | 1 | [Core DSL Infrastructure](./phase-1-core-dsl-infrastructure/SUMMARY.md) | ✅ Completed | 3/3 | 2 weeks |
-| 2 | [Convenience Composables](./phase-2-convenience-composables/SUMMARY.md) | ⬜ Not Started | 0/3 | 1 week |
+| 2 | [Convenience Composables](./phase-2-convenience-composables/SUMMARY.md) | ✅ Completed | 3/3 | 1 week |
 | 3 | [KSP Generator Refactoring](./phase-3-ksp-generator-refactoring/SUMMARY.md) | ⬜ Not Started | 0/4 | 2 weeks |
 | 4 | [Migration & Deprecation](./phase-4-migration-deprecation/SUMMARY.md) | ⬜ Not Started | 0/3 | 1 week |
 | 5 | [Documentation & Testing](./phase-5-documentation-testing/SUMMARY.md) | ⬜ Not Started | 0/2 | 1 week |
 
-**Overall Progress**: 3/15 tasks completed
+**Overall Progress**: 6/15 tasks completed
 
 ### Detailed Task Tracking
 
@@ -36,9 +36,9 @@ This directory contains the detailed implementation plan for refactoring KSP-gen
 
 | Task | Description | Status | Assignee |
 |------|-------------|--------|----------|
-| 2.1 | [Create rememberQuoVadisNavigator](./phase-2-convenience-composables/TASK-2.1-remember-navigator.md) | ⬜ Not Started | - |
-| 2.2 | [Create QuoVadisNavigation One-Liner](./phase-2-convenience-composables/TASK-2.2-one-liner-composable.md) | ⬜ Not Started | - |
-| 2.3 | [Add NavigationHost Config Overload](./phase-2-convenience-composables/TASK-2.3-navigation-host-overload.md) | ⬜ Not Started | - |
+| 2.1 | [Create rememberQuoVadisNavigator](./phase-2-convenience-composables/TASK-2.1-remember-navigator.md) | ✅ Completed | - |
+| 2.2 | [Create QuoVadisNavigation One-Liner](./phase-2-convenience-composables/TASK-2.2-one-liner-composable.md) | ✅ Completed | - |
+| 2.3 | [Add NavigationHost Config Overload](./phase-2-convenience-composables/TASK-2.3-navigation-host-overload.md) | ✅ Completed | - |
 
 #### Phase 3: KSP Generator Refactoring
 

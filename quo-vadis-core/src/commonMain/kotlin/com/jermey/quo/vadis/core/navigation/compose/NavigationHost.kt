@@ -23,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackMode
@@ -371,6 +372,109 @@ fun NavigationHost(
             }
         }
     }
+}
+
+// =============================================================================
+// NavigationHost Config Overload
+// =============================================================================
+
+/**
+ * NavigationHost that renders navigation content using a unified NavigationConfig.
+ *
+ * This overload accepts a single [NavigationConfig] instead of individual registries,
+ * providing a cleaner API surface. It extracts the required registries from the config
+ * and delegates to the full [NavigationHost] implementation.
+ *
+ * ## Basic Usage
+ *
+ * ```kotlin
+ * @Composable
+ * fun App() {
+ *     val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
+ *
+ *     NavigationHost(
+ *         navigator = navigator,
+ *         config = GeneratedNavigationConfig
+ *     )
+ * }
+ * ```
+ *
+ * ## With All Options
+ *
+ * ```kotlin
+ * NavigationHost(
+ *     navigator = navigator,
+ *     config = GeneratedNavigationConfig,
+ *     modifier = Modifier.fillMaxSize(),
+ *     enablePredictiveBack = true,
+ *     predictiveBackMode = PredictiveBackMode.FULL_CASCADE,
+ *     windowSizeClass = currentWindowSizeClass()
+ * )
+ * ```
+ *
+ * ## Multi-Module Composition
+ *
+ * ```kotlin
+ * val combinedConfig = AppConfig + FeatureAConfig + FeatureBConfig
+ *
+ * NavigationHost(
+ *     navigator = navigator,
+ *     config = combinedConfig
+ * )
+ * ```
+ *
+ * ## Choosing Between Overloads
+ *
+ * Use this overload (with [NavigationConfig]) when:
+ * - Using generated navigation configuration
+ * - Combining multiple module configurations
+ * - You want the simplest API surface
+ *
+ * Use the individual registry overload when:
+ * - You need fine-grained control over which registries to use
+ * - Mixing generated and custom registries
+ * - Gradual migration from legacy code
+ *
+ * @param navigator The Navigator managing navigation state.
+ *   Typically created with [rememberQuoVadisNavigator].
+ * @param config The NavigationConfig providing all required registries:
+ *   [screenRegistry][NavigationConfig.screenRegistry],
+ *   [wrapperRegistry][NavigationConfig.wrapperRegistry],
+ *   [transitionRegistry][NavigationConfig.transitionRegistry],
+ *   [scopeRegistry][NavigationConfig.scopeRegistry].
+ * @param modifier Modifier to apply to the host container.
+ * @param enablePredictiveBack Whether to enable predictive back gesture support.
+ *   When enabled, back gestures provide visual feedback before completing the navigation.
+ * @param predictiveBackMode The mode for predictive back behavior:
+ *   - [PredictiveBackMode.ROOT_ONLY]: Only animate the root container
+ *   - [PredictiveBackMode.FULL_CASCADE]: Animate all affected containers
+ * @param windowSizeClass Optional window size class for responsive layouts.
+ *   When provided, navigation containers can adapt their presentation based on available space.
+ *
+ * @see NavigationConfig for configuration details
+ * @see rememberQuoVadisNavigator for creating a Navigator
+ * @see QuoVadisNavigation for one-liner setup
+ */
+@Composable
+fun NavigationHost(
+    navigator: Navigator,
+    config: NavigationConfig,
+    modifier: Modifier = Modifier,
+    enablePredictiveBack: Boolean = true,
+    predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY,
+    windowSizeClass: WindowSizeClass? = null
+) {
+    NavigationHost(
+        navigator = navigator,
+        modifier = modifier,
+        screenRegistry = config.screenRegistry,
+        wrapperRegistry = config.wrapperRegistry,
+        transitionRegistry = config.transitionRegistry,
+        scopeRegistry = config.scopeRegistry,
+        enablePredictiveBack = enablePredictiveBack,
+        predictiveBackMode = predictiveBackMode,
+        windowSizeClass = windowSizeClass
+    )
 }
 
 // =============================================================================
