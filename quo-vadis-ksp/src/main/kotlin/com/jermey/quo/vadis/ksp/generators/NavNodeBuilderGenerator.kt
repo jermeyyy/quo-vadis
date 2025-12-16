@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.ksp.generators
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
+import com.jermey.quo.vadis.ksp.generators.base.StringTemplates
 import com.jermey.quo.vadis.ksp.models.AdaptStrategy
 import com.jermey.quo.vadis.ksp.models.PaneBackBehavior
 import com.jermey.quo.vadis.ksp.models.PaneInfo
@@ -10,6 +11,7 @@ import com.jermey.quo.vadis.ksp.models.PaneRole
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
 import com.jermey.quo.vadis.ksp.models.TabItemType
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -82,8 +84,9 @@ class NavNodeBuilderGenerator(
      * initialized with the start destination as its first screen.
      *
      * @param stackInfo Extracted metadata from the @Stack annotation
+     * @param addDeprecations When true, adds @Deprecated annotation to the generated function
      */
-    fun generateStackBuilder(stackInfo: StackInfo) {
+    fun generateStackBuilder(stackInfo: StackInfo, addDeprecations: Boolean = false) {
         val packageName = "${stackInfo.packageName}.$GENERATED_PACKAGE_SUFFIX"
         val fileName = "${stackInfo.className}NavNodeBuilder"
 
@@ -91,7 +94,7 @@ class NavNodeBuilderGenerator(
 
         val fileSpec = FileSpec.builder(packageName, fileName)
             .addFileComment(FILE_COMMENT)
-            .addFunction(buildStackNodeFunction(stackInfo))
+            .addFunction(buildStackNodeFunction(stackInfo, addDeprecations))
             .build()
 
         fileSpec.writeTo(codeGenerator, Dependencies(false))
@@ -111,9 +114,10 @@ class NavNodeBuilderGenerator(
      * @param tabInfo Extracted metadata from the @Tab annotation
      * @param stackBuilders Map of stack class names to their StackInfo (reserved for future
      *        cross-package validation; currently tab builders resolve imports dynamically)
+     * @param addDeprecations When true, adds @Deprecated annotation to the generated function
      */
     @Suppress("UnusedParameter") // stackBuilders reserved for future validation/optimization
-    fun generateTabBuilder(tabInfo: TabInfo, stackBuilders: Map<String, StackInfo>) {
+    fun generateTabBuilder(tabInfo: TabInfo, stackBuilders: Map<String, StackInfo>, addDeprecations: Boolean = false) {
         val packageName = "${tabInfo.packageName}.$GENERATED_PACKAGE_SUFFIX"
         val fileName = "${tabInfo.className}NavNodeBuilder"
 
@@ -137,7 +141,7 @@ class NavNodeBuilderGenerator(
                         )
                     }
             }
-            .addFunction(buildTabNodeFunction(tabInfo))
+            .addFunction(buildTabNodeFunction(tabInfo, addDeprecations))
             .addFunction(buildTabMetadataFunction(tabInfo))
             .build()
 
@@ -152,8 +156,9 @@ class NavNodeBuilderGenerator(
      * graph's builder function.
      *
      * @param paneInfo Extracted metadata from the @Pane annotation
+     * @param addDeprecations When true, adds @Deprecated annotation to the generated function
      */
-    fun generatePaneBuilder(paneInfo: PaneInfo) {
+    fun generatePaneBuilder(paneInfo: PaneInfo, addDeprecations: Boolean = false) {
         val packageName = "${paneInfo.packageName}.$GENERATED_PACKAGE_SUFFIX"
         val fileName = "${paneInfo.className}NavNodeBuilder"
 
@@ -172,17 +177,40 @@ class NavNodeBuilderGenerator(
                     )
                 }
             }
-            .addFunction(buildPaneNodeFunction(paneInfo))
+            .addFunction(buildPaneNodeFunction(paneInfo, addDeprecations))
             .build()
 
         fileSpec.writeTo(codeGenerator, Dependencies(false))
     }
 
     // =========================================================================
+    // Private Helper Functions
+    // =========================================================================
+
+    /**
+     * Builds the @Deprecated annotation for legacy builder functions.
+     *
+     * @param functionName The name of the deprecated function
+     * @param containerClass The container class name (without ::class)
+     */
+    private fun buildDeprecationAnnotation(functionName: String, containerClass: String): AnnotationSpec {
+        return AnnotationSpec.builder(Deprecated::class)
+            .addMember("message = %S", StringTemplates.deprecatedBuilderMessage(functionName, containerClass))
+            .addMember(
+                "replaceWith = %T(%S, %S)",
+                ReplaceWith::class,
+                "GeneratedNavigationConfig.buildNavNode($containerClass::class)",
+                "com.jermey.quo.vadis.generated.GeneratedNavigationConfig"
+            )
+            .addMember("level = %T.%L", DeprecationLevel::class, "WARNING")
+            .build()
+    }
+
+    // =========================================================================
     // Private Builder Functions - Stack
     // =========================================================================
 
-    private fun buildStackNodeFunction(stackInfo: StackInfo): FunSpec {
+    private fun buildStackNodeFunction(stackInfo: StackInfo, addDeprecations: Boolean): FunSpec {
         val startDest = stackInfo.resolvedStartDestination
             ?: throw IllegalStateException(
                 "No start destination resolved for ${stackInfo.className}. " +
@@ -191,8 +219,9 @@ class NavNodeBuilderGenerator(
 
         // Build proper ClassName for possibly nested stack class
         val stackClassName = buildClassName(stackInfo.classDeclaration)
+        val functionName = "build${stackInfo.className}NavNode"
 
-        return FunSpec.builder("build${stackInfo.className}NavNode")
+        return FunSpec.builder(functionName)
             .addKdoc(
                 """
                 |Builds the initial NavNode tree for the "${stackInfo.name}" stack.
@@ -210,6 +239,11 @@ class NavNodeBuilderGenerator(
                 startDest.className,
                 STACK_NODE
             )
+            .apply {
+                if (addDeprecations) {
+                    addAnnotation(buildDeprecationAnnotation(functionName, stackInfo.className))
+                }
+            }
             .addParameter(
                 ParameterSpec.builder("key", String::class)
                     .defaultValue("%S", "${stackInfo.name}-stack")
@@ -259,7 +293,7 @@ class NavNodeBuilderGenerator(
     // Private Builder Functions - Tab
     // =========================================================================
 
-    private fun buildTabNodeFunction(tabInfo: TabInfo): FunSpec {
+    private fun buildTabNodeFunction(tabInfo: TabInfo, addDeprecations: Boolean): FunSpec {
         // Calculate initial tab index: if initialTabClass is set, find its index; otherwise 0
         val initialTabIndex = tabInfo.initialTabClass?.let { initialClass ->
             val initialQualifiedName = initialClass.qualifiedName?.asString()
@@ -268,7 +302,9 @@ class NavNodeBuilderGenerator(
             }.takeIf { it >= 0 }
         } ?: 0
 
-        return FunSpec.builder("build${tabInfo.className}NavNode")
+        val functionName = "build${tabInfo.className}NavNode"
+
+        return FunSpec.builder(functionName)
             .addKdoc(
                 """
                 |Builds the initial NavNode tree for the "${tabInfo.name}" tab container.
@@ -284,6 +320,11 @@ class NavNodeBuilderGenerator(
                 TAB_NODE,
                 TAB_NODE
             )
+            .apply {
+                if (addDeprecations) {
+                    addAnnotation(buildDeprecationAnnotation(functionName, tabInfo.className))
+                }
+            }
             .addParameter(
                 ParameterSpec.builder("key", String::class)
                     .defaultValue("%S", "${tabInfo.name}-tabs")
@@ -491,8 +532,10 @@ class NavNodeBuilderGenerator(
     // Private Builder Functions - Pane
     // =========================================================================
 
-    private fun buildPaneNodeFunction(paneInfo: PaneInfo): FunSpec {
-        return FunSpec.builder("build${paneInfo.className}NavNode")
+    private fun buildPaneNodeFunction(paneInfo: PaneInfo, addDeprecations: Boolean): FunSpec {
+        val functionName = "build${paneInfo.className}NavNode"
+
+        return FunSpec.builder(functionName)
             .addKdoc(
                 """
                 |Builds the initial NavNode tree for the "${paneInfo.name}" pane container.
@@ -510,6 +553,11 @@ class NavNodeBuilderGenerator(
                 PANE_ROLE,
                 PANE_NODE
             )
+            .apply {
+                if (addDeprecations) {
+                    addAnnotation(buildDeprecationAnnotation(functionName, paneInfo.className))
+                }
+            }
             .addParameter(
                 ParameterSpec.builder("key", String::class)
                     .defaultValue("%S", "${paneInfo.name}-pane")

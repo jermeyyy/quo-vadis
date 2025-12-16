@@ -27,7 +27,7 @@ The demo should also include clear before/after comparisons to help users unders
 
 | File | Purpose | Changes |
 |------|---------|---------|
-| `App.kt` (or equivalent) | Main entry point | Migrate to new patterns |
+| `DemoApp.kt` | Main entry point | Migrate to new patterns |
 | Navigation setup files | Navigator creation | Use `rememberQuoVadisNavigator` |
 | Multi-module examples | Composition demo | Show `config + config` pattern |
 
