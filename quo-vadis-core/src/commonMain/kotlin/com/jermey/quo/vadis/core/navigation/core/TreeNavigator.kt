@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -140,6 +141,20 @@ class TreeNavigator(
      * Flow indicating whether back navigation is possible.
      */
     override val canNavigateBack: StateFlow<Boolean> = _canNavigateBack.asStateFlow()
+
+    // =========================================================================
+    // RESULT AND LIFECYCLE MANAGERS
+    // =========================================================================
+
+    /**
+     * Manager for navigation result passing between screens.
+     */
+    override val resultManager: NavigationResultManager = NavigationResultManager()
+
+    /**
+     * Manager for navigation lifecycle callbacks.
+     */
+    override val lifecycleManager: NavigationLifecycleManager = NavigationLifecycleManager()
 
     /**
      * Updates derived state properties when the main state changes.
@@ -872,6 +887,9 @@ class TreeNavigator(
         updateDerivedState(newState)
         val toKey = newState.activeLeaf()?.key
 
+        // Dispatch lifecycle events for screen changes
+        dispatchLifecycleEvents(oldState, newState, fromKey, toKey)
+
         if (transition != null) {
             _transitionState.value = TransitionState.InProgress(
                 transition = transition,
@@ -881,6 +899,75 @@ class TreeNavigator(
             )
         } else {
             _transitionState.value = TransitionState.Idle
+        }
+    }
+
+    /**
+     * Dispatch lifecycle events based on state changes.
+     *
+     * Compares old and new state to determine:
+     * - Which screens were destroyed (removed from tree)
+     * - Which screen became inactive (fromKey)
+     * - Which screen became active (toKey)
+     *
+     * Events are dispatched asynchronously to avoid blocking navigation.
+     */
+    private fun dispatchLifecycleEvents(
+        oldState: NavNode,
+        newState: NavNode,
+        fromKey: String?,
+        toKey: String?
+    ) {
+        // Find all screen keys in old and new state
+        val oldScreenKeys = collectScreenKeys(oldState)
+        val newScreenKeys = collectScreenKeys(newState)
+
+        // Destroyed screens = in old state but not in new state
+        val destroyedKeys = oldScreenKeys - newScreenKeys
+
+        // Only dispatch if there are changes to handle
+        if (destroyedKeys.isEmpty() && (fromKey == null || fromKey == toKey)) {
+            return
+        }
+
+        // Dispatch events using coroutineScope
+        // Use try-catch to handle cases where dispatcher is not available (tests)
+        try {
+            coroutineScope.launch {
+                // Dispatch onExit for the previously active screen if it changed
+                if (fromKey != null && fromKey != toKey && fromKey !in destroyedKeys) {
+                    lifecycleManager.onScreenExited(fromKey)
+                }
+
+                // Dispatch onDestroy and cancel results for destroyed screens
+                destroyedKeys.forEach { screenKey ->
+                    lifecycleManager.onScreenDestroyed(screenKey)
+                    resultManager.cancelResult(screenKey)
+                }
+            }
+        } catch (_: IllegalStateException) {
+            // Dispatcher not available (e.g., Main dispatcher in tests)
+            // Lifecycle events are optional, so we silently ignore this
+        }
+    }
+
+    /**
+     * Collect all screen keys from a navigation tree.
+     */
+    private fun collectScreenKeys(node: NavNode): Set<String> {
+        val keys = mutableSetOf<String>()
+        collectScreenKeysRecursive(node, keys)
+        return keys
+    }
+
+    private fun collectScreenKeysRecursive(node: NavNode, keys: MutableSet<String>) {
+        when (node) {
+            is ScreenNode -> keys.add(node.key)
+            is StackNode -> node.children.forEach { collectScreenKeysRecursive(it, keys) }
+            is TabNode -> node.stacks.forEach { collectScreenKeysRecursive(it, keys) }
+            is PaneNode -> node.paneConfigurations.values.forEach {
+                collectScreenKeysRecursive(it.content, keys)
+            }
         }
     }
 

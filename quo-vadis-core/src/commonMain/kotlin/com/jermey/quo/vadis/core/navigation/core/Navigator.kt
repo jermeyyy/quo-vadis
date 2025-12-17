@@ -97,6 +97,27 @@ interface Navigator : ParentNavigator {
     val canNavigateBack: StateFlow<Boolean>
 
     // =========================================================================
+    // RESULT AND LIFECYCLE MANAGEMENT
+    // =========================================================================
+
+    /**
+     * Manager for navigation result passing between screens.
+     *
+     * Used internally by [navigateForResult] and [navigateBackWithResult]
+     * extension functions. Not typically accessed directly.
+     */
+    val resultManager: NavigationResultManager
+
+    /**
+     * Manager for navigation lifecycle callbacks.
+     *
+     * Used internally by [registerNavigationLifecycle] and
+     * [unregisterNavigationLifecycle] extension functions.
+     * Not typically accessed directly.
+     */
+    val lifecycleManager: NavigationLifecycleManager
+
+    // =========================================================================
     // NAVIGATION OPERATIONS
     // =========================================================================
 

@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.generated.GeneratedNavigationConfig
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.compose.rememberQuoVadisNavigator
+import com.jermey.quo.vadis.generated.GeneratedNavigationConfig
 
 /**
  * Main entry point for the demo application.

@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AssistantDirection
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Lock
@@ -41,6 +42,7 @@ import com.jermey.navplayground.demo.destinations.AuthFlowDestination
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
+import com.jermey.navplayground.demo.destinations.ResultDemoDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
 import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
@@ -105,6 +107,12 @@ fun HomeScreen(
                     AuthFlowDestination.Login,
                     NavigationTransitions.SlideHorizontal
                 )
+            },
+            onNavigateToResultDemo = {
+                navigator.navigate(
+                    ResultDemoDestination.Demo,
+                    NavigationTransitions.SlideHorizontal
+                )
             }
         )
     }
@@ -136,7 +144,8 @@ private fun HomeScreenContent(
     onNavigateToTabs: () -> Unit,
     onNavigateToProcess: () -> Unit,
     onNavigateToStateDriven: () -> Unit,
-    onNavigateToAuthFlow: () -> Unit
+    onNavigateToAuthFlow: () -> Unit,
+    onNavigateToResultDemo: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -200,6 +209,13 @@ private fun HomeScreenContent(
             title = "Auth Flow (Scoped Stack)",
             description = "Scope-aware navigation with in/out of scope destinations",
             onClick = onNavigateToAuthFlow
+        )
+
+        NavigationPatternCard(
+            icon = Icons.AutoMirrored.Filled.Send,
+            title = "Navigation with Result",
+            description = "Navigate to a screen and await a result",
+            onClick = onNavigateToResultDemo
         )
 
         Spacer(Modifier.weight(1f))

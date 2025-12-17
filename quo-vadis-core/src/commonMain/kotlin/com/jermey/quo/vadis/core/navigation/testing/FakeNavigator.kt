@@ -8,6 +8,8 @@ import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavNode
+import com.jermey.quo.vadis.core.navigation.core.NavigationLifecycleManager
+import com.jermey.quo.vadis.core.navigation.core.NavigationResultManager
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
@@ -56,6 +58,20 @@ class FakeNavigator : Navigator {
 
     private val _currentTransition = MutableStateFlow<NavigationTransition?>(null)
     override val currentTransition: StateFlow<NavigationTransition?> = _currentTransition.asStateFlow()
+
+    // =========================================================================
+    // RESULT AND LIFECYCLE MANAGERS
+    // =========================================================================
+
+    /**
+     * Manager for navigation result passing between screens.
+     */
+    override val resultManager: NavigationResultManager = NavigationResultManager()
+
+    /**
+     * Manager for navigation lifecycle callbacks.
+     */
+    override val lifecycleManager: NavigationLifecycleManager = NavigationLifecycleManager()
 
     // Track navigation calls for verification
     val navigationCalls = mutableListOf<NavigationCall>()
