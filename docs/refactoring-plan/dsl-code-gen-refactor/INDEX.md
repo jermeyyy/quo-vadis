@@ -17,10 +17,10 @@ This directory contains the detailed implementation plan for refactoring KSP-gen
 | 1 | [Core DSL Infrastructure](./phase-1-core-dsl-infrastructure/SUMMARY.md) | ✅ Completed | 3/3 | 2 weeks |
 | 2 | [Convenience Composables](./phase-2-convenience-composables/SUMMARY.md) | ✅ Completed | 3/3 | 1 week |
 | 3 | [KSP Generator Refactoring](./phase-3-ksp-generator-refactoring/SUMMARY.md) | ✅ Completed | 4/4 | 2 weeks |
-| 4 | [Migration & Deprecation](./phase-4-migration-deprecation/SUMMARY.md) | ⬜ Not Started | 0/3 | 1 week |
+| 4 | [Migration & Deprecation](./phase-4-migration-deprecation/SUMMARY.md) | ✅ Completed | 3/3 | 1 week |
 | 5 | [Documentation & Testing](./phase-5-documentation-testing/SUMMARY.md) | ⬜ Not Started | 0/2 | 1 week |
 
-**Overall Progress**: 10/15 tasks completed
+**Overall Progress**: 13/15 tasks completed
 
 ### Detailed Task Tracking
 
@@ -53,9 +53,9 @@ This directory contains the detailed implementation plan for refactoring KSP-gen
 
 | Task | Description | Status | Assignee |
 |------|-------------|--------|----------|
-| 4.1 | [Add Deprecation Warnings](./phase-4-migration-deprecation/TASK-4.1-deprecation-warnings.md) | ⬜ Not Started | - |
-| 4.2 | [Update Demo Application](./phase-4-migration-deprecation/TASK-4.2-update-demo-app.md) | ⬜ Not Started | - |
-| 4.3 | [Create Migration Guide](./phase-4-migration-deprecation/TASK-4.3-migration-guide.md) | ⬜ Not Started | - |
+| 4.1 | [Add Deprecation Warnings](./phase-4-migration-deprecation/TASK-4.1-deprecation-warnings.md) | ✅ Completed | - |
+| 4.2 | [Update Demo Application](./phase-4-migration-deprecation/TASK-4.2-update-demo-app.md) | ✅ Completed | - |
+| 4.3 | [Create Migration Guide](./phase-4-migration-deprecation/TASK-4.3-migration-guide.md) | ✅ Completed | - |
 
 #### Phase 5: Documentation & Testing
 

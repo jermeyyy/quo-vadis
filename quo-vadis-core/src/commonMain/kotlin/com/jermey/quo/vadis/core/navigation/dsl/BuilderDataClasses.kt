@@ -26,7 +26,7 @@ public data class ScreenEntry(
         destination: Destination,
         navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
-        animatedVisibilityScope: AnimatedVisibilityScope?
+        animatedVisibilityScope: AnimatedVisibilityScope?,
     ) -> Unit
 )
 

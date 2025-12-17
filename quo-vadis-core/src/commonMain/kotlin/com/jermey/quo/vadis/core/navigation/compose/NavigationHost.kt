@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackMode
 import com.jermey.quo.vadis.core.navigation.compose.render.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.navigation.compose.animation.LocalBackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.render.NavRenderScope
@@ -182,7 +181,6 @@ fun NavigationHost(
     transitionRegistry: TransitionRegistry = TransitionRegistry.Empty,
     scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
     enablePredictiveBack: Boolean = true,
-    predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY,
     windowSizeClass: WindowSizeClass? = null
 ) {
     // Collect navigation state
@@ -333,7 +331,6 @@ fun NavigationHost(
                 predictiveBackController,
                 screenRegistry,
                 wrapperRegistry,
-                predictiveBackMode
             ) {
                 NavRenderScopeImpl(
                     navigator = navigator,
@@ -344,7 +341,6 @@ fun NavigationHost(
                     screenRegistry = screenRegistry,
                     wrapperRegistry = wrapperRegistry,
                     sharedTransitionScope = this,
-                    predictiveBackMode = predictiveBackMode
                 )
             }
 
@@ -445,15 +441,11 @@ fun NavigationHost(
  * @param modifier Modifier to apply to the host container.
  * @param enablePredictiveBack Whether to enable predictive back gesture support.
  *   When enabled, back gestures provide visual feedback before completing the navigation.
- * @param predictiveBackMode The mode for predictive back behavior:
- *   - [PredictiveBackMode.ROOT_ONLY]: Only animate the root container
- *   - [PredictiveBackMode.FULL_CASCADE]: Animate all affected containers
  * @param windowSizeClass Optional window size class for responsive layouts.
  *   When provided, navigation containers can adapt their presentation based on available space.
  *
  * @see NavigationConfig for configuration details
  * @see rememberQuoVadisNavigator for creating a Navigator
- * @see QuoVadisNavigation for one-liner setup
  */
 @Composable
 fun NavigationHost(
@@ -461,7 +453,6 @@ fun NavigationHost(
     config: NavigationConfig,
     modifier: Modifier = Modifier,
     enablePredictiveBack: Boolean = true,
-    predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY,
     windowSizeClass: WindowSizeClass? = null
 ) {
     NavigationHost(
@@ -472,7 +463,6 @@ fun NavigationHost(
         transitionRegistry = config.transitionRegistry,
         scopeRegistry = config.scopeRegistry,
         enablePredictiveBack = enablePredictiveBack,
-        predictiveBackMode = predictiveBackMode,
         windowSizeClass = windowSizeClass
     )
 }
@@ -513,7 +503,6 @@ private class NavRenderScopeImpl(
     override val screenRegistry: ScreenRegistry,
     override val wrapperRegistry: WrapperRegistry,
     override val sharedTransitionScope: SharedTransitionScope?,
-    override val predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY
 ) : NavRenderScope {
 
     /**

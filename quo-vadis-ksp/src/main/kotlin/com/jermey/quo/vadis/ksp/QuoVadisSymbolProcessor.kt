@@ -20,16 +20,8 @@ import com.jermey.quo.vadis.ksp.extractors.StackExtractor
 import com.jermey.quo.vadis.ksp.extractors.TabExtractor
 import com.jermey.quo.vadis.ksp.extractors.TransitionExtractor
 import com.jermey.quo.vadis.ksp.extractors.WrapperExtractor
-import com.jermey.quo.vadis.ksp.generators.ContainerRegistryGenerator
 import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
-import com.jermey.quo.vadis.ksp.generators.NavNodeBuilderGenerator
-import com.jermey.quo.vadis.ksp.generators.NavigatorExtGenerator
-import com.jermey.quo.vadis.ksp.generators.ScopeRegistryGenerator
-import com.jermey.quo.vadis.ksp.generators.ScreenRegistryGenerator
-import com.jermey.quo.vadis.ksp.generators.TransitionRegistryGenerator
-import com.jermey.quo.vadis.ksp.generators.WrapperRegistryGenerator
 import com.jermey.quo.vadis.ksp.generators.dsl.NavigationConfigGenerator
-import com.jermey.quo.vadis.ksp.generators.legacy.LegacyGenerators
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.PaneInfo
 import com.jermey.quo.vadis.ksp.models.ScreenInfo
@@ -37,7 +29,6 @@ import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
 import com.jermey.quo.vadis.ksp.models.TransitionInfo
 import com.jermey.quo.vadis.ksp.models.WrapperInfo
-import com.jermey.quo.vadis.ksp.models.WrapperType
 import com.jermey.quo.vadis.ksp.validation.ValidationEngine
 
 /**
@@ -77,21 +68,8 @@ class QuoVadisSymbolProcessor(
     // Configuration
     // =========================================================================
 
-    /**
-     * Generation mode controls which outputs are produced.
-     */
-    enum class GenerationMode {
-        /** Generate only GeneratedNavigationConfig (new DSL-based approach) */
-        DSL,
-        /** Generate only legacy registries (individual registry objects) */
-        LEGACY,
-        /** Generate both DSL config and legacy registries (default for transition) */
-        BOTH
-    }
-
-    private val generationMode: GenerationMode = parseGenerationMode()
     private val targetPackage: String = options["quoVadis.package"]
-        ?: "com.example.navigation.generated"
+        ?: "com.jermey.quo.vadis.generated"
     private val strictValidation: Boolean = options["quoVadis.strictValidation"]
         ?.toBooleanStrictOrNull() ?: true
 
@@ -108,32 +86,10 @@ class QuoVadisSymbolProcessor(
     private val transitionExtractor = TransitionExtractor(logger)
 
     // =========================================================================
-    // Legacy Generators (for LEGACY and BOTH modes)
+    // Deeplink Generator
     // =========================================================================
 
-    // Generator for NavNode builders (KSP-002)
-    private val navNodeBuilderGenerator = NavNodeBuilderGenerator(codeGenerator, logger)
-
-    // Generator for screen registry (KSP-003)
-    private val screenRegistryGenerator = ScreenRegistryGenerator(codeGenerator, logger)
-
-    // Generator for wrapper registry (HIER-015)
-    private val wrapperRegistryGenerator = WrapperRegistryGenerator(codeGenerator, logger)
-
-    // Generator for transition registry (HIER-015)
-    private val transitionRegistryGenerator = TransitionRegistryGenerator(codeGenerator, logger)
-
-    // Generator for scope registry (scoped navigation)
-    private val scopeRegistryGenerator = ScopeRegistryGenerator(codeGenerator, logger)
-
-    // Generator for container registry (container-aware navigation)
-    private val containerRegistryGenerator = ContainerRegistryGenerator(codeGenerator, logger)
-
-    // Generator for deep link handler (KSP-004)
     private val deepLinkHandlerGenerator = DeepLinkHandlerGenerator(codeGenerator, logger)
-
-    // Generator for navigator extensions (KSP-005)
-    private val navigatorExtGenerator = NavigatorExtGenerator(codeGenerator, logger)
 
     // =========================================================================
     // New DSL Generator (for DSL and BOTH modes)
@@ -143,12 +99,6 @@ class QuoVadisSymbolProcessor(
         codeGenerator = codeGenerator,
         logger = logger,
         packageName = targetPackage
-    )
-
-    // Legacy generators wrapper (for LEGACY and BOTH modes)
-    private val legacyGenerators = LegacyGenerators(
-        codeGenerator = codeGenerator,
-        logger = logger
     )
 
     // =========================================================================
@@ -178,14 +128,12 @@ class QuoVadisSymbolProcessor(
 
     // Track if generation has already happened (to handle multi-round processing)
     private var hasGenerated = false
-    
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         // Skip if we've already generated code in a previous round
         if (hasGenerated) {
             return emptyList()
         }
-
-        logger.info("QuoVadis: Starting symbol processing (mode: $generationMode)")
 
         // Phase 1: Collection - Extract all annotated symbols
         collectAllSymbols(resolver)
@@ -220,20 +168,6 @@ class QuoVadisSymbolProcessor(
     // =========================================================================
     // Configuration Parsing
     // =========================================================================
-
-    /**
-     * Parses the generation mode from KSP options.
-     *
-     * @return The generation mode, defaulting to BOTH during transition period
-     */
-    private fun parseGenerationMode(): GenerationMode {
-        return when (options["quoVadis.mode"]?.lowercase()) {
-            "dsl" -> GenerationMode.DSL
-            "legacy" -> GenerationMode.LEGACY
-            "both" -> GenerationMode.BOTH
-            else -> GenerationMode.BOTH // Default during transition period
-        }
-    }
 
     // =========================================================================
     // Phase 1: Collection
@@ -273,10 +207,12 @@ class QuoVadisSymbolProcessor(
         // Step 7: Extract transitions
         collectTransitions(resolver)
 
-        logger.info("QuoVadis: Collected ${collectedStacks.size} stacks, ${collectedTabs.size} tabs, " +
-            "${collectedPanes.size} panes, ${collectedScreens.size} screens, " +
-            "${collectedDestinations.size} destinations, ${collectedWrappers.size} wrappers, " +
-            "${collectedTransitions.size} transitions")
+        logger.info(
+            "QuoVadis: Collected ${collectedStacks.size} stacks, ${collectedTabs.size} tabs, " +
+                    "${collectedPanes.size} panes, ${collectedScreens.size} screens, " +
+                    "${collectedDestinations.size} destinations, ${collectedWrappers.size} wrappers, " +
+                    "${collectedTransitions.size} transitions"
+        )
     }
 
     /**
@@ -396,14 +332,19 @@ class QuoVadisSymbolProcessor(
             pane.panes.forEach { paneItem ->
                 if (seenQualifiedNames.add(paneItem.destination.qualifiedName)) {
                     collectedDestinations.add(paneItem.destination)
-                    paneItem.destination.classDeclaration.containingFile?.let { originatingFiles.add(it) }
+                    paneItem.destination.classDeclaration.containingFile?.let {
+                        originatingFiles.add(
+                            it
+                        )
+                    }
                 }
             }
         }
 
         // Also scan for standalone @Destination classes (not inside containers)
         // These are used for navigation targets that don't belong to a specific container
-        val destinationSymbols = resolver.getSymbolsWithAnnotation(Destination::class.qualifiedName!!)
+        val destinationSymbols =
+            resolver.getSymbolsWithAnnotation(Destination::class.qualifiedName!!)
         destinationSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
             val destInfo = destinationExtractor.extract(classDeclaration)
             if (destInfo != null && seenQualifiedNames.add(destInfo.qualifiedName)) {
@@ -478,25 +419,11 @@ class QuoVadisSymbolProcessor(
     private fun generateOutput() {
         val originatingFilesList = originatingFiles.toList()
 
-        when (generationMode) {
-            GenerationMode.DSL -> {
-                logger.info("QuoVadis: Generating DSL config only")
-                generateDslConfig(originatingFilesList)
-            }
-            GenerationMode.LEGACY -> {
-                logger.info("QuoVadis: Generating legacy registries only")
-                generateLegacyRegistries(originatingFilesList, withDeprecations = false)
-            }
-            GenerationMode.BOTH -> {
-                logger.info("QuoVadis: Generating both DSL config and legacy registries (with deprecations)")
-                generateDslConfig(originatingFilesList)
-                generateLegacyRegistries(originatingFilesList, withDeprecations = true)
-            }
-        }
+        logger.info("QuoVadis: Generating config")
+        generateDslConfig(originatingFilesList)
 
         // Always generate deep link handler and navigator extensions
         generateDeepLinkHandler()
-        // generateNavigatorExtensions() // Currently disabled
     }
 
     /**
@@ -507,7 +434,8 @@ class QuoVadisSymbolProcessor(
      */
     private fun generateDslConfig(originatingFilesList: List<KSFile>) {
         if (collectedScreens.isEmpty() && collectedTabs.isEmpty() &&
-            collectedStacks.isEmpty() && collectedPanes.isEmpty()) {
+            collectedStacks.isEmpty() && collectedPanes.isEmpty()
+        ) {
             logger.warn("QuoVadis: No navigation elements found, skipping DSL config generation")
             return
         }
@@ -525,219 +453,6 @@ class QuoVadisSymbolProcessor(
         )
 
         navigationConfigGenerator.generate(navigationData, originatingFilesList)
-    }
-
-    /**
-     * Generates legacy registry objects (deprecated in BOTH mode).
-     *
-     * This maintains backward compatibility during the transition period.
-     * When `withDeprecations` is true, all generated code includes @Deprecated
-     * annotations pointing users to the new DSL-based approach.
-     */
-    private fun generateLegacyRegistries(
-        originatingFilesList: List<KSFile>,
-        withDeprecations: Boolean
-    ) {
-        logger.info("QuoVadis: Generating legacy registries (deprecated=$withDeprecations)...")
-
-        // Generate NavNode builders
-        generateStackBuilders()
-        generateTabBuilders()
-        generatePaneBuilders()
-
-        // Generate screen registry
-        generateScreenRegistry(collectedScreens)
-
-        // Generate wrapper registry
-        generateWrapperRegistry()
-
-        // Generate transition registry
-        generateTransitionRegistry()
-
-        // Generate scope registry
-        generateScopeRegistry()
-
-        // Generate container registry
-        generateContainerRegistry()
-
-        // Note: LegacyGenerators wrapper is available for future use when
-        // individual generators are updated to support deprecation annotations.
-        // For now, we use the existing individual generators directly.
-    }
-
-    // =========================================================================
-    // Legacy Generator Methods
-    // =========================================================================
-
-    /**
-     * Generate stack builders for all collected stacks.
-     */
-    private fun generateStackBuilders() {
-        collectedStacks.forEach { stackInfo ->
-            try {
-                navNodeBuilderGenerator.generateStackBuilder(stackInfo)
-                logger.info("Generated NavNode builder for @Stack: ${stackInfo.className}")
-            } catch (e: IllegalStateException) {
-                logger.error("Error generating NavNode builder for @Stack ${stackInfo.className}: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Generate tab builders for all collected tabs.
-     */
-    private fun generateTabBuilders() {
-        collectedTabs.forEach { tabInfo ->
-            try {
-                navNodeBuilderGenerator.generateTabBuilder(tabInfo, stackInfoMap)
-                logger.info("Generated NavNode builder for @Tab: ${tabInfo.className}")
-            } catch (e: IllegalStateException) {
-                logger.error("Error generating NavNode builder for @Tab ${tabInfo.className}: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Generate pane builders for all collected panes.
-     */
-    private fun generatePaneBuilders() {
-        collectedPanes.forEach { paneInfo ->
-            try {
-                navNodeBuilderGenerator.generatePaneBuilder(paneInfo)
-                logger.info("Generated NavNode builder for @Pane: ${paneInfo.className}")
-            } catch (e: IllegalStateException) {
-                logger.error("Error generating NavNode builder for @Pane ${paneInfo.className}: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Generate screen registry from collected screens.
-     */
-    private fun generateScreenRegistry(screens: List<ScreenInfo>) {
-        try {
-            screenRegistryGenerator.generate(screens)
-        } catch (e: IllegalStateException) {
-            logger.error("Error generating screen registry: ${e.message}")
-        }
-    }
-
-    /**
-     * Generate WrapperRegistry from collected wrappers.
-     */
-    private fun generateWrapperRegistry() {
-        val tabWrappers = collectedWrappers.filter { it.wrapperType == WrapperType.TAB }
-        val paneWrappers = collectedWrappers.filter { it.wrapperType == WrapperType.PANE }
-
-        // Skip generation if no wrappers found
-        if (tabWrappers.isEmpty() && paneWrappers.isEmpty()) {
-            logger.info("No @TabWrapper or @PaneWrapper annotations found, skipping WrapperRegistry generation")
-            return
-        }
-
-        // Determine base package from first wrapper
-        val basePackage = tabWrappers.firstOrNull()?.packageName
-            ?: paneWrappers.firstOrNull()?.packageName
-            ?: return
-
-        try {
-            wrapperRegistryGenerator.generate(tabWrappers, paneWrappers, basePackage)
-            logger.info("Generated WrapperRegistry with ${tabWrappers.size} tab wrappers and ${paneWrappers.size} pane wrappers")
-        } catch (e: Exception) {
-            logger.error("Error generating WrapperRegistry: ${e.message}")
-        }
-    }
-
-    /**
-     * Generate TransitionRegistry from collected transitions.
-     */
-    private fun generateTransitionRegistry() {
-        // Skip generation if no transitions found
-        if (collectedTransitions.isEmpty()) {
-            logger.info("No @Transition annotations found, skipping TransitionRegistry generation")
-            return
-        }
-
-        // Determine base package from first transition
-        val basePackage = collectedTransitions.first().destinationQualifiedName.substringBeforeLast('.')
-
-        try {
-            transitionRegistryGenerator.generate(collectedTransitions, basePackage)
-            logger.info("Generated TransitionRegistry with ${collectedTransitions.size} transitions")
-        } catch (e: Exception) {
-            logger.error("Error generating TransitionRegistry: ${e.message}")
-        }
-    }
-
-    /**
-     * Generate scope registry for scoped navigation.
-     *
-     * Creates a registry that maps scope keys (sealed class names) to their
-     * member destinations. Used by TreeMutator for scope-aware navigation.
-     */
-    private fun generateScopeRegistry() {
-        if (collectedTabs.isEmpty() && collectedPanes.isEmpty() && collectedStacks.isEmpty()) {
-            logger.info("No @Tab, @Pane, or @Stack annotations found, skipping ScopeRegistry generation")
-            return
-        }
-
-        val basePackage = collectedTabs.firstOrNull()?.packageName
-            ?: collectedPanes.firstOrNull()?.packageName
-            ?: collectedStacks.firstOrNull()?.packageName
-            ?: return
-
-        try {
-            scopeRegistryGenerator.generate(collectedTabs, collectedPanes, collectedStacks, basePackage)
-        } catch (e: Exception) {
-            logger.error("Error generating ScopeRegistry: ${e.message}")
-        }
-    }
-
-    /**
-     * Generate container registry for container-aware navigation.
-     *
-     * Creates a registry that maps destinations within @Tab and @Pane containers
-     * to their builder functions. Used by TreeNavigator for automatic container creation.
-     */
-    private fun generateContainerRegistry() {
-        if (collectedTabs.isEmpty() && collectedPanes.isEmpty()) {
-            logger.info("No @Tab or @Pane annotations found, skipping ContainerRegistry generation")
-            return
-        }
-
-        try {
-            containerRegistryGenerator.generate(collectedTabs, collectedPanes)
-            logger.info("Generated ContainerRegistry with ${collectedTabs.size} tab containers and ${collectedPanes.size} pane containers")
-        } catch (e: Exception) {
-            logger.error("Error generating ContainerRegistry: ${e.message}")
-        }
-    }
-
-    /**
-     * Generate navigator convenience extensions for all collected containers.
-     *
-     * Creates extension functions on Navigator for type-safe navigation:
-     * - `to{Destination}()` for stack destinations
-     * - `switchTo{Pane}Pane()` for pane switching
-     *
-     * Note: Tab switching extensions are no longer generated.
-     */
-    @Suppress("unused")
-    private fun generateNavigatorExtensions() {
-        if (collectedStacks.isEmpty() && collectedTabs.isEmpty() && collectedPanes.isEmpty()) {
-            return
-        }
-
-        val basePackage = collectedStacks.firstOrNull()?.packageName
-            ?: collectedTabs.firstOrNull()?.packageName
-            ?: collectedPanes.firstOrNull()?.packageName
-            ?: return
-
-        try {
-            navigatorExtGenerator.generate(collectedStacks, collectedTabs, collectedPanes, basePackage)
-        } catch (e: IllegalStateException) {
-            logger.error("Error generating navigator extensions: ${e.message}")
-        }
     }
 
     // =========================================================================

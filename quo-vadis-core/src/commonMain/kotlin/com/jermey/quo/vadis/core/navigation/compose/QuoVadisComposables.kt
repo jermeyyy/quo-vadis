@@ -7,7 +7,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
-import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackMode
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.Destination
@@ -244,7 +243,6 @@ fun QuoVadisNavigation(
     modifier: Modifier = Modifier,
     key: String? = null,
     enablePredictiveBack: Boolean = platformDefaultPredictiveBack(),
-    predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY,
     windowSizeClass: WindowSizeClass? = null
 ) {
     val navigator = rememberQuoVadisNavigator(
@@ -258,7 +256,6 @@ fun QuoVadisNavigation(
         config = config,
         modifier = modifier,
         enablePredictiveBack = enablePredictiveBack,
-        predictiveBackMode = predictiveBackMode,
         windowSizeClass = windowSizeClass
     )
 }
@@ -295,7 +292,6 @@ fun QuoVadisNavigation(
     modifier: Modifier = Modifier,
     key: String? = null,
     enablePredictiveBack: Boolean = platformDefaultPredictiveBack(),
-    predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY,
     windowSizeClass: WindowSizeClass? = null
 ) {
     val navigator = rememberQuoVadisNavigator(
@@ -309,7 +305,6 @@ fun QuoVadisNavigation(
         config = config,
         modifier = modifier,
         enablePredictiveBack = enablePredictiveBack,
-        predictiveBackMode = predictiveBackMode,
         windowSizeClass = windowSizeClass
     )
 }

@@ -188,6 +188,9 @@ internal class DslContainerRegistry(
 
     /**
      * Finds the tab index for a destination within a tabs container.
+     *
+     * For [TabEntry.ContainerReference] entries, this also checks if the
+     * destination is a member of the referenced container.
      */
     @Suppress("ReturnCount")
     private fun findTabIndex(
@@ -207,6 +210,8 @@ internal class DslContainerRegistry(
                 }
                 is TabEntry.ContainerReference -> {
                     if (entry.containerClass == destClass) return index
+                    // Check if destination is a member of the referenced container
+                    if (isDestinationInContainer(entry.containerClass, destClass)) return index
                 }
             }
         }
@@ -214,7 +219,52 @@ internal class DslContainerRegistry(
     }
 
     /**
+     * Checks if a destination class is a member of a container.
+     *
+     * @param containerClass The container to check
+     * @param destClass The destination class to look for
+     * @return true if destClass is within the container
+     */
+    private fun isDestinationInContainer(
+        containerClass: KClass<out Destination>,
+        destClass: KClass<out Destination>
+    ): Boolean {
+        val containerBuilder = containers[containerClass] ?: return false
+
+        return when (containerBuilder) {
+            is ContainerBuilder.Stack -> {
+                containerBuilder.screens.any { it.destinationClass == destClass }
+            }
+            is ContainerBuilder.Tabs -> {
+                containerBuilder.config.tabs.any { entry ->
+                    when (entry) {
+                        is TabEntry.FlatScreen -> entry.destinationClass == destClass
+                        is TabEntry.NestedStack -> {
+                            entry.destinationClass == destClass ||
+                                entry.screens.any { it.destinationClass == destClass }
+                        }
+                        is TabEntry.ContainerReference -> {
+                            entry.containerClass == destClass ||
+                                isDestinationInContainer(entry.containerClass, destClass)
+                        }
+                    }
+                }
+            }
+            is ContainerBuilder.Panes -> {
+                containerBuilder.config.panes.values.any { entry ->
+                    entry.content.rootDestination?.let { it::class == destClass } ?: false
+                }
+            }
+        }
+    }
+
+    /**
      * Builds mapping from tab member destinations to their container class.
+     *
+     * For [TabEntry.ContainerReference] entries, this also recursively includes
+     * all destinations from the referenced container, enabling navigation to
+     * destinations within nested containers (e.g., `DemoTabs.BooksTab.List`)
+     * to correctly create the parent tab container (`DemoTabs`).
      */
     @Suppress("NestedBlockDepth")
     private fun buildTabMemberMapping(): Map<KClass<out Destination>, KClass<out Destination>> {
@@ -237,6 +287,10 @@ internal class DslContainerRegistry(
                         }
                         is TabEntry.ContainerReference -> {
                             result[entry.containerClass] = containerClass
+                            // Also map all destinations from the referenced container
+                            // This enables navigating to nested destinations like
+                            // DemoTabs.BooksTab.List to create the DemoTabs container
+                            addReferencedContainerMembers(entry.containerClass, containerClass, result)
                         }
                     }
                 }
@@ -244,6 +298,67 @@ internal class DslContainerRegistry(
         }
 
         return result
+    }
+
+    /**
+     * Recursively adds members of a referenced container to the tab member mapping.
+     *
+     * When a tab uses [TabEntry.ContainerReference], the destinations within
+     * that referenced container should also map to the parent tab container.
+     * This enables navigation like `DemoTabs.BooksTab.List` to correctly create
+     * the `DemoTabs` container with `DemoTabsWrapper`.
+     *
+     * @param referencedClass The container class being referenced
+     * @param tabContainerClass The parent tab container class
+     * @param result The mapping being built
+     */
+    private fun addReferencedContainerMembers(
+        referencedClass: KClass<out Destination>,
+        tabContainerClass: KClass<out Destination>,
+        result: MutableMap<KClass<out Destination>, KClass<out Destination>>
+    ) {
+        val referencedBuilder = containers[referencedClass] ?: return
+
+        when (referencedBuilder) {
+            is ContainerBuilder.Stack -> {
+                // Add all screen destinations from the stack
+                referencedBuilder.screens.forEach { screen ->
+                    screen.destinationClass?.let {
+                        result[it] = tabContainerClass
+                    }
+                }
+            }
+            is ContainerBuilder.Tabs -> {
+                // Recursively add tab members
+                referencedBuilder.config.tabs.forEach { entry ->
+                    when (entry) {
+                        is TabEntry.FlatScreen -> {
+                            result[entry.destinationClass] = tabContainerClass
+                        }
+                        is TabEntry.NestedStack -> {
+                            result[entry.destinationClass] = tabContainerClass
+                            entry.screens.forEach { screen ->
+                                screen.destinationClass?.let {
+                                    result[it] = tabContainerClass
+                                }
+                            }
+                        }
+                        is TabEntry.ContainerReference -> {
+                            result[entry.containerClass] = tabContainerClass
+                            addReferencedContainerMembers(entry.containerClass, tabContainerClass, result)
+                        }
+                    }
+                }
+            }
+            is ContainerBuilder.Panes -> {
+                // Add pane member destinations
+                referencedBuilder.config.panes.values.forEach { entry ->
+                    entry.content.rootDestination?.let { dest ->
+                        result[dest::class] = tabContainerClass
+                    }
+                }
+            }
+        }
     }
 
     /**

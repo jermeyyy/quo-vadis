@@ -1,7 +1,7 @@
 package com.jermey.navplayground.demo.destinations
 
-import com.jermey.navplayground.demo.destinations.MainTabs.HomeTab
 import com.jermey.navplayground.demo.destinations.MainTabs.ExploreTab
+import com.jermey.navplayground.demo.destinations.MainTabs.HomeTab
 import com.jermey.navplayground.demo.destinations.MainTabs.ProfileTab
 import com.jermey.navplayground.demo.destinations.MainTabs.SettingsTab
 import com.jermey.quo.vadis.annotations.Destination
@@ -64,8 +64,9 @@ import com.jermey.quo.vadis.annotations.TransitionType
     initialTab = HomeTab::class,
     items = [HomeTab::class, ExploreTab::class, ProfileTab::class, SettingsTab::class]
 )
-@Destination(route = "main/tabs")
 sealed class MainTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
+
+    companion object : com.jermey.quo.vadis.core.navigation.core.Destination
 
     @TabItem(label = "Home", icon = "home")
     @Destination(route = "main/home")
@@ -100,7 +101,7 @@ sealed class MainTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
     @TabItem(label = "Settings", icon = "settings")
     @Stack(name = "settingsTabStack", startDestinationClass = SettingsTab.Main::class)
     @Transition(type = TransitionType.Fade)
-    sealed class SettingsTab : com.jermey.quo.vadis.core.navigation.core.Destination {
+    sealed class SettingsTab : MainTabs() {
         /** Root destination for the Settings tab. */
 
         @Destination(route = "settings/main")

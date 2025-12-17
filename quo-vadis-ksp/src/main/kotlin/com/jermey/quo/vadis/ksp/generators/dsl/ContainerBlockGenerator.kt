@@ -233,7 +233,9 @@ class ContainerBlockGenerator(
     /**
      * Generates a `stack<T>` block.
      *
-     * Uses the reified type version `screen<Type>()` for all destinations.
+     * For the start destination (first entry), uses `screen(Instance)` syntax if it's a data object
+     * so that `buildStackChildren` can create the initial ScreenNode. For other destinations,
+     * uses `screen<Type>()` syntax since they're just registered for scope membership.
      *
      * @param stack The stack info to generate code for
      * @return CodeBlock for the stack container
@@ -245,15 +247,50 @@ class ContainerBlockGenerator(
         val builder = CodeBlock.builder()
             .beginControlFlow("stack<%T>(scopeKey = %S)", containerClass, scopeKey)
 
-        // Generate screen entries for each destination using reified type syntax
-        stack.destinations.forEach { dest ->
+        // Order destinations with start destination first (DSL uses first entry as root)
+        val orderedDestinations = orderDestinationsWithStartFirst(stack)
+
+        // Generate screen entries - first entry needs instance for buildStackChildren to work
+        orderedDestinations.forEachIndexed { index, dest ->
             val destClass = dest.classDeclaration.toClassName()
-            builder.addStatement("screen<%T>()", destClass)
+
+            if (index == 0 && dest.isDataObject) {
+                // Start destination: use instance syntax so buildStackChildren can create ScreenNode
+                builder.addStatement("screen(%T)", destClass)
+            } else {
+                // Other destinations: use type syntax for scope registration
+                builder.addStatement("screen<%T>()", destClass)
+            }
         }
 
         builder.endControlFlow()
 
         return builder.build()
+    }
+
+    /**
+     * Orders destinations with the resolved start destination first.
+     *
+     * The DSL uses the first screen entry as the initial/root screen,
+     * so we need to ensure the start destination is placed first.
+     *
+     * @param stack The stack info containing destinations and resolved start
+     * @return List of destinations with start destination first
+     */
+    private fun orderDestinationsWithStartFirst(
+        stack: StackInfo
+    ): List<com.jermey.quo.vadis.ksp.models.DestinationInfo> {
+        val startDestination = stack.resolvedStartDestination
+        if (startDestination == null) {
+            return stack.destinations
+        }
+
+        val startQualifiedName = startDestination.classDeclaration.qualifiedName?.asString()
+        val otherDestinations = stack.destinations.filter {
+            it.classDeclaration.qualifiedName?.asString() != startQualifiedName
+        }
+
+        return listOf(startDestination) + otherDestinations
     }
 
     /**

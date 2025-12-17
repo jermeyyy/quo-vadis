@@ -8,7 +8,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackMode
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -186,17 +185,6 @@ public interface NavRenderScope {
     public val wrapperRegistry: WrapperRegistry
 
     /**
-     * The predictive back mode for this navigation tree.
-     *
-     * Determines whether nested stacks receive predictive back gestures:
-     * - [PredictiveBackMode.ROOT_ONLY]: Only root stack handles predictive back (default)
-     * - [PredictiveBackMode.FULL_CASCADE]: All stacks handle predictive back
-     *
-     * @see PredictiveBackMode
-     */
-    public val predictiveBackMode: PredictiveBackMode
-
-    /**
      * Shared transition scope for coordinating shared element animations.
      *
      * When non-null, enables shared element transitions between screens.
@@ -217,9 +205,8 @@ public interface NavRenderScope {
      * Determines if predictive back should be enabled for a given node.
      *
      * This method considers:
-     * 1. The [predictiveBackMode] configuration
-     * 2. Whether a cascade animation is currently active
-     * 3. Whether this stack can handle the back action internally
+     * 1. Whether a cascade animation is currently active
+     * 2. Whether this stack can handle the back action internally
      *
      * For nested stacks inside tabs:
      * - If the stack has > 1 children, back pops within the stack → enable predictive back
@@ -256,10 +243,7 @@ public interface NavRenderScope {
             }
         }
 
-        return when (predictiveBackMode) {
-            PredictiveBackMode.ROOT_ONLY -> node.parentKey == null
-            PredictiveBackMode.FULL_CASCADE -> true
-        }
+        return true
     }
 
     /**

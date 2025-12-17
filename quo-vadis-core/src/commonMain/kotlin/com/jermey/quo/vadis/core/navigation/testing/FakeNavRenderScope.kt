@@ -10,7 +10,6 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackMode
 import com.jermey.quo.vadis.core.navigation.compose.render.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.navigation.compose.render.NavRenderScope
 import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
@@ -139,7 +138,6 @@ public class FakeNavRenderScope(
     override val screenRegistry: ScreenRegistry = EmptyScreenRegistry,
     override val wrapperRegistry: WrapperRegistry = WrapperRegistry.Empty,
     override val sharedTransitionScope: SharedTransitionScope? = null,
-    override val predictiveBackMode: PredictiveBackMode = PredictiveBackMode.ROOT_ONLY
 ) : NavRenderScope {
 
     /**
