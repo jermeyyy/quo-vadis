@@ -46,7 +46,7 @@ import kotlin.reflect.KClass
  * @see com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
  */
 @Stable
-public interface TransitionRegistry {
+interface TransitionRegistry {
 
     /**
      * Gets the transition configuration for a destination class.
@@ -59,12 +59,12 @@ public interface TransitionRegistry {
      *
      * @see NavTransition
      */
-    public fun getTransition(destinationClass: KClass<*>): NavTransition?
+    fun getTransition(destinationClass: KClass<*>): NavTransition?
 
     /**
      * Companion object providing default implementations and factory methods.
      */
-    public companion object {
+    companion object {
 
         /**
          * Empty registry that returns `null` for all lookups.
@@ -82,7 +82,7 @@ public interface TransitionRegistry {
          * )
          * ```
          */
-        public val Empty: TransitionRegistry = object : TransitionRegistry {
+        val Empty: TransitionRegistry = object : TransitionRegistry {
             override fun getTransition(destinationClass: KClass<*>): NavTransition? = null
         }
     }

@@ -13,11 +13,12 @@ Implement `DslNavigationConfig`, the concrete class that converts DSL builder co
 
 **Key Responsibilities**:
 1. Convert DSL screen registrations to `ScreenRegistry`
-2. Convert DSL container definitions to `ContainerRegistry`
+2. Convert DSL container definitions to `ContainerRegistry` (includes wrapper functionality)
 3. Convert DSL scope definitions to `ScopeRegistry`
 4. Convert DSL transition registrations to `TransitionRegistry`
-5. Convert DSL wrapper registrations to `WrapperRegistry`
-6. Implement `buildNavNode()` to create NavNode trees from container definitions
+5. Implement `buildNavNode()` to create NavNode trees from container definitions
+
+> **Note**: `WrapperRegistry` has been merged into `ContainerRegistry`. Wrapper functionality (tabs/panes) is now part of the container registry.
 
 ---
 
@@ -36,10 +37,9 @@ Implement `DslNavigationConfig`, the concrete class that converts DSL builder co
 | File | Description |
 |------|-------------|
 | `DslScreenRegistry.kt` | DSL-based screen registry implementation |
-| `DslContainerRegistry.kt` | DSL-based container registry implementation |
+| `DslContainerRegistry.kt` | DSL-based container registry implementation (includes wrapper functionality) |
 | `DslScopeRegistry.kt` | DSL-based scope registry implementation |
 | `DslTransitionRegistry.kt` | DSL-based transition registry implementation |
-| `DslWrapperRegistry.kt` | DSL-based wrapper registry implementation |
 | `NavNodeBuilder.kt` | Helper for building NavNode trees |
 
 ---
@@ -70,10 +70,9 @@ import kotlin.reflect.KClass
  * 
  * The class maintains maps of configurations and lazily creates registry implementations:
  * - Screen configurations → [DslScreenRegistry]
- * - Container configurations → [DslContainerRegistry]
+ * - Container configurations → [DslContainerRegistry] (includes wrapper functionality)
  * - Scope configurations → [DslScopeRegistry]
  * - Transition configurations → [DslTransitionRegistry]
- * - Wrapper configurations → [DslWrapperRegistry]
  * 
  * ## Thread Safety
  * 
@@ -84,16 +83,16 @@ import kotlin.reflect.KClass
  * @property containers Map of destination class to container builder
  * @property scopes Map of scope key to destination classes
  * @property transitions Map of destination class to transition
- * @property tabWrappers Map of wrapper key to tab wrapper composable
- * @property paneWrappers Map of wrapper key to pane wrapper composable
+ * @property tabsContainers Map of wrapper key to tabs container composable
+ * @property paneContainers Map of wrapper key to pane container composable
  */
 internal class DslNavigationConfig(
     private val screens: Map<KClass<out Destination>, ScreenEntry>,
     private val containers: Map<KClass<out Destination>, ContainerBuilder>,
     private val scopes: Map<String, Set<KClass<out Destination>>>,
     private val transitions: Map<KClass<out Destination>, NavTransition>,
-    private val tabWrappers: Map<String, @Composable TabWrapperScope.() -> Unit>,
-    private val paneWrappers: Map<String, @Composable PaneWrapperScope.() -> Unit>
+    private val tabsContainers: Map<String, @Composable TabsContainerScope.() -> Unit>,
+    private val paneContainers: Map<String, @Composable PaneContainerScope.() -> Unit>
 ) : NavigationConfig {
     
     // ========================================
@@ -102,10 +101,6 @@ internal class DslNavigationConfig(
     
     override val screenRegistry: ScreenRegistry by lazy {
         DslScreenRegistry(screens)
-    }
-    
-    override val wrapperRegistry: WrapperRegistry by lazy {
-        DslWrapperRegistry(tabWrappers, paneWrappers)
     }
     
     override val scopeRegistry: ScopeRegistry by lazy {
@@ -119,7 +114,8 @@ internal class DslNavigationConfig(
     }
     
     override val containerRegistry: ContainerRegistry by lazy {
-        DslContainerRegistry(containers, ::buildNavNode)
+        // ContainerRegistry now includes wrapper functionality (tabs/panes)
+        DslContainerRegistry(containers, tabsContainers, paneContainers, ::buildNavNode)
     }
     
     override val deepLinkHandler: DeepLinkHandler by lazy {
@@ -638,27 +634,28 @@ internal class DslTransitionRegistry(
 }
 ```
 
-### DslWrapperRegistry.kt
+### Wrapper Functionality in DslContainerRegistry
+
+> **Note**: `WrapperRegistry` has been merged into `ContainerRegistry`. The wrapper functionality
+> (tabs/panes container rendering) is now part of `DslContainerRegistry`:
 
 ```kotlin
-package com.jermey.quo.vadis.core.navigation.dsl
-
-import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneWrapperScope
-
-/**
- * WrapperRegistry implementation backed by DSL wrapper registrations.
- */
-internal class DslWrapperRegistry(
-    private val tabWrappers: Map<String, @Composable TabWrapperScope.() -> Unit>,
-    private val paneWrappers: Map<String, @Composable PaneWrapperScope.() -> Unit>
-) : WrapperRegistry {
+// Wrapper methods are now part of DslContainerRegistry
+internal class DslContainerRegistry(
+    private val containers: Map<KClass<out Destination>, ContainerBuilder>,
+    private val tabsContainers: Map<String, @Composable TabsContainerScope.() -> Unit>,
+    private val paneContainers: Map<String, @Composable PaneContainerScope.() -> Unit>,
+    private val navNodeBuilder: (KClass<out Destination>, String?, String?) -> NavNode?
+) : ContainerRegistry {
     
+    override fun getContainerInfo(destination: Destination): ContainerInfo? {
+        // ... existing container info logic
+    }
+    
+    // Wrapper functionality (formerly in WrapperRegistry)
     @Composable
-    override fun TabWrapper(wrapperKey: String, scope: TabWrapperScope) {
-        val wrapper = tabWrappers[wrapperKey]
+    override fun TabsContainer(wrapperKey: String, scope: TabsContainerScope) {
+        val wrapper = tabsContainers[wrapperKey]
         if (wrapper != null) {
             wrapper(scope)
         } else {
@@ -668,8 +665,8 @@ internal class DslWrapperRegistry(
     }
     
     @Composable
-    override fun PaneWrapper(wrapperKey: String, scope: PaneWrapperScope) {
-        val wrapper = paneWrappers[wrapperKey]
+    override fun PaneContainer(wrapperKey: String, scope: PaneContainerScope) {
+        val wrapper = paneContainers[wrapperKey]
         if (wrapper != null) {
             wrapper(scope)
         } else {
@@ -679,14 +676,14 @@ internal class DslWrapperRegistry(
     }
     
     /**
-     * Checks if a tab wrapper is registered for the given key.
+     * Checks if a tabs container is registered for the given key.
      */
-    fun hasTabWrapper(key: String): Boolean = tabWrappers.containsKey(key)
+    fun hasTabsContainer(key: String): Boolean = tabsContainers.containsKey(key)
     
     /**
-     * Checks if a pane wrapper is registered for the given key.
+     * Checks if a pane container is registered for the given key.
      */
-    fun hasPaneWrapper(key: String): Boolean = paneWrappers.containsKey(key)
+    fun hasPaneContainer(key: String): Boolean = paneContainers.containsKey(key)
 }
 ```
 
@@ -715,10 +712,9 @@ internal class DslWrapperRegistry(
 ┌─────────────────────────┐
 │ DslNavigationConfig     │  Runtime Configuration
 │ ├─ DslScreenRegistry    │
-│ ├─ DslContainerRegistry │
+│ ├─ DslContainerRegistry │  (includes wrapper functionality)
 │ ├─ DslScopeRegistry     │
-│ ├─ DslTransitionRegistry│
-│ └─ DslWrapperRegistry   │
+│ └─ DslTransitionRegistry│
 └───────────┬─────────────┘
             │ used by
             ▼
@@ -744,7 +740,8 @@ internal class DslWrapperRegistry(
 4. **Transitions**: `Map<KClass, NavTransition>` → `DslTransitionRegistry`
    - Direct mapping
 
-5. **Wrappers**: `Map<String, Composable>` → `DslWrapperRegistry`
+5. **Wrappers**: `Map<String, Composable>` → Now part of `DslContainerRegistry`
+   - Wrapper functionality has been merged into ContainerRegistry
    - Direct mapping with default fallback
 
 ---
@@ -841,10 +838,11 @@ Container Key: "MainTabs"
 - [ ] Returns registered transition for destination
 - [ ] Returns null for unregistered destinations
 
-### DslWrapperRegistry
+### DslContainerRegistry (includes wrapper functionality)
 - [ ] Invokes tab wrapper for registered key
 - [ ] Invokes pane wrapper for registered key
 - [ ] Falls back to default content() for unregistered keys
+- [ ] Returns correct ContainerInfo for destinations
 
 ### Testing
 - [ ] Unit test: DslNavigationConfig creation from builder
@@ -874,10 +872,9 @@ Container Key: "MainTabs"
 | buildNavNode() for Tabs | 0.5 days |
 | buildNavNode() for Panes | 0.25 days |
 | DslScreenRegistry | 0.25 days |
-| DslContainerRegistry | 0.25 days |
+| DslContainerRegistry (incl. wrappers) | 0.5 days |
 | DslScopeRegistry | 0.25 days |
 | DslTransitionRegistry | 0.25 days |
-| DslWrapperRegistry | 0.25 days |
 | Unit tests | 0.75 days |
 | Integration tests | 0.5 days |
 | Documentation & review | 0.5 days |
@@ -916,7 +913,7 @@ fun `DSL config integrates with NavigationHost`() {
         NavigationHost(
             navigator = navigator,
             screenRegistry = config.screenRegistry,
-            wrapperRegistry = config.wrapperRegistry,
+            containerRegistry = config.containerRegistry, // includes wrapper functionality
             transitionRegistry = config.transitionRegistry,
             scopeRegistry = config.scopeRegistry
         )

@@ -54,7 +54,7 @@ import com.jermey.quo.vadis.core.navigation.core.PaneRole
  * @see PaneRole
  */
 @NavigationConfigDsl
-public class PanesBuilder {
+class PanesBuilder {
 
     /**
      * Map of pane roles to their configuration.
@@ -67,7 +67,7 @@ public class PanesBuilder {
      * On compact screens, this determines which pane is visible initially.
      * Defaults to [PaneRole.Primary].
      */
-    public var initialPane: PaneRole = PaneRole.Primary
+    var initialPane: PaneRole = PaneRole.Primary
 
     /**
      * Back navigation behavior for this pane container.
@@ -75,7 +75,7 @@ public class PanesBuilder {
      * Controls how back gestures are handled when multiple panes are visible.
      * Defaults to [PaneBackBehavior.PopLatest].
      */
-    public var backBehavior: PaneBackBehavior = PaneBackBehavior.PopLatest
+    var backBehavior: PaneBackBehavior = PaneBackBehavior.PopLatest
 
     /**
      * Configures the primary pane.
@@ -96,7 +96,7 @@ public class PanesBuilder {
      * @param minWidth Minimum width for this pane
      * @param builder Content configuration lambda
      */
-    public fun primary(
+    fun primary(
         weight: Float = 1f,
         minWidth: Dp = 0.dp,
         builder: PaneContentBuilder.() -> Unit
@@ -128,7 +128,7 @@ public class PanesBuilder {
      * @param minWidth Minimum width for this pane
      * @param builder Content configuration lambda
      */
-    public fun secondary(
+    fun secondary(
         weight: Float = 1f,
         minWidth: Dp = 0.dp,
         builder: PaneContentBuilder.() -> Unit
@@ -160,7 +160,7 @@ public class PanesBuilder {
      * @param minWidth Minimum width for this pane
      * @param builder Content configuration lambda
      */
-    public fun extra(
+    fun extra(
         weight: Float = 1f,
         minWidth: Dp = 0.dp,
         builder: PaneContentBuilder.() -> Unit
@@ -181,7 +181,7 @@ public class PanesBuilder {
      * @param minWidth Minimum width for this pane
      * @param builder Content configuration lambda
      */
-    public fun tertiary(
+    fun tertiary(
         weight: Float = 1f,
         minWidth: Dp = 0.dp,
         builder: PaneContentBuilder.() -> Unit
@@ -194,7 +194,7 @@ public class PanesBuilder {
      *
      * @return [BuiltPanesConfig] containing all pane entries and settings
      */
-    public fun build(): BuiltPanesConfig = BuiltPanesConfig(
+    fun build(): BuiltPanesConfig = BuiltPanesConfig(
         panes = panes.toMap(),
         initialPane = initialPane,
         backBehavior = backBehavior
@@ -209,7 +209,7 @@ public class PanesBuilder {
  * @property minWidth Minimum width for this pane
  * @property content The built content configuration
  */
-public data class PaneEntry(
+data class PaneEntry(
     val role: PaneRole,
     val weight: Float,
     val minWidth: Dp,
@@ -233,7 +233,7 @@ public data class PaneEntry(
  * @see PanesBuilder
  */
 @NavigationConfigDsl
-public class PaneContentBuilder {
+class PaneContentBuilder {
 
     /**
      * The root destination for this pane.
@@ -253,7 +253,7 @@ public class PaneContentBuilder {
      *
      * @param destination The root destination
      */
-    public fun root(destination: Destination) {
+    fun root(destination: Destination) {
         rootDestination = destination
     }
 
@@ -266,7 +266,7 @@ public class PaneContentBuilder {
      *
      * Useful for primary navigation panes that should always be accessible.
      */
-    public fun alwaysVisible() {
+    fun alwaysVisible() {
         isAlwaysVisible = true
     }
 
@@ -275,7 +275,7 @@ public class PaneContentBuilder {
      *
      * @return [BuiltPaneContent] with the configured settings
      */
-    public fun build(): BuiltPaneContent = BuiltPaneContent(
+    fun build(): BuiltPaneContent = BuiltPaneContent(
         rootDestination = rootDestination,
         isAlwaysVisible = isAlwaysVisible
     )

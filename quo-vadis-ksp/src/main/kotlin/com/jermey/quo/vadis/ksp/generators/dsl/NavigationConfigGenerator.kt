@@ -66,7 +66,7 @@ import com.squareup.kotlinpoet.ksp.toClassName
  *         transition<DetailDestination>(NavTransition.SlideHorizontal)
  *
  *         // WRAPPERS
- *         tabWrapper("MainTabs") { ... }
+ *         tabsContainer("MainTabs") { ... }
  *     }
  *
  *     override val screenRegistry = config.screenRegistry
@@ -119,7 +119,7 @@ class NavigationConfigGenerator(
      * @property tabs List of tab info from @Tab annotations
      * @property panes List of pane info from @Pane annotations
      * @property transitions List of transition info from @Transition annotations
-     * @property wrappers List of wrapper info from @TabWrapper/@PaneWrapper annotations
+     * @property wrappers List of wrapper info from @TabsContainer/@PaneContainer annotations
      * @property destinations List of all destination info from @Destination annotations
      */
     data class NavigationData(
@@ -245,10 +245,10 @@ class NavigationConfigGenerator(
         addImport("com.jermey.quo.vadis.core.navigation.core", "GeneratedDeepLinkHandler")
         addImport("com.jermey.quo.vadis.core.navigation.dsl", "navigationConfig")
         addImport("com.jermey.quo.vadis.core.navigation.compose.registry",
-            "ScreenRegistry", "WrapperRegistry", "ScopeRegistry",
+            "ScreenRegistry", "ScopeRegistry",
             "TransitionRegistry", "ContainerRegistry")
         addImport("com.jermey.quo.vadis.core.navigation.compose.wrapper",
-            "TabWrapperScope", "PaneWrapperScope")
+            "TabsContainerScope", "PaneContainerScope")
         addImport("com.jermey.quo.vadis.core.navigation.compose.animation", "NavTransition")
         addImport("kotlin.reflect", "KClass")
 
@@ -279,7 +279,7 @@ class NavigationConfigGenerator(
      *
      * Uses a hybrid approach:
      * - DSL for containers, scopes, transitions (no composable lambdas)
-     * - Anonymous object implementations for screenRegistry and wrapperRegistry
+     * - Anonymous object implementations for screenRegistry and containerRegistry
      *   with when-based dispatch to avoid Compose lambda casting issues
      */
     private fun buildConfigObject(data: NavigationData): TypeSpec {
@@ -288,7 +288,7 @@ class NavigationConfigGenerator(
             .addSuperinterface(NAVIGATION_CONFIG_CLASS)
             .addProperty(buildBaseConfigProperty(data))
             .addProperty(buildScreenRegistryProperty(data.screens))
-            .addProperty(buildWrapperRegistryProperty(data.wrappers, data.tabs, data.panes))
+            .addProperty(buildContainerRegistryProperty(data.wrappers, data.tabs, data.panes))
             .addProperties(buildDelegationProperties())
             .addFunction(buildBuildNavNodeFunction())
             .addFunction(buildPlusFunction())
@@ -432,15 +432,15 @@ class NavigationConfigGenerator(
     /**
      * Builds the delegation properties for NavigationConfig implementation.
      *
-     * NOTE: screenRegistry and wrapperRegistry are NOT delegated here because they
-     * are implemented as custom anonymous objects with when-based dispatch.
+     * NOTE: screenRegistry is NOT delegated here because it is implemented as
+     * a custom anonymous object with when-based dispatch. containerRegistry is
+     * also implemented with when-based dispatch to handle wrapper composables.
      * Only non-composable registries are delegated to baseConfig.
      */
     private fun buildDelegationProperties(): List<PropertySpec> {
         return listOf(
             buildDelegationProperty("scopeRegistry", SCOPE_REGISTRY_CLASS),
             buildDelegationProperty("transitionRegistry", TRANSITION_REGISTRY_CLASS),
-            buildDelegationProperty("containerRegistry", CONTAINER_REGISTRY_CLASS),
             buildDelegationProperty("deepLinkHandler", DEEP_LINK_HANDLER_CLASS, nullable = true)
         )
     }
@@ -620,20 +620,24 @@ class NavigationConfigGenerator(
     }
 
     // ================================
-    // Wrapper Registry Generation
+    // Container Registry Generation
     // ================================
 
     /**
-     * Builds the wrapperRegistry property with an anonymous object implementation.
+     * Builds the containerRegistry property with an anonymous object implementation.
      *
-     * Uses when-based dispatch instead of DSL lambdas to avoid Compose compiler
+     * The merged ContainerRegistry handles both:
+     * 1. Container building - getContainerInfo() delegated to baseConfig
+     * 2. Wrapper rendering - TabsContainer/PaneContainer with when-based dispatch
+     *
+     * Uses when-based dispatch for wrapper methods to avoid Compose compiler
      * issues with lambda casting in object initialization context.
      *
      * @param wrappers All wrapper info from annotations
      * @param tabs Tab container info (to resolve scopeKeys for tab wrappers)
      * @param panes Pane container info (to resolve scopeKeys for pane wrappers)
      */
-    private fun buildWrapperRegistryProperty(
+    private fun buildContainerRegistryProperty(
         wrappers: List<WrapperInfo>,
         tabs: List<TabInfo>,
         panes: List<PaneInfo>
@@ -645,9 +649,9 @@ class NavigationConfigGenerator(
         val tabScopeKeyMap = buildTabScopeKeyMap(tabs)
         val paneScopeKeyMap = buildPaneScopeKeyMap(panes)
 
-        return PropertySpec.builder("wrapperRegistry", WRAPPER_REGISTRY_CLASS)
+        return PropertySpec.builder("containerRegistry", CONTAINER_REGISTRY_CLASS)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("%L", buildWrapperRegistryObject(
+            .initializer("%L", buildContainerRegistryObject(
                 tabWrappers, paneWrappers, tabScopeKeyMap, paneScopeKeyMap
             ))
             .build()
@@ -686,7 +690,7 @@ class NavigationConfigGenerator(
      * otherwise falls back to the target class qualified name.
      *
      * Handles the special case where the wrapper targets a Companion object (e.g.,
-     * `@TabWrapper(DemoTabs.Companion::class)`) by also checking for the parent
+     * `@TabsContainer(DemoTabs.Companion::class)`) by also checking for the parent
      * class in the scope key map.
      *
      * @param wrapper The wrapper info
@@ -709,34 +713,52 @@ class NavigationConfigGenerator(
     }
 
     /**
-     * Builds the anonymous WrapperRegistry object with when-based dispatch.
+     * Builds the anonymous ContainerRegistry object with when-based dispatch for wrappers.
+     *
+     * The merged ContainerRegistry:
+     * - Delegates getContainerInfo() to baseConfig.containerRegistry
+     * - Implements TabsContainer/PaneContainer with when-based dispatch
+     * - Provides hasTabsContainer/hasPaneContainer based on registered keys
      *
      * @param tabWrappers Tab wrapper info
      * @param paneWrappers Pane wrapper info
      * @param tabScopeKeyMap Map from tab class qualified name to scopeKey
      * @param paneScopeKeyMap Map from pane class qualified name to scopeKey
      */
-    private fun buildWrapperRegistryObject(
+    private fun buildContainerRegistryObject(
         tabWrappers: List<WrapperInfo>,
         paneWrappers: List<WrapperInfo>,
         tabScopeKeyMap: Map<String, String>,
         paneScopeKeyMap: Map<String, String>
     ): TypeSpec {
         return TypeSpec.anonymousClassBuilder()
-            .addSuperinterface(WRAPPER_REGISTRY_CLASS)
-            .addProperty(buildWrapperKeysProperty("tabWrapperKeys", tabWrappers, tabScopeKeyMap))
-            .addProperty(buildWrapperKeysProperty("paneWrapperKeys", paneWrappers, paneScopeKeyMap))
-            .addFunction(buildTabWrapperFunction(tabWrappers, tabScopeKeyMap))
-            .addFunction(buildPaneWrapperFunction(paneWrappers, paneScopeKeyMap))
-            .addFunction(buildHasTabWrapperFunction())
-            .addFunction(buildHasPaneWrapperFunction())
+            .addSuperinterface(CONTAINER_REGISTRY_CLASS)
+            .addProperty(buildWrapperKeysProperty("tabsContainerKeys", tabWrappers, tabScopeKeyMap))
+            .addProperty(buildWrapperKeysProperty("paneContainerKeys", paneWrappers, paneScopeKeyMap))
+            .addFunction(buildGetContainerInfoFunction())
+            .addFunction(buildTabsContainerFunction(tabWrappers, tabScopeKeyMap))
+            .addFunction(buildPaneContainerFunction(paneWrappers, paneScopeKeyMap))
+            .addFunction(buildHasTabsContainerFunction())
+            .addFunction(buildHasPaneContainerFunction())
+            .build()
+    }
+
+    /**
+     * Builds the getContainerInfo function that delegates to baseConfig.
+     */
+    private fun buildGetContainerInfoFunction(): FunSpec {
+        return FunSpec.builder("getContainerInfo")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("destination", DESTINATION_CLASS)
+            .returns(ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ContainerInfo").copy(nullable = true))
+            .addStatement("return baseConfig.containerRegistry.getContainerInfo(destination)")
             .build()
     }
 
     /**
      * Builds a private Set<String> property for wrapper keys.
      *
-     * @param name Property name (e.g., "tabWrapperKeys")
+     * @param name Property name (e.g., "tabsContainerKeys")
      * @param wrappers Wrapper info list
      * @param scopeKeyMap Map from qualified class name to scopeKey
      */
@@ -763,23 +785,23 @@ class NavigationConfigGenerator(
     }
 
     /**
-     * Builds the TabWrapper composable function with when-based dispatch.
+     * Builds the TabsContainer composable function with when-based dispatch.
      *
      * @param tabWrappers Tab wrapper info list
      * @param scopeKeyMap Map from qualified class name to scopeKey
      */
-    private fun buildTabWrapperFunction(
+    private fun buildTabsContainerFunction(
         tabWrappers: List<WrapperInfo>,
         scopeKeyMap: Map<String, String>
     ): FunSpec {
         val contentLambdaType = LambdaTypeName.get(returnType = UNIT)
             .copy(annotations = listOf(AnnotationSpec.builder(COMPOSABLE_CLASS).build()))
 
-        return FunSpec.builder("TabWrapper")
+        return FunSpec.builder("TabsContainer")
             .addAnnotation(COMPOSABLE_CLASS)
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("tabNodeKey", STRING)
-            .addParameter("scope", TAB_WRAPPER_SCOPE_CLASS)
+            .addParameter("scope", TABS_CONTAINER_SCOPE_CLASS)
             .addParameter(ParameterSpec.builder("content", contentLambdaType).build())
             .apply {
                 if (tabWrappers.isEmpty()) {
@@ -802,23 +824,23 @@ class NavigationConfigGenerator(
     }
 
     /**
-     * Builds the PaneWrapper composable function with when-based dispatch.
+     * Builds the PaneContainer composable function with when-based dispatch.
      *
-     * @param paneWrappers Pane wrapper info list
+     * @param paneWrappers Pane container info list
      * @param scopeKeyMap Map from qualified class name to scopeKey
      */
-    private fun buildPaneWrapperFunction(
+    private fun buildPaneContainerFunction(
         paneWrappers: List<WrapperInfo>,
         scopeKeyMap: Map<String, String>
     ): FunSpec {
         val contentLambdaType = LambdaTypeName.get(returnType = UNIT)
             .copy(annotations = listOf(AnnotationSpec.builder(COMPOSABLE_CLASS).build()))
 
-        return FunSpec.builder("PaneWrapper")
+        return FunSpec.builder("PaneContainer")
             .addAnnotation(COMPOSABLE_CLASS)
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("paneNodeKey", STRING)
-            .addParameter("scope", PANE_WRAPPER_SCOPE_CLASS)
+            .addParameter("scope", PANE_CONTAINER_SCOPE_CLASS)
             .addParameter(ParameterSpec.builder("content", contentLambdaType).build())
             .apply {
                 if (paneWrappers.isEmpty()) {
@@ -841,26 +863,26 @@ class NavigationConfigGenerator(
     }
 
     /**
-     * Builds the hasTabWrapper function.
+     * Builds the hasTabsContainer function.
      */
-    private fun buildHasTabWrapperFunction(): FunSpec {
-        return FunSpec.builder("hasTabWrapper")
+    private fun buildHasTabsContainerFunction(): FunSpec {
+        return FunSpec.builder("hasTabsContainer")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("tabNodeKey", STRING)
             .returns(Boolean::class)
-            .addStatement("return tabNodeKey in tabWrapperKeys")
+            .addStatement("return tabNodeKey in tabsContainerKeys")
             .build()
     }
 
     /**
-     * Builds the hasPaneWrapper function.
+     * Builds the hasPaneContainer function.
      */
-    private fun buildHasPaneWrapperFunction(): FunSpec {
-        return FunSpec.builder("hasPaneWrapper")
+    private fun buildHasPaneContainerFunction(): FunSpec {
+        return FunSpec.builder("hasPaneContainer")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("paneNodeKey", STRING)
             .returns(Boolean::class)
-            .addStatement("return paneNodeKey in paneWrapperKeys")
+            .addStatement("return paneNodeKey in paneContainerKeys")
             .build()
     }
 
@@ -941,15 +963,14 @@ class NavigationConfigGenerator(
 
         // Registry type references
         val SCREEN_REGISTRY_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ScreenRegistry")
-        val WRAPPER_REGISTRY_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "WrapperRegistry")
         val SCOPE_REGISTRY_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ScopeRegistry")
         val TRANSITION_REGISTRY_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "TransitionRegistry")
         val CONTAINER_REGISTRY_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ContainerRegistry")
         val DEEP_LINK_HANDLER_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "GeneratedDeepLinkHandler")
 
         // Wrapper scope type references (actual location is in .compose.wrapper package)
-        val TAB_WRAPPER_SCOPE_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "TabWrapperScope")
-        val PANE_WRAPPER_SCOPE_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "PaneWrapperScope")
+        val TABS_CONTAINER_SCOPE_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "TabsContainerScope")
+        val PANE_CONTAINER_SCOPE_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "PaneContainerScope")
 
         // Navigator type reference (located in .core package)
         val NAVIGATOR_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "Navigator")

@@ -3,10 +3,10 @@ package com.jermey.quo.vadis.annotations
 import kotlin.reflect.KClass
 
 /**
- * Marks a Composable function as a pane wrapper for the specified pane destination class.
+ * Marks a Composable function as a pane container wrapper for the specified pane destination class.
  *
- * Pane wrappers provide the adaptive layout chrome (split views, side panels, etc.) for
- * multi-pane navigation containers. The wrapper receives a `PaneWrapperScope` that provides
+ * Pane containers provide the adaptive layout chrome (split views, side panels, etc.) for
+ * multi-pane navigation containers. The wrapper receives a `PaneContainerScope` that provides
  * access to pane state and layout information, and a content slot where the pane contents
  * are rendered.
  *
@@ -14,18 +14,18 @@ import kotlin.reflect.KClass
  *
  * The annotated function must follow this signature:
  * ```kotlin
- * @PaneWrapper(CatalogPane::class)
+ * @PaneContainer(CatalogPane::class)
  * @Composable
- * fun CatalogPaneWrapper(scope: PaneWrapperScope, content: @Composable () -> Unit) {
- *     // Wrapper implementation
+ * fun CatalogPaneContainer(scope: PaneContainerScope, content: @Composable () -> Unit) {
+ *     // Container implementation
  * }
  * ```
  *
  * Parameters (detected by KSP based on types):
- * 1. `scope: PaneWrapperScope` - Provides access to pane state and layout
+ * 1. `scope: PaneContainerScope` - Provides access to pane state and layout
  * 2. `content: @Composable () -> Unit` - The pane contents to render
  *
- * ## PaneWrapperScope
+ * ## PaneContainerScope
  *
  * The scope provides:
  * - `navigator` - The Navigator instance for navigation operations
@@ -33,13 +33,13 @@ import kotlin.reflect.KClass
  * - `activePaneRole` - The currently focused pane role
  * - `isExpanded` - Whether the layout is in expanded (multi-pane) mode
  *
- * ## Example: Master-Detail List-Detail Wrapper
+ * ## Example: Master-Detail List-Detail Container
  *
  * ```kotlin
- * @PaneWrapper(CatalogPane::class)
+ * @PaneContainer(CatalogPane::class)
  * @Composable
- * fun CatalogMasterDetailWrapper(
- *     scope: PaneWrapperScope,
+ * fun CatalogMasterDetailContainer(
+ *     scope: PaneContainerScope,
  *     content: @Composable () -> Unit
  * ) {
  *     if (scope.isExpanded) {
@@ -73,13 +73,13 @@ import kotlin.reflect.KClass
  * }
  * ```
  *
- * ## Example: Three-Pane Email Wrapper
+ * ## Example: Three-Pane Email Container
  *
  * ```kotlin
- * @PaneWrapper(MailPane::class)
+ * @PaneContainer(MailPane::class)
  * @Composable
- * fun MailThreePaneWrapper(
- *     scope: PaneWrapperScope,
+ * fun MailThreePaneContainer(
+ *     scope: PaneContainerScope,
  *     content: @Composable () -> Unit
  * ) {
  *     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -118,20 +118,20 @@ import kotlin.reflect.KClass
  *
  * ## KSP Processing
  *
- * KSP generates entries in `GeneratedWrapperRegistry` mapping each pane class
- * to its wrapper function. The registry is used by the hierarchical renderer
- * to resolve which wrapper to use for each `PaneNode`.
+ * KSP generates entries in `GeneratedNavigationConfig.containerRegistry` mapping each pane class
+ * to its container function. The registry is used by the hierarchical renderer
+ * to resolve which container to use for each `PaneNode`.
  *
  * ## Hierarchical Rendering
  *
- * With the hierarchical rendering engine, the wrapper and its pane contents are
+ * With the hierarchical rendering engine, the container and its pane contents are
  * composed as a parent-child relationship, enabling:
  * - Coordinated layout transitions between expanded and compact modes
  * - Proper focus management across panes
  * - Unified predictive back gesture handling
  * - State preservation during layout changes
  *
- * @property paneClass The pane container class this wrapper wraps.
+ * @property paneClass The pane container class this container wraps.
  *   Must be a class annotated with [@Pane].
  *
  * @see Pane
@@ -141,10 +141,21 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-public annotation class PaneWrapper(
+annotation class PaneContainer(
     /**
-     * The pane container class this wrapper wraps.
+     * The pane container class this container wraps.
      * Must be a class annotated with @Pane.
      */
     val paneClass: KClass<*>
 )
+
+/**
+ * Backward compatibility typealias for [PaneContainer].
+ *
+ * @deprecated Use [PaneContainer] instead.
+ */
+@Deprecated(
+    message = "Use PaneContainer instead",
+    replaceWith = ReplaceWith("PaneContainer", "com.jermey.quo.vadis.annotations.PaneContainer")
+)
+typealias PaneWrapper = PaneContainer

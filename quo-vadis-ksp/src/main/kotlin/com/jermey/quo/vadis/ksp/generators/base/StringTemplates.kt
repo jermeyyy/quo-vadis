@@ -186,7 +186,6 @@ object StringTemplates {
      */
     const val CONFIG_DELEGATION_TEMPLATE = """
         |override val screenRegistry = config.screenRegistry
-        |override val wrapperRegistry = config.wrapperRegistry
         |override val scopeRegistry = config.scopeRegistry
         |override val transitionRegistry = config.transitionRegistry
         |override val containerRegistry = config.containerRegistry
@@ -315,9 +314,6 @@ object StringTemplates {
 
         /** ScreenRegistry type name. */
         const val SCREEN_REGISTRY = "ScreenRegistry"
-
-        /** WrapperRegistry type name. */
-        const val WRAPPER_REGISTRY = "WrapperRegistry"
 
         /** ScopeRegistry type name. */
         const val SCOPE_REGISTRY = "ScopeRegistry"

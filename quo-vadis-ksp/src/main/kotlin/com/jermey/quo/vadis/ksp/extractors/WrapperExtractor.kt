@@ -9,7 +9,7 @@ import com.jermey.quo.vadis.ksp.models.WrapperInfo
 import com.jermey.quo.vadis.ksp.models.WrapperType
 
 /**
- * Extracts @TabWrapper and @PaneWrapper annotations into [WrapperInfo] models.
+ * Extracts @TabsContainer and @PaneContainer annotations into [WrapperInfo] models.
  *
  * A wrapper binding connects a @Composable wrapper function to a tab/pane class.
  * This extractor handles:
@@ -24,89 +24,89 @@ import com.jermey.quo.vadis.ksp.models.WrapperType
  * - Function is annotated with @Composable (warning if missing)
  * - Target class can be resolved from annotation argument
  *
- * Note: Parameter type validation (TabWrapperScope, PaneWrapperScope, content lambda)
+ * Note: Parameter type validation (TabsContainerScope, PaneContainerScope, content lambda)
  * is intentionally lenient since these scope types may not be available during KSP
  * processing or may have different qualified names.
  *
  * @property logger KSP logger for error/warning output
  */
-public class WrapperExtractor(
+class WrapperExtractor(
     private val logger: KSPLogger
 ) {
 
     private companion object {
-        const val TAB_WRAPPER_ANNOTATION = "com.jermey.quo.vadis.annotations.TabWrapper"
-        const val PANE_WRAPPER_ANNOTATION = "com.jermey.quo.vadis.annotations.PaneWrapper"
+        const val TABS_CONTAINER_ANNOTATION = "com.jermey.quo.vadis.annotations.TabsContainer"
+        const val PANE_CONTAINER_ANNOTATION = "com.jermey.quo.vadis.annotations.PaneContainer"
         const val COMPOSABLE_ANNOTATION = "Composable"
     }
 
     /**
-     * Extract all @TabWrapper-annotated functions from the resolver.
+     * Extract all @TabsContainer-annotated functions from the resolver.
      *
-     * Finds all functions annotated with [com.jermey.quo.vadis.annotations.TabWrapper]
+     * Finds all functions annotated with [com.jermey.quo.vadis.annotations.TabsContainer]
      * and extracts their metadata for code generation.
      *
      * @param resolver KSP resolver to query for symbols
-     * @return List of [WrapperInfo] for all @TabWrapper-annotated functions
+     * @return List of [WrapperInfo] for all @TabsContainer-annotated functions
      */
-    public fun extractTabWrappers(resolver: Resolver): List<WrapperInfo> {
-        return resolver.getSymbolsWithAnnotation(TAB_WRAPPER_ANNOTATION)
+    fun extractTabsContainers(resolver: Resolver): List<WrapperInfo> {
+        return resolver.getSymbolsWithAnnotation(TABS_CONTAINER_ANNOTATION)
             .filterIsInstance<KSFunctionDeclaration>()
-            .mapNotNull { extractTabWrapper(it) }
+            .mapNotNull { extractTabsContainer(it) }
             .toList()
     }
 
     /**
-     * Extract all @PaneWrapper-annotated functions from the resolver.
+     * Extract all @PaneContainer-annotated functions from the resolver.
      *
-     * Finds all functions annotated with [com.jermey.quo.vadis.annotations.PaneWrapper]
+     * Finds all functions annotated with [com.jermey.quo.vadis.annotations.PaneContainer]
      * and extracts their metadata for code generation.
      *
      * @param resolver KSP resolver to query for symbols
-     * @return List of [WrapperInfo] for all @PaneWrapper-annotated functions
+     * @return List of [WrapperInfo] for all @PaneContainer-annotated functions
      */
-    public fun extractPaneWrappers(resolver: Resolver): List<WrapperInfo> {
-        return resolver.getSymbolsWithAnnotation(PANE_WRAPPER_ANNOTATION)
+    fun extractPaneContainers(resolver: Resolver): List<WrapperInfo> {
+        return resolver.getSymbolsWithAnnotation(PANE_CONTAINER_ANNOTATION)
             .filterIsInstance<KSFunctionDeclaration>()
-            .mapNotNull { extractPaneWrapper(it) }
+            .mapNotNull { extractPaneContainer(it) }
             .toList()
     }
 
     /**
-     * Extract WrapperInfo from a @TabWrapper-annotated function.
+     * Extract WrapperInfo from a @TabsContainer-annotated function.
      *
-     * @param functionDeclaration The @Composable function annotated with @TabWrapper
+     * @param functionDeclaration The @Composable function annotated with @TabsContainer
      * @return [WrapperInfo] or null if extraction fails
      */
-    private fun extractTabWrapper(functionDeclaration: KSFunctionDeclaration): WrapperInfo? {
+    private fun extractTabsContainer(functionDeclaration: KSFunctionDeclaration): WrapperInfo? {
         return extractWrapper(
             functionDeclaration = functionDeclaration,
-            annotationName = "TabWrapper",
+            annotationName = "TabsContainer",
             argumentName = "tabClass",
             wrapperType = WrapperType.TAB
         )
     }
 
     /**
-     * Extract WrapperInfo from a @PaneWrapper-annotated function.
+     * Extract WrapperInfo from a @PaneContainer-annotated function.
      *
-     * @param functionDeclaration The @Composable function annotated with @PaneWrapper
+     * @param functionDeclaration The @Composable function annotated with @PaneContainer
      * @return [WrapperInfo] or null if extraction fails
      */
-    private fun extractPaneWrapper(functionDeclaration: KSFunctionDeclaration): WrapperInfo? {
+    private fun extractPaneContainer(functionDeclaration: KSFunctionDeclaration): WrapperInfo? {
         return extractWrapper(
             functionDeclaration = functionDeclaration,
-            annotationName = "PaneWrapper",
+            annotationName = "PaneContainer",
             argumentName = "paneClass",
             wrapperType = WrapperType.PANE
         )
     }
 
     /**
-     * Common extraction logic for both TabWrapper and PaneWrapper.
+     * Common extraction logic for both TabsContainer and PaneContainer.
      *
      * @param functionDeclaration The annotated function
-     * @param annotationName Short name of the annotation ("TabWrapper" or "PaneWrapper")
+     * @param annotationName Short name of the annotation ("TabsContainer" or "PaneContainer")
      * @param argumentName Name of the class argument ("tabClass" or "paneClass")
      * @param wrapperType Type of wrapper being extracted
      * @return [WrapperInfo] or null if extraction fails
@@ -155,7 +155,7 @@ public class WrapperExtractor(
         val containingFile = functionDeclaration.containingFile?.filePath ?: ""
 
         // For companion objects, use the enclosing class name instead of "Companion"
-        // This handles cases like @TabWrapper(DemoTabs.Companion::class)
+        // This handles cases like @TabsContainer(DemoTabs.Companion::class)
         val simpleName = targetClass.simpleName.asString()
         val effectiveSimpleName = if (simpleName == "Companion") {
             // Get parent class declaration

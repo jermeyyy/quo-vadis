@@ -93,7 +93,7 @@ object GeneratedNavigationConfig : NavigationConfig {
         // WRAPPERS
         // ═══════════════════════════════════════════════
         
-        tabWrapper("mainTabsWrapper") { /* ... */ }
+        tabsContainer("mainTabsWrapper") { /* ... */ }
         // ... more wrappers
     }
     
@@ -102,10 +102,9 @@ object GeneratedNavigationConfig : NavigationConfig {
     // ═══════════════════════════════════════════════
     
     override val screenRegistry: ScreenRegistry = config.screenRegistry
-    override val wrapperRegistry: WrapperRegistry = config.wrapperRegistry
     override val scopeRegistry: ScopeRegistry = config.scopeRegistry
     override val transitionRegistry: TransitionRegistry = config.transitionRegistry
-    override val containerRegistry: ContainerRegistry = config.containerRegistry
+    override val containerRegistry: ContainerRegistry = config.containerRegistry // includes wrapper functionality
     override val deepLinkHandler: DeepLinkHandler = config.deepLinkHandler
     
     override fun buildNavNode(
@@ -169,7 +168,7 @@ import com.squareup.kotlinpoet.*
  * - [ContainerBlockGenerator] - Generates `tabs`, `stack`, `panes` blocks
  * - [ScopeBlockGenerator] - Generates `scope()` calls
  * - [TransitionBlockGenerator] - Generates `transition<T>` calls
- * - [WrapperBlockGenerator] - Generates `tabWrapper`/`paneWrapper` blocks
+ * - [WrapperBlockGenerator] - Generates `tabsContainer`/`paneContainer` blocks
  * - [DeepLinkBlockGenerator] - Generates deep link configuration
  * 
  * @param codeGenerator KSP code generator
@@ -1018,11 +1017,11 @@ import com.jermey.quo.vadis.ksp.models.WrapperInfo
 import com.squareup.kotlinpoet.CodeBlock
 
 /**
- * Generates `tabWrapper` and `paneWrapper` DSL blocks.
+ * Generates `tabsContainer` and `paneContainer` DSL blocks.
  * 
  * ## Example Output
  * ```kotlin
- * tabWrapper("mainTabsWrapper") {
+ * tabsContainer("mainTabsWrapper") {
  *     CustomTabBar(
  *         tabs = tabs,
  *         selectedIndex = activeTabIndex,
@@ -1032,7 +1031,7 @@ import com.squareup.kotlinpoet.CodeBlock
  *     }
  * }
  * 
- * paneWrapper("masterDetailWrapper") {
+ * paneContainer("masterDetailWrapper") {
  *     CustomPaneLayout(
  *         primaryContent = { PrimaryPaneContent() },
  *         secondaryContent = { SecondaryPaneContent() }
@@ -1055,21 +1054,21 @@ class WrapperBlockGenerator(
         
         val builder = CodeBlock.builder()
         
-        val tabWrappers = wrappers.filter { it.type == WrapperInfo.WrapperType.TAB }
-        val paneWrappers = wrappers.filter { it.type == WrapperInfo.WrapperType.PANE }
+        val tabsContainers = wrappers.filter { it.type == WrapperInfo.WrapperType.TAB }
+        val paneContainers = wrappers.filter { it.type == WrapperInfo.WrapperType.PANE }
         
-        // Generate tab wrappers
-        tabWrappers.forEachIndexed { index, wrapper ->
-            builder.add(generateTabWrapperBlock(wrapper))
-            if (index < tabWrappers.size - 1 || paneWrappers.isNotEmpty()) {
+        // Generate tabs containers
+        tabsContainers.forEachIndexed { index, wrapper ->
+            builder.add(generateTabsContainerBlock(wrapper))
+            if (index < tabsContainers.size - 1 || paneContainers.isNotEmpty()) {
                 builder.add("\n")
             }
         }
         
-        // Generate pane wrappers
-        paneWrappers.forEachIndexed { index, wrapper ->
-            builder.add(generatePaneWrapperBlock(wrapper))
-            if (index < paneWrappers.size - 1) {
+        // Generate pane containers
+        paneContainers.forEachIndexed { index, wrapper ->
+            builder.add(generatePaneContainerBlock(wrapper))
+            if (index < paneContainers.size - 1) {
                 builder.add("\n")
             }
         }
@@ -1078,22 +1077,22 @@ class WrapperBlockGenerator(
     }
     
     /**
-     * Generates a tabWrapper block.
+     * Generates a tabsContainer block.
      */
-    private fun generateTabWrapperBlock(wrapper: WrapperInfo): CodeBlock {
+    private fun generateTabsContainerBlock(wrapper: WrapperInfo): CodeBlock {
         return CodeBlock.builder()
-            .beginControlFlow("tabWrapper(%S)", wrapper.key)
+            .beginControlFlow("tabsContainer(%S)", wrapper.key)
             .add(generateWrapperContent(wrapper))
             .endControlFlow()
             .build()
     }
     
     /**
-     * Generates a paneWrapper block.
+     * Generates a paneContainer block.
      */
-    private fun generatePaneWrapperBlock(wrapper: WrapperInfo): CodeBlock {
+    private fun generatePaneContainerBlock(wrapper: WrapperInfo): CodeBlock {
         return CodeBlock.builder()
-            .beginControlFlow("paneWrapper(%S)", wrapper.key)
+            .beginControlFlow("paneContainer(%S)", wrapper.key)
             .add(generateWrapperContent(wrapper))
             .endControlFlow()
             .build()
@@ -1226,8 +1225,8 @@ class DeepLinkBlockGenerator(
 - [ ] Handles custom transition definitions
 
 ### WrapperBlockGenerator.kt
-- [ ] Generates valid `tabWrapper` blocks
-- [ ] Generates valid `paneWrapper` blocks
+- [ ] Generates valid `tabsContainer` blocks
+- [ ] Generates valid `paneContainer` blocks
 - [ ] Function calls include scope parameters
 
 ### Generated Code Quality

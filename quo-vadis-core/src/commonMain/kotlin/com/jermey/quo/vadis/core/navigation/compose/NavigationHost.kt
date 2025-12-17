@@ -33,8 +33,8 @@ import com.jermey.quo.vadis.core.navigation.compose.render.NavNodeRenderer
 import com.jermey.quo.vadis.core.navigation.compose.animation.rememberBackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.navback.NavigateBackHandler
 import com.jermey.quo.vadis.core.navigation.compose.navback.ScreenNavigationInfo
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
@@ -65,7 +65,7 @@ import com.jermey.quo.vadis.core.navigation.core.route
  * - [com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache] for state preservation
  * - [AnimationCoordinator] for transition resolution
  * - [PredictiveBackController] for gesture handling
- * - [ScreenRegistry] and [WrapperRegistry] for content resolution
+ * - [ScreenRegistry] and [ContainerRegistry] for content resolution
  * - [SharedTransitionScope] for shared element transitions
  *
  * ## Usage
@@ -131,7 +131,7 @@ val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
  * HierarchicalQuoVadisHost(
  *     navigator = navigator,
  *     screenRegistry = MyGeneratedScreenRegistry,
- *     wrapperRegistry = MyGeneratedWrapperRegistry,
+ *     containerRegistry = MyGeneratedContainerRegistry,
  *     transitionRegistry = MyGeneratedTransitionRegistry
  * )
  * ```
@@ -151,8 +151,8 @@ val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
  * @param modifier [Modifier] applied to the root container
  * @param screenRegistry Registry for mapping destinations to screen composables.
  *   Defaults to [ScreenRegistry.Empty] - provide a KSP-generated registry for full functionality.
- * @param wrapperRegistry Registry for custom tab and pane wrappers.
- *   Defaults to [WrapperRegistry.Empty] which renders content without custom wrappers.
+ * @param containerRegistry Registry for container builders and custom tab/pane wrappers.
+ *   Defaults to [ContainerRegistry.Empty] which renders content without custom wrappers.
  * @param transitionRegistry Registry for annotation-based transitions.
  *   Defaults to [TransitionRegistry.Empty] which uses default transitions.
  * @param scopeRegistry Registry for scope-aware navigation. When navigating to a
@@ -177,7 +177,7 @@ fun NavigationHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
     screenRegistry: ScreenRegistry = EmptyScreenRegistry,
-    wrapperRegistry: WrapperRegistry = WrapperRegistry.Empty,
+    containerRegistry: ContainerRegistry = ContainerRegistry.Empty,
     transitionRegistry: TransitionRegistry = TransitionRegistry.Empty,
     scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
     enablePredictiveBack: Boolean = true,
@@ -330,7 +330,7 @@ fun NavigationHost(
                 animationCoordinator,
                 predictiveBackController,
                 screenRegistry,
-                wrapperRegistry,
+                containerRegistry,
             ) {
                 NavRenderScopeImpl(
                     navigator = navigator,
@@ -339,7 +339,7 @@ fun NavigationHost(
                     animationCoordinator = animationCoordinator,
                     predictiveBackController = predictiveBackController,
                     screenRegistry = screenRegistry,
-                    wrapperRegistry = wrapperRegistry,
+                    containerRegistry = containerRegistry,
                     sharedTransitionScope = this,
                 )
             }
@@ -435,7 +435,7 @@ fun NavigationHost(
  *   Typically created with [rememberQuoVadisNavigator].
  * @param config The NavigationConfig providing all required registries:
  *   [screenRegistry][NavigationConfig.screenRegistry],
- *   [wrapperRegistry][NavigationConfig.wrapperRegistry],
+ *   [containerRegistry][NavigationConfig.containerRegistry],
  *   [transitionRegistry][NavigationConfig.transitionRegistry],
  *   [scopeRegistry][NavigationConfig.scopeRegistry].
  * @param modifier Modifier to apply to the host container.
@@ -459,7 +459,7 @@ fun NavigationHost(
         navigator = navigator,
         modifier = modifier,
         screenRegistry = config.screenRegistry,
-        wrapperRegistry = config.wrapperRegistry,
+        containerRegistry = config.containerRegistry,
         transitionRegistry = config.transitionRegistry,
         scopeRegistry = config.scopeRegistry,
         enablePredictiveBack = enablePredictiveBack,
@@ -480,7 +480,7 @@ fun NavigationHost(
  * - State preservation via [saveableStateHolder]
  * - Animation coordination via [animationCoordinator]
  * - Predictive back handling via [predictiveBackController]
- * - Content resolution via [screenRegistry] and [wrapperRegistry]
+ * - Content resolution via [screenRegistry] and [containerRegistry]
  * - Shared element support via [sharedTransitionScope]
  *
  * @property navigator Navigator instance for navigation operations
@@ -489,7 +489,7 @@ fun NavigationHost(
  * @property animationCoordinator Coordinator for resolving transitions
  * @property predictiveBackController Controller for predictive back gestures
  * @property screenRegistry Registry for screen content lookup
- * @property wrapperRegistry Registry for wrapper lookup
+ * @property containerRegistry Registry for container and wrapper lookup
  * @property sharedTransitionScope Scope for shared element transitions
  * @property predictiveBackMode Mode for predictive back gesture handling
  */
@@ -501,7 +501,7 @@ private class NavRenderScopeImpl(
     override val animationCoordinator: AnimationCoordinator,
     override val predictiveBackController: PredictiveBackController,
     override val screenRegistry: ScreenRegistry,
-    override val wrapperRegistry: WrapperRegistry,
+    override val containerRegistry: ContainerRegistry,
     override val sharedTransitionScope: SharedTransitionScope?,
 ) : NavRenderScope {
 

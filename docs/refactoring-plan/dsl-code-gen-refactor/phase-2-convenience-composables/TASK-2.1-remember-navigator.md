@@ -255,7 +255,7 @@ The navigator uses registries from the config for runtime operations:
 | `containerRegistry` | Container metadata for nested navigation |
 | `deepLinkHandler` | Processing incoming deep links |
 
-Note: `screenRegistry`, `wrapperRegistry`, and `transitionRegistry` are used by `NavigationHost`, not the navigator itself.
+Note: `screenRegistry` and `transitionRegistry` are used by `NavigationHost`, not the navigator itself. Wrapper functionality (formerly `wrapperRegistry`) is now part of `containerRegistry`.
 
 ---
 

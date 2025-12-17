@@ -1,7 +1,11 @@
 package com.jermey.quo.vadis.core.navigation.dsl
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerInfo
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.PaneNode
@@ -10,21 +14,21 @@ import kotlin.reflect.KClass
 
 /**
  * DSL-based implementation of [ContainerRegistry] that provides container
- * information for destinations requiring container structures.
+ * information for destinations requiring container structures and custom
+ * wrapper composables for tab and pane containers.
  *
- * This registry is created by [DslNavigationConfig] from container
+ * This registry is created by [DslNavigationConfig] from container and wrapper
  * registrations collected by [NavigationConfigBuilder].
  *
  * ## Purpose
  *
- * The ContainerRegistry enables automatic container creation during navigation.
- * When navigating to a destination that belongs to a `@Tabs` or `@Pane` container,
- * this registry provides the builder function to create the appropriate container
- * node structure.
+ * The ContainerRegistry enables:
+ * - Automatic container creation during navigation (for `@Tabs` and `@Pane` containers)
+ * - Custom chrome/UI surrounding navigation content (tab bars, bottom navigation, multi-pane layouts)
  *
  * ## Usage
  *
- * Containers are registered via the DSL:
+ * Containers and wrappers are registered via the DSL:
  *
  * ```kotlin
  * val config = navigationConfig {
@@ -32,6 +36,12 @@ import kotlin.reflect.KClass
  *         initialTab = 0
  *         tab(HomeTab, title = "Home")
  *         tab(ProfileTab, title = "Profile")
+ *     }
+ *
+ *     tabsContainer("main-tabs") { content ->
+ *         Scaffold(
+ *             bottomBar = { BottomNavigation(tabMetadata, activeTabIndex) }
+ *         ) { content() }
  *     }
  *
  *     panes<ListDetail>("list-detail") {
@@ -42,26 +52,25 @@ import kotlin.reflect.KClass
  * }
  * ```
  *
- * The registry is then consulted to create container nodes:
- *
- * ```kotlin
- * val containerInfo = containerRegistry.getContainerInfo(destination)
- * if (containerInfo is ContainerInfo.TabContainer) {
- *     val tabNode = containerInfo.builder(key, parentKey, initialTabIndex)
- *     // Push tabNode onto navigation stack
- * }
- * ```
- *
  * @param containers Map of destination classes to their container builders
+ * @param tabsContainers Map of wrapper keys to tabs container composables
+ * @param paneContainers Map of wrapper keys to pane container composables
  * @param navNodeBuilder Function to build NavNodes from destination classes
  *
  * @see ContainerRegistry
  * @see ContainerInfo
+ * @see TabsContainerScope
+ * @see PaneContainerScope
  * @see NavigationConfigBuilder.tabs
  * @see NavigationConfigBuilder.panes
+ * @see NavigationConfigBuilder.tabsContainer
+ * @see NavigationConfigBuilder.paneContainer
  */
+@Stable
 internal class DslContainerRegistry(
     private val containers: Map<KClass<out Destination>, ContainerBuilder>,
+    private val tabsContainers: Map<String, @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit>,
+    private val paneContainers: Map<String, @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit>,
     private val navNodeBuilder: (KClass<out Destination>, String?, String?) -> NavNode?
 ) : ContainerRegistry {
 
@@ -378,5 +387,81 @@ internal class DslContainerRegistry(
         }
 
         return result
+    }
+
+    // ================================
+    // Wrapper Rendering
+    // ================================
+
+    /**
+     * Renders the tabs container wrapper for the given tab node.
+     *
+     * If a custom wrapper is registered for [tabNodeKey], it is invoked with
+     * the provided [scope] and [content]. Otherwise, the content is rendered
+     * directly without any wrapper.
+     *
+     * @param tabNodeKey Unique identifier for the tab node
+     * @param scope Scope providing tab state and navigation actions
+     * @param content Composable lambda that renders the actual tab content
+     */
+    @Composable
+    override fun TabsContainer(
+        tabNodeKey: String,
+        scope: TabsContainerScope,
+        content: @Composable () -> Unit
+    ) {
+        val wrapper = tabsContainers[tabNodeKey]
+        if (wrapper != null) {
+            wrapper.invoke(scope, content)
+        } else {
+            // Default: render content directly without wrapper
+            content()
+        }
+    }
+
+    /**
+     * Renders the pane container for the given pane node.
+     *
+     * If a custom container is registered for [paneNodeKey], it is invoked with
+     * the provided [scope] and [content]. Otherwise, the content is rendered
+     * directly without any container.
+     *
+     * @param paneNodeKey Unique identifier for the pane node
+     * @param scope Scope providing pane state and layout information
+     * @param content Composable lambda that renders the pane content
+     */
+    @Composable
+    override fun PaneContainer(
+        paneNodeKey: String,
+        scope: PaneContainerScope,
+        content: @Composable () -> Unit
+    ) {
+        val wrapper = paneContainers[paneNodeKey]
+        if (wrapper != null) {
+            wrapper.invoke(scope, content)
+        } else {
+            // Default: render content directly without container
+            content()
+        }
+    }
+
+    /**
+     * Checks whether a custom tabs container wrapper is registered for the given key.
+     *
+     * @param tabNodeKey Unique identifier for the tab node
+     * @return `true` if a custom wrapper is registered, `false` if default will be used
+     */
+    override fun hasTabsContainer(tabNodeKey: String): Boolean {
+        return tabsContainers.containsKey(tabNodeKey)
+    }
+
+    /**
+     * Checks whether a custom pane container is registered for the given key.
+     *
+     * @param paneNodeKey Unique identifier for the pane node
+     * @return `true` if a custom container is registered, `false` if default will be used
+     */
+    override fun hasPaneContainer(paneNodeKey: String): Boolean {
+        return paneContainers.containsKey(paneNodeKey)
     }
 }

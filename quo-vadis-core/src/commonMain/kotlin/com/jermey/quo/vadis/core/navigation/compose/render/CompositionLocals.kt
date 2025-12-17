@@ -48,7 +48,7 @@ import com.jermey.quo.vadis.core.navigation.core.ScreenNode
  * @see ScreenNode
  * @see ScreenRenderer
  */
-public val LocalScreenNode = compositionLocalOf<ScreenNode?> { null }
+val LocalScreenNode = compositionLocalOf<ScreenNode?> { null }
 
 /**
  * Provides access to the current [AnimatedVisibilityScope] within the navigation hierarchy.
@@ -92,4 +92,4 @@ public val LocalScreenNode = compositionLocalOf<ScreenNode?> { null }
  * @see AnimatedVisibilityScope
  * @see StaticAnimatedVisibilityScope
  */
-public val LocalAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
+val LocalAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }

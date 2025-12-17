@@ -6,9 +6,8 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneWrapperScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
@@ -26,7 +25,6 @@ import com.jermey.quo.vadis.core.navigation.dsl.DslContainerRegistry
 import com.jermey.quo.vadis.core.navigation.dsl.DslScreenRegistry
 import com.jermey.quo.vadis.core.navigation.dsl.DslScopeRegistry
 import com.jermey.quo.vadis.core.navigation.dsl.DslTransitionRegistry
-import com.jermey.quo.vadis.core.navigation.dsl.DslWrapperRegistry
 import com.jermey.quo.vadis.core.navigation.dsl.ScreenEntry
 import com.jermey.quo.vadis.core.navigation.dsl.StackScreenEntry
 import com.jermey.quo.vadis.core.navigation.dsl.TabEntry
@@ -64,8 +62,8 @@ import kotlin.reflect.KClass
  * @param containers Map of destination classes to their container builder configurations
  * @param scopes Map of scope keys to sets of destination classes belonging to each scope
  * @param transitions Map of destination classes to their custom transitions
- * @param tabWrappers Map of wrapper keys to tab wrapper composables
- * @param paneWrappers Map of wrapper keys to pane wrapper composables
+ * @param tabsContainers Map of wrapper keys to tab container composables
+ * @param paneContainers Map of wrapper keys to pane container composables
  *
  * @see NavigationConfig
  * @see navigationConfig
@@ -75,8 +73,8 @@ internal class DslNavigationConfig(
     private val containers: Map<KClass<out Destination>, ContainerBuilder>,
     private val scopes: Map<String, Set<KClass<out Destination>>>,
     private val transitions: Map<KClass<out Destination>, NavTransition>,
-    private val tabWrappers: Map<String, @Composable TabWrapperScope.(@Composable () -> Unit) -> Unit>,
-    private val paneWrappers: Map<String, @Composable PaneWrapperScope.(@Composable () -> Unit) -> Unit>
+    private val tabsContainers: Map<String, @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit>,
+    private val paneContainers: Map<String, @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit>
 ) : NavigationConfig {
 
     /**
@@ -84,13 +82,6 @@ internal class DslNavigationConfig(
      */
     override val screenRegistry: ScreenRegistry by lazy {
         DslScreenRegistry(screens)
-    }
-
-    /**
-     * Registry for tab and pane wrapper composables.
-     */
-    override val wrapperRegistry: WrapperRegistry by lazy {
-        DslWrapperRegistry(tabWrappers, paneWrappers)
     }
 
     /**
@@ -108,10 +99,10 @@ internal class DslNavigationConfig(
     }
 
     /**
-     * Registry for building container nodes from destinations.
+     * Registry for building container nodes from destinations and wrapper composables.
      */
     override val containerRegistry: ContainerRegistry by lazy {
-        DslContainerRegistry(containers, ::buildNavNode)
+        DslContainerRegistry(containers, tabsContainers, paneContainers, ::buildNavNode)
     }
 
     /**

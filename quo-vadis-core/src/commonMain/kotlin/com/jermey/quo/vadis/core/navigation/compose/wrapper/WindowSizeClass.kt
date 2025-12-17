@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
  *
  * @see <a href="https://m3.material.io/foundations/layout/applying-layout/window-size-classes">Material Design Window Size Classes</a>
  */
-public enum class WindowWidthSizeClass {
+enum class WindowWidthSizeClass {
     /**
      * Compact width class for screens < 600dp wide.
      *
@@ -41,16 +41,16 @@ public enum class WindowWidthSizeClass {
      */
     Expanded;
 
-    public companion object {
+    companion object {
         /**
          * Breakpoint between Compact and Medium (600dp).
          */
-        public val CompactMaxWidth: Dp = 600.dp
+        val CompactMaxWidth: Dp = 600.dp
 
         /**
          * Breakpoint between Medium and Expanded (840dp).
          */
-        public val MediumMaxWidth: Dp = 840.dp
+        val MediumMaxWidth: Dp = 840.dp
 
         /**
          * Calculates the width size class from a width value.
@@ -58,7 +58,7 @@ public enum class WindowWidthSizeClass {
          * @param width The window width in Dp
          * @return The corresponding [WindowWidthSizeClass]
          */
-        public fun fromWidth(width: Dp): WindowWidthSizeClass = when {
+        fun fromWidth(width: Dp): WindowWidthSizeClass = when {
             width < CompactMaxWidth -> Compact
             width < MediumMaxWidth -> Medium
             else -> Expanded
@@ -74,7 +74,7 @@ public enum class WindowWidthSizeClass {
  * - [Medium]: 480dp - 900dp - tablets, phones in portrait
  * - [Expanded]: > 900dp - large tablets, desktops
  */
-public enum class WindowHeightSizeClass {
+enum class WindowHeightSizeClass {
     /**
      * Compact height class for screens < 480dp tall.
      *
@@ -99,16 +99,16 @@ public enum class WindowHeightSizeClass {
      */
     Expanded;
 
-    public companion object {
+    companion object {
         /**
          * Breakpoint between Compact and Medium (480dp).
          */
-        public val CompactMaxHeight: Dp = 480.dp
+        val CompactMaxHeight: Dp = 480.dp
 
         /**
          * Breakpoint between Medium and Expanded (900dp).
          */
-        public val MediumMaxHeight: Dp = 900.dp
+        val MediumMaxHeight: Dp = 900.dp
 
         /**
          * Calculates the height size class from a height value.
@@ -116,7 +116,7 @@ public enum class WindowHeightSizeClass {
          * @param height The window height in Dp
          * @return The corresponding [WindowHeightSizeClass]
          */
-        public fun fromHeight(height: Dp): WindowHeightSizeClass = when {
+        fun fromHeight(height: Dp): WindowHeightSizeClass = when {
             height < CompactMaxHeight -> Compact
             height < MediumMaxHeight -> Medium
             else -> Expanded
@@ -154,18 +154,18 @@ public enum class WindowHeightSizeClass {
  * @property heightSizeClass The semantic classification of window height
  */
 @Immutable
-public data class WindowSizeClass(
+data class WindowSizeClass(
     val widthSizeClass: WindowWidthSizeClass,
     val heightSizeClass: WindowHeightSizeClass
 ) {
-    public companion object {
+    companion object {
         /**
          * Calculates [WindowSizeClass] from a [DpSize].
          *
          * @param size The window size in Dp units
          * @return The corresponding [WindowSizeClass]
          */
-        public fun calculateFromSize(size: DpSize): WindowSizeClass {
+        fun calculateFromSize(size: DpSize): WindowSizeClass {
             return WindowSizeClass(
                 widthSizeClass = WindowWidthSizeClass.fromWidth(size.width),
                 heightSizeClass = WindowHeightSizeClass.fromHeight(size.height)
@@ -179,14 +179,14 @@ public data class WindowSizeClass(
          * @param height The window height in Dp
          * @return The corresponding [WindowSizeClass]
          */
-        public fun calculateFromSize(width: Dp, height: Dp): WindowSizeClass {
+        fun calculateFromSize(width: Dp, height: Dp): WindowSizeClass {
             return calculateFromSize(DpSize(width, height))
         }
 
         /**
          * Default compact window size class (for phones).
          */
-        public val Compact: WindowSizeClass = WindowSizeClass(
+        val Compact: WindowSizeClass = WindowSizeClass(
             widthSizeClass = WindowWidthSizeClass.Compact,
             heightSizeClass = WindowHeightSizeClass.Medium
         )
@@ -194,7 +194,7 @@ public data class WindowSizeClass(
         /**
          * Default medium window size class (for tablets).
          */
-        public val Medium: WindowSizeClass = WindowSizeClass(
+        val Medium: WindowSizeClass = WindowSizeClass(
             widthSizeClass = WindowWidthSizeClass.Medium,
             heightSizeClass = WindowHeightSizeClass.Medium
         )
@@ -202,7 +202,7 @@ public data class WindowSizeClass(
         /**
          * Default expanded window size class (for desktops).
          */
-        public val Expanded: WindowSizeClass = WindowSizeClass(
+        val Expanded: WindowSizeClass = WindowSizeClass(
             widthSizeClass = WindowWidthSizeClass.Expanded,
             heightSizeClass = WindowHeightSizeClass.Expanded
         )
@@ -211,19 +211,19 @@ public data class WindowSizeClass(
     /**
      * Returns true if this represents a compact width (phone-like).
      */
-    public val isCompactWidth: Boolean
+    val isCompactWidth: Boolean
         get() = widthSizeClass == WindowWidthSizeClass.Compact
 
     /**
      * Returns true if this represents a medium or larger width.
      */
-    public val isAtLeastMediumWidth: Boolean
+    val isAtLeastMediumWidth: Boolean
         get() = widthSizeClass != WindowWidthSizeClass.Compact
 
     /**
      * Returns true if this represents an expanded width (desktop-like).
      */
-    public val isExpandedWidth: Boolean
+    val isExpandedWidth: Boolean
         get() = widthSizeClass == WindowWidthSizeClass.Expanded
 }
 
@@ -247,4 +247,4 @@ public data class WindowSizeClass(
  * @return The current [WindowSizeClass] for the window
  */
 @Composable
-public expect fun calculateWindowSizeClass(): WindowSizeClass
+expect fun calculateWindowSizeClass(): WindowSizeClass

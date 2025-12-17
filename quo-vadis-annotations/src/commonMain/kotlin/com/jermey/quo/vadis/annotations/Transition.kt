@@ -20,7 +20,7 @@ import kotlin.reflect.KClass
  *
  * @see Transition
  */
-public enum class TransitionType {
+enum class TransitionType {
     /**
      * Horizontal slide transition.
      *
@@ -209,7 +209,7 @@ public enum class TransitionType {
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-public annotation class Transition(
+annotation class Transition(
     /**
      * The type of transition animation to use.
      * Defaults to SlideHorizontal for standard navigation.

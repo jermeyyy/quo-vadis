@@ -1,7 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
@@ -202,24 +202,24 @@ class TabRendererTest {
     // =========================================================================
 
     @Test
-    fun `FakeNavRenderScope provides wrapper registry`() {
+    fun `FakeNavRenderScope provides container registry`() {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertNotNull(scope.wrapperRegistry)
-        assertEquals(WrapperRegistry.Empty, scope.wrapperRegistry)
+        assertNotNull(scope.containerRegistry)
+        assertEquals(ContainerRegistry.Empty, scope.containerRegistry)
     }
 
     @Test
-    fun `wrapper registry hasTabWrapper returns false for empty registry`() {
+    fun `container registry hasTabsContainer returns false for empty registry`() {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertFalse(scope.wrapperRegistry.hasTabWrapper("any-key"))
-        assertFalse(scope.wrapperRegistry.hasTabWrapper("tabs"))
-        assertFalse(scope.wrapperRegistry.hasTabWrapper(""))
+        assertFalse(scope.containerRegistry.hasTabsContainer("any-key"))
+        assertFalse(scope.containerRegistry.hasTabsContainer("tabs"))
+        assertFalse(scope.containerRegistry.hasTabsContainer(""))
     }
 
     // =========================================================================

@@ -27,7 +27,7 @@ import kotlinx.serialization.Serializable
  * @property parentKey Key of the containing node (null if root)
  * @property stacks List of StackNodes, one per tab
  * @property activeStackIndex Index of the currently active tab (0-based)
- * @property wrapperKey Key used to lookup the wrapper in [WrapperRegistry].
+ * @property wrapperKey Key used to lookup the wrapper in [ContainerRegistry].
  *   This is typically the simple name of the tab class (e.g., "MainTabs")
  *   and is used by the hierarchical renderer to find the correct wrapper.
  *   Defaults to null, which means no custom wrapper is registered.

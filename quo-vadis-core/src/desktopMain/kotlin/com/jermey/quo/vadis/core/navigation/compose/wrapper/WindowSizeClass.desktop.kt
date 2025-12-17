@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
  * LocalDensity to convert pixels to dp.
  */
 @Composable
-public actual fun calculateWindowSizeClass(): WindowSizeClass {
+actual fun calculateWindowSizeClass(): WindowSizeClass {
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
 

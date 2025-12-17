@@ -309,7 +309,7 @@ QuoVadisNavigation(MainTabs::class, config)
 │         │                          │
 │         ▼                          │
 │   Uses config.screenRegistry       │
-│   Uses config.wrapperRegistry      │
+│   Uses config.containerRegistry    │  // includes wrapper functionality
 │   Uses config.transitionRegistry   │
 │   Uses config.scopeRegistry        │
 └────────────────────────────────────┘
@@ -320,7 +320,7 @@ QuoVadisNavigation(MainTabs::class, config)
 | Component | Uses |
 |-----------|------|
 | `TreeNavigator` | `scopeRegistry`, `containerRegistry`, `deepLinkHandler` |
-| `NavigationHost` | `screenRegistry`, `wrapperRegistry`, `transitionRegistry`, `scopeRegistry` |
+| `NavigationHost` | `screenRegistry`, `containerRegistry` (incl. wrappers), `transitionRegistry`, `scopeRegistry` |
 
 The `config` object is passed to both, ensuring consistent registry access.
 

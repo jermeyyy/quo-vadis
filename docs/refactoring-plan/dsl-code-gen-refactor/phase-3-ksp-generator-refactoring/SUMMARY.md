@@ -35,7 +35,7 @@ This phase transforms the KSP code generators to produce unified, DSL-based outp
 - `ContainerBlockGenerator.kt` - Generates `tabs`, `stack`, `panes` DSL blocks
 - `ScopeBlockGenerator.kt` - Generates `scope()` DSL blocks
 - `TransitionBlockGenerator.kt` - Generates `transition<T>` DSL blocks
-- `WrapperBlockGenerator.kt` - Generates `tabWrapper`/`paneWrapper` DSL blocks
+- `WrapperBlockGenerator.kt` - Generates `tabsContainer`/`paneContainer` DSL blocks
 
 ### 3. Refactored Existing Generators (Task 3.3)
 - Convert 7 existing generators to produce DSL blocks
@@ -186,17 +186,16 @@ object GeneratedNavigationConfig : NavigationConfig {
         // WRAPPERS
         // ═══════════════════════════════════════════════
         
-        tabWrapper("mainTabsWrapper") {
+        tabsContainer("mainTabsWrapper") {
             CustomTabBar(tabs, activeTabIndex, ::switchToTab) { content() }
         }
     }
     
     // Delegate to DSL-built config
     override val screenRegistry = config.screenRegistry
-    override val wrapperRegistry = config.wrapperRegistry
     override val scopeRegistry = config.scopeRegistry
     override val transitionRegistry = config.transitionRegistry
-    override val containerRegistry = config.containerRegistry
+    override val containerRegistry = config.containerRegistry // includes wrapper functionality
     override val deepLinkHandler = config.deepLinkHandler
     
     override fun buildNavNode(...) = config.buildNavNode(...)
@@ -255,7 +254,7 @@ object GeneratedNavigationConfig : NavigationConfig {
 
 - [ ] Single `GeneratedNavigationConfig.kt` file generated instead of 6+ files
 - [ ] Generated code uses DSL syntax (`navigationConfig { }`, `screen<T>`, etc.)
-- [ ] All existing annotation types supported (`@Screen`, `@Tabs`, `@Stack`, `@Pane`, `@Transition`, `@TabWrapper`, `@PaneWrapper`)
+- [ ] All existing annotation types supported (`@Screen`, `@Tabs`, `@Stack`, `@Pane`, `@Transition`, `@TabsContainer`, `@PaneContainer`)
 - [ ] Generated code compiles without errors
 - [ ] Generated config properly implements `NavigationConfig` interface
 - [ ] `buildNavNode()` delegation works correctly

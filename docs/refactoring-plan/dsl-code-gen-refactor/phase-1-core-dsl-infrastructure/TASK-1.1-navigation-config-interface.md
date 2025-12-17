@@ -41,7 +41,7 @@ val combined = AppConfig + FeatureAConfig + FeatureBConfig
 | File | Purpose |
 |------|---------|
 | `quo-vadis-core/.../compose/registry/ScreenRegistry.kt` | Screen registry interface |
-| `quo-vadis-core/.../compose/registry/WrapperRegistry.kt` | Wrapper registry interface |
+| `quo-vadis-core/.../compose/registry/ContainerRegistry.kt` | Container registry interface (includes wrapper functionality) |
 | `quo-vadis-core/.../compose/registry/ScopeRegistry.kt` | Scope registry interface |
 | `quo-vadis-core/.../compose/registry/TransitionRegistry.kt` | Transition registry interface |
 | `quo-vadis-core/.../compose/registry/ContainerRegistry.kt` | Container registry interface |
@@ -103,12 +103,6 @@ interface NavigationConfig {
     val screenRegistry: ScreenRegistry
     
     /**
-     * Registry for tab and pane wrappers.
-     * Provides custom wrapper Composables for containers.
-     */
-    val wrapperRegistry: WrapperRegistry
-    
-    /**
      * Registry for navigation scopes.
      * Defines which destinations belong to which scopes.
      */
@@ -123,6 +117,7 @@ interface NavigationConfig {
     /**
      * Registry for container information.
      * Provides metadata about how containers are structured.
+     * Also includes wrapper functionality for tabs and panes (formerly WrapperRegistry).
      */
     val containerRegistry: ContainerRegistry
     
@@ -224,24 +219,6 @@ internal object EmptyNavigationConfig : NavigationConfig {
         }
     }
     
-    override val wrapperRegistry: WrapperRegistry = object : WrapperRegistry {
-        @Composable
-        override fun TabWrapper(
-            wrapperKey: String,
-            scope: TabWrapperScope
-        ) {
-            scope.content()
-        }
-        
-        @Composable
-        override fun PaneWrapper(
-            wrapperKey: String,
-            scope: PaneWrapperScope
-        ) {
-            scope.content()
-        }
-    }
-    
     override val scopeRegistry: ScopeRegistry = object : ScopeRegistry {
         override fun getScopeKey(destination: Destination): String? = null
         override fun getDestinationsInScope(scopeKey: String): Set<KClass<out Destination>> = emptySet()
@@ -253,6 +230,17 @@ internal object EmptyNavigationConfig : NavigationConfig {
     
     override val containerRegistry: ContainerRegistry = object : ContainerRegistry {
         override fun getContainerInfo(destination: Destination): ContainerInfo? = null
+        
+        // Wrapper functionality (tabs/panes) is now part of ContainerRegistry
+        @Composable
+        override fun TabsContainer(wrapperKey: String, scope: TabsContainerScope) {
+            scope.content()
+        }
+        
+        @Composable
+        override fun PaneContainer(wrapperKey: String, scope: PaneContainerScope) {
+            scope.content()
+        }
     }
     
     override val deepLinkHandler: DeepLinkHandler = object : DeepLinkHandler {
@@ -313,11 +301,6 @@ internal class CompositeNavigationConfig(
         secondary = secondary.screenRegistry
     )
     
-    override val wrapperRegistry: WrapperRegistry = CompositeWrapperRegistry(
-        primary = primary.wrapperRegistry,
-        secondary = secondary.wrapperRegistry
-    )
-    
     override val scopeRegistry: ScopeRegistry = CompositeScopeRegistry(
         primary = primary.scopeRegistry,
         secondary = secondary.scopeRegistry
@@ -328,6 +311,7 @@ internal class CompositeNavigationConfig(
         secondary = secondary.transitionRegistry
     )
     
+    // ContainerRegistry now includes wrapper functionality (tabs/panes)
     override val containerRegistry: ContainerRegistry = CompositeContainerRegistry(
         primary = primary.containerRegistry,
         secondary = secondary.containerRegistry
@@ -373,21 +357,6 @@ private class CompositeScreenRegistry(
     }
 }
 
-private class CompositeWrapperRegistry(
-    private val primary: WrapperRegistry,
-    private val secondary: WrapperRegistry
-) : WrapperRegistry {
-    @Composable
-    override fun TabWrapper(wrapperKey: String, scope: TabWrapperScope) {
-        secondary.TabWrapper(wrapperKey, scope)
-    }
-    
-    @Composable
-    override fun PaneWrapper(wrapperKey: String, scope: PaneWrapperScope) {
-        secondary.PaneWrapper(wrapperKey, scope)
-    }
-}
-
 private class CompositeScopeRegistry(
     private val primary: ScopeRegistry,
     private val secondary: ScopeRegistry
@@ -412,12 +381,23 @@ private class CompositeTransitionRegistry(
     }
 }
 
+// ContainerRegistry now includes wrapper functionality (formerly WrapperRegistry)
 private class CompositeContainerRegistry(
     private val primary: ContainerRegistry,
     private val secondary: ContainerRegistry
 ) : ContainerRegistry {
     override fun getContainerInfo(destination: Destination): ContainerInfo? {
         return secondary.getContainerInfo(destination) ?: primary.getContainerInfo(destination)
+    }
+    
+    @Composable
+    override fun TabsContainer(wrapperKey: String, scope: TabsContainerScope) {
+        secondary.TabsContainer(wrapperKey, scope)
+    }
+    
+    @Composable
+    override fun PaneContainer(wrapperKey: String, scope: PaneContainerScope) {
+        secondary.PaneContainer(wrapperKey, scope)
     }
 }
 

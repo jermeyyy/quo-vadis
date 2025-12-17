@@ -205,11 +205,11 @@ transition<ProfileDestination>(NavTransitions.Slide)
 
 **Current Behavior**:
 - Generates `GeneratedWrapperRegistry` object
-- Contains `TabWrapper()` and `PaneWrapper()` composable functions
+- Contains `TabsContainer()` and `PaneContainer()` composable functions
 - Maps wrapper keys to composable implementations
 
 **New Behavior**:
-- Wrappers defined via `tabWrapper()` and `paneWrapper()` DSL blocks
+- Wrappers defined via `tabsContainer()` and `paneContainer()` DSL blocks
 
 **Transformation**:
 
@@ -217,7 +217,7 @@ transition<ProfileDestination>(NavTransitions.Slide)
 // BEFORE: WrapperRegistryGenerator generates
 object GeneratedWrapperRegistry : WrapperRegistry {
     @Composable
-    override fun TabWrapper(wrapperKey: String, scope: TabWrapperScope) {
+    override fun TabsContainer(wrapperKey: String, scope: TabsContainerScope) {
         when (wrapperKey) {
             "mainTabsWrapper" -> MainTabsWrapper(scope)
             else -> scope.content()
@@ -226,7 +226,7 @@ object GeneratedWrapperRegistry : WrapperRegistry {
 }
 
 // AFTER: Defined in DSL
-tabWrapper("mainTabsWrapper") {
+tabsContainer("mainTabsWrapper") {
     MainTabsWrapper(this)
 }
 ```
@@ -551,7 +551,7 @@ This task produces the foundation for the Phase 4 migration guide. Key migration
 NavigationHost(
     navigator = navigator,
     screenRegistry = GeneratedScreenRegistry,
-    wrapperRegistry = GeneratedWrapperRegistry,
+    containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
     scopeRegistry = GeneratedScopeRegistry,
     transitionRegistry = GeneratedTransitionRegistry
 )

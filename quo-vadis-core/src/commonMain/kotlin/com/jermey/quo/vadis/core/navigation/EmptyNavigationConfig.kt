@@ -4,7 +4,6 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavNode
@@ -58,11 +57,6 @@ internal object EmptyNavigationConfig : NavigationConfig {
     }
 
     /**
-     * Returns [WrapperRegistry.Empty] which provides default pass-through behavior.
-     */
-    override val wrapperRegistry: WrapperRegistry = WrapperRegistry.Empty
-
-    /**
      * Returns [ScopeRegistry.Empty] which allows all destinations in all scopes.
      */
     override val scopeRegistry: ScopeRegistry = ScopeRegistry.Empty
@@ -73,7 +67,8 @@ internal object EmptyNavigationConfig : NavigationConfig {
     override val transitionRegistry: TransitionRegistry = TransitionRegistry.Empty
 
     /**
-     * Returns [ContainerRegistry.Empty] which never creates containers.
+     * Returns [ContainerRegistry.Empty] which never creates containers
+     * and provides default pass-through wrapper behavior.
      */
     override val containerRegistry: ContainerRegistry = ContainerRegistry.Empty
 

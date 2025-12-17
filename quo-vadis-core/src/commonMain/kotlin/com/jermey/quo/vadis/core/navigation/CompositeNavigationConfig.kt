@@ -9,9 +9,8 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneWrapperScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
 import com.jermey.quo.vadis.core.navigation.core.Destination
@@ -62,14 +61,6 @@ internal class CompositeNavigationConfig(
     )
 
     /**
-     * Composite wrapper registry that checks secondary first, then primary.
-     */
-    override val wrapperRegistry: WrapperRegistry = CompositeWrapperRegistry(
-        primary = primary.wrapperRegistry,
-        secondary = secondary.wrapperRegistry
-    )
-
-    /**
      * Composite scope registry that checks secondary first, then primary.
      */
     override val scopeRegistry: ScopeRegistry = CompositeScopeRegistry(
@@ -87,6 +78,7 @@ internal class CompositeNavigationConfig(
 
     /**
      * Composite container registry that checks secondary first, then primary.
+     * Handles both container building and wrapper rendering.
      */
     override val containerRegistry: ContainerRegistry = CompositeContainerRegistry(
         primary = primary.containerRegistry,
@@ -165,49 +157,6 @@ private class CompositeScreenRegistry(
 }
 
 /**
- * Composite wrapper registry that delegates to secondary first, then primary.
- */
-private class CompositeWrapperRegistry(
-    private val primary: WrapperRegistry,
-    private val secondary: WrapperRegistry
-) : WrapperRegistry {
-
-    @Composable
-    override fun TabWrapper(
-        tabNodeKey: String,
-        scope: TabWrapperScope,
-        content: @Composable () -> Unit
-    ) {
-        if (secondary.hasTabWrapper(tabNodeKey)) {
-            secondary.TabWrapper(tabNodeKey, scope, content)
-        } else {
-            primary.TabWrapper(tabNodeKey, scope, content)
-        }
-    }
-
-    @Composable
-    override fun PaneWrapper(
-        paneNodeKey: String,
-        scope: PaneWrapperScope,
-        content: @Composable () -> Unit
-    ) {
-        if (secondary.hasPaneWrapper(paneNodeKey)) {
-            secondary.PaneWrapper(paneNodeKey, scope, content)
-        } else {
-            primary.PaneWrapper(paneNodeKey, scope, content)
-        }
-    }
-
-    override fun hasTabWrapper(tabNodeKey: String): Boolean {
-        return secondary.hasTabWrapper(tabNodeKey) || primary.hasTabWrapper(tabNodeKey)
-    }
-
-    override fun hasPaneWrapper(paneNodeKey: String): Boolean {
-        return secondary.hasPaneWrapper(paneNodeKey) || primary.hasPaneWrapper(paneNodeKey)
-    }
-}
-
-/**
  * Composite scope registry that delegates to secondary first, then primary.
  */
 private class CompositeScopeRegistry(
@@ -245,6 +194,8 @@ private class CompositeTransitionRegistry(
 
 /**
  * Composite container registry that delegates to secondary first, then primary.
+ * Handles both container building (getContainerInfo) and wrapper rendering
+ * (TabsContainer, PaneContainer).
  */
 private class CompositeContainerRegistry(
     private val primary: ContainerRegistry,
@@ -253,6 +204,40 @@ private class CompositeContainerRegistry(
 
     override fun getContainerInfo(destination: Destination): ContainerInfo? {
         return secondary.getContainerInfo(destination) ?: primary.getContainerInfo(destination)
+    }
+
+    @Composable
+    override fun TabsContainer(
+        tabNodeKey: String,
+        scope: TabsContainerScope,
+        content: @Composable () -> Unit
+    ) {
+        if (secondary.hasTabsContainer(tabNodeKey)) {
+            secondary.TabsContainer(tabNodeKey, scope, content)
+        } else {
+            primary.TabsContainer(tabNodeKey, scope, content)
+        }
+    }
+
+    @Composable
+    override fun PaneContainer(
+        paneNodeKey: String,
+        scope: PaneContainerScope,
+        content: @Composable () -> Unit
+    ) {
+        if (secondary.hasPaneContainer(paneNodeKey)) {
+            secondary.PaneContainer(paneNodeKey, scope, content)
+        } else {
+            primary.PaneContainer(paneNodeKey, scope, content)
+        }
+    }
+
+    override fun hasTabsContainer(tabNodeKey: String): Boolean {
+        return secondary.hasTabsContainer(tabNodeKey) || primary.hasTabsContainer(tabNodeKey)
+    }
+
+    override fun hasPaneContainer(paneNodeKey: String): Boolean {
+        return secondary.hasPaneContainer(paneNodeKey) || primary.hasPaneContainer(paneNodeKey)
     }
 }
 

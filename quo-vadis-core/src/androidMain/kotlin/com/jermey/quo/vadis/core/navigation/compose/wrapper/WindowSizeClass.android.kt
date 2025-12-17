@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
  */
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-public actual fun calculateWindowSizeClass(): WindowSizeClass {
+actual fun calculateWindowSizeClass(): WindowSizeClass {
     val activity = LocalContext.current as Activity
     val m3SizeClass = calculateMaterial3WindowSizeClass(activity)
 

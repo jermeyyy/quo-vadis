@@ -27,7 +27,7 @@ import kotlin.reflect.KClass
  * @see StackScreenEntry
  */
 @NavigationConfigDsl
-public class StackBuilder {
+class StackBuilder {
 
     /**
      * List of screen entries configured for this stack.
@@ -50,7 +50,7 @@ public class StackBuilder {
      * @param destination The destination instance
      * @param key Optional explicit key (auto-generated from class name if null)
      */
-    public fun screen(
+    fun screen(
         destination: Destination,
         key: String = destination::class.simpleName ?: "screen-${screens.size}"
     ) {
@@ -79,7 +79,7 @@ public class StackBuilder {
      * @param D The destination type
      * @param key Optional explicit key (auto-generated from class name if null)
      */
-    public inline fun <reified D : Destination> screen(key: String? = null) {
+    inline fun <reified D : Destination> screen(key: String? = null) {
         screens.add(
             StackScreenEntry(
                 destination = null,
@@ -94,7 +94,7 @@ public class StackBuilder {
      *
      * @return List of configured [StackScreenEntry] instances
      */
-    public fun build(): List<StackScreenEntry> = screens.toList()
+    fun build(): List<StackScreenEntry> = screens.toList()
 }
 
 /**
@@ -107,7 +107,7 @@ public class StackBuilder {
  * @property destinationClass The class of the destination (always provided)
  * @property key Unique identifier for this screen entry
  */
-public data class StackScreenEntry(
+data class StackScreenEntry(
     val destination: Destination? = null,
     val destinationClass: KClass<out Destination>? = null,
     val key: String

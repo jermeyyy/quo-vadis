@@ -29,7 +29,7 @@ package com.jermey.quo.vadis.core.navigation.core
  * @see DeepLinkHandler for the base deep link handler interface
  * @see DeepLinkResult for possible handling outcomes
  */
-public interface GeneratedDeepLinkHandler : DeepLinkHandler {
+interface GeneratedDeepLinkHandler : DeepLinkHandler {
     /**
      * Handle a deep link URI and return the matching destination if found.
      *
@@ -42,7 +42,7 @@ public interface GeneratedDeepLinkHandler : DeepLinkHandler {
      *         - [DeepLinkResult.Matched] if a route pattern matched
      *         - [DeepLinkResult.NotMatched] if no route pattern matched
      */
-    public fun handleDeepLink(uri: String): DeepLinkResult
+    fun handleDeepLink(uri: String): DeepLinkResult
 
     /**
      * Create a deep link URI from a destination instance.
@@ -64,7 +64,7 @@ public interface GeneratedDeepLinkHandler : DeepLinkHandler {
      * @return The URI string representing the destination, or `null` if the destination
      *         type has no associated route pattern (i.e., was not annotated with a route).
      */
-    public fun createDeepLinkUri(destination: Destination, scheme: String = "myapp"): String?
+    fun createDeepLinkUri(destination: Destination, scheme: String = "myapp"): String?
 }
 
 /**
@@ -84,7 +84,7 @@ public interface GeneratedDeepLinkHandler : DeepLinkHandler {
  * }
  * ```
  */
-public sealed class DeepLinkResult {
+sealed class DeepLinkResult {
     /**
      * The deep link matched a route pattern and produced a destination.
      *
@@ -94,7 +94,7 @@ public sealed class DeepLinkResult {
      *
      * @property destination The destination instance created from the deep link.
      */
-    public data class Matched(val destination: Destination) : DeepLinkResult()
+    data class Matched(val destination: Destination) : DeepLinkResult()
 
     /**
      * The deep link did not match any registered route pattern.
@@ -107,5 +107,5 @@ public sealed class DeepLinkResult {
      * Applications should handle this case gracefully, typically by showing
      * an error message or navigating to a default screen.
      */
-    public data object NotMatched : DeepLinkResult()
+    data object NotMatched : DeepLinkResult()
 }

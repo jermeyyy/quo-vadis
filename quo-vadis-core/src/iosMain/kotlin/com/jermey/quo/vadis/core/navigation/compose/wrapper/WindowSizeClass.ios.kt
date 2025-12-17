@@ -25,7 +25,7 @@ import platform.darwin.NSObject
  */
 @OptIn(ExperimentalForeignApi::class)
 @Composable
-public actual fun calculateWindowSizeClass(): WindowSizeClass {
+actual fun calculateWindowSizeClass(): WindowSizeClass {
     var windowSizeClass by remember { mutableStateOf(calculateCurrentSizeClass()) }
 
     DisposableEffect(Unit) {

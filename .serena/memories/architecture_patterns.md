@@ -103,7 +103,7 @@ The library uses a registry pattern for decoupling:
 | `ScreenRegistry` | Maps destinations to composables |
 | `ContainerRegistry` | Maps container nodes to layouts |
 | `TransitionRegistry` | Maps destinations to transitions |
-| `WrapperRegistry` | Tab/Pane wrapper composables |
+| `ContainerRegistry` | Container info + Tab/Pane wrapper composables (includes former WrapperRegistry) |
 | `BackHandlerRegistry` | Custom back handling |
 | `ScopeRegistry` | Scoped dependencies |
 

@@ -342,7 +342,7 @@ class LegacyApiCompatibilityTest {
             NavigationHost(
                 navigator = testNavigator,
                 screenRegistry = GeneratedScreenRegistry,
-                wrapperRegistry = GeneratedWrapperRegistry,
+                containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
                 scopeRegistry = GeneratedScopeRegistry,
                 // ... old parameters
             )

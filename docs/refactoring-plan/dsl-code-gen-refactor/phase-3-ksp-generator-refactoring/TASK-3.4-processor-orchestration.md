@@ -383,11 +383,11 @@ class QuoVadisSymbolProcessor(
     private fun collectWrappers(resolver: Resolver): List<KSAnnotated> {
         val deferred = mutableListOf<KSAnnotated>()
         
-        // Tab wrappers
-        resolver.getSymbolsWithAnnotation(QuoVadisClassNames.TAB_WRAPPER_ANNOTATION)
+        // Tabs containers
+        resolver.getSymbolsWithAnnotation(QuoVadisClassNames.TABS_CONTAINER_ANNOTATION)
             .filterIsInstance<KSFunctionDeclaration>()
             .forEach { symbol ->
-                val result = wrapperExtractor.extractTabWrapper(symbol)
+                val result = wrapperExtractor.extractTabsContainer(symbol)
                 when (result) {
                     is ExtractionResult.Success -> {
                         collectedWrappers.add(result.data)
@@ -398,11 +398,11 @@ class QuoVadisSymbolProcessor(
                 }
             }
         
-        // Pane wrappers
-        resolver.getSymbolsWithAnnotation(QuoVadisClassNames.PANE_WRAPPER_ANNOTATION)
+        // Pane containers
+        resolver.getSymbolsWithAnnotation(QuoVadisClassNames.PANE_CONTAINER_ANNOTATION)
             .filterIsInstance<KSFunctionDeclaration>()
             .forEach { symbol ->
-                val result = wrapperExtractor.extractPaneWrapper(symbol)
+                val result = wrapperExtractor.extractPaneContainer(symbol)
                 when (result) {
                     is ExtractionResult.Success -> {
                         collectedWrappers.add(result.data)
@@ -799,34 +799,34 @@ class ValidationEngine(
         errors: MutableList<String>,
         warnings: MutableList<String>
     ) {
-        val tabWrapperKeys = input.wrappers
+        val tabsContainerKeys = input.wrappers
             .filter { it.type == WrapperInfo.WrapperType.TAB }
             .map { it.key }
             .toSet()
         
-        val paneWrapperKeys = input.wrappers
+        val paneContainerKeys = input.wrappers
             .filter { it.type == WrapperInfo.WrapperType.PANE }
             .map { it.key }
             .toSet()
         
         // Check tab wrapperKey references
         input.tabs.filter { it.wrapperKey != null }.forEach { tab ->
-            if (tab.wrapperKey !in tabWrapperKeys) {
+            if (tab.wrapperKey !in tabsContainerKeys) {
                 errors.add(
                     "Tab container '${tab.containerClass.simpleName.asString()}' " +
                     "references unknown wrapper '${tab.wrapperKey}'. " +
-                    "Add @TabWrapper function with key='${tab.wrapperKey}'."
+                    "Add @TabsContainer function with key='${tab.wrapperKey}'."
                 )
             }
         }
         
         // Check pane wrapperKey references
         input.panes.filter { it.wrapperKey != null }.forEach { pane ->
-            if (pane.wrapperKey !in paneWrapperKeys) {
+            if (pane.wrapperKey !in paneContainerKeys) {
                 errors.add(
                     "Pane container '${pane.containerClass.simpleName.asString()}' " +
                     "references unknown wrapper '${pane.wrapperKey}'. " +
-                    "Add @PaneWrapper function with key='${pane.wrapperKey}'."
+                    "Add @PaneContainer function with key='${pane.wrapperKey}'."
                 )
             }
         }

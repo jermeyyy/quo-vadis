@@ -18,19 +18,19 @@ import kotlin.reflect.KClass
  *
  * @see NavigationConfigBuilder
  */
-public sealed class ContainerBuilder {
+sealed class ContainerBuilder {
 
     /**
      * The destination class that identifies this container.
      */
-    public abstract val destinationClass: KClass<out Destination>
+    abstract val destinationClass: KClass<out Destination>
 
     /**
      * The scope key for this container.
      *
      * Used to determine which destinations belong to this container's scope.
      */
-    public abstract val scopeKey: String
+    abstract val scopeKey: String
 
     /**
      * Stack container configuration.
@@ -42,7 +42,7 @@ public sealed class ContainerBuilder {
      * @property scopeKey The scope key for membership determination
      * @property screens List of screens belonging to this stack
      */
-    public data class Stack(
+    data class Stack(
         override val destinationClass: KClass<out Destination>,
         override val scopeKey: String,
         val screens: List<StackScreenEntry>
@@ -58,7 +58,7 @@ public sealed class ContainerBuilder {
      * @property scopeKey The scope key for membership determination
      * @property config The built tabs configuration
      */
-    public data class Tabs(
+    data class Tabs(
         override val destinationClass: KClass<out Destination>,
         override val scopeKey: String,
         val config: BuiltTabsConfig
@@ -74,7 +74,7 @@ public sealed class ContainerBuilder {
      * @property scopeKey The scope key for membership determination
      * @property config The built panes configuration
      */
-    public data class Panes(
+    data class Panes(
         override val destinationClass: KClass<out Destination>,
         override val scopeKey: String,
         val config: BuiltPanesConfig

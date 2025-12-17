@@ -17,7 +17,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  * @property contentDescription Accessibility content description
  * @property badge Optional badge content (e.g., notification count)
  */
-public data class TabMetadata(
+data class TabMetadata(
     val label: String,
     val icon: ImageVector? = null,
     val route: String,
@@ -26,7 +26,7 @@ public data class TabMetadata(
 )
 
 /**
- * Scope interface for tab wrapper composables.
+ * Scope interface for tabs container wrapper composables.
  *
  * This scope provides access to the tab navigation state and actions,
  * allowing user-defined wrappers to render custom tab UI while
@@ -34,10 +34,10 @@ public data class TabMetadata(
  *
  * ## Usage
  *
- * The scope is receiver for [TabWrapper] composables:
+ * The scope is receiver for [TabsContainer] composables:
  *
  * ```kotlin
- * val myTabWrapper: TabWrapper = { tabContent ->
+ * val myTabsContainerWrapper: TabsContainer = { tabContent ->
  *     Scaffold(
  *         bottomBar = {
  *             NavigationBar {
@@ -59,11 +59,11 @@ public data class TabMetadata(
  * }
  * ```
  *
- * @see TabWrapper
+ * @see TabsContainer
  * @see TabMetadata
  */
 @Stable
-public interface TabWrapperScope {
+interface TabsContainerScope {
 
     /**
      * The navigator instance for this tab container.
@@ -71,33 +71,33 @@ public interface TabWrapperScope {
      * Can be used for programmatic navigation or accessing
      * navigation state beyond tab switching.
      */
-    public val navigator: Navigator
+    val navigator: Navigator
 
     /**
      * The currently active tab index (0-based).
      *
      * Use this to highlight the selected tab in your UI.
      */
-    public val activeTabIndex: Int
+    val activeTabIndex: Int
 
     /**
      * Total number of tabs in this container.
      */
-    public val tabCount: Int
+    val tabCount: Int
 
     /**
      * Metadata for all tabs in order.
      *
      * Use this to render tab items with their labels, icons, and routes.
      */
-    public val tabMetadata: List<TabMetadata>
+    val tabMetadata: List<TabMetadata>
 
     /**
      * Whether tab switching animation is currently in progress.
      *
      * Can be used to disable user interaction during transitions.
      */
-    public val isTransitioning: Boolean
+    val isTransitioning: Boolean
 
     /**
      * Switch to the tab at the given index.
@@ -108,12 +108,12 @@ public interface TabWrapperScope {
      * @param index The 0-based index of the tab to switch to
      * @throws IndexOutOfBoundsException if index is out of range
      */
-    public fun switchTab(index: Int)
+    fun switchTab(index: Int)
 
 }
 
 /**
- * Internal implementation of [TabWrapperScope].
+ * Internal implementation of [TabsContainerScope].
  *
  * Created when processing TabNode to provide the wrapper composable
  * with access to tab navigation state and actions.
@@ -125,14 +125,14 @@ public interface TabWrapperScope {
  * @property isTransitioning Whether a tab transition is in progress
  * @property onSwitchTab Callback invoked when user switches tabs
  */
-internal class TabWrapperScopeImpl(
+internal class TabsContainerScopeImpl(
     override val navigator: Navigator,
     override val activeTabIndex: Int,
     override val tabCount: Int,
     override val tabMetadata: List<TabMetadata>,
     override val isTransitioning: Boolean,
     private val onSwitchTab: (Int) -> Unit
-) : TabWrapperScope {
+) : TabsContainerScope {
 
     override fun switchTab(index: Int) {
         require(index in 0 until tabCount) {
@@ -144,24 +144,24 @@ internal class TabWrapperScopeImpl(
 }
 
 /**
- * Creates a [TabWrapperScopeImpl] with the given parameters.
+ * Creates a [TabsContainerScopeImpl] with the given parameters.
  *
- * Factory function for creating tab wrapper scopes.
+ * Factory function for creating tabs container scopes.
  *
  * @param navigator The navigator instance
  * @param activeTabIndex Currently selected tab index
  * @param tabMetadata Metadata for all tabs
  * @param isTransitioning Whether transitioning between tabs
  * @param onSwitchTab Callback for tab switching
- * @return A new [TabWrapperScope] implementation
+ * @return A new [TabsContainerScope] implementation
  */
-internal fun createTabWrapperScope(
+internal fun createTabsContainerScope(
     navigator: Navigator,
     activeTabIndex: Int,
     tabMetadata: List<TabMetadata>,
     isTransitioning: Boolean,
     onSwitchTab: (Int) -> Unit
-): TabWrapperScope = TabWrapperScopeImpl(
+): TabsContainerScope = TabsContainerScopeImpl(
     navigator = navigator,
     activeTabIndex = activeTabIndex,
     tabCount = tabMetadata.size,
@@ -169,3 +169,32 @@ internal fun createTabWrapperScope(
     isTransitioning = isTransitioning,
     onSwitchTab = onSwitchTab
 )
+
+// ================================
+// Backward compatibility aliases
+// ================================
+
+/**
+ * @deprecated Use [TabsContainerScope] instead. This typealias is provided for backward compatibility.
+ */
+@Deprecated(
+    message = "Use TabsContainerScope instead",
+    replaceWith = ReplaceWith("TabsContainerScope", "com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope")
+)
+typealias TabWrapperScope = TabsContainerScope
+
+/**
+ * @deprecated Use [createTabsContainerScope] instead. This function is provided for backward compatibility.
+ */
+@Suppress("FunctionName")
+@Deprecated(
+    message = "Use createTabsContainerScope instead",
+    replaceWith = ReplaceWith("createTabsContainerScope(navigator, activeTabIndex, tabMetadata, isTransitioning, onSwitchTab)")
+)
+internal fun createTabWrapperScope(
+    navigator: Navigator,
+    activeTabIndex: Int,
+    tabMetadata: List<TabMetadata>,
+    isTransitioning: Boolean,
+    onSwitchTab: (Int) -> Unit
+): TabsContainerScope = createTabsContainerScope(navigator, activeTabIndex, tabMetadata, isTransitioning, onSwitchTab)

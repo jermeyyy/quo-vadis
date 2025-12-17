@@ -58,7 +58,7 @@ These generated singleton objects are replaced by properties on `GeneratedNaviga
 | `GeneratedScopeRegistry` | Generated | `GeneratedNavigationConfig.scopeRegistry` |
 | `GeneratedContainerRegistry` | Generated | `GeneratedNavigationConfig.containerRegistry` |
 | `GeneratedTransitionRegistry` | Generated | `GeneratedNavigationConfig.transitionRegistry` |
-| `GeneratedWrapperRegistry` | Generated | `GeneratedNavigationConfig.wrapperRegistry` |
+| `GeneratedWrapperRegistry` | Generated | **Removed** - now part of `containerRegistry` |
 | `GeneratedDeepLinkHandler` | Generated | `GeneratedNavigationConfig.deepLinkHandler` |
 
 **Deprecation Template**:
@@ -106,7 +106,7 @@ The `NavigationHost` overload with individual registry parameters should guide u
 fun NavigationHost(
     navigator: Navigator,
     screenRegistry: ScreenRegistry,
-    wrapperRegistry: WrapperRegistry,
+    containerRegistry: ContainerRegistry, // includes wrapper functionality (formerly WrapperRegistry)
     scopeRegistry: ScopeRegistry,
     transitionRegistry: TransitionRegistry,
     // ... other params
@@ -194,7 +194,7 @@ Major + 1 Version   → DeprecationLevel.HIDDEN or removal
 | `ScopeRegistryGenerator.kt` | Add deprecation to `GeneratedScopeRegistry` object |
 | `ContainerRegistryGenerator.kt` | Add deprecation to `GeneratedContainerRegistry` object |
 | `TransitionRegistryGenerator.kt` | Add deprecation to `GeneratedTransitionRegistry` object |
-| `WrapperRegistryGenerator.kt` | Add deprecation to `GeneratedWrapperRegistry` object |
+| `WrapperRegistryGenerator.kt` | **Removed** - wrapper functionality merged into `ContainerRegistry` |
 | `DeepLinkHandlerGenerator.kt` | Add deprecation to `GeneratedDeepLinkHandler` object |
 
 ### Core Library (Documentation)

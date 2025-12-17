@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
@@ -89,7 +89,7 @@ class NavTreeRendererTest {
         assertNotNull(scope.animationCoordinator, "AnimationCoordinator should be provided")
         assertNotNull(scope.predictiveBackController, "PredictiveBackController should be provided")
         assertNotNull(scope.screenRegistry, "ScreenRegistry should be provided")
-        assertNotNull(scope.wrapperRegistry, "WrapperRegistry should be provided")
+        assertNotNull(scope.containerRegistry, "ContainerRegistry should be provided")
         assertNull(scope.sharedTransitionScope, "SharedTransitionScope should be null by default")
     }
 
@@ -107,14 +107,14 @@ class NavTreeRendererTest {
     }
 
     @Test
-    fun `scope wrapper registry provides defaults`() {
+    fun `scope container registry provides defaults`() {
         // Given
         val scope = createFakeScope()
 
         // Then
-        assertEquals(WrapperRegistry.Empty, scope.wrapperRegistry)
-        assertFalse(scope.wrapperRegistry.hasTabWrapper("any-key"))
-        assertFalse(scope.wrapperRegistry.hasPaneWrapper("any-key"))
+        assertEquals(ContainerRegistry.Empty, scope.containerRegistry)
+        assertFalse(scope.containerRegistry.hasTabsContainer("any-key"))
+        assertFalse(scope.containerRegistry.hasPaneContainer("any-key"))
     }
 
     // =========================================================================

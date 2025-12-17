@@ -3,10 +3,10 @@ package com.jermey.quo.vadis.annotations
 import kotlin.reflect.KClass
 
 /**
- * Marks a Composable function as a tab wrapper for the specified tab destination class.
+ * Marks a Composable function as a tabs container wrapper for the specified tab destination class.
  *
- * Tab wrappers provide the surrounding UI chrome (tab bar, navigation rail, etc.) for
- * tabbed navigation containers. The wrapper receives a `TabWrapperScope` that provides
+ * Tabs container wrappers provide the surrounding UI chrome (tab bar, navigation rail, etc.) for
+ * tabbed navigation containers. The wrapper receives a `TabsContainerScope` that provides
  * access to tab state and navigation, and a content slot where the active tab's content
  * is rendered.
  *
@@ -14,18 +14,18 @@ import kotlin.reflect.KClass
  *
  * The annotated function must follow this signature:
  * ```kotlin
- * @TabWrapper(MainTabs::class)
+ * @TabsContainer(MainTabs::class)
  * @Composable
- * fun MainTabsWrapper(scope: TabWrapperScope, content: @Composable () -> Unit) {
+ * fun MainTabsWrapper(scope: TabsContainerScope, content: @Composable () -> Unit) {
  *     // Wrapper implementation
  * }
  * ```
  *
  * Parameters (detected by KSP based on types):
- * 1. `scope: TabWrapperScope` - Provides access to tab state and navigation
+ * 1. `scope: TabsContainerScope` - Provides access to tab state and navigation
  * 2. `content: @Composable () -> Unit` - The active tab's content to render
  *
- * ## TabWrapperScope
+ * ## TabsContainerScope
  *
  * The scope provides:
  * - `navigator` - The Navigator instance for navigation operations
@@ -36,10 +36,10 @@ import kotlin.reflect.KClass
  * ## Example: Bottom Navigation Wrapper
  *
  * ```kotlin
- * @TabWrapper(MainTabs::class)
+ * @TabsContainer(MainTabs::class)
  * @Composable
  * fun MainTabsBottomNavWrapper(
- *     scope: TabWrapperScope,
+ *     scope: TabsContainerScope,
  *     content: @Composable () -> Unit
  * ) {
  *     Scaffold(
@@ -66,10 +66,10 @@ import kotlin.reflect.KClass
  * ## Example: Navigation Rail Wrapper
  *
  * ```kotlin
- * @TabWrapper(MainTabs::class)
+ * @TabsContainer(MainTabs::class)
  * @Composable
  * fun MainTabsRailWrapper(
- *     scope: TabWrapperScope,
+ *     scope: TabsContainerScope,
  *     content: @Composable () -> Unit
  * ) {
  *     Row {
@@ -92,7 +92,7 @@ import kotlin.reflect.KClass
  *
  * ## KSP Processing
  *
- * KSP generates entries in `GeneratedWrapperRegistry` mapping each tab class
+ * KSP generates entries in `GeneratedNavigationConfig.containerRegistry` mapping each tab class
  * to its wrapper function. The registry is used by the hierarchical renderer
  * to resolve which wrapper to use for each `TabNode`.
  *
@@ -112,7 +112,7 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-public annotation class TabWrapper(
+annotation class TabsContainer(
     /**
      * The tab container class this wrapper wraps.
      * Must be a class annotated with @Tab.

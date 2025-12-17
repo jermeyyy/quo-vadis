@@ -34,7 +34,7 @@ import com.jermey.quo.vadis.ksp.models.TransitionInfo
  *
  * @property logger KSP logger for error/warning output
  */
-public class TransitionExtractor(
+class TransitionExtractor(
     private val logger: KSPLogger
 ) {
 
@@ -50,7 +50,7 @@ public class TransitionExtractor(
      * @param classDeclaration The class annotated with @Transition
      * @return TransitionInfo or null if extraction fails
      */
-    public fun extract(classDeclaration: KSClassDeclaration): TransitionInfo? {
+    fun extract(classDeclaration: KSClassDeclaration): TransitionInfo? {
         val annotation = classDeclaration.annotations.find {
             it.annotationType.resolve().declaration.qualifiedName?.asString() == TRANSITION_ANNOTATION
         } ?: return null
@@ -103,7 +103,7 @@ public class TransitionExtractor(
      * @param resolver KSP resolver to query for symbols
      * @return List of TransitionInfo for all @Transition-annotated classes
      */
-    public fun extractAll(resolver: Resolver): List<TransitionInfo> {
+    fun extractAll(resolver: Resolver): List<TransitionInfo> {
         return resolver.getSymbolsWithAnnotation(TRANSITION_ANNOTATION)
             .filterIsInstance<KSClassDeclaration>()
             .mapNotNull { extract(it) }

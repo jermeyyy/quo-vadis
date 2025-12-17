@@ -20,7 +20,7 @@ import kotlin.reflect.KClass
  * @property content The composable function that renders the screen content
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
-public data class ScreenEntry(
+data class ScreenEntry(
     val destinationClass: KClass<out Destination>,
     val content: @Composable (
         destination: Destination,
@@ -38,7 +38,7 @@ public data class ScreenEntry(
  * @property rootDestination The root destination for the pane, or null if not set
  * @property isAlwaysVisible Whether the pane should always be visible
  */
-public data class BuiltPaneContent(
+data class BuiltPaneContent(
     val rootDestination: Destination?,
     val isAlwaysVisible: Boolean
 )
@@ -51,7 +51,7 @@ public data class BuiltPaneContent(
  * @property tabs List of tab entries in display order
  * @property initialTab Index of the initially selected tab
  */
-public data class BuiltTabsConfig(
+data class BuiltTabsConfig(
     val tabs: List<TabEntry>,
     val initialTab: Int
 )
@@ -65,7 +65,7 @@ public data class BuiltTabsConfig(
  * @property initialPane The initially active pane role
  * @property backBehavior Back navigation behavior for the container
  */
-public data class BuiltPanesConfig(
+data class BuiltPanesConfig(
     val panes: Map<PaneRole, PaneEntry>,
     val initialPane: PaneRole,
     val backBehavior: PaneBackBehavior

@@ -8,13 +8,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContent
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneWrapperScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowWidthSizeClass
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.calculateWindowSizeClass
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.createPaneWrapperScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.createTabWrapperScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.createPaneContainerScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.createTabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.PaneNode
@@ -321,12 +321,12 @@ private fun detectBackNavigation(current: StackNode, previous: StackNode?): Bool
  *
  * This renderer maintains the parent-child relationship between tab wrappers
  * and their content, ensuring coordinated animations and predictive back gestures.
- * It creates a [TabWrapperScope] for the wrapper composable, caches the entire
+ * It creates a [TabsContainerScope] for the wrapper composable, caches the entire
  * tab structure (wrapper + content), and handles animated transitions between tabs.
  *
  * ## Wrapper Composition
  *
- * The renderer invokes [WrapperRegistry.TabWrapper] with a content slot. The wrapper
+ * The renderer invokes [ContainerRegistry.TabsContainer] with a content slot. The wrapper
  * is responsible for rendering the tab UI (bottom navigation, tab bar, etc.), while
  * the content slot renders the active tab's content with animations.
  *
@@ -355,7 +355,7 @@ private fun detectBackNavigation(current: StackNode, previous: StackNode?): Bool
  * ```
  * TabRenderer(tabNode)
  *   └── CachedEntry(tabNode.key)
- *         └── TabWrapper(scope, content)
+ *         └── TabsContainer(scope, content)
  *               └── AnimatedNavContent(activeStack)
  *                     └── NavTreeRenderer(stack)
  *                           └── StackRenderer/ScreenRenderer...
@@ -367,8 +367,8 @@ private fun detectBackNavigation(current: StackNode, previous: StackNode?): Bool
  * @param modifier Modifier to apply to the tab container
  *
  * @see TabNode
- * @see TabWrapperScope
- * @see WrapperRegistry.TabWrapper
+ * @see TabsContainerScope
+ * @see ContainerRegistry.TabsContainer
  * @see AnimatedNavContent
  */
 @Suppress("DEPRECATION") // Internal usage - deprecation is for public API users
@@ -383,10 +383,10 @@ internal fun TabRenderer(
     val activeStack = node.activeStack
     val previousActiveStack = previousNode?.activeStack
 
-    // Create TabWrapperScope with tab navigation state and actions
+    // Create TabsContainerScope with tab navigation state and actions
     // The scope is remembered to maintain referential stability
-    val tabWrapperScope = remember(node.key, node.activeStackIndex, node.tabCount) {
-        createTabWrapperScope(
+    val tabsContainerScope = remember(node.key, node.activeStackIndex, node.tabCount) {
+        createTabsContainerScope(
             navigator = scope.navigator,
             activeTabIndex = node.activeStackIndex,
             tabMetadata = createTabMetadataFromStacks(node),
@@ -399,9 +399,9 @@ internal fun TabRenderer(
     }
 
     // Derive updated scope when active index changes (without recreating)
-    val updatedTabWrapperScope by remember(tabWrapperScope) {
+    val updatedTabsContainerScope by remember(tabsContainerScope) {
         derivedStateOf {
-            createTabWrapperScope(
+            createTabsContainerScope(
                 navigator = scope.navigator,
                 activeTabIndex = node.activeStackIndex,
                 tabMetadata = createTabMetadataFromStacks(node),
@@ -424,12 +424,12 @@ internal fun TabRenderer(
     ) {
         // No additional animation needed here - parent handles cascade animation
         Box(modifier = modifier) {
-            // Invoke the registered tab wrapper (KSP-generated or default)
+            // Invoke the registered tabs container wrapper (KSP-generated or default)
             // The wrapper receives the scope and a content slot
             // Use wrapperKey for registry lookup (class simple name), fallback to node.key
-            scope.wrapperRegistry.TabWrapper(
+            scope.containerRegistry.TabsContainer(
                 tabNodeKey = node.wrapperKey ?: node.key,
-                scope = updatedTabWrapperScope
+                scope = updatedTabsContainerScope
             ) {
                 // Content slot: animate between tabs (within the wrapper)
                 AnimatedNavContent(
@@ -506,7 +506,7 @@ private fun createTabMetadataFromStacks(node: TabNode): List<TabMetadata> {
  * The renderer detects the current window size class and adapts the layout:
  *
  * - **Expanded mode** (width >= [WindowWidthSizeClass.Medium]): Multiple panes displayed
- *   side-by-side using [WrapperRegistry.PaneWrapper]. The wrapper receives [PaneContent]
+ *   side-by-side using [ContainerRegistry.PaneContainer]. The wrapper receives [PaneContent]
  *   slots for each configured pane, with visibility determined by [AdaptStrategy].
  *
  * - **Compact mode** (width < [WindowWidthSizeClass.Medium]): Single pane visible at a time,
@@ -535,7 +535,7 @@ private fun createTabMetadataFromStacks(node: TabNode): List<TabMetadata> {
  * ```
  * PaneRenderer(paneNode)
  *   └── CachedEntry(paneNode.key)
- *         └── [Expanded] PaneWrapper(scope, content)
+ *         └── [Expanded] PaneContainer(scope, content)
  *         │     └── Multiple NavTreeRenderer for each visible pane
  *         └── [Compact] AnimatedNavContent(activePaneContent)
  *               └── NavTreeRenderer(activePane)
@@ -547,8 +547,8 @@ private fun createTabMetadataFromStacks(node: TabNode): List<TabMetadata> {
  * @param modifier Modifier to apply to the pane container
  *
  * @see PaneNode
- * @see PaneWrapperScope
- * @see WrapperRegistry.PaneWrapper
+ * @see PaneContainerScope
+ * @see ContainerRegistry.PaneContainer
  * @see WindowSizeClass
  */
 @Composable
@@ -568,14 +568,14 @@ internal fun PaneRenderer(
         buildPaneContentList(node, isExpanded)
     }
 
-    // Create PaneWrapperScope with pane navigation state and actions
-    val paneWrapperScope = remember(
+    // Create PaneContainerScope with pane navigation state and actions
+    val paneContainerScope = remember(
         node.key,
         node.activePaneRole,
         paneContents,
         isExpanded
     ) {
-        createPaneWrapperScope(
+        createPaneContainerScope(
             navigator = scope.navigator,
             activePaneRole = node.activePaneRole,
             paneContents = paneContents,
@@ -586,9 +586,9 @@ internal fun PaneRenderer(
     }
 
     // Derive updated scope when active role or expanded state changes
-    val updatedPaneWrapperScope by remember(paneWrapperScope) {
+    val updatedPaneContainerScope by remember(paneContainerScope) {
         derivedStateOf {
-            createPaneWrapperScope(
+            createPaneContainerScope(
                 navigator = scope.navigator,
                 activePaneRole = node.activePaneRole,
                 paneContents = buildPaneContentList(node, isExpanded),
@@ -613,7 +613,7 @@ internal fun PaneRenderer(
                     node = node,
                     previousNode = previousNode,
                     scope = scope,
-                    paneWrapperScope = updatedPaneWrapperScope,
+                    paneContainerScope = updatedPaneContainerScope,
                     paneContents = paneContents
                 )
             } else {
@@ -632,7 +632,7 @@ internal fun PaneRenderer(
  * Renders multiple panes in expanded mode using the pane wrapper.
  *
  * This helper function handles expanded (multi-pane) layout by invoking the
- * registered [WrapperRegistry.PaneWrapper] with content slots for each visible pane.
+ * registered [ContainerRegistry.PaneContainer] with content slots for each visible pane.
  * The wrapper is responsible for arranging panes side-by-side based on their roles.
  *
  * ## Content Slot Rendering
@@ -654,14 +654,14 @@ private fun MultiPaneRenderer(
     node: PaneNode,
     previousNode: PaneNode?,
     scope: NavRenderScope,
-    paneWrapperScope: PaneWrapperScope,
+    paneContainerScope: PaneContainerScope,
     paneContents: List<PaneContent>
 ) {
-    // Invoke the registered pane wrapper (KSP-generated or default)
-    // The wrapper receives the scope and a content slot
-    scope.wrapperRegistry.PaneWrapper(
+    // Invoke the registered pane container (KSP-generated or default)
+    // The container receives the scope and a content slot
+    scope.containerRegistry.PaneContainer(
         paneNodeKey = node.key,
-        scope = paneWrapperScope
+        scope = paneContainerScope
     ) {
         // Content slot: render each visible pane
         // The wrapper is responsible for layout arrangement

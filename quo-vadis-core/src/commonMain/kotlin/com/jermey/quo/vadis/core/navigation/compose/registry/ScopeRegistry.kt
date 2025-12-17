@@ -35,7 +35,7 @@ import com.jermey.quo.vadis.core.navigation.core.Destination
  * @see com.jermey.quo.vadis.core.navigation.core.TabNode.scopeKey for tab container scopes
  * @see com.jermey.quo.vadis.core.navigation.core.PaneNode.scopeKey for pane container scopes
  */
-public interface ScopeRegistry {
+interface ScopeRegistry {
     /**
      * Checks if a destination belongs to the scope identified by [scopeKey].
      *

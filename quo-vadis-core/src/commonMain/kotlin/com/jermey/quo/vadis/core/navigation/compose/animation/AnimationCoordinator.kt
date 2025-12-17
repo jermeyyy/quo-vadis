@@ -54,7 +54,7 @@ import com.jermey.quo.vadis.core.navigation.core.ScreenNode
  * @see NavTransition
  */
 @Stable
-public class AnimationCoordinator(
+class AnimationCoordinator(
     private val transitionRegistry: TransitionRegistry = TransitionRegistry.Empty
 ) {
 
@@ -63,7 +63,7 @@ public class AnimationCoordinator(
      *
      * @return The default [NavTransition] for screen transitions
      */
-    public val defaultTransition: NavTransition
+    val defaultTransition: NavTransition
         get() = NavTransition.SlideHorizontal
 
     /**
@@ -71,7 +71,7 @@ public class AnimationCoordinator(
      *
      * @return The default [NavTransition] for tab transitions
      */
-    public val defaultTabTransition: NavTransition
+    val defaultTabTransition: NavTransition
         get() = NavTransition.Fade
 
     /**
@@ -79,7 +79,7 @@ public class AnimationCoordinator(
      *
      * @return The default [NavTransition] for pane transitions
      */
-    public val defaultPaneTransition: NavTransition
+    val defaultPaneTransition: NavTransition
         get() = NavTransition.Fade
 
     /**
@@ -119,7 +119,7 @@ public class AnimationCoordinator(
      *
      * @see NavTransition.createTransitionSpec
      */
-    public fun getTransition(from: NavNode?, to: NavNode, isBack: Boolean): NavTransition {
+    fun getTransition(from: NavNode?, to: NavNode, isBack: Boolean): NavTransition {
         // First check registry for annotation-based transition on destination
         val toScreen = to as? ScreenNode
         toScreen?.destination?.let { dest ->
@@ -158,14 +158,14 @@ public class AnimationCoordinator(
      *
      * @see PaneRole
      */
-    public fun getPaneTransition(fromRole: PaneRole?, toRole: PaneRole): NavTransition {
+    fun getPaneTransition(fromRole: PaneRole?, toRole: PaneRole): NavTransition {
         return defaultPaneTransition
     }
 
     /**
      * Companion object providing factory methods and default instances.
      */
-    public companion object {
+    companion object {
 
         /**
          * A default [AnimationCoordinator] with no custom transitions.
@@ -182,6 +182,6 @@ public class AnimationCoordinator(
          * )
          * ```
          */
-        public val Default: AnimationCoordinator = AnimationCoordinator(TransitionRegistry.Empty)
+        val Default: AnimationCoordinator = AnimationCoordinator(TransitionRegistry.Empty)
     }
 }

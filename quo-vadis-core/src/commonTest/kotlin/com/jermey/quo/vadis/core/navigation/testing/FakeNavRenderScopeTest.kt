@@ -3,7 +3,7 @@ package com.jermey.quo.vadis.core.navigation.testing
 import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.route
@@ -53,7 +53,7 @@ class FakeNavRenderScopeTest {
         assertNotNull(scope.animationCoordinator)
         assertNotNull(scope.predictiveBackController)
         assertNotNull(scope.screenRegistry)
-        assertNotNull(scope.wrapperRegistry)
+        assertNotNull(scope.containerRegistry)
         assertNull(scope.sharedTransitionScope)
     }
 
@@ -94,12 +94,12 @@ class FakeNavRenderScopeTest {
     }
 
     @Test
-    fun `FakeNavRenderScope uses WrapperRegistry Empty by default`() {
+    fun `FakeNavRenderScope uses ContainerRegistry Empty by default`() {
         // When
         val scope = FakeNavRenderScope()
 
         // Then
-        assertSame(WrapperRegistry.Empty, scope.wrapperRegistry)
+        assertSame(ContainerRegistry.Empty, scope.containerRegistry)
     }
 
     // =========================================================================
@@ -269,24 +269,24 @@ class FakeNavRenderScopeTest {
     }
 
     // =========================================================================
-    // WRAPPER REGISTRY TESTS
+    // CONTAINER REGISTRY TESTS
     // =========================================================================
 
     @Test
-    fun `wrapperRegistry hasTabWrapper returns false by default`() {
+    fun `containerRegistry hasTabsContainer returns false by default`() {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertFalse(scope.wrapperRegistry.hasTabWrapper("any-key"))
+        assertFalse(scope.containerRegistry.hasTabsContainer("any-key"))
     }
 
     @Test
-    fun `wrapperRegistry hasPaneWrapper returns false by default`() {
+    fun `containerRegistry hasPaneContainer returns false by default`() {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertFalse(scope.wrapperRegistry.hasPaneWrapper("any-key"))
+        assertFalse(scope.containerRegistry.hasPaneContainer("any-key"))
     }
 }

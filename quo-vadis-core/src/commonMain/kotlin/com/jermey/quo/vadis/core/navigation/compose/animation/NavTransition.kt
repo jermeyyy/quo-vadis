@@ -61,7 +61,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
  * @see EnterTransition
  * @see ExitTransition
  */
-public data class NavTransition(
+data class NavTransition(
     val enter: EnterTransition,
     val exit: ExitTransition,
     val popEnter: EnterTransition,
@@ -104,7 +104,7 @@ public data class NavTransition(
      * @param isBack Whether navigation is going backwards (pop) or forwards (push)
      * @return A [ContentTransform] combining the appropriate enter and exit transitions
      */
-    public fun createTransitionSpec(isBack: Boolean): ContentTransform {
+    fun createTransitionSpec(isBack: Boolean): ContentTransform {
         return if (isBack) {
             // Back navigation: exiting screen (current) should be on top, sliding away
             // to reveal the entering screen (previous) underneath
@@ -149,7 +149,7 @@ public data class NavTransition(
      *
      * @return A new [NavTransition] with swapped enter/exit and popEnter/popExit
      */
-    public fun reversed(): NavTransition {
+    fun reversed(): NavTransition {
         return NavTransition(
             enter = popEnter,
             exit = popExit,
@@ -164,14 +164,14 @@ public data class NavTransition(
      * These presets cover common navigation animation patterns and are derived
      * from the existing [NavigationTransitions] object for consistency.
      */
-    public companion object {
+    companion object {
 
         /**
          * Default animation duration in milliseconds.
          *
          * Matches the duration used by [NavigationTransitions] for consistency.
          */
-        public const val ANIMATION_DURATION: Int = NavigationTransitions.ANIMATION_DURATION
+        const val ANIMATION_DURATION: Int = NavigationTransitions.ANIMATION_DURATION
 
         /**
          * Horizontal slide transition with fade.
@@ -190,7 +190,7 @@ public data class NavTransition(
          * - **Back enter**: Fade in
          * - **Back exit**: Slide to right + fade out
          */
-        public val SlideHorizontal: NavTransition = NavTransition(
+        val SlideHorizontal: NavTransition = NavTransition(
             enter = NavigationTransitions.SlideHorizontal.enter,
             exit = NavigationTransitions.SlideHorizontal.exit,
             popEnter = NavigationTransitions.SlideHorizontal.popEnter,
@@ -208,7 +208,7 @@ public data class NavTransition(
          * - All transitions use fade in/out with [ANIMATION_DURATION]
          * - No spatial movement (translation, scale, etc.)
          */
-        public val Fade: NavTransition = NavTransition(
+        val Fade: NavTransition = NavTransition(
             enter = NavigationTransitions.Fade.enter,
             exit = NavigationTransitions.Fade.exit,
             popEnter = NavigationTransitions.Fade.popEnter,
@@ -228,7 +228,7 @@ public data class NavTransition(
          * - All transitions are [EnterTransition.None] / [ExitTransition.None]
          * - Zero duration, instant state change
          */
-        public val None: NavTransition = NavTransition(
+        val None: NavTransition = NavTransition(
             enter = NavigationTransitions.None.enter,
             exit = NavigationTransitions.None.exit,
             popEnter = NavigationTransitions.None.popEnter,
@@ -253,7 +253,7 @@ public data class NavTransition(
          * - **Back enter**: Fade in
          * - **Back exit**: Slide to bottom + fade out
          */
-        public val SlideVertical: NavTransition = NavTransition(
+        val SlideVertical: NavTransition = NavTransition(
             enter = NavigationTransitions.SlideVertical.enter,
             exit = NavigationTransitions.SlideVertical.exit,
             popEnter = NavigationTransitions.SlideVertical.popEnter,
@@ -279,7 +279,7 @@ public data class NavTransition(
          * - **Back enter**: Scale from 95% + fade in
          * - **Back exit**: Scale to 80% + fade out
          */
-        public val ScaleIn: NavTransition = NavTransition(
+        val ScaleIn: NavTransition = NavTransition(
             enter = NavigationTransitions.ScaleIn.enter,
             exit = NavigationTransitions.ScaleIn.exit,
             popEnter = NavigationTransitions.ScaleIn.popEnter,

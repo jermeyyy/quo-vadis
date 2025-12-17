@@ -28,7 +28,7 @@ import com.jermey.quo.vadis.annotations.Tabs
 sealed class DemoTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
 
     /**
-     * Companion object used as the wrapper key for @TabWrapper.
+     * Companion object used as the wrapper key for @TabsContainer.
      * This allows the wrapper to be associated with the DemoTabs container.
      */
     companion object: com.jermey.quo.vadis.core.navigation.core.Destination

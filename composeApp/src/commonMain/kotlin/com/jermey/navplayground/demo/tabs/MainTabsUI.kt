@@ -22,25 +22,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.MainTabs
-import com.jermey.quo.vadis.annotations.TabWrapper
+import com.jermey.quo.vadis.annotations.TabsContainer
 import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
- * Tab wrapper for the main tabs with bottom navigation.
+ * Tabs container wrapper for the main tabs with bottom navigation.
  *
- * The @TabWrapper annotation pattern gives full control over the scaffold structure
+ * The @TabsContainer annotation pattern gives full control over the scaffold structure
  * while the library handles tab content rendering and state management.
  *
- * @param scope The TabWrapperScope providing access to tab state and navigation
+ * @param scope The TabsContainerScope providing access to tab state and navigation
  * @param content The content slot where active tab content is rendered
  */
-@TabWrapper(MainTabs::class)
+@TabsContainer(MainTabs::class)
 @Composable
 fun MainTabsWrapper(
-    scope: TabWrapperScope,
+    scope: TabsContainerScope,
     content: @Composable () -> Unit
 ) {
     Column(
@@ -69,7 +69,7 @@ fun MainTabsWrapper(
  * This composable renders the main tab navigation with:
  * - Independent navigation stacks per tab
  * - State preservation across tab switches
- * - Custom bottom navigation bar via @TabWrapper annotation
+ * - Custom bottom navigation bar via @TabsContainer annotation
  * - Automatic back press handling
  *
  * @param navigator The navigator instance for this tab container
@@ -90,7 +90,7 @@ fun MainTabsScreen(
 /**
  * Bottom navigation bar for the main tabs.
  *
- * Uses [TabMetadata] from [TabWrapperScope] to render navigation items
+ * Uses [TabMetadata] from [TabsContainerScope] to render navigation items
  * with proper selection state and click handling.
  *
  * @param activeTabIndex The currently selected tab index (0-based)

@@ -205,7 +205,7 @@ fun App() {
         NavigationHost(
             navigator = navigator,
             screenRegistry = GeneratedScreenRegistry,
-            wrapperRegistry = GeneratedWrapperRegistry,
+            containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
             scopeRegistry = GeneratedScopeRegistry,
             transitionRegistry = GeneratedTransitionRegistry,
             modifier = Modifier.fillMaxSize()
@@ -256,7 +256,7 @@ fun App() {
             NavigationHost(
                 navigator = navigator,
                 screenRegistry = GeneratedScreenRegistry,
-                wrapperRegistry = GeneratedWrapperRegistry,
+                containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
                 scopeRegistry = GeneratedScopeRegistry,
                 transitionRegistry = GeneratedTransitionRegistry,
                 modifier = Modifier.weight(1f)

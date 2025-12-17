@@ -455,18 +455,18 @@ object CodeBlockBuilders {
     }
     
     /**
-     * Builds a `tabWrapper()` DSL block.
+     * Builds a `tabsContainer()` DSL block.
      * 
      * @param wrapperKey The wrapper key
      * @param wrapperContent CodeBlock containing wrapper composable content
-     * @return CodeBlock for the tab wrapper registration
+     * @return CodeBlock for the tabs container registration
      */
-    fun buildTabWrapperBlock(
+    fun buildTabsContainerBlock(
         wrapperKey: String,
         wrapperContent: CodeBlock
     ): CodeBlock {
         return CodeBlock.builder()
-            .addStatement("tabWrapper(%S) {", wrapperKey)
+            .addStatement("tabsContainer(%S) {", wrapperKey)
             .indent()
             .add(wrapperContent)
             .unindent()
@@ -475,18 +475,18 @@ object CodeBlockBuilders {
     }
     
     /**
-     * Builds a `paneWrapper()` DSL block.
+     * Builds a `paneContainer()` DSL block.
      * 
      * @param wrapperKey The wrapper key
      * @param wrapperContent CodeBlock containing wrapper composable content
-     * @return CodeBlock for the pane wrapper registration
+     * @return CodeBlock for the pane container registration
      */
-    fun buildPaneWrapperBlock(
+    fun buildPaneContainerBlock(
         wrapperKey: String,
         wrapperContent: CodeBlock
     ): CodeBlock {
         return CodeBlock.builder()
-            .addStatement("paneWrapper(%S) {", wrapperKey)
+            .addStatement("paneContainer(%S) {", wrapperKey)
             .indent()
             .add(wrapperContent)
             .unindent()
@@ -734,13 +734,13 @@ object StringTemplates {
     
     /**
      * Template for NavigationConfig implementation delegation.
+     * Note: wrapperRegistry has been merged into containerRegistry.
      */
     const val CONFIG_DELEGATION_TEMPLATE = """
         |override val screenRegistry = config.screenRegistry
-        |override val wrapperRegistry = config.wrapperRegistry
         |override val scopeRegistry = config.scopeRegistry
         |override val transitionRegistry = config.transitionRegistry
-        |override val containerRegistry = config.containerRegistry
+        |override val containerRegistry = config.containerRegistry // includes wrapper functionality
         |override val deepLinkHandler = config.deepLinkHandler
         |
         |override fun buildNavNode(
@@ -898,8 +898,8 @@ object StringTemplates {
 - [ ] `buildNestedTabEntry()` produces nested structure
 - [ ] `buildScopeBlock()` handles empty and non-empty cases
 - [ ] `buildTransitionBlock()` produces valid transition DSL
-- [ ] `buildTabWrapperBlock()` produces valid wrapper DSL
-- [ ] `buildPaneWrapperBlock()` produces valid wrapper DSL
+- [ ] `buildTabsContainerBlock()` produces valid container DSL
+- [ ] `buildPaneContainerBlock()` produces valid container DSL
 - [ ] `buildWhenExpression()` produces compilable when blocks
 - [ ] `buildMapOf()` handles empty and non-empty cases
 - [ ] `buildSetOf()` handles empty and non-empty cases

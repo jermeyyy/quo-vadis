@@ -25,7 +25,7 @@ NavigationHost(
 NavigationHost(
     navigator = navigator,
     screenRegistry = GeneratedScreenRegistry,
-    wrapperRegistry = GeneratedWrapperRegistry,
+    containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
     transitionRegistry = GeneratedTransitionRegistry,
     scopeRegistry = GeneratedScopeRegistry,
     modifier = Modifier.fillMaxSize()
@@ -116,7 +116,7 @@ Add this to the existing `NavigationHost.kt` file:
  *                  Typically created with [rememberQuoVadisNavigator].
  * @param config The NavigationConfig providing all required registries:
  *               [screenRegistry][NavigationConfig.screenRegistry],
- *               [wrapperRegistry][NavigationConfig.wrapperRegistry],
+ *               [containerRegistry][NavigationConfig.containerRegistry] (includes wrapper functionality),
  *               [transitionRegistry][NavigationConfig.transitionRegistry],
  *               [scopeRegistry][NavigationConfig.scopeRegistry].
  * @param modifier Modifier to apply to the host container.
@@ -148,7 +148,7 @@ fun NavigationHost(
         navigator = navigator,
         modifier = modifier,
         screenRegistry = config.screenRegistry,
-        wrapperRegistry = config.wrapperRegistry,
+        containerRegistry = config.containerRegistry, // includes wrapper functionality
         transitionRegistry = config.transitionRegistry,
         scopeRegistry = config.scopeRegistry,
         enablePredictiveBack = enablePredictiveBack,
@@ -172,7 +172,7 @@ fun NavigationHost(
     navigator: Navigator,
     modifier: Modifier = Modifier,
     screenRegistry: ScreenRegistry,
-    wrapperRegistry: WrapperRegistry,
+    containerRegistry: ContainerRegistry, // includes wrapper functionality (formerly WrapperRegistry)
     transitionRegistry: TransitionRegistry,
     scopeRegistry: ScopeRegistry,
     enablePredictiveBack: Boolean = false,
@@ -192,7 +192,7 @@ NavigationHost(navigator, config, modifier, ...) {
         navigator = navigator,
         modifier = modifier,
         screenRegistry = config.screenRegistry,     // Extract
-        wrapperRegistry = config.wrapperRegistry,   // Extract
+        containerRegistry = config.containerRegistry, // Extract (includes wrappers)
         transitionRegistry = config.transitionRegistry,  // Extract
         scopeRegistry = config.scopeRegistry,       // Extract
         enablePredictiveBack = enablePredictiveBack,
@@ -207,22 +207,22 @@ NavigationHost(navigator, config, modifier, ...) {
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    NavigationConfig                          │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────────┐  │
-│  │screenRegistry│ │wrapperRegistry│ │transitionRegistry│  │  │
-│  └──────┬───────┘ └──────┬───────┘ └──────────┬─────────┘  │
-│         │                │                     │            │
-│  ┌──────┴───────┐ ┌──────┴───────┐ ┌──────────┴─────────┐  │
-│  │scopeRegistry │ │containerReg  │ │deepLinkHandler     │  │
-│  └──────┬───────┘ └──────────────┘ └────────────────────┘  │
-│         │              (used by Navigator, not Host)       │
-└─────────┼──────────────────────────────────────────────────┘
+│  ┌──────────────┐ ┌──────────────────────┐ ┌────────────────┐  │
+│  │screenRegistry│ │containerRegistry       │ │transitionReg. │  │
+│  └──────┬───────┘ │(includes wrappers)     │ └──────┬─────────┘  │
+│         │        └──────────┬───────────┘        │            │
+│  ┌──────┴───────┐          │           ┌────────┴───────────┐  │
+│  │scopeRegistry │          │           │deepLinkHandler     │  │
+│  └──────┬───────┘          │           └────────────────────┘  │
+│         │                   │     (used by Navigator, not Host) │
+└─────────┼───────────────────┼───────────────────────────────────┘
           │
           ▼
 ┌─────────────────────────────────────────────────────────────┐
 │          NavigationHost (config overload)                   │
 │                         │                                   │
 │                         ▼                                   │
-│   Extracts: screenRegistry, wrapperRegistry,                │
+│   Extracts: screenRegistry, containerRegistry,              │
 │             transitionRegistry, scopeRegistry               │
 │                         │                                   │
 │                         ▼                                   │
@@ -254,7 +254,7 @@ NavigationHost(navigator, config, modifier, ...) {
 NavigationHost(
     navigator = navigator,
     screenRegistry = myScreenRegistry,
-    wrapperRegistry = myWrapperRegistry,
+    containerRegistry = myContainerRegistry, // includes wrapper functionality
     transitionRegistry = myTransitionRegistry,
     scopeRegistry = myScopeRegistry
 )
@@ -273,7 +273,7 @@ NavigationHost(
 NavigationHost(
     navigator = navigator,
     screenRegistry = CustomScreenRegistry,           // Custom
-    wrapperRegistry = config.wrapperRegistry,        // From config
+    containerRegistry = config.containerRegistry,    // From config (includes wrappers)
     transitionRegistry = config.transitionRegistry,  // From config
     scopeRegistry = config.scopeRegistry             // From config
 )
@@ -322,9 +322,9 @@ The implementation above follows the existing project's KDoc style:
 // Requires NavigationConfig with these properties
 interface NavigationConfig {
     val screenRegistry: ScreenRegistry
-    val wrapperRegistry: WrapperRegistry
     val scopeRegistry: ScopeRegistry
     val transitionRegistry: TransitionRegistry
+    val containerRegistry: ContainerRegistry // includes wrapper functionality
     // ...
 }
 ```
@@ -442,22 +442,22 @@ fun QuoVadisNavigation(..., config: NavigationConfig) {
 fun `config overload extracts registries correctly`() {
     val config = createTestConfig()
     var capturedScreenRegistry: ScreenRegistry? = null
-    var capturedWrapperRegistry: WrapperRegistry? = null
+    var capturedContainerRegistry: ContainerRegistry? = null
     
     composeRule.setContent {
         // Use test composition that captures arguments
         TestNavigationHost(
             navigator = testNavigator,
             config = config,
-            onRegistriesCaptured = { screen, wrapper, _, _ ->
+            onRegistriesCaptured = { screen, container, _, _ ->
                 capturedScreenRegistry = screen
-                capturedWrapperRegistry = wrapper
+                capturedContainerRegistry = container
             }
         )
     }
     
     assertSame(config.screenRegistry, capturedScreenRegistry)
-    assertSame(config.wrapperRegistry, capturedWrapperRegistry)
+    assertSame(config.containerRegistry, capturedContainerRegistry) // includes wrapper functionality
 }
 ```
 

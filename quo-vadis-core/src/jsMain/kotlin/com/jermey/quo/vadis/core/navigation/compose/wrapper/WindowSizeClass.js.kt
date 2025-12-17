@@ -17,7 +17,7 @@ import org.w3c.dom.events.Event
  * Uses window.innerWidth/innerHeight for viewport dimensions.
  */
 @Composable
-public actual fun calculateWindowSizeClass(): WindowSizeClass {
+actual fun calculateWindowSizeClass(): WindowSizeClass {
     var windowSizeClass by remember { mutableStateOf(calculateFromBrowser()) }
 
     DisposableEffect(Unit) {

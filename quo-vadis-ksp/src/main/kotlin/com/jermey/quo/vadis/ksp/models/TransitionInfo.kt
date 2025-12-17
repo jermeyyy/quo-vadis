@@ -30,7 +30,7 @@ import com.google.devtools.ksp.symbol.KSFile
  * @property customTransitionClass Qualified name of the custom transition class if type is Custom; null otherwise
  * @property containingFile The KSP file containing this annotation, for incremental compilation tracking
  */
-public data class TransitionInfo(
+data class TransitionInfo(
     val destinationClass: KSClassDeclaration,
     val destinationQualifiedName: String,
     val transitionType: String,

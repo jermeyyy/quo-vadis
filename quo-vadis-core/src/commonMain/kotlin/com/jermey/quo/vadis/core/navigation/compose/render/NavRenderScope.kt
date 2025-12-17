@@ -8,7 +8,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
@@ -67,11 +67,11 @@ import com.jermey.quo.vadis.core.navigation.core.StackNode
  * @see AnimationCoordinator
  * @see PredictiveBackController
  * @see ScreenRegistry
- * @see WrapperRegistry
+ * @see ContainerRegistry
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Stable
-public interface NavRenderScope {
+interface NavRenderScope {
 
     /**
      * The navigator instance for performing navigation operations.
@@ -89,7 +89,7 @@ public interface NavRenderScope {
      *
      * @see Navigator
      */
-    public val navigator: Navigator
+    val navigator: Navigator
 
     /**
      * Cache for managing composable lifecycle and state preservation.
@@ -106,7 +106,7 @@ public interface NavRenderScope {
      *
      * @see ComposableCache
      */
-    public val cache: ComposableCache
+    val cache: ComposableCache
 
     /**
      * State holder for preserving saveable state across navigation.
@@ -132,7 +132,7 @@ public interface NavRenderScope {
      * @see SaveableStateHolder
      * @see ComposableCache.CachedEntry
      */
-    public val saveableStateHolder: SaveableStateHolder
+    val saveableStateHolder: SaveableStateHolder
 
     /**
      * Coordinator for resolving and managing navigation transitions.
@@ -144,7 +144,7 @@ public interface NavRenderScope {
      *
      * @see AnimationCoordinator
      */
-    public val animationCoordinator: AnimationCoordinator
+    val animationCoordinator: AnimationCoordinator
 
     /**
      * Controller for predictive back gesture handling.
@@ -160,7 +160,7 @@ public interface NavRenderScope {
      *
      * @see PredictiveBackController
      */
-    public val predictiveBackController: PredictiveBackController
+    val predictiveBackController: PredictiveBackController
 
     /**
      * Registry for looking up screen composables by destination class.
@@ -171,18 +171,18 @@ public interface NavRenderScope {
      *
      * @see ScreenRegistry
      */
-    public val screenRegistry: ScreenRegistry
+    val screenRegistry: ScreenRegistry
 
     /**
-     * Registry for looking up wrapper composables by node key.
+     * Registry for looking up wrapper composables and container builders.
      *
-     * The wrapper registry maps tab and pane node keys to their custom
-     * wrapper composables, typically populated by KSP-generated code from
-     * `@TabWrapper` and `@PaneWrapper` annotations.
+     * The container registry provides:
+     * - Wrapper composables for tab and pane containers (from `@TabsContainer` and `@PaneContainer` annotations)
+     * - Container builders for creating TabNode/PaneNode structures
      *
-     * @see WrapperRegistry
+     * @see ContainerRegistry
      */
-    public val wrapperRegistry: WrapperRegistry
+    val containerRegistry: ContainerRegistry
 
     /**
      * Shared transition scope for coordinating shared element animations.
@@ -199,7 +199,7 @@ public interface NavRenderScope {
      *
      * @see SharedTransitionScope
      */
-    public val sharedTransitionScope: SharedTransitionScope?
+    val sharedTransitionScope: SharedTransitionScope?
 
     /**
      * Determines if predictive back should be enabled for a given node.
@@ -215,7 +215,7 @@ public interface NavRenderScope {
      * @param node The node to check
      * @return true if predictive back gestures should be enabled for this node
      */
-    public fun shouldEnablePredictiveBack(node: NavNode): Boolean {
+    fun shouldEnablePredictiveBack(node: NavNode): Boolean {
         val cascadeState = predictiveBackController.cascadeState.value
         val isGestureActive = predictiveBackController.isActive.value
         
@@ -229,11 +229,8 @@ public interface NavRenderScope {
                 // Check if this node is the stack that contains the exiting node
                 // That stack should enable predictive back for its animation
                 val exitingNode = cascadeState.exitingNode
-                if (node is StackNode && node.children.any { it.key == exitingNode.key }) {
-                    return true
-                }
+                return node is StackNode && node.children.any { it.key == exitingNode.key }
                 // Other stacks should not animate
-                return false
             }
             
             // True cascade case (cascadeDepth > 0): only root handles animation
@@ -268,7 +265,7 @@ public interface NavRenderScope {
      * @param content The composable content that needs access to the animation scope
      */
     @Composable
-    public fun withAnimatedVisibilityScope(
+    fun withAnimatedVisibilityScope(
         animatedVisibilityScope: AnimatedVisibilityScope,
         content: @Composable () -> Unit
     )

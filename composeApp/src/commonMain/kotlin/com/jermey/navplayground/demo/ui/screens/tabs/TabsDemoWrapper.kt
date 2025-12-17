@@ -20,24 +20,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.DemoTabs
-import com.jermey.quo.vadis.annotations.TabWrapper
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
+import com.jermey.quo.vadis.annotations.TabsContainer
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 
 /**
- * Tab wrapper for the Demo Tabs with a tab strip at the top.
+ * Tabs container wrapper for the Demo Tabs with a tab strip at the top.
  *
- * This demonstrates the @TabWrapper pattern with TabRow for switching tabs.
+ * This demonstrates the @TabsContainer pattern with TabRow for switching tabs.
  * Each tab maintains its own navigation stack, allowing nested navigation
  * within each tab.
  *
- * @param scope The TabWrapperScope providing access to tab state and navigation
+ * @param scope The TabsContainerScope providing access to tab state and navigation
  * @param content The content slot where active tab content is rendered
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@TabWrapper(DemoTabs.Companion::class)
+@TabsContainer(DemoTabs.Companion::class)
 @Composable
 fun DemoTabsWrapper(
-    scope: TabWrapperScope,
+    scope: TabsContainerScope,
     content: @Composable () -> Unit
 ) {
     Scaffold(

@@ -38,4 +38,4 @@ package com.jermey.quo.vadis.core.navigation.dsl
  */
 @DslMarker
 @Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
-public annotation class NavigationConfigDsl
+annotation class NavigationConfigDsl

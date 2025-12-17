@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
@@ -401,22 +401,22 @@ class PaneRendererTest {
     // =========================================================================
 
     @Test
-    fun `FakeNavRenderScope wrapper registry has no pane wrapper by default`() {
+    fun `FakeNavRenderScope container registry has no pane wrapper by default`() {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertFalse(scope.wrapperRegistry.hasPaneWrapper("any-key"))
-        assertFalse(scope.wrapperRegistry.hasPaneWrapper("panes"))
+        assertFalse(scope.containerRegistry.hasPaneContainer("any-key"))
+        assertFalse(scope.containerRegistry.hasPaneContainer("panes"))
     }
 
     @Test
-    fun `wrapper registry is empty by default`() {
+    fun `container registry is empty by default`() {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertEquals(WrapperRegistry.Empty, scope.wrapperRegistry)
+        assertEquals(ContainerRegistry.Empty, scope.containerRegistry)
     }
 
     // =========================================================================

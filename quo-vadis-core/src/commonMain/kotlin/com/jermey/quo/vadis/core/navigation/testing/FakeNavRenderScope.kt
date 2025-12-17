@@ -12,7 +12,7 @@ import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinat
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
 import com.jermey.quo.vadis.core.navigation.compose.render.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.navigation.compose.render.NavRenderScope
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
@@ -120,7 +120,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
  * @property animationCoordinator Coordinator for transitions. Defaults to [AnimationCoordinator.Default].
  * @property predictiveBackController Controller for predictive back gestures. Created fresh by default.
  * @property screenRegistry Registry for screen composables. Defaults to [EmptyScreenRegistry].
- * @property wrapperRegistry Registry for wrapper composables. Defaults to [WrapperRegistry.Empty].
+ * @property containerRegistry Registry for container and wrapper composables. Defaults to [ContainerRegistry.Empty].
  * @property sharedTransitionScope Scope for shared element transitions. Defaults to `null`.
  *
  * @see NavRenderScope
@@ -129,14 +129,14 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Stable
-public class FakeNavRenderScope(
+class FakeNavRenderScope(
     override val navigator: Navigator = FakeNavigator(),
     override val cache: ComposableCache = ComposableCache(),
     override val saveableStateHolder: SaveableStateHolder = FakeSaveableStateHolder(),
     override val animationCoordinator: AnimationCoordinator = AnimationCoordinator.Default,
     override val predictiveBackController: PredictiveBackController = PredictiveBackController(),
     override val screenRegistry: ScreenRegistry = EmptyScreenRegistry,
-    override val wrapperRegistry: WrapperRegistry = WrapperRegistry.Empty,
+    override val containerRegistry: ContainerRegistry = ContainerRegistry.Empty,
     override val sharedTransitionScope: SharedTransitionScope? = null,
 ) : NavRenderScope {
 
@@ -161,7 +161,7 @@ public class FakeNavRenderScope(
         }
     }
 
-    public companion object {
+    companion object {
         /**
          * Creates a [FakeNavRenderScope] configured for testing navigation actions.
          *
@@ -176,7 +176,7 @@ public class FakeNavRenderScope(
          *
          * @return A pair of the scope and the fake navigator for verification
          */
-        public fun withFakeNavigator(): Pair<FakeNavRenderScope, FakeNavigator> {
+        fun withFakeNavigator(): Pair<FakeNavRenderScope, FakeNavigator> {
             val navigator = FakeNavigator()
             return FakeNavRenderScope(navigator = navigator) to navigator
         }
@@ -217,7 +217,7 @@ public class FakeNavRenderScope(
  * @see SaveableStateHolder
  */
 @Stable
-public class FakeSaveableStateHolder : SaveableStateHolder {
+class FakeSaveableStateHolder : SaveableStateHolder {
 
     /**
      * Provides state for the given [key] by simply rendering the [content].
@@ -286,7 +286,7 @@ public class FakeSaveableStateHolder : SaveableStateHolder {
  * @see FakeNavRenderScope
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
-public object EmptyScreenRegistry : ScreenRegistry {
+object EmptyScreenRegistry : ScreenRegistry {
 
     /**
      * Renders nothing for any destination.

@@ -71,7 +71,7 @@ val navigator = TreeNavigator(
 NavigationHost(
     navigator = navigator,
     screenRegistry = GeneratedScreenRegistry,
-    wrapperRegistry = GeneratedWrapperRegistry,
+    containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
     scopeRegistry = GeneratedScopeRegistry,
     transitionRegistry = GeneratedTransitionRegistry,
     // ... more parameters
@@ -119,7 +119,7 @@ For a simple app, migration is three changes:
    NavigationHost(
        navigator = navigator,
        screenRegistry = GeneratedScreenRegistry,
-       wrapperRegistry = GeneratedWrapperRegistry,
+       containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
        scopeRegistry = GeneratedScopeRegistry,
        transitionRegistry = GeneratedTransitionRegistry
    )
@@ -185,7 +185,7 @@ val navigator = rememberQuoVadisNavigator(
 NavigationHost(
     navigator = navigator,
     screenRegistry = GeneratedScreenRegistry,
-    wrapperRegistry = GeneratedWrapperRegistry,
+    containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
     scopeRegistry = GeneratedScopeRegistry,
     transitionRegistry = GeneratedTransitionRegistry,
     enablePredictiveBack = true,
@@ -215,7 +215,7 @@ import com.example.navigation.generated.GeneratedScreenRegistry
 import com.example.navigation.generated.GeneratedScopeRegistry
 import com.example.navigation.generated.GeneratedContainerRegistry
 import com.example.navigation.generated.GeneratedTransitionRegistry
-import com.example.navigation.generated.GeneratedWrapperRegistry
+// GeneratedWrapperRegistry has been merged into ContainerRegistry
 import com.example.navigation.generated.GeneratedDeepLinkHandlerImpl
 import com.example.navigation.generated.buildMainTabsNavNode
 ```
@@ -264,7 +264,7 @@ fun App() {
         NavigationHost(
             navigator = navigator,
             screenRegistry = GeneratedScreenRegistry,
-            wrapperRegistry = GeneratedWrapperRegistry,
+            containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
             scopeRegistry = GeneratedScopeRegistry,
             transitionRegistry = GeneratedTransitionRegistry
         )
@@ -409,7 +409,7 @@ fun App() {
 | `GeneratedScopeRegistry` | `GeneratedNavigationConfig.scopeRegistry` |
 | `GeneratedContainerRegistry` | `GeneratedNavigationConfig.containerRegistry` |
 | `GeneratedTransitionRegistry` | `GeneratedNavigationConfig.transitionRegistry` |
-| `GeneratedWrapperRegistry` | `GeneratedNavigationConfig.wrapperRegistry` |
+| `GeneratedWrapperRegistry` | **Removed** - now part of `containerRegistry` |
 | `GeneratedDeepLinkHandlerImpl` | `GeneratedNavigationConfig.deepLinkHandler` |
 
 ### NavigationHost Parameters
@@ -417,7 +417,7 @@ fun App() {
 | Old Parameters | New Parameter |
 |----------------|---------------|
 | `screenRegistry = ...` | `config = GeneratedNavigationConfig` |
-| `wrapperRegistry = ...` | (included in config) |
+| `containerRegistry = ...` | (included in config, now includes wrapper functionality) |
 | `scopeRegistry = ...` | (included in config) |
 | `transitionRegistry = ...` | (included in config) |
 
@@ -456,14 +456,14 @@ fun App() {
 
 ### Scenario 2: I have custom screen wrappers
 
-**Solution**: Wrappers are included in the config - no changes needed
+**Solution**: Wrappers are now part of `containerRegistry` - no changes needed
 
 ```kotlin
-// Wrappers defined via @TabWrapper/@PaneWrapper annotations
-// are automatically included in GeneratedNavigationConfig.wrapperRegistry
+// Wrappers defined via @TabsContainer/@PaneContainer annotations
+// are automatically included in GeneratedNavigationConfig.containerRegistry
 NavigationHost(
     navigator = navigator,
-    config = GeneratedNavigationConfig  // wrappers included
+    config = GeneratedNavigationConfig  // wrappers included in containerRegistry
 )
 ```
 

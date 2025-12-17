@@ -48,7 +48,7 @@ import kotlin.reflect.KClass
  * @see TabEntry
  */
 @NavigationConfigDsl
-public class TabsBuilder {
+class TabsBuilder {
 
     /**
      * List of tab entries configured for this container.
@@ -61,7 +61,7 @@ public class TabsBuilder {
      *
      * Defaults to 0 (first tab).
      */
-    public var initialTab: Int = 0
+    var initialTab: Int = 0
 
     /**
      * Adds a flat screen tab (no nested navigation).
@@ -78,7 +78,7 @@ public class TabsBuilder {
      * @param title Optional display title for the tab
      * @param icon Optional icon for the tab (type is Any to support various icon types)
      */
-    public fun tab(
+    fun tab(
         destination: Destination,
         title: String? = null,
         icon: Any? = null
@@ -113,7 +113,7 @@ public class TabsBuilder {
      * @param icon Optional icon for the tab
      * @param builder Stack configuration lambda
      */
-    public fun tab(
+    fun tab(
         destination: Destination,
         title: String?,
         icon: Any?,
@@ -153,7 +153,7 @@ public class TabsBuilder {
      * @param title Optional display title for the tab
      * @param icon Optional icon for the tab
      */
-    public fun containerTab(
+    fun containerTab(
         containerClass: KClass<out Destination>,
         title: String? = null,
         icon: Any? = null
@@ -180,7 +180,7 @@ public class TabsBuilder {
      * @param title Optional display title for the tab
      * @param icon Optional icon for the tab
      */
-    public inline fun <reified D : Destination> containerTab(
+    inline fun <reified D : Destination> containerTab(
         title: String? = null,
         icon: Any? = null
     ) {
@@ -192,7 +192,7 @@ public class TabsBuilder {
      *
      * @return [BuiltTabsConfig] containing all tab entries and settings
      */
-    public fun build(): BuiltTabsConfig = BuiltTabsConfig(
+    fun build(): BuiltTabsConfig = BuiltTabsConfig(
         tabs = tabs.toList(),
         initialTab = initialTab
     )
@@ -206,17 +206,17 @@ public class TabsBuilder {
  * - [NestedStack]: A destination with its own navigation stack
  * - [ContainerReference]: A reference to an existing container
  */
-public sealed class TabEntry {
+sealed class TabEntry {
 
     /**
      * Display title for this tab.
      */
-    public abstract val title: String?
+    abstract val title: String?
 
     /**
      * Icon for this tab (supports various icon types).
      */
-    public abstract val icon: Any?
+    abstract val icon: Any?
 
     /**
      * A tab displaying a single screen without nested navigation.
@@ -226,7 +226,7 @@ public sealed class TabEntry {
      * @property title Display title
      * @property icon Tab icon
      */
-    public data class FlatScreen(
+    data class FlatScreen(
         val destination: Destination,
         val destinationClass: KClass<out Destination>,
         override val title: String?,
@@ -242,7 +242,7 @@ public sealed class TabEntry {
      * @property title Display title
      * @property icon Tab icon
      */
-    public data class NestedStack(
+    data class NestedStack(
         val rootDestination: Destination,
         val destinationClass: KClass<out Destination>,
         val screens: List<StackScreenEntry>,
@@ -257,7 +257,7 @@ public sealed class TabEntry {
      * @property title Display title
      * @property icon Tab icon
      */
-    public data class ContainerReference(
+    data class ContainerReference(
         val containerClass: KClass<out Destination>,
         override val title: String?,
         override val icon: Any?

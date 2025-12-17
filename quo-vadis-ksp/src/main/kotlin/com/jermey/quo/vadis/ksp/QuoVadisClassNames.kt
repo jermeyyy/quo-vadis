@@ -3,9 +3,8 @@ package com.jermey.quo.vadis.ksp
 import com.jermey.quo.vadis.core.navigation.compose.animation.TransitionScope
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerInfo
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneWrapperScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
@@ -39,17 +38,14 @@ internal object QuoVadisClassNames {
     // Compose classes
     val TRANSITION_SCOPE: ClassName = TransitionScope::class.toClassName()
     
-    // Wrapper registry classes (Phase 2: Hierarchical Rendering)
-    val WRAPPER_REGISTRY: ClassName = WrapperRegistry::class.toClassName()
-    val TAB_WRAPPER_SCOPE: ClassName = TabWrapperScope::class.toClassName()
-    val PANE_WRAPPER_SCOPE: ClassName = PaneWrapperScope::class.toClassName()
-    
-    // Container registry classes (Container-Aware Navigation)
+    // Container registry classes (unified container building + wrapper rendering)
     val CONTAINER_REGISTRY: ClassName = ContainerRegistry::class.toClassName()
     val CONTAINER_INFO: ClassName = ContainerInfo::class.toClassName()
     val CONTAINER_INFO_TAB_CONTAINER: ClassName = ContainerInfo.TabContainer::class.toClassName()
     val CONTAINER_INFO_PANE_CONTAINER: ClassName = ContainerInfo.PaneContainer::class.toClassName()
     val PANE_ROLE: ClassName = PaneRole::class.toClassName()
+    val TABS_CONTAINER_SCOPE: ClassName = TabsContainerScope::class.toClassName()
+    val PANE_CONTAINER_SCOPE: ClassName = PaneContainerScope::class.toClassName()
     
     // Annotation classes (for KSP processing)
     val ARGUMENT_ANNOTATION: ClassName = ClassName(

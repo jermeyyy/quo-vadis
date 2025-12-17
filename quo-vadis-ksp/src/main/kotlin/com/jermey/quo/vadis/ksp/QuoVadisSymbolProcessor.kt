@@ -261,18 +261,18 @@ class QuoVadisSymbolProcessor(
     }
 
     /**
-     * Collects @TabWrapper and @PaneWrapper annotated functions.
+     * Collects @TabsContainer and @PaneContainer annotated functions.
      */
     private fun collectWrappers(resolver: Resolver) {
-        val tabWrappers = wrapperExtractor.extractTabWrappers(resolver)
-        val paneWrappers = wrapperExtractor.extractPaneWrappers(resolver)
-        collectedWrappers.addAll(tabWrappers)
-        collectedWrappers.addAll(paneWrappers)
+        val tabsContainers = wrapperExtractor.extractTabsContainers(resolver)
+        val paneContainers = wrapperExtractor.extractPaneContainers(resolver)
+        collectedWrappers.addAll(tabsContainers)
+        collectedWrappers.addAll(paneContainers)
         // Track originating files from wrappers
-        tabWrappers.forEach { wrapper ->
+        tabsContainers.forEach { wrapper ->
             wrapper.functionDeclaration.containingFile?.let { originatingFiles.add(it) }
         }
-        paneWrappers.forEach { wrapper ->
+        paneContainers.forEach { wrapper ->
             wrapper.functionDeclaration.containingFile?.let { originatingFiles.add(it) }
         }
     }

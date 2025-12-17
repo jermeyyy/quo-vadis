@@ -6,21 +6,21 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 /**
  * Type of wrapper - distinguishes between tab and pane wrappers.
  */
-public enum class WrapperType {
+enum class WrapperType {
     /**
-     * Tab wrapper for [com.jermey.quo.vadis.annotations.TabWrapper].
+     * Tab wrapper for [com.jermey.quo.vadis.annotations.TabsContainer].
      */
     TAB,
 
     /**
-     * Pane wrapper for [com.jermey.quo.vadis.annotations.PaneWrapper].
+     * Pane wrapper for [com.jermey.quo.vadis.annotations.PaneContainer].
      */
     PANE
 }
 
 /**
- * Extracted metadata from a [@TabWrapper][com.jermey.quo.vadis.annotations.TabWrapper]
- * or [@PaneWrapper][com.jermey.quo.vadis.annotations.PaneWrapper] annotation.
+ * Extracted metadata from a [@TabsContainer][com.jermey.quo.vadis.annotations.TabsContainer]
+ * or [@PaneContainer][com.jermey.quo.vadis.annotations.PaneContainer] annotation.
  *
  * Wrapper info connects a @Composable wrapper function to a tab/pane class.
  * The wrapper provides the UI chrome (tab bar, navigation rail, split view, etc.)
@@ -28,13 +28,13 @@ public enum class WrapperType {
  *
  * ## Generated Code Usage
  *
- * The KSP generator uses this info to create entries in `GeneratedWrapperRegistry`:
+ * The KSP generator uses this info to create entries in `GeneratedNavigationConfig.containerRegistry`:
  *
  * ```kotlin
  * @Composable
- * override fun TabWrapper(tabNodeKey: String, scope: TabWrapperScope, content: @Composable () -> Unit) {
+ * override fun TabsContainer(tabNodeKey: String, scope: TabsContainerScope, content: @Composable () -> Unit) {
  *     when (tabNodeKey) {
- *         "com.example.MainTabs" -> MainTabsWrapper(scope, content) // uses targetClass
+ *         "com.example.MainTabs" -> MainTabsContainer(scope, content) // uses targetClass
  *         // ...
  *     }
  * }
@@ -49,7 +49,7 @@ public enum class WrapperType {
  * @property containingFile File path containing this function, for KSP incremental compilation
  * @property wrapperType Whether this is a TAB or PANE wrapper
  */
-public data class WrapperInfo(
+data class WrapperInfo(
     val functionDeclaration: KSFunctionDeclaration,
     val functionName: String,
     val packageName: String,

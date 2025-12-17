@@ -348,11 +348,11 @@ A critical insight of the refined architecture is that **users must control wrap
 - User executes this lambda in their own composable hierarchy (inside their scaffold, after their app bar, etc.)
 - Library only controls what content goes into that slot
 
-**TabNode Wrapper API:**
+**TabNode Container API:**
 ```kotlin
 QuoVadisHost(
     navigator = navigator,
-    tabWrapper = { tabNode, tabContent ->
+    tabsContainer = { tabNode, tabContent ->
         Scaffold(
             topBar = { TopAppBar(title = { Text("My App") }) },
             bottomBar = { MyBottomNavigation(tabNode.activeStackIndex) }
@@ -365,11 +365,11 @@ QuoVadisHost(
 ) { destination -> /* screen content */ }
 ```
 
-**PaneNode Wrapper API (Large Screens):**
+**PaneNode Container API (Large Screens):**
 ```kotlin
 QuoVadisHost(
     navigator = navigator,
-    paneWrapper = { paneNode, paneContents ->
+    paneContainer = { paneNode, paneContents ->
         Row {
             paneContents.forEach { pane ->
                 val weight = if (pane.role == PaneRole.LIST) 0.35f else 0.65f
@@ -434,7 +434,7 @@ The user specifically requested "Panes." This implies support for large screens 
 - The `flattenPane()` algorithm branches based on width class:
   - Compact: `flattenPaneAsStack()` - single pane, full caching
   - Medium/Expanded: `flattenPaneMultiPane()` - user wrapper with pane list
-- User provides `paneWrapper` composable that receives `List<PaneContent>`
+- User provides `paneContainer` composable that receives `List<PaneContent>`
 - Each `PaneContent` contains `paneRole` and `@Composable content`
 
 ## ---
@@ -453,7 +453,7 @@ The following table summarizes the key API changes. Since backward compatibility
 | **Graph Definition** | `@Graph` on Sealed Class | `@Stack`, `@Tab`, `@Pane` containers | Update annotation, define container type explicitly |
 | **Route Definition** | `@Route("path")` | `@Destination(route = "path/{param}")` | Rename annotation, add route template parameters |
 | **Content Binding** | `@Content(Dest::class)` | `@Screen(Dest::class)` | Rename annotation |
-| **Tab Navigation** | `TabbedNavHost` + `TabNavigatorState` | `@Tab` + `QuoVadisHost(tabWrapper = {...})` | Replace host, use wrapper pattern |
+| **Tab Navigation** | `TabbedNavHost` + `TabNavigatorState` | `@Tab` + `QuoVadisHost(tabsContainer = {...})` | Replace host, use container pattern |
 | **Navigation Host** | `GraphNavHost(navigator)` | `QuoVadisHost(navigator, screenRegistry)` | Single host for all navigation types |
 | **Transitions** | Per-call `NavigationTransition` param | `AnimationRegistry` | Configure transitions centrally |
 | **Arguments** | `@Argument` + `TypedDestination<T>` | Route template `{param}` | Use data class params directly |
@@ -619,7 +619,7 @@ sealed class MainTabs : Destination {
     data object Profile : MainTabs()
 }
 
-// App entry point with tabWrapper
+// App entry point with tabsContainer
 @Composable
 fun App() {
     val navTree = remember { buildMainTabsNavNode() }  // KSP-generated
@@ -628,7 +628,7 @@ fun App() {
     QuoVadisHost(
         navigator = navigator,
         screenRegistry = GeneratedScreenRegistry,
-        tabWrapper = { tabNode, tabContent ->
+        tabsContainer = { tabNode, tabContent ->
             Scaffold(
                 bottomBar = { MyBottomNavigation(tabNode.activeStackIndex) }
             ) { padding ->
@@ -647,8 +647,8 @@ navigator.switchTab(MainTabs.Profile)
 **Key Changes:**
 - No separate `TabbedNavigatorConfig` needed
 - `@Tab` + `@TabItem` annotations replace config objects
-- `TabbedNavHost` → `QuoVadisHost` with `tabWrapper` parameter
-- User controls wrapper (scaffold/bottom nav), library provides content slot
+- `TabbedNavHost` → `QuoVadisHost` with `tabsContainer` parameter
+- User controls container (scaffold/bottom nav), library provides content slot
 - New `switchTab()` method for tab switching
 
 #### Example 4: Defining Destinations (General Pattern)
@@ -712,7 +712,7 @@ The demo app (`composeApp`) serves as the reference implementation and will be r
 
 1. **Update all destination definitions** - Replace `@Graph`/`@Route` with `@Stack`/`@Tab`/`@Pane`/`@Destination`
 2. **Update all screen bindings** - Replace `@Content` with `@Screen`
-3. **Replace navigation hosts** - Single `QuoVadisHost` with `tabWrapper` and `paneWrapper`
+3. **Replace navigation hosts** - Single `QuoVadisHost` with `tabsContainer` and `paneContainer`
 4. **Configure animation registry** - Centralize transition definitions
 5. **Update navigation calls** - Use new `switchTab()` and destination-based navigation
 

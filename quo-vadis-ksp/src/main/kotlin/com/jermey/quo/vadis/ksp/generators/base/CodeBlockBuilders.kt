@@ -270,36 +270,36 @@ object CodeBlockBuilders {
     // ═══════════════════════════════════════════════════════════════════════
 
     /**
-     * Builds a `tabWrapper()` DSL block.
+     * Builds a `tabsContainer()` DSL block.
      *
      * @param wrapperKey The wrapper key identifier
      * @param wrapperContent CodeBlock containing wrapper composable content
-     * @return CodeBlock for the tab wrapper registration
+     * @return CodeBlock for the tabs container registration
      */
-    fun buildTabWrapperBlock(
+    fun buildTabsContainerBlock(
         wrapperKey: String,
         wrapperContent: CodeBlock
     ): CodeBlock {
         return CodeBlock.builder()
-            .beginControlFlow("tabWrapper(%S)", wrapperKey)
+            .beginControlFlow("tabsContainer(%S)", wrapperKey)
             .add(wrapperContent)
             .endControlFlow()
             .build()
     }
 
     /**
-     * Builds a `paneWrapper()` DSL block.
+     * Builds a `paneContainer()` DSL block.
      *
-     * @param wrapperKey The wrapper key identifier
-     * @param wrapperContent CodeBlock containing wrapper composable content
-     * @return CodeBlock for the pane wrapper registration
+     * @param wrapperKey The container key identifier
+     * @param wrapperContent CodeBlock containing container composable content
+     * @return CodeBlock for the pane container registration
      */
-    fun buildPaneWrapperBlock(
+    fun buildPaneContainerBlock(
         wrapperKey: String,
         wrapperContent: CodeBlock
     ): CodeBlock {
         return CodeBlock.builder()
-            .beginControlFlow("paneWrapper(%S)", wrapperKey)
+            .beginControlFlow("paneContainer(%S)", wrapperKey)
             .add(wrapperContent)
             .endControlFlow()
             .build()

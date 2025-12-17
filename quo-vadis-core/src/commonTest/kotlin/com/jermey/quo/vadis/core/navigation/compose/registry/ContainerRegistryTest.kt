@@ -1,5 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.compose.registry
 
+import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
@@ -296,17 +299,15 @@ class ContainerRegistryTest {
             scopeKey = "MainTabs"
         )
 
-        val registry = object : ContainerRegistry {
-            override fun getContainerInfo(destination: Destination): ContainerInfo? {
-                return when (destination) {
-                    is MainTabs -> tabContainerInfo.copy(
-                        initialTabIndex = when (destination) {
-                            MainTabs.HomeTab -> 0
-                            MainTabs.SettingsTab -> 1
-                        }
-                    )
-                    else -> null
-                }
+        val registry = createTestContainerRegistry { destination ->
+            when (destination) {
+                is MainTabs -> tabContainerInfo.copy(
+                    initialTabIndex = when (destination) {
+                        MainTabs.HomeTab -> 0
+                        MainTabs.SettingsTab -> 1
+                    }
+                )
+                else -> null
             }
         }
 
@@ -325,17 +326,15 @@ class ContainerRegistryTest {
             scopeKey = "DetailPane"
         )
 
-        val registry = object : ContainerRegistry {
-            override fun getContainerInfo(destination: Destination): ContainerInfo? {
-                return when (destination) {
-                    is DetailPane -> paneContainerInfo.copy(
-                        initialPane = when (destination) {
-                            DetailPane.ListItem -> PaneRole.Primary
-                            DetailPane.DetailItem -> PaneRole.Supporting
-                        }
-                    )
-                    else -> null
-                }
+        val registry = createTestContainerRegistry { destination ->
+            when (destination) {
+                is DetailPane -> paneContainerInfo.copy(
+                    initialPane = when (destination) {
+                        DetailPane.ListItem -> PaneRole.Primary
+                        DetailPane.DetailItem -> PaneRole.Supporting
+                    }
+                )
+                else -> null
             }
         }
 
@@ -348,17 +347,15 @@ class ContainerRegistryTest {
 
     @Test
     fun `Custom registry returns null for unregistered destinations`() {
-        val registry = object : ContainerRegistry {
-            override fun getContainerInfo(destination: Destination): ContainerInfo? {
-                return if (destination is MainTabs) {
-                    ContainerInfo.TabContainer(
-                        builder = createTabNodeBuilder(),
-                        initialTabIndex = 0,
-                        scopeKey = "MainTabs"
-                    )
-                } else {
-                    null
-                }
+        val registry = createTestContainerRegistry { destination ->
+            if (destination is MainTabs) {
+                ContainerInfo.TabContainer(
+                    builder = createTabNodeBuilder(),
+                    initialTabIndex = 0,
+                    scopeKey = "MainTabs"
+                )
+            } else {
+                null
             }
         }
 
@@ -379,13 +376,11 @@ class ContainerRegistryTest {
             scopeKey = "DetailPane"
         )
 
-        val registry = object : ContainerRegistry {
-            override fun getContainerInfo(destination: Destination): ContainerInfo? {
-                return when (destination) {
-                    is MainTabs -> tabInfo
-                    is DetailPane -> paneInfo
-                    else -> null
-                }
+        val registry = createTestContainerRegistry { destination ->
+            when (destination) {
+                is MainTabs -> tabInfo
+                is DetailPane -> paneInfo
+                else -> null
             }
         }
 
@@ -447,5 +442,43 @@ class ContainerRegistryTest {
             is ContainerInfo.PaneContainer -> "pane"
         }
         assertEquals("pane", paneType)
+    }
+
+    // =========================================================================
+    // HELPER FUNCTIONS
+    // =========================================================================
+
+    /**
+     * Creates a test ContainerRegistry with default wrapper implementations.
+     * Only the getContainerInfo function needs custom logic.
+     */
+    private fun createTestContainerRegistry(
+        getContainerInfoImpl: (Destination) -> ContainerInfo?
+    ): ContainerRegistry = object : ContainerRegistry {
+        override fun getContainerInfo(destination: Destination): ContainerInfo? =
+            getContainerInfoImpl(destination)
+
+        @Composable
+        override fun TabsContainer(
+            tabNodeKey: String,
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            // Default: just render content
+            content()
+        }
+
+        @Composable
+        override fun PaneContainer(
+            paneNodeKey: String,
+            scope: PaneContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            // Default: just render content
+            content()
+        }
+
+        override fun hasTabsContainer(tabNodeKey: String): Boolean = false
+        override fun hasPaneContainer(paneNodeKey: String): Boolean = false
     }
 }

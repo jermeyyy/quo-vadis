@@ -45,7 +45,7 @@ val config = navigationConfig {
     transition<DetailDestination>(NavTransitions.SharedElement)
     
     // Wrappers
-    tabWrapper("main") { CustomTabBar { content() } }
+    tabsContainer("main") { CustomTabBar { content() } }
 }
 ```
 
@@ -337,13 +337,13 @@ class NavigationConfigBuilder {
     // Wrapper Registrations
     // ========================================
     
-    internal val tabWrappers = mutableMapOf<String, @Composable TabWrapperScope.() -> Unit>()
-    internal val paneWrappers = mutableMapOf<String, @Composable PaneWrapperScope.() -> Unit>()
+    internal val tabsContainers = mutableMapOf<String, @Composable TabsContainerScope.() -> Unit>()
+    internal val paneContainers = mutableMapOf<String, @Composable PaneContainerScope.() -> Unit>()
     
     /**
-     * Register a tab wrapper.
+     * Register a tabs container.
      * 
-     * Tab wrappers provide custom UI around tab content,
+     * Tabs containers provide custom UI around tab content,
      * typically implementing the tab bar.
      * 
      * @param key Wrapper key (referenced in tabs() builder)
@@ -351,7 +351,7 @@ class NavigationConfigBuilder {
      * 
      * ## Example
      * ```kotlin
-     * tabWrapper("main") {
+     * tabsContainer("main") {
      *     CustomTabBar(
      *         tabs = tabs,
      *         selectedIndex = activeTabIndex,
@@ -362,14 +362,14 @@ class NavigationConfigBuilder {
      * }
      * ```
      */
-    fun tabWrapper(key: String, wrapper: @Composable TabWrapperScope.() -> Unit) {
-        tabWrappers[key] = wrapper
+    fun tabsContainer(key: String, wrapper: @Composable TabsContainerScope.() -> Unit) {
+        tabsContainers[key] = wrapper
     }
     
     /**
-     * Register a pane wrapper.
+     * Register a pane container.
      * 
-     * Pane wrappers provide custom UI around pane content,
+     * Pane containers provide custom UI around pane content,
      * typically implementing adaptive layouts.
      * 
      * @param key Wrapper key (referenced in panes() builder)
@@ -377,7 +377,7 @@ class NavigationConfigBuilder {
      * 
      * ## Example
      * ```kotlin
-     * paneWrapper("masterDetail") {
+     * paneContainer("masterDetail") {
      *     TwoPaneLayout(
      *         primaryContent = { primaryPaneContent() },
      *         secondaryContent = { secondaryPaneContent() }
@@ -385,8 +385,8 @@ class NavigationConfigBuilder {
      * }
      * ```
      */
-    fun paneWrapper(key: String, wrapper: @Composable PaneWrapperScope.() -> Unit) {
-        paneWrappers[key] = wrapper
+    fun paneContainer(key: String, wrapper: @Composable PaneContainerScope.() -> Unit) {
+        paneContainers[key] = wrapper
     }
     
     // ========================================
@@ -406,8 +406,8 @@ class NavigationConfigBuilder {
             containers = containers.toMap(),
             scopes = scopes.mapValues { it.value.toSet() },
             transitions = transitions.toMap(),
-            tabWrappers = tabWrappers.toMap(),
-            paneWrappers = paneWrappers.toMap()
+            tabsContainers = tabsContainers.toMap(),
+            paneContainers = paneContainers.toMap()
         )
     }
 }
@@ -977,8 +977,8 @@ fun PanesBuilder.build(): BuiltPanesConfig {
 - [ ] `panes<D>()` method registers pane containers
 - [ ] `scope()` method defines explicit scope membership
 - [ ] `transition<D>()` method registers transitions
-- [ ] `tabWrapper()` method registers tab wrappers
-- [ ] `paneWrapper()` method registers pane wrappers
+- [ ] `tabsContainer()` method registers tab containers
+- [ ] `paneContainer()` method registers pane containers
 - [ ] `build()` method returns `NavigationConfig`
 - [ ] All methods have KDoc documentation
 - [ ] Reified type parameters used where appropriate
@@ -1103,8 +1103,8 @@ fun build(): NavigationConfig {
         containers = containers.toMap(),
         scopes = scopes.mapValues { it.value.toSet() },
         transitions = transitions.toMap(),
-        tabWrappers = tabWrappers.toMap(),
-        paneWrappers = paneWrappers.toMap()
+        tabsContainers = tabsContainers.toMap(),
+        paneContainers = paneContainers.toMap()
     )
 }
 ```

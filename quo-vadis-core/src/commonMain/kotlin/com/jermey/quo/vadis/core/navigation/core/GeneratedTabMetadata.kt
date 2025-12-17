@@ -38,7 +38,7 @@ import kotlinx.serialization.Serializable
  * @property route The route identifier for this tab's content
  */
 @Serializable
-public data class GeneratedTabMetadata(
+data class GeneratedTabMetadata(
     val label: String,
     val icon: String,
     val route: String

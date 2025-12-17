@@ -44,9 +44,9 @@ fun App() {
     NavigationHost(
         navigator = navigator,
         screenRegistry = GeneratedScreenRegistry,
-        wrapperRegistry = GeneratedWrapperRegistry,
         scopeRegistry = GeneratedScopeRegistry,
         transitionRegistry = GeneratedTransitionRegistry,
+        containerRegistry = GeneratedContainerRegistry, // includes wrapper functionality
         // ... more parameters
     )
 }
@@ -121,10 +121,9 @@ fun App() {
  */
 interface NavigationConfig {
     val screenRegistry: ScreenRegistry
-    val wrapperRegistry: WrapperRegistry
     val scopeRegistry: ScopeRegistry
     val transitionRegistry: TransitionRegistry
-    val containerRegistry: ContainerRegistry
+    val containerRegistry: ContainerRegistry // includes wrapper functionality (tabs/panes)
     val deepLinkHandler: DeepLinkHandler
     
     /**
@@ -168,8 +167,8 @@ class NavigationConfigBuilder {
     // Transitions
     private val transitions = mutableMapOf<KClass<out Destination>, NavTransition>()
     // Wrappers
-    private val tabWrappers = mutableMapOf<String, @Composable TabWrapperScope.() -> Unit>()
-    private val paneWrappers = mutableMapOf<String, @Composable PaneWrapperScope.() -> Unit>()
+    private val tabsContainers = mutableMapOf<String, @Composable TabsContainerScope.() -> Unit>()
+    private val paneContainers = mutableMapOf<String, @Composable PaneContainerScope.() -> Unit>()
     
     /**
      * Register a screen for a destination.
@@ -243,17 +242,17 @@ class NavigationConfigBuilder {
     }
     
     /**
-     * Register tab wrapper.
+     * Register tabs container.
      */
-    fun tabWrapper(key: String, wrapper: @Composable TabWrapperScope.() -> Unit) {
-        tabWrappers[key] = wrapper
+    fun tabsContainer(key: String, wrapper: @Composable TabsContainerScope.() -> Unit) {
+        tabsContainers[key] = wrapper
     }
     
     /**
-     * Register pane wrapper.
+     * Register pane container.
      */
-    fun paneWrapper(key: String, wrapper: @Composable PaneWrapperScope.() -> Unit) {
-        paneWrappers[key] = wrapper
+    fun paneContainer(key: String, wrapper: @Composable PaneContainerScope.() -> Unit) {
+        paneContainers[key] = wrapper
     }
     
     fun build(): NavigationConfig = DslNavigationConfig(
@@ -261,8 +260,8 @@ class NavigationConfigBuilder {
         containers = containers.toMap(),
         scopes = scopes.mapValues { it.value.toSet() },
         transitions = transitions.toMap(),
-        tabWrappers = tabWrappers.toMap(),
-        paneWrappers = paneWrappers.toMap()
+        tabsContainers = tabsContainers.toMap(),
+        paneContainers = paneContainers.toMap()
     )
 }
 
@@ -560,7 +559,7 @@ object GeneratedNavigationConfig : NavigationConfig {
         // WRAPPERS
         // ─────────────────────────────────────
         
-        tabWrapper("mainTabsWrapper") {
+        tabsContainer("mainTabsWrapper") {
             CustomTabBar(
                 tabs = tabs,
                 selectedIndex = activeTabIndex,
@@ -570,7 +569,7 @@ object GeneratedNavigationConfig : NavigationConfig {
             }
         }
         
-        paneWrapper("masterDetailWrapper") {
+        paneContainer("masterDetailWrapper") {
             CustomPaneLayout(
                 primaryContent = { PrimaryPaneContent() },
                 secondaryContent = { SecondaryPaneContent() }
@@ -583,10 +582,9 @@ object GeneratedNavigationConfig : NavigationConfig {
     // ===========================================
     
     override val screenRegistry: ScreenRegistry = config.screenRegistry
-    override val wrapperRegistry: WrapperRegistry = config.wrapperRegistry
     override val scopeRegistry: ScopeRegistry = config.scopeRegistry
     override val transitionRegistry: TransitionRegistry = config.transitionRegistry
-    override val containerRegistry: ContainerRegistry = config.containerRegistry
+    override val containerRegistry: ContainerRegistry = config.containerRegistry // includes wrapper functionality
     override val deepLinkHandler: DeepLinkHandler = config.deepLinkHandler
     
     override fun buildNavNode(
@@ -662,7 +660,7 @@ fun QuoVadisNavigation(
         navigator = navigator,
         modifier = modifier,
         screenRegistry = config.screenRegistry,
-        wrapperRegistry = config.wrapperRegistry,
+        containerRegistry = config.containerRegistry, // includes wrapper functionality
         transitionRegistry = config.transitionRegistry,
         scopeRegistry = config.scopeRegistry,
         enablePredictiveBack = enablePredictiveBack,
@@ -687,7 +685,7 @@ fun NavigationHost(
         navigator = navigator,
         modifier = modifier,
         screenRegistry = config.screenRegistry,
-        wrapperRegistry = config.wrapperRegistry,
+        containerRegistry = config.containerRegistry, // includes wrapper functionality
         transitionRegistry = config.transitionRegistry,
         scopeRegistry = config.scopeRegistry,
         enablePredictiveBack = enablePredictiveBack,
@@ -825,7 +823,7 @@ fun NavigationHost(
 | `ContainerRegistryGenerator` | Convert to generate DSL blocks |
 | `ScopeRegistryGenerator` | Convert to generate DSL blocks |
 | `NavNodeBuilderGenerator` | Deprecate, keep for compatibility |
-| `WrapperRegistryGenerator` | Convert to generate DSL blocks |
+| `WrapperRegistryGenerator` | **Merged into ContainerRegistry** - wrapper functionality now handled by ContainerRegistry |
 | `TransitionRegistryGenerator` | Convert to generate DSL blocks |
 | `DeepLinkHandlerGenerator` | Integrate into config generator |
 
@@ -1037,14 +1035,13 @@ object GeneratedNavigationConfig : NavigationConfig {
         // WRAPPERS
         // ═══════════════════════════════════════════════
         
-        tabWrapper("mainTabsWrapper") {
+        tabsContainer("mainTabsWrapper") {
             CustomTabBar(tabs, activeTabIndex, ::switchToTab) { content() }
         }
     }
     
     // Delegate implementation
     override val screenRegistry = config.screenRegistry
-    override val wrapperRegistry = config.wrapperRegistry
     override val scopeRegistry = config.scopeRegistry
     override val transitionRegistry = config.transitionRegistry
     override val containerRegistry = config.containerRegistry
@@ -1214,7 +1211,7 @@ scopeBlock := 'scope' '(' STRING ',' KClass* ')'
 
 transitionBlock := 'transition' '<' DestinationType '>' '(' NavTransition ')'
 
-wrapperBlock := 'tabWrapper' '(' STRING ')' '{' composableContent '}' | 'paneWrapper' '(' STRING ')' '{' composableContent '}'
+wrapperBlock := 'tabsContainer' '(' STRING ')' '{' composableContent '}' | 'paneContainer' '(' STRING ')' '{' composableContent '}'
 
 containerParams := ('scopeKey' '=' STRING)? (',' 'wrapperKey' '=' STRING)?
 tabParams := 'destination' '=' Destination (',' 'title' '=' STRING)? (',' 'icon' '=' Any)?
@@ -1233,7 +1230,7 @@ paneParams := ('weight' '=' FLOAT)? (',' 'minWidth' '=' Dp)?
 | Stack Container | `@Stack` annotation | DSL `stack<T>` block | ✅ Both work |
 | Scope Definition | Annotation inference | DSL `scope()` + auto | ✅ Both work |
 | Transitions | `@Transition` annotation | DSL `transition<T>` | ✅ Both work |
-| Wrappers | `@TabWrapper`/`@PaneWrapper` | DSL wrapper blocks | ✅ Both work |
+| Wrappers | `@TabsContainer`/`@PaneContainer` | DSL wrapper blocks | ✅ Both work |
 | Deep Links | `@Destination(route=)` | DSL extension (future) | ✅ Both work |
 | NavigationHost | Multiple params | Single config param | ✅ Both work |
 | Navigator Creation | Manual | `rememberQuoVadisNavigator` | ✅ Both work |

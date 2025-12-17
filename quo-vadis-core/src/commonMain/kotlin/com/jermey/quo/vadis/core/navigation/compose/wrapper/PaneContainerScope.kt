@@ -8,32 +8,32 @@ import com.jermey.quo.vadis.core.navigation.core.PaneRole
 /**
  * Represents the content of a single pane in a multi-pane layout.
  *
- * Used by [PaneWrapper] to provide pane information and content
- * to user-defined wrapper composables.
+ * Used by [PaneContainer] to provide pane information and content
+ * to user-defined container composables.
  *
  * @property role The semantic role of this pane (Primary, Supporting, or Extra)
  * @property content The composable content to render in this pane
  * @property isVisible Whether this pane should be visible in the current layout
  */
-public data class PaneContent(
+data class PaneContent(
     val role: PaneRole,
     val content: @Composable () -> Unit,
     val isVisible: Boolean = true
 )
 
 /**
- * Scope interface for pane wrapper composables.
+ * Scope interface for pane container composables.
  *
  * This scope provides access to the pane layout state and configuration,
- * allowing user-defined wrappers to implement custom multi-pane layouts
+ * allowing user-defined containers to implement custom multi-pane layouts
  * while delegating content rendering to the library.
  *
  * ## Usage
  *
- * The scope is receiver for [PaneWrapper] composables:
+ * The scope is receiver for [PaneContainer] composables:
  *
  * ```kotlin
- * val myPaneWrapper: PaneWrapper = { paneContents ->
+ * val myPaneContainer: PaneContainer = { paneContents ->
  *     Row(modifier = Modifier.fillMaxSize()) {
  *         paneContents.filter { it.isVisible }.forEach { pane ->
  *             val weight = when (pane.role) {
@@ -49,12 +49,12 @@ public data class PaneContent(
  * }
  * ```
  *
- * @see PaneWrapper
+ * @see PaneContainer
  * @see PaneContent
  * @see PaneRole
  */
 @Stable
-public interface PaneWrapperScope {
+interface PaneContainerScope {
 
     /**
      * The navigator instance for this pane container.
@@ -62,7 +62,7 @@ public interface PaneWrapperScope {
      * Can be used for programmatic navigation or accessing
      * navigation state.
      */
-    public val navigator: Navigator
+    val navigator: Navigator
 
     /**
      * The currently active pane role.
@@ -70,12 +70,12 @@ public interface PaneWrapperScope {
      * In single-pane mode (e.g., on phones), this indicates
      * which pane is currently visible.
      */
-    public val activePaneRole: PaneRole
+    val activePaneRole: PaneRole
 
     /**
      * Total number of panes configured in this container.
      */
-    public val paneCount: Int
+    val paneCount: Int
 
     /**
      * Number of panes currently visible.
@@ -83,7 +83,7 @@ public interface PaneWrapperScope {
      * This may differ from [paneCount] based on screen size
      * and adaptive layout configuration.
      */
-    public val visiblePaneCount: Int
+    val visiblePaneCount: Int
 
     /**
      * Whether the layout is in expanded (multi-pane) mode.
@@ -91,12 +91,12 @@ public interface PaneWrapperScope {
      * - `true`: Multiple panes are visible side-by-side
      * - `false`: Single pane mode (stack-like behavior)
      */
-    public val isExpanded: Boolean
+    val isExpanded: Boolean
 
     /**
      * Whether a pane transition animation is in progress.
      */
-    public val isTransitioning: Boolean
+    val isTransitioning: Boolean
 
     /**
      * Navigate to show the specified pane role.
@@ -106,13 +106,13 @@ public interface PaneWrapperScope {
      *
      * @param role The pane role to navigate to
      */
-    public fun navigateToPane(role: PaneRole)
+    fun navigateToPane(role: PaneRole)
 }
 
 /**
- * Internal implementation of [PaneWrapperScope].
+ * Internal implementation of [PaneContainerScope].
  *
- * Created when processing PaneNode to provide the wrapper composable
+ * Created when processing PaneNode to provide the container composable
  * with access to pane layout state and actions.
  *
  * @property navigator The navigator instance for this pane container
@@ -123,7 +123,7 @@ public interface PaneWrapperScope {
  * @property isTransitioning Whether a pane transition is in progress
  * @property onNavigateToPane Callback invoked when navigating to a pane
  */
-internal class PaneWrapperScopeImpl(
+internal class PaneContainerScopeImpl(
     override val navigator: Navigator,
     override val activePaneRole: PaneRole,
     override val paneCount: Int,
@@ -131,7 +131,7 @@ internal class PaneWrapperScopeImpl(
     override val isExpanded: Boolean,
     override val isTransitioning: Boolean,
     private val onNavigateToPane: (PaneRole) -> Unit
-) : PaneWrapperScope {
+) : PaneContainerScope {
 
     override fun navigateToPane(role: PaneRole) {
         onNavigateToPane(role)
@@ -139,9 +139,9 @@ internal class PaneWrapperScopeImpl(
 }
 
 /**
- * Creates a [PaneWrapperScopeImpl] with the given parameters.
+ * Creates a [PaneContainerScopeImpl] with the given parameters.
  *
- * Factory function for creating pane wrapper scopes.
+ * Factory function for creating pane container scopes.
  *
  * @param navigator The navigator instance
  * @param activePaneRole Currently active pane role
@@ -149,16 +149,16 @@ internal class PaneWrapperScopeImpl(
  * @param isExpanded Whether in expanded mode
  * @param isTransitioning Whether transitioning between panes
  * @param onNavigateToPane Callback for pane navigation
- * @return A new [PaneWrapperScope] implementation
+ * @return A new [PaneContainerScope] implementation
  */
-internal fun createPaneWrapperScope(
+internal fun createPaneContainerScope(
     navigator: Navigator,
     activePaneRole: PaneRole,
     paneContents: List<PaneContent>,
     isExpanded: Boolean,
     isTransitioning: Boolean,
     onNavigateToPane: (PaneRole) -> Unit
-): PaneWrapperScope = PaneWrapperScopeImpl(
+): PaneContainerScope = PaneContainerScopeImpl(
     navigator = navigator,
     activePaneRole = activePaneRole,
     paneCount = paneContents.size,
@@ -167,3 +167,14 @@ internal fun createPaneWrapperScope(
     isTransitioning = isTransitioning,
     onNavigateToPane = onNavigateToPane
 )
+
+/**
+ * Backward compatibility typealias for [PaneContainerScope].
+ *
+ * @deprecated Use [PaneContainerScope] instead.
+ */
+@Deprecated(
+    message = "Use PaneContainerScope instead",
+    replaceWith = ReplaceWith("PaneContainerScope", "com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope")
+)
+typealias PaneWrapperScope = PaneContainerScope

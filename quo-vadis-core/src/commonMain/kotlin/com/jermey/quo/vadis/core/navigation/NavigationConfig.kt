@@ -4,7 +4,6 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.compose.registry.WrapperRegistry
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavNode
@@ -49,13 +48,12 @@ import kotlin.reflect.KClass
  * all registries from annotated destinations, wrappers, and transitions.
  *
  * @see ScreenRegistry for screen content rendering
- * @see WrapperRegistry for tab and pane wrapper composables
  * @see ScopeRegistry for navigation scope membership
  * @see TransitionRegistry for destination-specific transitions
- * @see ContainerRegistry for container node builders
+ * @see ContainerRegistry for container node builders and wrapper composables
  * @see GeneratedDeepLinkHandler for deep link handling
  */
-public interface NavigationConfig {
+interface NavigationConfig {
 
     /**
      * Registry for mapping destinations to composable screen content.
@@ -63,15 +61,7 @@ public interface NavigationConfig {
      * Used by the navigation renderer to display the appropriate content
      * for each destination in the navigation tree.
      */
-    public val screenRegistry: ScreenRegistry
-
-    /**
-     * Registry for tab and pane wrapper composables.
-     *
-     * Provides custom chrome/UI surrounding navigation content,
-     * such as tab bars, bottom navigation, and multi-pane layouts.
-     */
-    public val wrapperRegistry: WrapperRegistry
+    val screenRegistry: ScreenRegistry
 
     /**
      * Registry for navigation scope membership.
@@ -79,22 +69,24 @@ public interface NavigationConfig {
      * Used to determine whether a destination belongs to a container's
      * scope (TabNode/PaneNode) for scope-aware navigation.
      */
-    public val scopeRegistry: ScopeRegistry
+    val scopeRegistry: ScopeRegistry
 
     /**
      * Registry for destination-specific transition animations.
      *
      * Provides custom transitions defined via annotations on destination classes.
      */
-    public val transitionRegistry: TransitionRegistry
+    val transitionRegistry: TransitionRegistry
 
     /**
-     * Registry for container node builders.
+     * Registry for container node builders and wrapper composables.
      *
      * Maps destinations to their container structures (TabNode, PaneNode)
-     * for automatic container creation during navigation.
+     * for automatic container creation during navigation, and provides
+     * custom wrapper composables for tab bars, bottom navigation, and
+     * multi-pane layouts.
      */
-    public val containerRegistry: ContainerRegistry
+    val containerRegistry: ContainerRegistry
 
     /**
      * Handler for deep link URI parsing and destination creation.
@@ -102,7 +94,7 @@ public interface NavigationConfig {
      * Nullable because not all applications require deep link support.
      * When present, enables URI-based navigation and destination creation.
      */
-    public val deepLinkHandler: GeneratedDeepLinkHandler?
+    val deepLinkHandler: GeneratedDeepLinkHandler?
 
     /**
      * Builds the initial NavNode for the given destination class.
@@ -130,7 +122,7 @@ public interface NavigationConfig {
      * @param parentKey Optional key of the parent node
      * @return The constructed [NavNode], or null if the destination class is not registered
      */
-    public fun buildNavNode(
+    fun buildNavNode(
         destinationClass: KClass<out Destination>,
         key: String? = null,
         parentKey: String? = null
@@ -160,12 +152,12 @@ public interface NavigationConfig {
      * @param other The config to combine with this one
      * @return A new [NavigationConfig] combining both configs
      */
-    public operator fun plus(other: NavigationConfig): NavigationConfig
+    operator fun plus(other: NavigationConfig): NavigationConfig
 
     /**
      * Companion object providing default implementations.
      */
-    public companion object {
+    companion object {
         /**
          * Empty configuration with no registrations.
          *
@@ -178,6 +170,6 @@ public interface NavigationConfig {
          * - `Empty + config` returns `config`
          * - `config + Empty` returns `config`
          */
-        public val Empty: NavigationConfig = EmptyNavigationConfig
+        val Empty: NavigationConfig = EmptyNavigationConfig
     }
 }

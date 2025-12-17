@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.DslNavigationConfig
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneWrapperScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabWrapperScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.Destination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlin.reflect.KClass
@@ -46,7 +46,7 @@ import kotlin.reflect.KClass
  *     transition<DetailScreen>(NavTransition.SlideHorizontal)
  *
  *     // Register wrappers
- *     tabWrapper("main-tabs") { content ->
+ *     tabsContainer("main-tabs") { content ->
  *         MyCustomTabBar(content)
  *     }
  * }
@@ -84,19 +84,19 @@ class NavigationConfigBuilder {
     internal val transitions: MutableMap<KClass<out Destination>, NavTransition> = mutableMapOf()
 
     /**
-     * Custom tab wrapper composables indexed by wrapper key.
+     * Custom tabs container wrapper composables indexed by wrapper key.
      */
-    internal val tabWrappers: MutableMap<
+    internal val tabsContainers: MutableMap<
         String,
-        @Composable TabWrapperScope.(@Composable () -> Unit) -> Unit
+        @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit
         > = mutableMapOf()
 
     /**
-     * Custom pane wrapper composables indexed by wrapper key.
+     * Custom pane container composables indexed by wrapper key.
      */
-    internal val paneWrappers: MutableMap<
+    internal val paneContainers: MutableMap<
         String,
-        @Composable PaneWrapperScope.(@Composable () -> Unit) -> Unit
+        @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit
         > = mutableMapOf()
 
     /**
@@ -310,15 +310,15 @@ class NavigationConfigBuilder {
     }
 
     /**
-     * Registers a custom tab wrapper composable.
+     * Registers a custom tabs container wrapper composable.
      *
-     * Tab wrappers provide custom chrome/UI around tab content, such as
+     * Tabs container wrappers provide custom chrome/UI around tab content, such as
      * bottom navigation bars, navigation rails, or custom tab indicators.
      *
      * ## Example
      *
      * ```kotlin
-     * tabWrapper("main-tabs") { content ->
+     * tabsContainer("main-tabs") { content ->
      *     Scaffold(
      *         bottomBar = {
      *             NavigationBar {
@@ -343,23 +343,23 @@ class NavigationConfigBuilder {
      * @param key Unique identifier for the wrapper (typically matches container scope key)
      * @param wrapper Composable lambda that wraps tab content
      */
-    fun tabWrapper(
+    fun tabsContainer(
         key: String,
-        wrapper: @Composable TabWrapperScope.(@Composable () -> Unit) -> Unit
+        wrapper: @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit
     ) {
-        tabWrappers[key] = wrapper
+        tabsContainers[key] = wrapper
     }
 
     /**
-     * Registers a custom pane wrapper composable.
+     * Registers a custom pane container composable.
      *
-     * Pane wrappers provide custom layouts for multi-pane navigation,
+     * Pane containers provide custom layouts for multi-pane navigation,
      * such as master-detail or three-column layouts.
      *
      * ## Example
      *
      * ```kotlin
-     * paneWrapper("list-detail") { content ->
+     * paneContainer("list-detail") { content ->
      *     Row(Modifier.fillMaxSize()) {
      *         // Custom pane arrangement
      *         content()
@@ -367,14 +367,14 @@ class NavigationConfigBuilder {
      * }
      * ```
      *
-     * @param key Unique identifier for the wrapper (typically matches container scope key)
+     * @param key Unique identifier for the container (typically matches container scope key)
      * @param wrapper Composable lambda that wraps pane content
      */
-    fun paneWrapper(
+    fun paneContainer(
         key: String,
-        wrapper: @Composable PaneWrapperScope.(@Composable () -> Unit) -> Unit
+        wrapper: @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit
     ) {
-        paneWrappers[key] = wrapper
+        paneContainers[key] = wrapper
     }
 
     /**
@@ -391,8 +391,8 @@ class NavigationConfigBuilder {
             containers = containers.toMap(),
             scopes = scopes.mapValues { it.value.toSet() },
             transitions = transitions.toMap(),
-            tabWrappers = tabWrappers.toMap(),
-            paneWrappers = paneWrappers.toMap()
+            tabsContainers = tabsContainers.toMap(),
+            paneContainers = paneContainers.toMap()
         )
     }
 }

@@ -17,7 +17,7 @@ data class WrapperBlockResult(
 )
 
 /**
- * Generates `tabWrapper` and `paneWrapper` DSL blocks.
+ * Generates `tabsContainer` and `paneContainer` DSL blocks.
  *
  * This generator transforms [WrapperInfo] data into KotlinPoet [CodeBlock]s
  * representing wrapper registration DSL calls within the `navigationConfig { }` block.
@@ -38,12 +38,12 @@ data class WrapperBlockResult(
  * ## Output
  *
  * ```kotlin
- * tabWrapper("com.example.MainTabs") {
+ * tabsContainer("com.example.MainTabs") {
  *     MainTabsWrapper()
  * }
  *
- * paneWrapper("com.example.MasterDetail") {
- *     MasterDetailWrapper()
+ * paneContainer("com.example.MasterDetail") {
+ *     MasterDetailContainer()
  * }
  * ```
  *
@@ -51,12 +51,12 @@ data class WrapperBlockResult(
  *
  * Generated wrapper blocks execute within a scope that provides:
  *
- * ### TabWrapperScope
+ * ### TabsContainerScope
  * - `tabs` - List of tab metadata
  * - `activeTabIndex` - Currently selected tab index
  * - `switchTab(index)` - Function to switch tabs
  *
- * ### PaneWrapperScope
+ * ### PaneContainerScope
  * - Pane layout utilities
  * - Adaptive layout helpers
  *
@@ -97,9 +97,9 @@ class WrapperBlockGenerator(
         val builder = CodeBlock.builder()
         val imports = mutableSetOf<String>()
 
-        // Generate tab wrappers
+        // Generate tabs containers
         tabWrappers.forEachIndexed { index, wrapper ->
-            builder.add(generateTabWrapperBlock(wrapper))
+            builder.add(generateTabsContainerBlock(wrapper))
             if (index < tabWrappers.size - 1 || paneWrappers.isNotEmpty()) {
                 builder.add("\n")
             }
@@ -108,9 +108,9 @@ class WrapperBlockGenerator(
             imports.add(qualifiedName)
         }
 
-        // Generate pane wrappers
+        // Generate pane containers
         paneWrappers.forEachIndexed { index, wrapper ->
-            builder.add(generatePaneWrapperBlock(wrapper))
+            builder.add(generatePaneContainerBlock(wrapper))
             if (index < paneWrappers.size - 1) {
                 builder.add("\n")
             }
@@ -123,38 +123,38 @@ class WrapperBlockGenerator(
     }
 
     /**
-     * Generates a `tabWrapper` block.
+     * Generates a `tabsContainer` block.
      *
      * The wrapper key is the qualified name of the target class, which allows
      * the wrapper to be matched to its container at runtime.
      *
      * @param wrapper The wrapper info to generate code for
-     * @return CodeBlock for the tab wrapper registration
+     * @return CodeBlock for the tabs container registration
      */
-    private fun generateTabWrapperBlock(wrapper: WrapperInfo): CodeBlock {
+    private fun generateTabsContainerBlock(wrapper: WrapperInfo): CodeBlock {
         val wrapperKey = wrapper.targetClassQualifiedName
 
         return CodeBlock.builder()
-            .beginControlFlow("tabWrapper(%S)", wrapperKey)
+            .beginControlFlow("tabsContainer(%S)", wrapperKey)
             .add(generateWrapperContent(wrapper))
             .endControlFlow()
             .build()
     }
 
     /**
-     * Generates a `paneWrapper` block.
+     * Generates a `paneContainer` block.
      *
      * The wrapper key is the qualified name of the target class, which allows
      * the wrapper to be matched to its container at runtime.
      *
      * @param wrapper The wrapper info to generate code for
-     * @return CodeBlock for the pane wrapper registration
+     * @return CodeBlock for the pane container registration
      */
-    private fun generatePaneWrapperBlock(wrapper: WrapperInfo): CodeBlock {
+    private fun generatePaneContainerBlock(wrapper: WrapperInfo): CodeBlock {
         val wrapperKey = wrapper.targetClassQualifiedName
 
         return CodeBlock.builder()
-            .beginControlFlow("paneWrapper(%S)", wrapperKey)
+            .beginControlFlow("paneContainer(%S)", wrapperKey)
             .add(generateWrapperContent(wrapper))
             .endControlFlow()
             .build()
@@ -163,11 +163,11 @@ class WrapperBlockGenerator(
     /**
      * Generates the wrapper content (the composable function call).
      *
-     * The tabWrapper DSL provides a lambda with signature:
-     * `@Composable TabWrapperScope.(@Composable () -> Unit) -> Unit`
+     * The tabsContainer DSL provides a lambda with signature:
+     * `@Composable TabsContainerScope.(@Composable () -> Unit) -> Unit`
      *
      * This means:
-     * - `this` is TabWrapperScope (or PaneWrapperScope for pane wrappers)
+     * - `this` is TabsContainerScope (or PaneContainerScope for pane containers)
      * - The single parameter is the content composable
      *
      * So we generate:

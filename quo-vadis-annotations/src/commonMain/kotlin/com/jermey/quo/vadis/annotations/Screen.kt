@@ -81,7 +81,7 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.SOURCE)
-public annotation class Screen(
+annotation class Screen(
     /**
      * The destination class this composable renders.
      * Must be a class annotated with @Destination.
