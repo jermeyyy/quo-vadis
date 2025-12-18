@@ -43,6 +43,7 @@ import com.jermey.navplayground.demo.destinations.StateDrivenDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * State-Driven Navigation Demo Screen.
@@ -61,7 +62,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StateDrivenDemoScreen(
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
     val backStack = remember {
@@ -95,6 +96,7 @@ fun StateDrivenDemoScreen(
  */
 private val WIDE_LAYOUT_BREAKPOINT = 600.dp
 
+@Suppress("MagicNumber")
 @Composable
 private fun StateDrivenDemoContent(
     backStack: DemoBackStack,

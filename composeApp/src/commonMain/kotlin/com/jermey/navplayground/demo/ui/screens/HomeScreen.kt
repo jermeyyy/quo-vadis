@@ -54,6 +54,7 @@ import kotlinx.coroutines.launch
 import navplayground.composeapp.generated.resources.Res
 import navplayground.composeapp.generated.resources.logo
 import org.jetbrains.compose.resources.imageResource
+import org.koin.compose.koinInject
 
 /**
  * Home Screen - Main entry point with navigation to all patterns
@@ -62,7 +63,7 @@ import org.jetbrains.compose.resources.imageResource
 @Screen(MainTabs.HomeTab::class)
 @Composable
 fun HomeScreen(
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
     val sheetState = rememberModalBottomSheetState()

@@ -33,6 +33,7 @@ import com.jermey.navplayground.demo.ui.components.DeepLinkCard
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * DeepLink Demo Screen - Shows deep linking functionality
@@ -41,7 +42,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeepLinkDemoScreen(
-    navigator: Navigator
+    navigator: Navigator = koinInject()
 ) {
     Scaffold(
         topBar = {

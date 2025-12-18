@@ -27,6 +27,7 @@ import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.utils.navigateTo
+import org.koin.compose.koinInject
 
 /**
  * Process Complete Screen
@@ -34,7 +35,7 @@ import com.jermey.quo.vadis.core.navigation.utils.navigateTo
 @Screen(ProcessDestination.Complete::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProcessCompleteScreen(navigator: Navigator) {
+fun ProcessCompleteScreen(navigator: Navigator = koinInject()) {
     Scaffold(
         topBar = {
             TopAppBar(

@@ -32,6 +32,7 @@ import com.jermey.navplayground.demo.ui.components.ProcessStep
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Process Start Screen - Entry point for the wizard/process flow
@@ -39,7 +40,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 @Screen(ProcessDestination.Start::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProcessStartScreen(navigator: Navigator) {
+fun ProcessStartScreen(navigator: Navigator = koinInject()) {
     Scaffold(
         topBar = {
             TopAppBar(

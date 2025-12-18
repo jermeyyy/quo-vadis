@@ -34,11 +34,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.container
 import com.jermey.navplayground.demo.container.ResultDemoContainer
+import com.jermey.navplayground.demo.container.ResultDemoContainer.Action
+import com.jermey.navplayground.demo.container.ResultDemoContainer.Intent
+import com.jermey.navplayground.demo.container.ResultDemoState
 import com.jermey.navplayground.demo.destinations.ResultDemoDestination
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.compose.render.LocalScreenNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
+import pro.respawn.flowmvi.api.Store
+import pro.respawn.flowmvi.compose.dsl.subscribe
 
 // Cache containers by screen key to survive recomposition during navigation
 private val containerCache = mutableStateMapOf<String, ResultDemoContainer>()
@@ -62,23 +68,11 @@ private val containerCache = mutableStateMapOf<String, ResultDemoContainer>()
 @Screen(ResultDemoDestination.Demo::class)
 @Composable
 fun ResultDemoScreen(
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier,
+    container: Store<ResultDemoState, Intent, Action> = container<ResultDemoContainer, ResultDemoState, Intent, Action>()
 ) {
-    val screenKey = LocalScreenNode.current?.key ?: return
-
-    // Get or create container - survives navigation by using external cache
-    val container = containerCache.getOrPut(screenKey) {
-        println("ResultDemoScreen: Creating new container for key $screenKey")
-        ResultDemoContainer(
-            navigator = navigator,
-            screenKey = screenKey
-        )
-    }
-
-    println("ResultDemoScreen: Using container with state ${container.state.value}")
-
-    val state by container.state.collectAsState()
+    val state by container.subscribe()
 
     Scaffold(
         topBar = {
@@ -181,7 +175,7 @@ fun ResultDemoScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { container.clearSelection() },
+                    onClick = { container.intent(Intent.ClearSelection) },
                     enabled = state.selectedItem != null && !state.isLoading,
                     modifier = Modifier.weight(1f)
                 ) {
@@ -195,7 +189,7 @@ fun ResultDemoScreen(
                 }
 
                 Button(
-                    onClick = { container.pickItem()},
+                    onClick = { container.intent(Intent.PickItem) },
                     enabled = !state.isLoading,
                     modifier = Modifier.weight(1f)
                 ) {

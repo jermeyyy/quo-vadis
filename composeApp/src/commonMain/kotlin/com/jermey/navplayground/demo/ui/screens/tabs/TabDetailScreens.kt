@@ -35,11 +35,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.BooksDetail
-import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.destinations.MoviesDetail
 import com.jermey.navplayground.demo.destinations.MusicDetail
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 // =============================================================================
 // Music Detail Screen
@@ -51,12 +51,13 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  * Demonstrates nested navigation within a tab - this screen is pushed
  * onto the Music tab's stack.
  */
+@Suppress("MagicNumber")
 @OptIn(ExperimentalMaterial3Api::class)
 @Screen(MusicDetail::class)
 @Composable
 fun MusicDetailScreen(
     destination: MusicDetail,
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
     val itemIndex = destination.itemId.removePrefix("music_").toIntOrNull() ?: 1
@@ -120,13 +121,13 @@ private fun getMusicArtistById(index: Int): String {
  * Demonstrates nested navigation within a tab - this screen is pushed
  * onto the Movies tab's stack.
  */
+@Suppress("MagicNumber")
 @OptIn(ExperimentalMaterial3Api::class)
 @Screen(MoviesDetail::class)
 @Composable
 fun MoviesDetailScreen(
     destination: MoviesDetail,
-    navigator: Navigator,
-    modifier: Modifier = Modifier
+    navigator: Navigator = koinInject()
 ) {
     val itemIndex = destination.itemId.removePrefix("movie_").toIntOrNull() ?: 1
     val title = getMovieTitleById(itemIndex)
@@ -146,7 +147,7 @@ fun MoviesDetailScreen(
         }
     ) { padding ->
         DetailContent(
-            modifier = modifier.padding(padding),
+            modifier = Modifier.padding(padding),
             icon = Icons.Default.Movie,
             title = title,
             subtitle = "Directed by $director",
@@ -202,12 +203,13 @@ private fun getMovieGenreById(index: Int): String {
  * Demonstrates nested navigation within a tab - this screen is pushed
  * onto the Books tab's stack.
  */
+@Suppress("MagicNumber")
 @OptIn(ExperimentalMaterial3Api::class)
 @Screen(BooksDetail::class)
 @Composable
 fun BooksDetailScreen(
     destination: BooksDetail,
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
     val itemIndex = destination.itemId.removePrefix("book_").toIntOrNull() ?: 1

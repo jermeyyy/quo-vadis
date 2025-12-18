@@ -1,14 +1,24 @@
 package com.jermey.navplayground.demo.container
 
+import com.jermey.navplayground.demo.container.ResultDemoContainer.Action
+import com.jermey.navplayground.demo.container.ResultDemoContainer.Intent
 import com.jermey.navplayground.demo.destinations.ResultDemoDestination
 import com.jermey.navplayground.demo.destinations.SelectedItem
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.navigateForResult
+import com.jermey.quo.vadis.core.navigation.core.registerNavigationLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pro.respawn.flowmvi.api.MVIAction
+import pro.respawn.flowmvi.api.MVIIntent
+import pro.respawn.flowmvi.api.MVIState
+import pro.respawn.flowmvi.api.StateReceiver
+import pro.respawn.flowmvi.dsl.state
+import pro.respawn.flowmvi.dsl.store
+import pro.respawn.flowmvi.plugins.reduce
 
 /**
  * State for the Result Demo screen.
@@ -21,7 +31,7 @@ data class ResultDemoState(
     val selectedItem: SelectedItem? = null,
     val isLoading: Boolean = false,
     val message: String = "No item selected yet"
-)
+) : MVIState
 
 /**
  * Container for the Result Demo screen.
@@ -50,31 +60,32 @@ data class ResultDemoState(
 class ResultDemoContainer(
     navigator: Navigator,
     screenKey: String,
-) : BaseContainer(navigator, screenKey) {
+) : BaseContainer<ResultDemoState, Intent, Action>(navigator, screenKey) {
+    sealed class Intent : MVIIntent {
+        data object PickItem : Intent()
+        data object ClearSelection : Intent()
+    }
+
+    data object Action : MVIAction
 
     init {
         println("ResultDemoContainer created with screenKey: $screenKey")
     }
 
-    private val _state = MutableStateFlow(ResultDemoState())
+    override val store = store(ResultDemoState()) {
+        configure { }
+        reduce { intent ->
+            when (intent) {
+                Intent.ClearSelection -> clearSelection()
+                Intent.PickItem -> pickItem()
+            }
+        }
+    }
 
-    /**
-     * Observable state for the UI.
-     */
-    val state: StateFlow<ResultDemoState> = _state.asStateFlow()
-
-    /**
-     * Navigate to the item picker and await a result.
-     *
-     * Uses [navigateForResult] to:
-     * 1. Navigate to [ResultDemoDestination.ItemPicker]
-     * 2. Suspend until the picker returns a result or is cancelled
-     * 3. Update state with the selected item
-     */
-    fun pickItem() {
+    private suspend fun StateReceiver<ResultDemoState>.pickItem() {
         println("ResultDemoContainer.pickItem() called")
-        _state.update { it.copy(isLoading = true) }
-        scope.launch {
+        updateState { copy(isLoading = true) }
+        coroutineScope.launch {
             println("ResultDemoContainer: launching coroutine for navigateForResult")
 
             val result: SelectedItem? = navigator.navigateForResult(
@@ -83,33 +94,22 @@ class ResultDemoContainer(
 
             println("ResultDemoContainer: navigateForResult returned: $result")
 
-            _state.update {
-                val newState = if (result != null) {
-                    it.copy(
-                        selectedItem = result,
-                        isLoading = false,
-                        message = "Selected: ${result.name}"
-                    )
-                } else {
-                    it.copy(
-                        isLoading = false,
-                        message = "Selection cancelled"
-                    )
-                }
-                println("ResultDemoContainer: updating state to: $newState")
-                newState
+            updateState {
+                copy(
+                    selectedItem = result,
+                    isLoading = false,
+                    message = if (result != null) "Selected: ${result.name}" else "Selection cancelled"
+                )
             }
-            
-            println("ResultDemoContainer: state after update: ${_state.value}")
         }
     }
 
     /**
      * Clear the current selection.
      */
-    fun clearSelection() {
-        _state.update {
-            it.copy(
+    private suspend fun StateReceiver<ResultDemoState>.clearSelection() {
+        updateState {
+            copy(
                 selectedItem = null,
                 message = "No item selected yet"
             )

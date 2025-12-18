@@ -35,6 +35,7 @@ import com.jermey.navplayground.demo.ui.components.AccountTypeOption
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Process Step 1 - User type selection (branches the flow)
@@ -44,7 +45,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 @Composable
 fun ProcessStep1Screen(
     destination: ProcessDestination.Step1,
-    navigator: Navigator
+    navigator: Navigator = koinInject()
 ) {
     var selectedType by remember { mutableStateOf(destination.userType ?: "personal") }
     var name by remember { mutableStateOf("") }

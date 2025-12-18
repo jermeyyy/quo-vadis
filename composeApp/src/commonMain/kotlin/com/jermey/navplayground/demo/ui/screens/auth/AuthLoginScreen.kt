@@ -34,6 +34,7 @@ import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Auth Login Screen - Entry point for the auth flow.
@@ -45,7 +46,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 @Screen(AuthFlowDestination.Login::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AuthLoginScreen(navigator: Navigator) {
+fun AuthLoginScreen(navigator: Navigator = koinInject()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 

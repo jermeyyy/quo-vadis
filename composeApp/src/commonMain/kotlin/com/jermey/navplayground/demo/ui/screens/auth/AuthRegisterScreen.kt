@@ -32,6 +32,7 @@ import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Auth Register Screen - Part of the auth flow.
@@ -43,7 +44,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 @Screen(AuthFlowDestination.Register::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AuthRegisterScreen(navigator: Navigator) {
+fun AuthRegisterScreen(navigator: Navigator = koinInject()) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

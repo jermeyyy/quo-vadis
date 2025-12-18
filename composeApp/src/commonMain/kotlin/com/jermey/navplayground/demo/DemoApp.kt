@@ -8,7 +8,9 @@ import androidx.compose.ui.Modifier
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.compose.rememberQuoVadisNavigator
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.generated.GeneratedNavigationConfig
+import org.koin.compose.koinInject
 
 /**
  * Main entry point for the demo application.
@@ -37,12 +39,12 @@ import com.jermey.quo.vadis.generated.GeneratedNavigationConfig
  */
 @Composable
 fun DemoApp() {
-    val navigator = rememberQuoVadisNavigator(
-        rootDestination = MainTabs::class,
-        config = GeneratedNavigationConfig
-    )
+//    val navigator = rememberQuoVadisNavigator(
+//        rootDestination = MainTabs::class,
+//        config = GeneratedNavigationConfig
+//    )
+    val navigator = koinInject<Navigator>()
 
-    // Render with NavigationHost using unified config
     NavigationHost(
         navigator = navigator,
         config = GeneratedNavigationConfig,

@@ -48,6 +48,7 @@ package com.jermey.quo.vadis.core.navigation.core
  * @param screenKey The unique key of the screen to associate with
  */
 fun Navigator.registerNavigationLifecycle(lifecycle: NavigationLifecycle, screenKey: String) {
+    println("Navigator.registerNavigationLifecycle: Registering lifecycle for screenKey=$screenKey")
     lifecycleManager.registerSync(lifecycle, screenKey)
 }
 
@@ -69,5 +70,6 @@ fun Navigator.registerNavigationLifecycle(lifecycle: NavigationLifecycle, screen
  * @param lifecycle The lifecycle callbacks to unregister
  */
 fun Navigator.unregisterNavigationLifecycle(lifecycle: NavigationLifecycle) {
+    println("Navigator.unregisterNavigationLifecycle: Unregistering lifecycle")
     lifecycleManager.unregisterSync(lifecycle)
 }

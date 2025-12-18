@@ -30,6 +30,7 @@ import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
 import com.jermey.navplayground.demo.ui.components.ReviewRow
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 private const val DATA_INDEX_NAME = 0
 private const val DATA_INDEX_SECOND_FIELD = 1
@@ -44,7 +45,7 @@ private const val DATA_INDEX_INDUSTRY = 3
 @Composable
 fun ProcessStep3Screen(
     destination: ProcessDestination.Step3,
-    navigator: Navigator
+    navigator: Navigator = koinInject()
 ) {
     val dataParts = destination.previousData.split("|")
 

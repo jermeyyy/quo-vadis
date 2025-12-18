@@ -27,19 +27,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.container
 import com.jermey.navplayground.demo.container.ItemPickerContainer
+import com.jermey.navplayground.demo.container.ItemPickerContainer.*
+import com.jermey.navplayground.demo.container.ItemPickerState
 import com.jermey.navplayground.demo.container.PickerItem
 import com.jermey.navplayground.demo.destinations.ResultDemoDestination
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.compose.render.LocalScreenNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
+import pro.respawn.flowmvi.api.Store
+import pro.respawn.flowmvi.compose.dsl.subscribe
 
 /**
  * Item Picker Screen - Allows selecting an item to return as result.
@@ -59,32 +62,24 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 @Screen(ResultDemoDestination.ItemPicker::class)
 @Composable
 fun ItemPickerScreen(
-    navigator: Navigator,
-    modifier: Modifier = Modifier
+    navigator: Navigator = koinInject(),
+    modifier: Modifier = Modifier,
+    container: Store<ItemPickerState, Intent, Action> = container<ItemPickerContainer, ItemPickerState, Intent, Action>()
 ) {
-    val screenKey = LocalScreenNode.current?.key ?: return
 
-    // Create container - it manages its own coroutine scope internally
-    val container = remember(screenKey) {
-        ItemPickerContainer(
-            navigator = navigator,
-            screenKey = screenKey
-        )
-    }
-
-    val state by container.state.collectAsState()
+    val state by container.subscribe()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Pick an Item") },
                 navigationIcon = {
-                    IconButton(onClick = { container.cancel() }) {
+                    IconButton(onClick = { container.intent(Intent.Cancel) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Cancel")
                     }
                 },
                 actions = {
-                    TextButton(onClick = { container.cancel() }) {
+                    TextButton(onClick = { container.intent(Intent.Cancel) }) {
                         Text("Cancel")
                     }
                 }
@@ -126,7 +121,7 @@ fun ItemPickerScreen(
                 items(state.items, key = { it.id }) { item ->
                     PickerItemCard(
                         item = item,
-                        onClick = { container.selectItem(item) }
+                        onClick = { container.intent(Intent.SelectItem(item)) }
                     )
                 }
 

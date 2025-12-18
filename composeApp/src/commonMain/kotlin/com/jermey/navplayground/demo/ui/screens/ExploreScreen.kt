@@ -36,6 +36,7 @@ import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 private const val EXPLORE_ITEMS_COUNT = 20
 
@@ -46,7 +47,7 @@ private const val EXPLORE_ITEMS_COUNT = 20
 @Screen(MainTabs.ExploreTab::class)
 @Composable
 fun ExploreScreen(
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
     val items = remember {

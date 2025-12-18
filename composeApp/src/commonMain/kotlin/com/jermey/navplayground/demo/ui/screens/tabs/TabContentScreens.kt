@@ -33,6 +33,7 @@ import com.jermey.navplayground.demo.destinations.MoviesDetail
 import com.jermey.navplayground.demo.destinations.MusicDetail
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Data class representing an item in the tab lists.
@@ -55,7 +56,7 @@ private data class TabItem(
 @Screen(DemoTabs.MusicTab.List::class)
 @Composable
 fun MusicTabListScreen(
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
     val items = remember {
@@ -121,10 +122,11 @@ private fun getMusicArtist(index: Int): String {
  *
  * Clicking an item navigates to the detail screen within the movies tab stack.
  */
+@Suppress("MagicNumber")
 @Screen(DemoTabs.MoviesTab.List::class)
 @Composable
 fun MoviesTabListScreen(
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
     val items = remember {
@@ -190,10 +192,11 @@ private fun getMovieYear(index: Int): String {
  *
  * Clicking an item navigates to the detail screen within the books tab stack.
  */
+@Suppress("MagicNumber")
 @Screen(DemoTabs.BooksTab.List::class)
 @Composable
 fun BooksTabListScreen(
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
     val items = remember {

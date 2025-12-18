@@ -30,6 +30,7 @@ import com.jermey.navplayground.demo.destinations.AuthFlowDestination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Forgot Password Screen - Part of the auth flow.
@@ -40,7 +41,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 @Screen(AuthFlowDestination.ForgotPassword::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AuthForgotPasswordScreen(navigator: Navigator) {
+fun AuthForgotPasswordScreen(navigator: Navigator = koinInject()) {
     var email by remember { mutableStateOf("") }
 
     Scaffold(

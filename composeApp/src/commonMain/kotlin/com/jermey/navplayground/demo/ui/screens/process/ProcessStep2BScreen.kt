@@ -33,6 +33,7 @@ import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Process Step 2B - Business account configuration
@@ -42,7 +43,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
 @Composable
 fun ProcessStep2BScreen(
     destination: ProcessDestination.Step2B,
-    navigator: Navigator
+    navigator: Navigator = koinInject()
 ) {
     var companyName by remember { mutableStateOf("") }
     var taxId by remember { mutableStateOf("") }

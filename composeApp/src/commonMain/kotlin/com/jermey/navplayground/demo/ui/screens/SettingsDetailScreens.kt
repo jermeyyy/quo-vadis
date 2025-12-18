@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,18 +53,18 @@ private fun SettingsDetailContent(
 
 @Screen(MainTabs.SettingsTab.Profile::class)
 @Composable
-fun ProfileSettingsScreen(navigator: Navigator) {
+fun ProfileSettingsScreen(navigator: Navigator = koinInject()) {
     SettingsDetailContent(title = "Profile", navigator = navigator)
 }
 
 @Screen(MainTabs.SettingsTab.Notifications::class)
 @Composable
-fun NotificationsSettingsScreen(navigator: Navigator) {
+fun NotificationsSettingsScreen(navigator: Navigator = koinInject()) {
     SettingsDetailContent(title = "Notifications", navigator = navigator)
 }
 
 @Screen(MainTabs.SettingsTab.About::class)
 @Composable
-fun AboutSettingsScreen(navigator: Navigator) {
+fun AboutSettingsScreen(navigator: Navigator = koinInject()) {
     SettingsDetailContent(title = "About", navigator = navigator)
 }

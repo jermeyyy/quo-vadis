@@ -44,6 +44,7 @@ import com.jermey.quo.vadis.core.navigation.compose.animation.quoVadisSharedElem
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.sharedBounds
 import com.jermey.quo.vadis.core.navigation.core.sharedElement
+import org.koin.compose.koinInject
 
 private const val RELATED_ITEMS_COUNT = 5
 
@@ -55,7 +56,7 @@ private const val RELATED_ITEMS_COUNT = 5
 @Composable
 fun DetailScreen(
     destination: MasterDetailDestination.Detail,
-    navigator: Navigator
+    navigator: Navigator = koinInject()
 ) {
     val itemId = destination.itemId
     val relatedItems = remember(itemId) {

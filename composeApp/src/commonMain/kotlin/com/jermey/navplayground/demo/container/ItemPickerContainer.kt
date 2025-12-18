@@ -6,6 +6,11 @@ import com.jermey.quo.vadis.core.navigation.core.navigateBackWithResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import pro.respawn.flowmvi.api.MVIAction
+import pro.respawn.flowmvi.api.MVIIntent
+import pro.respawn.flowmvi.api.MVIState
+import pro.respawn.flowmvi.dsl.store
+import pro.respawn.flowmvi.plugins.reduce
 
 /**
  * Represents an item available for selection in the picker.
@@ -29,7 +34,7 @@ data class PickerItem(
  */
 data class ItemPickerState(
     val items: List<PickerItem> = defaultItems
-)
+): MVIState
 
 /**
  * Default items available in the picker.
@@ -67,8 +72,24 @@ private val defaultItems = listOf(
 class ItemPickerContainer(
     navigator: Navigator,
     screenKey: String,
-) : BaseContainer(navigator, screenKey) {
+) : BaseContainer<ItemPickerState, ItemPickerContainer.Intent, ItemPickerContainer.Action>(navigator, screenKey) {
 
+    sealed class Intent : MVIIntent {
+        data class SelectItem(val item: PickerItem) : Intent()
+        data object Cancel : Intent()
+    }
+    data object Action : MVIAction
+
+
+    override val store = store(ItemPickerState()) {
+        configure {  }
+        reduce { intent ->
+            when (intent) {
+                is Intent.SelectItem -> selectItem(intent.item)
+                Intent.Cancel -> cancel()
+            }
+        }
+    }
     private val _state = MutableStateFlow(ItemPickerState())
 
     /**
@@ -86,7 +107,7 @@ class ItemPickerContainer(
      *
      * @param item The item to select
      */
-    fun selectItem(item: PickerItem) {
+    private fun selectItem(item: PickerItem) {
         val result = SelectedItem(
             id = item.id,
             name = item.name
@@ -99,7 +120,7 @@ class ItemPickerContainer(
      *
      * The caller will receive `null` from [navigateForResult].
      */
-    fun cancel() {
+    private fun cancel() {
         navigator.navigateBack()
     }
 
