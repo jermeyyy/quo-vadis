@@ -1,7 +1,8 @@
 package com.jermey.navplayground.demo.destinations
 
+import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.ReturnsResult
 
 /**
@@ -40,7 +41,7 @@ data class SelectedItem(
  * ```
  */
 @Stack(name = "result_demo", startDestination = "Demo")
-sealed class ResultDemoDestination : Destination {
+sealed class ResultDemoDestination : NavDestination {
 
     /**
      * Entry screen for the navigation result demo.
@@ -48,7 +49,7 @@ sealed class ResultDemoDestination : Destination {
      * Shows the currently selected item (if any) and allows
      * the user to pick a new item.
      */
-    @com.jermey.quo.vadis.annotations.Destination(route = "result_demo/demo")
+    @Destination(route = "result_demo/demo")
     data object Demo : ResultDemoDestination()
 
     /**
@@ -58,6 +59,6 @@ sealed class ResultDemoDestination : Destination {
      * The calling screen uses [navigateForResult] to navigate here
      * and await the result.
      */
-    @com.jermey.quo.vadis.annotations.Destination(route = "result_demo/picker")
+    @Destination(route = "result_demo/picker")
     data object ItemPicker : ResultDemoDestination(), ReturnsResult<SelectedItem>
 }

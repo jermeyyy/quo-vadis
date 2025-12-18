@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.utils
 
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
@@ -13,7 +13,7 @@ import com.jermey.quo.vadis.core.navigation.core.Navigator
  */
 fun Navigator.navigateTo(
     transition: NavigationTransition? = null,
-    builder: () -> Destination
+    builder: () -> NavDestination
 ) {
     navigate(builder(), transition)
 }

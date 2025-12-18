@@ -1,7 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.StackNode
@@ -29,22 +29,22 @@ class StackRendererTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : Destination {
+    private object HomeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ProfileDestination : Destination {
+    private object ProfileDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object SettingsDestination : Destination {
+    private object SettingsDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object DetailDestination : Destination {
+    private object DetailDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -56,7 +56,7 @@ class StackRendererTest {
     private fun createScreen(
         key: String,
         parentKey: String? = null,
-        destination: Destination = HomeDestination
+        destination: NavDestination = HomeDestination
     ): ScreenNode = ScreenNode(key, parentKey, destination)
 
     private fun createStack(

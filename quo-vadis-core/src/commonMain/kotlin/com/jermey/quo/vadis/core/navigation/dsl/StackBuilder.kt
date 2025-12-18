@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.dsl
 
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import kotlin.reflect.KClass
 
 /**
@@ -51,7 +51,7 @@ class StackBuilder {
      * @param key Optional explicit key (auto-generated from class name if null)
      */
     fun screen(
-        destination: Destination,
+        destination: NavDestination,
         key: String = destination::class.simpleName ?: "screen-${screens.size}"
     ) {
         screens.add(
@@ -79,7 +79,7 @@ class StackBuilder {
      * @param D The destination type
      * @param key Optional explicit key (auto-generated from class name if null)
      */
-    inline fun <reified D : Destination> screen(key: String? = null) {
+    inline fun <reified D : NavDestination> screen(key: String? = null) {
         screens.add(
             StackScreenEntry(
                 destination = null,
@@ -108,7 +108,7 @@ class StackBuilder {
  * @property key Unique identifier for this screen entry
  */
 data class StackScreenEntry(
-    val destination: Destination? = null,
-    val destinationClass: KClass<out Destination>? = null,
+    val destination: NavDestination? = null,
+    val destinationClass: KClass<out NavDestination>? = null,
     val key: String
 )

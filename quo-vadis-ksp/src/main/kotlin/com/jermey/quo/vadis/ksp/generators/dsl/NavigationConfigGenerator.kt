@@ -239,7 +239,7 @@ class NavigationConfigGenerator(
     private fun FileSpec.Builder.addImports(): FileSpec.Builder {
         // Core navigation imports
         addImport("com.jermey.quo.vadis.core.navigation", "NavigationConfig")
-        addImport("com.jermey.quo.vadis.core.navigation.core", "Destination")
+        addImport("com.jermey.quo.vadis.core.navigation.core", "NavDestination")
         addImport("com.jermey.quo.vadis.core.navigation.core", "NavNode")
         addImport("com.jermey.quo.vadis.core.navigation.core", "Navigator")
         addImport("com.jermey.quo.vadis.core.navigation.core", "GeneratedDeepLinkHandler")
@@ -465,7 +465,7 @@ class NavigationConfigGenerator(
      */
     private fun buildBuildNavNodeFunction(): FunSpec {
         val kClassDestination = KCLASS_CLASS.parameterizedBy(
-            WildcardTypeName.producerOf(DESTINATION_CLASS)
+            WildcardTypeName.producerOf(NAV_DESTINATION_CLASS)
         )
 
         return FunSpec.builder("buildNavNode")
@@ -528,7 +528,7 @@ class NavigationConfigGenerator(
         return FunSpec.builder("Content")
             .addAnnotation(COMPOSABLE_CLASS)
             .addModifiers(KModifier.OVERRIDE)
-            .addParameter("destination", DESTINATION_CLASS)
+            .addParameter("destination", NAV_DESTINATION_CLASS)
             .addParameter("navigator", NAVIGATOR_CLASS)
             .addParameter(
                 ParameterSpec.builder("sharedTransitionScope", SHARED_TRANSITION_SCOPE_CLASS.copy(nullable = true))
@@ -561,7 +561,7 @@ class NavigationConfigGenerator(
     private fun buildScreenHasContentFunction(screens: List<ScreenInfo>): FunSpec {
         return FunSpec.builder("hasContent")
             .addModifiers(KModifier.OVERRIDE)
-            .addParameter("destination", DESTINATION_CLASS)
+            .addParameter("destination", NAV_DESTINATION_CLASS)
             .returns(Boolean::class)
             .apply {
                 if (screens.isEmpty()) {
@@ -749,7 +749,7 @@ class NavigationConfigGenerator(
     private fun buildGetContainerInfoFunction(): FunSpec {
         return FunSpec.builder("getContainerInfo")
             .addModifiers(KModifier.OVERRIDE)
-            .addParameter("destination", DESTINATION_CLASS)
+            .addParameter("destination", NAV_DESTINATION_CLASS)
             .returns(ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ContainerInfo").copy(nullable = true))
             .addStatement("return baseConfig.containerRegistry.getContainerInfo(destination)")
             .build()
@@ -924,7 +924,7 @@ class NavigationConfigGenerator(
         }
 
         val kClassType = KCLASS_CLASS.parameterizedBy(
-            WildcardTypeName.producerOf(DESTINATION_CLASS)
+            WildcardTypeName.producerOf(NAV_DESTINATION_CLASS)
         )
         val setType = ClassName("kotlin.collections", "Set").parameterizedBy(kClassType)
 
@@ -957,7 +957,7 @@ class NavigationConfigGenerator(
     private companion object {
         // Type references
         val NAVIGATION_CONFIG_CLASS = ClassName("com.jermey.quo.vadis.core.navigation", "NavigationConfig")
-        val DESTINATION_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "Destination")
+        val NAV_DESTINATION_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "NavDestination")
         val NAV_NODE_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "NavNode")
         val KCLASS_CLASS = ClassName("kotlin.reflect", "KClass")
 

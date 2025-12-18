@@ -8,6 +8,7 @@ import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.TabItem
 import com.jermey.quo.vadis.annotations.Tabs
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 /**
  * Tabs Demo navigation destinations.
@@ -25,13 +26,13 @@ import com.jermey.quo.vadis.annotations.Tabs
     initialTab = MusicTab::class,
     items = [MusicTab::class, MoviesTab::class, BooksTab::class]
 )
-sealed class DemoTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
+sealed class DemoTabs : NavDestination {
 
     /**
      * Companion object used as the wrapper key for @TabsContainer.
      * This allows the wrapper to be associated with the DemoTabs container.
      */
-    companion object: com.jermey.quo.vadis.core.navigation.core.Destination
+    companion object: NavDestination
 
     /**
      * Music tab - shows a list of music items
@@ -70,10 +71,10 @@ sealed class DemoTabs : com.jermey.quo.vadis.core.navigation.core.Destination {
 }
 
 @Destination(route = "demo/tabs/music/detail/{itemId}")
-data class MusicDetail(@Argument val itemId: String): com.jermey.quo.vadis.core.navigation.core.Destination
+data class MusicDetail(@Argument val itemId: String): NavDestination
 
 @Destination(route = "demo/tabs/movies/detail/{itemId}")
-data class MoviesDetail(@Argument val itemId: String) : com.jermey.quo.vadis.core.navigation.core.Destination
+data class MoviesDetail(@Argument val itemId: String) : NavDestination
 
 @Destination(route = "demo/tabs/books/detail/{itemId}")
-data class BooksDetail(@Argument val itemId: String) : com.jermey.quo.vadis.core.navigation.core.Destination
+data class BooksDetail(@Argument val itemId: String) : NavDestination

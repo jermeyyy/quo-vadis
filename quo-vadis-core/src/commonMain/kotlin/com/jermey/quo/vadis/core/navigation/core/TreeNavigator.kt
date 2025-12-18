@@ -112,16 +112,16 @@ class TreeNavigator(
     // Backed by MutableStateFlow for synchronous updates in tests
     // =========================================================================
 
-    private val _currentDestination = MutableStateFlow<Destination?>(
+    private val _currentDestination = MutableStateFlow<NavDestination?>(
         _state.value.activeLeaf()?.destination
     )
 
     /**
      * The currently active destination, derived from the active leaf node.
      */
-    override val currentDestination: StateFlow<Destination?> = _currentDestination.asStateFlow()
+    override val currentDestination: StateFlow<NavDestination?> = _currentDestination.asStateFlow()
 
-    private val _previousDestination = MutableStateFlow<Destination?>(
+    private val _previousDestination = MutableStateFlow<NavDestination?>(
         computePreviousDestination(_state.value)
     )
 
@@ -131,7 +131,7 @@ class TreeNavigator(
      * This is the destination that would be shown after a back navigation,
      * or null if there is no previous destination.
      */
-    override val previousDestination: StateFlow<Destination?> = _previousDestination.asStateFlow()
+    override val previousDestination: StateFlow<NavDestination?> = _previousDestination.asStateFlow()
 
     private val _canNavigateBack = MutableStateFlow(
         TreeMutator.canHandleBackNavigation(_state.value)
@@ -237,7 +237,7 @@ class TreeNavigator(
      * @param destination The destination to navigate to
      * @param transition Optional transition animation
      */
-    override fun navigate(destination: Destination, transition: NavigationTransition?) {
+    override fun navigate(destination: NavDestination, transition: NavigationTransition?) {
         val effectiveTransition = transition ?: destination.transition
         val oldState = _state.value
         val fromKey = oldState.activeLeaf()?.key
@@ -343,7 +343,7 @@ class TreeNavigator(
      */
     private fun navigateDefault(
         oldState: NavNode,
-        destination: Destination,
+        destination: NavDestination,
         effectiveTransition: NavigationTransition?,
         fromKey: String?
     ) {
@@ -543,7 +543,7 @@ class TreeNavigator(
      * @param inclusive If true, also remove the destination at clearRoute
      */
     override fun navigateAndClearTo(
-        destination: Destination,
+        destination: NavDestination,
         clearRoute: String?,
         inclusive: Boolean
     ) {
@@ -563,7 +563,7 @@ class TreeNavigator(
      * @param destination The replacement destination
      * @param transition Optional transition animation
      */
-    override fun navigateAndReplace(destination: Destination, transition: NavigationTransition?) {
+    override fun navigateAndReplace(destination: NavDestination, transition: NavigationTransition?) {
         val newState = TreeMutator.replaceCurrent(_state.value, destination) { generateKey() }
         updateStateWithTransition(newState, transition)
     }
@@ -573,7 +573,7 @@ class TreeNavigator(
      *
      * @param destination The destination to set as the new root
      */
-    override fun navigateAndClearAll(destination: Destination) {
+    override fun navigateAndClearAll(destination: NavDestination) {
         val newState = TreeMutator.clearAndPush(_state.value, destination) { generateKey() }
         updateStateWithTransition(newState, null)
     }
@@ -623,7 +623,7 @@ class TreeNavigator(
      */
     override fun navigateToPane(
         role: PaneRole,
-        destination: Destination,
+        destination: NavDestination,
         switchFocus: Boolean,
         transition: NavigationTransition?
     ) {
@@ -971,7 +971,7 @@ class TreeNavigator(
         }
     }
 
-    private fun computePreviousDestination(state: NavNode): Destination? {
+    private fun computePreviousDestination(state: NavNode): NavDestination? {
         val stack = state.activeStack() ?: return null
         if (stack.children.size >= 2) {
             val previousNode = stack.children[stack.children.size - 2]

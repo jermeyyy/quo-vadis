@@ -23,32 +23,32 @@ class NavNodeTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : Destination {
+    private object HomeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ProfileDestination : Destination {
+    private object ProfileDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object SettingsDestination : Destination {
+    private object SettingsDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object FeedDestination : Destination {
+    private object FeedDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object DetailDestination : Destination {
+    private object DetailDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ListDestination : Destination {
+    private object ListDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }

@@ -25,7 +25,7 @@ class TreeMutatorStackScopeTest {
      * Simulates an authentication flow sealed class.
      * These are "in scope" for a StackNode with scopeKey="AuthFlow".
      */
-    private sealed interface AuthFlow : Destination {
+    private sealed interface AuthFlow : NavDestination {
         data object Login : AuthFlow {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -49,7 +49,7 @@ class TreeMutatorStackScopeTest {
      * Simulates a main flow sealed class.
      * These are "in scope" for a StackNode with scopeKey="MainFlow".
      */
-    private sealed interface MainFlow : Destination {
+    private sealed interface MainFlow : NavDestination {
         data object Home : MainFlow {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -66,7 +66,7 @@ class TreeMutatorStackScopeTest {
     /**
      * A destination that is NOT part of any scope.
      */
-    private data object UniversalDestination : Destination {
+    private data object UniversalDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "Universal"
@@ -86,12 +86,12 @@ class TreeMutatorStackScopeTest {
             "MainFlow" to setOf(MainFlow.Home::class, MainFlow.Profile::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: Destination): Boolean {
+        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
             val scopeClasses = scopes[scopeKey] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: Destination): String? {
+        override fun getScopeKey(destination: NavDestination): String? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
             }?.key
@@ -605,7 +605,7 @@ class TreeMutatorStackScopeTest {
     /**
      * Simulates tab destinations for testing combined scopes.
      */
-    private sealed interface HomeTabs : Destination {
+    private sealed interface HomeTabs : NavDestination {
         data object Feed : HomeTabs {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -624,12 +624,12 @@ class TreeMutatorStackScopeTest {
             "HomeTabs" to setOf(HomeTabs.Feed::class, HomeTabs.Explore::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: Destination): Boolean {
+        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
             val scopeClasses = scopes[scopeKey] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: Destination): String? {
+        override fun getScopeKey(destination: NavDestination): String? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
             }?.key

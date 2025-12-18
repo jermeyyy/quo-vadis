@@ -1,7 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
 import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
@@ -30,17 +30,17 @@ class ScreenRendererTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : Destination {
+    private object HomeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ProfileDestination : Destination {
+    private object ProfileDestination : NavDestination {
         override val data: Any? = "profile-data"
         override val transition: NavigationTransition? = null
     }
 
-    private object SettingsDestination : Destination {
+    private object SettingsDestination : NavDestination {
         override val data: Any? = mapOf("theme" to "dark")
         override val transition: NavigationTransition? = null
     }
@@ -52,7 +52,7 @@ class ScreenRendererTest {
     private fun createScreen(
         key: String,
         parentKey: String? = null,
-        destination: Destination = HomeDestination
+        destination: NavDestination = HomeDestination
     ): ScreenNode = ScreenNode(key, parentKey, destination)
 
     // =========================================================================
@@ -256,7 +256,7 @@ class ScreenRendererTest {
     @Test
     fun `screen transitions are preserved`() {
         // Given
-        val transitionDestination = object : Destination {
+        val transitionDestination = object : NavDestination {
             override val data: Any? = null
             override val transition: NavigationTransition? = NavigationTransitions.SlideHorizontal
         }

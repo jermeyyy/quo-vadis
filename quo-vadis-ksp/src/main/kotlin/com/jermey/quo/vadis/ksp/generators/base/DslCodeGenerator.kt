@@ -193,12 +193,12 @@ abstract class DslCodeGenerator(
      *
      * Includes:
      * - NavigationConfig
-     * - Destination
+     * - NavDestination
      * - KClass
      */
     protected val commonImports: List<ClassName> = listOf(
         ClassName("com.jermey.quo.vadis.core.navigation", "NavigationConfig"),
-        ClassName("com.jermey.quo.vadis.core.navigation", "Destination"),
+        ClassName("com.jermey.quo.vadis.core.navigation", "NavDestination"),
         ClassName("kotlin.reflect", "KClass")
     )
 

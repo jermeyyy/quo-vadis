@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.PaneNode
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
 import com.jermey.quo.vadis.core.navigation.core.TabNode
@@ -142,7 +142,7 @@ interface ContainerRegistry {
      * @param destination The destination being navigated to
      * @return [ContainerInfo] if destination needs a container, null otherwise
      */
-    fun getContainerInfo(destination: Destination): ContainerInfo?
+    fun getContainerInfo(destination: NavDestination): ContainerInfo?
 
     // ================================
     // Wrapper Rendering
@@ -281,7 +281,7 @@ interface ContainerRegistry {
          * ```
          */
         val Empty: ContainerRegistry = object : ContainerRegistry {
-            override fun getContainerInfo(destination: Destination): ContainerInfo? = null
+            override fun getContainerInfo(destination: NavDestination): ContainerInfo? = null
 
             @Composable
             override fun TabsContainer(

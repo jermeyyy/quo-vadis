@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.flowmvi.core
 
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.activeStack
 import kotlinx.coroutines.CoroutineScope
@@ -51,7 +52,7 @@ import pro.respawn.flowmvi.plugins.whileSubscribed
  */
 class NavigatorContainer(
     private val navigator: Navigator,
-    initialDestination: com.jermey.quo.vadis.core.navigation.core.Destination? = null,
+    initialDestination: NavDestination? = null,
     private val debuggable: Boolean = false
 ) : Container<NavigationState, NavigationIntent, NavigationAction> {
 
@@ -59,7 +60,7 @@ class NavigatorContainer(
      * Internal state implementation.
      */
     private data class NavigatorState(
-        override val currentDestination: com.jermey.quo.vadis.core.navigation.core.Destination?,
+        override val currentDestination: NavDestination?,
         override val backStackSize: Int
     ) : NavigationState
 

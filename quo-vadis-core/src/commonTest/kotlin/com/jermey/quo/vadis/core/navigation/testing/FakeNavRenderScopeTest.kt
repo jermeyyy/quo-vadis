@@ -4,7 +4,7 @@ import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.route
 import kotlin.test.Ignore
@@ -32,7 +32,7 @@ class FakeNavRenderScopeTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object TestDestination : Destination {
+    private object TestDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -222,7 +222,7 @@ class FakeNavRenderScopeTest {
     @Test
     fun `EmptyScreenRegistry hasContent returns false for different destinations`() {
         // Given
-        val anotherDestination = object : Destination {
+        val anotherDestination = object : NavDestination {
             override val data: Any? = "test"
             override val transition: NavigationTransition? = null
         }

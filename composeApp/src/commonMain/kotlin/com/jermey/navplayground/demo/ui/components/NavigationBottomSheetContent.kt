@@ -21,12 +21,12 @@ import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.destinations.MainTabs
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 @Composable
 fun NavigationBottomSheetContent(
     currentRoute: String?,
-    onNavigate: (Destination) -> Unit
+    onNavigate: (NavDestination) -> Unit
 ) {
     Column(
         modifier = Modifier

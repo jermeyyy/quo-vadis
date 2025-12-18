@@ -4,7 +4,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import kotlin.reflect.KClass
@@ -45,7 +45,7 @@ internal object EmptyNavigationConfig : NavigationConfig {
     override val screenRegistry: ScreenRegistry = object : ScreenRegistry {
         @androidx.compose.runtime.Composable
         override fun Content(
-            destination: Destination,
+            destination: NavDestination,
             navigator: com.jermey.quo.vadis.core.navigation.core.Navigator,
             sharedTransitionScope: androidx.compose.animation.SharedTransitionScope?,
             animatedVisibilityScope: androidx.compose.animation.AnimatedVisibilityScope?
@@ -53,7 +53,7 @@ internal object EmptyNavigationConfig : NavigationConfig {
             // Empty implementation - no content registered
         }
 
-        override fun hasContent(destination: Destination): Boolean = false
+        override fun hasContent(destination: NavDestination): Boolean = false
     }
 
     /**
@@ -86,7 +86,7 @@ internal object EmptyNavigationConfig : NavigationConfig {
      * @return Always null in empty config
      */
     override fun buildNavNode(
-        destinationClass: KClass<out Destination>,
+        destinationClass: KClass<out NavDestination>,
         key: String?,
         parentKey: String?
     ): NavNode? = null

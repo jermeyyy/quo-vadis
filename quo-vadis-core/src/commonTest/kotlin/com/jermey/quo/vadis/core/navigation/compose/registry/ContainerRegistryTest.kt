@@ -3,7 +3,7 @@ package com.jermey.quo.vadis.core.navigation.compose.registry
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.core.PaneNode
@@ -35,7 +35,7 @@ class ContainerRegistryTest {
     /**
      * Simulates a destination that is part of a tab container.
      */
-    private sealed interface MainTabs : Destination {
+    private sealed interface MainTabs : NavDestination {
         data object HomeTab : MainTabs {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -50,7 +50,7 @@ class ContainerRegistryTest {
     /**
      * Simulates a destination that is part of a pane container.
      */
-    private sealed interface DetailPane : Destination {
+    private sealed interface DetailPane : NavDestination {
         data object ListItem : DetailPane {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -65,7 +65,7 @@ class ContainerRegistryTest {
     /**
      * A destination that is NOT part of any container.
      */
-    private data object StandaloneDestination : Destination {
+    private data object StandaloneDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -453,9 +453,9 @@ class ContainerRegistryTest {
      * Only the getContainerInfo function needs custom logic.
      */
     private fun createTestContainerRegistry(
-        getContainerInfoImpl: (Destination) -> ContainerInfo?
+        getContainerInfoImpl: (NavDestination) -> ContainerInfo?
     ): ContainerRegistry = object : ContainerRegistry {
-        override fun getContainerInfo(destination: Destination): ContainerInfo? =
+        override fun getContainerInfo(destination: NavDestination): ContainerInfo? =
             getContainerInfoImpl(destination)
 
         @Composable

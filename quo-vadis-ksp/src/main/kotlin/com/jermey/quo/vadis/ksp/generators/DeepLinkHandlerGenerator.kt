@@ -333,7 +333,7 @@ class DeepLinkHandlerGenerator(
 
         return FunSpec.builder("createDeepLinkUri")
             .addModifiers(KModifier.OVERRIDE)
-            .addParameter("destination", QuoVadisClassNames.DESTINATION)
+            .addParameter("destination", QuoVadisClassNames.NAV_DESTINATION)
             .addParameter("scheme", STRING)
             .returns(STRING.copy(nullable = true))
             .beginControlFlow("return when (destination)")
@@ -442,7 +442,7 @@ class DeepLinkHandlerGenerator(
         return FunSpec.builder("resolve")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("deepLink", DEEP_LINK)
-            .returns(QuoVadisClassNames.DESTINATION.copy(nullable = true))
+            .returns(QuoVadisClassNames.NAV_DESTINATION.copy(nullable = true))
             .addCode(
                 """
                 |val result = handleDeepLink(deepLink.uri)
@@ -465,7 +465,7 @@ class DeepLinkHandlerGenerator(
     private fun buildRegisterFunction(): FunSpec {
         val actionType = LambdaTypeName.get(
             parameters = listOf(
-                ParameterSpec.builder("destination", QuoVadisClassNames.DESTINATION).build(),
+                ParameterSpec.builder("destination", QuoVadisClassNames.NAV_DESTINATION).build(),
                 ParameterSpec.builder("navigator", NAVIGATOR).build(),
                 ParameterSpec.builder("parameters", MAP.parameterizedBy(STRING, STRING)).build()
             ),
@@ -534,7 +534,7 @@ class DeepLinkHandlerGenerator(
             parameters = listOf(
                 ParameterSpec.unnamed(MAP.parameterizedBy(STRING, STRING))
             ),
-            returnType = QuoVadisClassNames.DESTINATION
+            returnType = QuoVadisClassNames.NAV_DESTINATION
         )
 
         return TypeSpec.classBuilder("RoutePattern")

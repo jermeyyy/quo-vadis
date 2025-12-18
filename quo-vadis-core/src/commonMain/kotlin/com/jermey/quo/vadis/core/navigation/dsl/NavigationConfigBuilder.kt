@@ -9,7 +9,7 @@ import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlin.reflect.KClass
 
@@ -63,25 +63,25 @@ class NavigationConfigBuilder {
      * Registered screen content composables indexed by destination class.
      */
     @PublishedApi
-    internal val screens: MutableMap<KClass<out Destination>, ScreenEntry> = mutableMapOf()
+    internal val screens: MutableMap<KClass<out NavDestination>, ScreenEntry> = mutableMapOf()
 
     /**
      * Registered container builders indexed by destination class.
      */
     @PublishedApi
-    internal val containers: MutableMap<KClass<out Destination>, ContainerBuilder> = mutableMapOf()
+    internal val containers: MutableMap<KClass<out NavDestination>, ContainerBuilder> = mutableMapOf()
 
     /**
      * Scope membership definitions mapping scope keys to sets of destination classes.
      */
     @PublishedApi
-    internal val scopes: MutableMap<String, MutableSet<KClass<out Destination>>> = mutableMapOf()
+    internal val scopes: MutableMap<String, MutableSet<KClass<out NavDestination>>> = mutableMapOf()
 
     /**
      * Custom transitions indexed by destination class.
      */
     @PublishedApi
-    internal val transitions: MutableMap<KClass<out Destination>, NavTransition> = mutableMapOf()
+    internal val transitions: MutableMap<KClass<out NavDestination>, NavTransition> = mutableMapOf()
 
     /**
      * Custom tabs container wrapper composables indexed by wrapper key.
@@ -121,7 +121,7 @@ class NavigationConfigBuilder {
      * @param D The destination type (must extend [Destination])
      * @param content Composable lambda that renders the screen content
      */
-    inline fun <reified D : Destination> screen(
+    inline fun <reified D : NavDestination> screen(
         noinline content: @Composable (
             destination: D,
             navigator: Navigator,
@@ -133,7 +133,7 @@ class NavigationConfigBuilder {
         screens[D::class] = ScreenEntry(
             destinationClass = D::class,
             content = content as @Composable (
-                Destination,
+                NavDestination,
                 Navigator,
                 SharedTransitionScope?,
                 AnimatedVisibilityScope?
@@ -160,7 +160,7 @@ class NavigationConfigBuilder {
      * @param scopeKey Unique identifier for this container's scope
      * @param builder Configuration lambda for the stack's screens
      */
-    inline fun <reified D : Destination> stack(
+    inline fun <reified D : NavDestination> stack(
         scopeKey: String = D::class.simpleName ?: "stack",
         builder: StackBuilder.() -> Unit = {}
     ) {
@@ -198,7 +198,7 @@ class NavigationConfigBuilder {
      * @param scopeKey Unique identifier for this container's scope
      * @param builder Configuration lambda for the tabs
      */
-    inline fun <reified D : Destination> tabs(
+    inline fun <reified D : NavDestination> tabs(
         scopeKey: String = D::class.simpleName ?: "tabs",
         builder: TabsBuilder.() -> Unit = {}
     ) {
@@ -249,7 +249,7 @@ class NavigationConfigBuilder {
      * @param scopeKey Unique identifier for this container's scope
      * @param builder Configuration lambda for the panes
      */
-    inline fun <reified D : Destination> panes(
+    inline fun <reified D : NavDestination> panes(
         scopeKey: String = D::class.simpleName ?: "panes",
         builder: PanesBuilder.() -> Unit = {}
     ) {
@@ -305,7 +305,7 @@ class NavigationConfigBuilder {
      * @param D The destination type
      * @param transition The [NavTransition] to use
      */
-    inline fun <reified D : Destination> transition(transition: NavTransition) {
+    inline fun <reified D : NavDestination> transition(transition: NavTransition) {
         transitions[D::class] = transition
     }
 
@@ -440,21 +440,21 @@ fun navigationConfig(builder: NavigationConfigBuilder.() -> Unit): NavigationCon
 @NavigationConfigDsl
 class ScopeBuilder {
     @PublishedApi
-    internal val members: MutableSet<KClass<out Destination>> = mutableSetOf()
+    internal val members: MutableSet<KClass<out NavDestination>> = mutableSetOf()
 
     /**
      * Adds a destination class to this scope.
      *
      * @param destinationClass The class to add
      */
-    operator fun KClass<out Destination>.unaryPlus() {
+    operator fun KClass<out NavDestination>.unaryPlus() {
         addMember(this)
     }
 
     /**
      * Adds a destination class to this scope using reified type.
      */
-    inline fun <reified D : Destination> include() {
+    inline fun <reified D : NavDestination> include() {
         addMember(D::class)
     }
 
@@ -462,7 +462,7 @@ class ScopeBuilder {
      * Internal helper to add a member to the scope.
      */
     @PublishedApi
-    internal fun addMember(klass: KClass<out Destination>) {
+    internal fun addMember(klass: KClass<out NavDestination>) {
         members.add(klass)
     }
 }

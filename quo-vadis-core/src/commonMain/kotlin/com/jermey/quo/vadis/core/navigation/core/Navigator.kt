@@ -74,7 +74,7 @@ interface Navigator : ParentNavigator {
      *
      * This is derived from [state] for convenience.
      */
-    val currentDestination: StateFlow<Destination?>
+    val currentDestination: StateFlow<NavDestination?>
 
     /**
      * The previous destination before the current one.
@@ -82,7 +82,7 @@ interface Navigator : ParentNavigator {
      * Derived from the active stack's second-to-last entry.
      * Useful for determining if back navigation is semantically meaningful.
      */
-    val previousDestination: StateFlow<Destination?>
+    val previousDestination: StateFlow<NavDestination?>
 
     /**
      * Current transition animation (null if idle).
@@ -130,7 +130,7 @@ interface Navigator : ParentNavigator {
      * @param transition Optional transition animation (defaults to destination's transition)
      */
     fun navigate(
-        destination: Destination,
+        destination: NavDestination,
         transition: NavigationTransition? = null
     )
 
@@ -156,7 +156,7 @@ interface Navigator : ParentNavigator {
      * @param inclusive If true, also remove the destination matching clearRoute
      */
     fun navigateAndClearTo(
-        destination: Destination,
+        destination: NavDestination,
         clearRoute: String? = null,
         inclusive: Boolean = false
     )
@@ -167,14 +167,14 @@ interface Navigator : ParentNavigator {
      * @param destination The replacement destination
      * @param transition Optional transition animation
      */
-    fun navigateAndReplace(destination: Destination, transition: NavigationTransition? = null)
+    fun navigateAndReplace(destination: NavDestination, transition: NavigationTransition? = null)
 
     /**
      * Navigate to a destination and clear the entire active stack.
      *
      * @param destination The destination to set as the new root
      */
-    fun navigateAndClearAll(destination: Destination)
+    fun navigateAndClearAll(destination: NavDestination)
 
     // =========================================================================
     // TAB NAVIGATION
@@ -211,7 +211,7 @@ interface Navigator : ParentNavigator {
     )
     fun navigateToPane(
         role: PaneRole,
-        destination: Destination,
+        destination: NavDestination,
         switchFocus: Boolean = true,
         transition: NavigationTransition? = null
     )
@@ -379,7 +379,7 @@ interface Navigator : ParentNavigator {
  * @param role Target pane role
  * @param destination Destination to show in the pane
  */
-fun Navigator.showInPane(role: PaneRole, destination: Destination) {
+fun Navigator.showInPane(role: PaneRole, destination: NavDestination) {
     navigateToPane(role, destination, switchFocus = true)
 }
 
@@ -391,7 +391,7 @@ fun Navigator.showInPane(role: PaneRole, destination: Destination) {
  * @param role Target pane role
  * @param destination Destination to preload
  */
-fun Navigator.preloadPane(role: PaneRole, destination: Destination) {
+fun Navigator.preloadPane(role: PaneRole, destination: NavDestination) {
     navigateToPane(role, destination, switchFocus = false)
 }
 
@@ -402,7 +402,7 @@ fun Navigator.preloadPane(role: PaneRole, destination: Destination) {
  *
  * @param destination The detail destination to display
  */
-fun Navigator.showDetail(destination: Destination) {
+fun Navigator.showDetail(destination: NavDestination) {
     navigateToPane(PaneRole.Supporting, destination, switchFocus = true)
 }
 

@@ -13,7 +13,7 @@ package com.jermey.quo.vadis.core.navigation.core
  * @Destination
  * data class ItemPickerDestination(
  *     val items: List<String>
- * ) : Destination, ReturnsResult<PickedItem>
+ * ) : NavDestination, ReturnsResult<PickedItem>
  *
  * data class PickedItem(val id: String, val name: String)
  *

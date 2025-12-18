@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import kotlin.reflect.KClass
@@ -80,7 +80,7 @@ import kotlin.reflect.KClass
  */
 @Composable
 fun rememberQuoVadisNavigator(
-    rootDestination: KClass<out Destination>,
+    rootDestination: KClass<out NavDestination>,
     config: NavigationConfig,
     key: String? = null
 ): Navigator {
@@ -134,7 +134,7 @@ fun rememberQuoVadisNavigator(
  */
 @Composable
 fun rememberQuoVadisNavigator(
-    rootDestination: Destination,
+    rootDestination: NavDestination,
     config: NavigationConfig,
     key: String? = null
 ): Navigator {
@@ -238,7 +238,7 @@ fun rememberQuoVadisNavigator(
  */
 @Composable
 fun QuoVadisNavigation(
-    rootDestination: KClass<out Destination>,
+    rootDestination: KClass<out NavDestination>,
     config: NavigationConfig,
     modifier: Modifier = Modifier,
     key: String? = null,
@@ -287,7 +287,7 @@ fun QuoVadisNavigation(
  */
 @Composable
 fun QuoVadisNavigation(
-    rootDestination: Destination,
+    rootDestination: NavDestination,
     config: NavigationConfig,
     modifier: Modifier = Modifier,
     key: String? = null,

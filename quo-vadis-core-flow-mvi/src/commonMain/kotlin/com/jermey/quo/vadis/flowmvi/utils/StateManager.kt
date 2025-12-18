@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.flowmvi.utils
 
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.flowmvi.core.NavigationState
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -41,7 +41,7 @@ fun NavigationState.isValid(): Boolean {
  * Useful for initialization or reset scenarios.
  */
 fun emptyNavigationState(): NavigationState = object : NavigationState {
-    override val currentDestination: Destination? = null
+    override val currentDestination: NavDestination? = null
     override val backStackSize: Int = 0
     override val canGoBack: Boolean = false
     override fun equals(other: Any?): Boolean = other is NavigationState && 
@@ -57,8 +57,8 @@ fun emptyNavigationState(): NavigationState = object : NavigationState {
  * @param destination The initial destination
  * @return NavigationState with single entry
  */
-fun navigationStateOf(destination: Destination): NavigationState = object : NavigationState {
-    override val currentDestination: Destination = destination
+fun navigationStateOf(destination: NavDestination): NavigationState = object : NavigationState {
+    override val currentDestination: NavDestination = destination
     override val backStackSize: Int = 1
     override val canGoBack: Boolean = false
     override fun equals(other: Any?): Boolean = other is NavigationState && 
@@ -129,7 +129,7 @@ class NavigationStateHistory(private val maxSize: Int = 50) {
  * @property timestamp When the snapshot was taken
  */
 data class NavigationStateSnapshot(
-    val currentDestination: Destination?,
+    val currentDestination: NavDestination?,
     val backStackSize: Int,
     val timestamp: Long
 )
@@ -156,11 +156,11 @@ fun NavigationState.isEquivalentTo(other: NavigationState): Boolean {
  * Extension to copy and modify a NavigationState immutably.
  */
 fun NavigationState.copy(
-    currentDestination: Destination? = this.currentDestination,
+    currentDestination: NavDestination? = this.currentDestination,
     backStackSize: Int = this.backStackSize,
     canGoBack: Boolean = this.canGoBack
 ): NavigationState = object : NavigationState {
-    override val currentDestination: Destination? = currentDestination
+    override val currentDestination: NavDestination? = currentDestination
     override val backStackSize: Int = backStackSize
     override val canGoBack: Boolean = canGoBack
     override fun equals(other: Any?): Boolean = other is NavigationState && 

@@ -13,7 +13,7 @@ import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -108,7 +108,7 @@ internal class CompositeNavigationConfig(
      * @return NavNode from secondary if available, otherwise from primary
      */
     override fun buildNavNode(
-        destinationClass: KClass<out Destination>,
+        destinationClass: KClass<out NavDestination>,
         key: String?,
         parentKey: String?
     ): NavNode? {
@@ -139,7 +139,7 @@ private class CompositeScreenRegistry(
 
     @Composable
     override fun Content(
-        destination: Destination,
+        destination: NavDestination,
         navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?
@@ -151,7 +151,7 @@ private class CompositeScreenRegistry(
         }
     }
 
-    override fun hasContent(destination: Destination): Boolean {
+    override fun hasContent(destination: NavDestination): Boolean {
         return secondary.hasContent(destination) || primary.hasContent(destination)
     }
 }
@@ -164,7 +164,7 @@ private class CompositeScopeRegistry(
     private val secondary: ScopeRegistry
 ) : ScopeRegistry {
 
-    override fun isInScope(scopeKey: String, destination: Destination): Boolean {
+    override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
         // Check secondary first for an explicit registration
         val secondaryScopeKey = secondary.getScopeKey(destination)
         if (secondaryScopeKey != null) {
@@ -174,7 +174,7 @@ private class CompositeScopeRegistry(
         return primary.isInScope(scopeKey, destination)
     }
 
-    override fun getScopeKey(destination: Destination): String? {
+    override fun getScopeKey(destination: NavDestination): String? {
         return secondary.getScopeKey(destination) ?: primary.getScopeKey(destination)
     }
 }
@@ -202,7 +202,7 @@ private class CompositeContainerRegistry(
     private val secondary: ContainerRegistry
 ) : ContainerRegistry {
 
-    override fun getContainerInfo(destination: Destination): ContainerInfo? {
+    override fun getContainerInfo(destination: NavDestination): ContainerInfo? {
         return secondary.getContainerInfo(destination) ?: primary.getContainerInfo(destination)
     }
 
@@ -257,12 +257,12 @@ private class CompositeDeepLinkHandler(
         return primary.handleDeepLink(uri)
     }
 
-    override fun createDeepLinkUri(destination: Destination, scheme: String): String? {
+    override fun createDeepLinkUri(destination: NavDestination, scheme: String): String? {
         return secondary.createDeepLinkUri(destination, scheme)
             ?: primary.createDeepLinkUri(destination, scheme)
     }
 
-    override fun resolve(deepLink: DeepLink): Destination? {
+    override fun resolve(deepLink: DeepLink): NavDestination? {
         return secondary.resolve(deepLink) ?: primary.resolve(deepLink)
     }
 

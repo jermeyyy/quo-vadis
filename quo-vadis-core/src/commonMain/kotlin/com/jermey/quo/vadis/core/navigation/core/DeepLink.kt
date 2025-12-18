@@ -41,7 +41,7 @@ data class DeepLink(
  */
 data class DeepLinkConfig(
     val uriPattern: String,
-    val destinationFactory: (Map<String, String>) -> Destination
+    val destinationFactory: (Map<String, String>) -> NavDestination
 )
 
 /**
@@ -53,7 +53,7 @@ interface DeepLinkHandler {
      * @param deepLink the deep link to resolve
      * @return the destination if resolved, null otherwise
      */
-    fun resolve(deepLink: DeepLink): Destination?
+    fun resolve(deepLink: DeepLink): NavDestination?
 
     /**
      * Register a deep link pattern with an action to execute when matched.
@@ -93,14 +93,14 @@ class DefaultDeepLinkHandler : DeepLinkHandler {
      */
     private data class LegacyDeepLinkRegistration(
         val pattern: String,
-        val destinationFactory: (Map<String, String>) -> Destination,
-        val action: (Destination, Navigator, Map<String, String>) -> Unit
+        val destinationFactory: (Map<String, String>) -> NavDestination,
+        val action: (NavDestination, Navigator, Map<String, String>) -> Unit
     )
     
     private val simpleRegistrations = mutableListOf<SimpleDeepLinkRegistration>()
     private val legacyRegistrations = mutableListOf<LegacyDeepLinkRegistration>()
 
-    override fun resolve(deepLink: DeepLink): Destination? {
+    override fun resolve(deepLink: DeepLink): NavDestination? {
         // Try legacy pattern matching (only legacy registrations have destination factories)
         legacyRegistrations.forEach { registration ->
             val pattern = registration.pattern

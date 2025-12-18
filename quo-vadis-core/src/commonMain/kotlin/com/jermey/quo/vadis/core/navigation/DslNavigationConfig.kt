@@ -9,7 +9,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.GeneratedTabMetadata
 import com.jermey.quo.vadis.core.navigation.core.NavNode
@@ -69,10 +69,10 @@ import kotlin.reflect.KClass
  * @see navigationConfig
  */
 internal class DslNavigationConfig(
-    private val screens: Map<KClass<out Destination>, ScreenEntry>,
-    private val containers: Map<KClass<out Destination>, ContainerBuilder>,
-    private val scopes: Map<String, Set<KClass<out Destination>>>,
-    private val transitions: Map<KClass<out Destination>, NavTransition>,
+    private val screens: Map<KClass<out NavDestination>, ScreenEntry>,
+    private val containers: Map<KClass<out NavDestination>, ContainerBuilder>,
+    private val scopes: Map<String, Set<KClass<out NavDestination>>>,
+    private val transitions: Map<KClass<out NavDestination>, NavTransition>,
     private val tabsContainers: Map<String, @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit>,
     private val paneContainers: Map<String, @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit>
 ) : NavigationConfig {
@@ -122,7 +122,7 @@ internal class DslNavigationConfig(
      * @return The constructed NavNode, or null if no container is registered
      */
     override fun buildNavNode(
-        destinationClass: KClass<out Destination>,
+        destinationClass: KClass<out NavDestination>,
         key: String?,
         parentKey: String?
     ): NavNode? {
@@ -156,7 +156,7 @@ internal class DslNavigationConfig(
      *
      * @return Combined map of scope keys to destination class sets
      */
-    private fun buildCombinedScopes(): Map<String, Set<KClass<out Destination>>> {
+    private fun buildCombinedScopes(): Map<String, Set<KClass<out NavDestination>>> {
         val combined = scopes.toMutableMap()
 
         // Add container-inferred scopes
@@ -194,7 +194,7 @@ internal class DslNavigationConfig(
      */
     private fun addTabEntriesToScope(
         config: BuiltTabsConfig,
-        members: MutableSet<KClass<out Destination>>
+        members: MutableSet<KClass<out NavDestination>>
     ) {
         config.tabs.forEach { entry ->
             when (entry) {

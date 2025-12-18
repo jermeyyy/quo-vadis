@@ -9,10 +9,10 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.RouteRegistry
  * 
  * KSP generates the necessary code to register routes, so destinations remain simple POJOs.
  */
-interface Destination {
+interface NavDestination {
     /**
      * Optional data passed to this destination.
-     * Should be a serializable type when using TypedDestination.
+     * Should be a serializable type.
      * Use null for destinations without data.
      */
     val data: Any? get() = null
@@ -25,14 +25,13 @@ interface Destination {
 }
 
 /**
- * Extension to get the route for any Destination.
+ * Extension to get the route for any NavDestination.
  * Routes are resolved from RouteRegistry (populated by KSP-generated code).
  */
-val Destination.route: String
+val NavDestination.route: String
     get() {
         val kClass = this::class
         val route = RouteRegistry.getRoute(kClass)
-        println("DEBUG: Destination.route - class=$kClass, simpleName=${kClass.simpleName}, route=$route")
         return route ?: error("Route not registered for ${kClass.simpleName}. Ensure @Route annotation is present.")
     }
 

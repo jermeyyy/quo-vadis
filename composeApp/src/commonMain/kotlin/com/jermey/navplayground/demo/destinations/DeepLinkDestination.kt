@@ -1,7 +1,8 @@
 package com.jermey.navplayground.demo.destinations
 
+import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 /**
  * Deep link demo destination.
@@ -10,7 +11,7 @@ import com.jermey.quo.vadis.core.navigation.core.Destination
  * Allows navigation to all linked screens for testing deep links.
  */
 @Stack(name = "deeplink", startDestination = "Demo")
-sealed class DeepLinkDestination : Destination {
-    @com.jermey.quo.vadis.annotations.Destination(route = "deeplink/demo")
+sealed class DeepLinkDestination : NavDestination {
+    @Destination(route = "deeplink/demo")
     data object Demo : DeepLinkDestination()
 }

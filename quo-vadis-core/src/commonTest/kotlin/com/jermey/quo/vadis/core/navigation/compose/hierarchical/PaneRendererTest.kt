@@ -2,7 +2,7 @@ package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
@@ -34,17 +34,17 @@ class PaneRendererTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object ListDestination : Destination {
+    private object ListDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object DetailDestination : Destination {
+    private object DetailDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ExtraDestination : Destination {
+    private object ExtraDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -56,7 +56,7 @@ class PaneRendererTest {
     private fun createScreen(
         key: String,
         parentKey: String? = null,
-        destination: Destination = ListDestination
+        destination: NavDestination = ListDestination
     ): ScreenNode = ScreenNode(key, parentKey, destination)
 
     private fun createStack(

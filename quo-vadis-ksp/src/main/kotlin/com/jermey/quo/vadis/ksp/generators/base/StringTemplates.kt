@@ -297,8 +297,8 @@ object StringTemplates {
      * Use when building string-based code or messages.
      */
     object Types {
-        /** Destination type name. */
-        const val DESTINATION = "Destination"
+        /** NavDestination type name (interface for navigation destinations). */
+        const val NAV_DESTINATION = "NavDestination"
 
         /** Navigator type name. */
         const val NAVIGATOR = "Navigator"

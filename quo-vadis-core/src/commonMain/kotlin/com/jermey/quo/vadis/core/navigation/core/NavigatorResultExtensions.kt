@@ -37,7 +37,7 @@ package com.jermey.quo.vadis.core.navigation.core
 @Suppress("UNCHECKED_CAST")
 suspend fun <R : Any, D> Navigator.navigateForResult(
     destination: D
-): R? where D : Destination, D : ReturnsResult<R> {
+): R? where D : NavDestination, D : ReturnsResult<R> {
     println("navigateForResult: navigating to $destination")
     // Navigate to the destination
     navigate(destination)

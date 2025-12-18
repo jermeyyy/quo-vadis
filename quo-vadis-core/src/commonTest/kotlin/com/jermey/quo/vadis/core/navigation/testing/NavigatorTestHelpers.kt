@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.testing
 
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
@@ -49,7 +49,7 @@ import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
  * @return A TreeNavigator with the destination as its initial state
  */
 @Suppress("UnusedReceiverParameter")
-fun TreeNavigator.Companion.withDestination(destination: Destination): TreeNavigator {
+fun TreeNavigator.Companion.withDestination(destination: NavDestination): TreeNavigator {
     val stackKey = NavKeyGenerator.generate()
     val screenKey = NavKeyGenerator.generate()
     val screenNode = ScreenNode(
@@ -85,7 +85,7 @@ fun TreeNavigator.Companion.withState(initialState: NavNode): TreeNavigator {
  * @return A StackNode containing a single screen
  */
 @Suppress("UnusedReceiverParameter")
-fun StackNode.Companion.singleScreen(destination: Destination): StackNode {
+fun StackNode.Companion.singleScreen(destination: NavDestination): StackNode {
     val stackKey = NavKeyGenerator.generate()
     val screenKey = NavKeyGenerator.generate()
     val screenNode = ScreenNode(

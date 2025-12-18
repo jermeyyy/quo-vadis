@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.dsl
 
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import kotlin.reflect.KClass
 
 /**
@@ -79,7 +79,7 @@ class TabsBuilder {
      * @param icon Optional icon for the tab (type is Any to support various icon types)
      */
     fun tab(
-        destination: Destination,
+        destination: NavDestination,
         title: String? = null,
         icon: Any? = null
     ) {
@@ -114,7 +114,7 @@ class TabsBuilder {
      * @param builder Stack configuration lambda
      */
     fun tab(
-        destination: Destination,
+        destination: NavDestination,
         title: String?,
         icon: Any?,
         builder: StackBuilder.() -> Unit
@@ -154,7 +154,7 @@ class TabsBuilder {
      * @param icon Optional icon for the tab
      */
     fun containerTab(
-        containerClass: KClass<out Destination>,
+        containerClass: KClass<out NavDestination>,
         title: String? = null,
         icon: Any? = null
     ) {
@@ -180,7 +180,7 @@ class TabsBuilder {
      * @param title Optional display title for the tab
      * @param icon Optional icon for the tab
      */
-    inline fun <reified D : Destination> containerTab(
+    inline fun <reified D : NavDestination> containerTab(
         title: String? = null,
         icon: Any? = null
     ) {
@@ -227,8 +227,8 @@ sealed class TabEntry {
      * @property icon Tab icon
      */
     data class FlatScreen(
-        val destination: Destination,
-        val destinationClass: KClass<out Destination>,
+        val destination: NavDestination,
+        val destinationClass: KClass<out NavDestination>,
         override val title: String?,
         override val icon: Any?
     ) : TabEntry()
@@ -243,8 +243,8 @@ sealed class TabEntry {
      * @property icon Tab icon
      */
     data class NestedStack(
-        val rootDestination: Destination,
-        val destinationClass: KClass<out Destination>,
+        val rootDestination: NavDestination,
+        val destinationClass: KClass<out NavDestination>,
         val screens: List<StackScreenEntry>,
         override val title: String?,
         override val icon: Any?
@@ -258,7 +258,7 @@ sealed class TabEntry {
      * @property icon Tab icon
      */
     data class ContainerReference(
-        val containerClass: KClass<out Destination>,
+        val containerClass: KClass<out NavDestination>,
         override val title: String?,
         override val icon: Any?
     ) : TabEntry()

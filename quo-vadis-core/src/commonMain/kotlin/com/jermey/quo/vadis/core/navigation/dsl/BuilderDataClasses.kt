@@ -4,7 +4,7 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
@@ -21,9 +21,9 @@ import kotlin.reflect.KClass
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 data class ScreenEntry(
-    val destinationClass: KClass<out Destination>,
+    val destinationClass: KClass<out NavDestination>,
     val content: @Composable (
-        destination: Destination,
+        destination: NavDestination,
         navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?,
@@ -39,7 +39,7 @@ data class ScreenEntry(
  * @property isAlwaysVisible Whether the pane should always be visible
  */
 data class BuiltPaneContent(
-    val rootDestination: Destination?,
+    val rootDestination: NavDestination?,
     val isAlwaysVisible: Boolean
 )
 

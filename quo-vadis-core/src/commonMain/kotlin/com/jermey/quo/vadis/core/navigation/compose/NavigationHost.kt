@@ -45,6 +45,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.LocalBackHandlerReg
 import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.render.rememberComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.core.activeLeaf
@@ -541,7 +542,7 @@ private object EmptyScreenRegistry : ScreenRegistry {
 
     @Composable
     override fun Content(
-        destination: com.jermey.quo.vadis.core.navigation.core.Destination,
+        destination: NavDestination,
         navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?
@@ -550,6 +551,6 @@ private object EmptyScreenRegistry : ScreenRegistry {
     }
 
     override fun hasContent(
-        destination: com.jermey.quo.vadis.core.navigation.core.Destination
+        destination: NavDestination
     ): Boolean = false
 }

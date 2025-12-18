@@ -1,7 +1,8 @@
 package com.jermey.navplayground.demo.destinations
 
+import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 /**
  * Auth flow destinations - Demonstrates scope-aware stack navigation.
@@ -15,13 +16,13 @@ import com.jermey.quo.vadis.core.navigation.core.Destination
  * - Out-of-scope navigation: AuthFlow → MainTabs navigates above the AuthFlow stack
  */
 @Stack(name = "auth", startDestination = "Login")
-sealed class AuthFlowDestination : Destination {
-    @com.jermey.quo.vadis.annotations.Destination(route = "auth/login")
+sealed class AuthFlowDestination : NavDestination {
+    @Destination(route = "auth/login")
     data object Login : AuthFlowDestination()
 
-    @com.jermey.quo.vadis.annotations.Destination(route = "auth/register")
+    @Destination(route = "auth/register")
     data object Register : AuthFlowDestination()
 
-    @com.jermey.quo.vadis.annotations.Destination(route = "auth/forgot-password")
+    @Destination(route = "auth/forgot-password")
     data object ForgotPassword : AuthFlowDestination()
 }

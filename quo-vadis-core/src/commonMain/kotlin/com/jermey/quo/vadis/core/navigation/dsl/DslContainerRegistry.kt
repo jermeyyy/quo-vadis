@@ -6,7 +6,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerInfo
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.PaneNode
 import com.jermey.quo.vadis.core.navigation.core.TabNode
@@ -68,10 +68,10 @@ import kotlin.reflect.KClass
  */
 @Stable
 internal class DslContainerRegistry(
-    private val containers: Map<KClass<out Destination>, ContainerBuilder>,
+    private val containers: Map<KClass<out NavDestination>, ContainerBuilder>,
     private val tabsContainers: Map<String, @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit>,
     private val paneContainers: Map<String, @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit>,
-    private val navNodeBuilder: (KClass<out Destination>, String?, String?) -> NavNode?
+    private val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode?
 ) : ContainerRegistry {
 
     /**
@@ -79,14 +79,14 @@ internal class DslContainerRegistry(
      *
      * Built lazily to enable looking up containers by member destinations.
      */
-    private val tabMemberToContainer: Map<KClass<out Destination>, KClass<out Destination>> by lazy {
+    private val tabMemberToContainer: Map<KClass<out NavDestination>, KClass<out NavDestination>> by lazy {
         buildTabMemberMapping()
     }
 
     /**
      * Mapping from pane member destinations to their container class.
      */
-    private val paneMemberToContainer: Map<KClass<out Destination>, KClass<out Destination>> by lazy {
+    private val paneMemberToContainer: Map<KClass<out NavDestination>, KClass<out NavDestination>> by lazy {
         buildPaneMemberMapping()
     }
 
@@ -101,7 +101,7 @@ internal class DslContainerRegistry(
      * @return [ContainerInfo] if destination needs a container, null otherwise
      */
     @Suppress("ReturnCount")
-    override fun getContainerInfo(destination: Destination): ContainerInfo? {
+    override fun getContainerInfo(destination: NavDestination): ContainerInfo? {
         val destClass = destination::class
 
         // First check if this is a container root
@@ -134,7 +134,7 @@ internal class DslContainerRegistry(
      */
     private fun createContainerInfo(
         builder: ContainerBuilder,
-        containerClass: KClass<out Destination>
+        containerClass: KClass<out NavDestination>
     ): ContainerInfo? {
         return when (builder) {
             is ContainerBuilder.Stack -> null // Stacks don't create ContainerInfo
@@ -148,7 +148,7 @@ internal class DslContainerRegistry(
      */
     private fun createTabContainerInfo(
         builder: ContainerBuilder.Tabs,
-        containerClass: KClass<out Destination>,
+        containerClass: KClass<out NavDestination>,
         initialTabIndex: Int
     ): ContainerInfo.TabContainer {
         return ContainerInfo.TabContainer(
@@ -177,7 +177,7 @@ internal class DslContainerRegistry(
      */
     private fun createPaneContainerInfo(
         builder: ContainerBuilder.Panes,
-        containerClass: KClass<out Destination>
+        containerClass: KClass<out NavDestination>
     ): ContainerInfo.PaneContainer {
         return ContainerInfo.PaneContainer(
             builder = { key, parentKey ->
@@ -204,7 +204,7 @@ internal class DslContainerRegistry(
     @Suppress("ReturnCount")
     private fun findTabIndex(
         builder: ContainerBuilder.Tabs,
-        destClass: KClass<out Destination>
+        destClass: KClass<out NavDestination>
     ): Int {
         builder.config.tabs.forEachIndexed { index, entry ->
             when (entry) {
@@ -235,8 +235,8 @@ internal class DslContainerRegistry(
      * @return true if destClass is within the container
      */
     private fun isDestinationInContainer(
-        containerClass: KClass<out Destination>,
-        destClass: KClass<out Destination>
+        containerClass: KClass<out NavDestination>,
+        destClass: KClass<out NavDestination>
     ): Boolean {
         val containerBuilder = containers[containerClass] ?: return false
 
@@ -276,8 +276,8 @@ internal class DslContainerRegistry(
      * to correctly create the parent tab container (`DemoTabs`).
      */
     @Suppress("NestedBlockDepth")
-    private fun buildTabMemberMapping(): Map<KClass<out Destination>, KClass<out Destination>> {
-        val result = mutableMapOf<KClass<out Destination>, KClass<out Destination>>()
+    private fun buildTabMemberMapping(): Map<KClass<out NavDestination>, KClass<out NavDestination>> {
+        val result = mutableMapOf<KClass<out NavDestination>, KClass<out NavDestination>>()
 
         containers.forEach { (containerClass, builder) ->
             if (builder is ContainerBuilder.Tabs) {
@@ -322,9 +322,9 @@ internal class DslContainerRegistry(
      * @param result The mapping being built
      */
     private fun addReferencedContainerMembers(
-        referencedClass: KClass<out Destination>,
-        tabContainerClass: KClass<out Destination>,
-        result: MutableMap<KClass<out Destination>, KClass<out Destination>>
+        referencedClass: KClass<out NavDestination>,
+        tabContainerClass: KClass<out NavDestination>,
+        result: MutableMap<KClass<out NavDestination>, KClass<out NavDestination>>
     ) {
         val referencedBuilder = containers[referencedClass] ?: return
 
@@ -373,8 +373,8 @@ internal class DslContainerRegistry(
     /**
      * Builds mapping from pane member destinations to their container class.
      */
-    private fun buildPaneMemberMapping(): Map<KClass<out Destination>, KClass<out Destination>> {
-        val result = mutableMapOf<KClass<out Destination>, KClass<out Destination>>()
+    private fun buildPaneMemberMapping(): Map<KClass<out NavDestination>, KClass<out NavDestination>> {
+        val result = mutableMapOf<KClass<out NavDestination>, KClass<out NavDestination>>()
 
         containers.forEach { (containerClass, builder) ->
             if (builder is ContainerBuilder.Panes) {

@@ -4,7 +4,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import kotlin.reflect.KClass
@@ -123,7 +123,7 @@ interface NavigationConfig {
      * @return The constructed [NavNode], or null if the destination class is not registered
      */
     fun buildNavNode(
-        destinationClass: KClass<out Destination>,
+        destinationClass: KClass<out NavDestination>,
         key: String? = null,
         parentKey: String? = null
     ): NavNode?

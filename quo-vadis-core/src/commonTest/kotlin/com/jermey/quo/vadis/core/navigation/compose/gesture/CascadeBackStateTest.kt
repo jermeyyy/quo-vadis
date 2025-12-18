@@ -2,7 +2,7 @@ package com.jermey.quo.vadis.core.navigation.compose.gesture
 
 import com.jermey.quo.vadis.core.navigation.compose.navback.calculateCascadeBackState
 import com.jermey.quo.vadis.core.navigation.compose.navback.wouldCascade
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
@@ -24,19 +24,19 @@ class CascadeBackStateTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : Destination {
+    private object HomeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "home"
     }
 
-    private object ProfileDestination : Destination {
+    private object ProfileDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "profile"
     }
 
-    private object SettingsDestination : Destination {
+    private object SettingsDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "settings"

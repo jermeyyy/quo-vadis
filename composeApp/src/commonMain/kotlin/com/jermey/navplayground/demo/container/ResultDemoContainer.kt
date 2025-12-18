@@ -6,19 +6,16 @@ import com.jermey.navplayground.demo.destinations.ResultDemoDestination
 import com.jermey.navplayground.demo.destinations.SelectedItem
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.navigateForResult
-import com.jermey.quo.vadis.core.navigation.core.registerNavigationLifecycle
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
-import pro.respawn.flowmvi.api.StateReceiver
-import pro.respawn.flowmvi.dsl.state
+import pro.respawn.flowmvi.api.PipelineContext
 import pro.respawn.flowmvi.dsl.store
 import pro.respawn.flowmvi.plugins.reduce
+
+private typealias Ctx = PipelineContext<ResultDemoState, Intent, Action>
 
 /**
  * State for the Result Demo screen.
@@ -82,7 +79,7 @@ class ResultDemoContainer(
         }
     }
 
-    private suspend fun StateReceiver<ResultDemoState>.pickItem() {
+    private suspend fun Ctx.pickItem() {
         println("ResultDemoContainer.pickItem() called")
         updateState { copy(isLoading = true) }
         coroutineScope.launch {
@@ -107,7 +104,7 @@ class ResultDemoContainer(
     /**
      * Clear the current selection.
      */
-    private suspend fun StateReceiver<ResultDemoState>.clearSelection() {
+    private suspend fun Ctx.clearSelection() {
         updateState {
             copy(
                 selectedItem = null,

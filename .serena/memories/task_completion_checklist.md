@@ -19,8 +19,8 @@ Run through this checklist after completing any code changes:
 ### 2. Testing
 
 ```bash
-# Run desktop tests (fastest)
-./gradlew :quo-vadis-core:desktopTest
+# Run android tests (fastest)
+./gradlew :quo-vadis-core:androidTest
 
 # Run all tests for the affected module
 ./gradlew :quo-vadis-core:test
@@ -66,8 +66,6 @@ For UI or platform-specific changes:
 # Android
 ./gradlew :composeApp:installDebug
 
-# Web
-./gradlew :composeApp:jsBrowserDevelopmentRun
 ```
 
 - [ ] Feature works on Android

@@ -32,37 +32,37 @@ class TreeNavigatorTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : Destination {
+    private object HomeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "home"
     }
 
-    private object ProfileDestination : Destination {
+    private object ProfileDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "profile"
     }
 
-    private object SettingsDestination : Destination {
+    private object SettingsDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "settings"
     }
 
-    private object DetailDestination : Destination {
+    private object DetailDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "detail"
     }
 
-    private object ListDestination : Destination {
+    private object ListDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "list"
     }
 
-    private object FeedDestination : Destination {
+    private object FeedDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "feed"

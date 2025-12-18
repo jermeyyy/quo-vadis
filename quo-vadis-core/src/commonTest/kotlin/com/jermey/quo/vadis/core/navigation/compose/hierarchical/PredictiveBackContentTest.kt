@@ -1,7 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.StackNode
@@ -29,12 +29,12 @@ class PredictiveBackContentTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object CurrentDestination : Destination {
+    private object CurrentDestination : NavDestination {
         override val data: Any? = "current"
         override val transition: NavigationTransition? = null
     }
 
-    private object PreviousDestination : Destination {
+    private object PreviousDestination : NavDestination {
         override val data: Any? = "previous"
         override val transition: NavigationTransition? = null
     }
@@ -46,7 +46,7 @@ class PredictiveBackContentTest {
     private fun createScreen(
         key: String,
         parentKey: String? = null,
-        destination: Destination = CurrentDestination
+        destination: NavDestination = CurrentDestination
     ): ScreenNode = ScreenNode(key, parentKey, destination)
 
     private fun createStack(

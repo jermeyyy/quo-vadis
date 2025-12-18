@@ -1,7 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
@@ -28,17 +28,17 @@ class AnimatedNavContentTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object ScreenADestination : Destination {
+    private object ScreenADestination : NavDestination {
         override val data: Any? = "A"
         override val transition: NavigationTransition? = null
     }
 
-    private object ScreenBDestination : Destination {
+    private object ScreenBDestination : NavDestination {
         override val data: Any? = "B"
         override val transition: NavigationTransition? = null
     }
 
-    private object ScreenCDestination : Destination {
+    private object ScreenCDestination : NavDestination {
         override val data: Any? = "C"
         override val transition: NavigationTransition? = null
     }
@@ -50,7 +50,7 @@ class AnimatedNavContentTest {
     private fun createScreen(
         key: String,
         parentKey: String? = null,
-        destination: Destination = ScreenADestination
+        destination: NavDestination = ScreenADestination
     ): ScreenNode = ScreenNode(key, parentKey, destination)
 
     private fun createStack(
@@ -307,7 +307,7 @@ class AnimatedNavContentTest {
     @Test
     fun `screen destination can specify custom transition`() {
         // Given
-        val slideDestination = object : Destination {
+        val slideDestination = object : NavDestination {
             override val data: Any? = null
             override val transition: NavigationTransition? = NavigationTransitions.SlideHorizontal
         }

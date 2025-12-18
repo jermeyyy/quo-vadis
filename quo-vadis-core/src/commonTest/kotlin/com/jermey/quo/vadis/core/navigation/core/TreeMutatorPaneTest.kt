@@ -26,25 +26,25 @@ class TreeMutatorPaneTest {
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object ListDestination : Destination {
+    private object ListDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "list"
     }
 
-    private object DetailDestination : Destination {
+    private object DetailDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "detail"
     }
 
-    private object SettingsDestination : Destination {
+    private object SettingsDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "settings"
     }
 
-    private object ExtraDestination : Destination {
+    private object ExtraDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "extra"

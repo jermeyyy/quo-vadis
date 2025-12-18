@@ -5,7 +5,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlin.reflect.KClass
 
@@ -37,7 +37,7 @@ import kotlin.reflect.KClass
  *
  * ```kotlin
  * @Composable
- * fun RenderScreen(destination: Destination) {
+ * fun RenderScreen(destination: NavDestination) {
  *     screenRegistry.Content(destination, navigator, null, null)
  * }
  * ```
@@ -50,7 +50,7 @@ import kotlin.reflect.KClass
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 internal class DslScreenRegistry(
-    private val screens: Map<KClass<out Destination>, ScreenEntry>
+    private val screens: Map<KClass<out NavDestination>, ScreenEntry>
 ) : ScreenRegistry {
 
     /**
@@ -68,7 +68,7 @@ internal class DslScreenRegistry(
      */
     @Composable
     override fun Content(
-        destination: Destination,
+        destination: NavDestination,
         navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?
@@ -88,7 +88,7 @@ internal class DslScreenRegistry(
      * @param destination The destination to check
      * @return true if a screen is registered for this destination's class
      */
-    override fun hasContent(destination: Destination): Boolean {
+    override fun hasContent(destination: NavDestination): Boolean {
         return screens.containsKey(destination::class)
     }
 }

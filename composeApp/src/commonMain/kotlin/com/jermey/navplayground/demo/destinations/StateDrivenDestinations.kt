@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo.destinations
 
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 /**
  * Destinations for the State-Driven Navigation Demo.
@@ -9,7 +9,7 @@ import com.jermey.quo.vadis.core.navigation.core.Destination
  * - Object destinations (Home, Settings) - no parameters
  * - Data class destinations (Profile, Detail) - with parameters
  */
-sealed class StateDrivenDestination : Destination {
+sealed class StateDrivenDestination : NavDestination {
 
     /**
      * Home destination - the starting point of the demo.

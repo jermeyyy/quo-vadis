@@ -13,7 +13,7 @@ import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackContro
 import com.jermey.quo.vadis.core.navigation.compose.render.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.navigation.compose.render.NavRenderScope
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 
@@ -98,7 +98,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
  * val testRegistry = object : ScreenRegistry {
  *     @Composable
  *     override fun Content(
- *         destination: Destination,
+ *         destination: NavDestination,
  *         navigator: Navigator,
  *         sharedTransitionScope: SharedTransitionScope?,
  *         animatedVisibilityScope: AnimatedVisibilityScope?
@@ -108,7 +108,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
  *             else -> {}
  *         }
  *     }
- *     override fun hasContent(destination: Destination) = destination is MyTestDestination
+ *     override fun hasContent(destination: NavDestination) = destination is MyTestDestination
  * }
  * 
  * val fakeScope = FakeNavRenderScope(screenRegistry = testRegistry)
@@ -266,7 +266,7 @@ class FakeSaveableStateHolder : SaveableStateHolder {
  * val testRegistry = object : ScreenRegistry {
  *     @Composable
  *     override fun Content(
- *         destination: Destination,
+ *         destination: NavDestination,
  *         navigator: Navigator,
  *         sharedTransitionScope: SharedTransitionScope?,
  *         animatedVisibilityScope: AnimatedVisibilityScope?
@@ -277,7 +277,7 @@ class FakeSaveableStateHolder : SaveableStateHolder {
  *         }
  *     }
  *     
- *     override fun hasContent(destination: Destination) = 
+ *     override fun hasContent(destination: NavDestination) = 
  *         destination is TestDestination
  * }
  * ```
@@ -298,7 +298,7 @@ object EmptyScreenRegistry : ScreenRegistry {
      */
     @Composable
     override fun Content(
-        destination: Destination,
+        destination: NavDestination,
         navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?
@@ -312,5 +312,5 @@ object EmptyScreenRegistry : ScreenRegistry {
      * @param destination The destination to check
      * @return Always `false`
      */
-    override fun hasContent(destination: Destination): Boolean = false
+    override fun hasContent(destination: NavDestination): Boolean = false
 }

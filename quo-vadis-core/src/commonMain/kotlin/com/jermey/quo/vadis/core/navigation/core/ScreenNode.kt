@@ -19,5 +19,5 @@ import kotlinx.serialization.Serializable
 data class ScreenNode(
     override val key: String,
     override val parentKey: String?,
-    val destination: Destination
+    val destination: NavDestination
 ) : NavNode

@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens.statedriven
 
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 data class BackStackEntry(
     val id: String,
-    val destination: Destination
+    val destination: NavDestination
 )
 
 /**
@@ -96,7 +96,7 @@ class DemoBackStack {
     /**
      * Push a destination onto the backstack.
      */
-    fun push(destination: Destination) {
+    fun push(destination: NavDestination) {
         val newState = TreeMutator.push(_state.value, destination)
         _state.value = newState
     }

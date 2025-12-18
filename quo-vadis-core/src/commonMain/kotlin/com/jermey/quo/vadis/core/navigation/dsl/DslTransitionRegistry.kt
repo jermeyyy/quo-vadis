@@ -3,7 +3,7 @@ package com.jermey.quo.vadis.core.navigation.dsl
 import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import kotlin.reflect.KClass
 
 /**
@@ -47,7 +47,7 @@ import kotlin.reflect.KClass
  */
 @Stable
 internal class DslTransitionRegistry(
-    private val transitions: Map<KClass<out Destination>, NavTransition>
+    private val transitions: Map<KClass<out NavDestination>, NavTransition>
 ) : TransitionRegistry {
 
     /**

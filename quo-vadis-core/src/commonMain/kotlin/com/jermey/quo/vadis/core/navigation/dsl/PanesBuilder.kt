@@ -2,7 +2,7 @@ package com.jermey.quo.vadis.core.navigation.dsl
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
 
@@ -238,7 +238,7 @@ class PaneContentBuilder {
     /**
      * The root destination for this pane.
      */
-    internal var rootDestination: Destination? = null
+    internal var rootDestination: NavDestination? = null
 
     /**
      * Whether this pane should always be visible, even on compact screens.
@@ -253,7 +253,7 @@ class PaneContentBuilder {
      *
      * @param destination The root destination
      */
-    fun root(destination: Destination) {
+    fun root(destination: NavDestination) {
         rootDestination = destination
     }
 

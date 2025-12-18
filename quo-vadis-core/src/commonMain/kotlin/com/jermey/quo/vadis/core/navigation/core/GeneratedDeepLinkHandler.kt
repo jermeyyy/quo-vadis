@@ -64,7 +64,7 @@ interface GeneratedDeepLinkHandler : DeepLinkHandler {
      * @return The URI string representing the destination, or `null` if the destination
      *         type has no associated route pattern (i.e., was not annotated with a route).
      */
-    fun createDeepLinkUri(destination: Destination, scheme: String = "myapp"): String?
+    fun createDeepLinkUri(destination: NavDestination, scheme: String = "myapp"): String?
 }
 
 /**
@@ -94,7 +94,7 @@ sealed class DeepLinkResult {
      *
      * @property destination The destination instance created from the deep link.
      */
-    data class Matched(val destination: Destination) : DeepLinkResult()
+    data class Matched(val destination: NavDestination) : DeepLinkResult()
 
     /**
      * The deep link did not match any registered route pattern.

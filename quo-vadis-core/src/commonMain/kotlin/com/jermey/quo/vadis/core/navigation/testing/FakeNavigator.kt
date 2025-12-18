@@ -5,7 +5,7 @@ import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.NavigationLifecycleManager
@@ -50,11 +50,11 @@ class FakeNavigator : Navigator {
     private val _canNavigateBack = MutableStateFlow(false)
     override val canNavigateBack: StateFlow<Boolean> = _canNavigateBack.asStateFlow()
 
-    private val _currentDestination = MutableStateFlow<Destination?>(null)
-    override val currentDestination: StateFlow<Destination?> = _currentDestination.asStateFlow()
+    private val _currentDestination = MutableStateFlow<NavDestination?>(null)
+    override val currentDestination: StateFlow<NavDestination?> = _currentDestination.asStateFlow()
 
-    private val _previousDestination = MutableStateFlow<Destination?>(null)
-    override val previousDestination: StateFlow<Destination?> = _previousDestination.asStateFlow()
+    private val _previousDestination = MutableStateFlow<NavDestination?>(null)
+    override val previousDestination: StateFlow<NavDestination?> = _previousDestination.asStateFlow()
 
     private val _currentTransition = MutableStateFlow<NavigationTransition?>(null)
     override val currentTransition: StateFlow<NavigationTransition?> = _currentTransition.asStateFlow()
@@ -98,7 +98,7 @@ class FakeNavigator : Navigator {
     // NAVIGATION OPERATIONS
     // =========================================================================
 
-    override fun navigate(destination: Destination, transition: NavigationTransition?) {
+    override fun navigate(destination: NavDestination, transition: NavigationTransition?) {
         navigationCalls.add(NavigationCall.Navigate(destination, transition))
         _currentTransition.value = transition
 
@@ -149,7 +149,7 @@ class FakeNavigator : Navigator {
     }
 
     override fun navigateAndClearTo(
-        destination: Destination,
+        destination: NavDestination,
         clearRoute: String?,
         inclusive: Boolean
     ) {
@@ -158,7 +158,7 @@ class FakeNavigator : Navigator {
         initializeWithDestination(destination)
     }
 
-    override fun navigateAndReplace(destination: Destination, transition: NavigationTransition?) {
+    override fun navigateAndReplace(destination: NavDestination, transition: NavigationTransition?) {
         navigationCalls.add(NavigationCall.NavigateAndReplace(destination, transition))
         val currentState = _state.value
         val activeStack = currentState.activeStack()
@@ -176,7 +176,7 @@ class FakeNavigator : Navigator {
         updateDerivedState()
     }
 
-    override fun navigateAndClearAll(destination: Destination) {
+    override fun navigateAndClearAll(destination: NavDestination) {
         navigationCalls.add(NavigationCall.NavigateAndClearAll(destination))
         initializeWithDestination(destination)
     }
@@ -192,7 +192,7 @@ class FakeNavigator : Navigator {
      *
      * @param destination The starting destination
      */
-    internal fun initializeWithDestination(destination: Destination) {
+    internal fun initializeWithDestination(destination: NavDestination) {
         navigationCalls.add(NavigationCall.SetStartDestination(destination))
         val stackKey = NavKeyGenerator.generate()
         val screenKey = NavKeyGenerator.generate()
@@ -223,7 +223,7 @@ class FakeNavigator : Navigator {
 
     override fun navigateToPane(
         role: PaneRole,
-        destination: Destination,
+        destination: NavDestination,
         switchFocus: Boolean,
         transition: NavigationTransition?
     ) {
@@ -389,7 +389,7 @@ class FakeNavigator : Navigator {
          * @param destination The initial destination to navigate to
          * @return A FakeNavigator with the destination as its initial state
          */
-        fun withDestination(destination: Destination): FakeNavigator {
+        fun withDestination(destination: NavDestination): FakeNavigator {
             return FakeNavigator().apply {
                 initializeWithDestination(destination)
             }
@@ -402,28 +402,28 @@ class FakeNavigator : Navigator {
  */
 sealed class NavigationCall {
     data class Navigate(
-        val destination: Destination,
+        val destination: NavDestination,
         val transition: NavigationTransition?
     ) : NavigationCall()
 
     data class NavigateBack(val success: Boolean) : NavigationCall()
 
     data class NavigateAndClearTo(
-        val destination: Destination,
+        val destination: NavDestination,
         val clearRoute: String?,
         val inclusive: Boolean
     ) : NavigationCall()
 
     data class NavigateAndReplace(
-        val destination: Destination,
+        val destination: NavDestination,
         val transition: NavigationTransition?
     ) : NavigationCall()
 
-    data class NavigateAndClearAll(val destination: Destination) : NavigationCall()
+    data class NavigateAndClearAll(val destination: NavDestination) : NavigationCall()
 
     data class HandleDeepLink(val deepLink: DeepLink) : NavigationCall()
 
-    data class SetStartDestination(val destination: Destination) : NavigationCall()
+    data class SetStartDestination(val destination: NavDestination) : NavigationCall()
 }
 
 /**

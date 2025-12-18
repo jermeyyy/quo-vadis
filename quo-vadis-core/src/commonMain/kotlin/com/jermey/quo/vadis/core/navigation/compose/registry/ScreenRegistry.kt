@@ -3,7 +3,7 @@ package com.jermey.quo.vadis.core.navigation.compose.registry
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
@@ -27,7 +27,7 @@ interface ScreenRegistry {
      */
     @Composable
     fun Content(
-        destination: Destination,
+        destination: NavDestination,
         navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?
@@ -39,5 +39,5 @@ interface ScreenRegistry {
      * @param destination The destination to check
      * @return true if a screen is registered for this destination
      */
-    fun hasContent(destination: Destination): Boolean
+    fun hasContent(destination: NavDestination): Boolean
 }

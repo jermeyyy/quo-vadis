@@ -2,6 +2,7 @@ package com.jermey.navplayground.demo.destinations
 
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 /**
  * # Quo Vadis Demo App - Navigation Destinations
@@ -55,7 +56,7 @@ import com.jermey.quo.vadis.annotations.Stack
  * direct backstack manipulation and Compose state observation.
  */
 @Stack(name = "statedriven", startDestination = "Demo")
-sealed class StateDrivenDemoDestination : com.jermey.quo.vadis.core.navigation.core.Destination {
+sealed class StateDrivenDemoDestination : NavDestination {
     @Destination(route = "statedriven/demo")
     data object Demo : StateDrivenDemoDestination()
 }

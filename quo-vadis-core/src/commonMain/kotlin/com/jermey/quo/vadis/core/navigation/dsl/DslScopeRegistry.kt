@@ -1,7 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.dsl
 
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import kotlin.reflect.KClass
 
 /**
@@ -44,7 +44,7 @@ import kotlin.reflect.KClass
  * @see NavigationConfigBuilder.scope
  */
 internal class DslScopeRegistry(
-    private val scopes: Map<String, Set<KClass<out Destination>>>
+    private val scopes: Map<String, Set<KClass<out NavDestination>>>
 ) : ScopeRegistry {
 
     /**
@@ -53,7 +53,7 @@ internal class DslScopeRegistry(
      * Built lazily to optimize lookups. If a destination belongs to
      * multiple scopes, the first one encountered is used.
      */
-    private val destinationToScope: Map<KClass<out Destination>, String> by lazy {
+    private val destinationToScope: Map<KClass<out NavDestination>, String> by lazy {
         buildDestinationToScopeMap()
     }
 
@@ -64,7 +64,7 @@ internal class DslScopeRegistry(
      * @param destination The destination to check
      * @return true if the destination's class is in the specified scope
      */
-    override fun isInScope(scopeKey: String, destination: Destination): Boolean {
+    override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
         val scopeMembers = scopes[scopeKey] ?: return false
         return scopeMembers.contains(destination::class)
     }
@@ -75,7 +75,7 @@ internal class DslScopeRegistry(
      * @param destination The destination to lookup
      * @return The scope key if found, null otherwise
      */
-    override fun getScopeKey(destination: Destination): String? {
+    override fun getScopeKey(destination: NavDestination): String? {
         return destinationToScope[destination::class]
     }
 
@@ -84,8 +84,8 @@ internal class DslScopeRegistry(
      *
      * @return Map of destination classes to their primary scope keys
      */
-    private fun buildDestinationToScopeMap(): Map<KClass<out Destination>, String> {
-        val result = mutableMapOf<KClass<out Destination>, String>()
+    private fun buildDestinationToScopeMap(): Map<KClass<out NavDestination>, String> {
+        val result = mutableMapOf<KClass<out NavDestination>, String>()
 
         scopes.forEach { (scopeKey, members) ->
             members.forEach { memberClass ->

@@ -20,7 +20,7 @@ class ScopeRegistryTest {
      * Simulates a sealed interface for tab destinations.
      * In real apps, this would be generated from @Tab annotations.
      */
-    private sealed interface MainTabs : Destination {
+    private sealed interface MainTabs : NavDestination {
         data object HomeTab : MainTabs {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -35,7 +35,7 @@ class ScopeRegistryTest {
     /**
      * A destination that is NOT part of MainTabs scope.
      */
-    private data object OutOfScopeDestination : Destination {
+    private data object OutOfScopeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -53,12 +53,12 @@ class ScopeRegistryTest {
             "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: Destination): Boolean {
+        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
             val scopeClasses = scopes[scopeKey] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: Destination): String? {
+        override fun getScopeKey(destination: NavDestination): String? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
             }?.key
@@ -141,7 +141,7 @@ class ScopeRegistryTest {
     /**
      * Additional destinations for testing multiple scopes.
      */
-    private sealed interface ProfileTabs : Destination {
+    private sealed interface ProfileTabs : NavDestination {
         data object OverviewTab : ProfileTabs {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -162,12 +162,12 @@ class ScopeRegistryTest {
             "ProfileTabs" to setOf(ProfileTabs.OverviewTab::class, ProfileTabs.HistoryTab::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: Destination): Boolean {
+        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
             val scopeClasses = scopes[scopeKey] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: Destination): String? {
+        override fun getScopeKey(destination: NavDestination): String? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
             }?.key
@@ -214,7 +214,7 @@ class ScopeRegistryTest {
      * Simulates a sealed interface for stack destinations (auth flow).
      * In real apps, this would be generated from @Stack annotations.
      */
-    private sealed interface AuthFlow : Destination {
+    private sealed interface AuthFlow : NavDestination {
         data object Login : AuthFlow {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -234,7 +234,7 @@ class ScopeRegistryTest {
     /**
      * Another stack scope for testing.
      */
-    private sealed interface OnboardingFlow : Destination {
+    private sealed interface OnboardingFlow : NavDestination {
         data object Welcome : OnboardingFlow {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -259,12 +259,12 @@ class ScopeRegistryTest {
             "OnboardingFlow" to setOf(OnboardingFlow.Welcome::class, OnboardingFlow.Tutorial::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: Destination): Boolean {
+        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
             val scopeClasses = scopes[scopeKey] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: Destination): String? {
+        override fun getScopeKey(destination: NavDestination): String? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
             }?.key

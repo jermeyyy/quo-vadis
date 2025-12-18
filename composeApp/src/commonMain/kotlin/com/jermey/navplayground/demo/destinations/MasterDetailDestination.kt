@@ -1,8 +1,9 @@
 package com.jermey.navplayground.demo.destinations
 
 import com.jermey.quo.vadis.annotations.Argument
+import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 /**
  * Master-Detail pattern destinations.
@@ -20,8 +21,8 @@ import com.jermey.quo.vadis.core.navigation.core.Destination
  * - Content function receives arguments directly (see ContentDefinitions.kt)
  */
 @Stack(name = "master_detail", startDestination = "List")
-sealed class MasterDetailDestination : Destination {
-    @com.jermey.quo.vadis.annotations.Destination(route = "master_detail/list")
+sealed class MasterDetailDestination : NavDestination {
+    @Destination(route = "master_detail/list")
     data object List : MasterDetailDestination()
 
     /**
@@ -35,7 +36,7 @@ sealed class MasterDetailDestination : Destination {
      * )
      * ```
      */
-    @com.jermey.quo.vadis.annotations.Destination(route = "master_detail/detail/{itemId}")
+    @Destination(route = "master_detail/detail/{itemId}")
     data class Detail(
         @Argument val itemId: String
     ) : MasterDetailDestination()

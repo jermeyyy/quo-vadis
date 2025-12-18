@@ -23,7 +23,7 @@ class TreeMutatorScopeTest {
      * Simulates a sealed interface for tab destinations.
      * These are "in scope" for a TabNode with scopeKey="MainTabs".
      */
-    private sealed interface MainTabs : Destination {
+    private sealed interface MainTabs : NavDestination {
         data object HomeTab : MainTabs {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -51,7 +51,7 @@ class TreeMutatorScopeTest {
      * A destination that is NOT part of MainTabs scope.
      * Should be pushed outside the tab container.
      */
-    private data object OutOfScopeDestination : Destination {
+    private data object OutOfScopeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "OutOfScope"
@@ -60,7 +60,7 @@ class TreeMutatorScopeTest {
     /**
      * Another out-of-scope destination for variation.
      */
-    private data object DetailDestination : Destination {
+    private data object DetailDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "Detail"
@@ -83,12 +83,12 @@ class TreeMutatorScopeTest {
             )
         )
 
-        override fun isInScope(scopeKey: String, destination: Destination): Boolean {
+        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
             val scopeClasses = scopes[scopeKey] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: Destination): String? {
+        override fun getScopeKey(destination: NavDestination): String? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
             }?.key

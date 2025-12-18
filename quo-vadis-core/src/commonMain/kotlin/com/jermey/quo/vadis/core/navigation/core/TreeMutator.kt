@@ -139,7 +139,7 @@ object TreeMutator {
     @OptIn(ExperimentalUuidApi::class)
     fun push(
         root: NavNode,
-        destination: Destination,
+        destination: NavDestination,
         generateKey: () -> String = { Uuid.random().toString().take(8) }
     ): NavNode {
         val targetStack = root.activeStack()
@@ -176,7 +176,7 @@ object TreeMutator {
     fun pushToStack(
         root: NavNode,
         stackKey: String,
-        destination: Destination,
+        destination: NavDestination,
         generateKey: () -> String = { Uuid.random().toString().take(8) }
     ): NavNode {
         val targetNode = root.findByKey(stackKey)
@@ -252,7 +252,7 @@ object TreeMutator {
     @OptIn(ExperimentalUuidApi::class)
     fun push(
         root: NavNode,
-        destination: Destination,
+        destination: NavDestination,
         scopeRegistry: ScopeRegistry,
         generateKey: () -> String = { Uuid.random().toString().take(8) }
     ): NavNode {
@@ -288,7 +288,7 @@ object TreeMutator {
      */
     private fun determinePushStrategy(
         root: NavNode,
-        destination: Destination,
+        destination: NavDestination,
         scopeRegistry: ScopeRegistry
     ): PushStrategy {
         val activeStack = root.activeStack()
@@ -365,7 +365,7 @@ object TreeMutator {
      * @param destination The destination to find
      * @return The tab index if found, null otherwise
      */
-    private fun findTabWithDestination(tabNode: TabNode, destination: Destination): Int? {
+    private fun findTabWithDestination(tabNode: TabNode, destination: NavDestination): Int? {
         val destinationClass = destination::class
         tabNode.stacks.forEachIndexed { index, stack ->
             // Check if this stack contains a screen with matching destination type
@@ -392,7 +392,7 @@ object TreeMutator {
     private fun pushToActiveStack(
         root: NavNode,
         targetStack: StackNode,
-        destination: Destination,
+        destination: NavDestination,
         generateKey: () -> String
     ): NavNode {
         val newScreen = ScreenNode(
@@ -425,7 +425,7 @@ object TreeMutator {
     private fun pushOutOfScope(
         root: NavNode,
         parentStack: StackNode,
-        destination: Destination,
+        destination: NavDestination,
         generateKey: () -> String
     ): NavNode {
         val screenKey = generateKey()
@@ -556,7 +556,7 @@ object TreeMutator {
      * @param inclusive If true, also removes the matching screen
      * @return New tree with nodes popped, or original tree if not found
      */
-    inline fun <reified D : Destination> popToDestination(
+    inline fun <reified D : NavDestination> popToDestination(
         root: NavNode,
         inclusive: Boolean = false
     ): NavNode {
@@ -693,7 +693,7 @@ object TreeMutator {
         root: NavNode,
         nodeKey: String,
         role: PaneRole,
-        destination: Destination,
+        destination: NavDestination,
         switchFocus: Boolean = true,
         generateKey: () -> String = { Uuid.random().toString().take(8) }
     ): NavNode {
@@ -1171,7 +1171,7 @@ object TreeMutator {
     @OptIn(ExperimentalUuidApi::class)
     fun clearAndPush(
         root: NavNode,
-        destination: Destination,
+        destination: NavDestination,
         generateKey: () -> String = { Uuid.random().toString().take(8) }
     ): NavNode {
         val targetStack = root.activeStack()
@@ -1201,7 +1201,7 @@ object TreeMutator {
     fun clearStackAndPush(
         root: NavNode,
         stackKey: String,
-        destination: Destination,
+        destination: NavDestination,
         generateKey: () -> String = { Uuid.random().toString().take(8) }
     ): NavNode {
         val targetNode = root.findByKey(stackKey)
@@ -1236,7 +1236,7 @@ object TreeMutator {
     @OptIn(ExperimentalUuidApi::class)
     fun replaceCurrent(
         root: NavNode,
-        destination: Destination,
+        destination: NavDestination,
         generateKey: () -> String = { Uuid.random().toString().take(8) }
     ): NavNode {
         val targetStack = root.activeStack()
@@ -1273,7 +1273,7 @@ object TreeMutator {
     @OptIn(ExperimentalUuidApi::class)
     fun pushAll(
         root: NavNode,
-        destinations: List<Destination>,
+        destinations: List<NavDestination>,
         generateKey: () -> String = { Uuid.random().toString().take(8) }
     ): NavNode {
         if (destinations.isEmpty()) return root
@@ -1313,7 +1313,7 @@ object TreeMutator {
      * @param root The root NavNode of the navigation tree
      * @return The current active Destination, or null if tree is empty
      */
-    fun currentDestination(root: NavNode): Destination? {
+    fun currentDestination(root: NavNode): NavDestination? {
         return root.activeLeaf()?.destination
     }
 
