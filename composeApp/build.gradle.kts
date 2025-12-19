@@ -100,7 +100,7 @@ kotlin {
     }
 
     ksp {
-        arg("quoVadis.modulePrefix",project.name.toCamelCase())
+        arg("quoVadis.modulePrefix", project.name.toCamelCase())
     }
 }
 
