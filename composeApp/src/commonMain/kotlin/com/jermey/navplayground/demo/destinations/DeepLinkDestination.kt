@@ -10,7 +10,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
  * Accessible from anywhere via modal bottom sheet.
  * Allows navigation to all linked screens for testing deep links.
  */
-@Stack(name = "deeplink", startDestination = "Demo")
+@Stack(name = "deeplink", startDestination = DeepLinkDestination.Demo::class)
 sealed class DeepLinkDestination : NavDestination {
     @Destination(route = "deeplink/demo")
     data object Demo : DeepLinkDestination()

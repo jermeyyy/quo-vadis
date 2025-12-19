@@ -171,7 +171,7 @@ class ValidationEngine(
     }
 
     /**
-     * Validates that @Stack(startDestination) references an existing destination.
+     * Validates that @Stack(startDestinationLegacy) references an existing destination.
      */
     private fun validateContainerStartDestinations(stacks: List<StackInfo>) {
         stacks.forEach { stack ->
@@ -179,7 +179,7 @@ class ValidationEngine(
                 val availableDestinations = stack.destinations.map { it.className }
                 reportError(
                     stack.classDeclaration,
-                    "@Stack(startDestination = \"${stack.startDestination}\") - " +
+                    "@Stack(startDestinationLegacy = \"${stack.startDestination}\") - " +
                         "No destination named \"${stack.startDestination}\" found in ${stack.className}. " +
                         "Available destinations: $availableDestinations"
                 )

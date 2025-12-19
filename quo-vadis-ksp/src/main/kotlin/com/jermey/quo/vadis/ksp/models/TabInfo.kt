@@ -28,7 +28,7 @@ enum class TabItemType {
      * Pattern: `@TabItem` + `@Stack` on sealed class
      * ```kotlin
      * @TabItem(label = "Home", icon = "home")
-     * @Stack(name = "homeStack", startDestinationClass = HomeDestination.Feed::class)
+     * @Stack(name = "homeStack", startDestination = HomeDestination.Feed::class)
      * sealed class HomeTab : MainTabs {
      *     @Destination(route = "home/feed")
      *     data object Feed : HomeTab()
@@ -104,7 +104,7 @@ data class TabInfo(
  * Tab has its own navigation stack (sealed class with @Stack):
  * ```kotlin
  * @TabItem(label = "Home", icon = "home")
- * @Stack(name = "homeStack", startDestinationClass = HomeDestination.Feed::class)
+ * @Stack(name = "homeStack", startDestination = HomeDestination.Feed::class)
  * sealed class HomeTab : MainTabs {
  *     @Destination(route = "home/feed")
  *     data object Feed : HomeTab()

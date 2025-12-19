@@ -8,7 +8,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
 /**
  * Process/Wizard flow destinations
  */
-@Stack(name = "process", startDestination = "Start")
+@Stack(name = "process", startDestination = ProcessDestination.Start::class)
 sealed class ProcessDestination : NavDestination {
     @Destination(route = "process/start")
     data object Start : ProcessDestination()

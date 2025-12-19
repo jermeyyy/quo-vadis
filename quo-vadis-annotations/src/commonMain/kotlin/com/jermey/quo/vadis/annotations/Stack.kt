@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
  *
  * Apply to a sealed class containing destination subclasses:
  * ```kotlin
- * @Stack(name = "home", startDestination = "Feed")
+ * @Stack(name = "home", startDestinationLegacy = "Feed")
  * sealed class HomeDestination {
  *
  *     @Destination(route = "home/feed")
@@ -43,18 +43,18 @@ import kotlin.reflect.KClass
  * ## Start Destination Resolution
  *
  * The start destination is resolved with the following priority:
- * 1. Type-safe [startDestinationClass] (if not [Unit])
- * 2. String-based [startDestination] (if not empty)
+ * 1. Type-safe [startDestination] (if not [Unit])
+ * 2. String-based [startDestinationLegacy] (if not empty)
  * 3. First destination in declaration order
  *
- * If [startDestination] is empty, the first destination in declaration
+ * If [startDestinationLegacy] is empty, the first destination in declaration
  * order is used as the initial screen.
  *
  * ## Examples
  *
  * ### Basic Stack Navigation
  * ```kotlin
- * @Stack(name = "home", startDestination = "Feed")
+ * @Stack(name = "home", startDestinationLegacy = "Feed")
  * sealed class HomeDestination {
  *
  *     @Destination(route = "home/feed")
@@ -70,7 +70,7 @@ import kotlin.reflect.KClass
  *
  * ### Type-Safe Start Destination
  * ```kotlin
- * @Stack(name = "home", startDestinationClass = HomeDestination.Feed::class)
+ * @Stack(name = "home", startDestination = HomeDestination.Feed::class)
  * sealed class HomeDestination {
  *     @Destination(route = "home/feed")
  *     data object Feed : HomeDestination()
@@ -79,7 +79,7 @@ import kotlin.reflect.KClass
  *
  * ### Stack with Default Start Destination
  * ```kotlin
- * // First destination (Overview) is used as start when startDestination is empty
+ * // First destination (Overview) is used as start when startDestinationLegacy is empty
  * @Stack(name = "profile")
  * sealed class ProfileDestination {
  *
@@ -96,11 +96,7 @@ import kotlin.reflect.KClass
  *
  * @property name Unique name for this navigation stack. Used for key
  *   generation, debugging, and identification in the navigation tree.
- * @property startDestination Simple class name of the initial destination
- *   (e.g., "Feed" matches `data object Feed`). If empty and [startDestinationClass]
- *   is [Unit], the first destination is used.
- * @property startDestinationClass Type-safe KClass reference to the initial destination.
- *   If not [Unit] (the default), this takes precedence over [startDestination].
+ * @property startDestination Type-safe KClass reference to the initial destination.
  *   Use `MyDestination.Feed::class` for type-safe start destination resolution.
  *
  * @see Destination
@@ -111,6 +107,5 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.SOURCE)
 annotation class Stack(
     val name: String,
-    val startDestination: String = "",
-    val startDestinationClass: KClass<*> = Unit::class
+    val startDestination: KClass<*>,
 )

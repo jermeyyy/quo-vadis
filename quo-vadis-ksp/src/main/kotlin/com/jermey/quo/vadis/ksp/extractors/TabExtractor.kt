@@ -23,7 +23,7 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
  * ## New Pattern Example
  * ```kotlin
  * @TabItem(label = "Home", icon = "home")
- * @Stack(name = "homeStack", startDestination = "Feed")
+ * @Stack(name = "homeStack", startDestinationLegacy = "Feed")
  * sealed class HomeTab : Destination { ... }
  *
  * @Tab(name = "mainTabs", initialTab = HomeTab::class, items = [HomeTab::class, ExploreTab::class])

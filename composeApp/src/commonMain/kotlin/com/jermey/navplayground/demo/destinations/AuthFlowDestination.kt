@@ -15,7 +15,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
  * - In-scope navigation: Login → Register stays within AuthFlow stack
  * - Out-of-scope navigation: AuthFlow → MainTabs navigates above the AuthFlow stack
  */
-@Stack(name = "auth", startDestination = "Login")
+@Stack(name = "auth", startDestination = AuthFlowDestination.Login::class)
 sealed class AuthFlowDestination : NavDestination {
     @Destination(route = "auth/login")
     data object Login : AuthFlowDestination()

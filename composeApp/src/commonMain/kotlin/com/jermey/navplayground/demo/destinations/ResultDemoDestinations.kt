@@ -40,7 +40,7 @@ data class SelectedItem(
  * ResultDemo (receives result)
  * ```
  */
-@Stack(name = "result_demo", startDestination = "Demo")
+@Stack(name = "result_demo", startDestination = ResultDemoDestination.Demo::class)
 sealed class ResultDemoDestination : NavDestination {
 
     /**

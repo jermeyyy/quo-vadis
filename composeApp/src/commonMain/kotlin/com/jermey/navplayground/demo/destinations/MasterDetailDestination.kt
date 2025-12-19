@@ -20,7 +20,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
  * - Automatic route parameter extraction
  * - Content function receives arguments directly (see ContentDefinitions.kt)
  */
-@Stack(name = "master_detail", startDestination = "List")
+@Stack(name = "master_detail", startDestination = MasterDetailDestination.List::class)
 sealed class MasterDetailDestination : NavDestination {
     @Destination(route = "master_detail/list")
     data object List : MasterDetailDestination()

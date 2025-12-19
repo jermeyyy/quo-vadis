@@ -100,7 +100,7 @@ sealed class MainTabs : NavDestination {
      * Icon: "settings" (material icon name)
      */
     @TabItem(label = "Settings", icon = "settings")
-    @Stack(name = "settingsTabStack", startDestinationClass = SettingsTab.Main::class)
+    @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
     @Transition(type = TransitionType.Fade)
     sealed class SettingsTab : MainTabs() {
         /** Root destination for the Settings tab. */

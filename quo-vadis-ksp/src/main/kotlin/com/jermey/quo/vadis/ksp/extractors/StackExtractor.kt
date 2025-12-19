@@ -27,8 +27,8 @@ class StackExtractor(
      * Extract StackInfo from a class declaration.
      *
      * Supports both type-safe (KClass) and string-based start destination resolution:
-     * 1. If `startDestinationClass` is specified and not Unit::class, use it (type-safe)
-     * 2. Otherwise, if `startDestination` string is not empty, match by class name
+     * 1. If `startDestination` is specified and not Unit::class, use it (type-safe)
+     * 2. Otherwise, if `startDestinationLegacy` string is not empty, match by class name
      * 3. Otherwise, use the first destination in declaration order
      *
      * @param classDeclaration The sealed class annotated with @Stack
@@ -43,14 +43,14 @@ class StackExtractor(
             it.name?.asString() == "name"
         }?.value as? String ?: return null
 
-        // Extract legacy string-based startDestination
+        // Extract legacy string-based startDestinationLegacy
         val startDestination = annotation.arguments.find {
-            it.name?.asString() == "startDestination"
+            it.name?.asString() == "startDestinationLegacy"
         }?.value as? String ?: ""
 
-        // Extract type-safe startDestinationClass (new)
+        // Extract type-safe startDestination (new)
         val startDestinationClassType = annotation.arguments.find {
-            it.name?.asString() == "startDestinationClass"
+            it.name?.asString() == "startDestination"
         }?.value as? KSType
 
         val startDestinationClassDecl = startDestinationClassType?.declaration as? KSClassDeclaration
@@ -69,8 +69,8 @@ class StackExtractor(
         val destinations = destinationExtractor.extractFromContainer(classDeclaration)
 
         // Resolve start destination with priority:
-        // 1. Type-safe KClass (startDestinationClass)
-        // 2. String-based (startDestination)
+        // 1. Type-safe KClass (startDestination)
+        // 2. String-based (startDestinationLegacy)
         // 3. First destination in declaration order
         val resolvedStart = resolveStartDestination(
             startDestinationClass = startDestinationClass,
@@ -120,12 +120,12 @@ class StackExtractor(
             }
             if (match != null) {
                 logger.info(
-                    "Resolved startDestinationClass to '${match.className}' in $containerClassName"
+                    "Resolved startDestination to '${match.className}' in $containerClassName"
                 )
                 return match
             }
             logger.warn(
-                "startDestinationClass '$qualifiedName' not found in $containerClassName, " +
+                "startDestination '$qualifiedName' not found in $containerClassName, " +
                     "falling back to string or first destination"
             )
         }
@@ -137,12 +137,12 @@ class StackExtractor(
             }
             if (match != null) {
                 logger.info(
-                    "Resolved startDestination string '$startDestinationString' in $containerClassName"
+                    "Resolved startDestinationLegacy string '$startDestinationString' in $containerClassName"
                 )
                 return match
             }
             logger.warn(
-                "startDestination '$startDestinationString' not found in $containerClassName, " +
+                "startDestinationLegacy '$startDestinationString' not found in $containerClassName, " +
                     "falling back to first destination"
             )
         }

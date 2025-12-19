@@ -148,14 +148,3 @@ annotation class PaneContainer(
      */
     val paneClass: KClass<*>
 )
-
-/**
- * Backward compatibility typealias for [PaneContainer].
- *
- * @deprecated Use [PaneContainer] instead.
- */
-@Deprecated(
-    message = "Use PaneContainer instead",
-    replaceWith = ReplaceWith("PaneContainer", "com.jermey.quo.vadis.annotations.PaneContainer")
-)
-typealias PaneWrapper = PaneContainer

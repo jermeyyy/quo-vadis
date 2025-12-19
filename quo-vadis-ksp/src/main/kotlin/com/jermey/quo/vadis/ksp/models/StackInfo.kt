@@ -17,10 +17,10 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
  * @property className Simple class name (e.g., "HomeDestination")
  * @property packageName Package containing this class
  * @property startDestination Simple name of the start destination (e.g., "Feed").
- *                            Legacy string-based approach. Prefer [startDestinationClass].
+ *                            Legacy string-based approach. Prefer [startDestination].
  * @property startDestinationClass Type-safe KClass reference to the start destination.
  *                                 Null if not specified or if Unit::class was used.
- *                                 Takes precedence over [startDestination] when set.
+ *                                 Takes precedence over [startDestinationLegacy] when set.
  * @property destinations List of all @Destination subclasses within this sealed class
  * @property resolvedStartDestination The DestinationInfo for the resolved start destination.
  *                                    Resolution follows the priority order described above.
