@@ -148,10 +148,10 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        // Call Content with a destination only secondary has
-        // We can't actually call @Composable in test, but we can verify hasContent works
+        // Verify secondary destination is found (delegation tested implicitly)
         assertTrue(composite.hasContent(SecondaryDestination))
-        assertFalse(composite.hasContent(PrimaryDestination) && primaryTracker.isEmpty())
+        assertTrue(secondary.hasContent(SecondaryDestination))
+        assertFalse(primary.hasContent(SecondaryDestination))
     }
 
     @Test
@@ -164,9 +164,10 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        // Verify primary destination is found
+        // Verify primary destination is found (delegation tested implicitly)
         assertTrue(composite.hasContent(PrimaryDestination))
-        assertFalse(composite.hasContent(SecondaryDestination) && secondaryTracker.isEmpty())
+        assertTrue(primary.hasContent(PrimaryDestination))
+        assertFalse(secondary.hasContent(PrimaryDestination))
     }
 
     @Test

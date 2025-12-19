@@ -546,7 +546,7 @@ class CompositeContainerRegistryTest {
 
         val info = composite.getContainerInfo(PrimaryTabs.Tab1) as ContainerInfo.TabContainer
 
-        // Test different initialTabIndex values
+        // Test different initialTabIndex values (builder creates 3 stacks with indices 0, 1, 2)
         val node0 = info.builder("key", null, 0)
         assertEquals(0, node0.activeStackIndex)
 
@@ -556,9 +556,9 @@ class CompositeContainerRegistryTest {
         val node2 = info.builder("key", null, 2)
         assertEquals(2, node2.activeStackIndex)
 
-        // Test out of bounds - should be coerced
+        // Test out of bounds - should be coerced to max stack index
         val nodeHigh = info.builder("key", null, 10)
-        assertEquals(2, nodeHigh.activeStackIndex) // Should be coerced to max index (2)
+        assertEquals(2, nodeHigh.activeStackIndex) // Coerced to max index (2 = stacks.size - 1)
     }
 
     // =========================================================================
