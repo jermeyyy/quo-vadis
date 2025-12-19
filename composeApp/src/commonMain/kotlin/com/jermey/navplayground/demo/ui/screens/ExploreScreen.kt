@@ -139,8 +139,3 @@ private fun ExploreScreenContent(
         }
     }
 }
-
-@Composable
-private fun remember(calculation: () -> List<String>): List<String> {
-    return androidx.compose.runtime.remember(calculation)
-}

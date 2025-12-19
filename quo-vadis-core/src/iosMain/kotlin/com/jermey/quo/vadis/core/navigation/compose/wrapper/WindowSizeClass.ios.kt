@@ -65,6 +65,7 @@ private fun calculateCurrentSizeClass(): WindowSizeClass {
 private class OrientationObserver(
     private val onOrientationChange: () -> Unit
 ) : NSObject() {
+    @Suppress("unused")
     @ObjCAction
     fun orientationDidChange() {
         onOrientationChange()

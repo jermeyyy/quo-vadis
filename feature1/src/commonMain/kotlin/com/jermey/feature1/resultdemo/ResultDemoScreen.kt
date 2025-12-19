@@ -29,13 +29,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.jermey.feature1.resultdemo.container.ResultDemoContainer
-import com.jermey.feature1.resultdemo.container.ResultDemoContainer.*
+import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Action
+import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Intent
 import com.jermey.feature1.resultdemo.container.ResultDemoState
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -43,9 +42,6 @@ import com.jermey.quo.vadis.flowmvi.container
 import org.koin.compose.koinInject
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
-
-// Cache containers by screen key to survive recomposition during navigation
-private val containerCache = mutableStateMapOf<String, ResultDemoContainer>()
 
 /**
  * Result Demo Screen - Entry point for the navigation result demo.
@@ -68,7 +64,7 @@ private val containerCache = mutableStateMapOf<String, ResultDemoContainer>()
 fun ResultDemoScreen(
     navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier,
-    container: Store<ResultDemoState, Intent, Action> = container<ResultDemoContainer, ResultDemoState, Intent, Action>()
+    container: Store<ResultDemoState, Intent, Action> = container()
 ) {
     val state by container.subscribe()
 

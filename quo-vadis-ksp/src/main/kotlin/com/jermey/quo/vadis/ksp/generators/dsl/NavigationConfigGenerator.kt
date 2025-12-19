@@ -164,7 +164,7 @@ class NavigationConfigGenerator(
         originatingFiles: List<KSFile>
     ) {
         val totalItems = data.screens.size + data.tabs.size + data.stacks.size +
-            data.panes.size + data.transitions.size + data.wrappers.size
+                data.panes.size + data.transitions.size + data.wrappers.size
 
         logInfo("Generating NavigationConfig with $totalItems total items:")
         logInfo("  - ${data.screens.size} screens")
@@ -251,11 +251,15 @@ class NavigationConfigGenerator(
         addImport("com.jermey.quo.vadis.core.navigation.core", "Navigator")
         addImport("com.jermey.quo.vadis.core.navigation.core", "GeneratedDeepLinkHandler")
         addImport("com.jermey.quo.vadis.core.navigation.dsl", "navigationConfig")
-        addImport("com.jermey.quo.vadis.core.navigation.compose.registry",
+        addImport(
+            "com.jermey.quo.vadis.core.navigation.compose.registry",
             "ScreenRegistry", "ScopeRegistry",
-            "TransitionRegistry", "ContainerRegistry")
-        addImport("com.jermey.quo.vadis.core.navigation.compose.wrapper",
-            "TabsContainerScope", "PaneContainerScope")
+            "TransitionRegistry", "ContainerRegistry"
+        )
+        addImport(
+            "com.jermey.quo.vadis.core.navigation.compose.wrapper",
+            "TabsContainerScope", "PaneContainerScope"
+        )
         addImport("com.jermey.quo.vadis.core.navigation.compose.animation", "NavTransition")
         addImport("kotlin.reflect", "KClass")
 
@@ -338,7 +342,8 @@ class NavigationConfigGenerator(
         val builder = CodeBlock.builder()
 
         // CONTAINERS section (no composable lambdas)
-        val hasContainers = data.tabs.isNotEmpty() || data.stacks.isNotEmpty() || data.panes.isNotEmpty()
+        val hasContainers =
+            data.tabs.isNotEmpty() || data.stacks.isNotEmpty() || data.panes.isNotEmpty()
         if (hasContainers) {
             builder.add("\n")
             builder.add(StringTemplates.CONTAINERS_SECTION)
@@ -539,11 +544,17 @@ class NavigationConfigGenerator(
             .addParameter("destination", NAV_DESTINATION_CLASS)
             .addParameter("navigator", NAVIGATOR_CLASS)
             .addParameter(
-                ParameterSpec.builder("sharedTransitionScope", SHARED_TRANSITION_SCOPE_CLASS.copy(nullable = true))
+                ParameterSpec.builder(
+                    "sharedTransitionScope",
+                    SHARED_TRANSITION_SCOPE_CLASS.copy(nullable = true)
+                )
                     .build()
             )
             .addParameter(
-                ParameterSpec.builder("animatedVisibilityScope", ANIMATED_VISIBILITY_SCOPE_CLASS.copy(nullable = true))
+                ParameterSpec.builder(
+                    "animatedVisibilityScope",
+                    ANIMATED_VISIBILITY_SCOPE_CLASS.copy(nullable = true)
+                )
                     .build()
             )
             .apply {
@@ -556,7 +567,10 @@ class NavigationConfigGenerator(
                         val functionCall = buildScreenFunctionCall(screen)
                         addStatement("is %L -> %L", destClassName, functionCall)
                     }
-                    addStatement("else -> error(%P)", "No screen registered for destination: \$destination")
+                    addStatement(
+                        "else -> error(%P)",
+                        "No screen registered for destination: \$destination"
+                    )
                     endControlFlow()
                 }
             }
@@ -659,9 +673,11 @@ class NavigationConfigGenerator(
 
         return PropertySpec.builder("containerRegistry", CONTAINER_REGISTRY_CLASS)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("%L", buildContainerRegistryObject(
-                tabWrappers, paneWrappers, tabScopeKeyMap, paneScopeKeyMap
-            ))
+            .initializer(
+                "%L", buildContainerRegistryObject(
+                    tabWrappers, paneWrappers, tabScopeKeyMap, paneScopeKeyMap
+                )
+            )
             .build()
     }
 
@@ -711,7 +727,8 @@ class NavigationConfigGenerator(
 
         // For Companion objects, try the parent class
         if (wrapper.targetClassSimpleName == "Companion" ||
-            wrapper.targetClassQualifiedName.endsWith(".Companion")) {
+            wrapper.targetClassQualifiedName.endsWith(".Companion")
+        ) {
             val parentQualifiedName = wrapper.targetClassQualifiedName.removeSuffix(".Companion")
             scopeKeyMap[parentQualifiedName]?.let { return it }
         }
@@ -742,7 +759,13 @@ class NavigationConfigGenerator(
         return TypeSpec.anonymousClassBuilder()
             .addSuperinterface(CONTAINER_REGISTRY_CLASS)
             .addProperty(buildWrapperKeysProperty("tabsContainerKeys", tabWrappers, tabScopeKeyMap))
-            .addProperty(buildWrapperKeysProperty("paneContainerKeys", paneWrappers, paneScopeKeyMap))
+            .addProperty(
+                buildWrapperKeysProperty(
+                    "paneContainerKeys",
+                    paneWrappers,
+                    paneScopeKeyMap
+                )
+            )
             .addFunction(buildGetContainerInfoFunction())
             .addFunction(buildTabsContainerFunction(tabWrappers, tabScopeKeyMap))
             .addFunction(buildPaneContainerFunction(paneWrappers, paneScopeKeyMap))
@@ -758,7 +781,12 @@ class NavigationConfigGenerator(
         return FunSpec.builder("getContainerInfo")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("destination", NAV_DESTINATION_CLASS)
-            .returns(ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ContainerInfo").copy(nullable = true))
+            .returns(
+                ClassName(
+                    "com.jermey.quo.vadis.core.navigation.compose.registry",
+                    "ContainerInfo"
+                ).copy(nullable = true)
+            )
             .addStatement("return baseConfig.containerRegistry.getContainerInfo(destination)")
             .build()
     }
@@ -918,7 +946,7 @@ class NavigationConfigGenerator(
             val isNestedInTab = data.tabs.any { tab ->
                 tab.tabs.any { tabItem ->
                     tabItem.stackInfo?.classDeclaration?.qualifiedName?.asString() ==
-                        stack.classDeclaration.qualifiedName?.asString()
+                            stack.classDeclaration.qualifiedName?.asString()
                 }
             }
             if (!isNestedInTab) {
@@ -964,28 +992,39 @@ class NavigationConfigGenerator(
 
     private companion object {
         // Type references
-        val NAVIGATION_CONFIG_CLASS = ClassName("com.jermey.quo.vadis.core.navigation", "NavigationConfig")
-        val NAV_DESTINATION_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "NavDestination")
+        val NAVIGATION_CONFIG_CLASS =
+            ClassName("com.jermey.quo.vadis.core.navigation", "NavigationConfig")
+        val NAV_DESTINATION_CLASS =
+            ClassName("com.jermey.quo.vadis.core.navigation.core", "NavDestination")
         val NAV_NODE_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "NavNode")
         val KCLASS_CLASS = ClassName("kotlin.reflect", "KClass")
 
         // Registry type references
-        val SCREEN_REGISTRY_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ScreenRegistry")
-        val SCOPE_REGISTRY_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ScopeRegistry")
-        val TRANSITION_REGISTRY_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "TransitionRegistry")
-        val CONTAINER_REGISTRY_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ContainerRegistry")
-        val DEEP_LINK_HANDLER_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "GeneratedDeepLinkHandler")
+        val SCREEN_REGISTRY_CLASS =
+            ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ScreenRegistry")
+        val SCOPE_REGISTRY_CLASS =
+            ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ScopeRegistry")
+        val TRANSITION_REGISTRY_CLASS =
+            ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "TransitionRegistry")
+        val CONTAINER_REGISTRY_CLASS =
+            ClassName("com.jermey.quo.vadis.core.navigation.compose.registry", "ContainerRegistry")
+        val DEEP_LINK_HANDLER_CLASS =
+            ClassName("com.jermey.quo.vadis.core.navigation.core", "GeneratedDeepLinkHandler")
 
         // Wrapper scope type references (actual location is in .compose.wrapper package)
-        val TABS_CONTAINER_SCOPE_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "TabsContainerScope")
-        val PANE_CONTAINER_SCOPE_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "PaneContainerScope")
+        val TABS_CONTAINER_SCOPE_CLASS =
+            ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "TabsContainerScope")
+        val PANE_CONTAINER_SCOPE_CLASS =
+            ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "PaneContainerScope")
 
         // Navigator type reference (located in .core package)
         val NAVIGATOR_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "Navigator")
 
         // Compose type references
         val COMPOSABLE_CLASS = ClassName("androidx.compose.runtime", "Composable")
-        val SHARED_TRANSITION_SCOPE_CLASS = ClassName("androidx.compose.animation", "SharedTransitionScope")
-        val ANIMATED_VISIBILITY_SCOPE_CLASS = ClassName("androidx.compose.animation", "AnimatedVisibilityScope")
+        val SHARED_TRANSITION_SCOPE_CLASS =
+            ClassName("androidx.compose.animation", "SharedTransitionScope")
+        val ANIMATED_VISIBILITY_SCOPE_CLASS =
+            ClassName("androidx.compose.animation", "AnimatedVisibilityScope")
     }
 }

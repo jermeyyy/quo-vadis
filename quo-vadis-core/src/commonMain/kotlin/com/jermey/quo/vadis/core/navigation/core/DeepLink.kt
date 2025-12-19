@@ -37,14 +37,6 @@ data class DeepLink(
 }
 
 /**
- * Configuration for deep link support on a destination.
- */
-data class DeepLinkConfig(
-    val uriPattern: String,
-    val destinationFactory: (Map<String, String>) -> NavDestination
-)
-
-/**
  * Handler for resolving deep links to destinations.
  */
 interface DeepLinkHandler {

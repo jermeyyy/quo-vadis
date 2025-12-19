@@ -1,6 +1,5 @@
 package com.jermey.quo.vadis.core.navigation.testing
 
-import com.jermey.quo.vadis.core.navigation.core.BackPressHandler
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
@@ -211,16 +210,15 @@ class FakeNavigator : Navigator {
     }
 
     // =========================================================================
-    // TAB NAVIGATION
-    // =========================================================================
-
-    override val activeTabIndex: Int?
-        get() = null
-
-    // =========================================================================
     // PANE NAVIGATION (Stubbed for testing)
     // =========================================================================
 
+    @Deprecated(
+        "navigateToPane() is deprecated. Use navigate() with a destination instead. " +
+                "Navigate will automatically target the correct pane based on destination.",
+        replaceWith = ReplaceWith("navigate(destination)"),
+        level = DeprecationLevel.WARNING
+    )
     override fun navigateToPane(
         role: PaneRole,
         destination: NavDestination,
@@ -231,6 +229,12 @@ class FakeNavigator : Navigator {
         navigate(destination, transition)
     }
 
+    @Deprecated(
+        "switchPane() is deprecated. Use navigate() with a destination instead. " +
+                "Navigate will automatically switch to the pane containing the destination.",
+        replaceWith = ReplaceWith("navigate(destination)"),
+        level = DeprecationLevel.WARNING
+    )
     override fun switchPane(role: PaneRole) {
         // No-op for fake navigator
     }
@@ -241,9 +245,7 @@ class FakeNavigator : Navigator {
 
     override fun navigateBackInPane(role: PaneRole): Boolean = navigateBack()
 
-    override fun clearPane(role: PaneRole) {
-        // No-op for fake navigator
-    }
+
 
     // =========================================================================
     // STATE MANIPULATION
@@ -260,8 +262,7 @@ class FakeNavigator : Navigator {
     // =========================================================================
 
     override fun updateTransitionProgress(progress: Float) {
-        val current = _transitionState.value
-        when (current) {
+        when (val current = _transitionState.value) {
             is TransitionState.InProgress -> {
                 _transitionState.value = current.copy(progress = progress)
             }
@@ -314,16 +315,7 @@ class FakeNavigator : Navigator {
         return fakeDeepLinkHandler
     }
 
-    // Child navigator support for hierarchical navigation
-    private var _activeChild: BackPressHandler? = null
-    override val activeChild: BackPressHandler?
-        get() = _activeChild
-
-    override fun setActiveChild(child: BackPressHandler?) {
-        _activeChild = child
-    }
-
-    override fun handleBackInternal(): Boolean {
+    override fun onBack(): Boolean {
         val currentState = _state.value
         val activeStack = currentState.activeStack()
         if (activeStack != null && activeStack.children.size > 1) {
@@ -342,13 +334,6 @@ class FakeNavigator : Navigator {
     // =========================================================================
 
     /**
-     * Clear all recorded navigation calls.
-     */
-    fun clearCalls() {
-        navigationCalls.clear()
-    }
-
-    /**
      * Verify that a specific navigation call was made.
      */
     fun verifyNavigateTo(route: String): Boolean {
@@ -357,44 +342,6 @@ class FakeNavigator : Navigator {
         }
     }
 
-    /**
-     * Verify that navigateBack was called.
-     */
-    fun verifyNavigateBack(): Boolean {
-        return navigationCalls.any { it is NavigationCall.NavigateBack }
-    }
-
-    /**
-     * Get the count of navigate calls.
-     */
-    fun getNavigateCallCount(route: String): Int {
-        return navigationCalls.count { call ->
-            call is NavigationCall.Navigate && call.destination.route == route
-        }
-    }
-
-    /**
-     * Get the current stack size for testing.
-     */
-    fun getStackSize(): Int {
-        val activeStack = _state.value.activeStack()
-        return activeStack?.children?.size ?: 0
-    }
-
-    companion object {
-        /**
-         * Creates a FakeNavigator initialized with a single destination.
-         * Useful for simple test cases that don't need complex navigation state.
-         *
-         * @param destination The initial destination to navigate to
-         * @return A FakeNavigator with the destination as its initial state
-         */
-        fun withDestination(destination: NavDestination): FakeNavigator {
-            return FakeNavigator().apply {
-                initializeWithDestination(destination)
-            }
-        }
-    }
 }
 
 /**
@@ -424,36 +371,4 @@ sealed class NavigationCall {
     data class HandleDeepLink(val deepLink: DeepLink) : NavigationCall()
 
     data class SetStartDestination(val destination: NavDestination) : NavigationCall()
-}
-
-/**
- * Test builder for creating test navigation scenarios.
- */
-@Suppress("FunctionNaming")
-class NavigationTestBuilder {
-    private val navigator = FakeNavigator()
-
-    fun given(block: FakeNavigator.() -> Unit): NavigationTestBuilder {
-        navigator.block()
-        return this
-    }
-
-    fun `when`(block: FakeNavigator.() -> Unit): NavigationTestBuilder {
-        navigator.block()
-        return this
-    }
-
-    fun then(block: FakeNavigator.() -> Unit): NavigationTestBuilder {
-        navigator.block()
-        return this
-    }
-
-    fun build() = navigator
-}
-
-/**
- * DSL for creating navigation tests.
- */
-fun navigationTest(block: NavigationTestBuilder.() -> Unit): FakeNavigator {
-    return NavigationTestBuilder().apply(block).build()
 }

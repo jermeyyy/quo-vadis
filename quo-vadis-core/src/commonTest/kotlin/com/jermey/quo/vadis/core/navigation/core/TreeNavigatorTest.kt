@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
  * - Tab navigation: switchTab, activeTabIndex
  * - Pane navigation: navigateToPane, switchPane, isPaneAvailable, navigateBackInPane, clearPane, paneContent
  * - State flows: state, currentDestination, previousDestination, canNavigateBack, transitionState
- * - Transition management: updateTransitionProgress, startPredictiveBack, updatePredictiveBack, 
+ * - Transition management: updateTransitionProgress, startPredictiveBack, updatePredictiveBack,
  *   cancelPredictiveBack, commitPredictiveBack, completeTransition
  * - Deep link and graph management: handleDeepLink, registerGraph, getDeepLinkHandler
  * - Parent navigator support: activeChild, setActiveChild
@@ -231,9 +231,9 @@ class TreeNavigatorTest {
 
         // Single screen at root - should delegate to system (close app)
         // New back handling preserves root constraint: root stack always keeps 1 item
-        val result = navigator.handleBackInternal()
+        val result = navigator.onBack()
         assertFalse(result, "Single item at root should delegate to system")
-        
+
         // Current destination should still be there (not popped)
         assertEquals(HomeDestination, navigator.currentDestination.value)
     }
@@ -267,16 +267,16 @@ class TreeNavigatorTest {
         navigator.navigate(SettingsDestination)
 
         // Pop SettingsDestination
-        assertTrue(navigator.handleBackInternal())
+        assertTrue(navigator.onBack())
         assertEquals(ProfileDestination, navigator.currentDestination.value)
 
         // Pop ProfileDestination
-        assertTrue(navigator.handleBackInternal())
+        assertTrue(navigator.onBack())
         assertEquals(HomeDestination, navigator.currentDestination.value)
 
         // HomeDestination is the last item - should delegate to system (return false)
         // New back handling preserves root constraint: can't pop the last item at root
-        assertFalse(navigator.handleBackInternal())
+        assertFalse(navigator.onBack())
         assertEquals(HomeDestination, navigator.currentDestination.value)
     }
 
@@ -380,12 +380,16 @@ class TreeNavigatorTest {
                     key = "tabs",
                     parentKey = "root",
                     stacks = listOf(
-                        StackNode("tab0", "tabs", listOf(
-                            ScreenNode("s1", "tab0", HomeDestination)
-                        )),
-                        StackNode("tab1", "tabs", listOf(
-                            ScreenNode("s2", "tab1", ProfileDestination)
-                        ))
+                        StackNode(
+                            "tab0", "tabs", listOf(
+                                ScreenNode("s1", "tab0", HomeDestination)
+                            )
+                        ),
+                        StackNode(
+                            "tab1", "tabs", listOf(
+                                ScreenNode("s2", "tab1", ProfileDestination)
+                            )
+                        )
                     ),
                     activeStackIndex = 0
                 )
@@ -408,13 +412,17 @@ class TreeNavigatorTest {
             key = "tabs",
             parentKey = "root",
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination),
-                    ScreenNode("s2", "tab0", ProfileDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s3", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination),
+                        ScreenNode("s2", "tab0", ProfileDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s3", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -508,12 +516,16 @@ class TreeNavigatorTest {
             key = "tabs",
             parentKey = "root",
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s2", "tab1", ProfileDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s2", "tab1", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -543,9 +555,11 @@ class TreeNavigatorTest {
             parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("list", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("list", "primary-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
                     StackNode("supporting-stack", "panes", emptyList())
@@ -767,10 +781,12 @@ class TreeNavigatorTest {
                     ScreenNode("list", "panes", ListDestination)
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", listOf(
-                        ScreenNode("detail1", "supporting-stack", DetailDestination),
-                        ScreenNode("detail2", "supporting-stack", SettingsDestination)
-                    ))
+                    StackNode(
+                        "supporting-stack", "panes", listOf(
+                            ScreenNode("detail1", "supporting-stack", DetailDestination),
+                            ScreenNode("detail2", "supporting-stack", SettingsDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -837,11 +853,13 @@ class TreeNavigatorTest {
                     ScreenNode("list", "panes", ListDestination)
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", listOf(
-                        ScreenNode("detail1", "supporting-stack", DetailDestination),
-                        ScreenNode("detail2", "supporting-stack", SettingsDestination),
-                        ScreenNode("detail3", "supporting-stack", ProfileDestination)
-                    ))
+                    StackNode(
+                        "supporting-stack", "panes", listOf(
+                            ScreenNode("detail1", "supporting-stack", DetailDestination),
+                            ScreenNode("detail2", "supporting-stack", SettingsDestination),
+                            ScreenNode("detail3", "supporting-stack", ProfileDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -992,42 +1010,6 @@ class TreeNavigatorTest {
     }
 
     // =========================================================================
-    // PARENT NAVIGATOR SUPPORT TESTS
-    // =========================================================================
-
-    @Test
-    fun `activeChild is initially null`() {
-        val navigator = TreeNavigator()
-
-        assertNull(navigator.activeChild)
-    }
-
-    @Test
-    fun `setActiveChild sets child handler`() {
-        val navigator = TreeNavigator()
-        val childHandler = object : BackPressHandler {
-            override fun onBack(): Boolean = false
-        }
-
-        navigator.setActiveChild(childHandler)
-
-        assertEquals(childHandler, navigator.activeChild)
-    }
-
-    @Test
-    fun `setActiveChild with null clears child handler`() {
-        val navigator = TreeNavigator()
-        val childHandler = object : BackPressHandler {
-            override fun onBack(): Boolean = false
-        }
-        navigator.setActiveChild(childHandler)
-
-        navigator.setActiveChild(null)
-
-        assertNull(navigator.activeChild)
-    }
-
-    // =========================================================================
     // GRAPH AND DEEP LINK TESTS
     // =========================================================================
 
@@ -1135,12 +1117,16 @@ class TreeNavigatorTest {
             key = "tabs",
             parentKey = "root",
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s2", "tab1", ProfileDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s2", "tab1", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -1168,12 +1154,16 @@ class TreeNavigatorTest {
             key = "tabs",
             parentKey = "root",
             stacks = listOf(
-                StackNode("home-tab", "tabs", listOf(
-                    ScreenNode("home-screen", "home-tab", HomeDestination)
-                )),
-                StackNode("profile-tab", "tabs", listOf(
-                    ScreenNode("profile-screen", "profile-tab", ProfileDestination)
-                ))
+                StackNode(
+                    "home-tab", "tabs", listOf(
+                        ScreenNode("home-screen", "home-tab", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "profile-tab", "tabs", listOf(
+                        ScreenNode("profile-screen", "profile-tab", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -1218,9 +1208,11 @@ class TreeNavigatorTest {
             parentKey = "root",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("list-stack", "panes", listOf(
-                        ScreenNode("list", "list-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "list-stack", "panes", listOf(
+                            ScreenNode("list", "list-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
                     StackNode("detail-stack", "panes", emptyList())

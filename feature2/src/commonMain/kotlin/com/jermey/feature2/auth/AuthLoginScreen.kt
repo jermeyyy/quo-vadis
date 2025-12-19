@@ -115,7 +115,7 @@ fun AuthLoginScreen(navigator: Navigator = koinInject()) {
             // With scope-aware navigation, this will navigate ABOVE the AuthFlow stack
             Button(
                 onClick = {
-                    navigator.navigateAndClearTo(AuthFlowDestination.Register, inclusive = true)
+                    navigator.navigateBack()
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

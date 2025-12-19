@@ -17,12 +17,10 @@
 package com.jermey.quo.vadis.core.navigation.compose.render
 
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 

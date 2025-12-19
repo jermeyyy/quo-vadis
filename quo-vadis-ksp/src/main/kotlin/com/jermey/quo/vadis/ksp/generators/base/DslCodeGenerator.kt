@@ -188,30 +188,7 @@ abstract class DslCodeGenerator(
      */
     protected fun indent(level: Int = 1): String = INDENT.repeat(level)
 
-    /**
-     * Common imports needed by most generators.
-     *
-     * Includes:
-     * - NavigationConfig
-     * - NavDestination
-     * - KClass
-     */
-    protected val commonImports: List<ClassName> = listOf(
-        ClassName("com.jermey.quo.vadis.core.navigation", "NavigationConfig"),
-        ClassName("com.jermey.quo.vadis.core.navigation", "NavDestination"),
-        ClassName("kotlin.reflect", "KClass")
-    )
-
     companion object {
-        /**
-         * Default generated file name for navigation configuration.
-         */
-        const val GENERATED_FILE_NAME = "GeneratedNavigationConfig"
-
-        /**
-         * Default generated object name for navigation configuration.
-         */
-        const val GENERATED_OBJECT_NAME = "GeneratedNavigationConfig"
 
         /**
          * Default package for generated code.

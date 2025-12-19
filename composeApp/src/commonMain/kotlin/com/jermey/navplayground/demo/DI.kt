@@ -47,9 +47,10 @@ val profileModule = module {
 
     single { ProfileRepository() }
 
-    single {
+    container<ProfileContainer> {
         ProfileContainer(
             navigator = get(),
+            screenKey = id,
             repository = get(),
             debuggable = true
         )

@@ -66,7 +66,7 @@ class AnimatedNavContentTest {
     @Test
     fun `animation state tracks displayed state`() {
         // Given - simulating AnimatedNavContent state tracking
-        var displayedState: ScreenNode? = null
+        var displayedState: ScreenNode?
         var previousState: ScreenNode? = null
 
         val screenA = createScreen("a", "stack", ScreenADestination)
@@ -96,7 +96,7 @@ class AnimatedNavContentTest {
         val screenC = createScreen("c", "stack", ScreenCDestination)
 
         var displayedState = screenA
-        var previousState: ScreenNode? = null
+        var previousState: ScreenNode?
 
         // When - navigate A -> B
         previousState = displayedState

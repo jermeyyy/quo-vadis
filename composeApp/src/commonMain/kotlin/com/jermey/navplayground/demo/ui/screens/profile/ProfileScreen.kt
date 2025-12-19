@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,6 +41,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -52,9 +52,11 @@ import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.flowmvi.compose.StoreScreen
+import com.jermey.quo.vadis.flowmvi.container
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import pro.respawn.flowmvi.api.Store
+import pro.respawn.flowmvi.compose.dsl.subscribe
 
 /**
  * Profile screen demonstrating FlowMVI patterns.
@@ -72,89 +74,85 @@ import org.koin.compose.koinInject
 @Composable
 fun ProfileScreen(
     navigator: Navigator = koinInject(),
-    container: ProfileContainer = koinInject()
+    container: Store<ProfileState, ProfileIntent, ProfileAction> = container()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Use StoreScreen pattern for automatic state management
-    StoreScreen(
-        container = container,
-        onAction = { action ->
-            // Handle side effects
-            scope.launch {
-                when (action) {
-                    is ProfileAction.ShowToast -> {
-                        snackbarHostState.showSnackbar(
-                            message = action.message,
-                            duration = SnackbarDuration.Short
-                        )
-                    }
+    val state by container.subscribe { action ->
+        scope.launch {
+            when (action) {
+                is ProfileAction.ShowToast -> {
+                    snackbarHostState.showSnackbar(
+                        message = action.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
 
-                    is ProfileAction.ShowError -> {
-                        snackbarHostState.showSnackbar(
-                            message = action.error,
-                            duration = SnackbarDuration.Long
-                        )
-                    }
+                is ProfileAction.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        message = action.error,
+                        duration = SnackbarDuration.Long
+                    )
+                }
 
-                    is ProfileAction.ProfileSaved -> {
-                        // Already handled by ShowToast
-                    }
+                is ProfileAction.ProfileSaved -> {
+                    // Already handled by ShowToast
+                }
 
-                    is ProfileAction.LogoutSuccess -> {
-                        // Navigation already handled in container
-                    }
+                is ProfileAction.LogoutSuccess -> {
+                    // Navigation already handled in container
+                }
 
-                    is ProfileAction.ValidationFailed -> {
-                        snackbarHostState.showSnackbar(
-                            message = "Please fix validation errors",
-                            duration = SnackbarDuration.Short
-                        )
-                    }
+                is ProfileAction.ValidationFailed -> {
+                    snackbarHostState.showSnackbar(
+                        message = "Please fix validation errors",
+                        duration = SnackbarDuration.Short
+                    )
+                }
 
-                    is ProfileAction.NetworkError -> {
-                        snackbarHostState.showSnackbar(
-                            message = "Network error: ${action.message}",
-                            duration = SnackbarDuration.Long
-                        )
-                    }
+                is ProfileAction.NetworkError -> {
+                    snackbarHostState.showSnackbar(
+                        message = "Network error: ${action.message}",
+                        duration = SnackbarDuration.Long
+                    )
                 }
             }
         }
-    ) { state, intentReceiver ->
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Profile") },
-                    actions = {
-                        if (state is ProfileState.Content && !state.isEditing) {
-                            IconButton(onClick = { intentReceiver.intent(ProfileIntent.NavigateToSettings) }) {
-                                Icon(Icons.Default.Settings, "Settings")
-                            }
+
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Profile") },
+                actions = {
+                    if ((state as? ProfileState.Content)?.isEditing ?: false) {
+                        IconButton(onClick = { container.intent(ProfileIntent.NavigateToSettings) }) {
+                            Icon(Icons.Default.Settings, "Settings")
                         }
                     }
-                )
-            },
-            snackbarHost = { SnackbarHost(snackbarHostState) }
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                when (state) {
-                    is ProfileState.Loading -> LoadingContent()
-                    is ProfileState.Content -> ProfileContent(
-                        state = state,
-                        onIntent = intentReceiver::intent
-                    )
-
-                    is ProfileState.Error -> ErrorContent(
-                        message = state.message,
-                        onRetry = { intentReceiver.intent(ProfileIntent.LoadProfile) }
-                    )
                 }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when (state) {
+                is ProfileState.Loading -> LoadingContent()
+                is ProfileState.Content -> ProfileContent(
+                    state = state as ProfileState.Content,
+                    onIntent = container::intent
+                )
+
+                is ProfileState.Error -> ErrorContent(
+                    message = (state as ProfileState.Error).message,
+                    onRetry = { container.intent(ProfileIntent.LoadProfile) }
+                )
             }
         }
     }

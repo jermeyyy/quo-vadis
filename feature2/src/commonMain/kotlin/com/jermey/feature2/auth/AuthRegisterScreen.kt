@@ -116,7 +116,7 @@ fun AuthRegisterScreen(navigator: Navigator = koinInject()) {
             // OUT-OF-SCOPE navigation: MainTabs is not in AuthFlow scope
             Button(
                 onClick = {
-                    navigator.navigateAndClearTo(AuthFlowDestination.Register, inclusive = true)
+                    navigator.navigateAndClearTo(AuthFlowDestination.Login, inclusive = true)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
