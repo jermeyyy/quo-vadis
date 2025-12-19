@@ -151,10 +151,10 @@ internal class CompositeContainerRegistry(
     }
 
     override fun hasTabsContainer(tabNodeKey: String): Boolean {
-        return primary.hasTabsContainer(tabNodeKey) || secondary.hasTabsContainer(tabNodeKey)
+        return secondary.hasTabsContainer(tabNodeKey) || primary.hasTabsContainer(tabNodeKey)
     }
 
     override fun hasPaneContainer(paneNodeKey: String): Boolean {
-        return primary.hasPaneContainer(paneNodeKey) || secondary.hasPaneContainer(paneNodeKey)
+        return secondary.hasPaneContainer(paneNodeKey) || primary.hasPaneContainer(paneNodeKey)
     }
 }
