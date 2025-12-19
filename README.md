@@ -88,15 +88,15 @@ repositories {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.jermeyyy:quo-vadis-core:0.1.1")
-            implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.1")
+            implementation("io.github.jermeyyy:quo-vadis-core:0.2.0")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.2.0")
         }
     }
 }
 
 dependencies {
     // KSP code generator (all targets)
-    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.1")
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.2.0")
 }
 ```
 
