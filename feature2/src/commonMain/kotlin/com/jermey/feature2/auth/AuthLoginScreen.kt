@@ -1,4 +1,4 @@
-package com.jermey.navplayground.demo.ui.screens.auth
+package com.jermey.feature2.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,9 +14,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,29 +27,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.AuthFlowDestination
+import com.jermey.feature2.AuthFlowDestination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import org.koin.compose.koinInject
 
 /**
- * Forgot Password Screen - Part of the auth flow.
+ * Auth Login Screen - Entry point for the auth flow.
  *
- * Demonstrates in-scope navigation within AuthFlow.
- * All navigation from here stays within the AuthFlow stack.
+ * Demonstrates:
+ * - In-scope navigation: Login → Register (stays within AuthFlow stack)
+ * - Out-of-scope navigation: Login → MainTabs (navigates above AuthFlow stack)
  */
-@Screen(AuthFlowDestination.ForgotPassword::class)
+@Screen(AuthFlowDestination.Login::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AuthForgotPasswordScreen(navigator: Navigator = koinInject()) {
+fun AuthLoginScreen(navigator: Navigator = koinInject()) {
     var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reset Password") },
+                title = { Text("Login") },
                 navigationIcon = {
                     IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -65,12 +70,12 @@ fun AuthForgotPasswordScreen(navigator: Navigator = koinInject()) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                "Forgot Password?",
+                "Welcome Back",
                 style = MaterialTheme.typography.headlineMedium
             )
 
             Text(
-                "Still within AuthFlow scope",
+                "Scope-Aware Navigation Demo",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -84,32 +89,57 @@ fun AuthForgotPasswordScreen(navigator: Navigator = koinInject()) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Text(
-                "Enter your email address and we'll send you a link to reset your password.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
             )
+
+            // In-scope navigation: stays within AuthFlow stack
+            TextButton(
+                onClick = {
+                    navigator.navigate(
+                        AuthFlowDestination.ForgotPassword,
+                        NavigationTransitions.SlideHorizontal
+                    )
+                }
+            ) {
+                Text("Forgot Password?")
+            }
 
             Spacer(Modifier.height(8.dp))
 
-            // In-scope navigation: back to Login within AuthFlow
+            // OUT-OF-SCOPE navigation: MainTabs is not in AuthFlow scope
+            // With scope-aware navigation, this will navigate ABOVE the AuthFlow stack
             Button(
                 onClick = {
+                    navigator.navigateAndClearTo(AuthFlowDestination.Register, inclusive = true)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Login (→ MainTabs - Out of Scope)")
+            }
+
+            // In-scope navigation: stays within AuthFlow stack
+            OutlinedButton(
+                onClick = {
                     navigator.navigate(
-                        AuthFlowDestination.Login,
+                        AuthFlowDestination.Register,
                         NavigationTransitions.SlideHorizontal
                     )
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Send Reset Link (→ Login - In Scope)")
+                Text("Create Account (→ Register - In Scope)")
             }
 
             Spacer(Modifier.weight(1f))
 
             Text(
-                "Navigating back to Login stays within AuthFlow.\n" +
-                    "Use back button to pop from the stack.",
+                "In-scope navigation stays within AuthFlow.\n" +
+                        "Out-of-scope navigation goes above AuthFlow.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

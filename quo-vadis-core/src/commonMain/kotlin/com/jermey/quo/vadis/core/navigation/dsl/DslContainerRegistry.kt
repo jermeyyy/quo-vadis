@@ -168,7 +168,8 @@ internal class DslContainerRegistry(
                 }
             },
             initialTabIndex = initialTabIndex,
-            scopeKey = builder.scopeKey
+            scopeKey = builder.scopeKey,
+            containerClass = containerClass
         )
     }
 
@@ -191,7 +192,8 @@ internal class DslContainerRegistry(
                 node
             },
             initialPane = builder.config.initialPane,
-            scopeKey = builder.scopeKey
+            scopeKey = builder.scopeKey,
+            containerClass = containerClass
         )
     }
 

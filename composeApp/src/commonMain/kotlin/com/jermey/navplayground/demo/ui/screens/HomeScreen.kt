@@ -38,13 +38,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.AuthFlowDestination
+import com.jermey.feature1.resultdemo.ResultDemoDestination
+import com.jermey.feature2.AuthFlowDestination
+import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.destinations.ProcessDestination
-import com.jermey.navplayground.demo.destinations.ResultDemoDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
-import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.NavigationPatternCard
 import com.jermey.quo.vadis.annotations.Screen

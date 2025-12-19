@@ -1,22 +1,32 @@
 package com.jermey.navplayground.demo
 
-import com.jermey.navplayground.demo.container.ItemPickerContainer
-import com.jermey.navplayground.demo.container.ResultDemoContainer
+import com.jermey.feature1.resultdemo.container.ItemPickerContainer
+import com.jermey.feature1.resultdemo.container.ResultDemoContainer
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileContainer
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
+import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
-import com.jermey.quo.vadis.generated.GeneratedNavigationConfig
+import com.jermey.quo.vadis.flowmvi.container
+import com.jermey.quo.vadis.generated.ComposeAppNavigationConfig
+import com.jermey.quo.vadis.generated.Feature1NavigationConfig
+import com.jermey.quo.vadis.generated.Feature2NavigationConfig
 import org.koin.dsl.module
 
 val navigationModule = module {
+    single<NavigationConfig> {
+        ComposeAppNavigationConfig +
+                Feature1NavigationConfig +
+                Feature2NavigationConfig
+
+    }
     single<Navigator> {
-        val config = GeneratedNavigationConfig
+        val navigationConfig = get<NavigationConfig>()
         val rootDestination = MainTabs::class
 
-        val initialState = config.buildNavNode(
+        val initialState = navigationConfig.buildNavNode(
             destinationClass = rootDestination,
             parentKey = null
         ) ?: error(
@@ -26,9 +36,9 @@ val navigationModule = module {
         )
         TreeNavigator(
             initialState = initialState,
-            scopeRegistry = config.scopeRegistry,
-            containerRegistry = config.containerRegistry,
-            deepLinkHandler = config.deepLinkHandler ?: DefaultDeepLinkHandler(),
+            scopeRegistry = navigationConfig.scopeRegistry,
+            containerRegistry = navigationConfig.containerRegistry,
+            deepLinkHandler = navigationConfig.deepLinkHandler ?: DefaultDeepLinkHandler(),
         )
     }
 }

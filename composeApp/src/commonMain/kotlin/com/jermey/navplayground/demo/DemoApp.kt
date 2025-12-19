@@ -5,11 +5,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.jermey.navplayground.demo.destinations.MainTabs
+import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.compose.rememberQuoVadisNavigator
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.generated.GeneratedNavigationConfig
 import org.koin.compose.koinInject
 
 /**
@@ -44,10 +43,11 @@ fun DemoApp() {
 //        config = GeneratedNavigationConfig
 //    )
     val navigator = koinInject<Navigator>()
+    val navigationConfig = koinInject<NavigationConfig>()
 
     NavigationHost(
         navigator = navigator,
-        config = GeneratedNavigationConfig,
+        config = navigationConfig,
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),

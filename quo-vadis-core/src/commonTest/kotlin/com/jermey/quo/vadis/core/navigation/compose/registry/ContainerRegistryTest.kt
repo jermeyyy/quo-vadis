@@ -139,7 +139,8 @@ class ContainerRegistryTest {
         val info = ContainerInfo.TabContainer(
             builder = builder,
             initialTabIndex = 1,
-            scopeKey = "TestScope"
+            scopeKey = "TestScope",
+            containerClass = MainTabs::class
         )
 
         assertEquals(1, info.initialTabIndex)
@@ -151,7 +152,8 @@ class ContainerRegistryTest {
         val info = ContainerInfo.TabContainer(
             builder = builder,
             initialTabIndex = 0,
-            scopeKey = "MainTabs"
+            scopeKey = "MainTabs",
+            containerClass = MainTabs::class
         )
 
         assertEquals("MainTabs", info.scopeKey)
@@ -163,7 +165,8 @@ class ContainerRegistryTest {
         val info = ContainerInfo.TabContainer(
             builder = builder,
             initialTabIndex = 1,
-            scopeKey = "MainTabs"
+            scopeKey = "MainTabs",
+            containerClass = MainTabs::class
         )
 
         val tabNode = info.builder("test-tabs", "parent", 1)
@@ -180,7 +183,8 @@ class ContainerRegistryTest {
         val info = ContainerInfo.TabContainer(
             builder = builder,
             initialTabIndex = 0,
-            scopeKey = "MainTabs"
+            scopeKey = "MainTabs",
+            containerClass = MainTabs::class
         )
 
         val tabNode = info.builder("tabs", null, info.initialTabIndex)
@@ -191,9 +195,9 @@ class ContainerRegistryTest {
     @Test
     fun `TabContainer equality based on properties`() {
         val builder = createTabNodeBuilder()
-        val info1 = ContainerInfo.TabContainer(builder, initialTabIndex = 0, scopeKey = "Scope1")
-        val info2 = ContainerInfo.TabContainer(builder, initialTabIndex = 0, scopeKey = "Scope1")
-        val info3 = ContainerInfo.TabContainer(builder, initialTabIndex = 1, scopeKey = "Scope1")
+        val info1 = ContainerInfo.TabContainer(builder, initialTabIndex = 0, scopeKey = "Scope1", containerClass = MainTabs::class)
+        val info2 = ContainerInfo.TabContainer(builder, initialTabIndex = 0, scopeKey = "Scope1", containerClass = MainTabs::class)
+        val info3 = ContainerInfo.TabContainer(builder, initialTabIndex = 1, scopeKey = "Scope1", containerClass = MainTabs::class)
 
         assertEquals(info1, info2)
         assertNotEquals(info1, info3)
@@ -202,8 +206,8 @@ class ContainerRegistryTest {
     @Test
     fun `TabContainer with different scopeKeys are not equal`() {
         val builder = createTabNodeBuilder()
-        val info1 = ContainerInfo.TabContainer(builder, initialTabIndex = 0, scopeKey = "Scope1")
-        val info2 = ContainerInfo.TabContainer(builder, initialTabIndex = 0, scopeKey = "Scope2")
+        val info1 = ContainerInfo.TabContainer(builder, initialTabIndex = 0, scopeKey = "Scope1", containerClass = MainTabs::class)
+        val info2 = ContainerInfo.TabContainer(builder, initialTabIndex = 0, scopeKey = "Scope2", containerClass = MainTabs::class)
 
         assertNotEquals(info1, info2)
     }
@@ -218,7 +222,8 @@ class ContainerRegistryTest {
         val info = ContainerInfo.PaneContainer(
             builder = builder,
             initialPane = PaneRole.Supporting,
-            scopeKey = "TestScope"
+            scopeKey = "TestScope",
+            containerClass = DetailPane::class
         )
 
         assertEquals(PaneRole.Supporting, info.initialPane)
@@ -230,7 +235,8 @@ class ContainerRegistryTest {
         val info = ContainerInfo.PaneContainer(
             builder = builder,
             initialPane = PaneRole.Primary,
-            scopeKey = "DetailPane"
+            scopeKey = "DetailPane",
+            containerClass = DetailPane::class
         )
 
         assertEquals("DetailPane", info.scopeKey)
@@ -242,7 +248,8 @@ class ContainerRegistryTest {
         val info = ContainerInfo.PaneContainer(
             builder = builder,
             initialPane = PaneRole.Primary,
-            scopeKey = "DetailPane"
+            scopeKey = "DetailPane",
+            containerClass = DetailPane::class
         )
 
         val paneNode = info.builder("test-panes", "parent")
@@ -261,7 +268,8 @@ class ContainerRegistryTest {
             val info = ContainerInfo.PaneContainer(
                 builder = builder,
                 initialPane = role,
-                scopeKey = "Test"
+                scopeKey = "Test",
+                containerClass = DetailPane::class
             )
             assertEquals(role, info.initialPane)
         }
@@ -270,9 +278,9 @@ class ContainerRegistryTest {
     @Test
     fun `PaneContainer equality based on properties`() {
         val builder = createPaneNodeBuilder()
-        val info1 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Primary, scopeKey = "Scope1")
-        val info2 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Primary, scopeKey = "Scope1")
-        val info3 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Supporting, scopeKey = "Scope1")
+        val info1 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Primary, scopeKey = "Scope1", containerClass = DetailPane::class)
+        val info2 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Primary, scopeKey = "Scope1", containerClass = DetailPane::class)
+        val info3 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Supporting, scopeKey = "Scope1", containerClass = DetailPane::class)
 
         assertEquals(info1, info2)
         assertNotEquals(info1, info3)
@@ -281,8 +289,8 @@ class ContainerRegistryTest {
     @Test
     fun `PaneContainer with different scopeKeys are not equal`() {
         val builder = createPaneNodeBuilder()
-        val info1 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Primary, scopeKey = "Scope1")
-        val info2 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Primary, scopeKey = "Scope2")
+        val info1 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Primary, scopeKey = "Scope1", containerClass = DetailPane::class)
+        val info2 = ContainerInfo.PaneContainer(builder, initialPane = PaneRole.Primary, scopeKey = "Scope2", containerClass = DetailPane::class)
 
         assertNotEquals(info1, info2)
     }
@@ -296,7 +304,8 @@ class ContainerRegistryTest {
         val tabContainerInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(),
             initialTabIndex = 0,
-            scopeKey = "MainTabs"
+            scopeKey = "MainTabs",
+            containerClass = MainTabs::class
         )
 
         val registry = createTestContainerRegistry { destination ->
@@ -323,7 +332,8 @@ class ContainerRegistryTest {
         val paneContainerInfo = ContainerInfo.PaneContainer(
             builder = createPaneNodeBuilder(),
             initialPane = PaneRole.Primary,
-            scopeKey = "DetailPane"
+            scopeKey = "DetailPane",
+            containerClass = DetailPane::class
         )
 
         val registry = createTestContainerRegistry { destination ->
@@ -352,7 +362,8 @@ class ContainerRegistryTest {
                 ContainerInfo.TabContainer(
                     builder = createTabNodeBuilder(),
                     initialTabIndex = 0,
-                    scopeKey = "MainTabs"
+                    scopeKey = "MainTabs",
+                    containerClass = MainTabs::class
                 )
             } else {
                 null
@@ -368,12 +379,14 @@ class ContainerRegistryTest {
         val tabInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(),
             initialTabIndex = 0,
-            scopeKey = "MainTabs"
+            scopeKey = "MainTabs",
+            containerClass = MainTabs::class
         )
         val paneInfo = ContainerInfo.PaneContainer(
             builder = createPaneNodeBuilder(),
             initialPane = PaneRole.Primary,
-            scopeKey = "DetailPane"
+            scopeKey = "DetailPane",
+            containerClass = DetailPane::class
         )
 
         val registry = createTestContainerRegistry { destination ->
@@ -404,13 +417,15 @@ class ContainerRegistryTest {
         val tabInfo: ContainerInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(),
             initialTabIndex = 0,
-            scopeKey = "TabScope"
+            scopeKey = "TabScope",
+            containerClass = MainTabs::class
         )
 
         val paneInfo: ContainerInfo = ContainerInfo.PaneContainer(
             builder = createPaneNodeBuilder(),
             initialPane = PaneRole.Primary,
-            scopeKey = "PaneScope"
+            scopeKey = "PaneScope",
+            containerClass = DetailPane::class
         )
 
         assertEquals("TabScope", tabInfo.scopeKey)
@@ -422,12 +437,14 @@ class ContainerRegistryTest {
         val tabInfo: ContainerInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(),
             initialTabIndex = 0,
-            scopeKey = "Test"
+            scopeKey = "Test",
+            containerClass = MainTabs::class
         )
         val paneInfo: ContainerInfo = ContainerInfo.PaneContainer(
             builder = createPaneNodeBuilder(),
             initialPane = PaneRole.Primary,
-            scopeKey = "Test"
+            scopeKey = "Test",
+            containerClass = DetailPane::class
         )
 
         // This verifies exhaustive when works correctly

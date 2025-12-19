@@ -40,22 +40,13 @@ import com.jermey.quo.vadis.ksp.validation.ValidationEngine
  * - @Pane - generates PaneNode builder functions with pane configurations
  * - @Destination - generates deep link handler for URI pattern matching
  * - @Screen - generates screen registry for composable resolution
- *
- * Also generates:
- * - Navigator extension functions for type-safe navigation
- * - Validation of annotation usage and relationships
- *
- * ## Generation Modes
- *
- * Controlled via KSP options:
- * - `quoVadis.mode=dsl` - Generate only DSL config (GeneratedNavigationConfig)
- * - `quoVadis.mode=legacy` - Generate only legacy registries
- * - `quoVadis.mode=both` - Generate both (default during transition)
+ * - @TabsContainer / @PaneContainer - generates wrapper functions for container scopes
+ * - @Transition - generates transition registry for animated navigation
  *
  * ## KSP Options
- *
- * - `quoVadis.mode` - "dsl", "legacy", or "both" (default: "both")
  * - `quoVadis.package` - Target package for generated code
+ * - `quoVadis.modulePrefix` - Prefix for generated class names (e.g., "ComposeApp" -> ComposeAppGeneratedNavigationConfig).
+ *   This is required for multi-module projects to avoid class name conflicts.
  * - `quoVadis.strictValidation` - Whether validation errors abort generation (default: true)
  */
 class QuoVadisSymbolProcessor(
@@ -70,6 +61,7 @@ class QuoVadisSymbolProcessor(
 
     private val targetPackage: String = options["quoVadis.package"]
         ?: "com.jermey.quo.vadis.generated"
+    private val modulePrefix: String = options["quoVadis.modulePrefix"] ?: ""
     private val strictValidation: Boolean = options["quoVadis.strictValidation"]
         ?.toBooleanStrictOrNull() ?: true
 
@@ -89,7 +81,8 @@ class QuoVadisSymbolProcessor(
     // Deeplink Generator
     // =========================================================================
 
-    private val deepLinkHandlerGenerator = DeepLinkHandlerGenerator(codeGenerator, logger)
+    private val deepLinkHandlerGenerator =
+        DeepLinkHandlerGenerator(codeGenerator, logger, modulePrefix)
 
     // =========================================================================
     // New DSL Generator (for DSL and BOTH modes)
@@ -98,7 +91,8 @@ class QuoVadisSymbolProcessor(
     private val navigationConfigGenerator = NavigationConfigGenerator(
         codeGenerator = codeGenerator,
         logger = logger,
-        packageName = targetPackage
+        packageName = targetPackage,
+        modulePrefix = modulePrefix
     )
 
     // =========================================================================

@@ -91,14 +91,20 @@ import com.squareup.kotlinpoet.ksp.toClassName
  * @param codeGenerator KSP code generator
  * @param logger KSP logger
  * @param packageName Target package for generated code
+ * @param modulePrefix Optional prefix for generated class names (e.g., "ComposeApp" -> "ComposeAppNavigationConfig")
  */
 class NavigationConfigGenerator(
     codeGenerator: CodeGenerator,
     logger: KSPLogger,
-    private val packageName: String
+    private val packageName: String,
+    private val modulePrefix: String = ""
 ) : DslCodeGenerator(codeGenerator, logger) {
 
     override val generatedPackage: String = packageName
+
+    // Dynamic names based on modulePrefix
+    private val generatedFileName: String = "${modulePrefix}NavigationConfig"
+    private val generatedObjectName: String = "${modulePrefix}NavigationConfig"
 
     // Sub-generators
     private val screenBlockGenerator = ScreenBlockGenerator(logger)
@@ -171,7 +177,7 @@ class NavigationConfigGenerator(
         val fileSpec = buildFileSpec(data)
         writeFile(fileSpec, originatingFiles)
 
-        logInfo("Successfully generated $GENERATED_FILE_NAME.kt in package $packageName")
+        logInfo("Successfully generated $generatedFileName.kt in package $packageName")
     }
 
     /**
@@ -181,7 +187,7 @@ class NavigationConfigGenerator(
         // Collect imports from sub-generators
         val dynamicImports = collectDynamicImports(data)
 
-        return createFileBuilder(GENERATED_FILE_NAME, packageName)
+        return createFileBuilder(generatedFileName, packageName)
             .addImports()
             .addDynamicImports(dynamicImports)
             .addType(buildConfigObject(data))
@@ -239,6 +245,7 @@ class NavigationConfigGenerator(
     private fun FileSpec.Builder.addImports(): FileSpec.Builder {
         // Core navigation imports
         addImport("com.jermey.quo.vadis.core.navigation", "NavigationConfig")
+        addImport("com.jermey.quo.vadis.core.navigation", "CompositeNavigationConfig")
         addImport("com.jermey.quo.vadis.core.navigation.core", "NavDestination")
         addImport("com.jermey.quo.vadis.core.navigation.core", "NavNode")
         addImport("com.jermey.quo.vadis.core.navigation.core", "Navigator")
@@ -283,7 +290,7 @@ class NavigationConfigGenerator(
      *   with when-based dispatch to avoid Compose lambda casting issues
      */
     private fun buildConfigObject(data: NavigationData): TypeSpec {
-        return TypeSpec.objectBuilder(GENERATED_OBJECT_NAME)
+        return TypeSpec.objectBuilder(generatedObjectName)
             .addKdoc(StringTemplates.NAVIGATION_CONFIG_KDOC)
             .addSuperinterface(NAVIGATION_CONFIG_CLASS)
             .addProperty(buildBaseConfigProperty(data))
@@ -481,15 +488,16 @@ class NavigationConfigGenerator(
     /**
      * Builds the `plus` operator function implementation.
      *
-     * Delegates to baseConfig.plus(other) to leverage the DSL-built config's
-     * plus implementation, avoiding direct use of internal CompositeNavigationConfig.
+     * Creates a CompositeNavigationConfig with `this` as primary and `other` as secondary.
+     * This ensures that the generated config's screenRegistry (which contains the actual
+     * screen mappings) is used in the composite, not just baseConfig's empty registry.
      */
     private fun buildPlusFunction(): FunSpec {
         return FunSpec.builder("plus")
             .addModifiers(KModifier.OVERRIDE, KModifier.OPERATOR)
             .addParameter("other", NAVIGATION_CONFIG_CLASS)
             .returns(NAVIGATION_CONFIG_CLASS)
-            .addStatement("return baseConfig + other")
+            .addStatement("return CompositeNavigationConfig(this, other)")
             .build()
     }
 

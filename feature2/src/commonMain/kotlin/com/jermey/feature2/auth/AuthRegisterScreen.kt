@@ -1,4 +1,4 @@
-package com.jermey.navplayground.demo.ui.screens.auth
+package com.jermey.feature2.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,10 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.AuthFlowDestination
-import com.jermey.navplayground.demo.destinations.MainTabs
+import com.jermey.feature2.AuthFlowDestination
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import org.koin.compose.koinInject
 
@@ -118,10 +116,7 @@ fun AuthRegisterScreen(navigator: Navigator = koinInject()) {
             // OUT-OF-SCOPE navigation: MainTabs is not in AuthFlow scope
             Button(
                 onClick = {
-                    navigator.navigate(
-                        MainTabs.HomeTab,
-                        NavigationTransitions.SlideHorizontal
-                    )
+                    navigator.navigateAndClearTo(AuthFlowDestination.Register, inclusive = true)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

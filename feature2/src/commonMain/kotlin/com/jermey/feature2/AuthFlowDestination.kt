@@ -1,4 +1,4 @@
-package com.jermey.navplayground.demo.destinations
+package com.jermey.feature2
 
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack

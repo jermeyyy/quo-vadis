@@ -1,22 +1,12 @@
 package com.jermey.quo.vadis.core.navigation
 
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerInfo
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.DeepLink
-import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlin.reflect.KClass
 
 /**
@@ -47,7 +37,7 @@ import kotlin.reflect.KClass
  * @param primary The base config (lower priority)
  * @param secondary The overlay config (higher priority)
  */
-internal class CompositeNavigationConfig(
+class CompositeNavigationConfig(
     private val primary: NavigationConfig,
     private val secondary: NavigationConfig
 ) : NavigationConfig {
@@ -79,11 +69,18 @@ internal class CompositeNavigationConfig(
     /**
      * Composite container registry that checks secondary first, then primary.
      * Handles both container building and wrapper rendering.
+     *
+     * Uses lazy initialization to allow passing [buildNavNode] reference,
+     * which enables cross-config destination resolution when building
+     * container nodes.
      */
-    override val containerRegistry: ContainerRegistry = CompositeContainerRegistry(
-        primary = primary.containerRegistry,
-        secondary = secondary.containerRegistry
-    )
+    override val containerRegistry: ContainerRegistry by lazy {
+        CompositeContainerRegistry(
+            primary = primary.containerRegistry,
+            secondary = secondary.containerRegistry,
+            navNodeBuilder = ::buildNavNode
+        )
+    }
 
     /**
      * Returns secondary's deep link handler if available, otherwise primary's.
@@ -129,159 +126,3 @@ internal class CompositeNavigationConfig(
     }
 }
 
-/**
- * Composite screen registry that delegates to secondary first, then primary.
- */
-private class CompositeScreenRegistry(
-    private val primary: ScreenRegistry,
-    private val secondary: ScreenRegistry
-) : ScreenRegistry {
-
-    @Composable
-    override fun Content(
-        destination: NavDestination,
-        navigator: Navigator,
-        sharedTransitionScope: SharedTransitionScope?,
-        animatedVisibilityScope: AnimatedVisibilityScope?
-    ) {
-        if (secondary.hasContent(destination)) {
-            secondary.Content(destination, navigator, sharedTransitionScope, animatedVisibilityScope)
-        } else {
-            primary.Content(destination, navigator, sharedTransitionScope, animatedVisibilityScope)
-        }
-    }
-
-    override fun hasContent(destination: NavDestination): Boolean {
-        return secondary.hasContent(destination) || primary.hasContent(destination)
-    }
-}
-
-/**
- * Composite scope registry that delegates to secondary first, then primary.
- */
-private class CompositeScopeRegistry(
-    private val primary: ScopeRegistry,
-    private val secondary: ScopeRegistry
-) : ScopeRegistry {
-
-    override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
-        // Check secondary first for an explicit registration
-        val secondaryScopeKey = secondary.getScopeKey(destination)
-        if (secondaryScopeKey != null) {
-            return secondary.isInScope(scopeKey, destination)
-        }
-        // Fall back to primary
-        return primary.isInScope(scopeKey, destination)
-    }
-
-    override fun getScopeKey(destination: NavDestination): String? {
-        return secondary.getScopeKey(destination) ?: primary.getScopeKey(destination)
-    }
-}
-
-/**
- * Composite transition registry that delegates to secondary first, then primary.
- */
-private class CompositeTransitionRegistry(
-    private val primary: TransitionRegistry,
-    private val secondary: TransitionRegistry
-) : TransitionRegistry {
-
-    override fun getTransition(destinationClass: KClass<*>): NavTransition? {
-        return secondary.getTransition(destinationClass) ?: primary.getTransition(destinationClass)
-    }
-}
-
-/**
- * Composite container registry that delegates to secondary first, then primary.
- * Handles both container building (getContainerInfo) and wrapper rendering
- * (TabsContainer, PaneContainer).
- */
-private class CompositeContainerRegistry(
-    private val primary: ContainerRegistry,
-    private val secondary: ContainerRegistry
-) : ContainerRegistry {
-
-    override fun getContainerInfo(destination: NavDestination): ContainerInfo? {
-        return secondary.getContainerInfo(destination) ?: primary.getContainerInfo(destination)
-    }
-
-    @Composable
-    override fun TabsContainer(
-        tabNodeKey: String,
-        scope: TabsContainerScope,
-        content: @Composable () -> Unit
-    ) {
-        if (secondary.hasTabsContainer(tabNodeKey)) {
-            secondary.TabsContainer(tabNodeKey, scope, content)
-        } else {
-            primary.TabsContainer(tabNodeKey, scope, content)
-        }
-    }
-
-    @Composable
-    override fun PaneContainer(
-        paneNodeKey: String,
-        scope: PaneContainerScope,
-        content: @Composable () -> Unit
-    ) {
-        if (secondary.hasPaneContainer(paneNodeKey)) {
-            secondary.PaneContainer(paneNodeKey, scope, content)
-        } else {
-            primary.PaneContainer(paneNodeKey, scope, content)
-        }
-    }
-
-    override fun hasTabsContainer(tabNodeKey: String): Boolean {
-        return secondary.hasTabsContainer(tabNodeKey) || primary.hasTabsContainer(tabNodeKey)
-    }
-
-    override fun hasPaneContainer(paneNodeKey: String): Boolean {
-        return secondary.hasPaneContainer(paneNodeKey) || primary.hasPaneContainer(paneNodeKey)
-    }
-}
-
-/**
- * Composite deep link handler that delegates to secondary first, then primary.
- */
-private class CompositeDeepLinkHandler(
-    private val primary: GeneratedDeepLinkHandler,
-    private val secondary: GeneratedDeepLinkHandler
-) : GeneratedDeepLinkHandler {
-
-    override fun handleDeepLink(uri: String): DeepLinkResult {
-        val secondaryResult = secondary.handleDeepLink(uri)
-        if (secondaryResult is DeepLinkResult.Matched) {
-            return secondaryResult
-        }
-        return primary.handleDeepLink(uri)
-    }
-
-    override fun createDeepLinkUri(destination: NavDestination, scheme: String): String? {
-        return secondary.createDeepLinkUri(destination, scheme)
-            ?: primary.createDeepLinkUri(destination, scheme)
-    }
-
-    override fun resolve(deepLink: DeepLink): NavDestination? {
-        return secondary.resolve(deepLink) ?: primary.resolve(deepLink)
-    }
-
-    override fun register(
-        pattern: String,
-        action: (navigator: Navigator, parameters: Map<String, String>) -> Unit
-    ) {
-        // Register on both handlers to support full pattern matching
-        secondary.register(pattern, action)
-        primary.register(pattern, action)
-    }
-
-    override fun handle(deepLink: DeepLink, navigator: Navigator) {
-        // Try secondary first, then primary
-        val secondaryResolved = secondary.resolve(deepLink)
-        if (secondaryResolved != null) {
-            secondary.handle(deepLink, navigator)
-        } else {
-            primary.handle(deepLink, navigator)
-        }
-    }
-}
