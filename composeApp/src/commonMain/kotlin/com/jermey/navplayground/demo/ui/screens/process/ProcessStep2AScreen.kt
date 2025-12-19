@@ -28,18 +28,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
-
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Process Step 2A - Personal account configuration
  */
+@Screen(ProcessDestination.Step2A::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProcessStep2AScreen(
-    previousData: String,
-    onNext: (data: String) -> Unit,
-    onBack: () -> Unit
+    destination: ProcessDestination.Step2A,
+    navigator: Navigator = koinInject()
 ) {
     var email by remember { mutableStateOf("") }
     var birthdate by remember { mutableStateOf("") }
@@ -49,14 +52,30 @@ fun ProcessStep2AScreen(
             TopAppBar(
                 title = { Text("Step 2: Personal Details") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
             )
         }
     ) { padding ->
-        ProcessStep2AContent(padding, previousData, email, birthdate, onBack, onNext)
+        ProcessStep2AContent(
+            padding = padding,
+            previousData = destination.stepData,
+            email = email,
+            birthdate = birthdate,
+            onEmailChange = { email = it },
+            onBirthdateChange = { birthdate = it },
+            onBack = { navigator.navigateBack() },
+            onNext = { data ->
+                navigator.navigate(
+                    ProcessDestination.Step3(
+                        previousData = data,
+                        branch = "personal"
+                    )
+                )
+            }
+        )
     }
 }
 
@@ -66,11 +85,11 @@ private fun ProcessStep2AContent(
     previousData: String,
     email: String,
     birthdate: String,
+    onEmailChange: (String) -> Unit,
+    onBirthdateChange: (String) -> Unit,
     onBack: () -> Unit,
     onNext: (String) -> Unit
 ) {
-    var email1 = email
-    var birthdate1 = birthdate
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -93,8 +112,8 @@ private fun ProcessStep2AContent(
             )
 
             OutlinedTextField(
-                value = email1,
-                onValueChange = { email1 = it },
+                value = email,
+                onValueChange = onEmailChange,
                 label = { Text("Email Address") },
                 leadingIcon = { Icon(Icons.Default.Email, null) },
                 modifier = Modifier.fillMaxWidth(),
@@ -102,8 +121,8 @@ private fun ProcessStep2AContent(
             )
 
             OutlinedTextField(
-                value = birthdate1,
-                onValueChange = { birthdate1 = it },
+                value = birthdate,
+                onValueChange = onBirthdateChange,
                 label = { Text("Birth Date (YYYY-MM-DD)") },
                 leadingIcon = { Icon(Icons.Default.CalendarToday, null) },
                 modifier = Modifier.fillMaxWidth(),
@@ -123,9 +142,9 @@ private fun ProcessStep2AContent(
             }
 
             Button(
-                onClick = { onNext("$previousData|$email1|$birthdate1") },
+                onClick = { onNext("$previousData|$email|$birthdate") },
                 modifier = Modifier.weight(1f),
-                enabled = email1.isNotBlank() && birthdate1.isNotBlank()
+                enabled = email.isNotBlank() && birthdate.isNotBlank()
             ) {
                 Text("Next")
             }

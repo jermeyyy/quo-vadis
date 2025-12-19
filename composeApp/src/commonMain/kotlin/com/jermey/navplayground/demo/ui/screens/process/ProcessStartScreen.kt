@@ -27,24 +27,26 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.ui.components.ProcessStep
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Process Start Screen - Entry point for the wizard/process flow
  */
+@Screen(ProcessDestination.Start::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProcessStartScreen(
-    onStart: () -> Unit,
-    onCancel: () -> Unit
-) {
+fun ProcessStartScreen(navigator: Navigator = koinInject()) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Setup Process") },
                 navigationIcon = {
-                    IconButton(onClick = onCancel) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.Default.Close, "Cancel")
                     }
                 }
@@ -58,7 +60,9 @@ fun ProcessStartScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            ProcessStartContent(onStart)
+            ProcessStartContent(
+                onStart = { navigator.navigate(ProcessDestination.Step1()) }
+            )
         }
     }
 }

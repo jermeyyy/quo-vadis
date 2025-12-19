@@ -30,20 +30,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.ui.components.AccountTypeOption
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Process Step 1 - User type selection (branches the flow)
  */
+@Screen(ProcessDestination.Step1::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProcessStep1Screen(
-    initialUserType: String?,
-    onNext: (userType: String, data: String) -> Unit,
-    onBack: () -> Unit
+    destination: ProcessDestination.Step1,
+    navigator: Navigator = koinInject()
 ) {
-    var selectedType by remember { mutableStateOf(initialUserType ?: "personal") }
+    var selectedType by remember { mutableStateOf(destination.userType ?: "personal") }
     var name by remember { mutableStateOf("") }
 
     Scaffold(
@@ -51,7 +55,7 @@ fun ProcessStep1Screen(
             TopAppBar(
                 title = { Text("Step 1: Account Type") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
@@ -65,7 +69,20 @@ fun ProcessStep1Screen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            ProcessStep1Content(selectedType, name, onBack, onNext)
+            ProcessStep1Content(
+                selectedType = selectedType,
+                name = name,
+                onSelectedTypeChange = { selectedType = it },
+                onNameChange = { name = it },
+                onBack = { navigator.navigateBack() },
+                onNext = { userType, data ->
+                    if (userType == "personal") {
+                        navigator.navigate(ProcessDestination.Step2A(stepData = data))
+                    } else {
+                        navigator.navigate(ProcessDestination.Step2B(stepData = data))
+                    }
+                }
+            )
         }
     }
 }
@@ -74,11 +91,11 @@ fun ProcessStep1Screen(
 private fun ProcessStep1Content(
     selectedType: String,
     name: String,
+    onSelectedTypeChange: (String) -> Unit,
+    onNameChange: (String) -> Unit,
     onBack: () -> Unit,
     onNext: (String, String) -> Unit
 ) {
-    var selectedType1 = selectedType
-    var name1 = name
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -103,8 +120,8 @@ private fun ProcessStep1Content(
                 title = "Personal Account",
                 description = "For individual use",
                 icon = Icons.Default.Person,
-                selected = selectedType1 == "personal",
-                onSelect = { selectedType1 = "personal" }
+                selected = selectedType == "personal",
+                onSelect = { onSelectedTypeChange("personal") }
             )
 
             Spacer(Modifier.height(8.dp))
@@ -114,16 +131,16 @@ private fun ProcessStep1Content(
                 title = "Business Account",
                 description = "For companies and organizations",
                 icon = Icons.Default.Business,
-                selected = selectedType1 == "business",
-                onSelect = { selectedType1 = "business" }
+                selected = selectedType == "business",
+                onSelect = { onSelectedTypeChange("business") }
             )
         }
 
         Spacer(Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = name1,
-            onValueChange = { name1 = it },
+            value = name,
+            onValueChange = onNameChange,
             label = { Text("Your Name") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
@@ -142,9 +159,9 @@ private fun ProcessStep1Content(
         }
 
         Button(
-            onClick = { onNext(selectedType1, name1) },
+            onClick = { onNext(selectedType, name) },
             modifier = Modifier.weight(1f),
-            enabled = name1.isNotBlank()
+            enabled = name.isNotBlank()
         ) {
             Text("Next")
         }

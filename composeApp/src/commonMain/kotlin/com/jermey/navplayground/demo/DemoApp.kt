@@ -1,43 +1,56 @@
 package com.jermey.navplayground.demo
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import com.jermey.navplayground.demo.destinations.AppDestination
-import com.jermey.navplayground.demo.destinations.initializeQuoVadisRoutes
-import com.jermey.navplayground.demo.graphs.appRootGraph
-import com.jermey.quo.vadis.core.navigation.compose.GraphNavHost
-import com.jermey.quo.vadis.core.navigation.compose.rememberNavigator
-import com.jermey.quo.vadis.core.navigation.core.NavigationGraph
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
+import androidx.compose.ui.Modifier
+import com.jermey.navplayground.demo.destinations.MainTabs
+import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
+import com.jermey.quo.vadis.core.navigation.compose.rememberQuoVadisNavigator
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.generated.GeneratedNavigationConfig
+import org.koin.compose.koinInject
 
 /**
  * Main entry point for the demo application.
  *
- * Architecture:
- * - appRootGraph contains only AppDestination.MainTabs
- * - MainTabsScreen hosts tabbed navigation with 4 tabs
- * - Each tab uses tabContentGraph for navigation within its stack
- * - MasterDetail, Process, Tabs demos open in new stacks
- * - DeepLink demo accessible via modal bottom sheet
+ * ```kotlin
+ * val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
+ * NavigationHost(
+ *     navigator = navigator,
+ *     config = GeneratedNavigationConfig
+ * )
+ * ```
+ *
+ * ## Navigation Structure
+ *
+ * ```
+ * MainTabs (TabNode)
+ * ├── Home (StackNode) → HomeTab.Tab
+ * ├── Explore (StackNode) → ExploreTab.Tab
+ * ├── Profile (StackNode) → ProfileTab.Tab
+ * └── Settings (StackNode) → SettingsTab.Tab
+ * ```
+ *
+ * @see GeneratedNavigationConfig KSP-generated unified config object
+ * @see rememberQuoVadisNavigator Composable navigator creation
+ * @see NavigationHost Display navigation content
  */
 @Composable
 fun DemoApp() {
-    // Initialize auto-generated route registrations
-    remember { initializeQuoVadisRoutes() }
-    
-    val navigator = rememberNavigator()
-    val appGraph = remember<NavigationGraph> { appRootGraph() }
+//    val navigator = rememberQuoVadisNavigator(
+//        rootDestination = MainTabs::class,
+//        config = GeneratedNavigationConfig
+//    )
+    val navigator = koinInject<Navigator>()
 
-    LaunchedEffect(navigator, appGraph) {
-        navigator.registerGraph(appGraph)
-        navigator.setStartDestination(AppDestination.MainTabs)
-    }
-
-    GraphNavHost(
-        graph = appGraph,
+    NavigationHost(
         navigator = navigator,
-        defaultTransition = NavigationTransitions.SlideHorizontal,
-        enablePredictiveBack = true
+        config = GeneratedNavigationConfig,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        enablePredictiveBack = true,
     )
 }

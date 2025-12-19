@@ -1,411 +1,268 @@
-# Navigation Library - Complete Architecture & Implementation
+# Architecture Patterns
 
-## Overview
-**Quo Vadis** (Latin for "Where are you going?") - A comprehensive, type-safe navigation library for Kotlin Multiplatform with Compose Multiplatform UI.
+## Core Architecture
 
-## Core Architecture Principles
+The Quo Vadis navigation library uses a **tree-based navigation architecture** where navigation state is represented as a tree of nodes.
 
-### 1. Type Safety First
-- Compile-time safe navigation with sealed classes
-- NO string-based routing in application code
-- Typed argument passing with validation
-
-### 2. Modularization (Gray Box Pattern)
-- Feature modules expose entry points
-- Internal navigation stays private
-- Clear module boundaries
-- Easy refactoring within modules
-
-### 3. Reactive State Management
-- StateFlow for observable state
-- SharedFlow for one-time events
-- All navigation state is reactive
-- Automatic UI updates
-
-### 4. Direct Backstack Access
-- Full control over navigation stack
-- Observable state via StateFlow
-- Advanced operations (popUntil, popTo, etc.)
-- Complex navigation patterns supported
-
-### 5. FlowMVI Architecture Integration
-- MVI support via separate `quo-vadis-core-flow-mvi` module
-- FlowMVI library integration
-- Type-safe navigation intents and actions
-- Observable navigation state
-
-### 6. Predictive Back Navigation
-- Smooth gesture-based navigation
-- Two-phase animation system
-- Automatic screen caching
-- Works on both Android and iOS
-- Prevents premature screen destruction
-
-### 7. Shared Element Transitions (NEW!)
-- Material Design-compliant shared elements
-- Works in BOTH forward AND backward navigation
-- Compatible with predictive back gestures
-- Per-destination opt-in via `destinationWithScopes()`
-- Type-safe with compile-time guarantees
-- Full multiplatform support
-
-## Package Structure
+### Navigation Tree Model
 
 ```
-com.jermey.quo.vadis.core.navigation/
-├── core/
-│   ├── Destination.kt              - Navigation targets (type-safe)
-│   ├── BackStack.kt                - Stack manipulation & state
-│   ├── Navigator.kt                - Central controller
-│   ├── NavigationGraph.kt          - Modular graph definitions
-│   ├── NavigationTransition.kt     - Animation support + SharedElementConfig
-│   └── DeepLink.kt                 - URI-based navigation
-├── compose/
-│   ├── NavHost.kt                  - Basic navigation host
-│   ├── GraphNavHost.kt             - Graph-based host with SharedTransitionLayout
-│   ├── PredictiveBackNavigation.kt - Gesture navigation
-│   ├── ComposableCache.kt          - Screen caching
-│   ├── SharedElementScope.kt       - ✨ CompositionLocal providers (NEW)
-│   └── SharedElementModifiers.kt   - ✨ Convenience extensions (NEW)
-├── integration/
-│   └── KoinIntegration.kt          - DI support
-├── utils/
-│   └── NavigationExtensions.kt     - Utility functions
-├── testing/
-│   └── FakeNavigator.kt            - Testing utilities
-└── serialization/
-    └── StateSerializer.kt          - State persistence
+NavNode (root)
+├── StackNode (main stack)
+│   ├── ScreenNode (Home)
+│   ├── ScreenNode (List)
+│   └── ScreenNode (Detail)
+├── TabNode (bottom tabs)
+│   ├── StackNode (Tab 1 stack)
+│   │   └── ScreenNode
+│   └── StackNode (Tab 2 stack)
+│       └── ScreenNode
+└── PaneNode (adaptive layout)
+    ├── StackNode (primary)
+    └── StackNode (detail)
 ```
 
-**FlowMVI Module** (`quo-vadis-core-flow-mvi/`):
-For MVI architecture, use the separate FlowMVI integration module which provides:
-- NavigationIntent - Type-safe navigation actions
-- NavigationAction - Side effects
-- NavigationState - Observable state
-- NavigatorContainer - FlowMVI store integration
+### Node Types
+
+| Node | Purpose | Key Features |
+|------|---------|--------------|
+| `NavNode` | Base type for all nodes | Has `key`, parent reference |
+| `ScreenNode` | Single screen/destination | Contains `Destination`, handles content |
+| `StackNode` | Stack of screens | Push/pop operations, backstack |
+| `TabNode` | Tab container | Independent stacks per tab |
+| `PaneNode` | Adaptive layout | Primary/detail panes |
 
 ## Key Components
 
-### Navigator
-Central navigation controller with reactive state:
-- `navigate(destination, transition)` - Navigate to destination
-- `navigateBack()` - Go back
-- `navigateAndClearTo()` - Navigate and clear stack
-- `backStack` - Direct backstack access
-- `currentDestination` - Observable current destination
+### Navigator Interface
 
-### BackStack
-Direct stack manipulation with StateFlow:
-- `push()`, `pop()`, `replace()`, `clear()`
-- `popUntil()`, `popTo()`, `popToRoot()`
-- `current`, `previous`, `canGoBack` - Observable state
-- `stack` - Full stack as StateFlow
+The central navigation controller:
 
-### NavigationGraph
-Modular graph definitions with DSL:
 ```kotlin
-navigationGraph("feature") {
-    startDestination(Screen1)
-    destination(Screen1) { _, nav -> Screen1UI(nav) }
+interface Navigator {
+    val state: StateFlow<NavNode>
     
-    // ✨ NEW: Per-destination shared elements
-    destinationWithScopes(Screen2) { _, nav, shared, animated ->
-        Screen2UI(nav, shared, animated)
+    // Basic navigation
+    fun navigate(destination: Destination)
+    fun navigateBack(): Boolean
+    
+    // Tree manipulation
+    fun mutate(mutation: TreeMutator.() -> NavNode?)
+    
+    // Stack operations
+    fun popTo(predicate: (NavNode) -> Boolean): Boolean
+    fun popToRoot(): Boolean
+}
+```
+
+### TreeMutator
+
+For complex navigation state changes:
+
+```kotlin
+navigator.mutate { node ->
+    node.pop()
+}
+
+navigator.mutate { node ->
+    node.popTo { it.destination.route == "home" }
+}
+
+navigator.mutate { node ->
+    node.push(DetailDestination(id))
+}
+```
+
+### Destination Pattern
+
+Type-safe destinations using sealed classes:
+
+```kotlin
+sealed class AppDestination : Destination {
+    @Route("home")
+    data object Home : AppDestination()
+    
+    @Route("detail/{id}")
+    @Argument(DetailData::class)
+    data class Detail(val id: String) : AppDestination(),
+        TypedDestination<DetailData> {
+        override val data = DetailData(id)
     }
 }
 ```
 
-### PredictiveBackNavigation
-Gesture-based navigation with smooth animations:
+## Registry System
 
-**Two-Phase Animation System:**
-1. **Gesture Phase**: User dragging, real-time animation
-2. **Exit Phase**: After release, smooth completion
+### Registries
 
-**Animation Coordinator Pattern:**
-- Captures entries at animation start
-- Freezes previous screen for rendering
-- Current screen uses live entry for updates
-- Locks cache entries during animation
-- Defers navigation until animation completes
+The library uses a registry pattern for decoupling:
 
-**Three Animation Types:**
-- Material3: Scale + translate + corners + shadow
-- Scale: Simple scale with fade
-- Slide: Slide right with fade
+| Registry | Purpose |
+|----------|---------|
+| `RouteRegistry` | Maps routes to destinations |
+| `ScreenRegistry` | Maps destinations to composables |
+| `ContainerRegistry` | Maps container nodes to layouts |
+| `TransitionRegistry` | Maps destinations to transitions |
+| `ContainerRegistry` | Container info + Tab/Pane wrapper composables (includes former WrapperRegistry) |
+| `BackHandlerRegistry` | Custom back handling |
+| `ScopeRegistry` | Scoped dependencies |
 
-Each type has matching gesture and exit animations.
+### Registration (via KSP)
 
-**Key Classes:**
-- `PredictiveBackAnimationCoordinator` - Manages animation state
-- `ComposableCache` - Caches screens with locking
-- Animation modifiers: `material3BackAnimation()`, etc.
+KSP generates registration code:
 
-### Shared Element Transitions (NEW!)
-
-**Architecture:**
-- `GraphNavHost` always wraps content in `SharedTransitionLayout`
-- Uses `AnimatedContent` for both forward AND backward navigation
-- Provides `AnimatedVisibilityScope` consistently in both directions
-- Per-destination opt-in via `destinationWithScopes()`
-
-**Key Components:**
-1. **SharedElementScope.kt**: CompositionLocal providers
-   - `currentSharedTransitionScope()`
-   - `currentNavAnimatedVisibilityScope()`
-
-2. **SharedElementModifiers.kt**: Convenience extensions
-   - `quoVadisSharedElement()` - For visual elements (icons, images)
-   - `quoVadisSharedBounds()` - For text/containers (crossfades)
-   - `quoVadisSharedElementOrNoop()` - Graceful fallback
-
-3. **destinationWithScopes()**: New graph builder
-   - Provides 4 parameters: destination, navigator, sharedScope, animatedScope
-   - Per-destination shared element opt-in
-
-**Usage Pattern:**
 ```kotlin
-// 1. Use destinationWithScopes in graph
-destinationWithScopes(Screen) { _, nav, shared, animated ->
-    ScreenUI(nav, shared, animated)
+// Generated initializer
+object AppDestinationRouteInitializer {
+    fun initialize() {
+        RouteRegistry.register("home", AppDestination.Home::class)
+        RouteRegistry.register("detail/{id}", AppDestination.Detail::class)
+    }
 }
+```
 
-// 2. Apply modifiers with matching keys
-Icon(
-    modifier = Modifier.quoVadisSharedElement(
-        key = "icon-$id",  // MUST match on both screens
-        sharedTransitionScope = shared,
-        animatedVisibilityScope = animated
-    )
+## Rendering Architecture
+
+### NavTreeRenderer
+
+Renders the navigation tree to Compose UI:
+
+1. Flattens tree to visible nodes
+2. Determines transitions
+3. Handles predictive back animation
+4. Manages composition lifecycle
+
+### AnimatedNavContent
+
+Handles screen transitions:
+
+```kotlin
+AnimatedNavContent(
+    targetNode = currentNode,
+    transition = transition,
+    backProgress = backProgress
+) { node ->
+    // Render screen content
+}
+```
+
+## Compose Integration
+
+### NavigationHost
+
+Main entry point for navigation UI:
+
+```kotlin
+@Composable
+fun NavigationHost(
+    navigator: Navigator,
+    modifier: Modifier = Modifier,
+    defaultTransition: NavigationTransition = NavigationTransitions.Fade,
+    predictiveBackEnabled: Boolean = true
 )
-
-// 3. Navigate normally - transitions automatic
-nav.navigate(Detail)
-nav.navigateBack()  // Works in reverse!
 ```
 
-## Design Patterns Used
+### Content Registration
 
-### 1. Builder Pattern (DSL)
-Navigation graphs use Kotlin DSL:
+Using `@Content` annotation:
+
 ```kotlin
-navigationGraph("app") {
-    startDestination(Home)
-    destination(Home) { _, nav -> HomeUI(nav) }
-    destinationWithScopes(Detail) { _, nav, s, a -> DetailUI(nav, s, a) }
+@Content(AppDestination.Home::class)
+@Composable
+fun HomeContent(navigator: Navigator) {
+    HomeScreen(navigator)
+}
+
+@Content(AppDestination.Detail::class)
+@Composable
+fun DetailContent(data: DetailData, navigator: Navigator) {
+    DetailScreen(data, navigator)
 }
 ```
 
-### 2. Observer Pattern
-All state observable via StateFlow:
+## Predictive Back Navigation
+
+### CascadeBackState
+
+Coordinates back gesture across the tree:
+
 ```kotlin
-val current by navigator.backStack.current.collectAsState()
+enum class PredictiveBackMode {
+    None,       // No predictive back
+    Animate,    // Animate during gesture
+    Complete    // Gesture completed
+}
 ```
 
-### 3. Strategy Pattern
-Transitions are swappable strategies:
-```kotlin
-navigator.navigate(dest, NavigationTransitions.Slide)
-```
+### PredictiveBackController
 
-### 4. Coordinator Pattern
-PredictiveBackAnimationCoordinator separates logical and visual state
+Handles gesture progress and completion.
 
-### 5. Facade Pattern
-Navigator acts as facade for complex operations
+## Testing Architecture
 
-### 6. Composition Pattern (NEW!)
-SharedTransitionLayout wraps navigation content, scopes propagate via CompositionLocal
+### FakeNavigator
 
-## State Management Flow
+For unit testing navigation logic:
 
-```
-User Action → Intent → Navigator → BackStack Update
-                                         ↓
-                                    State Change
-                                         ↓
-                                   UI Recomposition
-                                         ↓
-                              (Shared Elements Animate)
-```
-
-For MVI:
-```
-User Action → NavigationIntent → ViewModel → Navigator
-                                                  ↓
-                                             BackStack
-                                                  ↓
-                                         NavigationState
-                                                  ↓
-                                         NavigationEffect
-```
-
-## Predictive Back Animation Flow
-
-```
-User Gesture Start
-    ↓
-Coordinator captures entries (current + previous)
-    ↓
-Lock cache entries (prevent destruction)
-    ↓
-Gesture Phase: Real-time animation (gestureProgress)
-    ↓ (Shared elements follow gesture if enabled)
-User releases → Exit Phase starts
-    ↓
-Exit animation plays to completion (exitProgress)
-    ↓ (Shared elements continue animating)
-Animation completes → navigator.navigateBack()
-    ↓
-Coordinator finishes → Unlock cache
-    ↓
-New screen renders smoothly
-```
-
-## Shared Element Transition Flow (NEW!)
-
-```
-User initiates navigation (forward or back)
-    ↓
-GraphNavHost uses AnimatedContent
-    ↓
-Provides AnimatedVisibilityScope via CompositionLocal
-    ↓
-Screens receive scopes via destinationWithScopes()
-    ↓
-Elements with matching keys identified
-    ↓
-SharedTransitionLayout animates:
-    - Position (bounds)
-    - Size
-    - Shape (if applicable)
-    - Content (crossfade for sharedBounds)
-    ↓
-Animation completes → Navigation finishes
-```
-
-## Platform Support
-
-### Common (commonMain)
-- All core logic
-- Compose UI integration
-- Platform-agnostic abstractions
-- Shared element transitions
-
-### Android (androidMain)
-- System back button handling
-- Deep link intent handling
-- Activity integration
-- Predictive back (API 33+) with shared elements
-
-### iOS (iosMain)
-- Navigation bar integration
-- Universal link handling
-- iOS gesture support
-- Native back gesture with shared elements
-
-### Web/Desktop (jsMain/wasmJsMain/desktopMain)
-- Shared element transitions
-- Browser back button (Web)
-- Keyboard shortcuts (Desktop)
-
-## Testing Strategy
-
-### Unit Testing
 ```kotlin
 val fakeNavigator = FakeNavigator()
-viewModel.navigate(destination)
-assertTrue(fakeNavigator.verifyNavigateTo("details"))
+fakeNavigator.navigate(HomeDestination)
+
+assertTrue(fakeNavigator.verifyNavigateTo("home"))
+assertEquals(1, fakeNavigator.navigationStack.size)
 ```
 
-### Shared Element Testing
+### FakeNavRenderScope
+
+For testing composable content in isolation.
+
+## Deep Linking
+
+### DeepLink Pattern
+
 ```kotlin
-// Verify scopes provided
-destinationWithScopes(Screen) { _, _, shared, animated ->
-    assertNotNull(shared)
-    assertNotNull(animated)
+@DeepLink("myapp://detail/{id}")
+data class DetailDestination(val id: String) : Destination
+
+// Handler
+val handler = GeneratedDeepLinkHandler()
+val destination = handler.handleUri("myapp://detail/123")
+```
+
+## Modular Navigation
+
+### Gray Box Pattern
+
+Feature modules expose navigation without exposing implementation:
+
+```kotlin
+// Feature module exposes
+interface FeatureNavigation {
+    fun navigateToFeature(navigator: Navigator, params: FeatureParams)
+}
+
+// Implementation hidden
+internal class FeatureNavigationImpl : FeatureNavigation {
+    override fun navigateToFeature(navigator: Navigator, params: FeatureParams) {
+        navigator.navigate(FeatureDestination(params))
+    }
 }
 ```
 
-### Integration Testing
-- Graph configurations
-- Deep link handling
-- Backstack operations
-- Shared element key matching
+## DI Integration
 
-### UI Testing
-- Screen transitions
-- Back button behavior
-- Gesture animations
-- Shared element animations (forward & back)
+### Koin Support
 
-## Best Practices
+Built-in Koin integration helpers in `KoinIntegration.kt`:
 
-### DO ✅
-- Use sealed classes for destinations
-- Keep destinations simple (data only)
-- One graph per feature module
-- Test with FakeNavigator
-- Observe state reactively
-- Use type-safe navigation
-- Document public APIs
-- Handle deep links early
-- Lock cache during animations
-- **NEW**: Use `destinationWithScopes()` for shared elements
-- **NEW**: Match keys exactly between screens
-- **NEW**: Use `quoVadisSharedElement()` for icons/images
-- **NEW**: Use `quoVadisSharedBounds()` for text/containers
-
-### DON'T ❌
-- String-based navigation
-- Circular dependencies
-- Store UI state in Navigator
-- Blocking operations in navigation
-- Expose mutable state
-- Create StateFlows in Composables
-- Use global navigation singletons
-- Mix navigation and business logic
-- **NEW**: Same key for multiple elements
-- **NEW**: Mix shared element modifier types
-- **NEW**: Forget AnimatedVisibilityScope parameter
-- **NEW**: Use global shared element flags (removed!)
-
-## Performance Optimizations
-
-1. **Lazy Graph Registration**: Graphs created on-demand
-2. **Efficient StateFlows**: Batched updates
-3. **No Reflection**: Compile-time safety
-4. **Smart Caching**: Only necessary screens
-5. **GPU Animations**: graphicsLayer for performance
-6. **Cache Locking**: Prevents unnecessary recreation
-7. **NEW**: Shared elements GPU-accelerated on all platforms
-8. **NEW**: SharedTransitionLayout minimal overhead when not animating
-
-## Extension Points
-
-Extendable via:
-1. Custom transitions (implement NavigationTransition)
-2. Custom serializers (implement StateSerializer)
-3. Custom deep link handlers (implement DeepLinkHandler)
-4. Custom destinations (extend Destination)
-5. Custom animation types (add to PredictiveBackAnimationType)
-6. **NEW**: Custom shared element animations (BoundsTransform, EnterTransition, ExitTransition)
-
-## Related Documentation
-
-- `API_REFERENCE.md` - Complete API documentation (includes shared elements)
-- `ARCHITECTURE.md` - Detailed architecture
-- `MULTIPLATFORM_PREDICTIVE_BACK.md` - Predictive back details
-- `NAVIGATION_IMPLEMENTATION.md` - Implementation summary
-- **NEW**: `SHARED_ELEMENT_TRANSITIONS.md` - Complete shared elements guide
-
-## Recent Architectural Changes (December 2024)
-
-### Shared Element Transitions Implementation
-1. **Always-On SharedTransitionLayout**: Removed global flag, always enabled (lightweight)
-2. **AnimatedContent Unification**: Both forward and back navigation use AnimatedContent
-3. **Per-Destination Opt-In**: `destinationWithScopes()` provides granular control
-4. **Graceful Degradation**: Elements render normally if scopes null
-5. **Type-Safe Keys**: String keys but typed at call sites
-
-This maintains architectural consistency while adding powerful new capabilities.
+```kotlin
+@Composable
+fun NavigationHost(
+    navigator: Navigator,
+    koinModule: Module = module { }
+) {
+    KoinContext(modules = listOf(koinModule)) {
+        // Navigation content
+    }
+}
+```

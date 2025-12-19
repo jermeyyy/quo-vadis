@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.13.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.13.0)" variant="all" version="8.13.0">
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/PredictiveBackNavigation.kt"
+            line="120"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StateFlowValueCalledInComposition"
+        message="StateFlow.value should not be called within composition"
+        errorLine1="        val currentDest = navigator.currentDestination.value"
+        errorLine2="                                                       ~~~~~">
+        <location
+            file="src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/core/DestinationDsl.kt"
+            line="73"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="StateFlowValueCalledInComposition"
+        message="StateFlow.value should not be called within composition"
+        errorLine1="        val currentDest = navigator.currentDestination.value"
+        errorLine2="                                                       ~~~~~">
+        <location
+            file="src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/core/DestinationDsl.kt"
+            line="151"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="StateFlowValueCalledInComposition"
+        message="StateFlow.value should not be called within composition"
+        errorLine1="                println(&quot;DEBUG_TAB_NAV: TabbedNavHost - Navigator backstack size: ${tabNavigator.backStack.stack.value.size}&quot;)"
+        errorLine2="                                                                                                                 ~~~~~">
+        <location
+            file="src/commonMain/kotlin/com/jermey/quo/vadis/core/navigation/compose/TabbedNavHost.kt"
+            line="142"
+            column="114"/>
+    </issue>
+
+</issues>

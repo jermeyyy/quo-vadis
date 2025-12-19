@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MaxLineLength:ScreenExtractor.kt:ScreenExtractor$logger.warn("Could not resolve destination class for @Screen on ${functionDeclaration.simpleName.asString()}")</ID>
+    <ID>ReturnCount:PaneExtractor.kt:PaneExtractor$fun extract(classDeclaration: KSClassDeclaration): PaneInfo?</ID>
+    <ID>ReturnCount:PaneExtractor.kt:PaneExtractor$private fun extractPaneItem(classDeclaration: KSClassDeclaration): PaneItemInfo?</ID>
+    <ID>ReturnCount:ScreenExtractor.kt:ScreenExtractor$fun extract(functionDeclaration: KSFunctionDeclaration): ScreenInfo?</ID>
+    <ID>ReturnCount:StackExtractor.kt:StackExtractor$fun extract(classDeclaration: KSClassDeclaration): StackInfo?</ID>
+    <ID>ReturnCount:TabExtractor.kt:TabExtractor$fun extract(classDeclaration: KSClassDeclaration): TabInfo?</ID>
+    <ID>ReturnCount:TabExtractor.kt:TabExtractor$private fun extractTabItemLegacy(classDeclaration: KSClassDeclaration): TabItemInfo?</ID>
+    <ID>ReturnCount:TabExtractor.kt:TabExtractor$private fun resolveInitialTabClass( annotation: com.google.devtools.ksp.symbol.KSAnnotation, tabs: List&lt;TabItemInfo> ): KSClassDeclaration?</ID>
+    <ID>SwallowedException:PaneExtractor.kt:PaneExtractor$e: IllegalArgumentException</ID>
+    <ID>TooManyFunctions:DeepLinkHandlerGenerator.kt:DeepLinkHandlerGenerator</ID>
+    <ID>TooManyFunctions:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor : SymbolProcessor</ID>
+    <ID>TooManyFunctions:ValidationEngine.kt:ValidationEngine</ID>
+    <ID>UnusedParameter:ValidationEngine.kt:ValidationEngine$resolver: Resolver</ID>
+  </CurrentIssues>
+</SmellBaseline>

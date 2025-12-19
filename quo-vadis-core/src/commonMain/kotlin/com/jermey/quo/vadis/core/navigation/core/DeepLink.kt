@@ -41,7 +41,7 @@ data class DeepLink(
  */
 data class DeepLinkConfig(
     val uriPattern: String,
-    val destinationFactory: (Map<String, String>) -> Destination
+    val destinationFactory: (Map<String, String>) -> NavDestination
 )
 
 /**
@@ -51,71 +51,62 @@ interface DeepLinkHandler {
     /**
      * Resolve a deep link to a destination.
      * @param deepLink the deep link to resolve
-     * @param graphs available navigation graphs
      * @return the destination if resolved, null otherwise
      */
-    fun resolve(deepLink: DeepLink, graphs: Map<String, NavigationGraph>): Destination?
+    fun resolve(deepLink: DeepLink): NavDestination?
 
     /**
      * Register a deep link pattern with an action to execute when matched.
      * 
-     * The action receives:
-     * - destination: The resolved destination to navigate to
-     * - navigator: The navigator instance to use for navigation
-     * - parameters: Extracted parameters from the URI pattern and query string
-     * 
-     * This allows for custom navigation behavior, such as:
-     * - Switching tabs before navigating
-     * - Clearing back stack
-     * - Custom transition animations
-     * - Conditional navigation logic
-     * 
      * @param pattern The URI pattern to match (e.g., "app://demo/item/{id}")
-     * @param action The action to execute when the pattern matches
+     * @param action The action to execute when pattern matches.
+     *               Receives navigator and extracted parameters.
      */
     fun register(
-        pattern: String, 
-        action: (destination: Destination, navigator: Navigator, parameters: Map<String, String>) -> Unit
+        pattern: String,
+        action: (navigator: Navigator, parameters: Map<String, String>) -> Unit
     )
-    
+
     /**
      * Handle a deep link by resolving it and executing the registered action.
      * 
      * @param deepLink The deep link to handle
      * @param navigator The navigator to pass to the action
-     * @param graphs Available navigation graphs for resolution
      */
-    fun handle(deepLink: DeepLink, navigator: Navigator, graphs: Map<String, NavigationGraph>)
+    fun handle(deepLink: DeepLink, navigator: Navigator)
 }
 
 /**
  * Default implementation of DeepLinkHandler.
  */
 class DefaultDeepLinkHandler : DeepLinkHandler {
-    private data class DeepLinkRegistration(
+    /**
+     * New simplified registration format without destination parameter.
+     */
+    private data class SimpleDeepLinkRegistration(
         val pattern: String,
-        val destinationFactory: (Map<String, String>) -> Destination,
-        val action: (Destination, Navigator, Map<String, String>) -> Unit
+        val action: (navigator: Navigator, parameters: Map<String, String>) -> Unit
+    )
+
+    /**
+     * Legacy registration format with destination parameter (deprecated).
+     */
+    private data class LegacyDeepLinkRegistration(
+        val pattern: String,
+        val destinationFactory: (Map<String, String>) -> NavDestination,
+        val action: (NavDestination, Navigator, Map<String, String>) -> Unit
     )
     
-    private val registrations = mutableListOf<DeepLinkRegistration>()
+    private val simpleRegistrations = mutableListOf<SimpleDeepLinkRegistration>()
+    private val legacyRegistrations = mutableListOf<LegacyDeepLinkRegistration>()
 
-    override fun resolve(deepLink: DeepLink, graphs: Map<String, NavigationGraph>): Destination? {
-        // Try pattern matching
-        registrations.forEach { registration ->
+    override fun resolve(deepLink: DeepLink): NavDestination? {
+        // Try legacy pattern matching (only legacy registrations have destination factories)
+        legacyRegistrations.forEach { registration ->
             val pattern = registration.pattern
             if (deepLink.uri == pattern || matchesPattern(deepLink.uri, pattern)) {
                 val params = extractParameters(deepLink.uri, pattern) + deepLink.parameters
                 return registration.destinationFactory(params)
-            }
-        }
-
-        // Finally, search through registered graphs
-        graphs.values.forEach { graph ->
-            graph.destinations.forEach { destConfig ->
-                if (destConfig.destination.route == deepLink.uri) {
-                    return destConfig.destination
-                }
             }
         }
 
@@ -124,34 +115,35 @@ class DefaultDeepLinkHandler : DeepLinkHandler {
 
     override fun register(
         pattern: String,
-        action: (destination: Destination, navigator: Navigator, parameters: Map<String, String>) -> Unit
+        action: (navigator: Navigator, parameters: Map<String, String>) -> Unit
     ) {
-        // Create a destination factory that will be used for resolution
-        // The actual destination will be determined when the action is executed
-        val destinationFactory: (Map<String, String>) -> Destination = { _ ->
-            // This is a placeholder destination for resolution purposes
-            // The action will handle the actual navigation
-            BasicDestination(pattern)
-        }
-        
-        registrations.add(DeepLinkRegistration(pattern, destinationFactory, action))
+        simpleRegistrations.add(SimpleDeepLinkRegistration(pattern, action))
     }
-    
-    override fun handle(deepLink: DeepLink, navigator: Navigator, graphs: Map<String, NavigationGraph>) {
-        // Find matching registration
-        registrations.forEach { registration ->
+
+    override fun handle(deepLink: DeepLink, navigator: Navigator) {
+        // Try simple registrations first (new format)
+        simpleRegistrations.forEach { registration ->
+            val pattern = registration.pattern
+            if (deepLink.uri == pattern || matchesPattern(deepLink.uri, pattern)) {
+                val params = extractParameters(deepLink.uri, pattern) + deepLink.parameters
+                registration.action(navigator, params)
+                return
+            }
+        }
+
+        // Try legacy registrations (deprecated format)
+        legacyRegistrations.forEach { registration ->
             val pattern = registration.pattern
             if (deepLink.uri == pattern || matchesPattern(deepLink.uri, pattern)) {
                 val params = extractParameters(deepLink.uri, pattern) + deepLink.parameters
                 val destination = registration.destinationFactory(params)
-                // Execute the action with the destination, navigator, and parameters
                 registration.action(destination, navigator, params)
                 return
             }
         }
         
-        // Fallback: try to find destination in graphs and navigate directly
-        val destination = resolve(deepLink, graphs)
+        // Fallback: try to find destination and navigate directly
+        val destination = resolve(deepLink)
         destination?.let { navigator.navigate(it) }
     }
 

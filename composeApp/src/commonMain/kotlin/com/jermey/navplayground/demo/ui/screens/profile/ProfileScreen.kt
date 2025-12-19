@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,6 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.MainTabs
+import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.flowmvi.compose.StoreScreen
 import kotlinx.coroutines.launch
@@ -55,7 +58,7 @@ import org.koin.compose.koinInject
 
 /**
  * Profile screen demonstrating FlowMVI patterns.
- * 
+ *
  * Features showcased:
  * - StoreScreen pattern for automatic state subscription
  * - Loading, content, and error states
@@ -65,6 +68,7 @@ import org.koin.compose.koinInject
  * - Koin dependency injection
  */
 @OptIn(ExperimentalMaterial3Api::class)
+@Screen(MainTabs.ProfileTab::class)
 @Composable
 fun ProfileScreen(
     navigator: Navigator = koinInject(),
@@ -72,7 +76,7 @@ fun ProfileScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    
+
     // Use StoreScreen pattern for automatic state management
     StoreScreen(
         container = container,
@@ -86,24 +90,29 @@ fun ProfileScreen(
                             duration = SnackbarDuration.Short
                         )
                     }
+
                     is ProfileAction.ShowError -> {
                         snackbarHostState.showSnackbar(
                             message = action.error,
                             duration = SnackbarDuration.Long
                         )
                     }
+
                     is ProfileAction.ProfileSaved -> {
                         // Already handled by ShowToast
                     }
+
                     is ProfileAction.LogoutSuccess -> {
                         // Navigation already handled in container
                     }
+
                     is ProfileAction.ValidationFailed -> {
                         snackbarHostState.showSnackbar(
                             message = "Please fix validation errors",
                             duration = SnackbarDuration.Short
                         )
                     }
+
                     is ProfileAction.NetworkError -> {
                         snackbarHostState.showSnackbar(
                             message = "Network error: ${action.message}",
@@ -140,6 +149,7 @@ fun ProfileScreen(
                         state = state,
                         onIntent = intentReceiver::intent
                     )
+
                     is ProfileState.Error -> ErrorContent(
                         message = state.message,
                         onRetry = { intentReceiver.intent(ProfileIntent.LoadProfile) }
@@ -183,9 +193,9 @@ private fun ProfileContent(
     ) {
         // Avatar section
         ProfileAvatar(user = state.user)
-        
+
         Divider()
-        
+
         if (state.isEditing) {
             // Edit mode
             ProfileEditForm(
@@ -224,12 +234,12 @@ private fun ProfileAvatar(user: UserData) {
                 )
             }
         }
-        
+
         Text(
             text = user.name,
             style = MaterialTheme.typography.headlineSmall
         )
-        
+
         Text(
             text = "Member since ${user.joinedDate}",
             style = MaterialTheme.typography.bodySmall,
@@ -252,16 +262,16 @@ private fun ProfileViewContent(
             value = user.email,
             icon = Icons.Default.Email
         )
-        
+
         // Bio
         ProfileInfoItem(
             label = "Bio",
             value = user.bio,
             icon = Icons.Default.Info
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Action buttons
         Button(
             onClick = { onIntent(ProfileIntent.StartEditing) },
@@ -271,7 +281,7 @@ private fun ProfileViewContent(
             Spacer(modifier = Modifier.width(8.dp))
             Text("Edit Profile")
         }
-        
+
         OutlinedButton(
             onClick = { onIntent(ProfileIntent.Logout) },
             modifier = Modifier.fillMaxWidth(),
@@ -337,7 +347,7 @@ private fun ProfileEditForm(
             enabled = !state.isSaving,
             modifier = Modifier.fillMaxWidth()
         )
-        
+
         // Email field
         OutlinedTextField(
             value = state.editedEmail,
@@ -350,7 +360,7 @@ private fun ProfileEditForm(
             enabled = !state.isSaving,
             modifier = Modifier.fillMaxWidth()
         )
-        
+
         // Bio field
         OutlinedTextField(
             value = state.editedBio,
@@ -366,9 +376,9 @@ private fun ProfileEditForm(
             enabled = !state.isSaving,
             modifier = Modifier.fillMaxWidth()
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Action buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -381,7 +391,7 @@ private fun ProfileEditForm(
             ) {
                 Text("Cancel")
             }
-            
+
             Button(
                 onClick = { onIntent(ProfileIntent.SaveChanges) },
                 enabled = !state.isSaving && state.hasChanges,
@@ -421,18 +431,18 @@ private fun ErrorContent(
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.error
             )
-            
+
             Text(
                 text = "Error",
                 style = MaterialTheme.typography.headlineSmall
             )
-            
+
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             Button(onClick = onRetry) {
                 Icon(Icons.Default.Refresh, "Retry", modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))

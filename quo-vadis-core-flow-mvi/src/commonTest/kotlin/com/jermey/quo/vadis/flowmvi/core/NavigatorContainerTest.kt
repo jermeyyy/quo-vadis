@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.flowmvi.core
 
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.testing.FakeNavigator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,17 +25,17 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class NavigatorContainerTest {
     
-    private val HomeDestination = object : Destination {
+    private val HomeDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
     
-    private val DetailsDestination = object : Destination {
+    private val DetailsDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
     
-    private val SettingsDestination = object : Destination {
+    private val SettingsDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -83,7 +83,7 @@ class NavigatorContainerTest {
             assertFalse(states.value.canGoBack)
             
             // Verify navigator was called
-            assertEquals(1, fakeNavigator.backStack.stack.value.size)
+            assertEquals(1, fakeNavigator.getStackSize())
             assertEquals(HomeDestination, fakeNavigator.currentDestination.value)
         }
     }

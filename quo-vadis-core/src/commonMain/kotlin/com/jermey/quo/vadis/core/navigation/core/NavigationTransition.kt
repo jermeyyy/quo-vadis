@@ -68,15 +68,30 @@ object NavigationTransitions {
         override val popExit = fadeOut(animationSpec = tween(ANIMATION_DURATION))
     }
 
+    /**
+     * Factor for parallax effect on the "background" screen during transitions.
+     * The background screen moves at this fraction of the foreground screen's movement.
+     * This prevents the white/transparent background from showing during crossfades.
+     */
+    private const val PARALLAX_FACTOR = 0.3f
+
     val SlideHorizontal = object : NavigationTransition {
         override val enter = slideInHorizontally(
             initialOffsetX = { it },
             animationSpec = tween(ANIMATION_DURATION)
         ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
-        override val exit = fadeOut(animationSpec = tween(ANIMATION_DURATION))
+        // Exit with parallax: slide left slightly while fading to prevent white flash
+        override val exit = slideOutHorizontally(
+            targetOffsetX = { -(it * PARALLAX_FACTOR).toInt() },
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeOut(animationSpec = tween(ANIMATION_DURATION))
 
-        override val popEnter = fadeIn(animationSpec = tween(ANIMATION_DURATION))
+        // Pop enter with parallax: start offset left and slide in while fading
+        override val popEnter = slideInHorizontally(
+            initialOffsetX = { -(it * PARALLAX_FACTOR).toInt() },
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
         override val popExit = slideOutHorizontally(
             targetOffsetX = { it },
@@ -90,9 +105,17 @@ object NavigationTransitions {
             animationSpec = tween(ANIMATION_DURATION)
         ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
-        override val exit = fadeOut(animationSpec = tween(ANIMATION_DURATION))
+        // Exit with parallax: slide up slightly while fading to prevent white flash
+        override val exit = slideOutVertically(
+            targetOffsetY = { -(it * PARALLAX_FACTOR).toInt() },
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeOut(animationSpec = tween(ANIMATION_DURATION))
 
-        override val popEnter = fadeIn(animationSpec = tween(ANIMATION_DURATION))
+        // Pop enter with parallax: start offset up and slide in while fading
+        override val popEnter = slideInVertically(
+            initialOffsetY = { -(it * PARALLAX_FACTOR).toInt() },
+            animationSpec = tween(ANIMATION_DURATION)
+        ) + fadeIn(animationSpec = tween(ANIMATION_DURATION))
 
         override val popExit = slideOutVertically(
             targetOffsetY = { it },
@@ -160,18 +183,6 @@ data class SharedElementConfig(
     val key: Any,
     val type: SharedElementType = SharedElementType.Element,
     val boundsTransform: BoundsTransform? = null
-)
-
-/**
- * Shared element transition key.
- * Identifies elements that should animate between screens.
- * 
- * @deprecated Use SharedElementConfig with type parameter instead
- */
-@Deprecated("Use SharedElementConfig with type parameter instead", ReplaceWith("SharedElementConfig(key, type)"))
-data class SharedElementKey(
-    val key: String,
-    val type: SharedElementType = SharedElementType.Bounds
 )
 
 /**

@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
-import com.jermey.quo.vadis.core.navigation.core.DefaultNavigator
+import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlin.reflect.KClass
 
@@ -35,7 +35,7 @@ class DefaultNavigationFactory(
     private val deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler()
 ) : NavigationFactory {
     override fun createNavigator(): Navigator {
-        return DefaultNavigator(deepLinkHandler)
+        return TreeNavigator(deepLinkHandler)
     }
 
     override fun createDeepLinkHandler(): DeepLinkHandler {

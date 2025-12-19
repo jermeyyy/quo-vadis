@@ -16,16 +16,6 @@ mcp_gradle-mcp_run_task(task=":composeApp:assembleDebug")
 ./gradlew :composeApp:assembleDebug
 ```
 
-#### Build Release APK
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:assembleRelease")
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:assembleRelease
-```
-
 #### Install Debug on Connected Device
 **MCP (PREFERRED):**
 ```python
@@ -58,178 +48,11 @@ mcp_gradle-mcp_run_task(task=":composeApp:linkDebugFrameworkIosSimulatorArm64")
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
 ```
 
-#### Build iOS Framework (Intel Macs)
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:linkDebugFrameworkIosX64")
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:linkDebugFrameworkIosX64
-```
-
-#### Build for Physical Device
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:linkDebugFrameworkIosArm64")
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:linkDebugFrameworkIosArm64
-```
-
 #### Open iOS Project in Xcode
 **Terminal (Non-Gradle):**
 ```bash
 open iosApp/iosApp.xcodeproj
 ```
-
-### Web Targets
-
-#### JavaScript (Development with Hot Reload)
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:jsBrowserDevelopmentRun", args=["--continuous"])
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:jsBrowserDevelopmentRun --continuous
-```
-Opens at `http://localhost:8080` with automatic reload on code changes.
-
-#### WebAssembly (Development with Hot Reload)
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:wasmJsBrowserDevelopmentRun", args=["--continuous"])
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun --continuous
-```
-Opens at `http://localhost:8080` with automatic reload on code changes.
-
-#### JavaScript (Production Build)
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:jsBrowserDistribution")
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:jsBrowserDistribution
-```
-Output: `composeApp/build/dist/js/productionExecutable/`
-
-#### WebAssembly (Production Build)
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:wasmJsBrowserDistribution")
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:wasmJsBrowserDistribution
-```
-Output: `composeApp/build/dist/wasmJs/productionExecutable/`
-
-#### Build Web Libraries
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":quo-vadis-core:jsJar")          # JavaScript library
-mcp_gradle-mcp_run_task(task=":quo-vadis-core:wasmJsJar")      # WebAssembly library
-```
-**Terminal:**
-```bash
-./gradlew :quo-vadis-core:jsJar          # JavaScript library
-./gradlew :quo-vadis-core:wasmJsJar      # WebAssembly library
-```
-
-### Desktop (JVM)
-
-#### Run Desktop App
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:run", args=["--no-configuration-cache"])
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:run --no-configuration-cache
-```
-Launches native window application.
-
-#### Create Distributable Bundle
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:createDistributable")
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:createDistributable
-```
-Output: `composeApp/build/compose/binaries/main/app/NavPlayground`
-
-#### Create Native Installer (Current OS)
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:packageDistributionForCurrentOS")
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:packageDistributionForCurrentOS
-```
-
-#### Platform-Specific Installers
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:packageDmg")        # macOS DMG (macOS only)
-mcp_gradle-mcp_run_task(task=":composeApp:packageMsi")        # Windows MSI (Windows only)
-mcp_gradle-mcp_run_task(task=":composeApp:packageDeb")        # Linux DEB (Linux only)
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:packageDmg        # macOS DMG (macOS only)
-./gradlew :composeApp:packageMsi        # Windows MSI (Windows only)
-./gradlew :composeApp:packageDeb        # Linux DEB (Linux only)
-```
-
-#### Build Desktop Library
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":quo-vadis-core:desktopJar")
-```
-**Terminal:**
-```bash
-./gradlew :quo-vadis-core:desktopJar
-```
-Output: `quo-vadis-core/build/libs/quo-vadis-core-desktop.jar`
-
-**Note**: The `desktopJar` task creates a library JAR (not executable). Use `:composeApp:run` to run the app.
-
-## Publishing Commands
-
-### Publish to Maven Local
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":quo-vadis-core:publishToMavenLocal")
-```
-**Terminal:**
-```bash
-./gradlew :quo-vadis-core:publishToMavenLocal
-```
-Publishes all platform artifacts to `~/.m2/repository/com/jermey/quo/vadis/quo-vadis-core/0.1.0-SNAPSHOT/`
-
-### Verify Published Artifacts
-**Terminal (Non-Gradle):**
-```bash
-ls ~/.m2/repository/com/jermey/quo/vadis/quo-vadis-core/0.1.0-SNAPSHOT/
-```
-
-Expected artifacts:
-- `quo-vadis-core-android-0.1.0-SNAPSHOT.aar`
-- `quo-vadis-core-desktop-0.1.0-SNAPSHOT.jar`
-- `quo-vadis-core-iosarm64-0.1.0-SNAPSHOT.klib`
-- `quo-vadis-core-iossimulatorarm64-0.1.0-SNAPSHOT.klib`
-- `quo-vadis-core-iosx64-0.1.0-SNAPSHOT.klib`
-- `quo-vadis-core-js-0.1.0-SNAPSHOT.klib`
-- `quo-vadis-core-wasm-js-0.1.0-SNAPSHOT.klib`
 
 ## Testing Commands
 
@@ -372,15 +195,11 @@ After running lint, check: `composeApp/build/reports/lint-results.html`
 **MCP (PREFERRED):**
 ```python
 mcp_gradle-mcp_run_task(task=":composeApp:compileKotlinAndroid")
-mcp_gradle-mcp_run_task(task=":composeApp:compileKotlinDesktop")
-mcp_gradle-mcp_run_task(task=":composeApp:compileKotlinJs")
 ```
 Use IDE tools or:
 **Terminal:**
 ```bash
 ./gradlew :composeApp:compileKotlinAndroid
-./gradlew :composeApp:compileKotlinDesktop
-./gradlew :composeApp:compileKotlinJs
 ```
 
 ## Gradle Commands
@@ -462,53 +281,6 @@ adb shell am start -n com.jermey.navplayground/.MainActivity
 2. Select simulator/device
 3. Press Run (⌘R)
 
-### Web (Development Server)
-**MCP (PREFERRED):**
-```python
-# JavaScript with hot reload
-mcp_gradle-mcp_run_task(task=":composeApp:jsBrowserDevelopmentRun", args=["--continuous"])
-
-# WebAssembly with hot reload
-mcp_gradle-mcp_run_task(task=":composeApp:wasmJsBrowserDevelopmentRun", args=["--continuous"])
-```
-**Terminal:**
-```bash
-# JavaScript with hot reload
-./gradlew :composeApp:jsBrowserDevelopmentRun --continuous
-
-# WebAssembly with hot reload
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun --continuous
-```
-Both open at `http://localhost:8080`
-
-### Web (Production - Static Server)
-**Terminal (Non-Gradle):**
-```bash
-# After building production bundle
-cd composeApp/build/dist/js/productionExecutable
-python3 -m http.server 8000
-# Open http://localhost:8000
-```
-
-### Desktop
-**MCP (PREFERRED):**
-```python
-# Direct run (fastest for development)
-mcp_gradle-mcp_run_task(task=":composeApp:run", args=["--no-configuration-cache"])
-
-# Or create distributable
-mcp_gradle-mcp_run_task(task=":composeApp:createDistributable")
-```
-**Terminal:**
-```bash
-# Direct run (fastest for development)
-./gradlew :composeApp:run --no-configuration-cache
-
-# Or run distributable
-./gradlew :composeApp:createDistributable
-./composeApp/build/compose/binaries/main/app/NavPlayground/NavPlayground
-```
-
 ## Performance Analysis
 
 ### Profile Build
@@ -544,16 +316,6 @@ mcp_gradle-mcp_run_task(task="build", args=["--parallel"])
 **Terminal:**
 ```bash
 ./gradlew build --parallel
-```
-
-### Offline Mode
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task="build", args=["--offline"])
-```
-**Terminal:**
-```bash
-./gradlew build --offline
 ```
 
 ### Refresh Dependencies
@@ -594,15 +356,12 @@ mcp_gradle-mcp_run_task(task="build", args=["--no-configuration-cache"])
 **Development (MCP PREFERRED):**
 ```python
 mcp_gradle-mcp_run_task(task=":composeApp:installDebug")                      # Android
-mcp_gradle-mcp_run_task(task=":composeApp:jsBrowserDevelopmentRun")           # Web JS
 mcp_gradle-mcp_run_task(task=":composeApp:run")                               # Desktop
 ```
 
 **Development (Terminal):**
 ```bash
 ./gradlew :composeApp:installDebug                      # Android
-./gradlew :composeApp:jsBrowserDevelopmentRun           # Web JS
-./gradlew :composeApp:run                               # Desktop
 open iosApp/iosApp.xcodeproj                            # iOS
 ```
 
@@ -617,16 +376,6 @@ mcp_gradle-mcp_run_task(task="build")                                         # 
 ```bash
 ./gradlew test                                          # All tests
 ./gradlew clean build                                   # Clean build
-```
-
-**Publishing (MCP PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":quo-vadis-core:publishToMavenLocal")           # Publish library
-```
-
-**Publishing (Terminal):**
-```bash
-./gradlew :quo-vadis-core:publishToMavenLocal           # Publish library
 ```
 
 ## Notes

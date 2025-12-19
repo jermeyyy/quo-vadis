@@ -28,30 +28,37 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.DeepLinkDestination
 import com.jermey.navplayground.demo.ui.components.DeepLinkCard
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.DeepLink
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * DeepLink Demo Screen - Shows deep linking functionality
  */
+@Screen(DeepLinkDestination.Demo::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeepLinkDemoScreen(
-    onBack: () -> Unit,
-    onNavigateViaDeepLink: (String) -> Unit
+    navigator: Navigator = koinInject()
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Deep Link Demo") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
             )
         }
     ) { padding ->
-        DeepLinkDemoScreenContent(padding, onNavigateViaDeepLink)
+        DeepLinkDemoScreenContent(padding) { deepLinkUri ->
+            navigator.handleDeepLink(DeepLink.parse(deepLinkUri))
+        }
     }
 }
 
@@ -108,9 +115,9 @@ private fun DeepLinkDemoScreenContent(
         item {
             DeepLinkCard(
                 title = "Navigate to Home",
-                deepLink = "app://demo/home",
+                deepLink = "app://main/home",
                 description = "Simple deep link to home screen",
-                onClick = { onNavigateViaDeepLink("app://demo/home") }
+                onClick = { onNavigateViaDeepLink("app://main/home") }
             )
         }
 
@@ -118,9 +125,9 @@ private fun DeepLinkDemoScreenContent(
         item {
             DeepLinkCard(
                 title = "Navigate to Item Detail",
-                deepLink = "app://demo/item/42",
+                deepLink = "app://master_detail/detail/42",
                 description = "Deep link with path parameter (item ID: 42)",
-                onClick = { onNavigateViaDeepLink("app://demo/item/42") }
+                onClick = { onNavigateViaDeepLink("app://master_detail/detail/42") }
             )
         }
 
@@ -128,9 +135,9 @@ private fun DeepLinkDemoScreenContent(
         item {
             DeepLinkCard(
                 title = "Start Process Flow",
-                deepLink = "app://demo/process/start",
+                deepLink = "app://process/start",
                 description = "Deep link to wizard process",
-                onClick = { onNavigateViaDeepLink("app://demo/process/start") }
+                onClick = { onNavigateViaDeepLink("app://process/start") }
             )
         }
 

@@ -1,84 +1,70 @@
 # Quo Vadis Navigation Library
 
 <p align="center">
-  <img src="art/logo.jpg" alt="NavPlayground Logo" width="200"/>
+  <img src="art/logo.jpg" alt="Quo Vadis Logo" width="200"/>
 </p>
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.jermeyyy/quo-vadis-core)](https://central.sonatype.com/artifact/io.github.jermeyyy/quo-vadis-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.2.20-blue.svg?logo=kotlin)](http://kotlinlang.org)
-[![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.9.0-4285F4.svg?logo=jetpackcompose)](https://www.jetbrains.com/lp/compose-multiplatform/)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.10.0--rc02-4285F4.svg?logo=jetpackcompose)](https://www.jetbrains.com/lp/compose-multiplatform/)
 
-**"Quo Vadis"** (Latin for "Where are you going?") - A comprehensive, type-safe navigation library for Kotlin Multiplatform and Compose Multiplatform.
+**"Quo Vadis"** (Latin for "Where are you going?") - A comprehensive, type-safe navigation library for Kotlin Multiplatform and Compose Multiplatform using a **tree-based navigation architecture**.
 
 ## 🎯 Project Overview
 
-This project consists of **two main components**:
+Quo Vadis provides a powerful navigation solution with:
 
-1. **`quo-vadis-core`** - The navigation library itself (reusable, independent)
-2. **`composeApp`** - Demo application showcasing all navigation patterns
+1. **`quo-vadis-core`** - The navigation library (reusable, no external dependencies)
+2. **`quo-vadis-annotations`** - KSP annotations (`@Stack`, `@Destination`, `@Screen`, `@Tabs`, `@Pane`)
+3. **`quo-vadis-ksp`** - Code generator for zero-boilerplate navigation
+4. **`quo-vadis-core-flow-mvi`** - Optional FlowMVI integration
+5. **`composeApp`** - Demo application showcasing all navigation patterns
 
 ## ✨ Key Features
 
+- ✅ **NavNode Tree Architecture** - Hierarchical navigation state as a tree of nodes
 - ✅ **Annotation-based API** - KSP code generation for zero-boilerplate navigation
-- ✅ **Type-Safe Arguments** - Serializable data classes with automatic wiring
 - ✅ **Type-Safe Navigation** - Compile-time safety with no string-based routing
-- ✅ **Multiplatform** - Works on Android, iOS, Desktop, and Web
-- ✅ **Modular Architecture** - Gray box pattern for feature modules
-- ✅ **Direct BackStack Access** - Full control over navigation stack
-- ✅ **Deep Link Support** - URI-based navigation with pattern matching
+- ✅ **Multiple Container Types** - `@Stack`, `@Tabs`, and `@Pane` for different navigation patterns
+- ✅ **Type-Safe Arguments** - `@Argument` annotation with automatic deep link serialization
+- ✅ **Multiplatform** - Works on Android, iOS, Desktop, Web (JS & WASM)
 - ✅ **Predictive Back Navigation** - Smooth animated back gestures (Android 13+ & iOS)
 - ✅ **Shared Element Transitions** - Material Design shared elements (forward & back!)
-- ✅ **Tabbed Navigation** - Annotation-based generation of tabbed navigation with independent backstacks
-- ✅ **FlowMVI Integration** - Built-in support for FlowMVI state management via `quo-vadis-core-flow-mvi` module
-- ✅ **Transitions & Animations** - Built-in and custom transitions
+- ✅ **Tabbed Navigation** - Independent backstacks per tab with `@Tabs` + `@TabItem`
+- ✅ **Adaptive Layouts** - Multi-pane layouts with `@Pane` + `@PaneItem`
+- ✅ **Custom Transitions** - `@Transition` annotation with preset and custom animations
+- ✅ **Deep Link Support** - URI-based navigation with automatic parameter extraction
+- ✅ **Hierarchical Rendering** - True parent-child composition with coordinated animations
+- ✅ **Navigation Results** - Type-safe result passing between screens
 - ✅ **DI Framework Support** - Easy integration with Koin, Kodein, etc.
-- ✅ **Testable** - FakeNavigator for unit testing
-- ✅ **No External Dependencies** - Independent navigation library
+- ✅ **Testable** - `FakeNavigator` for unit testing
 
 ## 📦 Project Structure
 
 ```
 NavPlayground/
 ├── quo-vadis-core/              # Core navigation library
-│   ├── src/commonMain/          # Core navigation logic
-│   ├── src/androidMain/         # Android-specific features
-│   ├── src/iosMain/             # iOS-specific features
-│   └── docs/                    # Library documentation
-│       ├── ANNOTATION_API.md               # Annotation-based API guide
-│       ├── TYPED_DESTINATIONS.md           # Type-safe arguments guide
-│       ├── TAB_NAVIGATION.md               # Tabbed navigation guide
-│       ├── FLOW_MVI.md                     # FlowMVI integration guide
-│       ├── ARCHITECTURE.md
-│       ├── API_REFERENCE.md
-│       ├── NAVIGATION_IMPLEMENTATION.md
-│       ├── MULTIPLATFORM_PREDICTIVE_BACK.md
-│       └── SHARED_ELEMENT_TRANSITIONS.md
-├── quo-vadis-annotations/       # Annotation definitions (@Graph, @Route, etc.)
-│   └── src/commonMain/          # Multiplatform annotations
+│   └── src/
+│       ├── commonMain/          # Core navigation logic (Navigator, NavNode, TreeNavigator)
+│       ├── androidMain/         # Android-specific features (predictive back)
+│       └── iosMain/             # iOS-specific features (swipe back)
+├── quo-vadis-annotations/       # Annotation definitions
+│   └── src/commonMain/          # @Stack, @Destination, @Screen, @Tabs, @Pane, etc.
 ├── quo-vadis-ksp/               # KSP code generator
 │   └── src/main/                # Processor implementation
+├── quo-vadis-core-flow-mvi/     # FlowMVI integration (optional)
+│   └── src/commonMain/          # MVI navigation integration
 ├── composeApp/                  # Demo application
 │   └── src/
 │       ├── commonMain/          # Demo screens & examples
 │       ├── androidMain/         # Android app entry point
 │       └── iosMain/             # iOS app entry point
-└── iosApp/                      # iOS app wrapper
+├── iosApp/                      # iOS app wrapper
+└── docs/
+    ├── refactoring-plan/        # Architecture documentation
+    └── site/                    # Documentation website
 ```
-
-## 📚 Modules Overview
-
-### quo-vadis-core
-The core navigation library with full multiplatform support. Contains all navigation primitives, graph builders, and Compose integration. **No external dependencies** - can be used standalone.
-
-### quo-vadis-annotations  
-Annotation definitions for the code generation API. Provides `@Graph`, `@Route`, `@Argument`, and `@Content` annotations. Lightweight module with only Kotlin reflection dependency.
-
-### quo-vadis-ksp
-KSP (Kotlin Symbol Processing) code generator that processes annotations and generates graph builders, route registration, and typed destination extensions. Build-time only dependency.
-
-### composeApp
-Comprehensive demo application showcasing all navigation patterns using the annotation-based API. Demonstrates best practices for real-world applications.
 
 ## 🚀 Quick Start
 
@@ -90,510 +76,10 @@ Add the library to your Kotlin Multiplatform project:
 // build.gradle.kts
 plugins {
     kotlin("multiplatform")
-    kotlin("plugin.serialization") version "2.2.20"
-    id("com.google.devtools.ksp") version "2.2.20-1.0.29"
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.devtools.ksp") version "2.3.0"
 }
 
-repositories {
-    mavenCentral()
-    google()
-}
-
-kotlin {
-    sourceSets {
-        val commonMain by getting {
-            dependencies {
-                // Core navigation library
-                implementation("io.github.jermeyyy:quo-vadis-core:0.1.1")
-                
-                // Annotation-based API (recommended)
-                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.1")
-                
-                // For type-safe arguments
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-            }
-        }
-    }
-}
-
-dependencies {
-    // KSP code generator
-    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.1")
-}
-```
-
-### Using the Annotation-based API (Recommended)
-
-The annotation-based API uses KSP to generate navigation code, reducing boilerplate by 70%:
-
-```kotlin
-// 1. Define destinations with annotations
-import com.jermey.quo.vadis.annotations.*
-import com.jermey.quo.vadis.core.navigation.core.*
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class DetailData(val itemId: String, val mode: String = "view")
-
-@Graph("app")
-sealed class AppDestination : Destination {
-    @Route("app/home")
-    data object Home : AppDestination()
-    
-    @Route("app/detail")
-    @Argument(DetailData::class)
-    data class Detail(val itemId: String, val mode: String = "view") 
-        : AppDestination(), TypedDestination<DetailData> {
-        override val data = DetailData(itemId, mode)
-    }
-}
-
-// 2. Define content functions with @Content
-import androidx.compose.runtime.Composable
-
-@Content(AppDestination.Home::class)
-@Composable
-fun HomeContent(navigator: Navigator) {
-    HomeScreen(
-        onNavigateToDetail = { itemId ->
-            navigator.navigate(AppDestination.Detail(itemId))
-        }
-    )
-}
-
-@Content(AppDestination.Detail::class)
-@Composable
-fun DetailContent(data: DetailData, navigator: Navigator) {
-    DetailScreen(
-        itemId = data.itemId,
-        mode = data.mode,
-        onBack = { navigator.navigateBack() }
-    )
-}
-
-// 3. Use generated graph builder
-import com.example.app.destinations.buildAppDestinationGraph
-
-fun rootGraph() = navigationGraph("root") {
-    startDestination(AppDestination.Home)
-    include(buildAppDestinationGraph())  // Auto-generated!
-}
-
-// 4. Setup navigation in your app
-@Composable
-fun App() {
-    val navigator = rememberNavigator()
-    
-    LaunchedEffect(Unit) {
-        navigator.registerGraph(rootGraph())
-        navigator.setStartDestination(AppDestination.Home)
-    }
-    
-    GraphNavHost(
-        graph = rootGraph(),
-        navigator = navigator,
-        defaultTransition = NavigationTransitions.SlideHorizontal
-    )
-}
-```
-
-**What gets generated:**
-- ✅ Route registration (`AppDestinationRouteInitializer`)
-- ✅ Graph builder function (`buildAppDestinationGraph()`)
-- ✅ Typed destination extensions (for destinations with `@Argument`)
-
-### Alternative: Manual DSL Approach
-
-For dynamic navigation or when you prefer explicit control:
-
-```kotlin
-// Define destinations manually
-sealed class AppDestination : Destination {
-    object Home : AppDestination() {
-        override val route = "home"
-    }
-    
-    data class Details(val id: String) : AppDestination() {
-        override val route = "details"
-        override val arguments = mapOf("id" to id)
-    }
-}
-
-// Build graph manually
-val appGraph = navigationGraph("app") {
-    startDestination(AppDestination.Home)
-    
-    destination(AppDestination.Home) { _, navigator ->
-        HomeScreen(
-            onNavigateToDetails = { id ->
-                navigator.navigate(AppDestination.Details(id))
-            }
-        )
-    }
-    
-    destination(SimpleDestination("details")) { dest, navigator ->
-        DetailsScreen(
-            itemId = dest.arguments["id"] as String,
-            onBack = { navigator.navigateBack() }
-        )
-    }
-}
-
-// Setup navigation
-@Composable
-fun App() {
-    val navigator = rememberNavigator()
-    
-    LaunchedEffect(Unit) {
-        navigator.registerGraph(appGraph)
-        navigator.setStartDestination(AppDestination.Home)
-    }
-    
-    GraphNavHost(
-        graph = appGraph,
-        navigator = navigator,
-        defaultTransition = NavigationTransitions.SlideHorizontal
-    )
-}
-```
-
-**When to use manual DSL:**
-- Dynamic navigation that changes at runtime
-- Integration with existing manual code
-- Fine-grained control over graph construction
-- Building libraries that avoid KSP dependency
-
-### Predictive Back Navigation
-
-```kotlin
-PredictiveBackNavigation(
-    navigator = navigator,
-    graph = appGraph,
-    animationType = PredictiveBackAnimationType.Material3,
-    enabled = true
-)
-```
-
-## 📚 Documentation
-
-### 🌐 Documentation Website
-
-The project documentation is published at **[https://jermeyyy.github.io/quo-vadis/](https://jermeyyy.github.io/quo-vadis/)**
-
-The website includes:
-- **Getting Started Guide** - Installation and basic setup
-- **Features Documentation** - Detailed feature explanations
-- **Demo Application** - Interactive examples
-- **API Reference** - Complete API documentation (auto-generated from source)
-
-### 📖 Local Documentation
-
-Comprehensive documentation is available in the `quo-vadis-core/docs/` directory:
-
-**Getting Started:**
-- **[Annotation-based API Guide](quo-vadis-core/docs/ANNOTATION_API.md)** - Complete guide to using annotations (recommended)
-- **[TypedDestination Guide](quo-vadis-core/docs/TYPED_DESTINATIONS.md)** - Type-safe navigation arguments with serialization
-
-**Core Documentation:**
-- **[Architecture Overview](quo-vadis-core/docs/ARCHITECTURE.md)** - Design principles, patterns, and architecture layers
-- **[API Reference](quo-vadis-core/docs/API_REFERENCE.md)** - Complete API documentation with examples
-- **[Navigation Implementation](quo-vadis-core/docs/NAVIGATION_IMPLEMENTATION.md)** - Implementation details and features
-
-**Advanced Features:**
-- **[Multiplatform Predictive Back](quo-vadis-core/docs/MULTIPLATFORM_PREDICTIVE_BACK.md)** - Gesture-based back navigation
-- **[Shared Element Transitions](quo-vadis-core/docs/SHARED_ELEMENT_TRANSITIONS.md)** - Material Design shared element animations
-
-### 🔧 Updating the Website
-
-The website is automatically deployed when changes are pushed to the `main` branch via GitHub Actions.
-
-**Static site content:** `/docs/site/`  
-**API documentation:** Auto-generated from Dokka
-
-To preview locally:
-```bash
-# Generate Dokka documentation
-./gradlew :quo-vadis-core:dokkaGenerateHtml
-
-# View Dokka output
-open quo-vadis-core/build/dokka/html/index.html
-
-# View static site
-open docs/site/index.html
-```
-
-**Website structure:**
-- Homepage and guides: `/docs/site/*.html`
-- Styles: `/docs/site/css/`
-- Scripts: `/docs/site/js/`
-- Images: `/docs/site/images/`
-- API Reference: Auto-generated during deployment
-
-### 📖 Generating API Documentation
-
-You can generate comprehensive HTML API documentation using Dokka:
-
-```bash
-# Generate HTML documentation
-./gradlew :quo-vadis-core:dokkaGenerate
-
-# View the generated documentation
-open quo-vadis-core/build/dokka/html/index.html
-```
-
-The documentation includes:
-- All public APIs with KDoc comments
-- Source code links to GitHub
-- External documentation links (Android, Coroutines)
-- Package-level documentation
-- Automatic suppression of internal packages
-
-## 🎮 Demo Application
-
-The **`composeApp`** module contains a comprehensive demo showcasing all navigation patterns:
-
-### Demo Features
-
-- **Bottom Navigation** - Tab-based navigation between main sections
-- **Drawer Navigation** - Side drawer with feature access
-- **Deep Stack Navigation** - Multi-level navigation with backstack
-- **Modular Navigation** - Feature module pattern demonstration
-- **Predictive Back Gestures** - Animated back navigation (Android 13+ & iOS)
-- **Transitions** - Various animation styles (Fade, Slide, Scale, Material3)
-- **Deep Links** - URI-based navigation examples
-- **FlowMVI Pattern** - FlowMVI architecture integration
-- **BackStack Manipulation** - Direct stack access examples
-
-### Running the Demo
-
-**Android:**
-```bash
-./gradlew :composeApp:assembleDebug
-# Or install directly on connected device
-./gradlew :composeApp:installDebug
-```
-
-**iOS:**
-Open the `iosApp` directory in Xcode and run, or use:
-```bash
-./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
-# Then open in Xcode
-open iosApp/iosApp.xcodeproj
-```
-
-**Web (JavaScript):**
-```bash
-./gradlew :composeApp:jsBrowserDevelopmentRun --continuous
-# Opens at http://localhost:8080 with hot reload
-```
-
-**Web (WebAssembly):**
-```bash
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun --continuous
-# Opens at http://localhost:8080 with hot reload
-```
-
-**Desktop:**
-```bash
-./gradlew :composeApp:run
-# Launches native window application
-```
-
-## 🛠 Technology Stack
-
-- **Kotlin**: 2.2.20 (Multiplatform)
-- **Compose Multiplatform**: 1.9.0
-- **Android**: Min SDK 24, Target/Compile SDK 36
-- **iOS**: iosArm64, iosSimulatorArm64, iosX64
-- **JavaScript**: IR compiler with Canvas rendering
-- **WebAssembly**: Wasm-JS target with Canvas rendering
-- **Desktop**: JVM target (Java 11+)
-- **Gradle**: 8.14.3 (8GB heap)
-- **AGP**: 8.11.2
-
-### Build Configuration
-
-- **Gradle Daemon**: 6GB (-Xmx6144M)
-- **Gradle Build**: 8GB (-Xmx8192M)
-- **Configuration Cache**: Enabled
-- **Build Cache**: Enabled
-
-## 🏗 Architecture Highlights
-
-### Type-Safe Navigation
-```kotlin
-// No string-based routing!
-navigator.navigate(DetailsDestination("123"))
-```
-
-### Direct BackStack Access
-```kotlin
-navigator.backStack.pop()
-navigator.backStack.popTo("route")
-navigator.backStack.clear()
-```
-
-### Modular Feature Navigation
-```kotlin
-class FeatureNavigation : BaseModuleNavigation() {
-    override fun buildGraph() = navigationGraph("feature") {
-        startDestination(Screen1)
-        destination(Screen1) { _, nav -> Screen1UI(nav) }
-    }
-}
-```
-
-### FlowMVI Integration
-For MVI architecture, use the `quo-vadis-core-flow-mvi` module. See [FlowMVI Integration Guide](quo-vadis-core/docs/FLOW_MVI.md).
-
-## 🧪 Testing
-
-The library includes comprehensive testing support:
-
-```kotlin
-@Test
-fun `navigate to details screen`() {
-    val fakeNavigator = FakeNavigator()
-    val viewModel = MyViewModel(fakeNavigator)
-    
-    viewModel.onItemClicked("123")
-    
-    assertTrue(fakeNavigator.verifyNavigateTo("details"))
-}
-```
-
-## 📱 Platform Support
-
-The Quo Vadis library supports **7 platforms** across mobile, desktop, and web:
-
-| Platform | Target                          | Status | Features |
-|----------|---------------------------------|--------|----------|
-| **Android** | `androidLibrary`                | ✅ Production | Predictive back, deep links, system integration |
-| **iOS** | `iosArm64` `iosSimulatorArm64` `iosX64` | ✅ Production | Predictive back, universal links, navigation bar |
-| **JavaScript** | `js(IR)`                        | ✅ Production | Browser history, Canvas rendering, PWA-ready |
-| **WebAssembly** | `wasmJs`                        | ✅ Production | Near-native performance, modern browsers |
-| **Desktop** | `jvm("desktop")`                | ✅ Production | Native windows (macOS, Windows, Linux) |
-
-### Platform-Specific Features
-
-**Android:**
-- System back button integration
-- Predictive back gestures (Android 13+)
-- Deep link handling
-- Activity lifecycle integration
-
-**iOS:**
-- Swipe-back navigation
-- Navigation bar customization
-- Universal links
-- iOS-specific transitions
-
-**Web (JS/Wasm):**
-- Browser back button support
-- URL-based routing
-- Canvas-based rendering
-- Single-page application (SPA) support
-- Progressive Web App (PWA) compatible
-
-**Desktop (JVM):**
-- Native window controls (macOS, Windows, Linux)
-- Keyboard shortcuts support
-- Menu bar integration
-- Multi-window support
-- Native installers (DMG, MSI, DEB)
-
-## 🎨 Animation Types
-
-The library supports multiple animation styles:
-
-- **None** - Instant navigation
-- **Fade** - Smooth fade transition
-- **SlideHorizontal** - Slide left/right
-- **SlideVertical** - Slide up/down
-- **ScaleIn** - Scale with fade
-- **Material3** - Material Design 3 with scale, translate, and rounded corners
-- **Custom** - Build your own with Compose animations
-
-## 🔧 Build Commands
-
-### Core Commands
-
-```bash
-# Clean build
-./gradlew clean build
-
-# Run all tests
-./gradlew test
-
-# Build library only
-./gradlew :quo-vadis-core:build
-
-# Lint check
-./gradlew lint
-```
-
-### Platform-Specific Builds
-
-**Android:**
-```bash
-./gradlew :composeApp:assembleDebug        # Debug APK
-./gradlew :composeApp:assembleRelease      # Release APK
-./gradlew :composeApp:installDebug         # Install on device
-```
-
-**iOS:**
-```bash
-./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64  # M1/M2 simulator
-./gradlew :composeApp:linkDebugFrameworkIosArm64           # Physical device
-./gradlew :composeApp:linkDebugFrameworkIosX64             # Intel simulator
-```
-
-**Web:**
-```bash
-# Development (with hot reload)
-./gradlew :composeApp:jsBrowserDevelopmentRun              # JavaScript
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun          # WebAssembly
-
-# Production build
-./gradlew :composeApp:jsBrowserDistribution                # JS bundle
-./gradlew :composeApp:wasmJsBrowserDistribution            # Wasm bundle
-
-# Build library
-./gradlew :quo-vadis-core:jsJar                            # JS library
-./gradlew :quo-vadis-core:wasmJsJar                        # Wasm library
-```
-
-**Desktop:**
-```bash
-./gradlew :composeApp:run                                  # Run app
-./gradlew :composeApp:createDistributable                  # App bundle
-./gradlew :composeApp:packageDistributionForCurrentOS      # Native installer
-
-# Platform-specific installers
-./gradlew :composeApp:packageDmg                           # macOS DMG
-./gradlew :composeApp:packageMsi                           # Windows MSI
-./gradlew :composeApp:packageDeb                           # Linux DEB
-
-# Build library
-./gradlew :quo-vadis-core:desktopJar                       # Desktop library
-```
-
-### Publishing
-
-```bash
-# Publish to Maven Local
-./gradlew :quo-vadis-core:publishToMavenLocal
-
-# Published artifacts location
-ls ~/.m2/repository/io/github/jermeyyy/quo-vadis-core/0.1.0-SNAPSHOT/
-```
-
-## 📦 Using the Library
-
-### From Maven Central (Stable Releases)
-
-**build.gradle.kts:**
-```kotlin
 repositories {
     mavenCentral()
     google()
@@ -609,97 +95,441 @@ kotlin {
 }
 
 dependencies {
+    // KSP code generator (all targets)
     add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.1")
 }
 ```
 
-### From Maven Local (Development)
+### Basic Stack Navigation
 
-First, publish to Maven Local:
+Define destinations using `@Stack` and `@Destination` annotations:
 
-```bash
-./gradlew :quo-vadis-core:publishToMavenLocal
+```kotlin
+import com.jermey.quo.vadis.annotations.*
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
+
+// 1. Define a navigation stack with destinations
+@Stack(name = "home", startDestination = "Feed")
+sealed class HomeDestination : NavDestination {
+
+    @Destination(route = "home/feed")
+    data object Feed : HomeDestination()
+
+    @Destination(route = "home/article/{articleId}")
+    data class Article(
+        @Argument val articleId: String,
+        @Argument(optional = true) val showComments: Boolean = false
+    ) : HomeDestination()
+
+    @Destination(route = "home/settings")
+    data object Settings : HomeDestination()
+}
 ```
 
-Then add to your project:
+### Screen Binding with `@Screen`
 
-**build.gradle.kts:**
+Bind Composable functions to destinations:
+
 ```kotlin
-repositories {
-    mavenLocal()  // For local SNAPSHOT versions
-    mavenCentral()
-    google()
-}
+import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 
-kotlin {
-    sourceSets {
-        commonMain.dependencies {
-            implementation("io.github.jermeyyy:quo-vadis-core:0.1.0-SNAPSHOT")
-            implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.0-SNAPSHOT")
+// Simple screen (data object destination)
+@Screen(HomeDestination.Feed::class)
+@Composable
+fun FeedScreen(navigator: Navigator) {
+    Column {
+        Text("Feed")
+        Button(onClick = { 
+            navigator.navigate(HomeDestination.Article(articleId = "123"))
+        }) {
+            Text("View Article")
         }
     }
 }
 
-dependencies {
-    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.0-SNAPSHOT")
+// Screen with arguments (data class destination)
+@Screen(HomeDestination.Article::class)
+@Composable
+fun ArticleScreen(destination: HomeDestination.Article, navigator: Navigator) {
+    Column {
+        Text("Article: ${destination.articleId}")
+        if (destination.showComments) {
+            Text("Comments visible")
+        }
+        Button(onClick = { navigator.navigateBack() }) {
+            Text("Back")
+        }
+    }
 }
 ```
 
-### Platform-Specific Setup
+### Setting Up Navigation
 
-The library automatically includes platform-specific implementations:
+```kotlin
+import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
+import com.jermey.quo.vadis.generated.GeneratedNavigationConfig
 
-- **Android**: AAR artifact with Activity integration
-- **iOS**: Framework with UIKit integration
-- **JavaScript**: JS bundle with Canvas rendering
-- **WebAssembly**: Wasm binary with JS glue code
-- **Desktop**: JAR with native window support
+@Composable
+fun App() {
+    val config = GeneratedNavigationConfig
+    
+    // Build the initial NavNode tree from your root destination
+    val initialState = remember {
+        config.buildNavNode(
+            destinationClass = HomeDestination::class,
+            parentKey = null
+        )!!
+    }
+    
+    // Create the navigator
+    val navigator = remember {
+        TreeNavigator(
+            initialState = initialState,
+            scopeRegistry = config.scopeRegistry,
+            containerRegistry = config.containerRegistry,
+            deepLinkHandler = config.deepLinkHandler
+        )
+    }
+    
+    // Render the navigation tree
+    QuoVadisHost(
+        navigator = navigator,
+        screenRegistry = config.screenRegistry
+    )
+}
+```
 
-No additional configuration required - it just works! ✨
+## 📱 Navigation Patterns
 
-## �📖 Examples
+### Tabbed Navigation with `@Tabs`
 
-Check out the demo app for complete working examples:
+Create bottom navigation or tab bars with independent backstacks:
 
-- **[DemoApp.kt](composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/DemoApp.kt)** - Main demo with drawer & bottom nav
-- **[destinations/](composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/destinations/)** - All destination definitions
-- **[graphs/](composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/graphs/)** - Navigation graph examples
-- **[ui/screens/](composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/ui/screens/)** - Demo screens
+```kotlin
+// Define each tab as @TabItem + @Stack
+@TabItem(label = "Home", icon = "home")
+@Stack(name = "homeStack", startDestinationClass = HomeTab.Feed::class)
+sealed class HomeTab : NavDestination {
+    @Destination(route = "home/feed")
+    data object Feed : HomeTab()
+    
+    @Destination(route = "home/article/{id}")
+    data class Article(@Argument val id: String) : HomeTab()
+}
 
-### Platform Entry Points
+@TabItem(label = "Explore", icon = "explore")
+@Stack(name = "exploreStack", startDestinationClass = ExploreTab.Root::class)
+sealed class ExploreTab : NavDestination {
+    @Destination(route = "explore/root")
+    data object Root : ExploreTab()
+}
 
-- **Android**: `composeApp/src/androidMain/kotlin/MainActivity.kt`
-- **iOS**: `composeApp/src/iosMain/kotlin/MainViewController.kt`
-- **JavaScript**: `composeApp/src/jsMain/kotlin/main.js.kt`
-- **WebAssembly**: `composeApp/src/wasmJsMain/kotlin/main.wasmJs.kt`
-- **Desktop**: `composeApp/src/desktopMain/kotlin/main.desktop.kt`
+// Define the tabs container
+@Tabs(
+    name = "mainTabs",
+    initialTab = HomeTab::class,
+    items = [HomeTab::class, ExploreTab::class]
+)
+object MainTabs
+```
+
+#### Tab Container UI
+
+Provide the tab bar UI with `@TabsContainer`:
+
+```kotlin
+@TabsContainer(MainTabs::class)
+@Composable
+fun MainTabsWrapper(scope: TabsContainerScope, content: @Composable () -> Unit) {
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                scope.tabs.forEachIndexed { index, tab ->
+                    NavigationBarItem(
+                        selected = index == scope.activeIndex,
+                        onClick = { scope.switchTab(index) },
+                        icon = { Icon(tabIcon(tab.icon), tab.label) },
+                        label = { Text(tab.label) }
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        Box(Modifier.padding(padding)) {
+            content()
+        }
+    }
+}
+```
+
+### Adaptive Pane Layouts with `@Pane`
+
+Create responsive list-detail layouts:
+
+```kotlin
+@Pane(name = "catalog", backBehavior = PaneBackBehavior.PopUntilContentChange)
+sealed class CatalogPane : NavDestination {
+
+    @PaneItem(role = PaneRole.PRIMARY, rootGraph = ProductListGraph::class)
+    @Destination(route = "catalog/list")
+    data object List : CatalogPane()
+
+    @PaneItem(
+        role = PaneRole.SECONDARY,
+        adaptStrategy = AdaptStrategy.OVERLAY,
+        rootGraph = ProductDetailGraph::class
+    )
+    @Destination(route = "catalog/detail/{id}")
+    data class Detail(@Argument val id: String) : CatalogPane()
+}
+```
+
+### Custom Transitions with `@Transition`
+
+Specify transition animations per destination:
+
+```kotlin
+@Stack(name = "home", startDestination = "List")
+sealed class HomeDestination : NavDestination {
+
+    // Default transition
+    @Destination(route = "list")
+    data object List : HomeDestination()
+
+    // Horizontal slide for detail screens
+    @Transition(type = TransitionType.SlideHorizontal)
+    @Destination(route = "details/{id}")
+    data class Details(@Argument val id: String) : HomeDestination()
+
+    // Vertical slide for modals
+    @Transition(type = TransitionType.SlideVertical)
+    @Destination(route = "filter")
+    data object Filter : HomeDestination()
+
+    // Fade for overlays
+    @Transition(type = TransitionType.Fade)
+    @Destination(route = "help")
+    data object Help : HomeDestination()
+}
+```
+
+## 🏗 Architecture: NavNode Tree
+
+Quo Vadis uses a tree-based navigation architecture where the navigation state is represented as a tree of nodes:
+
+```
+NavNode (root)
+├── StackNode (main stack)
+│   ├── ScreenNode (Home)
+│   ├── ScreenNode (List)
+│   └── ScreenNode (Detail)
+├── TabNode (bottom tabs)
+│   ├── StackNode (Tab 1 stack)
+│   │   └── ScreenNode
+│   └── StackNode (Tab 2 stack)
+│       └── ScreenNode
+└── PaneNode (adaptive layout)
+    ├── StackNode (primary)
+    └── StackNode (detail)
+```
+
+### Node Types
+
+| Node | Purpose | Annotation |
+|------|---------|------------|
+| `ScreenNode` | Single screen/destination | `@Destination` |
+| `StackNode` | Stack of screens (push/pop) | `@Stack` |
+| `TabNode` | Tab container with independent stacks | `@Tabs` |
+| `PaneNode` | Adaptive multi-pane layout | `@Pane` |
+
+### Navigator Interface
+
+```kotlin
+interface Navigator {
+    val state: StateFlow<NavNode>
+    val currentDestination: StateFlow<NavDestination?>
+    val canNavigateBack: StateFlow<Boolean>
+    
+    // Basic navigation
+    fun navigate(destination: NavDestination)
+    fun navigateBack(): Boolean
+    
+    // Advanced navigation
+    fun navigateAndClearTo(destination: NavDestination)
+    fun navigateAndReplace(destination: NavDestination)
+    
+    // Pane navigation
+    fun navigateToPane(role: PaneRole, destination: NavDestination)
+    fun switchPane(role: PaneRole)
+    
+    // Deep links
+    fun handleDeepLink(uri: String): Boolean
+}
+```
+
+## 🎨 Shared Element Transitions
+
+Enable beautiful shared element animations:
+
+```kotlin
+@Screen(HomeDestination.Article::class)
+@Composable
+fun ArticleScreen(
+    destination: HomeDestination.Article,
+    navigator: Navigator,
+    sharedTransitionScope: SharedTransitionScope?,
+    animatedVisibilityScope: AnimatedVisibilityScope?
+) {
+    // Use shared elements when scopes are available
+    if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        Image(
+            modifier = Modifier.quoVadisSharedElement(
+                key = "article-image-${destination.articleId}",
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        )
+    }
+}
+```
+
+**Key rules:**
+- Use `quoVadisSharedElement()` for icons/images
+- Use `quoVadisSharedBounds()` for text/containers
+- Keys must match exactly between source and destination screens
+- Works in both forward and backward navigation
+
+## 🛠 Technology Stack
+
+- **Kotlin**: 2.2.21 (Multiplatform)
+- **Compose Multiplatform**: 1.10.0-rc02
+- **KSP**: 2.3.0
+- **Android**: Min SDK 24, Target/Compile SDK 36
+- **iOS**: iosArm64, iosSimulatorArm64, iosX64
+- **JavaScript**: IR compiler with Canvas rendering
+- **WebAssembly**: Wasm-JS target with Canvas rendering
+- **Desktop**: JVM target (Java 11+)
+- **Gradle**: 8.14.3
+- **AGP**: 8.13.2
+
+### Key Dependencies
+
+- `kotlinx-serialization-json`: 1.9.0 - Deep link serialization
+- `kotlinx-coroutines`: 1.10.2 - Async navigation
+- `FlowMVI`: 3.2.1 - MVI integration (optional)
+- `Koin`: 4.2.0-beta2 - DI support (optional)
+
+## 📱 Platform Support
+
+| Platform | Target | Status | Features |
+|----------|--------|--------|----------|
+| **Android** | `androidLibrary` | ✅ Production | Predictive back, deep links, system integration |
+| **iOS** | `iosArm64` `iosSimulatorArm64` `iosX64` | ✅ Production | Swipe back, universal links |
+| **JavaScript** | `js(IR)` | ✅ Production | Browser history, Canvas rendering |
+| **WebAssembly** | `wasmJs` | ✅ Production | Near-native performance |
+| **Desktop** | `jvm("desktop")` | ✅ Production | Native windows (macOS, Windows, Linux) |
+
+## 🎮 Demo Application
+
+The `composeApp` module showcases all navigation patterns:
+
+- **Tabbed Navigation** - Bottom navigation with `@Tabs`
+- **Stack Navigation** - Push/pop with `@Stack`
+- **Master-Detail** - Adaptive layouts with `@Pane`
+- **Auth Flows** - Scope-aware navigation
+- **Deep Links** - URI parameter handling
+- **Transitions** - Custom animations
+- **Result Handling** - Navigation results
+
+### Running the Demo
+
+```bash
+# Android
+./gradlew :composeApp:installDebug
+
+# iOS (Apple Silicon simulator)
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+open iosApp/iosApp.xcodeproj
+
+# Web (JavaScript)
+./gradlew :composeApp:jsBrowserDevelopmentRun --continuous
+
+# Web (WebAssembly)
+./gradlew :composeApp:wasmJsBrowserDevelopmentRun --continuous
+
+# Desktop
+./gradlew :composeApp:run
+```
+
+## 🧪 Testing
+
+```kotlin
+@Test
+fun `navigate to details screen`() {
+    val config = GeneratedNavigationConfig
+    val initialState = config.buildNavNode(HomeDestination::class, null)!!
+    val navigator = TreeNavigator(initialState = initialState)
+    
+    navigator.navigate(HomeDestination.Article(articleId = "123"))
+    
+    assertEquals(
+        HomeDestination.Article(articleId = "123"),
+        navigator.currentDestination.value
+    )
+}
+```
+
+## 📚 Documentation
+
+- **Website**: [https://jermeyyy.github.io/quo-vadis/](https://jermeyyy.github.io/quo-vadis/)
+- **API Reference**: Auto-generated via Dokka
+
+```bash
+# Generate API docs
+./gradlew :quo-vadis-core:dokkaGenerate
+open quo-vadis-core/build/dokka/html/index.html
+```
+
+## 🔧 Build Commands
+
+```bash
+# Full build
+./gradlew clean build
+
+# Run tests
+./gradlew test
+
+# Build library only
+./gradlew :quo-vadis-core:build
+
+# Lint check
+./gradlew lint
+```
+
+### Platform-Specific Builds
+
+```bash
+# Android
+./gradlew :composeApp:assembleDebug
+./gradlew :composeApp:installDebug
+
+# iOS
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+
+# Web
+./gradlew :composeApp:jsBrowserDevelopmentRun
+./gradlew :composeApp:wasmJsBrowserDevelopmentRun
+
+# Desktop
+./gradlew :composeApp:run
+```
 
 ## 🤝 Contributing
 
-This is a demonstration project showcasing navigation patterns. Feel free to explore, learn, and adapt for your own projects!
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.
-
-The MIT License allows you to:
-- Use the library in any project (commercial or open-source)
-- Modify the library for your own use
-- Distribute modified or unmodified versions
-- Use the library without any copyleft requirements
-
-The only requirement is that you include the copyright notice and license text in any copies or substantial portions of the software.
-
-See the [LICENSE](LICENSE) file for the complete license text.
-
-**Note**: This license applies to the `quo-vadis-core` navigation library and the demo application (`composeApp`).
-
----
-
-**Learn more:**
-- [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)
-- [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/)
-
----
-
-Made with ❤️ using Kotlin Multiplatform and Compose Multiplatform
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

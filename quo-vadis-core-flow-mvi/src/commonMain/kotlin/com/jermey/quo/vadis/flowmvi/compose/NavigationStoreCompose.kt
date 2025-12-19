@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.flowmvi.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.flowmvi.core.NavigationAction
 import com.jermey.quo.vadis.flowmvi.core.NavigationIntent
 import com.jermey.quo.vadis.flowmvi.core.NavigationState
@@ -94,7 +95,7 @@ fun rememberNavigationIntentReceiver(
  * ```
  */
 fun IntentReceiver<NavigationIntent>.navigateTo(
-    destination: com.jermey.quo.vadis.core.navigation.core.Destination,
+    destination: NavDestination,
     transition: com.jermey.quo.vadis.core.navigation.core.NavigationTransition? = null
 ) {
     intent(NavigationIntent.Navigate(destination, transition))
@@ -111,7 +112,7 @@ fun IntentReceiver<NavigationIntent>.navigateBack() {
  * Extension: Emit a navigate and clear to intent.
  */
 fun IntentReceiver<NavigationIntent>.navigateAndClearTo(
-    destination: com.jermey.quo.vadis.core.navigation.core.Destination,
+    destination: NavDestination,
     popUpToRoute: String,
     inclusive: Boolean = false
 ) {
@@ -122,7 +123,7 @@ fun IntentReceiver<NavigationIntent>.navigateAndClearTo(
  * Extension: Emit a navigate and replace intent.
  */
 fun IntentReceiver<NavigationIntent>.navigateAndReplace(
-    destination: com.jermey.quo.vadis.core.navigation.core.Destination
+    destination: NavDestination
 ) {
     intent(NavigationIntent.NavigateAndReplace(destination))
 }
@@ -131,7 +132,7 @@ fun IntentReceiver<NavigationIntent>.navigateAndReplace(
  * Extension: Emit a navigate and clear all intent.
  */
 fun IntentReceiver<NavigationIntent>.navigateAndClearAll(
-    destination: com.jermey.quo.vadis.core.navigation.core.Destination
+    destination: NavDestination
 ) {
     intent(NavigationIntent.NavigateAndClearAll(destination))
 }

@@ -1,0 +1,638 @@
+package com.jermey.quo.vadis.ksp.generators
+
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSPLogger
+import com.jermey.quo.vadis.ksp.QuoVadisClassNames
+import com.jermey.quo.vadis.ksp.generators.base.StringTemplates
+import com.jermey.quo.vadis.ksp.models.DestinationInfo
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
+import com.squareup.kotlinpoet.MAP
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STRING
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.ksp.writeTo
+
+/**
+ * Generates [GeneratedDeepLinkHandlerImpl] for parsing deep link URIs into destinations.
+ *
+ * Transforms `@Destination` route patterns into:
+ * - [RoutePattern] instances for URI matching with regex-based extraction
+ * - [handleDeepLink] implementation that matches URIs against route patterns
+ * - [createDeepLinkUri] for generating URIs from destination instances
+ *
+ * ## Route Pattern Syntax
+ *
+ * | Pattern | Example URI | Extracted Params |
+ * |---------|-------------|------------------|
+ * | `home/feed` | `myapp://home/feed` | (none) |
+ * | `home/detail/{id}` | `myapp://home/detail/123` | `id="123"` |
+ * | `user/{userId}/post/{postId}` | `myapp://user/42/post/99` | `userId="42"`, `postId="99"` |
+ *
+ * ## Example Generated Code
+ *
+ * ```kotlin
+ * object GeneratedDeepLinkHandlerImpl : GeneratedDeepLinkHandler {
+ *     private val routes = listOf(
+ *         RoutePattern("home/feed", emptyList()) { HomeDestination.Feed },
+ *         RoutePattern("home/detail/{id}", listOf("id")) { params ->
+ *             HomeDestination.Detail(id = params["id"]!!)
+ *         }
+ *     )
+ *
+ *     override fun handleDeepLink(uri: String): DeepLinkResult { ... }
+ *     override fun createDeepLinkUri(destination: Destination, scheme: String): String? { ... }
+ * }
+ * ```
+ *
+ * @property codeGenerator KSP code generator for writing output files
+ * @property logger KSP logger for diagnostic output
+ */
+class DeepLinkHandlerGenerator(
+    private val codeGenerator: CodeGenerator,
+    private val logger: KSPLogger
+) {
+
+    companion object {
+        private const val GENERATED_PACKAGE = "com.jermey.quo.vadis.generated"
+        private const val HANDLER_NAME = "GeneratedDeepLinkHandlerImpl"
+
+        // Core type references
+        private val GENERATED_DEEP_LINK_HANDLER = ClassName(
+            "com.jermey.quo.vadis.core.navigation.core",
+            "GeneratedDeepLinkHandler"
+        )
+        private val DEEP_LINK_RESULT = ClassName(
+            "com.jermey.quo.vadis.core.navigation.core",
+            "DeepLinkResult"
+        )
+        private val DEEP_LINK_RESULT_MATCHED = DEEP_LINK_RESULT.nestedClass("Matched")
+        private val DEEP_LINK_RESULT_NOT_MATCHED = DEEP_LINK_RESULT.nestedClass("NotMatched")
+        
+        // DeepLinkHandler interface types
+        private val DEEP_LINK = ClassName(
+            "com.jermey.quo.vadis.core.navigation.core",
+            "DeepLink"
+        )
+        private val NAVIGATOR = ClassName(
+            "com.jermey.quo.vadis.core.navigation.core",
+            "Navigator"
+        )
+    }
+
+    /**
+     * Generate the deep link handler from extracted destination information.
+     *
+     * Filters destinations to those with non-null, non-empty routes and generates
+     * a handler implementation. If no routable destinations are found, logs a warning
+     * and skips generation.
+     *
+     * @param destinations List of DestinationInfo models from DestinationExtractor
+     * @param addDeprecations When true, adds @Deprecated annotations to generated code
+     *        pointing users to use GeneratedNavigationConfig instead
+     */
+    fun generate(destinations: List<DestinationInfo>, addDeprecations: Boolean = false) {
+        // Filter to destinations with valid routes
+        val routableDestinations = destinations.filter { !it.route.isNullOrBlank() }
+
+        if (routableDestinations.isEmpty()) {
+            logger.warn("No @Destination annotations with routes found, skipping deep link handler generation")
+            return
+        }
+
+        val fileSpec = buildFileSpec(routableDestinations, addDeprecations)
+
+        val dependencies = Dependencies(
+            aggregating = true,
+            sources = routableDestinations.mapNotNull { it.classDeclaration.containingFile }.toTypedArray()
+        )
+
+        fileSpec.writeTo(codeGenerator, dependencies)
+
+        logger.info("Generated $HANDLER_NAME with ${routableDestinations.size} route patterns")
+    }
+
+    /**
+     * Build the complete file specification for GeneratedDeepLinkHandler.kt
+     */
+    private fun buildFileSpec(destinations: List<DestinationInfo>, addDeprecations: Boolean): FileSpec {
+        return FileSpec.builder(GENERATED_PACKAGE, HANDLER_NAME)
+            .addFileComment("DO NOT EDIT - Auto-generated by Quo Vadis KSP processor")
+            .addType(buildHandlerObject(destinations, addDeprecations))
+            .addType(buildRoutePatternClass())
+            .build()
+    }
+
+    /**
+     * Build the GeneratedDeepLinkHandlerImpl object.
+     */
+    private fun buildHandlerObject(destinations: List<DestinationInfo>, addDeprecations: Boolean): TypeSpec {
+        return TypeSpec.objectBuilder(HANDLER_NAME)
+            .addKdoc(
+                """
+                |KSP-generated deep link handler mapping URIs to destinations.
+                |
+                |Generated from @Destination annotations found in the codebase.
+                |DO NOT EDIT - This file is auto-generated by Quo Vadis KSP processor.
+                |
+                |Supports ${destinations.size} route patterns.
+                """.trimMargin()
+            )
+            .apply {
+                if (addDeprecations) {
+                    addAnnotation(buildDeprecationAnnotation())
+                }
+            }
+            .addSuperinterface(GENERATED_DEEP_LINK_HANDLER)
+            .addProperty(buildRoutesProperty(destinations))
+            .addFunction(buildHandleDeepLinkFunction())
+            .addFunction(buildCreateDeepLinkUriFunction(destinations))
+            .addFunction(buildExtractPathFunction())
+            // DeepLinkHandler interface methods
+            .addFunction(buildResolveFunction())
+            .addFunction(buildSimpleRegisterFunction())
+            .addFunction(buildHandleFunction())
+            .build()
+    }
+
+    /**
+     * Builds the @Deprecated annotation for legacy deep link handler.
+     */
+    private fun buildDeprecationAnnotation(): AnnotationSpec {
+        return AnnotationSpec.builder(Deprecated::class)
+            .addMember("message = %S", StringTemplates.deprecatedRegistryMessage(HANDLER_NAME))
+            .addMember(
+                "replaceWith = %T(%S, %S)",
+                ReplaceWith::class,
+                "GeneratedNavigationConfig.deepLinkHandler",
+                "$GENERATED_PACKAGE.GeneratedNavigationConfig"
+            )
+            .addMember("level = %T.%L", DeprecationLevel::class, "WARNING")
+            .build()
+    }
+
+    /**
+     * Build the routes property containing all RoutePattern instances.
+     */
+    private fun buildRoutesProperty(destinations: List<DestinationInfo>): PropertySpec {
+        val routePatternType = ClassName(GENERATED_PACKAGE, "RoutePattern")
+        val listOfRoutePattern = ClassName("kotlin.collections", "List")
+            .parameterizedBy(routePatternType)
+
+        // Filter out empty patterns (from sealed classes that can't be instantiated)
+        val routePatterns = destinations
+            .map { dest -> buildRoutePatternInitializer(dest) }
+            .filter { it.toString().isNotEmpty() }
+
+        return PropertySpec.builder("routes", listOfRoutePattern)
+            .addModifiers(KModifier.PRIVATE)
+            .initializer(
+                CodeBlock.builder()
+                    .add("listOf(\n")
+                    .indent()
+                    .apply {
+                        routePatterns.forEachIndexed { index, pattern ->
+                            add(pattern)
+                            if (index < routePatterns.lastIndex) add(",")
+                            add("\n")
+                        }
+                    }
+                    .unindent()
+                    .add(")")
+                    .build()
+            )
+            .build()
+    }
+
+    /**
+     * Build a single RoutePattern initializer for a destination.
+     *
+     * Uses %T format specifier for destination class names to ensure
+     * KotlinPoet generates proper imports in the output file.
+     *
+     * Handles three cases:
+     * - Objects (data object, companion object, regular object): `DestinationClass.Object`
+     * - Data classes with route params: `DestinationClass.DataClass(param = params["param"]!!)`
+     * - Data classes without route params (optional/default params): `DestinationClass.DataClass()`
+     * - Sealed classes: Skipped (cannot be instantiated directly)
+     */
+    private fun buildRoutePatternInitializer(dest: DestinationInfo): CodeBlock {
+        val route = dest.route ?: return CodeBlock.of("")
+
+        // Skip sealed classes - they cannot be instantiated directly
+        // (their subclasses should be used as destinations instead)
+        if (dest.isSealedClass) {
+            logger.info("Skipping sealed class ${dest.className} in deep link handler - cannot be instantiated")
+            return CodeBlock.of("")
+        }
+
+        val params = dest.routeParams
+        val destClassName = buildDestinationClassName(dest)
+
+        return when {
+            dest.isObject -> {
+                // Any object (data object, companion object, regular object) - no parentheses needed
+                CodeBlock.of(
+                    "RoutePattern(%S, emptyList()) { %T }",
+                    route,
+                    destClassName
+                )
+            }
+            params.isEmpty() -> {
+                // Data class with no route params (uses defaults) - needs parentheses
+                CodeBlock.of(
+                    "RoutePattern(%S, emptyList()) { %T() }",
+                    route,
+                    destClassName
+                )
+            }
+            else -> {
+                // Data class with route params - extract and pass parameters
+                val paramAssignments = params.joinToString(", ") { p ->
+                    "$p = params[\"$p\"]!!"
+                }
+                CodeBlock.of(
+                    "RoutePattern(%S, listOf(%L)) { params ->\n    %T(%L)\n}",
+                    route,
+                    params.joinToString(", ") { "\"$it\"" },
+                    destClassName,
+                    paramAssignments
+                )
+            }
+        }
+    }
+
+    /**
+     * Build the KotlinPoet ClassName for a destination.
+     *
+     * For nested sealed class members (e.g., HomeDestination.Detail),
+     * creates a properly nested ClassName that KotlinPoet can import.
+     * Handles arbitrary nesting depth (e.g., MainTabs.SettingsTab.SettingsMain).
+     *
+     * @param dest The destination info containing class metadata
+     * @return ClassName that will generate proper imports when used with %T
+     */
+    private fun buildDestinationClassName(dest: DestinationInfo): ClassName {
+        val packageName = dest.classDeclaration.packageName.asString()
+        val simpleNames = mutableListOf<String>()
+
+        // Walk up the parent chain to collect all enclosing class names
+        var current: com.google.devtools.ksp.symbol.KSDeclaration? = dest.classDeclaration
+        while (current is com.google.devtools.ksp.symbol.KSClassDeclaration) {
+            simpleNames.add(0, current.simpleName.asString())
+            current = current.parentDeclaration
+        }
+
+        return ClassName(packageName, simpleNames)
+    }
+
+    /**
+     * Build the handleDeepLink function implementation.
+     */
+    private fun buildHandleDeepLinkFunction(): FunSpec {
+        return FunSpec.builder("handleDeepLink")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("uri", STRING)
+            .returns(DEEP_LINK_RESULT)
+            .addCode(
+                """
+                |val path = extractPath(uri)
+                |
+                |for (route in routes) {
+                |    val params = route.match(path)
+                |    if (params != null) {
+                |        return %T(route.createDestination(params))
+                |    }
+                |}
+                |
+                |return %T
+                """.trimMargin(),
+                DEEP_LINK_RESULT_MATCHED,
+                DEEP_LINK_RESULT_NOT_MATCHED
+            )
+            .build()
+    }
+
+    /**
+     * Build the createDeepLinkUri function implementation.
+     *
+     * Uses CodeBlock-based when cases to ensure proper destination class imports.
+     * Note: Override functions cannot have default parameter values, so scheme
+     * has no default here (defaults should be in the interface/base class).
+     */
+    private fun buildCreateDeepLinkUriFunction(destinations: List<DestinationInfo>): FunSpec {
+        val whenCases = buildWhenCases(destinations)
+
+        return FunSpec.builder("createDeepLinkUri")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("destination", QuoVadisClassNames.NAV_DESTINATION)
+            .addParameter("scheme", STRING)
+            .returns(STRING.copy(nullable = true))
+            .beginControlFlow("return when (destination)")
+            .apply {
+                whenCases.forEach { caseBlock ->
+                    addCode(caseBlock)
+                    addCode("\n")
+                }
+            }
+            .addStatement("else -> null")
+            .endControlFlow()
+            .build()
+    }
+
+    /**
+     * Build when case CodeBlocks for createDeepLinkUri.
+     *
+     * Returns CodeBlocks with %T format specifiers to ensure proper imports.
+     * Handles three cases:
+     * - Objects (data object, companion object, regular object): `DestinationClass.Object -> "scheme://route"`
+     * - Data classes without route params: `is DestinationClass.DataClass -> "scheme://route"`
+     * - Data classes with route params: `is DestinationClass.DataClass -> "scheme://route/${destination.param}"`
+     * - Sealed classes: Skipped (cannot be used as concrete destinations)
+     */
+    private fun buildWhenCases(destinations: List<DestinationInfo>): List<CodeBlock> {
+        return destinations.mapNotNull { dest ->
+            val route = dest.route ?: return@mapNotNull null
+
+            // Skip sealed classes - they cannot be used as concrete destinations
+            if (dest.isSealedClass) return@mapNotNull null
+
+            val destClassName = buildDestinationClassName(dest)
+            val params = dest.routeParams
+
+            // All cases use %P (string template) to properly interpolate $scheme at runtime.
+            // %S would escape the $ making it a literal string instead of interpolated.
+            when {
+                dest.isObject -> {
+                    // Any object (data object, companion object, regular object) - exact match, use %T for auto-import
+                    CodeBlock.of("%T -> %P", destClassName, "\$scheme://$route")
+                }
+                params.isEmpty() -> {
+                    // Data class without route params - use "is" check
+                    CodeBlock.of("is %T -> %P", destClassName, "\$scheme://$route")
+                }
+                else -> {
+                    // Data class with route params - interpolate parameters
+                    val uriPath = buildUriPathWithParams(route, params)
+                    CodeBlock.of("is %T -> %P", destClassName, "\$scheme://$uriPath")
+                }
+            }
+        }
+    }
+
+    /**
+     * Build URI path with interpolated parameter references.
+     *
+     * Transforms "home/detail/{id}" to "home/detail/\${destination.id}"
+     */
+    private fun buildUriPathWithParams(route: String, params: List<String>): String {
+        var result = route
+        for (param in params) {
+            result = result.replace("{$param}", "\${destination.$param}")
+        }
+        return result
+    }
+
+    /**
+     * Build the extractPath helper function.
+     */
+    private fun buildExtractPathFunction(): FunSpec {
+        return FunSpec.builder("extractPath")
+            .addModifiers(KModifier.PRIVATE)
+            .addParameter("uri", STRING)
+            .returns(STRING)
+            .addKdoc(
+                """
+                |Extract the path component from a URI.
+                |
+                |Removes the scheme (e.g., "myapp://") and any leading slashes.
+                |
+                |@param uri The full URI string
+                |@return The path component without scheme or leading slashes
+                """.trimMargin()
+            )
+            .addCode(
+                """
+                |// Remove scheme (e.g., "myapp://") and leading slashes
+                |val schemeEnd = uri.indexOf("://")
+                |return if (schemeEnd >= 0) {
+                |    uri.substring(schemeEnd + 3).trimStart('/')
+                |} else {
+                |    uri.trimStart('/')
+                |}
+                """.trimMargin()
+            )
+            .build()
+    }
+
+    /**
+     * Build the resolve function from DeepLinkHandler interface.
+     * 
+     * Uses the KSP-generated route patterns to resolve deep links.
+     */
+    private fun buildResolveFunction(): FunSpec {
+        return FunSpec.builder("resolve")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("deepLink", DEEP_LINK)
+            .returns(QuoVadisClassNames.NAV_DESTINATION.copy(nullable = true))
+            .addCode(
+                """
+                |val result = handleDeepLink(deepLink.uri)
+                |return when (result) {
+                |    is %T -> result.destination
+                |    is %T -> null
+                |}
+                """.trimMargin(),
+                DEEP_LINK_RESULT_MATCHED,
+                DEEP_LINK_RESULT_NOT_MATCHED
+            )
+            .build()
+    }
+
+    /**
+     * Build the register function from DeepLinkHandler interface (deprecated 3-param version).
+     * 
+     * This is a no-op for generated handlers since routes are determined at compile time.
+     */
+    private fun buildRegisterFunction(): FunSpec {
+        val actionType = LambdaTypeName.get(
+            parameters = listOf(
+                ParameterSpec.builder("destination", QuoVadisClassNames.NAV_DESTINATION).build(),
+                ParameterSpec.builder("navigator", NAVIGATOR).build(),
+                ParameterSpec.builder("parameters", MAP.parameterizedBy(STRING, STRING)).build()
+            ),
+            returnType = ClassName("kotlin", "Unit")
+        )
+        
+        return FunSpec.builder("register")
+            .addModifiers(KModifier.OVERRIDE)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlin", "Suppress"))
+                    .addMember("%S", "DEPRECATION")
+                    .build()
+            )
+            .addParameter("pattern", STRING)
+            .addParameter("action", actionType)
+            .addComment("No-op: Generated handler uses compile-time routes from @Destination annotations")
+            .build()
+    }
+
+    /**
+     * Build the new simplified register function from DeepLinkHandler interface (2-param version).
+     * 
+     * This is a no-op for generated handlers since routes are determined at compile time.
+     */
+    private fun buildSimpleRegisterFunction(): FunSpec {
+        val actionType = LambdaTypeName.get(
+            parameters = listOf(
+                ParameterSpec.builder("navigator", NAVIGATOR).build(),
+                ParameterSpec.builder("parameters", MAP.parameterizedBy(STRING, STRING)).build()
+            ),
+            returnType = ClassName("kotlin", "Unit")
+        )
+        
+        return FunSpec.builder("register")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("pattern", STRING)
+            .addParameter("action", actionType)
+            .addComment("No-op: Generated handler uses compile-time routes from @Destination annotations")
+            .build()
+    }
+
+    /**
+     * Build the handle function from DeepLinkHandler interface.
+     * 
+     * Resolves the deep link and navigates if a destination is found.
+     */
+    private fun buildHandleFunction(): FunSpec {
+        return FunSpec.builder("handle")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("deepLink", DEEP_LINK)
+            .addParameter("navigator", NAVIGATOR)
+            .addCode(
+                """
+                |val destination = resolve(deepLink)
+                |destination?.let { navigator.navigate(it) }
+                """.trimMargin()
+            )
+            .build()
+    }
+
+    /**
+     * Build the RoutePattern private data class.
+     */
+    private fun buildRoutePatternClass(): TypeSpec {
+        val destinationLambdaType = LambdaTypeName.get(
+            parameters = listOf(
+                ParameterSpec.unnamed(MAP.parameterizedBy(STRING, STRING))
+            ),
+            returnType = QuoVadisClassNames.NAV_DESTINATION
+        )
+
+        return TypeSpec.classBuilder("RoutePattern")
+            .addModifiers(KModifier.PRIVATE, KModifier.DATA)
+            .addKdoc(
+                """
+                |Route pattern for matching deep link URIs.
+                |
+                |@property pattern The route pattern string (e.g., "home/detail/{id}")
+                |@property paramNames List of parameter names extracted from the pattern
+                |@property createDestination Lambda to create a destination from extracted parameters
+                """.trimMargin()
+            )
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter("pattern", STRING)
+                    .addParameter(
+                        ParameterSpec.builder(
+                            "paramNames",
+                            ClassName("kotlin.collections", "List").parameterizedBy(STRING)
+                        ).build()
+                    )
+                    .addParameter(
+                        ParameterSpec.builder("createDestination", destinationLambdaType).build()
+                    )
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("pattern", STRING)
+                    .initializer("pattern")
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder(
+                    "paramNames",
+                    ClassName("kotlin.collections", "List").parameterizedBy(STRING)
+                )
+                    .initializer("paramNames")
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("createDestination", destinationLambdaType)
+                    .initializer("createDestination")
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("regex", ClassName("kotlin.text", "Regex"))
+                    .addModifiers(KModifier.PRIVATE)
+                    .initializer("buildRegex()")
+                    .build()
+            )
+            .addFunction(buildBuildRegexFunction())
+            .addFunction(buildMatchFunction())
+            .build()
+    }
+
+    /**
+     * Build the buildRegex helper function for RoutePattern.
+     */
+    private fun buildBuildRegexFunction(): FunSpec {
+        return FunSpec.builder("buildRegex")
+            .addModifiers(KModifier.PRIVATE)
+            .returns(ClassName("kotlin.text", "Regex"))
+            .addCode(
+                """
+                |var regexPattern = %T.escape(pattern)
+                |for (param in paramNames) {
+                |    regexPattern = regexPattern.replace("\\{${'$'}param\\}", "([^/]+)")
+                |}
+                |return %T("^${'$'}regexPattern${'$'}")
+                """.trimMargin(),
+                ClassName("kotlin.text", "Regex"),
+                ClassName("kotlin.text", "Regex")
+            )
+            .build()
+    }
+
+    /**
+     * Build the match function for RoutePattern.
+     */
+    private fun buildMatchFunction(): FunSpec {
+        return FunSpec.builder("match")
+            .addParameter("path", STRING)
+            .returns(MAP.parameterizedBy(STRING, STRING).copy(nullable = true))
+            .addKdoc(
+                """
+                |Match a path against this pattern and extract parameters.
+                |
+                |@param path The path to match (without scheme)
+                |@return Map of parameter names to values, or null if no match
+                """.trimMargin()
+            )
+            .addCode(
+                """
+                |val matchResult = regex.matchEntire(path) ?: return null
+                |return paramNames.zip(matchResult.groupValues.drop(1)).toMap()
+                """.trimMargin()
+            )
+            .build()
+    }
+}

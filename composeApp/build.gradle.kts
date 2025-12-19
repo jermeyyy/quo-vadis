@@ -9,18 +9,6 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-// Force Compose Multiplatform version alignment
-configurations.all {
-    resolutionStrategy {
-        force("org.jetbrains.compose.material3:material3:1.9.0")
-        force("org.jetbrains.compose.material3:material3-desktop:1.9.0")
-        force("org.jetbrains.compose.ui:ui:1.9.0")
-        force("org.jetbrains.compose.ui:ui-desktop:1.9.0")
-        force("org.jetbrains.compose.runtime:runtime:1.9.0")
-        force("org.jetbrains.compose.runtime:runtime-desktop:1.9.0")
-    }
-}
-
 kotlin {
     androidTarget {
         compilerOptions {
@@ -68,6 +56,7 @@ kotlin {
             implementation(compose.materialIconsExtended)
         }
         commonMain.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -85,6 +74,7 @@ kotlin {
             // Koin
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

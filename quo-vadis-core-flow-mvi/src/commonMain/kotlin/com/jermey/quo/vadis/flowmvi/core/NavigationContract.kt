@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.flowmvi.core
 
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
@@ -19,7 +19,7 @@ import pro.respawn.flowmvi.api.MVIState
  * Example:
  * ```kotlin
  * data class ProfileNavigationState(
- *     override val currentDestination: Destination?,
+ *     override val currentDestination: NavDestination?,
  *     override val backStackSize: Int,
  *     val userData: UserData?
  * ) : NavigationState
@@ -30,7 +30,7 @@ interface NavigationState : MVIState {
      * The currently active destination in the navigation stack.
      * Null if navigation hasn't been initialized.
      */
-    val currentDestination: Destination?
+    val currentDestination: NavDestination?
     
     /**
      * Number of destinations in the back stack (including current).
@@ -73,7 +73,7 @@ sealed interface NavigationIntent : MVIIntent {
      * @param transition Optional custom transition animation
      */
     data class Navigate(
-        val destination: Destination,
+        val destination: NavDestination,
         val transition: NavigationTransition? = null
     ) : NavigationIntent
     
@@ -100,7 +100,7 @@ sealed interface NavigationIntent : MVIIntent {
      * ```
      */
     data class NavigateAndClearTo(
-        val destination: Destination,
+        val destination: NavDestination,
         val popUpToRoute: String,
         val inclusive: Boolean = false
     ) : NavigationIntent
@@ -113,7 +113,7 @@ sealed interface NavigationIntent : MVIIntent {
      * Use case: Login -> Home (don't allow back to login)
      */
     data class NavigateAndReplace(
-        val destination: Destination
+        val destination: NavDestination
     ) : NavigationIntent
     
     /**
@@ -124,7 +124,7 @@ sealed interface NavigationIntent : MVIIntent {
      * Use case: Logout -> Login (clear all previous screens)
      */
     data class NavigateAndClearAll(
-        val destination: Destination
+        val destination: NavDestination
     ) : NavigationIntent
     
     /**
@@ -137,7 +137,7 @@ sealed interface NavigationIntent : MVIIntent {
      */
     data class NavigateToGraph(
         val graphId: String,
-        val startDestination: Destination
+        val startDestination: NavDestination
     ) : NavigationIntent
 }
 

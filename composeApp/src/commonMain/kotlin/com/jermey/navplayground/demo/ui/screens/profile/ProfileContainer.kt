@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens.profile
 
-import com.jermey.navplayground.demo.destinations.TabDestination
+import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import pro.respawn.flowmvi.api.Container
 import pro.respawn.flowmvi.api.PipelineContext
@@ -234,7 +234,7 @@ class ProfileContainer(
      */
     private suspend fun PipelineContext<ProfileState, ProfileIntent, ProfileAction>.handleNavigateToSettings() {
         try {
-            navigator.navigate(TabDestination.Settings)
+            navigator.navigate(MainTabs.SettingsTab.Main)
         } catch (e: Exception) {
             action(ProfileAction.ShowError("Navigation failed"))
         }

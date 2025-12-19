@@ -21,7 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.screens.masterdetail.Item
-import com.jermey.quo.vadis.core.navigation.compose.quoVadisSharedElement
+import com.jermey.quo.vadis.core.navigation.compose.animation.quoVadisSharedElement
 import com.jermey.quo.vadis.core.navigation.core.sharedBounds
 import com.jermey.quo.vadis.core.navigation.core.sharedElement
 

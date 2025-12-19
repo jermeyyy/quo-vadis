@@ -1,51 +1,50 @@
 package com.jermey.navplayground.demo.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Explore
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.jermey.navplayground.demo.destinations.TabDestination
-import com.jermey.navplayground.demo.destinations.DeepLinkDestination
-import com.jermey.quo.vadis.core.navigation.core.Destination
+import androidx.compose.ui.Modifier
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
 
+/**
+ * Bottom navigation bar component using index-based tab selection.
+ *
+ * This component renders a Material 3 NavigationBar with items based on
+ * the provided [tabMetadata]. Selection is determined by comparing
+ * the current [activeTabIndex] with each tab's position.
+ *
+ * @param activeTabIndex The index of the currently selected tab
+ * @param tabMetadata List of metadata for each tab (labels, icons, etc.)
+ * @param onTabSelected Callback invoked when a tab is selected, receives the tab index
+ * @param isTransitioning Whether a tab transition is in progress (disables interaction)
+ * @param modifier Modifier for the NavigationBar
+ */
 @Composable
 fun BottomNavigationBar(
-    currentRoute: String?,
-    onNavigate: (Destination) -> Unit
+    activeTabIndex: Int,
+    tabMetadata: List<TabMetadata>,
+    onTabSelected: (Int) -> Unit,
+    isTransitioning: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
-    NavigationBar {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = currentRoute == "home",
-            onClick = { onNavigate(TabDestination.Home) }
-        )
-
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Explore, contentDescription = "Explore") },
-            label = { Text("Explore") },
-            selected = currentRoute == "explore",
-            onClick = { onNavigate(TabDestination.Explore) }
-        )
-
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-            label = { Text("Profile") },
-            selected = currentRoute == "profile",
-            onClick = { onNavigate(TabDestination.Profile) }
-        )
-
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-            label = { Text("Settings") },
-            selected = currentRoute == "settings",
-            onClick = { onNavigate(TabDestination.Settings) }
-        )
+    NavigationBar(modifier = modifier) {
+        tabMetadata.forEachIndexed { index, meta ->
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = meta.icon ?: Icons.Default.Circle,
+                        contentDescription = meta.contentDescription ?: meta.label
+                    )
+                },
+                label = { Text(meta.label) },
+                selected = activeTabIndex == index,
+                onClick = { onTabSelected(index) },
+                enabled = !isTransitioning
+            )
+        }
     }
 }

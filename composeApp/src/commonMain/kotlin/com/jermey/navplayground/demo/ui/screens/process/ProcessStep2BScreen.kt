@@ -29,17 +29,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.core.Navigator
+import org.koin.compose.koinInject
 
 /**
  * Process Step 2B - Business account configuration
  */
+@Screen(ProcessDestination.Step2B::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProcessStep2BScreen(
-    previousData: String,
-    onNext: (data: String) -> Unit,
-    onBack: () -> Unit
+    destination: ProcessDestination.Step2B,
+    navigator: Navigator = koinInject()
 ) {
     var companyName by remember { mutableStateOf("") }
     var taxId by remember { mutableStateOf("") }
@@ -50,14 +54,32 @@ fun ProcessStep2BScreen(
             TopAppBar(
                 title = { Text("Step 2: Business Details") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
             )
         }
     ) { padding ->
-        ProcessStep2BContent(padding, previousData, companyName, taxId, industry, onBack, onNext)
+        ProcessStep2BContent(
+            padding = padding,
+            previousData = destination.stepData,
+            companyName = companyName,
+            taxId = taxId,
+            industry = industry,
+            onCompanyNameChange = { companyName = it },
+            onTaxIdChange = { taxId = it },
+            onIndustryChange = { industry = it },
+            onBack = { navigator.navigateBack() },
+            onNext = { data ->
+                navigator.navigate(
+                    ProcessDestination.Step3(
+                        previousData = data,
+                        branch = "business"
+                    )
+                )
+            }
+        )
     }
 }
 
@@ -68,12 +90,12 @@ private fun ProcessStep2BContent(
     companyName: String,
     taxId: String,
     industry: String,
+    onCompanyNameChange: (String) -> Unit,
+    onTaxIdChange: (String) -> Unit,
+    onIndustryChange: (String) -> Unit,
     onBack: () -> Unit,
     onNext: (String) -> Unit
 ) {
-    var companyName1 = companyName
-    var taxId1 = taxId
-    var industry1 = industry
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -96,8 +118,8 @@ private fun ProcessStep2BContent(
             )
 
             OutlinedTextField(
-                value = companyName1,
-                onValueChange = { companyName1 = it },
+                value = companyName,
+                onValueChange = onCompanyNameChange,
                 label = { Text("Company Name") },
                 leadingIcon = { Icon(Icons.Default.Business, null) },
                 modifier = Modifier.fillMaxWidth(),
@@ -105,8 +127,8 @@ private fun ProcessStep2BContent(
             )
 
             OutlinedTextField(
-                value = taxId1,
-                onValueChange = { taxId1 = it },
+                value = taxId,
+                onValueChange = onTaxIdChange,
                 label = { Text("Tax ID / EIN") },
                 leadingIcon = { Icon(Icons.Default.Badge, null) },
                 modifier = Modifier.fillMaxWidth(),
@@ -114,8 +136,8 @@ private fun ProcessStep2BContent(
             )
 
             OutlinedTextField(
-                value = industry1,
-                onValueChange = { industry1 = it },
+                value = industry,
+                onValueChange = onIndustryChange,
                 label = { Text("Industry") },
                 leadingIcon = { Icon(Icons.Default.Work, null) },
                 modifier = Modifier.fillMaxWidth(),
@@ -135,9 +157,9 @@ private fun ProcessStep2BContent(
             }
 
             Button(
-                onClick = { onNext("$previousData|$companyName1|$taxId1|$industry1") },
+                onClick = { onNext("$previousData|$companyName|$taxId|$industry") },
                 modifier = Modifier.weight(1f),
-                enabled = companyName1.isNotBlank() && taxId1.isNotBlank()
+                enabled = companyName.isNotBlank() && taxId.isNotBlank()
             ) {
                 Text("Next")
             }

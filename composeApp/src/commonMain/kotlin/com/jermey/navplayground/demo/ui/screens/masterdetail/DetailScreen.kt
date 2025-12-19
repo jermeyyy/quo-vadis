@@ -36,24 +36,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.DetailRow
 import com.jermey.navplayground.demo.ui.components.SpecificationRow
-import com.jermey.quo.vadis.core.navigation.compose.quoVadisSharedElement
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.compose.animation.quoVadisSharedElement
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.sharedBounds
 import com.jermey.quo.vadis.core.navigation.core.sharedElement
+import org.koin.compose.koinInject
 
 private const val RELATED_ITEMS_COUNT = 5
 
 /**
  * Detail Screen - Shows details of selected item (Detail view)
  */
+@Screen(MasterDetailDestination.Detail::class)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun DetailScreen(
-    itemId: String,
-    onBack: () -> Unit,
-    onNavigateToRelated: (String) -> Unit
+    destination: MasterDetailDestination.Detail,
+    navigator: Navigator = koinInject()
 ) {
+    val itemId = destination.itemId
     val relatedItems = remember(itemId) {
         (1..RELATED_ITEMS_COUNT).map { "Related item $it" }
     }
@@ -63,7 +68,7 @@ fun DetailScreen(
             TopAppBar(
                 title = { Text("Item Details") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navigator.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
@@ -101,12 +106,12 @@ fun DetailScreen(
                 val relatedId = "related_${itemId}_$index"
                 RelatedItemCard(
                     relatedItemName = relatedItems[index],
-                    onNavigateToRelated = { onNavigateToRelated(relatedId) }
+                    onNavigateToRelated = { navigator.navigate(MasterDetailDestination.Detail(itemId = relatedId)) }
                 )
             }
 
             item {
-                ActionButtons(onBack)
+                ActionButtons(onBack = { navigator.navigateBack() })
             }
         }
     }
