@@ -45,7 +45,7 @@ import com.jermey.quo.vadis.ksp.validation.ValidationEngine
  *
  * ## KSP Options
  * - `quoVadis.package` - Target package for generated code
- * - `quoVadis.modulePrefix` - Prefix for generated class names (e.g., "ComposeApp" -> ComposeAppGeneratedNavigationConfig).
+ * - `quoVadis.modulePrefix` - Prefix for generated class names (e.g., "ComposeApp" -> ComposeAppNavigationConfig).
  *   This is required for multi-module projects to avoid class name conflicts.
  * - `quoVadis.strictValidation` - Whether validation errors abort generation (default: true)
  */
