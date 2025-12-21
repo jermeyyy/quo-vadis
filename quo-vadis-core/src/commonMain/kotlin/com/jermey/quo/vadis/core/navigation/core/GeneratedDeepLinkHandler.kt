@@ -3,7 +3,7 @@ package com.jermey.quo.vadis.core.navigation.core
 /**
  * Interface for KSP-generated deep link handlers.
  *
- * Extends [DeepLinkHandler] to provide type-safe deep link handling based on
+ * Extends [DeepLinkHandler] and [DeepLinkRegistry] to provide type-safe deep link handling based on
  * code-generated route patterns from `@Destination` annotations.
  *
  * ## Usage
@@ -27,9 +27,16 @@ package com.jermey.quo.vadis.core.navigation.core
  * - Return `DeepLinkResult.Matched(DetailScreen("123"))`
  *
  * @see DeepLinkHandler for the base deep link handler interface
+ * @see DeepLinkRegistry for the new unified deep link registry
  * @see DeepLinkResult for possible handling outcomes
  */
-interface GeneratedDeepLinkHandler : DeepLinkHandler {
+@Deprecated(
+    message = "Use DeepLinkRegistry instead. Generated handlers now implement DeepLinkRegistry.",
+    replaceWith = ReplaceWith("DeepLinkRegistry"),
+    level = DeprecationLevel.WARNING
+)
+@Suppress("DEPRECATION")
+interface GeneratedDeepLinkHandler : DeepLinkHandler, DeepLinkRegistry {
     /**
      * Handle a deep link URI and return the matching destination if found.
      *
@@ -65,6 +72,82 @@ interface GeneratedDeepLinkHandler : DeepLinkHandler {
      *         type has no associated route pattern (i.e., was not annotated with a route).
      */
     fun createDeepLinkUri(destination: NavDestination, scheme: String = "myapp"): String?
+
+    // =========================================================================
+    // DeepLinkRegistry default implementations
+    // =========================================================================
+
+    /**
+     * Resolve a deep link URI to a destination using the generated patterns.
+     */
+    override fun resolve(uri: String): NavDestination? {
+        val result = handleDeepLink(uri)
+        return when (result) {
+            is DeepLinkResult.Matched -> result.destination
+            is DeepLinkResult.NotMatched -> null
+        }
+    }
+
+    /**
+     * Resolve a parsed DeepLink to a destination.
+     */
+    override fun resolve(deepLink: DeepLink): NavDestination? {
+        return resolve(deepLink.uri)
+    }
+
+    /**
+     * Generated handlers do not support runtime registration.
+     * Use [RuntimeDeepLinkRegistry] for runtime pattern registration.
+     */
+    override fun register(pattern: String, factory: (params: Map<String, String>) -> NavDestination) {
+        // Generated handlers don't support runtime registration
+        throw UnsupportedOperationException(
+            "Generated handlers do not support runtime registration. Use RuntimeDeepLinkRegistry instead."
+        )
+    }
+
+    /**
+     * Generated handlers do not support runtime action registration.
+     * Use [RuntimeDeepLinkRegistry] for runtime action registration.
+     */
+    override fun registerAction(pattern: String, action: (navigator: Navigator, params: Map<String, String>) -> Unit) {
+        // Generated handlers don't support runtime action registration
+        throw UnsupportedOperationException(
+            "Generated handlers do not support runtime action registration. Use RuntimeDeepLinkRegistry instead."
+        )
+    }
+
+    /**
+     * Handle a deep link by resolving and navigating.
+     */
+    override fun handle(uri: String, navigator: Navigator): Boolean {
+        val destination = resolve(uri) ?: return false
+        navigator.navigate(destination)
+        return true
+    }
+
+    /**
+     * Create a deep link URI from a destination.
+     * Delegates to the existing createDeepLinkUri method.
+     */
+    override fun createUri(destination: NavDestination, scheme: String): String? {
+        return createDeepLinkUri(destination, scheme)
+    }
+
+    /**
+     * Check if a URI matches any generated pattern.
+     */
+    override fun canHandle(uri: String): Boolean {
+        return handleDeepLink(uri) is DeepLinkResult.Matched
+    }
+
+    /**
+     * Get all registered route patterns.
+     * Subclasses should override this to return actual patterns.
+     */
+    override fun getRegisteredPatterns(): List<String> {
+        return emptyList() // Override in generated implementations
+    }
 }
 
 /**

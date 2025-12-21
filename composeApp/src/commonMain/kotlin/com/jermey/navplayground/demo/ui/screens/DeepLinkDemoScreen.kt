@@ -13,22 +13,34 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.DeepLinkDestination
+import com.jermey.navplayground.demo.destinations.PromoDestination
 import com.jermey.navplayground.demo.ui.components.DeepLinkCard
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
@@ -37,6 +49,12 @@ import org.koin.compose.koinInject
 
 /**
  * DeepLink Demo Screen - Shows deep linking functionality
+ *
+ * Demonstrates:
+ * - New simplified `navigator.handleDeepLink(uri)` API
+ * - Runtime deep link registration via `getDeepLinkRegistry()`
+ * - Query parameter handling with `@Argument(optional = true)`
+ * - Type conversions (Int, Boolean) in deep link parameters
  */
 @Screen(DeepLinkDestination.Demo::class)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +62,14 @@ import org.koin.compose.koinInject
 fun DeepLinkDemoScreen(
     navigator: Navigator = koinInject()
 ) {
+    // Example: Register a promo code handler at runtime
+    // This demonstrates runtime deep link registration
+    LaunchedEffect(Unit) {
+        navigator.getDeepLinkRegistry().register("promo/{code}") { params ->
+            PromoDestination(code = params["code"]!!)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,7 +83,8 @@ fun DeepLinkDemoScreen(
         }
     ) { padding ->
         DeepLinkDemoScreenContent(padding) { deepLinkUri ->
-            navigator.handleDeepLink(DeepLink.parse(deepLinkUri))
+            // New simplified API - just pass the URI string directly
+            navigator.handleDeepLink(deepLinkUri)
         }
     }
 }
@@ -67,6 +94,9 @@ private fun DeepLinkDemoScreenContent(
     padding: PaddingValues,
     onNavigateViaDeepLink: (String) -> Unit
 ) {
+    var customDeepLink by remember { mutableStateOf("app://search/results?query=kotlin&page=2") }
+    var lastParsedDeepLink by remember { mutableStateOf<DeepLink?>(null) }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -100,6 +130,92 @@ private fun DeepLinkDemoScreenContent(
                                 "This demonstrates how the navigation library handles URI-based navigation.",
                         style = MaterialTheme.typography.bodyMedium
                     )
+                }
+            }
+        }
+
+        // Custom Deep Link Tester
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Code, null)
+                        Text(
+                            "Test Custom Deep Link",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = customDeepLink,
+                        onValueChange = {
+                            customDeepLink = it
+                            // Parse on change to show parsed properties
+                            lastParsedDeepLink = runCatching { DeepLink.parse(it) }.getOrNull()
+                        },
+                        label = { Text("Deep Link URI") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    // Show parsed deep link properties
+                    lastParsedDeepLink?.let { parsed ->
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    "Parsed DeepLink:",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                                Text(
+                                    "scheme: ${parsed.scheme}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                                Text(
+                                    "path: ${parsed.path}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                                if (parsed.queryParams.isNotEmpty()) {
+                                    Text(
+                                        "queryParams: ${parsed.queryParams}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = { onNavigateViaDeepLink(customDeepLink) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Send,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text("Navigate")
+                    }
                 }
             }
         }
@@ -161,6 +277,26 @@ private fun DeepLinkDemoScreenContent(
             )
         }
 
+        // Search results with typed query params
+        item {
+            DeepLinkCard(
+                title = "Search with Query Params",
+                deepLink = "app://search/results?query=kotlin&page=2&sortAsc=true",
+                description = "Deep link with typed params: query (String), page (Int), sortAsc (Boolean)",
+                onClick = { onNavigateViaDeepLink("app://search/results?query=kotlin&page=2&sortAsc=true") }
+            )
+        }
+
+        // Runtime-registered promo deep link
+        item {
+            DeepLinkCard(
+                title = "Promo Code (Runtime Registered)",
+                deepLink = "app://promo/SAVE20",
+                description = "This pattern was registered at runtime via getDeepLinkRegistry().register()",
+                onClick = { onNavigateViaDeepLink("app://promo/SAVE20") }
+            )
+        }
+
         item {
             Spacer(Modifier.height(16.dp))
 
@@ -188,11 +324,64 @@ private fun DeepLinkDemoScreenContent(
                     Text(
                         "• Deep links use URI patterns (app://...)\n" +
                                 "• Parameters can be in the path ({id}) or query string (?key=value)\n" +
-                                "• The DeepLinkHandler resolves URIs to destinations\n" +
-                                "• Supports pattern matching with wildcards\n" +
-                                "• Can handle universal links from web (https://...)",
+                                "• The DeepLinkRegistry resolves URIs to destinations\n" +
+                                "• Supports pattern matching with path placeholders\n" +
+                                "• Type conversions: String, Int, Long, Float, Boolean\n" +
+                                "• @Argument(optional = true) for query params with defaults\n" +
+                                "• Runtime registration via getDeepLinkRegistry().register()",
                         style = MaterialTheme.typography.bodySmall
                     )
+                }
+            }
+        }
+
+        // New API Code Examples
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Code, null)
+                        Text(
+                            "New API Examples",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "// Simplified navigation\n" +
+                                    "navigator.handleDeepLink(uri)\n\n" +
+                                    "// Runtime registration\n" +
+                                    "navigator.getDeepLinkRegistry()\n" +
+                                    "    .register(\"promo/{code}\") { params ->\n" +
+                                    "        PromoDestination(params[\"code\"]!!)\n" +
+                                    "    }\n\n" +
+                                    "// Destination with typed params\n" +
+                                    "@Destination(route = \"search/results\")\n" +
+                                    "data class SearchResults(\n" +
+                                    "    @Argument val query: String,\n" +
+                                    "    @Argument(optional = true) val page: Int = 1\n" +
+                                    ") : SearchDestination()",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
                 }
             }
         }

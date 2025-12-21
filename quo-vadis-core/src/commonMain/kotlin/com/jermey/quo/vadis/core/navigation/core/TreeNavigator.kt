@@ -69,7 +69,14 @@ class TreeNavigator(
     // Registries derived from config for internal use
     private val scopeRegistry: ScopeRegistry get() = config.scopeRegistry
     private val containerRegistry: ContainerRegistry get() = config.containerRegistry
+    @Suppress("DEPRECATION")
     private val deepLinkHandler: DeepLinkHandler = config.deepLinkHandler ?: DefaultDeepLinkHandler()
+
+    // Deep link registry combining generated and runtime handlers
+    @Suppress("DEPRECATION")
+    private val deepLinkRegistry: CompositeDeepLinkRegistry = CompositeDeepLinkRegistry(
+        generated = config.deepLinkHandler as? DeepLinkRegistry
+    )
 
     // =========================================================================
     // TREE-BASED STATE
@@ -565,19 +572,45 @@ class TreeNavigator(
     }
 
     /**
+     * Handle deep link navigation from URI string.
+     *
+     * @param uri The deep link URI to handle
+     * @return true if navigation occurred, false otherwise
+     */
+    override fun handleDeepLink(uri: String): Boolean {
+        return deepLinkRegistry.handle(uri, this)
+    }
+
+    /**
      * Handle deep link navigation.
      *
      * @param deepLink The deep link to handle
      */
     override fun handleDeepLink(deepLink: DeepLink) {
-        deepLinkHandler.handle(deepLink, this)
+        // Use registry first, fall back to legacy handler
+        if (!deepLinkRegistry.handle(deepLink.uri, this)) {
+            deepLinkHandler.handle(deepLink, this)
+        }
     }
+
+    /**
+     * Get the deep link registry for pattern registration and resolution.
+     *
+     * @return The configured DeepLinkRegistry
+     */
+    override fun getDeepLinkRegistry(): DeepLinkRegistry = deepLinkRegistry
 
     /**
      * Get the deep link handler to register patterns.
      *
      * @return The configured DeepLinkHandler
      */
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        message = "Use getDeepLinkRegistry() instead for the new unified API",
+        replaceWith = ReplaceWith("getDeepLinkRegistry()"),
+        level = DeprecationLevel.WARNING
+    )
     override fun getDeepLinkHandler(): DeepLinkHandler = deepLinkHandler
 
     // =========================================================================

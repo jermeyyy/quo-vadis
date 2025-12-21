@@ -292,8 +292,11 @@ class NavigationConfigGenerator(
      * - DSL for containers, scopes, transitions (no composable lambdas)
      * - Anonymous object implementations for screenRegistry and containerRegistry
      *   with when-based dispatch to avoid Compose lambda casting issues
+     * - Direct reference to generated DeepLinkHandler object
      */
     private fun buildConfigObject(data: NavigationData): TypeSpec {
+        val hasRoutes = data.destinations.any { !it.route.isNullOrBlank() }
+        
         return TypeSpec.objectBuilder(generatedObjectName)
             .addKdoc(StringTemplates.NAVIGATION_CONFIG_KDOC)
             .addSuperinterface(NAVIGATION_CONFIG_CLASS)
@@ -301,6 +304,7 @@ class NavigationConfigGenerator(
             .addProperty(buildScreenRegistryProperty(data.screens))
             .addProperty(buildContainerRegistryProperty(data.wrappers, data.tabs, data.panes))
             .addProperties(buildDelegationProperties())
+            .addProperty(buildDeepLinkHandlerProperty(hasRoutes))
             .addFunction(buildBuildNavNodeFunction())
             .addFunction(buildPlusFunction())
             .addProperty(buildRootsProperty(data))
@@ -447,14 +451,35 @@ class NavigationConfigGenerator(
      * NOTE: screenRegistry is NOT delegated here because it is implemented as
      * a custom anonymous object with when-based dispatch. containerRegistry is
      * also implemented with when-based dispatch to handle wrapper composables.
+     * deepLinkHandler is NOT delegated because it references the generated handler
+     * object directly instead of baseConfig (which would be null from DSL).
      * Only non-composable registries are delegated to baseConfig.
      */
     private fun buildDelegationProperties(): List<PropertySpec> {
         return listOf(
             buildDelegationProperty("scopeRegistry", SCOPE_REGISTRY_CLASS),
-            buildDelegationProperty("transitionRegistry", TRANSITION_REGISTRY_CLASS),
-            buildDelegationProperty("deepLinkHandler", DEEP_LINK_HANDLER_CLASS, nullable = true)
+            buildDelegationProperty("transitionRegistry", TRANSITION_REGISTRY_CLASS)
         )
+    }
+
+    /**
+     * Builds the deepLinkHandler property that references the generated handler.
+     *
+     * Unlike other properties, deepLinkHandler cannot be delegated to baseConfig
+     * because DslNavigationConfig always returns null for deepLinkHandler.
+     * Instead, we reference the generated ${modulePrefix}DeepLinkHandler object directly.
+     *
+     * @param hasRoutes Whether any destinations have routes defined
+     * @return PropertySpec for deepLinkHandler
+     */
+    private fun buildDeepLinkHandlerProperty(hasRoutes: Boolean): PropertySpec {
+        val propertyType = DEEP_LINK_HANDLER_CLASS.copy(nullable = true)
+        val handlerName = "${modulePrefix}DeepLinkHandler"
+
+        return PropertySpec.builder("deepLinkHandler", propertyType)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer(if (hasRoutes) handlerName else "null")
+            .build()
     }
 
     /**
