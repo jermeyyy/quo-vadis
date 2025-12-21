@@ -6,7 +6,6 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlin.reflect.KClass
 
 /**
@@ -22,10 +21,9 @@ import kotlin.reflect.KClass
  *
  * ```kotlin
  * val config = navigationConfig {
- *     screen<HomeScreen> { destination, navigator, sharedScope, animScope ->
+ *     screen<HomeScreen> { destination, sharedScope, animScope ->
  *         HomeScreenContent(
  *             destination = destination,
- *             navigator = navigator,
  *             sharedTransitionScope = sharedScope,
  *             animatedVisibilityScope = animScope
  *         )
@@ -38,7 +36,7 @@ import kotlin.reflect.KClass
  * ```kotlin
  * @Composable
  * fun RenderScreen(destination: NavDestination) {
- *     screenRegistry.Content(destination, navigator, null, null)
+ *     screenRegistry.Content(destination)
  * }
  * ```
  *
@@ -62,21 +60,18 @@ internal class DslScreenRegistry(
      * If no screen is registered for the destination, nothing is rendered.
      *
      * @param destination The destination to render
-     * @param navigator The Navigator instance for navigation actions
      * @param sharedTransitionScope Optional SharedTransitionScope for shared element transitions
      * @param animatedVisibilityScope Optional AnimatedVisibilityScope for coordinated animations
      */
     @Composable
     override fun Content(
         destination: NavDestination,
-        navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?
     ) {
         val entry = screens[destination::class]
         entry?.content?.invoke(
             destination,
-            navigator,
             sharedTransitionScope,
             animatedVisibilityScope
         )

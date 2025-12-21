@@ -5,7 +5,6 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
  * Composite screen registry that delegates to secondary first, then primary.
@@ -20,7 +19,6 @@ internal class CompositeScreenRegistry(
     @Composable
     override fun Content(
         destination: NavDestination,
-        navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?
     ) {
@@ -28,13 +26,11 @@ internal class CompositeScreenRegistry(
         when {
             secondary.hasContent(destination) -> secondary.Content(
                 destination,
-                navigator,
                 sharedTransitionScope,
                 animatedVisibilityScope
             )
             primary.hasContent(destination) -> primary.Content(
                 destination,
-                navigator,
                 sharedTransitionScope,
                 animatedVisibilityScope
             )

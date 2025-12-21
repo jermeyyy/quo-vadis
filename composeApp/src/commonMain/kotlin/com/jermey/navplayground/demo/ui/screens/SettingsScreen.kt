@@ -44,6 +44,7 @@ import com.jermey.navplayground.demo.ui.theme.rememberThemeManager
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 /**
  * Settings Screen
@@ -52,7 +53,7 @@ import kotlinx.coroutines.launch
 @Screen(MainTabs.SettingsTab.Main::class)
 @Composable
 fun SettingsScreen(
-    navigator: Navigator,
+    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
     val sheetState = rememberModalBottomSheetState()

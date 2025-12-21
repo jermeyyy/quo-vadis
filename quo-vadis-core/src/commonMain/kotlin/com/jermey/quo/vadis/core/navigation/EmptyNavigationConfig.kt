@@ -46,7 +46,6 @@ internal object EmptyNavigationConfig : NavigationConfig {
         @androidx.compose.runtime.Composable
         override fun Content(
             destination: NavDestination,
-            navigator: com.jermey.quo.vadis.core.navigation.core.Navigator,
             sharedTransitionScope: androidx.compose.animation.SharedTransitionScope?,
             animatedVisibilityScope: androidx.compose.animation.AnimatedVisibilityScope?
         ) {

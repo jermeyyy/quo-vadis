@@ -162,7 +162,6 @@ internal fun NavNodeRenderer(
  *
  * Invokes [ScreenRegistry.Content] with:
  * - `destination`: The destination from the ScreenNode
- * - `navigator`: For performing navigation actions
  * - `sharedTransitionScope`: For shared element transitions (may be null)
  * - `animatedVisibilityScope`: For coordinated animations (may be null)
  *
@@ -195,7 +194,6 @@ internal fun ScreenRenderer(
                 // Invoke screen content via registry
                 scope.screenRegistry.Content(
                     destination = node.destination,
-                    navigator = scope.navigator,
                     sharedTransitionScope = scope.sharedTransitionScope,
                     animatedVisibilityScope = LocalAnimatedVisibilityScope.current
                 )

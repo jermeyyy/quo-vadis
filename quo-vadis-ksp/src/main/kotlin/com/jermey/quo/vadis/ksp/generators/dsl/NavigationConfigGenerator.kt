@@ -248,7 +248,6 @@ class NavigationConfigGenerator(
         addImport("com.jermey.quo.vadis.core.navigation", "CompositeNavigationConfig")
         addImport("com.jermey.quo.vadis.core.navigation.core", "NavDestination")
         addImport("com.jermey.quo.vadis.core.navigation.core", "NavNode")
-        addImport("com.jermey.quo.vadis.core.navigation.core", "Navigator")
         addImport("com.jermey.quo.vadis.core.navigation.core", "DeepLinkRegistry")
         addImport("com.jermey.quo.vadis.core.navigation.dsl", "navigationConfig")
         addImport(
@@ -568,7 +567,6 @@ class NavigationConfigGenerator(
             .addAnnotation(COMPOSABLE_CLASS)
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("destination", NAV_DESTINATION_CLASS)
-            .addParameter("navigator", NAVIGATOR_CLASS)
             .addParameter(
                 ParameterSpec.builder(
                     "sharedTransitionScope",
@@ -642,19 +640,16 @@ class NavigationConfigGenerator(
 
     /**
      * Builds the screen composable function call with appropriate parameters.
+     * Uses smart cast for destination parameter (no explicit cast needed after when-is check).
      */
     private fun buildScreenFunctionCall(screen: ScreenInfo): String {
         val funcName = screen.functionName
         val args = mutableListOf<String>()
 
-        // Add destination parameter if needed (cast to specific type)
+        // Add destination parameter if needed (smart cast from when-is check)
         if (screen.hasDestinationParam) {
-            val destClassName = buildDestinationClassName(screen.destinationClass)
-            args.add("destination = destination as $destClassName")
+            args.add("destination = destination")
         }
-
-        // Navigator is always passed
-        args.add("navigator = navigator")
 
         // Add shared transition scopes if needed
         if (screen.hasSharedTransitionScope) {
@@ -1042,9 +1037,6 @@ class NavigationConfigGenerator(
             ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "TabsContainerScope")
         val PANE_CONTAINER_SCOPE_CLASS =
             ClassName("com.jermey.quo.vadis.core.navigation.compose.wrapper", "PaneContainerScope")
-
-        // Navigator type reference (located in .core package)
-        val NAVIGATOR_CLASS = ClassName("com.jermey.quo.vadis.core.navigation.core", "Navigator")
 
         // Compose type references
         val COMPOSABLE_CLASS = ClassName("androidx.compose.runtime", "Composable")

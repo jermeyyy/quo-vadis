@@ -580,7 +580,6 @@ private object EmptyScreenRegistry : ScreenRegistry {
     @Composable
     override fun Content(
         destination: NavDestination,
-        navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?
     ) {

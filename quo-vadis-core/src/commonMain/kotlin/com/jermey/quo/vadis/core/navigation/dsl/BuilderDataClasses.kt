@@ -5,7 +5,6 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
 import kotlin.reflect.KClass
@@ -24,7 +23,6 @@ data class ScreenEntry(
     val destinationClass: KClass<out NavDestination>,
     val content: @Composable (
         destination: NavDestination,
-        navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?,
     ) -> Unit
