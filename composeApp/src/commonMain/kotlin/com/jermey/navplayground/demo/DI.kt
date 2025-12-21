@@ -6,7 +6,6 @@ import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileContainer
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
-import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.flowmvi.container
@@ -34,11 +33,10 @@ val navigationModule = module {
                     "Make sure the destination is annotated with @Tabs, @Stack, or @Pane, " +
                     "or manually registered in the NavigationConfig."
         )
+        // Config is now passed directly - navigator derives registries from it
         TreeNavigator(
-            initialState = initialState,
-            scopeRegistry = navigationConfig.scopeRegistry,
-            containerRegistry = navigationConfig.containerRegistry,
-            deepLinkHandler = navigationConfig.deepLinkHandler ?: DefaultDeepLinkHandler(),
+            config = navigationConfig,
+            initialState = initialState
         )
     }
 }

@@ -8,7 +8,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
-import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
@@ -98,10 +97,8 @@ fun rememberQuoVadisNavigator(
         )
 
         TreeNavigator(
+            config = config,
             initialState = initialState,
-            scopeRegistry = config.scopeRegistry,
-            containerRegistry = config.containerRegistry,
-            deepLinkHandler = config.deepLinkHandler ?: DefaultDeepLinkHandler(),
             coroutineScope = coroutineScope
         )
     }
@@ -152,10 +149,8 @@ fun rememberQuoVadisNavigator(
         )
 
         TreeNavigator(
+            config = config,
             initialState = initialState,
-            scopeRegistry = config.scopeRegistry,
-            containerRegistry = config.containerRegistry,
-            deepLinkHandler = config.deepLinkHandler ?: DefaultDeepLinkHandler(),
             coroutineScope = coroutineScope
         )
     }
@@ -253,7 +248,6 @@ fun QuoVadisNavigation(
 
     NavigationHost(
         navigator = navigator,
-        config = config,
         modifier = modifier,
         enablePredictiveBack = enablePredictiveBack,
         windowSizeClass = windowSizeClass
@@ -302,7 +296,6 @@ fun QuoVadisNavigation(
 
     NavigationHost(
         navigator = navigator,
-        config = config,
         modifier = modifier,
         enablePredictiveBack = enablePredictiveBack,
         windowSizeClass = windowSizeClass

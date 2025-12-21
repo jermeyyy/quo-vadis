@@ -109,7 +109,7 @@ import com.jermey.quo.vadis.annotations.*
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 // 1. Define a navigation stack with destinations
-@Stack(name = "home", startDestination = "Feed")
+@Stack(name = "home", startDestination = Feed::class)
 sealed class HomeDestination : NavDestination {
 
     @Destination(route = "home/feed")
@@ -183,17 +183,15 @@ fun App() {
         )!!
     }
     
-    // Create the navigator
+    // Create the navigator with config
     val navigator = remember {
         TreeNavigator(
-            initialState = initialState,
-            scopeRegistry = config.scopeRegistry,
-            containerRegistry = config.containerRegistry,
-            deepLinkHandler = config.deepLinkHandler
+            config = config,
+            initialState = initialState
         )
     }
     
-    // Render the navigation tree
+    // Render the navigation tree - config read from navigator
     QuoVadisHost(
         navigator = navigator,
         screenRegistry = config.screenRegistry
@@ -210,7 +208,7 @@ Create bottom navigation or tab bars with independent backstacks:
 ```kotlin
 // Define each tab as @TabItem + @Stack
 @TabItem(label = "Home", icon = "home")
-@Stack(name = "homeStack", startDestinationClass = HomeTab.Feed::class)
+@Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
 sealed class HomeTab : NavDestination {
     @Destination(route = "home/feed")
     data object Feed : HomeTab()
@@ -220,7 +218,7 @@ sealed class HomeTab : NavDestination {
 }
 
 @TabItem(label = "Explore", icon = "explore")
-@Stack(name = "exploreStack", startDestinationClass = ExploreTab.Root::class)
+@Stack(name = "exploreStack", startDestination = ExploreTab.Root::class)
 sealed class ExploreTab : NavDestination {
     @Destination(route = "explore/root")
     data object Root : ExploreTab()
@@ -470,7 +468,8 @@ open iosApp/iosApp.xcodeproj
 fun `navigate to details screen`() {
     val config = GeneratedNavigationConfig
     val initialState = config.buildNavNode(HomeDestination::class, null)!!
-    val navigator = TreeNavigator(initialState = initialState)
+    // For testing, config can be passed or use defaults (NavigationConfig.Empty)
+    val navigator = TreeNavigator(config = config, initialState = initialState)
     
     navigator.navigate(HomeDestination.Article(articleId = "123"))
     

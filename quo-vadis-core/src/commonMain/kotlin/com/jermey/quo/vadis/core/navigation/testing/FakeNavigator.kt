@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.testing
 
+import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.route
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
@@ -26,9 +27,14 @@ import kotlinx.coroutines.flow.asStateFlow
  * Allows you to verify navigation calls without actual UI rendering.
  *
  * Uses the new tree-based navigation state model.
+ *
+ * @param config Optional navigation configuration for testing scenarios that need registry access.
+ *   Defaults to [NavigationConfig.Empty].
  */
 @Suppress("TooManyFunctions")
-class FakeNavigator : Navigator {
+class FakeNavigator(
+    override val config: NavigationConfig = NavigationConfig.Empty
+) : Navigator {
 
     // =========================================================================
     // TREE-BASED STATE

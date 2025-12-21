@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -23,8 +24,10 @@ import kotlinx.coroutines.flow.StateFlow
  * ## Usage
  *
  * ```kotlin
- * val navigator = TreeNavigator()
- * navigator.setStartDestination(HomeDestination)
+ * val navigator = TreeNavigator(
+ *     config = GeneratedNavigationConfig,
+ *     initialState = buildInitialState()
+ * )
  *
  * // Navigate
  * navigator.navigate(DetailDestination("123"))
@@ -118,8 +121,26 @@ interface Navigator : BackPressHandler {
     val lifecycleManager: NavigationLifecycleManager
 
     // =========================================================================
-    // NAVIGATION OPERATIONS
+    // CONFIGURATION
     // =========================================================================
+
+    /**
+     * The navigation configuration.
+     *
+     * Provides access to all registries for rendering and navigation.
+     * NavigationHost uses this to resolve screen content, transitions,
+     * and container wrappers.
+     *
+     * This property consolidates all navigation-related configuration,
+     * eliminating the need to pass config separately to NavigationHost.
+     *
+     * @see NavigationConfig
+     */
+    val config: NavigationConfig
+
+    // =========================================================================
+    // NAVIGATION OPERATIONS
+    // ===========================================================================
 
     /**
      * Navigate to a destination with optional transition.

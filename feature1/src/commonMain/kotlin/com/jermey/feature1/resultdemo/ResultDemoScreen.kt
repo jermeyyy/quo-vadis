@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jermey.feature1.resultdemo.container.ResultDemoContainer
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Action
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Intent
 import com.jermey.feature1.resultdemo.container.ResultDemoState
@@ -64,7 +65,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 fun ResultDemoScreen(
     navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier,
-    container: Store<ResultDemoState, Intent, Action> = container()
+    container: Store<ResultDemoState, Intent, Action> = container<ResultDemoContainer, ResultDemoState, Intent, Action>()
 ) {
     val state by container.subscribe()
 
