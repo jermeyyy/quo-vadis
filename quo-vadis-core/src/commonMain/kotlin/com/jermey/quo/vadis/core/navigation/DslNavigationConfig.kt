@@ -10,7 +10,7 @@ import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.core.GeneratedTabMetadata
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
@@ -106,9 +106,10 @@ internal class DslNavigationConfig(
     }
 
     /**
-     * Deep link handler - null for DSL-based configs (requires KSP generation).
+     * Deep link registry - returns [DeepLinkRegistry.Empty] for DSL-based configs.
+     * Full deep link support requires KSP generation.
      */
-    override val deepLinkHandler: GeneratedDeepLinkHandler? = null
+    override val deepLinkRegistry: DeepLinkRegistry = DeepLinkRegistry.Empty
 
     /**
      * Builds the appropriate NavNode for the given destination class.

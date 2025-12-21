@@ -53,7 +53,7 @@ import kotlin.uuid.Uuid
  * ```
  *
  * @param config Navigation configuration providing all registries. The navigator derives
- *   [scopeRegistry], [containerRegistry], and [deepLinkHandler] from this config.
+ *   [scopeRegistry], [containerRegistry], and [deepLinkRegistry] from this config.
  *   Defaults to [NavigationConfig.Empty].
  * @param coroutineScope Scope for derived state computations
  * @param initialState Optional initial navigation state (defaults to empty stack)
@@ -69,13 +69,10 @@ class TreeNavigator(
     // Registries derived from config for internal use
     private val scopeRegistry: ScopeRegistry get() = config.scopeRegistry
     private val containerRegistry: ContainerRegistry get() = config.containerRegistry
-    @Suppress("DEPRECATION")
-    private val deepLinkHandler: DeepLinkHandler = config.deepLinkHandler ?: DefaultDeepLinkHandler()
 
     // Deep link registry combining generated and runtime handlers
-    @Suppress("DEPRECATION")
     private val deepLinkRegistry: CompositeDeepLinkRegistry = CompositeDeepLinkRegistry(
-        generated = config.deepLinkHandler as? DeepLinkRegistry
+        generated = config.deepLinkRegistry
     )
 
     // =========================================================================
@@ -587,10 +584,7 @@ class TreeNavigator(
      * @param deepLink The deep link to handle
      */
     override fun handleDeepLink(deepLink: DeepLink) {
-        // Use registry first, fall back to legacy handler
-        if (!deepLinkRegistry.handle(deepLink.uri, this)) {
-            deepLinkHandler.handle(deepLink, this)
-        }
+        deepLinkRegistry.handle(deepLink.uri, this)
     }
 
     /**
@@ -599,19 +593,6 @@ class TreeNavigator(
      * @return The configured DeepLinkRegistry
      */
     override fun getDeepLinkRegistry(): DeepLinkRegistry = deepLinkRegistry
-
-    /**
-     * Get the deep link handler to register patterns.
-     *
-     * @return The configured DeepLinkHandler
-     */
-    @Suppress("DEPRECATION")
-    @Deprecated(
-        message = "Use getDeepLinkRegistry() instead for the new unified API",
-        replaceWith = ReplaceWith("getDeepLinkRegistry()"),
-        level = DeprecationLevel.WARNING
-    )
-    override fun getDeepLinkHandler(): DeepLinkHandler = deepLinkHandler
 
     // =========================================================================
     // PANE-SPECIFIC OPERATIONS

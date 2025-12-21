@@ -261,19 +261,9 @@ private fun DeepLinkDemoScreenContent(
         item {
             DeepLinkCard(
                 title = "Open Tabs Example",
-                deepLink = "app://demo/tabs",
+                deepLink = "app://demo/tabs/music/list",
                 description = "Deep link to tabs navigation",
-                onClick = { onNavigateViaDeepLink("app://demo/tabs") }
-            )
-        }
-
-        // Deep link with query parameters
-        item {
-            DeepLinkCard(
-                title = "Item with Query Parameters",
-                deepLink = "app://demo/item/99?source=deeplink&ref=email",
-                description = "Deep link with query parameters for analytics",
-                onClick = { onNavigateViaDeepLink("app://demo/item/99?source=deeplink&ref=email") }
+                onClick = { onNavigateViaDeepLink("app://demo/tabs/music/list") }
             )
         }
 

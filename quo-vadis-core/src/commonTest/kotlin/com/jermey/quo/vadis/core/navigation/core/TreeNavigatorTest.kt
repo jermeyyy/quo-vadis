@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
  * - State flows: state, currentDestination, previousDestination, canNavigateBack, transitionState
  * - Transition management: updateTransitionProgress, startPredictiveBack, updatePredictiveBack,
  *   cancelPredictiveBack, commitPredictiveBack, completeTransition
- * - Deep link and graph management: handleDeepLink, registerGraph, getDeepLinkHandler
+ * - Deep link and graph management: handleDeepLink, registerGraph, getDeepLinkRegistry
  * - Parent navigator support: activeChild, setActiveChild
  */
 class TreeNavigatorTest {
@@ -1012,15 +1012,6 @@ class TreeNavigatorTest {
     // =========================================================================
     // GRAPH AND DEEP LINK TESTS
     // =========================================================================
-
-    @Test
-    fun `getDeepLinkHandler returns configured handler`() {
-        val navigator = TreeNavigator()
-
-        val handler = navigator.getDeepLinkHandler()
-
-        assertNotNull(handler)
-    }
 
     @Test
     fun `getDeepLinkRegistry returns registry for pattern registration`() {

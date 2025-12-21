@@ -3,9 +3,7 @@ package com.jermey.quo.vadis.core.navigation.testing
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.route
-import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavNode
@@ -317,8 +315,6 @@ class FakeNavigator(
     // DEEP LINK & CHILD SUPPORT
     // =========================================================================
 
-    @Suppress("DEPRECATION")
-    private val fakeDeepLinkHandler = DefaultDeepLinkHandler()
     private val fakeDeepLinkRegistry = RuntimeDeepLinkRegistry()
 
     override fun handleDeepLink(uri: String): Boolean {
@@ -327,16 +323,6 @@ class FakeNavigator(
 
     override fun getDeepLinkRegistry(): DeepLinkRegistry {
         return fakeDeepLinkRegistry
-    }
-
-    @Suppress("DEPRECATION")
-    @Deprecated(
-        message = "Use getDeepLinkRegistry() instead for the new unified API",
-        replaceWith = ReplaceWith("getDeepLinkRegistry()"),
-        level = DeprecationLevel.WARNING
-    )
-    override fun getDeepLinkHandler(): DeepLinkHandler {
-        return fakeDeepLinkHandler
     }
 
     override fun onBack(): Boolean {

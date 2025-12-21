@@ -295,19 +295,6 @@ interface Navigator : BackPressHandler {
      */
     fun getDeepLinkRegistry(): DeepLinkRegistry
 
-    /**
-     * Get the deep link handler to register patterns.
-     *
-     * @return The configured DeepLinkHandler
-     */
-    @Suppress("DEPRECATION")
-    @Deprecated(
-        message = "Use getDeepLinkRegistry() instead for the new unified API",
-        replaceWith = ReplaceWith("getDeepLinkRegistry()"),
-        level = DeprecationLevel.WARNING
-    )
-    fun getDeepLinkHandler(): DeepLinkHandler
-
     // =========================================================================
     // STATE MANIPULATION (Advanced)
     // =========================================================================

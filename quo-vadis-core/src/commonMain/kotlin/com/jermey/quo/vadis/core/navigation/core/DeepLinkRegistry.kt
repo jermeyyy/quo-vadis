@@ -78,4 +78,33 @@ interface DeepLinkRegistry {
      * @return List of pattern strings
      */
     fun getRegisteredPatterns(): List<String>
+
+    /**
+     * Companion object providing default implementations.
+     */
+    companion object {
+        /**
+         * Empty registry with no registered patterns.
+         *
+         * All lookups return null/false/empty. Registration methods are no-ops.
+         * This is the identity element when no deep link support is needed.
+         *
+         * ## Usage
+         *
+         * ```kotlin
+         * // Use when no deep links are registered
+         * override val deepLinkRegistry: DeepLinkRegistry = DeepLinkRegistry.Empty
+         * ```
+         */
+        val Empty: DeepLinkRegistry = object : DeepLinkRegistry {
+            override fun resolve(uri: String): NavDestination? = null
+            override fun resolve(deepLink: DeepLink): NavDestination? = null
+            override fun register(pattern: String, factory: (params: Map<String, String>) -> NavDestination) { /* no-op */ }
+            override fun registerAction(pattern: String, action: (navigator: Navigator, params: Map<String, String>) -> Unit) { /* no-op */ }
+            override fun handle(uri: String, navigator: Navigator): Boolean = false
+            override fun createUri(destination: NavDestination, scheme: String): String? = null
+            override fun canHandle(uri: String): Boolean = false
+            override fun getRegisteredPatterns(): List<String> = emptyList()
+        }
+    }
 }

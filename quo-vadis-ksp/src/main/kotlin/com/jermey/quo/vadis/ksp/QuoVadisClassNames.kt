@@ -7,7 +7,7 @@ import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.DeepLinkResult
-import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
@@ -31,7 +31,7 @@ internal object QuoVadisClassNames {
     val ROUTE_REGISTRY: ClassName = RouteRegistry::class.toClassName()
     val NAV_DESTINATION: ClassName = NavDestination::class.toClassName()
     val SCREEN_REGISTRY: ClassName = ScreenRegistry::class.toClassName()
-    val GENERATED_DEEP_LINK_HANDLER: ClassName = GeneratedDeepLinkHandler::class.toClassName()
+    val DEEP_LINK_REGISTRY: ClassName = DeepLinkRegistry::class.toClassName()
     val DEEP_LINK_RESULT: ClassName = DeepLinkResult::class.toClassName()
     val SCOPE_REGISTRY: ClassName = ScopeRegistry::class.toClassName()
     

@@ -4,9 +4,11 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.navigation.core.DeepLink
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
 import com.jermey.quo.vadis.core.navigation.core.NavNode
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlin.reflect.KClass
 
 /**
@@ -83,17 +85,37 @@ class CompositeNavigationConfig(
     }
 
     /**
-     * Returns secondary's deep link handler if available, otherwise primary's.
+     * Composite deep link registry that tries secondary first, then falls back to primary.
      *
-     * If both configs provide handlers, a composite handler is created that
-     * tries secondary first, then falls back to primary.
+     * Creates an anonymous registry that delegates to both registries appropriately:
+     * - Lookups try secondary first, then primary
+     * - Registrations go to secondary (higher priority)
+     * - Pattern lists combine both registries
      */
-    override val deepLinkHandler: GeneratedDeepLinkHandler? = when {
-        secondary.deepLinkHandler != null && primary.deepLinkHandler != null -> {
-            CompositeDeepLinkHandler(primary.deepLinkHandler!!, secondary.deepLinkHandler!!)
+    override val deepLinkRegistry: DeepLinkRegistry = run {
+        val secondaryReg = secondary.deepLinkRegistry
+        val primaryReg = primary.deepLinkRegistry
+        object : DeepLinkRegistry {
+            override fun resolve(uri: String): NavDestination? =
+                secondaryReg.resolve(uri) ?: primaryReg.resolve(uri)
+            override fun resolve(deepLink: DeepLink): NavDestination? =
+                secondaryReg.resolve(deepLink) ?: primaryReg.resolve(deepLink)
+            override fun register(pattern: String, factory: (params: Map<String, String>) -> NavDestination) {
+                // Delegate to secondary (higher priority)
+                secondaryReg.register(pattern, factory)
+            }
+            override fun registerAction(pattern: String, action: (navigator: Navigator, params: Map<String, String>) -> Unit) {
+                secondaryReg.registerAction(pattern, action)
+            }
+            override fun handle(uri: String, navigator: Navigator): Boolean =
+                secondaryReg.handle(uri, navigator) || primaryReg.handle(uri, navigator)
+            override fun createUri(destination: NavDestination, scheme: String): String? =
+                secondaryReg.createUri(destination, scheme) ?: primaryReg.createUri(destination, scheme)
+            override fun canHandle(uri: String): Boolean =
+                secondaryReg.canHandle(uri) || primaryReg.canHandle(uri)
+            override fun getRegisteredPatterns(): List<String> =
+                secondaryReg.getRegisteredPatterns() + primaryReg.getRegisteredPatterns()
         }
-        secondary.deepLinkHandler != null -> secondary.deepLinkHandler
-        else -> primary.deepLinkHandler
     }
 
     /**
