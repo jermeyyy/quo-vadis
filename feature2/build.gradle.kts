@@ -1,5 +1,3 @@
-import android.databinding.tool.ext.toCamelCase
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
@@ -8,6 +6,12 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.quoVadis)
+}
+
+// Quo Vadis KSP configuration (using local processor for development)
+quoVadis {
+    useLocalKsp = true
 }
 
 kotlin {
@@ -148,33 +152,6 @@ kotlin {
         }
         wasmJsMain.dependencies {
             implementation(compose.materialIconsExtended)
-        }
-    }
-
-    ksp {
-        arg("quoVadis.modulePrefix", project.name.toCamelCase())
-    }
-
-}
-
-// KSP configuration for Kotlin Multiplatform
-// According to https://kotlinlang.org/docs/ksp-multiplatform.html
-// Use "kspCommonMainMetadata" configuration (not "kspCommonMainKotlinMetadata")
-dependencies {
-    add("kspCommonMainMetadata", project(":quo-vadis-ksp"))
-}
-
-// Fix KSP task dependencies for Kotlin Multiplatform
-// KSP generated sources are registered automatically since KSP 1.8.0-1.0.9
-// BUT for metadata target in KMP, we need to add the source directory manually
-kotlin.sourceSets.commonMain {
-    kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
-}
-
-afterEvaluate {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
-        if (!name.startsWith("ksp") && !name.contains("Test", ignoreCase = true)) {
-            dependsOn("kspCommonMainKotlinMetadata")
         }
     }
 }

@@ -63,7 +63,6 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 @Composable
 fun ItemPickerScreen(
     navigator: Navigator = koinInject(),
-    modifier: Modifier = Modifier,
     container: Store<ItemPickerState, Intent, Action> = container<ItemPickerContainer, ItemPickerState, Intent, Action>()
 ) {
 
@@ -87,7 +86,7 @@ fun ItemPickerScreen(
         }
     ) { padding ->
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {

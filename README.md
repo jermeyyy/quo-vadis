@@ -18,8 +18,9 @@ Quo Vadis provides a powerful navigation solution with:
 1. **`quo-vadis-core`** - The navigation library (reusable, no external dependencies)
 2. **`quo-vadis-annotations`** - KSP annotations (`@Stack`, `@Destination`, `@Screen`, `@Tabs`, `@Pane`)
 3. **`quo-vadis-ksp`** - Code generator for zero-boilerplate navigation
-4. **`quo-vadis-core-flow-mvi`** - Optional FlowMVI integration
-5. **`composeApp`** - Demo application showcasing all navigation patterns
+4. **`quo-vadis-gradle-plugin`** - Gradle plugin for simplified KSP configuration
+5. **`quo-vadis-core-flow-mvi`** - Optional FlowMVI integration
+6. **`composeApp`** - Demo application showcasing all navigation patterns
 
 ## ✨ Key Features
 
@@ -53,6 +54,8 @@ NavPlayground/
 │   └── src/commonMain/          # @Stack, @Destination, @Screen, @Tabs, @Pane, etc.
 ├── quo-vadis-ksp/               # KSP code generator
 │   └── src/main/                # Processor implementation
+├── quo-vadis-gradle-plugin/     # Gradle plugin for KSP configuration
+│   └── src/main/                # Plugin implementation
 ├── quo-vadis-core-flow-mvi/     # FlowMVI integration (optional)
 │   └── src/commonMain/          # MVI navigation integration
 ├── composeApp/                  # Demo application
@@ -71,6 +74,53 @@ NavPlayground/
 ### Installation
 
 Add the library to your Kotlin Multiplatform project:
+
+#### Option 1: Using Gradle Plugin (Recommended)
+
+The simplest way to set up Quo Vadis with KSP:
+
+```kotlin
+// settings.gradle.kts
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+// build.gradle.kts
+plugins {
+    kotlin("multiplatform")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.devtools.ksp") version "2.3.0"
+    id("io.github.jermeyyy.quo-vadis") version "0.2.0"
+}
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.jermeyyy:quo-vadis-core:0.2.0")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.2.0")
+        }
+    }
+}
+
+// Optional: Configure the plugin
+quoVadis {
+    // Override module prefix (defaults to project.name in PascalCase)
+    modulePrefix = "MyApp"
+}
+```
+
+The plugin automatically:
+- Configures KSP with the correct processor dependency
+- Sets up the module prefix for generated class names
+- Registers generated source directories
+- Configures proper task dependencies for KMP
+
+#### Option 2: Manual Configuration
+
+For more control, configure KSP manually:
 
 ```kotlin
 // build.gradle.kts
@@ -92,11 +142,30 @@ kotlin {
             implementation("io.github.jermeyyy:quo-vadis-annotations:0.2.0")
         }
     }
+    
+    // Configure KSP module prefix
+    ksp {
+        arg("quoVadis.modulePrefix", "MyApp")
+    }
 }
 
 dependencies {
     // KSP code generator (all targets)
     add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.2.0")
+}
+
+// Required for KMP: Register generated sources
+kotlin.sourceSets.commonMain {
+    kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+}
+
+// Required for KMP: Fix task dependencies
+afterEvaluate {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+        if (!name.startsWith("ksp") && !name.contains("Test", ignoreCase = true)) {
+            dependsOn("kspCommonMainKotlinMetadata")
+        }
+    }
 }
 ```
 
@@ -418,6 +487,63 @@ fun ArticleScreen(
 - `kotlinx-coroutines`: 1.10.2 - Async navigation
 - `FlowMVI`: 3.2.1 - MVI integration (optional)
 - `Koin`: 4.2.0-beta2 - DI support (optional)
+
+## 🔌 Gradle Plugin
+
+The `quo-vadis-gradle-plugin` simplifies KSP configuration for Kotlin Multiplatform projects.
+
+### Plugin Features
+
+| Feature | Description |
+|---------|-------------|
+| **Auto KSP Setup** | Configures `kspCommonMainMetadata` dependency automatically |
+| **Module Prefix** | Generates class names like `MyAppNavigationConfig` |
+| **Source Registration** | Registers generated source directories for KMP |
+| **Task Dependencies** | Ensures KSP runs before compilation |
+
+### Configuration Options
+
+```kotlin
+quoVadis {
+    // Module prefix for generated class names
+    // Default: project.name converted to PascalCase
+    // Example: "feature-one" → "FeatureOne" → "FeatureOneNavigationConfig"
+    modulePrefix = "CustomPrefix"
+    
+    // Use local KSP processor (for library development)
+    // Default: false (uses Maven Central artifact)
+    useLocalKsp = true
+}
+```
+
+### Generated Classes
+
+The KSP processor generates these classes based on your module prefix:
+
+| Generated Class | Purpose |
+|----------------|---------|
+| `{Prefix}NavigationConfig` | Main navigation configuration object |
+| `{Prefix}DeepLinkHandler` | Deep link handling implementation |
+
+For example, with `modulePrefix = "MyApp"`:
+- `MyAppNavigationConfig` - Use with `NavigationHost`
+- `MyAppDeepLinkHandler` - Handle URI-based navigation
+
+### Multi-Module Setup
+
+Each module can have its own navigation config that can be combined:
+
+```kotlin
+// In app module
+val combinedConfig = AppNavigationConfig + 
+    Feature1NavigationConfig + 
+    Feature2NavigationConfig
+
+NavigationHost(
+    navigator = navigator,
+    config = combinedConfig
+)
+```
 
 ## 📱 Platform Support
 
