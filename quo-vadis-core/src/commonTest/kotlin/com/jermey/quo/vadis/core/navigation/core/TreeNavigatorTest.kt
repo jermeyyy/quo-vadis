@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
  * - State flows: state, currentDestination, previousDestination, canNavigateBack, transitionState
  * - Transition management: updateTransitionProgress, startPredictiveBack, updatePredictiveBack,
  *   cancelPredictiveBack, commitPredictiveBack, completeTransition
- * - Deep link and graph management: handleDeepLink, registerGraph, getDeepLinkHandler
+ * - Deep link and graph management: handleDeepLink, registerGraph, getDeepLinkRegistry
  * - Parent navigator support: activeChild, setActiveChild
  */
 class TreeNavigatorTest {
@@ -1014,12 +1014,78 @@ class TreeNavigatorTest {
     // =========================================================================
 
     @Test
-    fun `getDeepLinkHandler returns configured handler`() {
+    fun `getDeepLinkRegistry returns registry for pattern registration`() {
         val navigator = TreeNavigator()
 
-        val handler = navigator.getDeepLinkHandler()
+        val registry = navigator.getDeepLinkRegistry()
 
-        assertNotNull(handler)
+        assertNotNull(registry)
+    }
+
+    @Test
+    fun `getDeepLinkRegistry allows runtime pattern registration`() {
+        val navigator = TreeNavigator.withDestination(HomeDestination)
+        val registry = navigator.getDeepLinkRegistry()
+
+        registry.register("profile/{id}") { params ->
+            ProfileDestination
+        }
+
+        assertTrue(registry.canHandle("app://profile/123"))
+    }
+
+    @Test
+    fun `handleDeepLink navigates to registered destination`() {
+        val navigator = TreeNavigator.withDestination(HomeDestination)
+        val registry = navigator.getDeepLinkRegistry()
+
+        registry.register("profile/{id}") { params ->
+            ProfileDestination
+        }
+
+        val handled = navigator.handleDeepLink("app://profile/123")
+
+        assertTrue(handled)
+        assertEquals(ProfileDestination, navigator.currentDestination.value)
+    }
+
+    @Test
+    fun `handleDeepLink returns false for unregistered pattern`() {
+        val navigator = TreeNavigator.withDestination(HomeDestination)
+
+        val handled = navigator.handleDeepLink("app://unknown/path")
+
+        assertFalse(handled)
+        assertEquals(HomeDestination, navigator.currentDestination.value)
+    }
+
+    @Test
+    fun `handleDeepLink with DeepLink object navigates correctly`() {
+        val navigator = TreeNavigator.withDestination(HomeDestination)
+        val registry = navigator.getDeepLinkRegistry()
+
+        registry.register("settings") { SettingsDestination }
+
+        val deepLink = DeepLink.parse("app://settings")
+        navigator.handleDeepLink(deepLink)
+
+        assertEquals(SettingsDestination, navigator.currentDestination.value)
+    }
+
+    @Test
+    fun `registry registerAction executes custom navigation logic`() {
+        val navigator = TreeNavigator.withDestination(HomeDestination)
+        navigator.navigate(ProfileDestination)
+        val registry = navigator.getDeepLinkRegistry()
+
+        registry.registerAction("back") { nav, _ ->
+            nav.navigateBack()
+        }
+
+        val handled = navigator.handleDeepLink("app://back")
+
+        assertTrue(handled)
+        assertEquals(HomeDestination, navigator.currentDestination.value)
     }
 
     // =========================================================================

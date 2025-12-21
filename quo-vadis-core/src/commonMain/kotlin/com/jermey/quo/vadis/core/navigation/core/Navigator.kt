@@ -274,6 +274,14 @@ interface Navigator : BackPressHandler {
     // =========================================================================
 
     /**
+     * Handle a deep link URI string and navigate to the matched destination.
+     *
+     * @param uri The deep link URI string (e.g., "app://profile/123")
+     * @return true if navigation occurred, false if no match
+     */
+    fun handleDeepLink(uri: String): Boolean
+
+    /**
      * Handle deep link navigation.
      *
      * @param deepLink The deep link to process
@@ -281,11 +289,11 @@ interface Navigator : BackPressHandler {
     fun handleDeepLink(deepLink: DeepLink)
 
     /**
-     * Get the deep link handler to register patterns.
+     * Get the deep link registry for pattern registration and resolution.
      *
-     * @return The configured DeepLinkHandler
+     * @return The configured DeepLinkRegistry
      */
-    fun getDeepLinkHandler(): DeepLinkHandler
+    fun getDeepLinkRegistry(): DeepLinkRegistry
 
     // =========================================================================
     // STATE MANIPULATION (Advanced)

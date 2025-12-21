@@ -5,7 +5,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import kotlin.reflect.KClass
 
@@ -73,9 +73,9 @@ internal object EmptyNavigationConfig : NavigationConfig {
     override val containerRegistry: ContainerRegistry = ContainerRegistry.Empty
 
     /**
-     * Returns null since no deep link handling is configured.
+     * Returns [DeepLinkRegistry.Empty] which provides no-op behavior.
      */
-    override val deepLinkHandler: GeneratedDeepLinkHandler? = null
+    override val deepLinkRegistry: DeepLinkRegistry = DeepLinkRegistry.Empty
 
     /**
      * Always returns null since no destinations are registered.

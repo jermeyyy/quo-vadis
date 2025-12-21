@@ -5,7 +5,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.GeneratedDeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import kotlin.reflect.KClass
 
@@ -51,7 +51,7 @@ import kotlin.reflect.KClass
  * @see ScopeRegistry for navigation scope membership
  * @see TransitionRegistry for destination-specific transitions
  * @see ContainerRegistry for container node builders and wrapper composables
- * @see GeneratedDeepLinkHandler for deep link handling
+ * @see DeepLinkRegistry for deep link handling
  */
 interface NavigationConfig {
 
@@ -89,12 +89,14 @@ interface NavigationConfig {
     val containerRegistry: ContainerRegistry
 
     /**
-     * Handler for deep link URI parsing and destination creation.
+     * Registry for deep link URI parsing and destination creation.
      *
-     * Nullable because not all applications require deep link support.
-     * When present, enables URI-based navigation and destination creation.
+     * Enables URI-based navigation and destination creation. When no deep links
+     * are registered, returns [DeepLinkRegistry.Empty] which provides no-op behavior.
+     *
+     * @see DeepLinkRegistry.Empty
      */
-    val deepLinkHandler: GeneratedDeepLinkHandler?
+    val deepLinkRegistry: DeepLinkRegistry
 
     /**
      * Builds the initial NavNode for the given destination class.

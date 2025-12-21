@@ -53,7 +53,7 @@ import kotlin.uuid.Uuid
  * ```
  *
  * @param config Navigation configuration providing all registries. The navigator derives
- *   [scopeRegistry], [containerRegistry], and [deepLinkHandler] from this config.
+ *   [scopeRegistry], [containerRegistry], and [deepLinkRegistry] from this config.
  *   Defaults to [NavigationConfig.Empty].
  * @param coroutineScope Scope for derived state computations
  * @param initialState Optional initial navigation state (defaults to empty stack)
@@ -69,7 +69,11 @@ class TreeNavigator(
     // Registries derived from config for internal use
     private val scopeRegistry: ScopeRegistry get() = config.scopeRegistry
     private val containerRegistry: ContainerRegistry get() = config.containerRegistry
-    private val deepLinkHandler: DeepLinkHandler = config.deepLinkHandler ?: DefaultDeepLinkHandler()
+
+    // Deep link registry combining generated and runtime handlers
+    private val deepLinkRegistry: CompositeDeepLinkRegistry = CompositeDeepLinkRegistry(
+        generated = config.deepLinkRegistry
+    )
 
     // =========================================================================
     // TREE-BASED STATE
@@ -565,20 +569,30 @@ class TreeNavigator(
     }
 
     /**
+     * Handle deep link navigation from URI string.
+     *
+     * @param uri The deep link URI to handle
+     * @return true if navigation occurred, false otherwise
+     */
+    override fun handleDeepLink(uri: String): Boolean {
+        return deepLinkRegistry.handle(uri, this)
+    }
+
+    /**
      * Handle deep link navigation.
      *
      * @param deepLink The deep link to handle
      */
     override fun handleDeepLink(deepLink: DeepLink) {
-        deepLinkHandler.handle(deepLink, this)
+        deepLinkRegistry.handle(deepLink.uri, this)
     }
 
     /**
-     * Get the deep link handler to register patterns.
+     * Get the deep link registry for pattern registration and resolution.
      *
-     * @return The configured DeepLinkHandler
+     * @return The configured DeepLinkRegistry
      */
-    override fun getDeepLinkHandler(): DeepLinkHandler = deepLinkHandler
+    override fun getDeepLinkRegistry(): DeepLinkRegistry = deepLinkRegistry
 
     // =========================================================================
     // PANE-SPECIFIC OPERATIONS

@@ -189,7 +189,7 @@ object StringTemplates {
         |override val scopeRegistry = config.scopeRegistry
         |override val transitionRegistry = config.transitionRegistry
         |override val containerRegistry = config.containerRegistry
-        |override val deepLinkHandler = config.deepLinkHandler
+        |override val deepLinkRegistry = config.deepLinkRegistry
         |
         |override fun buildNavNode(
         |    destinationClass: KClass<out Destination>,

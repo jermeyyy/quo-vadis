@@ -3,8 +3,7 @@ package com.jermey.quo.vadis.core.navigation.testing
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.core.DeepLink
 import com.jermey.quo.vadis.core.navigation.core.route
-import com.jermey.quo.vadis.core.navigation.core.DeepLinkHandler
-import com.jermey.quo.vadis.core.navigation.core.DefaultDeepLinkHandler
+import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavNode
@@ -13,6 +12,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavigationResultManager
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
+import com.jermey.quo.vadis.core.navigation.core.RuntimeDeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import com.jermey.quo.vadis.core.navigation.core.StackNode
 import com.jermey.quo.vadis.core.navigation.core.TransitionState
@@ -315,10 +315,14 @@ class FakeNavigator(
     // DEEP LINK & CHILD SUPPORT
     // =========================================================================
 
-    private val fakeDeepLinkHandler = DefaultDeepLinkHandler()
+    private val fakeDeepLinkRegistry = RuntimeDeepLinkRegistry()
 
-    override fun getDeepLinkHandler(): DeepLinkHandler {
-        return fakeDeepLinkHandler
+    override fun handleDeepLink(uri: String): Boolean {
+        return fakeDeepLinkRegistry.handle(uri, this)
+    }
+
+    override fun getDeepLinkRegistry(): DeepLinkRegistry {
+        return fakeDeepLinkRegistry
     }
 
     override fun onBack(): Boolean {
