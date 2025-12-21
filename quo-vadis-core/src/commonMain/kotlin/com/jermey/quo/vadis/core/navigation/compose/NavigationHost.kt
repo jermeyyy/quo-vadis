@@ -372,82 +372,119 @@ fun NavigationHost(
 }
 
 // =============================================================================
-// NavigationHost Config Overload
+// NavigationHost Simplified Overload (Recommended)
 // =============================================================================
 
 /**
- * NavigationHost that renders navigation content using a unified NavigationConfig.
+ * NavigationHost that renders navigation content by reading config from the navigator.
  *
- * This overload accepts a single [NavigationConfig] instead of individual registries,
- * providing a cleaner API surface. It extracts the required registries from the config
- * and delegates to the full [NavigationHost] implementation.
+ * This is the **recommended overload** as it eliminates the need to pass config twice.
+ * The navigator already holds the [NavigationConfig], so NavigationHost reads it
+ * directly from there.
  *
- * ## Basic Usage
+ * ## Basic Usage (Simplest)
  *
  * ```kotlin
  * @Composable
  * fun App() {
  *     val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
  *
- *     NavigationHost(
- *         navigator = navigator,
- *         config = GeneratedNavigationConfig
- *     )
+ *     // Config is now implicit - read from navigator
+ *     NavigationHost(navigator)
  * }
  * ```
  *
- * ## With All Options
+ * ## With Options
  *
  * ```kotlin
  * NavigationHost(
  *     navigator = navigator,
- *     config = GeneratedNavigationConfig,
  *     modifier = Modifier.fillMaxSize(),
  *     enablePredictiveBack = true,
- *     predictiveBackMode = PredictiveBackMode.FULL_CASCADE,
  *     windowSizeClass = currentWindowSizeClass()
  * )
  * ```
  *
- * ## Multi-Module Composition
+ * ## Benefits
  *
- * ```kotlin
- * val combinedConfig = AppConfig + FeatureAConfig + FeatureBConfig
+ * - **No redundancy**: Config passed once to navigator, not repeated here
+ * - **No mismatch risk**: Impossible to pass different configs to navigator and host
+ * - **Cleaner API**: Fewer parameters to manage
  *
- * NavigationHost(
- *     navigator = navigator,
- *     config = combinedConfig
- * )
- * ```
- *
- * ## Choosing Between Overloads
- *
- * Use this overload (with [NavigationConfig]) when:
- * - Using generated navigation configuration
- * - Combining multiple module configurations
- * - You want the simplest API surface
- *
- * Use the individual registry overload when:
- * - You need fine-grained control over which registries to use
- * - Mixing generated and custom registries
- * - Gradual migration from legacy code
- *
- * @param navigator The Navigator managing navigation state.
- *   Typically created with [rememberQuoVadisNavigator].
- * @param config The NavigationConfig providing all required registries:
- *   [screenRegistry][NavigationConfig.screenRegistry],
- *   [containerRegistry][NavigationConfig.containerRegistry],
- *   [transitionRegistry][NavigationConfig.transitionRegistry],
- *   [scopeRegistry][NavigationConfig.scopeRegistry].
+ * @param navigator The Navigator managing navigation state. Must have been created
+ *   with a valid [NavigationConfig] (e.g., via [rememberQuoVadisNavigator]).
  * @param modifier Modifier to apply to the host container.
  * @param enablePredictiveBack Whether to enable predictive back gesture support.
  *   When enabled, back gestures provide visual feedback before completing the navigation.
  * @param windowSizeClass Optional window size class for responsive layouts.
  *   When provided, navigation containers can adapt their presentation based on available space.
  *
+ * @see rememberQuoVadisNavigator for creating a Navigator with config
+ * @see QuoVadisNavigation for a one-liner combining navigator + host
+ */
+@Composable
+fun NavigationHost(
+    navigator: Navigator,
+    modifier: Modifier = Modifier,
+    enablePredictiveBack: Boolean = true,
+    windowSizeClass: WindowSizeClass? = null
+) {
+    // Read config from navigator
+    val config = navigator.config
+
+    NavigationHost(
+        navigator = navigator,
+        modifier = modifier,
+        screenRegistry = config.screenRegistry,
+        containerRegistry = config.containerRegistry,
+        transitionRegistry = config.transitionRegistry,
+        scopeRegistry = config.scopeRegistry,
+        enablePredictiveBack = enablePredictiveBack,
+        windowSizeClass = windowSizeClass
+    )
+}
+
+// =============================================================================
+// NavigationHost Config Overload (Deprecated)
+// =============================================================================
+
+/**
+ * NavigationHost that renders navigation content using a unified NavigationConfig.
+ *
+ * @deprecated This overload is deprecated because it requires passing config twice -
+ * once to [rememberQuoVadisNavigator] and again here. Use the simplified overload
+ * that reads config from the navigator instead.
+ *
+ * ## Migration
+ *
+ * Before (deprecated):
+ * ```kotlin
+ * val navigator = rememberQuoVadisNavigator(MainTabs::class, config)
+ * NavigationHost(navigator, config)  // Config passed twice
+ * ```
+ *
+ * After (recommended):
+ * ```kotlin
+ * val navigator = rememberQuoVadisNavigator(MainTabs::class, config)
+ * NavigationHost(navigator)  // Config read from navigator
+ * ```
+ *
+ * @param navigator The Navigator managing navigation state.
+ * @param config The NavigationConfig providing all required registries.
+ *   **Note**: This should match the config used to create the navigator.
+ * @param modifier Modifier to apply to the host container.
+ * @param enablePredictiveBack Whether to enable predictive back gesture support.
+ * @param windowSizeClass Optional window size class for responsive layouts.
+ *
  * @see NavigationConfig for configuration details
  * @see rememberQuoVadisNavigator for creating a Navigator
  */
+@Deprecated(
+    message = "Config should be passed only to rememberQuoVadisNavigator. " +
+        "Use NavigationHost(navigator) instead - config is read from navigator.",
+    replaceWith = ReplaceWith("NavigationHost(navigator, modifier, enablePredictiveBack, windowSizeClass)"),
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun NavigationHost(
     navigator: Navigator,

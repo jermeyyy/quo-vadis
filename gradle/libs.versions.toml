@@ -81,3 +81,4 @@ detekt = { id = "dev.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 vanniktechMavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktechMavenPublish" }
+quoVadis = { id = "io.github.jermeyyy.quo-vadis" }

@@ -1,11 +1,12 @@
 package com.jermey.quo.vadis.core.navigation.core
 
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.registry.BackHandlerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerInfo
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -34,10 +35,10 @@ import kotlin.uuid.Uuid
  * ## Usage
  *
  * ```kotlin
- * val navigator = TreeNavigator()
- *
- * // Set initial state
- * navigator.setStartDestination(HomeDestination)
+ * val navigator = TreeNavigator(
+ *     config = GeneratedNavigationConfig,
+ *     initialState = buildInitialState()
+ * )
  *
  * // Navigate
  * navigator.navigate(DetailDestination("123"))
@@ -51,27 +52,24 @@ import kotlin.uuid.Uuid
  * }
  * ```
  *
- * @param deepLinkHandler Handler for deep link navigation
+ * @param config Navigation configuration providing all registries. The navigator derives
+ *   [scopeRegistry], [containerRegistry], and [deepLinkHandler] from this config.
+ *   Defaults to [NavigationConfig.Empty].
  * @param coroutineScope Scope for derived state computations
  * @param initialState Optional initial navigation state (defaults to empty stack)
- * @property scopeRegistry Registry for scope-aware navigation. When a destination is
- *   out of the current container's scope (TabNode/PaneNode), navigation pushes to
- *   the parent stack instead of the deepest active stack. Defaults to [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry.Empty]
- *   which allows all destinations in all scopes (backward compatible behavior).
- * @property containerRegistry Registry for container-aware navigation. When navigating
- *   to a destination that belongs to a @Tabs or @Pane container, this registry provides
- *   the builder function to create the appropriate container node. Defaults to
- *   [ContainerRegistry.Empty] which never creates containers (backward compatible behavior).
  */
 @OptIn(ExperimentalUuidApi::class)
 @Stable
 class TreeNavigator(
-    private val deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler(),
+    override val config: NavigationConfig = NavigationConfig.Empty,
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
-    initialState: NavNode? = null,
-    private val scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
-    private val containerRegistry: ContainerRegistry = ContainerRegistry.Empty
+    initialState: NavNode? = null
 ) : Navigator {
+
+    // Registries derived from config for internal use
+    private val scopeRegistry: ScopeRegistry get() = config.scopeRegistry
+    private val containerRegistry: ContainerRegistry get() = config.containerRegistry
+    private val deepLinkHandler: DeepLinkHandler = config.deepLinkHandler ?: DefaultDeepLinkHandler()
 
     // =========================================================================
     // TREE-BASED STATE

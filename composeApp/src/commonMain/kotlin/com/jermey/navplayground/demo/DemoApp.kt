@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.compose.rememberQuoVadisNavigator
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -14,12 +13,13 @@ import org.koin.compose.koinInject
 /**
  * Main entry point for the demo application.
  *
+ * Uses the simplified NavigationHost API where config is read from the navigator,
+ * eliminating the need to pass config twice.
+ *
  * ```kotlin
  * val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
- * NavigationHost(
- *     navigator = navigator,
- *     config = GeneratedNavigationConfig
- * )
+ * // Config is now implicit - read from navigator
+ * NavigationHost(navigator)
  * ```
  *
  * ## Navigation Structure
@@ -43,11 +43,10 @@ fun DemoApp() {
 //        config = GeneratedNavigationConfig
 //    )
     val navigator = koinInject<Navigator>()
-    val navigationConfig = koinInject<NavigationConfig>()
 
+    // Config is now implicit - NavigationHost reads from navigator
     NavigationHost(
         navigator = navigator,
-        config = navigationConfig,
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
