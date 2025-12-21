@@ -35,3 +35,5 @@ include(":quo-vadis-annotations")
 include(":quo-vadis-ksp")
 
 
+include(":feature1")
+include(":feature2")

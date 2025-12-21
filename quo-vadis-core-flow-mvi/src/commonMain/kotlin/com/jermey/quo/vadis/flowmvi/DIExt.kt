@@ -1,8 +1,7 @@
-package com.jermey.navplayground.demo
+package com.jermey.quo.vadis.flowmvi
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import com.jermey.navplayground.demo.container.BaseContainer
 import com.jermey.quo.vadis.core.navigation.compose.render.LocalScreenNode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

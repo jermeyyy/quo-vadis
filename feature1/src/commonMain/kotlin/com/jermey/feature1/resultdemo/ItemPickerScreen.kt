@@ -1,4 +1,4 @@
-package com.jermey.navplayground.demo.ui.screens.resultdemo
+package com.jermey.feature1.resultdemo
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,14 +32,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.container
-import com.jermey.navplayground.demo.container.ItemPickerContainer
-import com.jermey.navplayground.demo.container.ItemPickerContainer.*
-import com.jermey.navplayground.demo.container.ItemPickerState
-import com.jermey.navplayground.demo.container.PickerItem
-import com.jermey.navplayground.demo.destinations.ResultDemoDestination
+import com.jermey.feature1.resultdemo.container.ItemPickerContainer
+import com.jermey.feature1.resultdemo.container.ItemPickerContainer.Action
+import com.jermey.feature1.resultdemo.container.ItemPickerContainer.Intent
+import com.jermey.feature1.resultdemo.container.ItemPickerState
+import com.jermey.feature1.resultdemo.container.PickerItem
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.flowmvi.container
 import org.koin.compose.koinInject
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
@@ -49,7 +49,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
  *
  * Demonstrates:
  * - Returning a result using [navigateBackWithResult]
- * - Container integration with [ItemPickerContainer]
+ * - Container integration with [com.jermey.navplayground.demo.container.ItemPickerContainer]
  * - List-based selection UI
  *
  * ## Features

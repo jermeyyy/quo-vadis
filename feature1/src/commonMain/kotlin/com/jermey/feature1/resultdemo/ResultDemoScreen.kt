@@ -1,4 +1,4 @@
-package com.jermey.navplayground.demo.ui.screens.resultdemo
+package com.jermey.feature1.resultdemo
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,14 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.container
-import com.jermey.navplayground.demo.container.ResultDemoContainer
-import com.jermey.navplayground.demo.container.ResultDemoContainer.Action
-import com.jermey.navplayground.demo.container.ResultDemoContainer.Intent
-import com.jermey.navplayground.demo.container.ResultDemoState
-import com.jermey.navplayground.demo.destinations.ResultDemoDestination
+import com.jermey.feature1.resultdemo.container.ResultDemoContainer
+import com.jermey.feature1.resultdemo.container.ResultDemoContainer.*
+import com.jermey.feature1.resultdemo.container.ResultDemoState
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.flowmvi.container
 import org.koin.compose.koinInject
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
@@ -54,7 +52,7 @@ private val containerCache = mutableStateMapOf<String, ResultDemoContainer>()
  *
  * Demonstrates:
  * - Navigation with result using [navigateForResult]
- * - Container integration with [ResultDemoContainer]
+ * - Container integration with [com.jermey.navplayground.demo.container.ResultDemoContainer]
  * - State observation with [collectAsState]
  *
  * ## Features

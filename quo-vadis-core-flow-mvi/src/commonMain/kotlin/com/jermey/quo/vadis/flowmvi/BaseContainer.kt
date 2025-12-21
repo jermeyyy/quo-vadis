@@ -1,7 +1,6 @@
-package com.jermey.navplayground.demo.container
+package com.jermey.quo.vadis.flowmvi
 
 import androidx.annotation.CallSuper
-import com.jermey.navplayground.demo.DestinationScope
 import com.jermey.quo.vadis.core.navigation.core.NavigationLifecycle
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.registerNavigationLifecycle

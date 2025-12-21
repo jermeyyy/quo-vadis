@@ -8,6 +8,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.PaneNode
 import com.jermey.quo.vadis.core.navigation.core.PaneRole
 import com.jermey.quo.vadis.core.navigation.core.TabNode
+import kotlin.reflect.KClass
 
 /**
  * Information about a container and how to create it.
@@ -26,6 +27,13 @@ sealed class ContainerInfo {
     abstract val scopeKey: String
 
     /**
+     * The destination class that defines this container.
+     * Used for rebuilding the container with a different navNodeBuilder
+     * when combining navigation configs.
+     */
+    abstract val containerClass: KClass<out NavDestination>
+
+    /**
      * Tab container information.
      *
      * Contains everything needed to create a [TabNode] for a tabs-based
@@ -40,11 +48,13 @@ sealed class ContainerInfo {
      *   being navigated to. Index is 0-based.
      * @property scopeKey The scope key for this container, typically the sealed
      *   class simple name (e.g., "MainTabs"). Used for scope-aware navigation.
+     * @property containerClass The destination class that defines this container.
      */
     data class TabContainer(
         val builder: (key: String, parentKey: String?, initialTabIndex: Int) -> TabNode,
         val initialTabIndex: Int,
-        override val scopeKey: String
+        override val scopeKey: String,
+        override val containerClass: KClass<out NavDestination>
     ) : ContainerInfo()
 
     /**
@@ -60,11 +70,13 @@ sealed class ContainerInfo {
      * @property initialPane Which pane should be initially active
      * @property scopeKey The scope key for this container, typically the sealed
      *   class simple name. Used for scope-aware navigation.
+     * @property containerClass The destination class that defines this container.
      */
     data class PaneContainer(
         val builder: (key: String, parentKey: String?) -> PaneNode,
         val initialPane: PaneRole,
-        override val scopeKey: String
+        override val scopeKey: String,
+        override val containerClass: KClass<out NavDestination>
     ) : ContainerInfo()
 }
 

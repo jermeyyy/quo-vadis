@@ -1,3 +1,4 @@
+import android.databinding.tool.ext.toCamelCase
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -75,6 +76,9 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+
+            implementation(projects.feature1)
+            implementation(projects.feature2)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -93,6 +97,10 @@ kotlin {
                 // Desktop JVM doesn't support materialIconsExtended in Compose 1.9.0
             }
         }
+    }
+
+    ksp {
+        arg("quoVadis.modulePrefix", project.name.toCamelCase())
     }
 }
 
