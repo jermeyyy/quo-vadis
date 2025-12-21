@@ -54,14 +54,13 @@ inline fun <reified T : BaseContainer<S, I, A>, S : MVIState, I : MVIIntent, A :
         }
     })
 
-    return koinInject<T>(
-        scope = scope, parameters = params
-    ).store
+    return koinInject<T>(scope = scope, parameters = params).store
 }
 
 @FlowMVIDSL
 @Composable
-inline fun <reified T : BaseContainer<S, I, A>, S : MVIState, I : MVIIntent, A : MVIAction> container(): Store<S, I, A> {
+inline fun <reified T : BaseContainer<S, I, A>, S, I, A> container(): Store<S, I, A>
+        where S : MVIState, I : MVIIntent, A : MVIAction {
     val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     val scope = getKoin().getOrCreateScope<DestinationScope>(LocalScreenNode.current!!.key)
     scope.declare(instance = coroutineScope, allowOverride = false)
@@ -73,7 +72,5 @@ inline fun <reified T : BaseContainer<S, I, A>, S : MVIState, I : MVIIntent, A :
         }
     })
 
-    return koinInject<T>(
-        scope = scope
-    ).store
+    return koinInject<T>(scope = scope).store
 }

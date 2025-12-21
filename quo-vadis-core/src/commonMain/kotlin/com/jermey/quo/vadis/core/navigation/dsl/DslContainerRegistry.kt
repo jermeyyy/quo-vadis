@@ -213,12 +213,14 @@ internal class DslContainerRegistry(
                 is TabEntry.FlatScreen -> {
                     if (entry.destinationClass == destClass) return index
                 }
+
                 is TabEntry.NestedStack -> {
                     if (entry.destinationClass == destClass) return index
                     entry.screens.forEach { screen ->
                         if (screen.destinationClass == destClass) return index
                     }
                 }
+
                 is TabEntry.ContainerReference -> {
                     if (entry.containerClass == destClass) return index
                     // Check if destination is a member of the referenced container
@@ -246,21 +248,24 @@ internal class DslContainerRegistry(
             is ContainerBuilder.Stack -> {
                 containerBuilder.screens.any { it.destinationClass == destClass }
             }
+
             is ContainerBuilder.Tabs -> {
                 containerBuilder.config.tabs.any { entry ->
                     when (entry) {
                         is TabEntry.FlatScreen -> entry.destinationClass == destClass
                         is TabEntry.NestedStack -> {
                             entry.destinationClass == destClass ||
-                                entry.screens.any { it.destinationClass == destClass }
+                                    entry.screens.any { it.destinationClass == destClass }
                         }
+
                         is TabEntry.ContainerReference -> {
                             entry.containerClass == destClass ||
-                                isDestinationInContainer(entry.containerClass, destClass)
+                                    isDestinationInContainer(entry.containerClass, destClass)
                         }
                     }
                 }
             }
+
             is ContainerBuilder.Panes -> {
                 containerBuilder.config.panes.values.any { entry ->
                     entry.content.rootDestination?.let { it::class == destClass } ?: false
@@ -288,6 +293,7 @@ internal class DslContainerRegistry(
                         is TabEntry.FlatScreen -> {
                             result[entry.destinationClass] = containerClass
                         }
+
                         is TabEntry.NestedStack -> {
                             result[entry.destinationClass] = containerClass
                             entry.screens.forEach { screen ->
@@ -296,12 +302,17 @@ internal class DslContainerRegistry(
                                 }
                             }
                         }
+
                         is TabEntry.ContainerReference -> {
                             result[entry.containerClass] = containerClass
                             // Also map all destinations from the referenced container
                             // This enables navigating to nested destinations like
                             // DemoTabs.BooksTab.List to create the DemoTabs container
-                            addReferencedContainerMembers(entry.containerClass, containerClass, result)
+                            addReferencedContainerMembers(
+                                entry.containerClass,
+                                containerClass,
+                                result
+                            )
                         }
                     }
                 }
@@ -339,6 +350,7 @@ internal class DslContainerRegistry(
                     }
                 }
             }
+
             is ContainerBuilder.Tabs -> {
                 // Recursively add tab members
                 referencedBuilder.config.tabs.forEach { entry ->
@@ -346,6 +358,7 @@ internal class DslContainerRegistry(
                         is TabEntry.FlatScreen -> {
                             result[entry.destinationClass] = tabContainerClass
                         }
+
                         is TabEntry.NestedStack -> {
                             result[entry.destinationClass] = tabContainerClass
                             entry.screens.forEach { screen ->
@@ -354,13 +367,19 @@ internal class DslContainerRegistry(
                                 }
                             }
                         }
+
                         is TabEntry.ContainerReference -> {
                             result[entry.containerClass] = tabContainerClass
-                            addReferencedContainerMembers(entry.containerClass, tabContainerClass, result)
+                            addReferencedContainerMembers(
+                                entry.containerClass,
+                                tabContainerClass,
+                                result
+                            )
                         }
                     }
                 }
             }
+
             is ContainerBuilder.Panes -> {
                 // Add pane member destinations
                 referencedBuilder.config.panes.values.forEach { entry ->

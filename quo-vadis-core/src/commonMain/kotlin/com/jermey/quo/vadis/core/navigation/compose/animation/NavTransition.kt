@@ -4,12 +4,7 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
+import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition.Companion.ANIMATION_DURATION
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
 
 /**

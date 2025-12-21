@@ -43,7 +43,7 @@ import kotlinx.coroutines.flow.StateFlow
  * Implements [ParentNavigator] to support hierarchical navigation with child navigators.
  */
 @Stable
-interface Navigator : ParentNavigator {
+interface Navigator : BackPressHandler {
 
     // =========================================================================
     // TREE-BASED STATE
@@ -142,13 +142,6 @@ interface Navigator : ParentNavigator {
     fun navigateBack(): Boolean
 
     /**
-     * Navigate up in the hierarchy (semantic equivalent of back).
-     *
-     * Default implementation delegates to [navigateBack].
-     */
-    fun navigateUp(): Boolean = navigateBack()
-
-    /**
      * Navigate to a destination and clear the backstack up to a certain point.
      *
      * @param destination The destination to navigate to
@@ -179,11 +172,6 @@ interface Navigator : ParentNavigator {
     // =========================================================================
     // TAB NAVIGATION
     // =========================================================================
-
-    /**
-     * The currently active tab index, or null if no TabNode exists.
-     */
-    val activeTabIndex: Int?
 
     // =========================================================================
     // PANE NAVIGATION
@@ -260,15 +248,6 @@ interface Navigator : ParentNavigator {
      */
     fun navigateBackInPane(role: PaneRole): Boolean
 
-    /**
-     * Clear a pane's navigation stack back to its root.
-     *
-     * @param role Pane role to clear
-     * @throws IllegalStateException if no PaneNode found
-     * @throws IllegalArgumentException if role is not configured
-     */
-    fun clearPane(role: PaneRole)
-
     // =========================================================================
     // DEEP LINK & GRAPH REGISTRATION
     // =========================================================================
@@ -286,20 +265,6 @@ interface Navigator : ParentNavigator {
      * @return The configured DeepLinkHandler
      */
     fun getDeepLinkHandler(): DeepLinkHandler
-
-    // =========================================================================
-    // CHILD NAVIGATOR SUPPORT
-    // =========================================================================
-
-    /**
-     * Set the active child navigator for back press delegation.
-     *
-     * When a child navigator is set, back press events will be delegated
-     * to the child first before being handled by this navigator.
-     *
-     * @param child The child navigator to delegate to, or null to clear
-     */
-    fun setActiveChild(child: BackPressHandler?)
 
     // =========================================================================
     // STATE MANIPULATION (Advanced)
@@ -366,63 +331,3 @@ interface Navigator : ParentNavigator {
      */
     fun completeTransition()
 }
-
-// =========================================================================
-// CONVENIENCE EXTENSION FUNCTIONS
-// =========================================================================
-
-/**
- * Navigate to a pane and switch focus in one call.
- *
- * This is the most common pattern for master-detail navigation.
- *
- * @param role Target pane role
- * @param destination Destination to show in the pane
- */
-fun Navigator.showInPane(role: PaneRole, destination: NavDestination) {
-    navigateToPane(role, destination, switchFocus = true)
-}
-
-/**
- * Show detail content while keeping focus on the current pane.
- *
- * Useful for "peek" scenarios or preloading content.
- *
- * @param role Target pane role
- * @param destination Destination to preload
- */
-fun Navigator.preloadPane(role: PaneRole, destination: NavDestination) {
-    navigateToPane(role, destination, switchFocus = false)
-}
-
-/**
- * Show detail content in the Supporting pane.
- *
- * Typed extension for the common master-detail pattern.
- *
- * @param destination The detail destination to display
- */
-fun Navigator.showDetail(destination: NavDestination) {
-    navigateToPane(PaneRole.Supporting, destination, switchFocus = true)
-}
-
-/**
- * Return focus to the Primary pane.
- *
- * Common operation after viewing detail content.
- */
-fun Navigator.showPrimary() {
-    switchPane(PaneRole.Primary)
-}
-
-/**
- * The current active pane role, or null if no PaneNode in state.
- */
-val Navigator.activePaneRole: PaneRole?
-    get() = state.value.findFirst<PaneNode>()?.activePaneRole
-
-/**
- * Whether the current state contains a PaneNode.
- */
-val Navigator.hasPaneLayout: Boolean
-    get() = state.value.findFirst<PaneNode>() != null

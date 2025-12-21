@@ -28,9 +28,5 @@ object RouteRegistry {
         println("DEBUG: RouteRegistry.getRoute - class=$destinationClass, route=$route, allRoutes=$allRoutes")
         return route
     }
-    
-    /**
-     * Debug helper to list all registered routes.
-     */
-    fun listAllRoutes(): Map<KClass<*>, String> = routes.toMap()
+
 }

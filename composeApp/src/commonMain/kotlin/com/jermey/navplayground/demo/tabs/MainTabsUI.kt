@@ -23,10 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.TabsContainer
-import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
  * Tabs container wrapper for the main tabs with bottom navigation.
@@ -61,30 +59,6 @@ fun MainTabsWrapper(
             isTransitioning = scope.isTransitioning
         )
     }
-}
-
-/**
- * Main app tabs screen using HierarchicalQuoVadisHost.
- *
- * This composable renders the main tab navigation with:
- * - Independent navigation stacks per tab
- * - State preservation across tab switches
- * - Custom bottom navigation bar via @TabsContainer annotation
- * - Automatic back press handling
- *
- * @param navigator The navigator instance for this tab container
- * @param modifier Modifier to be applied to the root container
- */
-@Composable
-fun MainTabsScreen(
-    navigator: Navigator,
-    modifier: Modifier = Modifier
-) {
-    NavigationHost(
-        navigator = navigator,
-        modifier = modifier,
-        enablePredictiveBack = true
-    )
 }
 
 /**

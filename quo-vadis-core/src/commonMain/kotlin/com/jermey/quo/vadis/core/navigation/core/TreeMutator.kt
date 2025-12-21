@@ -1,6 +1,9 @@
 package com.jermey.quo.vadis.core.navigation.core
 
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.navigation.core.TreeMutator.canGoBack
+import com.jermey.quo.vadis.core.navigation.core.TreeMutator.popTo
+import com.jermey.quo.vadis.core.navigation.core.TreeMutator.push
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -265,9 +268,11 @@ object TreeMutator {
             is PushStrategy.PushToStack -> {
                 pushToActiveStack(root, strategy.targetStack, destination, generateKey)
             }
+
             is PushStrategy.SwitchToTab -> {
                 switchTab(root, strategy.tabNode.key, strategy.tabIndex)
             }
+
             is PushStrategy.PushOutOfScope -> {
                 pushOutOfScope(root, strategy.parentStack, destination, generateKey)
             }
@@ -312,6 +317,7 @@ object TreeMutator {
                         }
                     }
                 }
+
                 is TabNode -> {
                     val scopeKey = node.scopeKey
 
@@ -336,6 +342,7 @@ object TreeMutator {
                     // Destination is in scope but not in another tab - push to active stack
                     // Continue checking other containers up the tree
                 }
+
                 is PaneNode -> {
                     val scopeKey = node.scopeKey
                     if (scopeKey != null && !scopeRegistry.isInScope(scopeKey, destination)) {
@@ -347,7 +354,9 @@ object TreeMutator {
                         }
                     }
                 }
-                else -> { /* Continue checking */ }
+
+                else -> { /* Continue checking */
+                }
             }
         }
 
@@ -579,6 +588,7 @@ object TreeMutator {
                 val newStack = emptyStack.copy(children = emptyList())
                 replaceNode(root, emptyStack.key, newStack)
             }
+
             PopBehavior.CASCADE -> {
                 // If this is the root, cannot cascade further
                 if (emptyStack.parentKey == null) return null
@@ -594,15 +604,18 @@ object TreeMutator {
                         val newStack = emptyStack.copy(children = emptyList())
                         replaceNode(root, emptyStack.key, newStack)
                     }
+
                     is StackNode -> {
                         // Remove the empty stack from parent's children
                         removeNode(root, emptyStack.key)
                     }
+
                     is PaneNode -> {
                         // Cannot remove a pane's content - preserve empty
                         val newStack = emptyStack.copy(children = emptyList())
                         replaceNode(root, emptyStack.key, newStack)
                     }
+
                     is ScreenNode -> {
                         // ScreenNode cannot be a parent - this shouldn't happen
                         null
@@ -829,6 +842,7 @@ object TreeMutator {
                 // Simple pop - if we can't, we can't
                 pop(root)?.let { PopResult.Popped(it) } ?: PopResult.CannotPop
             }
+
             PaneBackBehavior.PopUntilScaffoldValueChange -> {
                 // Try to switch to Primary pane if we're in a different pane
                 if (paneNode.activePaneRole != PaneRole.Primary) {
@@ -839,6 +853,7 @@ object TreeMutator {
                     PopResult.RequiresScaffoldChange
                 }
             }
+
             PaneBackBehavior.PopUntilCurrentDestinationChange -> {
                 // Try switching to a different pane with content
                 val alternativePanes = paneNode.configuredRoles
@@ -856,6 +871,7 @@ object TreeMutator {
                     PopResult.PaneEmpty(paneNode.activePaneRole)
                 }
             }
+
             PaneBackBehavior.PopUntilContentChange -> {
                 // Pop from any pane that has content
                 val panesWithContent = paneNode.configuredRoles.filter { role ->
@@ -1034,10 +1050,15 @@ object TreeMutator {
             is ScreenNode -> {
                 throw IllegalArgumentException("Node with key '$targetKey' not found")
             }
+
             is StackNode -> {
                 val newChildren = root.children.map { child ->
                     if (child.key == targetKey) newNode
-                    else if (child.findByKey(targetKey) != null) replaceNode(child, targetKey, newNode)
+                    else if (child.findByKey(targetKey) != null) replaceNode(
+                        child,
+                        targetKey,
+                        newNode
+                    )
                     else child
                 }
                 if (newChildren == root.children) {
@@ -1045,6 +1066,7 @@ object TreeMutator {
                 }
                 root.copy(children = newChildren)
             }
+
             is TabNode -> {
                 val newStacks = root.stacks.map { stack ->
                     if (stack.key == targetKey) newNode as StackNode
@@ -1057,6 +1079,7 @@ object TreeMutator {
                 }
                 root.copy(stacks = newStacks)
             }
+
             is PaneNode -> {
                 val newConfigurations = root.paneConfigurations.mapValues { (_, config) ->
                     if (config.content.key == targetKey) {
@@ -1096,6 +1119,7 @@ object TreeMutator {
             is ScreenNode -> {
                 throw IllegalArgumentException("Node with key '$targetKey' not found")
             }
+
             is StackNode -> {
                 // Check if any child has this key
                 val childIndex = root.children.indexOfFirst { it.key == targetKey }
@@ -1116,6 +1140,7 @@ object TreeMutator {
                 }
                 root.copy(children = newChildren)
             }
+
             is TabNode -> {
                 // Cannot remove stacks directly from TabNode
                 if (root.stacks.any { it.key == targetKey }) {
@@ -1133,6 +1158,7 @@ object TreeMutator {
                 }
                 root.copy(stacks = newStacks)
             }
+
             is PaneNode -> {
                 // Cannot remove pane configurations directly
                 if (root.paneConfigurations.values.any { it.content.key == targetKey }) {
@@ -1406,11 +1432,13 @@ object TreeMutator {
                     }
                 }
             }
+
             is TabNode -> {
                 // TabNode inside another TabNode (edge case)
                 // Treat parent TabNode as if we're on its stack
                 handleTabBack(root, tabParent, tabNode.activeStack)
             }
+
             else -> BackResult.DelegateToSystem
         }
     }
@@ -1459,7 +1487,11 @@ object TreeMutator {
      * - If PaneNode's parent can pop it: pop PaneNode
      * - If parent also has only one child: cascade further up the tree
      */
-    private fun handlePaneBack(root: NavNode, paneNode: PaneNode, activeStack: NavNode): BackResult {
+    private fun handlePaneBack(
+        root: NavNode,
+        paneNode: PaneNode,
+        activeStack: NavNode
+    ): BackResult {
         return when (val result = popWithPaneBehavior(root)) {
             is PopResult.Popped -> BackResult.Handled(result.newState)
             is PopResult.CannotPop, is PopResult.PaneEmpty -> {
@@ -1482,19 +1514,26 @@ object TreeMutator {
                                 val grandparentKey = paneParent.parentKey
                                 val grandparent = root.findByKey(grandparentKey)
                                 when (grandparent) {
-                                    is StackNode -> handleNestedStackBack(root, grandparent, paneParent)
+                                    is StackNode -> handleNestedStackBack(
+                                        root,
+                                        grandparent,
+                                        paneParent
+                                    )
+
                                     is TabNode -> handleTabBack(root, grandparent, paneParent)
                                     is PaneNode -> handlePaneBack(root, grandparent, paneParent)
                                     else -> BackResult.DelegateToSystem
                                 }
                             }
                         }
+
                         is TabNode -> handleTabBack(root, paneParent, activeStack)
                         is PaneNode -> handlePaneBack(root, paneParent, activeStack)
                         else -> BackResult.DelegateToSystem
                     }
                 }
             }
+
             is PopResult.RequiresScaffoldChange -> BackResult.CannotHandle
         }
     }
@@ -1527,10 +1566,12 @@ object TreeMutator {
                 val tabParent = root.findByKey(tabParentKey)
                 (tabParent as? StackNode)?.children?.size?.let { it > 1 } ?: false
             }
+
             is StackNode -> parent.canGoBack
             is PaneNode -> parent.paneConfigurations.values.any {
                 it.content.activeStack()?.canGoBack == true
             }
+
             else -> false
         }
     }

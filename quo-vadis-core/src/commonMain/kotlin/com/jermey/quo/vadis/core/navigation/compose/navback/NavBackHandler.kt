@@ -104,6 +104,7 @@ fun NavBackHandler(
  *
  * @see NavBackHandler
  */
+@Suppress("unused")
 @Composable
 fun ConsumingNavBackHandler(
     enabled: Boolean = true,

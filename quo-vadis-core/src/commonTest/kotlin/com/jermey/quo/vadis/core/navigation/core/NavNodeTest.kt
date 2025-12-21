@@ -557,9 +557,11 @@ class NavNodeTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s0", "tab0", ProfileDestination)
-                )),
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s0", "tab0", ProfileDestination)
+                    )
+                ),
                 StackNode("tab1", "tabs", listOf(targetScreen))
             ),
             activeStackIndex = 0 // tab0 is active, but we're looking in tab1
@@ -597,18 +599,20 @@ class NavNodeTest {
                     key = "tabs",
                     parentKey = "root",
                     stacks = listOf(
-                        StackNode("tab0", "tabs", listOf(
-                            PaneNode(
-                                key = "panes",
-                                parentKey = "tab0",
-                                paneConfigurations = mapOf(
-                                    PaneRole.Primary to PaneConfiguration(
-                                        StackNode("inner-stack", "panes", listOf(targetScreen))
-                                    )
-                                ),
-                                activePaneRole = PaneRole.Primary
+                        StackNode(
+                            "tab0", "tabs", listOf(
+                                PaneNode(
+                                    key = "panes",
+                                    parentKey = "tab0",
+                                    paneConfigurations = mapOf(
+                                        PaneRole.Primary to PaneConfiguration(
+                                            StackNode("inner-stack", "panes", listOf(targetScreen))
+                                        )
+                                    ),
+                                    activePaneRole = PaneRole.Primary
+                                )
                             )
-                        ))
+                        )
                     ),
                     activeStackIndex = 0
                 )
@@ -748,9 +752,11 @@ class NavNodeTest {
             parentKey = null,
             stacks = listOf(
                 StackNode("tab0", "tabs", listOf(activeScreen)),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("inactive", "tab1", ProfileDestination)
-                ))
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("inactive", "tab1", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -818,9 +824,11 @@ class NavNodeTest {
 
     @Test
     fun `activeStack returns deepest stack in TabNode`() {
-        val deepStack = StackNode("deep", "tab0", listOf(
-            ScreenNode("s", "deep", HomeDestination)
-        ))
+        val deepStack = StackNode(
+            "deep", "tab0", listOf(
+                ScreenNode("s", "deep", HomeDestination)
+            )
+        )
         val tabs = TabNode(
             key = "tabs",
             parentKey = null,
@@ -836,9 +844,11 @@ class NavNodeTest {
 
     @Test
     fun `activeStack returns deepest stack in PaneNode`() {
-        val deepStack = StackNode("deep", "primary", listOf(
-            ScreenNode("s", "deep", HomeDestination)
-        ))
+        val deepStack = StackNode(
+            "deep", "primary", listOf(
+                ScreenNode("s", "deep", HomeDestination)
+            )
+        )
         val panes = PaneNode(
             key = "panes",
             parentKey = null,
@@ -855,9 +865,11 @@ class NavNodeTest {
 
     @Test
     fun `activeStack returns TabNode activeStack when it has no deeper stacks`() {
-        val tabStack = StackNode("tab0", "tabs", listOf(
-            ScreenNode("s", "tab0", HomeDestination)
-        ))
+        val tabStack = StackNode(
+            "tab0", "tabs", listOf(
+                ScreenNode("s", "tab0", HomeDestination)
+            )
+        )
         val tabs = TabNode(
             key = "tabs",
             parentKey = null,
@@ -1129,13 +1141,17 @@ class NavNodeTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s0", "tab0", HomeDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s1", "tab1", ProfileDestination),
-                    ScreenNode("s2", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s0", "tab0", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s1", "tab1", ProfileDestination),
+                        ScreenNode("s2", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -1167,12 +1183,16 @@ class NavNodeTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s0", "tab0", HomeDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s1", "tab1", ProfileDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s0", "tab0", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s1", "tab1", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -1239,7 +1259,8 @@ class NavNodeTest {
         val profileScreen2 = ScreenNode("profile-screen-2", "profile-stack", DetailDestination)
 
         val homeStack = StackNode("home-stack", "tabs", listOf(homeScreen))
-        val profileStack = StackNode("profile-stack", "tabs", listOf(profileScreen1, profileScreen2))
+        val profileStack =
+            StackNode("profile-stack", "tabs", listOf(profileScreen1, profileScreen2))
 
         val tabs = TabNode(
             key = "tabs",

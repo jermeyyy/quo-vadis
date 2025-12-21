@@ -40,4 +40,7 @@ abstract class BaseContainer<S : MVIState, I : MVIIntent, A : MVIAction>(
         scope.close()
     }
 
+    override fun onEnter() = Unit
+
+    override fun onExit() = Unit
 }

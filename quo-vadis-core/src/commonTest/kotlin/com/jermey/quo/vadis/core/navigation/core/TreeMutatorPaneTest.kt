@@ -71,14 +71,18 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("list-screen", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("list-screen", "primary-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", listOf(
-                        ScreenNode("detail-screen", "supporting-stack", DetailDestination)
-                    ))
+                    StackNode(
+                        "supporting-stack", "panes", listOf(
+                            ScreenNode("detail-screen", "supporting-stack", DetailDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -135,9 +139,11 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("list-screen", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("list-screen", "primary-stack", ListDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -205,9 +211,11 @@ class TreeMutatorPaneTest {
                     StackNode("primary-stack", "panes", listOf(primaryScreen))
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", listOf(
-                        ScreenNode("detail-screen", "supporting-stack", DetailDestination)
-                    ))
+                    StackNode(
+                        "supporting-stack", "panes", listOf(
+                            ScreenNode("detail-screen", "supporting-stack", DetailDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -317,10 +325,12 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination),
-                        ScreenNode("s2", "primary-stack", DetailDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination),
+                            ScreenNode("s2", "primary-stack", DetailDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -346,9 +356,11 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -411,15 +423,19 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", listOf(
-                        ScreenNode("s2", "supporting-stack", DetailDestination),
-                        ScreenNode("s3", "supporting-stack", SettingsDestination)
-                    ))
+                    StackNode(
+                        "supporting-stack", "panes", listOf(
+                            ScreenNode("s2", "supporting-stack", DetailDestination),
+                            ScreenNode("s3", "supporting-stack", SettingsDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -451,10 +467,12 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination),
-                        ScreenNode("s2", "primary-stack", DetailDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination),
+                            ScreenNode("s2", "primary-stack", DetailDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -475,9 +493,11 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary,
@@ -500,14 +520,18 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", listOf(
-                        ScreenNode("s2", "supporting-stack", DetailDestination)
-                    ))
+                    StackNode(
+                        "supporting-stack", "panes", listOf(
+                            ScreenNode("s2", "supporting-stack", DetailDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Supporting, // Start on Supporting
@@ -528,9 +552,11 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary,
@@ -589,18 +615,22 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
         )
 
         val newConfig = PaneConfiguration(
-            content = StackNode("supporting-stack", "panes", listOf(
-                ScreenNode("s2", "supporting-stack", DetailDestination)
-            )),
+            content = StackNode(
+                "supporting-stack", "panes", listOf(
+                    ScreenNode("s2", "supporting-stack", DetailDestination)
+                )
+            ),
             adaptStrategy = AdaptStrategy.Levitate
         )
 
@@ -620,9 +650,11 @@ class TreeMutatorPaneTest {
     fun `setPaneConfiguration replaces existing config`() {
         val panes = createStandardPaneNode()
 
-        val newContent = StackNode("new-supporting-stack", "panes", listOf(
-            ScreenNode("new-screen", "new-supporting-stack", SettingsDestination)
-        ))
+        val newContent = StackNode(
+            "new-supporting-stack", "panes", listOf(
+                ScreenNode("new-screen", "new-supporting-stack", SettingsDestination)
+            )
+        )
         val newConfig = PaneConfiguration(
             content = newContent,
             adaptStrategy = AdaptStrategy.Hide
@@ -665,14 +697,18 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", listOf(
-                        ScreenNode("s2", "supporting-stack", DetailDestination)
-                    ))
+                    StackNode(
+                        "supporting-stack", "panes", listOf(
+                            ScreenNode("s2", "supporting-stack", DetailDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -696,14 +732,18 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", listOf(
-                        ScreenNode("s2", "supporting-stack", DetailDestination)
-                    ))
+                    StackNode(
+                        "supporting-stack", "panes", listOf(
+                            ScreenNode("s2", "supporting-stack", DetailDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Supporting // Supporting is active
@@ -747,9 +787,11 @@ class TreeMutatorPaneTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("list", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("list", "primary-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
                     StackNode("supporting-stack", "panes", emptyList())
@@ -805,9 +847,11 @@ class TreeMutatorPaneTest {
             parentKey = "stack",
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
                     StackNode("supporting-stack", "panes", emptyList())

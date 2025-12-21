@@ -36,12 +36,6 @@ class CascadeBackStateTest {
         override fun toString(): String = "profile"
     }
 
-    private object SettingsDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-        override fun toString(): String = "settings"
-    }
-
     @BeforeTest
     fun setup() {
         NavKeyGenerator.reset()

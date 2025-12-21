@@ -201,7 +201,7 @@ class PredictiveBackContentTest {
     @Test
     fun `previous content is available after navigation`() {
         // Given
-        var previous: ScreenNode? = null
+        var previous: ScreenNode?
         var current = createScreen("screen-a", destination = PreviousDestination)
 
         // When - navigate to new screen

@@ -112,7 +112,7 @@ class TreeNavigator(
     // Backed by MutableStateFlow for synchronous updates in tests
     // =========================================================================
 
-    private val _currentDestination = MutableStateFlow<NavDestination?>(
+    private val _currentDestination = MutableStateFlow(
         _state.value.activeLeaf()?.destination
     )
 
@@ -121,7 +121,7 @@ class TreeNavigator(
      */
     override val currentDestination: StateFlow<NavDestination?> = _currentDestination.asStateFlow()
 
-    private val _previousDestination = MutableStateFlow<NavDestination?>(
+    private val _previousDestination = MutableStateFlow(
         computePreviousDestination(_state.value)
     )
 
@@ -192,7 +192,7 @@ class TreeNavigator(
      * Optional back handler registry for user-defined back handlers.
      * Set by the navigation host during composition.
      *
-     * When set, [handleBackInternal] will first consult registered handlers
+     * When set, [onBack] will first consult registered handlers
      * before falling back to tree-based back navigation.
      */
     var backHandlerRegistry: BackHandlerRegistry? = null
@@ -209,18 +209,6 @@ class TreeNavigator(
      */
     var windowSizeClass: WindowSizeClass? = null
 
-    // =========================================================================
-    // PARENT NAVIGATOR SUPPORT
-    // =========================================================================
-
-    private var _activeChild: BackPressHandler? = null
-
-    override val activeChild: BackPressHandler?
-        get() = _activeChild
-
-    override fun setActiveChild(child: BackPressHandler?) {
-        _activeChild = child
-    }
 
     // =========================================================================
     // NAVIGATION OPERATIONS
@@ -302,7 +290,7 @@ class TreeNavigator(
                     toKey = toKey
                 )
             }
-        } catch (e: IllegalStateException) {
+        } catch (_: IllegalStateException) {
             // If no active stack, create root stack with container
             val rootKey = generateKey()
             val containerKey = generateKey()
@@ -504,7 +492,7 @@ class TreeNavigator(
      * 4. For nested structures: cascade up the tree
      * 5. Return false to delegate to system (e.g., close app)
      */
-    override fun handleBackInternal(): Boolean {
+    override fun onBack(): Boolean {
         // 1. Check user-defined handlers first
         if (backHandlerRegistry?.handleBack() == true) {
             return true
@@ -621,6 +609,11 @@ class TreeNavigator(
      * navigator.navigateToPane(PaneRole.Supporting, ItemDetailDestination(itemId), switchFocus = false)
      * ```
      */
+    @Deprecated(
+        "navigateToPane() is deprecated. Use navigate() with a destination instead. Navigate will automatically target the correct pane based on destination.",
+        replaceWith = ReplaceWith("navigate(destination)"),
+        level = DeprecationLevel.WARNING
+    )
     override fun navigateToPane(
         role: PaneRole,
         destination: NavDestination,
@@ -658,6 +651,11 @@ class TreeNavigator(
      * navigator.switchPane(PaneRole.Primary)
      * ```
      */
+    @Deprecated(
+        "switchPane() is deprecated. Use navigate() with a destination instead. Navigate will automatically switch to the pane containing the destination.",
+        replaceWith = ReplaceWith("navigate(destination)"),
+        level = DeprecationLevel.WARNING
+    )
     override fun switchPane(role: PaneRole) {
         val currentState = _state.value
         val paneNode = currentState.findFirst<PaneNode>()
@@ -736,7 +734,7 @@ class TreeNavigator(
      * navigator.navigateToPane(PaneRole.Supporting, newDetailDestination)
      * ```
      */
-    override fun clearPane(role: PaneRole) {
+    fun clearPane(role: PaneRole) {
         val currentState = _state.value
         val paneNode = currentState.findFirst<PaneNode>()
             ?: throw IllegalStateException("No PaneNode found in current navigation state")
@@ -768,7 +766,7 @@ class TreeNavigator(
      *
      * @return The active tab index, or null if no TabNode exists
      */
-    override val activeTabIndex: Int?
+    val activeTabIndex: Int?
         get() = _state.value.findFirst<TabNode>()?.activeStackIndex
 
     // =========================================================================
@@ -862,7 +860,7 @@ class TreeNavigator(
         val current = _transitionState.value
         if (current is TransitionState.PredictiveBack) {
             _transitionState.value = current.copy(isCommitted = true)
-            handleBackInternal()
+            onBack()
             _transitionState.value = TransitionState.Idle
         }
     }

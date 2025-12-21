@@ -109,7 +109,7 @@ fun AuthForgotPasswordScreen(navigator: Navigator = koinInject()) {
 
             Text(
                 "Navigating back to Login stays within AuthFlow.\n" +
-                    "Use back button to pop from the stack.",
+                        "Use back button to pop from the stack.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

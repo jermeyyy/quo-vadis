@@ -59,11 +59,6 @@ sealed interface TransitionState {
             require(touchY in 0f..1f) { "touchY must be between 0 and 1, was: $touchY" }
         }
 
-        /**
-         * Returns true if the gesture should complete navigation when released.
-         * Default threshold is 20% progress.
-         */
-        fun shouldComplete(threshold: Float = 0.2f): Boolean = progress >= threshold || isCommitted
     }
 
     /**

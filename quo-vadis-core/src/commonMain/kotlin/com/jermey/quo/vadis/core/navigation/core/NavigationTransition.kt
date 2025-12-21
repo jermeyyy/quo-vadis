@@ -4,9 +4,6 @@ import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -16,10 +13,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 
 /**
  * Defines navigation transitions between screens.
@@ -166,6 +159,7 @@ class TransitionBuilder {
 /**
  * DSL for creating custom transitions.
  */
+@Suppress("unused")
 fun customTransition(block: TransitionBuilder.() -> Unit): NavigationTransition {
     return TransitionBuilder().apply(block).build()
 }

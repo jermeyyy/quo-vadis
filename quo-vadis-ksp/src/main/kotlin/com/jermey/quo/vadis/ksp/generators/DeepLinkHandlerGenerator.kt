@@ -463,34 +463,6 @@ class DeepLinkHandlerGenerator(
     }
 
     /**
-     * Build the register function from DeepLinkHandler interface (deprecated 3-param version).
-     * 
-     * This is a no-op for generated handlers since routes are determined at compile time.
-     */
-    private fun buildRegisterFunction(): FunSpec {
-        val actionType = LambdaTypeName.get(
-            parameters = listOf(
-                ParameterSpec.builder("destination", QuoVadisClassNames.NAV_DESTINATION).build(),
-                ParameterSpec.builder("navigator", NAVIGATOR).build(),
-                ParameterSpec.builder("parameters", MAP.parameterizedBy(STRING, STRING)).build()
-            ),
-            returnType = ClassName("kotlin", "Unit")
-        )
-        
-        return FunSpec.builder("register")
-            .addModifiers(KModifier.OVERRIDE)
-            .addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlin", "Suppress"))
-                    .addMember("%S", "DEPRECATION")
-                    .build()
-            )
-            .addParameter("pattern", STRING)
-            .addParameter("action", actionType)
-            .addComment("No-op: Generated handler uses compile-time routes from @Destination annotations")
-            .build()
-    }
-
-    /**
      * Build the new simplified register function from DeepLinkHandler interface (2-param version).
      * 
      * This is a no-op for generated handlers since routes are determined at compile time.

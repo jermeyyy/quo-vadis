@@ -102,18 +102,4 @@ class DeepLinkBlockGenerator(
         return destinations.any { !it.route.isNullOrEmpty() }
     }
 
-    /**
-     * Gets all unique route patterns from destinations.
-     *
-     * Utility method for debugging or validation purposes.
-     *
-     * @param destinations List of destination info
-     * @return Set of unique route patterns
-     */
-    fun getRoutePatterns(destinations: List<DestinationInfo>): Set<String> {
-        return destinations
-            .mapNotNull { it.route }
-            .filter { it.isNotEmpty() }
-            .toSet()
-    }
 }
