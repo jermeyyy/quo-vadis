@@ -58,7 +58,7 @@ enum class TabItemType {
  * ```kotlin
  * @Tab(name = "main")
  * sealed class MainTabs {
- *     @TabItem(label = "Home", icon = "home", rootGraph = HomeGraph::class)
+ *     @TabItem(label = "Home", icon = "home")
  *     data object Home : MainTabs(), Destination
  * }
  * ```

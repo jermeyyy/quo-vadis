@@ -92,7 +92,7 @@ import kotlin.reflect.KClass
  * // DEPRECATED - Do not use this pattern
  * @Tab(name = "mainTabs", initialTabLegacy = "Home")
  * sealed class MainTabs : Destination {
- *     @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
+ *     @TabItem(label = "Home", icon = "home")
  *     @Destination(route = "tabs/home")
  *     data object Home : MainTabs()
  * }
@@ -188,14 +188,13 @@ annotation class Tabs(
  *
  * ## Legacy Pattern (Deprecated)
  *
- * The old pattern applied `@TabItem` to nested sealed subclasses with a
- * separate `rootGraph` reference. This is deprecated due to KSP limitations
- * in KMP metadata compilation:
+ * The old pattern applied `@TabItem` to nested sealed subclasses.
+ * This is deprecated due to KSP limitations in KMP metadata compilation:
  * ```kotlin
  * // DEPRECATED - Do not use this pattern
  * @Tab(name = "mainTabs")
  * sealed class MainTabs : Destination {
- *     @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
+ *     @TabItem(label = "Home", icon = "home")
  *     @Destination(route = "tabs/home")
  *     data object Home : MainTabs()
  * }
@@ -208,11 +207,6 @@ annotation class Tabs(
  *   - iOS: SF Symbol name
  *   - Desktop/Web: Icon library identifier
  *   Empty string means no icon.
- * @property rootGraph **Deprecated**: When using the new pattern, the
- *   `@TabItem` class itself should also be annotated with `@Stack`, making
- *   the class itself the root graph. Use `Unit::class` (default) to indicate
- *   that the annotated class IS the stack. This parameter is kept for
- *   backward compatibility with the legacy nested subclass pattern.
  *
  * @see Tabs
  * @see Stack
@@ -223,6 +217,4 @@ annotation class Tabs(
 annotation class TabItem(
     val label: String,
     val icon: String = "",
-    @Deprecated("Use @TabItem + @Stack on the same class instead. The class itself becomes the root graph.")
-    val rootGraph: KClass<*> = Unit::class
 )

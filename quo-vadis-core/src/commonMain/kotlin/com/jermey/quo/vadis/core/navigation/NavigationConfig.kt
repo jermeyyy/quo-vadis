@@ -32,11 +32,9 @@ import kotlin.reflect.KClass
  * ```kotlin
  * // In app module
  * val appConfig = featureAConfig + featureBConfig + featureCConfig
+ * val navigator = rememberQuoVadisNavigator(MainTabs::class, appConfig)
  *
- * NavigationHost(
- *     config = appConfig,
- *     navigator = navigator
- * )
+ * NavigationHost(navigator)  // Config is read from navigator
  * ```
  *
  * When combining configs, the second (right-hand) config takes priority for

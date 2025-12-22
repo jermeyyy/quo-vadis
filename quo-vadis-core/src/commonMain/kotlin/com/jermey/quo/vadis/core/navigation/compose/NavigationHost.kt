@@ -445,67 +445,6 @@ fun NavigationHost(
 }
 
 // =============================================================================
-// NavigationHost Config Overload (Deprecated)
-// =============================================================================
-
-/**
- * NavigationHost that renders navigation content using a unified NavigationConfig.
- *
- * @deprecated This overload is deprecated because it requires passing config twice -
- * once to [rememberQuoVadisNavigator] and again here. Use the simplified overload
- * that reads config from the navigator instead.
- *
- * ## Migration
- *
- * Before (deprecated):
- * ```kotlin
- * val navigator = rememberQuoVadisNavigator(MainTabs::class, config)
- * NavigationHost(navigator, config)  // Config passed twice
- * ```
- *
- * After (recommended):
- * ```kotlin
- * val navigator = rememberQuoVadisNavigator(MainTabs::class, config)
- * NavigationHost(navigator)  // Config read from navigator
- * ```
- *
- * @param navigator The Navigator managing navigation state.
- * @param config The NavigationConfig providing all required registries.
- *   **Note**: This should match the config used to create the navigator.
- * @param modifier Modifier to apply to the host container.
- * @param enablePredictiveBack Whether to enable predictive back gesture support.
- * @param windowSizeClass Optional window size class for responsive layouts.
- *
- * @see NavigationConfig for configuration details
- * @see rememberQuoVadisNavigator for creating a Navigator
- */
-@Deprecated(
-    message = "Config should be passed only to rememberQuoVadisNavigator. " +
-        "Use NavigationHost(navigator) instead - config is read from navigator.",
-    replaceWith = ReplaceWith("NavigationHost(navigator, modifier, enablePredictiveBack, windowSizeClass)"),
-    level = DeprecationLevel.WARNING
-)
-@Composable
-fun NavigationHost(
-    navigator: Navigator,
-    config: NavigationConfig,
-    modifier: Modifier = Modifier,
-    enablePredictiveBack: Boolean = true,
-    windowSizeClass: WindowSizeClass? = null
-) {
-    NavigationHost(
-        navigator = navigator,
-        modifier = modifier,
-        screenRegistry = config.screenRegistry,
-        containerRegistry = config.containerRegistry,
-        transitionRegistry = config.transitionRegistry,
-        scopeRegistry = config.scopeRegistry,
-        enablePredictiveBack = enablePredictiveBack,
-        windowSizeClass = windowSizeClass
-    )
-}
-
-// =============================================================================
 // NavRenderScope Implementation
 // =============================================================================
 

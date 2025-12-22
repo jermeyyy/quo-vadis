@@ -34,7 +34,7 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
  * ```kotlin
  * @Tab(name = "mainTabs", initialTabLegacy = "Home")
  * sealed class MainTabs : Destination {
- *     @TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
+ *     @TabItem(label = "Home", icon = "home")
  *     @Destination(route = "tabs/home")
  *     data object Home : MainTabs()
  * }
@@ -243,7 +243,7 @@ class TabExtractor(
      * In the new pattern:
      * - The class has @TabItem (label, icon)
      * - The class may have @Stack (NESTED_STACK) or @Destination (FLAT_SCREEN)
-     * - rootGraphClass is null (class IS the stack or destination)
+     * - The class IS the stack or destination itself
      *
      * Tab type detection:
      * - @TabItem + @Stack → [TabItemType.NESTED_STACK]
@@ -364,7 +364,6 @@ class TabExtractor(
      * In the legacy pattern:
      * - The class is a nested sealed subclass with @TabItem
      * - The class must also have @Destination
-     * - rootGraph parameter is deprecated and ignored
      *
      * @param classDeclaration The nested @TabItem subclass
      * @return TabItemInfo or null if not valid
@@ -391,22 +390,6 @@ class TabExtractor(
         val icon = tabItemAnnotation.arguments.find {
             it.name?.asString() == "icon"
         }?.value as? String ?: ""
-
-        // Note: rootGraph parameter is deprecated and no longer supported
-        // Check if it's set and warn the user
-        val rootGraphType = tabItemAnnotation.arguments.find {
-            it.name?.asString() == "rootGraph"
-        }?.value as? KSType
-        val rootGraphQualifiedName = (rootGraphType?.declaration as? KSClassDeclaration)
-            ?.qualifiedName?.asString()
-        if (rootGraphQualifiedName != null && rootGraphQualifiedName != "kotlin.Unit") {
-            logger.warn(
-                "Legacy @TabItem '${classDeclaration.simpleName.asString()}' uses deprecated " +
-                    "'rootGraph' parameter. Please migrate to the new pattern using @Stack " +
-                    "annotation directly on the tab class.",
-                classDeclaration
-            )
-        }
 
         // Legacy pattern is now treated as FLAT_SCREEN with the destination info
         return TabItemInfo(

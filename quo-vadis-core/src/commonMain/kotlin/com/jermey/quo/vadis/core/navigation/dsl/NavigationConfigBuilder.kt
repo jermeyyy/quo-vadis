@@ -414,10 +414,8 @@ class NavigationConfigBuilder {
  *     transition<DetailScreen>(NavTransition.SlideHorizontal)
  * }
  *
- * NavigationHost(
- *     config = config,
- *     navigator = navigator
- * )
+ * val navigator = rememberQuoVadisNavigator(MainStack::class, config)
+ * NavigationHost(navigator)  // Config is read from navigator
  * ```
  *
  * @param builder Configuration lambda applied to [NavigationConfigBuilder]

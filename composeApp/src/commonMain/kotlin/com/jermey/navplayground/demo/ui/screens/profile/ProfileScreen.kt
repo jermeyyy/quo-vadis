@@ -74,7 +74,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 @Composable
 fun ProfileScreen(
     navigator: Navigator = koinInject(),
-    container: Store<ProfileState, ProfileIntent, ProfileAction> = container()
+    container: Store<ProfileState, ProfileIntent, ProfileAction> = container<ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

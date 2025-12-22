@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### ⚠️ Breaking Changes - Deprecated API Removal
+
+The following deprecated APIs have been removed as part of the planned cleanup:
+
+#### Navigator Interface
+- **Removed**: `Navigator.navigateToPane(role, destination, switchFocus, transition)` - Use `navigate(destination)` instead. The navigation system automatically targets the correct pane based on the destination.
+- **Removed**: `Navigator.switchPane(role)` - Navigate to a destination in the target pane instead.
+
+#### Type Aliases
+- **Removed**: `PaneWrapperScope` - Use `PaneContainerScope` instead.
+- **Removed**: `TabWrapperScope` - Use `TabsContainerScope` instead.
+
+#### Functions
+- **Removed**: `createTabWrapperScope()` - Use `createTabsContainerScope()` instead.
+
+#### NavigationHost
+- **Removed**: `NavigationHost(navigator, config, ...)` overload - Config should only be passed to `rememberQuoVadisNavigator()`. Use `NavigationHost(navigator)` instead.
+
+#### Annotations
+- **Removed**: `@TabItem.rootGraph` parameter - Use the new pattern with separate `@TabItem` and `@Stack` annotations instead.
+
+### Migration Guide
+
+```kotlin
+// Before (removed)
+navigator.navigateToPane(PaneRole.Supporting, DetailDestination(itemId))
+navigator.switchPane(PaneRole.Primary)
+
+// After
+navigator.navigate(DetailDestination(itemId))  // Automatically targets correct pane
+
+// Before (removed)
+val navigator = rememberQuoVadisNavigator(MainTabs::class, config)
+NavigationHost(navigator, config)  // Config passed twice
+
+// After
+val navigator = rememberQuoVadisNavigator(MainTabs::class, config)
+NavigationHost(navigator)  // Config read from navigator
+
+// Before (removed - @TabItem.rootGraph)
+@TabItem(label = "Home", icon = "home", rootGraph = HomeDestination::class)
+data object Home : MainTabs()
+
+// After (use @TabItem + @Stack pattern)
+@TabItem(label = "Home", icon = "home")
+@Stack(name = "homeStack", startDestination = Feed::class)
+sealed class HomeTab : Destination { ... }
+```
+
 ## [0.2.0] - 2025-12-19
 
 ### ⚠️ Breaking Changes
