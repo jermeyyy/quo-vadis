@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 
 /**
  * Interface for screen registries that map destinations to composable content.
@@ -21,16 +20,14 @@ interface ScreenRegistry {
      * Render composable content for the given destination.
      *
      * @param destination The destination to render
-     * @param navigator The Navigator instance for navigation actions
      * @param sharedTransitionScope Optional SharedTransitionScope for shared element transitions
      * @param animatedVisibilityScope Optional AnimatedVisibilityScope for coordinated animations
      */
     @Composable
     fun Content(
         destination: NavDestination,
-        navigator: Navigator,
-        sharedTransitionScope: SharedTransitionScope?,
-        animatedVisibilityScope: AnimatedVisibilityScope?
+        sharedTransitionScope: SharedTransitionScope? = null,
+        animatedVisibilityScope: AnimatedVisibilityScope? = null
     )
 
     /**

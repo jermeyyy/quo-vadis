@@ -99,12 +99,11 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
  *     @Composable
  *     override fun Content(
  *         destination: NavDestination,
- *         navigator: Navigator,
  *         sharedTransitionScope: SharedTransitionScope?,
  *         animatedVisibilityScope: AnimatedVisibilityScope?
  *     ) {
  *         when (destination) {
- *             is MyTestDestination -> TestScreen(destination, navigator)
+ *             is MyTestDestination -> TestScreen(destination)
  *             else -> {}
  *         }
  *     }
@@ -267,12 +266,11 @@ class FakeSaveableStateHolder : SaveableStateHolder {
  *     @Composable
  *     override fun Content(
  *         destination: NavDestination,
- *         navigator: Navigator,
  *         sharedTransitionScope: SharedTransitionScope?,
  *         animatedVisibilityScope: AnimatedVisibilityScope?
  *     ) {
  *         when (destination) {
- *             is TestDestination -> TestScreen(navigator)
+ *             is TestDestination -> TestScreen()
  *             else -> {}
  *         }
  *     }
@@ -292,14 +290,12 @@ object EmptyScreenRegistry : ScreenRegistry {
      * Renders nothing for any destination.
      *
      * @param destination The destination to render (ignored)
-     * @param navigator The Navigator instance (ignored)
      * @param sharedTransitionScope Shared transition scope (ignored)
      * @param animatedVisibilityScope Animated visibility scope (ignored)
      */
     @Composable
     override fun Content(
         destination: NavDestination,
-        navigator: Navigator,
         sharedTransitionScope: SharedTransitionScope?,
         animatedVisibilityScope: AnimatedVisibilityScope?
     ) {

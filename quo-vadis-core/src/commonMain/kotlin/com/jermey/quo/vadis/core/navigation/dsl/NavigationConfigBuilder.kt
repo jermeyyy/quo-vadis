@@ -10,7 +10,6 @@ import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlin.reflect.KClass
 
 /**
@@ -25,8 +24,8 @@ import kotlin.reflect.KClass
  * ```kotlin
  * val config = navigationConfig {
  *     // Register screens
- *     screen<HomeScreen> { destination, navigator, _, _ ->
- *         HomeScreenContent(destination, navigator)
+ *     screen<HomeScreen> { destination, _, _ ->
+ *         HomeScreenContent(destination)
  *     }
  *
  *     // Register stack container
@@ -102,16 +101,15 @@ class NavigationConfigBuilder {
     /**
      * Registers a screen with its composable content.
      *
-     * The content lambda receives the destination instance, navigator, and optional
+     * The content lambda receives the destination instance and optional
      * animation scopes for shared element transitions.
      *
      * ## Example
      *
      * ```kotlin
-     * screen<ProfileScreen> { destination, navigator, sharedScope, animScope ->
+     * screen<ProfileScreen> { destination, sharedScope, animScope ->
      *     ProfileContent(
      *         userId = destination.userId,
-     *         onBack = { navigator.navigateBack() },
      *         sharedTransitionScope = sharedScope,
      *         animatedVisibilityScope = animScope
      *     )
@@ -124,7 +122,6 @@ class NavigationConfigBuilder {
     inline fun <reified D : NavDestination> screen(
         noinline content: @Composable (
             destination: D,
-            navigator: Navigator,
             sharedTransitionScope: SharedTransitionScope?,
             animatedVisibilityScope: AnimatedVisibilityScope?
         ) -> @Composable () -> Unit
@@ -134,7 +131,6 @@ class NavigationConfigBuilder {
             destinationClass = D::class,
             content = content as @Composable (
                 NavDestination,
-                Navigator,
                 SharedTransitionScope?,
                 AnimatedVisibilityScope?
             ) -> Unit
@@ -406,8 +402,8 @@ class NavigationConfigBuilder {
  *
  * ```kotlin
  * val config = navigationConfig {
- *     screen<HomeScreen> { dest, nav, _, _ ->
- *         HomeContent(dest, nav)
+ *     screen<HomeScreen> { dest, _, _ ->
+ *         HomeContent(dest)
  *     }
  *
  *     stack<MainStack>("main") {

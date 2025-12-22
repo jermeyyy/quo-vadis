@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -66,7 +65,6 @@ class CompositeScreenRegistryTest {
         @Composable
         override fun Content(
             destination: NavDestination,
-            navigator: Navigator,
             sharedTransitionScope: SharedTransitionScope?,
             animatedVisibilityScope: AnimatedVisibilityScope?
         ) {
