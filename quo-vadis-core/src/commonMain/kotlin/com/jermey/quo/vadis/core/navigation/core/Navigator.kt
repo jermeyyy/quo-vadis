@@ -199,51 +199,6 @@ interface Navigator : BackPressHandler {
     // =========================================================================
 
     /**
-     * Navigate to a destination within a specific pane.
-     *
-     * This is the primary API for master-detail and supporting pane patterns.
-     * The destination is pushed onto the target pane's stack.
-     *
-     * @param role Target pane role (Primary, Supporting, Extra)
-     * @param destination Destination to navigate to
-     * @param switchFocus If true, also changes activePaneRole to target role
-     * @param transition Optional transition animation
-     *
-     * @throws IllegalStateException if no PaneNode found in current state
-     * @throws IllegalArgumentException if role is not configured in the PaneNode
-     */
-    @Deprecated(
-        message = "navigateToPane() is deprecated. Use navigate() with a destination instead. " +
-            "Navigate will automatically target the correct pane based on destination.",
-        replaceWith = ReplaceWith("navigate(destination)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun navigateToPane(
-        role: PaneRole,
-        destination: NavDestination,
-        switchFocus: Boolean = true,
-        transition: NavigationTransition? = null
-    )
-
-    /**
-     * Switch the active (focused) pane without navigation.
-     *
-     * Changes which pane receives navigation focus. On compact screens,
-     * this determines which pane is visible.
-     *
-     * @param role Pane role to activate
-     * @throws IllegalStateException if no PaneNode found
-     * @throws IllegalArgumentException if role is not configured
-     */
-    @Deprecated(
-        message = "switchPane() is deprecated. Use navigate() with a destination instead. " +
-            "Navigate will automatically switch to the pane containing the destination.",
-        replaceWith = ReplaceWith("navigate(destination)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun switchPane(role: PaneRole)
-
-    /**
      * Check if a pane role is available in the current state.
      *
      * @param role Pane role to check

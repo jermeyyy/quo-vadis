@@ -599,86 +599,6 @@ class TreeNavigator(
     // =========================================================================
 
     /**
-     * Navigate to a destination within a specific pane.
-     *
-     * This is the primary API for master-detail and supporting pane patterns.
-     * The destination is pushed onto the target pane's stack.
-     *
-     * @param role Target pane role (Primary, Supporting, Extra)
-     * @param destination Destination to navigate to
-     * @param switchFocus If true, also changes activePaneRole to target role
-     * @param transition Optional transition animation
-     *
-     * @throws IllegalStateException if no PaneNode found in current state
-     * @throws IllegalArgumentException if role is not configured in the PaneNode
-     *
-     * Example usage:
-     * ```kotlin
-     * // Master-detail: show item detail in supporting pane
-     * navigator.navigateToPane(PaneRole.Supporting, ItemDetailDestination(itemId))
-     *
-     * // Keep focus on list while loading detail
-     * navigator.navigateToPane(PaneRole.Supporting, ItemDetailDestination(itemId), switchFocus = false)
-     * ```
-     */
-    @Deprecated(
-        "navigateToPane() is deprecated. Use navigate() with a destination instead. Navigate will automatically target the correct pane based on destination.",
-        replaceWith = ReplaceWith("navigate(destination)"),
-        level = DeprecationLevel.WARNING
-    )
-    override fun navigateToPane(
-        role: PaneRole,
-        destination: NavDestination,
-        switchFocus: Boolean,
-        transition: NavigationTransition?
-    ) {
-        val currentState = _state.value
-        val paneNode = currentState.findFirst<PaneNode>()
-            ?: throw IllegalStateException("No PaneNode found in current navigation state")
-
-        val newState = TreeMutator.navigateToPane(
-            root = currentState,
-            nodeKey = paneNode.key,
-            role = role,
-            destination = destination,
-            switchFocus = switchFocus
-        ) { generateKey() }
-
-        updateStateWithTransition(newState, transition)
-    }
-
-    /**
-     * Switch the active (focused) pane without navigation.
-     *
-     * Changes which pane receives navigation focus. On compact screens,
-     * this determines which pane is visible.
-     *
-     * @param role Pane role to activate
-     * @throws IllegalStateException if no PaneNode found in current state
-     * @throws IllegalArgumentException if role is not configured
-     *
-     * Example usage:
-     * ```kotlin
-     * // Return focus to list pane
-     * navigator.switchPane(PaneRole.Primary)
-     * ```
-     */
-    @Deprecated(
-        "switchPane() is deprecated. Use navigate() with a destination instead. Navigate will automatically switch to the pane containing the destination.",
-        replaceWith = ReplaceWith("navigate(destination)"),
-        level = DeprecationLevel.WARNING
-    )
-    override fun switchPane(role: PaneRole) {
-        val currentState = _state.value
-        val paneNode = currentState.findFirst<PaneNode>()
-            ?: throw IllegalStateException("No PaneNode found in current navigation state")
-
-        val newState = TreeMutator.switchActivePane(currentState, paneNode.key, role)
-        _state.value = newState
-        updateDerivedState(newState)
-    }
-
-    /**
      * Check if a pane role is available in the current state.
      *
      * @param role Pane role to check
@@ -687,7 +607,7 @@ class TreeNavigator(
      * Example usage:
      * ```kotlin
      * if (navigator.isPaneAvailable(PaneRole.Extra)) {
-     *     navigator.navigateToPane(PaneRole.Extra, SettingsDestination)
+     *     navigator.navigate(SettingsDestination)
      * }
      * ```
      */
@@ -743,7 +663,7 @@ class TreeNavigator(
      * ```kotlin
      * // Reset detail pane when selecting new list item
      * navigator.clearPane(PaneRole.Supporting)
-     * navigator.navigateToPane(PaneRole.Supporting, newDetailDestination)
+     * navigator.navigate(newDetailDestination)
      * ```
      */
     fun clearPane(role: PaneRole) {

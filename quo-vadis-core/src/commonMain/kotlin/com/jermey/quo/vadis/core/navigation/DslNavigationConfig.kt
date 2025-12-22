@@ -52,10 +52,8 @@ import kotlin.reflect.KClass
  *     }
  * }
  *
- * NavigationHost(
- *     config = config,
- *     navigator = navigator
- * )
+ * val navigator = rememberQuoVadisNavigator(MainTabs::class, config)
+ * NavigationHost(navigator)  // Config is read from navigator
  * ```
  *
  * @param screens Map of destination classes to their screen entry configurations

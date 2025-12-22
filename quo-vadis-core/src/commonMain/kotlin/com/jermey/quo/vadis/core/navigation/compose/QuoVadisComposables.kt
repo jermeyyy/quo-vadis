@@ -32,10 +32,7 @@ import kotlin.reflect.KClass
  * fun App() {
  *     val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
  *
- *     NavigationHost(
- *         navigator = navigator,
- *         config = GeneratedNavigationConfig
- *     )
+ *     NavigationHost(navigator)  // Config is read from navigator
  * }
  * ```
  *

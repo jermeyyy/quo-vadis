@@ -167,14 +167,3 @@ internal fun createPaneContainerScope(
     isTransitioning = isTransitioning,
     onNavigateToPane = onNavigateToPane
 )
-
-/**
- * Backward compatibility typealias for [PaneContainerScope].
- *
- * @deprecated Use [PaneContainerScope] instead.
- */
-@Deprecated(
-    message = "Use PaneContainerScope instead",
-    replaceWith = ReplaceWith("PaneContainerScope", "com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope")
-)
-typealias PaneWrapperScope = PaneContainerScope

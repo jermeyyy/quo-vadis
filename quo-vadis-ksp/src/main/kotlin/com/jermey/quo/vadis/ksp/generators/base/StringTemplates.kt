@@ -47,21 +47,20 @@ object StringTemplates {
         |
         |### One-liner
         |```kotlin
-        |QuoVadisNavigation(MainTabs::class)
+        |QuoVadisNavigation(MainTabs::class, GeneratedNavigationConfig)
         |```
         |
         |### Standard
         |```kotlin
-        |val navigator = rememberQuoVadisNavigator(MainTabs::class)
-        |NavigationHost(navigator, config = GeneratedNavigationConfig)
+        |val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
+        |NavigationHost(navigator)  // Config is read from navigator
         |```
         |
-        |### Advanced
+        |### Multi-Module
         |```kotlin
-        |NavigationHost(
-        |    navigator = navigator,
-        |    config = GeneratedNavigationConfig + FeatureModuleConfig
-        |)
+        |val combinedConfig = GeneratedNavigationConfig + FeatureModuleConfig
+        |val navigator = rememberQuoVadisNavigator(MainTabs::class, combinedConfig)
+        |NavigationHost(navigator)
         |```
     """.trimMargin()
 

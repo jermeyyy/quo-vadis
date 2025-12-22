@@ -219,32 +219,6 @@ class FakeNavigator(
     // PANE NAVIGATION (Stubbed for testing)
     // =========================================================================
 
-    @Deprecated(
-        "navigateToPane() is deprecated. Use navigate() with a destination instead. " +
-                "Navigate will automatically target the correct pane based on destination.",
-        replaceWith = ReplaceWith("navigate(destination)"),
-        level = DeprecationLevel.WARNING
-    )
-    override fun navigateToPane(
-        role: PaneRole,
-        destination: NavDestination,
-        switchFocus: Boolean,
-        transition: NavigationTransition?
-    ) {
-        // Simplified: treat as regular navigate
-        navigate(destination, transition)
-    }
-
-    @Deprecated(
-        "switchPane() is deprecated. Use navigate() with a destination instead. " +
-                "Navigate will automatically switch to the pane containing the destination.",
-        replaceWith = ReplaceWith("navigate(destination)"),
-        level = DeprecationLevel.WARNING
-    )
-    override fun switchPane(role: PaneRole) {
-        // No-op for fake navigator
-    }
-
     override fun isPaneAvailable(role: PaneRole): Boolean = false
 
     override fun paneContent(role: PaneRole): NavNode? = null

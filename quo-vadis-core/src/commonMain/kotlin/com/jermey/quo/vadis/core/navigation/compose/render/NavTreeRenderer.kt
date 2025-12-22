@@ -579,7 +579,12 @@ internal fun PaneRenderer(
             paneContents = paneContents,
             isExpanded = isExpanded,
             isTransitioning = false, // Transition state tracked by AnimatedNavContent
-            onNavigateToPane = { role -> scope.navigator.switchPane(role) }
+            onNavigateToPane = { role ->
+                // Use TreeMutator directly to switch active pane
+                val currentState = scope.navigator.state.value
+                val newState = TreeMutator.switchActivePane(currentState, node.key, role)
+                scope.navigator.updateState(newState)
+            }
         )
     }
 
@@ -592,7 +597,12 @@ internal fun PaneRenderer(
                 paneContents = buildPaneContentList(node, isExpanded),
                 isExpanded = isExpanded,
                 isTransitioning = false,
-                onNavigateToPane = { role -> scope.navigator.switchPane(role) }
+                onNavigateToPane = { role ->
+                    // Use TreeMutator directly to switch active pane
+                    val currentState = scope.navigator.state.value
+                    val newState = TreeMutator.switchActivePane(currentState, node.key, role)
+                    scope.navigator.updateState(newState)
+                }
             )
         }
     }

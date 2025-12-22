@@ -169,32 +169,3 @@ internal fun createTabsContainerScope(
     isTransitioning = isTransitioning,
     onSwitchTab = onSwitchTab
 )
-
-// ================================
-// Backward compatibility aliases
-// ================================
-
-/**
- * @deprecated Use [TabsContainerScope] instead. This typealias is provided for backward compatibility.
- */
-@Deprecated(
-    message = "Use TabsContainerScope instead",
-    replaceWith = ReplaceWith("TabsContainerScope", "com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope")
-)
-typealias TabWrapperScope = TabsContainerScope
-
-/**
- * @deprecated Use [createTabsContainerScope] instead. This function is provided for backward compatibility.
- */
-@Suppress("FunctionName")
-@Deprecated(
-    message = "Use createTabsContainerScope instead",
-    replaceWith = ReplaceWith("createTabsContainerScope(navigator, activeTabIndex, tabMetadata, isTransitioning, onSwitchTab)")
-)
-internal fun createTabWrapperScope(
-    navigator: Navigator,
-    activeTabIndex: Int,
-    tabMetadata: List<TabMetadata>,
-    isTransitioning: Boolean,
-    onSwitchTab: (Int) -> Unit
-): TabsContainerScope = createTabsContainerScope(navigator, activeTabIndex, tabMetadata, isTransitioning, onSwitchTab)
