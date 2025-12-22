@@ -94,13 +94,13 @@ import com.jermey.quo.vadis.core.navigation.core.route
 val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
 
 // =============================================================================
-// HierarchicalQuoVadisHost
+// HierarchicalNavigationHost
 // =============================================================================
 
 /**
  * Unified navigation host that renders NavNode trees using hierarchical rendering.
  *
- * `HierarchicalQuoVadisHost` is the new rendering approach that preserves the parent-child
+ * `HierarchicalNavigationHost` is the new rendering approach that preserves the parent-child
  * relationships in the navigation tree, enabling proper wrapper composition, coordinated
  * animations, and seamless predictive back gestures.
  *
@@ -119,7 +119,7 @@ val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
  * fun App() {
  *     val navigator = rememberNavigator(initialGraph)
  *
- *     HierarchicalQuoVadisHost(
+ *     HierarchicalNavigationHost(
  *         navigator = navigator,
  *         modifier = Modifier.fillMaxSize()
  *     )
@@ -129,7 +129,7 @@ val LocalNavRenderScope = compositionLocalOf<NavRenderScope?> { null }
  * ## With Custom Registries
  *
  * ```kotlin
- * HierarchicalQuoVadisHost(
+ * HierarchicalNavigationHost(
  *     navigator = navigator,
  *     screenRegistry = MyGeneratedScreenRegistry,
  *     containerRegistry = MyGeneratedContainerRegistry,

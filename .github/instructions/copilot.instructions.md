@@ -43,7 +43,7 @@ fun App() {
     val navTree = remember { buildHomeDestinationNavNode() }  // KSP-generated
     val navigator = TreeNavigator(initialState = navTree)
     
-    QuoVadisHost(navigator = navigator, screenRegistry = GeneratedScreenRegistry)
+    NavigationHost(navigator = navigator, screenRegistry = GeneratedScreenRegistry)
 }
 ```
 
@@ -101,7 +101,7 @@ mcp_gradle-mcp_clean()
 |---------|----------|
 | **Refactoring plan** | `docs/refactoring-plan/` |
 | NavNode tree types | `quo-vadis-core/.../navigation/core/NavNode.kt` |
-| QuoVadisHost | `quo-vadis-core/.../navigation/compose/QuoVadisHost.kt` |
+| NavigationHost | `quo-vadis-core/.../navigation/compose/NavigationHost.kt` |
 | TreeNavigator | `quo-vadis-core/.../navigation/core/TreeNavigator.kt` |
 | New annotations | `quo-vadis-annotations/src/.../` |
 | Demo destinations | `composeApp/.../demo/destinations/` |

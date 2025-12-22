@@ -30,7 +30,7 @@ import kotlinx.serialization.Serializable
  * - Which pane/stack/tab is "active" (has navigation focus)
  * - Adaptation strategies (how panes SHOULD adapt when space is limited)
  *
- * **What the Renderer (QuoVadisHost) determines:**
+ * **What the Renderer (NavigationHost) determines:**
  * - Which panes are currently VISIBLE (based on WindowSizeClass)
  * - Layout arrangement (side-by-side, stacked, levitated)
  * - Animation states during transitions

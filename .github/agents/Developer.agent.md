@@ -233,11 +233,11 @@ Return: Analysis report with options and recommendation.
 |-----------|---------|
 | NavNode types | `core/navigation/node/` |
 | TreeMutator | `core/navigation/tree/` |
-| QuoVadisHost | `core/navigation/compose/` |
+| NavigationHost | `core/navigation/compose/` |
 | Flattening | `core/navigation/render/` |
 
 ### Reuse Candidates
-- Transition/animation logic → QuoVadisHost
+- Transition/animation logic → NavigationHost
 - Serialization utilities → NavNode serialization
 - Platform back handling → New predictive back
 - SaveableStateHolder → New renderer
@@ -260,7 +260,7 @@ Return: Analysis report with options and recommendation.
 | OLD (Replacing) | NEW (Target) |
 |-----------------|--------------|
 | `List<Destination>` | `NavNode` tree |
-| Multiple hosts | `QuoVadisHost` |
+| Multiple hosts | `NavigationHost` |
 | Navigator state | `StateFlow<NavNode>` |
 | Direct manipulation | `TreeMutator` |
 

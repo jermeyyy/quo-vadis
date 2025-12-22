@@ -261,7 +261,7 @@ fun App() {
     }
     
     // Render the navigation tree - config read from navigator
-    QuoVadisHost(
+    NavigationHost(
         navigator = navigator,
         screenRegistry = config.screenRegistry
     )

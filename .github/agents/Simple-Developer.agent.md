@@ -134,11 +134,10 @@ Trivial formatting, obvious spec choices, internal implementation details.
 |-----------|---------|
 | NavNode types | `core/navigation/node/` |
 | TreeMutator | `core/navigation/tree/` |
-| QuoVadisHost | `core/navigation/compose/` |
-| Flattening | `core/navigation/render/` |
+| NavigationHost | `core/navigation/compose/` |
 
 ### Reuse Candidates
-- Transition/animation logic → QuoVadisHost
+- Transition/animation logic → NavigationHost
 - Serialization utilities → NavNode serialization
 - Platform back handling → New predictive back
 - SaveableStateHolder → New renderer
@@ -151,16 +150,6 @@ Trivial formatting, obvious spec choices, internal implementation details.
 - Immutable (`val` > `var`), sealed classes, extension functions
 - Composables: `PascalCase`, `Modifier` last, state hoisting, `LaunchedEffect` for effects
 - ALL public APIs need KDoc with `@param`, `@return`
-
-### Architecture Patterns
-| OLD (Replacing) | NEW (Target) |
-|-----------------|--------------|
-| `List<Destination>` | `NavNode` tree |
-| Multiple hosts | `QuoVadisHost` |
-| Navigator state | `StateFlow<NavNode>` |
-| Direct manipulation | `TreeMutator` |
-
-**During refactor**: Create new components, don't modify old unless spec says to.
 
 ---
 
@@ -207,11 +196,6 @@ Trivial formatting, obvious spec choices, internal implementation details.
 **Platforms**: Android, iOS, Web, Desktop
 **Modules**: `quo-vadis-core`, `quo-vadis-annotations`, `quo-vadis-ksp`, `composeApp`
 **Source Sets**: `commonMain` (core), `androidMain`, `iosMain`, `desktopMain`, `jsMain`, `wasmJsMain`
-
-**Refactoring Plan**: `docs/refactoring-plan/`
-- `INDEX.md` - Master task list
-- `PLAN_PROGRESS.md` - Progress tracker
-- `phase1-core/` through `phase8-testing/` - Task specs
 
 ---
 

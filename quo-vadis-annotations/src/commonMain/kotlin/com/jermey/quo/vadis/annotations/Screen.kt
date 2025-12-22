@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
  *
  * Apply this annotation to `@Composable` functions to register them as the
  * renderer for a particular destination. When the navigation state changes
- * to show a destination, `QuoVadisHost` uses the `GeneratedScreenRegistry`
+ * to show a destination, `NavigationHost` uses the `GeneratedScreenRegistry`
  * (produced by KSP) to find and invoke the matching Composable.
  *
  * ## Function Signature Requirements
@@ -43,7 +43,7 @@ import kotlin.reflect.KClass
  * ### With Shared Element Scopes (optional)
  *
  * To participate in shared element transitions, add optional scope parameters.
- * These are nullable and provided by `QuoVadisHost` when transitions are active:
+ * These are nullable and provided by `NavigationHost` when transitions are active:
  *
  * ```kotlin
  * @Screen(HomeDestination.Detail::class)
@@ -61,14 +61,14 @@ import kotlin.reflect.KClass
  * ## KSP Processing
  *
  * KSP generates entries in `GeneratedScreenRegistry` mapping each destination
- * class to its Composable renderer. The registry is used by `QuoVadisHost`
+ * class to its Composable renderer. The registry is used by `NavigationHost`
  * at runtime to resolve which Composable to display.
  *
  * ## NavNode Mapping
  *
  * ```
  * @Screen(Destination::class) → GeneratedScreenRegistry entry
- *                             → QuoVadisHost renders via ScreenNode
+ *                             → NavigationHost renders via ScreenNode
  * ```
  *
  * @property destination The destination class this Composable renders.

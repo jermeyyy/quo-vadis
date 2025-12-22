@@ -85,7 +85,7 @@ This release introduces a complete architecture refactor from linear backstack t
   - Navigator extensions generator
   - Deep link handler generator
   - Enhanced validation and error reporting
-- **Hierarchical Rendering**: True parent-child composition with coordinated animations via `QuoVadisHost`.
+- **Hierarchical Rendering**: True parent-child composition with coordinated animations via `NavigationHost`.
 - **Container Registry**: Unified container-aware navigation with `ContainerRegistry`.
 - **Navigation with Results**: Type-safe `NavigationResult` API for passing data back from screens.
 - **Navigation Lifecycle**: `NavigationLifecycle` API for observing navigation events.

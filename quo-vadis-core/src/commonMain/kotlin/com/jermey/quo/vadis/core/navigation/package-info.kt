@@ -13,7 +13,7 @@ package com.jermey.quo.vadis.core.navigation
  * - DeepLink: Deep link handling
  *
  * ## Compose Integration (navigation.compose)
- * - QuoVadisHost: Main navigation host composable
+ * - NavigationHost: Main navigation host composable
  * - rememberTreeNavigator: Navigator factory
  *
  * ## DI Integration (navigation.integration)

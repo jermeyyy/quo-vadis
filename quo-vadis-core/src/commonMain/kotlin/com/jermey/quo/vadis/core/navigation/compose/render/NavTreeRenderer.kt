@@ -68,7 +68,7 @@ import com.jermey.quo.vadis.core.navigation.core.TreeMutator
  * ## Example Usage
  *
  * ```kotlin
- * // Inside QuoVadisHost
+ * // Inside NavigationHost
  * val currentState by navigator.state.collectAsState()
  * var previousState by remember { mutableStateOf<NavNode?>(null) }
  *
