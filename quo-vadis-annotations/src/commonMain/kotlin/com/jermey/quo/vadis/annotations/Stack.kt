@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
  *
  * Apply to a sealed class containing destination subclasses:
  * ```kotlin
- * @Stack(name = "home", startDestinationLegacy = "Feed")
+ * @Stack(name = "home", startDestination = HomeDestination.Feed::class)
  * sealed class HomeDestination {
  *
  *     @Destination(route = "home/feed")
@@ -44,17 +44,13 @@ import kotlin.reflect.KClass
  *
  * The start destination is resolved with the following priority:
  * 1. Type-safe [startDestination] (if not [Unit])
- * 2. String-based [startDestinationLegacy] (if not empty)
- * 3. First destination in declaration order
- *
- * If [startDestinationLegacy] is empty, the first destination in declaration
- * order is used as the initial screen.
+ * 2. First destination in declaration order (if [startDestination] is [Unit])
  *
  * ## Examples
  *
  * ### Basic Stack Navigation
  * ```kotlin
- * @Stack(name = "home", startDestinationLegacy = "Feed")
+ * @Stack(name = "home", startDestination = HomeDestination.Feed::class)
  * sealed class HomeDestination {
  *
  *     @Destination(route = "home/feed")
@@ -79,8 +75,8 @@ import kotlin.reflect.KClass
  *
  * ### Stack with Default Start Destination
  * ```kotlin
- * // First destination (Overview) is used as start when startDestinationLegacy is empty
- * @Stack(name = "profile")
+ * // First destination (Overview) is used as start when startDestination is Unit::class
+ * @Stack(name = "profile", startDestination = Unit::class)
  * sealed class ProfileDestination {
  *
  *     @Destination(route = "profile/overview")

@@ -157,7 +157,7 @@ enum class TransitionType {
  *
  * ### Standard Navigation Flow
  * ```kotlin
- * @Stack(name = "home", startDestinationLegacy = "List")
+ * @Stack(name = "home", startDestination = HomeDestination.List::class)
  * sealed class HomeDestination {
  *
  *     // Default transition (SlideHorizontal)
@@ -184,7 +184,7 @@ enum class TransitionType {
  * ### Tab Content Transitions
  * ```kotlin
  * @TabItem(label = "Home", icon = "home")
- * @Stack(name = "homeStack", startDestinationLegacy = "Feed")
+ * @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
  * sealed class HomeTab {
  *
  *     @Transition(type = TransitionType.Fade)

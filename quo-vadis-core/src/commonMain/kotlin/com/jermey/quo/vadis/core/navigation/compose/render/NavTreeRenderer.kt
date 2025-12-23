@@ -369,7 +369,6 @@ private fun detectBackNavigation(current: StackNode, previous: StackNode?): Bool
  * @see ContainerRegistry.TabsContainer
  * @see AnimatedNavContent
  */
-@Suppress("DEPRECATION") // Internal usage - deprecation is for public API users
 @Composable
 internal fun TabRenderer(
     node: TabNode,

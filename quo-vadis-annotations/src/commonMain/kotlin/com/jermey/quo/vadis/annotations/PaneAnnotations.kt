@@ -344,7 +344,7 @@ annotation class Pane(
  * with [@Stack]:
  * ```kotlin
  * // Referenced stack graph
- * @Stack(name = "productList", startDestinationLegacy = "Products")
+ * @Stack(name = "productList", startDestination = ProductListGraph.Products::class)
  * sealed class ProductListGraph : Destination {
  *
  *     @Destination(route = "products")

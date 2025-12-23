@@ -1,9 +1,59 @@
 package com.jermey.quo.vadis.core.navigation.core
 
 /**
- * Runtime implementation of DeepLinkRegistry for registering patterns at runtime.
+ * Runtime implementation of [DeepLinkRegistry] for registering deep link patterns dynamically.
  *
- * Thread-safe implementation using synchronized collections.
+ * This class allows registering deep link patterns at runtime, as opposed to the compile-time
+ * registration provided by KSP-generated `GeneratedDeepLinkRegistry`. Use this for:
+ *
+ * ## Use Cases
+ *
+ * - **Testing**: Create isolated registries for unit tests without full KSP processing
+ * - **Dynamic routes**: Register routes that are determined at runtime (e.g., from config)
+ * - **Feature modules**: Register routes from dynamically loaded feature modules
+ * - **Prototyping**: Quick experimentation without annotation processing
+ *
+ * ## Usage Example
+ *
+ * ```kotlin
+ * val registry = RuntimeDeepLinkRegistry()
+ *
+ * // Register a pattern with a factory
+ * registry.register("product/{id}") { params ->
+ *     ProductDestination(id = params["id"]!!)
+ * }
+ *
+ * // Register an action (navigation side-effect)
+ * registry.registerAction("logout") { navigator, _ ->
+ *     navigator.popToRoot()
+ *     // Perform logout logic
+ * }
+ *
+ * // Resolve a deep link
+ * val destination = registry.resolve("product/123")
+ *
+ * // Check if a URI can be handled
+ * val canHandle = registry.canHandle("product/456") // true
+ * ```
+ *
+ * ## Combining with Generated Registry
+ *
+ * Use [CompositeDeepLinkRegistry] to combine runtime and generated registries:
+ *
+ * ```kotlin
+ * val combinedRegistry = CompositeDeepLinkRegistry(
+ *     GeneratedDeepLinkRegistry,
+ *     runtimeRegistry
+ * )
+ * ```
+ *
+ * ## Thread Safety
+ *
+ * This implementation uses mutable lists internally. For concurrent registration,
+ * synchronize access externally or register all patterns during initialization.
+ *
+ * @see DeepLinkRegistry
+ * @see CompositeDeepLinkRegistry
  */
 class RuntimeDeepLinkRegistry : DeepLinkRegistry {
 

@@ -23,7 +23,7 @@ import kotlin.reflect.KClass
  * Define each tab as a separate `@TabItem` + `@Stack` class at the top level:
  * ```kotlin
  * @TabItem(label = "Home", icon = "home")
- * @Stack(name = "homeStack", startDestinationLegacy = "Feed")
+ * @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
  * sealed class HomeTab : Destination {
  *     @Destination(route = "home/feed")
  *     data object Feed : HomeTab()
@@ -33,7 +33,7 @@ import kotlin.reflect.KClass
  * }
  *
  * @TabItem(label = "Explore", icon = "explore")
- * @Stack(name = "exploreStack", startDestinationLegacy = "ExploreRoot")
+ * @Stack(name = "exploreStack", startDestination = ExploreTab.ExploreRoot::class)
  * sealed class ExploreTab : Destination {
  *     @Destination(route = "explore/root")
  *     data object ExploreRoot : ExploreTab()
@@ -135,7 +135,7 @@ annotation class Tabs(
  * Apply `@TabItem` alongside `@Stack` on the same top-level class:
  * ```kotlin
  * @TabItem(label = "Home", icon = "home")
- * @Stack(name = "homeStack", startDestinationLegacy = "Feed")
+ * @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
  * sealed class HomeTab : Destination {
  *     @Destination(route = "home/feed")
  *     data object Feed : HomeTab()
@@ -145,7 +145,7 @@ annotation class Tabs(
  * }
  *
  * @TabItem(label = "Explore", icon = "explore")
- * @Stack(name = "exploreStack", startDestinationLegacy = "ExploreRoot")
+ * @Stack(name = "exploreStack", startDestination = ExploreTab.ExploreRoot::class)
  * sealed class ExploreTab : Destination {
  *     @Destination(route = "explore/root")
  *     data object ExploreRoot : ExploreTab()
