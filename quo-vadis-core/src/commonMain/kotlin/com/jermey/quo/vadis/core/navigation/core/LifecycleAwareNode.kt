@@ -1,0 +1,126 @@
+package com.jermey.quo.vadis.core.navigation.core
+
+/**
+ * Interface for navigation nodes that provide lifecycle and state management.
+ *
+ * Both container nodes (TabNode, PaneNode) and screen nodes (ScreenNode)
+ * implement this to provide consistent lifecycle behavior across the navigation tree.
+ *
+ * This interface is designed to be implemented alongside [NavNode], not as a
+ * replacement for it. The sealed [NavNode] hierarchy handles navigation tree
+ * structure, while [LifecycleAwareNode] handles runtime lifecycle state.
+ *
+ * ## Lifecycle States
+ *
+ * Navigation nodes transition through the following states:
+ * - **Detached**: Node exists but is not part of the navigation tree
+ * - **Attached**: Node is in the navigation tree but not currently displayed
+ * - **Displayed**: Node is actively being displayed to the user
+ *
+ * ## State Transitions
+ *
+ * ```
+ * [Created] -> attachToNavigator() -> [Attached] -> attachToUI() -> [Displayed]
+ *                                          ^                            |
+ *                                          |                            v
+ *                                          +---- detachFromUI() --------+
+ *                                          |
+ *                                          v
+ *                              detachFromNavigator() -> [Destroyed]
+ * ```
+ *
+ * ## Saved State
+ *
+ * The [composeSavedState] property stores Compose `rememberSaveable` state
+ * for this node, enabling state preservation across configuration changes
+ * and process death.
+ *
+ * ## Phase 1 Note
+ *
+ * This is the Phase 1 implementation focusing on navigation lifecycle.
+ * Phase 2 will add `LifecycleOwner`, `ViewModelStoreOwner`, and
+ * `SavedStateRegistryOwner` for full AndroidX ecosystem compatibility.
+ */
+interface LifecycleAwareNode {
+
+    /**
+     * Whether this node is currently attached to the navigator tree.
+     *
+     * A node becomes attached when it's added to the navigation tree
+     * via [attachToNavigator] and remains attached until [detachFromNavigator]
+     * is called.
+     */
+    val isAttachedToNavigator: Boolean
+
+    /**
+     * Whether this node is currently being displayed.
+     *
+     * A node becomes displayed when [attachToUI] is called (typically
+     * when its composable enters composition) and stops being displayed
+     * when [detachFromUI] is called.
+     */
+    val isDisplayed: Boolean
+
+    /**
+     * Saved state for Compose `rememberSaveable`.
+     *
+     * This map stores the saved state from `SaveableStateRegistry.performSave()`
+     * and is used to restore state via `SaveableStateRegistry` on recomposition.
+     *
+     * The map is:
+     * - `null` when no state has been saved yet
+     * - Populated when the node's UI is disposed while the node remains in the tree
+     * - Cleared when state is consumed during restoration
+     */
+    var composeSavedState: Map<String, List<Any?>>?
+
+    /**
+     * Called when this node is added to the navigator tree.
+     *
+     * This transition happens when:
+     * - A new screen is pushed onto a stack
+     * - A new tab/pane container is created
+     * - Navigation tree is restored from saved state
+     *
+     * After this call, [isAttachedToNavigator] will be `true`.
+     *
+     * @throws IllegalStateException if already attached
+     */
+    fun attachToNavigator()
+
+    /**
+     * Called when this node's UI enters composition.
+     *
+     * This transition happens when the node's content composable
+     * starts being displayed. After this call, [isDisplayed] will be `true`.
+     *
+     * @throws IllegalStateException if not attached to navigator
+     */
+    fun attachToUI()
+
+    /**
+     * Called when this node's UI leaves composition.
+     *
+     * This transition happens when:
+     * - Another screen is pushed on top
+     * - Tab is switched to another tab
+     * - Screen is being animated out
+     *
+     * After this call, [isDisplayed] will be `false`.
+     * If the node was already detached from navigator, this triggers cleanup.
+     */
+    fun detachFromUI()
+
+    /**
+     * Called when this node is removed from the navigator tree.
+     *
+     * This transition happens when:
+     * - A screen is popped from the stack
+     * - A tab container is removed
+     * - Navigation tree is being cleared
+     *
+     * After this call, [isAttachedToNavigator] will be `false`.
+     * If the node is not being displayed, this triggers cleanup.
+     */
+    fun detachFromNavigator()
+}

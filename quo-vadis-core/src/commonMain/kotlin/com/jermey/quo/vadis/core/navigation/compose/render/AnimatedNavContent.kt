@@ -106,19 +106,20 @@ internal fun <T : NavNode> AnimatedNavContent(
     // Detect if this is back navigation BEFORE updating tracking state
     // Back navigation: we're returning to the state that was displayed before the current one
     val isBackNavigation = targetState.key != lastCommittedState.key &&
-        stateBeforeLast?.key == targetState.key
+            stateBeforeLast?.key == targetState.key
 
     // Determine if predictive back gesture is currently active
     val isPredictiveBackActive = predictiveBackEnabled &&
-        scope.predictiveBackController.isActive.value
+            scope.predictiveBackController.isActive.value
 
     if (isPredictiveBackActive) {
         // For predictive back, prefer cascadeState.targetNode over local stateBeforeLast
         // This ensures correct animation target even for deep links or restored state
         val cascadeState = scope.predictiveBackController.cascadeState.value
+
         @Suppress("UNCHECKED_CAST")
         val backTarget = (cascadeState?.targetNode as? T) ?: stateBeforeLast
-        
+
         // Gesture-driven animation - bypass AnimatedContent
         PredictiveBackContent(
             current = lastCommittedState,
@@ -144,7 +145,7 @@ internal fun <T : NavNode> AnimatedNavContent(
             label = "AnimatedNavContent"
         ) { animatingState ->
             // Provide AnimatedVisibilityScope to content via NavRenderScope
-            scope.withAnimatedVisibilityScope(this) {
+            scope.WithAnimatedVisibilityScope(this) {
                 content(animatingState)
             }
         }

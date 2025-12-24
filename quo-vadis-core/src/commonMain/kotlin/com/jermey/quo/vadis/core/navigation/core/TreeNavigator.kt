@@ -154,11 +154,6 @@ class TreeNavigator(
     override val resultManager: NavigationResultManager = NavigationResultManager()
 
     /**
-     * Manager for navigation lifecycle callbacks.
-     */
-    override val lifecycleManager: NavigationLifecycleManager = NavigationLifecycleManager()
-
-    /**
      * Updates derived state properties when the main state changes.
      * Called after every state mutation to keep derived values in sync.
      */
@@ -817,8 +812,8 @@ class TreeNavigator(
         updateDerivedState(newState)
         val toKey = newState.activeLeaf()?.key
 
-        // Dispatch lifecycle events for screen changes
-        dispatchLifecycleEvents(oldState, newState, fromKey, toKey)
+        // Cancel results for destroyed screens
+        cancelResultsForDestroyedScreens(oldState, newState)
 
         if (transition != null) {
             _transitionState.value = TransitionState.InProgress(
@@ -833,51 +828,25 @@ class TreeNavigator(
     }
 
     /**
-     * Dispatch lifecycle events based on state changes.
-     *
-     * Compares old and new state to determine:
-     * - Which screens were destroyed (removed from tree)
-     * - Which screen became inactive (fromKey)
-     * - Which screen became active (toKey)
-     *
-     * Events are dispatched asynchronously to avoid blocking navigation.
+     * Cancel pending results for screens that were removed from the tree.
      */
-    private fun dispatchLifecycleEvents(
-        oldState: NavNode,
-        newState: NavNode,
-        fromKey: String?,
-        toKey: String?
-    ) {
-        // Find all screen keys in old and new state
+    private fun cancelResultsForDestroyedScreens(oldState: NavNode, newState: NavNode) {
         val oldScreenKeys = collectScreenKeys(oldState)
         val newScreenKeys = collectScreenKeys(newState)
-
-        // Destroyed screens = in old state but not in new state
         val destroyedKeys = oldScreenKeys - newScreenKeys
 
-        // Only dispatch if there are changes to handle
-        if (destroyedKeys.isEmpty() && (fromKey == null || fromKey == toKey)) {
-            return
-        }
+        if (destroyedKeys.isEmpty()) return
 
-        // Dispatch events using coroutineScope
-        // Use try-catch to handle cases where dispatcher is not available (tests)
+        // Launch in coroutine scope since cancelResult is a suspend function
         try {
             coroutineScope.launch {
-                // Dispatch onExit for the previously active screen if it changed
-                if (fromKey != null && fromKey != toKey && fromKey !in destroyedKeys) {
-                    lifecycleManager.onScreenExited(fromKey)
-                }
-
-                // Dispatch onDestroy and cancel results for destroyed screens
                 destroyedKeys.forEach { screenKey ->
-                    lifecycleManager.onScreenDestroyed(screenKey)
                     resultManager.cancelResult(screenKey)
                 }
             }
         } catch (_: IllegalStateException) {
             // Dispatcher not available (e.g., Main dispatcher in tests)
-            // Lifecycle events are optional, so we silently ignore this
+            // Result cancellation is optional, so we silently ignore this
         }
     }
 

@@ -8,7 +8,7 @@ import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
-import com.jermey.quo.vadis.flowmvi.container
+import com.jermey.quo.vadis.flowmvi.navigationContainer
 import com.jermey.quo.vadis.generated.ComposeAppNavigationConfig
 import com.jermey.quo.vadis.generated.Feature1NavigationConfig
 import com.jermey.quo.vadis.generated.Feature2NavigationConfig
@@ -45,11 +45,10 @@ val profileModule = module {
 
     single { ProfileRepository() }
 
-    container<ProfileContainer> {
+    navigationContainer<ProfileContainer> { scope ->
         ProfileContainer(
-            navigator = get(),
-            screenKey = id,
-            repository = get(),
+            scope = scope,
+            repository = scope.getKoin().get(),
             debuggable = true
         )
     }
@@ -57,16 +56,10 @@ val profileModule = module {
 
 
 val resultDemoModule = module {
-    container<ResultDemoContainer> {
-        ResultDemoContainer(
-            navigator = get(),
-            screenKey = id
-        )
+    navigationContainer<ResultDemoContainer> { scope ->
+        ResultDemoContainer(scope)
     }
-    container<ItemPickerContainer> {
-        ItemPickerContainer(
-            navigator = get(),
-            screenKey = id
-        )
+    navigationContainer<ItemPickerContainer> { scope ->
+        ItemPickerContainer(scope)
     }
 }

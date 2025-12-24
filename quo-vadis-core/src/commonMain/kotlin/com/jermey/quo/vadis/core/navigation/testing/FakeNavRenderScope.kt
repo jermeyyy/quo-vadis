@@ -7,15 +7,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.SaveableStateHolder
-import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.render.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.navigation.compose.render.NavRenderScope
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.testing.EmptyScreenRegistry.Content
+import com.jermey.quo.vadis.core.navigation.testing.EmptyScreenRegistry.hasContent
 
 /**
  * Test fake implementation of [NavRenderScope] for composable testing.
@@ -56,16 +58,16 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
  * fun testNavigationActions() = runComposeTest {
  *     val fakeNavigator = FakeNavigator()
  *     val fakeScope = FakeNavRenderScope(navigator = fakeNavigator)
- *     
+ *
  *     setContent {
  *         Button(onClick = { fakeScope.navigator.navigateBack() }) {
  *             Text("Back")
  *         }
  *     }
- *     
+ *
  *     // Click button
  *     onNodeWithText("Back").performClick()
- *     
+ *
  *     // Verify navigation
  *     assertTrue(fakeNavigator.verifyNavigateBack())
  * }
@@ -76,7 +78,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
  * @Test
  * fun testPredictiveBackRendering() = runComposeTest {
  *     val fakeScope = FakeNavRenderScope()
- *     
+ *
  *     setContent {
  *         if (fakeScope.predictiveBackController.isActive.value) {
  *             Text("Gesture Active")
@@ -84,10 +86,10 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
  *             Text("Idle")
  *         }
  *     }
- *     
+ *
  *     // Initially idle
  *     onNodeWithText("Idle").assertExists()
- *     
+ *
  *     // Simulate gesture (in coroutine context)
  *     // Note: For testing active state, use coroutine-based testing
  * }
@@ -109,7 +111,7 @@ import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
  *     }
  *     override fun hasContent(destination: NavDestination) = destination is MyTestDestination
  * }
- * 
+ *
  * val fakeScope = FakeNavRenderScope(screenRegistry = testRegistry)
  * ```
  *
@@ -149,7 +151,7 @@ class FakeNavRenderScope(
      * @param content The composable content that needs access to the animation scope
      */
     @Composable
-    override fun withAnimatedVisibilityScope(
+    override fun WithAnimatedVisibilityScope(
         animatedVisibilityScope: AnimatedVisibilityScope,
         content: @Composable () -> Unit
     ) {
@@ -198,7 +200,7 @@ class FakeNavRenderScope(
  *
  * ```kotlin
  * val stateHolder = FakeSaveableStateHolder()
- * 
+ *
  * // In a composable test
  * stateHolder.SaveableStateProvider("key") {
  *     // Content renders normally, but rememberSaveable won't persist
@@ -274,8 +276,8 @@ class FakeSaveableStateHolder : SaveableStateHolder {
  *             else -> {}
  *         }
  *     }
- *     
- *     override fun hasContent(destination: NavDestination) = 
+ *
+ *     override fun hasContent(destination: NavDestination) =
  *         destination is TestDestination
  * }
  * ```

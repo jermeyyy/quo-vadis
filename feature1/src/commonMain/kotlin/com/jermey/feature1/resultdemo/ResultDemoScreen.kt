@@ -38,11 +38,11 @@ import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Action
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Intent
 import com.jermey.feature1.resultdemo.container.ResultDemoState
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.flowmvi.container
-import org.koin.compose.koinInject
+import com.jermey.quo.vadis.core.navigation.compose.render.LocalNavigator
+import com.jermey.quo.vadis.flowmvi.rememberContainer
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
+import pro.respawn.flowmvi.dsl.state
 
 /**
  * Result Demo Screen - Entry point for the navigation result demo.
@@ -63,10 +63,10 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 @Screen(ResultDemoDestination.Demo::class)
 @Composable
 fun ResultDemoScreen(
-    navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier,
-    container: Store<ResultDemoState, Intent, Action> = container<ResultDemoContainer, ResultDemoState, Intent, Action>()
+    container: Store<ResultDemoState, Intent, Action> = rememberContainer<ResultDemoContainer, ResultDemoState, Intent, Action>()
 ) {
+    val navigator = LocalNavigator.current ?: error("Navigator not found")
     val state by container.subscribe()
 
     Scaffold(
@@ -159,6 +159,11 @@ fun ResultDemoScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                    Text(
+                        text = "Timer: ${state.timerValue}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
             }
 

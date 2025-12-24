@@ -93,11 +93,13 @@ fun <R : Any> Navigator.navigateBackWithResult(result: R) {
     println("navigateBackWithResult: current screen key = $currentScreenKey, result = $result")
     println("navigateBackWithResult: hasPendingResult = ${resultManager.hasPendingResult(currentScreenKey)}")
 
-    // Navigate back
-    navigateBack()
-
+    // Complete the result BEFORE navigating back
+    // This is important because navigateBack() may trigger result cancellation
+    // for destroyed screens
     println("navigateBackWithResult: completing result...")
-    // Complete the result synchronously
     resultManager.completeResultSync(currentScreenKey, result)
     println("navigateBackWithResult: result completed")
+
+    // Navigate back after the result is delivered
+    navigateBack()
 }

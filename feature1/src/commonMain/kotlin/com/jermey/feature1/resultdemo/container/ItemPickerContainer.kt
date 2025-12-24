@@ -1,9 +1,9 @@
 package com.jermey.feature1.resultdemo.container
 
 import com.jermey.feature1.resultdemo.SelectedItem
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.navigateBackWithResult
-import com.jermey.quo.vadis.flowmvi.BaseContainer
+import com.jermey.quo.vadis.flowmvi.NavigationContainer
+import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
@@ -51,29 +51,23 @@ private val defaultItems = listOf(
  *
  * Demonstrates:
  * - Returning a result using [navigateBackWithResult]
- * - Lifecycle integration via [BaseContainer]
+ * - Lifecycle integration via [NavigationContainer]
  *
  * ## Usage
  *
  * ```kotlin
- * val screenKey = LocalScreenNode.current?.key ?: return
- * val container = remember(screenKey) {
- *     ItemPickerContainer(navigator, screenKey)
+ * @Composable
+ * fun ItemPickerScreen() {
+ *     val store = rememberContainer<ItemPickerContainer, ItemPickerState, Intent, Action>()
+ *     // use store
  * }
- * container.selectItem(item) // Returns result to caller
- * container.cancel() // Navigates back without result
  * ```
  *
- * @param navigator The Navigator instance
- * @param screenKey The unique screen key from LocalScreenNode
+ * @param scope The NavigationContainerScope for navigation and lifecycle
  */
 class ItemPickerContainer(
-    navigator: Navigator,
-    screenKey: String,
-) : BaseContainer<ItemPickerState, ItemPickerContainer.Intent, ItemPickerContainer.Action>(
-    navigator,
-    screenKey
-) {
+    scope: NavigationContainerScope,
+) : NavigationContainer<ItemPickerState, ItemPickerContainer.Intent, ItemPickerContainer.Action>(scope) {
 
     sealed class Intent : MVIIntent {
         data class SelectItem(val item: PickerItem) : Intent()
@@ -118,13 +112,5 @@ class ItemPickerContainer(
      */
     private fun cancel() {
         navigator.navigateBack()
-    }
-
-    override fun onEnter() {
-        println("ItemPickerContainer: onEnter")
-    }
-
-    override fun onExit() {
-        println("ItemPickerContainer: onExit")
     }
 }

@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.ksp.generators
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.symbol.KSType
 import com.jermey.quo.vadis.ksp.QuoVadisClassNames
 import com.jermey.quo.vadis.ksp.generators.base.StringTemplates
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
@@ -25,7 +26,8 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.writeTo
 
 /**
- * Generates a [DeepLinkRegistry] implementation for parsing deep link URIs into destinations.
+ * Generates a [com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry]
+ * implementation for parsing deep link URIs into destinations.
  *
  * Transforms `@Destination` route patterns into:
  * - [RoutePattern] instances for URI matching with regex-based extraction
@@ -412,7 +414,7 @@ class DeepLinkHandlerGenerator(
         serializerType: SerializerType,
         isOptional: Boolean,
         isNullableType: Boolean,
-        type: com.google.devtools.ksp.symbol.KSType
+        type: KSType
     ): String {
         // For optional params, use safe conversion that can return null
         // The default value will be used by Kotlin when the result is null
@@ -436,7 +438,7 @@ class DeepLinkHandlerGenerator(
     /**
      * Build enum type conversion expression.
      */
-    private fun buildEnumConversion(type: com.google.devtools.ksp.symbol.KSType, isOptional: Boolean): String {
+    private fun buildEnumConversion(type: KSType, isOptional: Boolean): String {
         val enumClassName = type.declaration.qualifiedName?.asString() ?: "kotlin.Enum"
         return if (isOptional) {
             "?.let { enumValueOf<$enumClassName>(it) }"

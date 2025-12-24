@@ -111,11 +111,6 @@ object StringTemplates {
     val TRANSITIONS_SECTION: String = sectionHeader("TRANSITIONS")
 
     /**
-     * Section header for wrappers registration.
-     */
-    val WRAPPERS_SECTION: String = sectionHeader("WRAPPERS")
-
-    /**
      * Section header for deep links registration.
      */
     val DEEP_LINKS_SECTION: String = sectionHeader("DEEP LINKS")
