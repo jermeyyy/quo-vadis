@@ -1,3 +1,5 @@
+@file:Suppress("CanConvertToMultiDollarString")
+
 package com.jermey.quo.vadis.ksp.generators
 
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -28,11 +30,6 @@ import com.squareup.kotlinpoet.ksp.writeTo
 /**
  * Generates a [com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry]
  * implementation for parsing deep link URIs into destinations.
- *
- * Transforms `@Destination` route patterns into:
- * - [RoutePattern] instances for URI matching with regex-based extraction
- * - [handleDeepLink] implementation that matches URIs against route patterns
- * - [createDeepLinkUri] for generating URIs from destination instances
  *
  * ## Route Pattern Syntax
  *

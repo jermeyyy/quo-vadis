@@ -1,12 +1,12 @@
 # Quo Vadis Navigation Library
 
 <p align="center">
-  <img src="art/logo.jpg" alt="Quo Vadis Logo" width="200"/>
+  <img src="art/logo.jpg" alt="Quo Vadis Logo" width="256"/>
 </p>
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.jermeyyy/quo-vadis-core)](https://central.sonatype.com/artifact/io.github.jermeyyy/quo-vadis-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.3.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.10.0--rc02-4285F4.svg?logo=jetpackcompose)](https://www.jetbrains.com/lp/compose-multiplatform/)
 
 **"Quo Vadis"** (Latin for "Where are you going?") - A comprehensive, type-safe navigation library for Kotlin Multiplatform and Compose Multiplatform using a **tree-based navigation architecture**.
@@ -40,6 +40,8 @@ Quo Vadis provides a powerful navigation solution with:
 - ✅ **Navigation Results** - Type-safe result passing between screens
 - ✅ **DI Framework Support** - Easy integration with Koin, Kodein, etc.
 - ✅ **Testable** - `FakeNavigator` for unit testing
+- ✅ **Lifecycle Management** - Proper lifecycle state for screens and containers
+- ✅ **FlowMVI Integration** - Screen and container-scoped MVI containers
 
 ## 📦 Project Structure
 
@@ -57,7 +59,7 @@ NavPlayground/
 ├── quo-vadis-gradle-plugin/     # Gradle plugin for KSP configuration
 │   └── src/main/                # Plugin implementation
 ├── quo-vadis-core-flow-mvi/     # FlowMVI integration (optional)
-│   └── src/commonMain/          # MVI navigation integration
+│   └── src/commonMain/          # NavigationContainer, SharedNavigationContainer
 ├── composeApp/                  # Demo application
 │   └── src/
 │       ├── commonMain/          # Demo screens & examples
@@ -174,9 +176,6 @@ afterEvaluate {
 Define destinations using `@Stack` and `@Destination` annotations:
 
 ```kotlin
-import com.jermey.quo.vadis.annotations.*
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-
 // 1. Define a navigation stack with destinations
 @Stack(name = "home", startDestination = Feed::class)
 sealed class HomeDestination : NavDestination {
@@ -200,10 +199,6 @@ sealed class HomeDestination : NavDestination {
 Bind Composable functions to destinations:
 
 ```kotlin
-import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-
 // Simple screen (data object destination)
 @Screen(HomeDestination.Feed::class)
 @Composable
@@ -237,9 +232,6 @@ fun ArticleScreen(destination: HomeDestination.Article, navigator: Navigator) {
 ### Setting Up Navigation
 
 ```kotlin
-import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
-import com.jermey.quo.vadis.generated.GeneratedNavigationConfig
-
 @Composable
 fun App() {
     val config = GeneratedNavigationConfig
@@ -467,6 +459,108 @@ fun ArticleScreen(
 - Use `quoVadisSharedBounds()` for text/containers
 - Keys must match exactly between source and destination screens
 - Works in both forward and backward navigation
+
+## 🧠 MVI Architecture
+
+Quo Vadis integrates with FlowMVI for state management. Add the optional module:
+
+```kotlin
+implementation("io.github.jermeyyy:quo-vadis-core-flow-mvi:0.2.0")
+```
+
+### Screen-Scoped Containers
+
+Create MVI containers for individual screens:
+
+```kotlin
+class ProfileContainer(scope: NavigationContainerScope) :
+    NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
+    
+    override val store = store(ProfileState()) {
+        reduce { intent ->
+            when (intent) {
+                is ProfileIntent.LoadProfile -> loadProfile()
+                is ProfileIntent.NavigateToSettings -> navigator.navigate(SettingsDestination)
+            }
+        }
+    }
+    
+    private suspend fun loadProfile() {
+        updateState { copy(isLoading = true) }
+        // Load data...
+    }
+}
+
+@Composable
+fun ProfileScreen() {
+    val store = rememberContainer<ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()
+    
+    with(store) {
+        val state by subscribe()
+        // Render UI
+        Button(onClick = { intent(ProfileIntent.LoadProfile) }) {
+            Text("Load")
+        }
+    }
+}
+```
+
+### Shared Containers (Tab/Pane-Scoped)
+
+Share state across all screens within a Tab or Pane container:
+
+```kotlin
+class MainTabsContainer(scope: SharedContainerScope) :
+    SharedNavigationContainer<TabsState, TabsIntent, TabsAction>(scope) {
+    
+    override val store = store(TabsState(badgeCount = 0)) {
+        reduce { intent ->
+            when (intent) {
+                is TabsIntent.IncrementBadge -> updateState { copy(badgeCount = badgeCount + 1) }
+            }
+        }
+    }
+}
+
+// In tabs wrapper
+@TabsContainer(MainTabs::class)
+@Composable
+fun MainTabsWrapper(scope: TabsContainerScope, content: @Composable () -> Unit) {
+    val store = rememberSharedContainer<MainTabsContainer, TabsState, TabsIntent, TabsAction>()
+    
+    CompositionLocalProvider(LocalMainTabsStore provides store) {
+        val state by store.subscribe()
+        Scaffold(
+            bottomBar = { TabBar(badgeCount = state.badgeCount) }
+        ) {
+            content()
+        }
+    }
+}
+
+// Child screens can access the shared store
+@Composable
+fun HomeScreen() {
+    val tabsStore = LocalMainTabsStore.current
+    Button(onClick = { tabsStore?.intent(TabsIntent.IncrementBadge) }) {
+        Text("Update Badge")
+    }
+}
+```
+
+### Koin Module Setup
+
+```kotlin
+val mviModule = module {
+    navigationContainer<ProfileContainer> { scope ->
+        ProfileContainer(scope)
+    }
+    
+    sharedNavigationContainer<MainTabsContainer> { scope ->
+        MainTabsContainer(scope)
+    }
+}
+```
 
 ## 🛠 Technology Stack
 

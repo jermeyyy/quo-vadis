@@ -108,7 +108,7 @@ class ItemPickerContainer(
     /**
      * Cancel the selection and navigate back without a result.
      *
-     * The caller will receive `null` from [navigateForResult].
+     * The caller will receive `null` from [com.jermey.quo.vadis.core.navigation.core.navigateForResult].
      */
     private fun cancel() {
         navigator.navigateBack()

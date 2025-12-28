@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import com.jermey.quo.vadis.core.navigation.compose.render.LocalContainerNode
 import com.jermey.quo.vadis.core.navigation.compose.render.LocalNavigator
 import com.jermey.quo.vadis.core.navigation.compose.render.LocalScreenNode
+import com.jermey.quo.vadis.core.navigation.core.NavNode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -82,7 +83,7 @@ inline fun <reified C : NavigationContainer<S, I, A>, S : MVIState, I : MVIInten
 
         // Declare coroutine scope in Koin scope if not already present
         if (koinScope.getOrNull<CoroutineScope>() == null) {
-            koinScope.declare(CoroutineScope(Dispatchers.Main + SupervisorJob()))
+            koinScope.declare(CoroutineScope(Dispatchers.Default + SupervisorJob()))
         }
 
         val navContainerScope = NavigationContainerScope(
@@ -154,7 +155,7 @@ inline fun <reified C : SharedNavigationContainer<S, I, A>, S, I, A> rememberSha
     val koin = getKoin()
 
     // Get the container key for stable scope identity
-    val containerKey = (containerNode as? com.jermey.quo.vadis.core.navigation.core.NavNode)?.key
+    val containerKey = (containerNode as? NavNode)?.key
         ?: error("Container node must be a NavNode with a key")
 
     // Use containerKey for Koin scope identity - key is stable across state updates
@@ -163,7 +164,7 @@ inline fun <reified C : SharedNavigationContainer<S, I, A>, S, I, A> rememberSha
         val koinScope = koin.getOrCreateScope<SharedContainerScope>(containerKey)
 
         if (koinScope.getOrNull<CoroutineScope>() == null) {
-            koinScope.declare(CoroutineScope(Dispatchers.Main + SupervisorJob()))
+            koinScope.declare(CoroutineScope(Dispatchers.Default + SupervisorJob()))
         }
 
         val sharedContainerScope = SharedContainerScope(

@@ -1,3 +1,5 @@
+@file:Suppress("CanConvertToMultiDollarString")
+
 package com.jermey.quo.vadis.ksp.generators.dsl
 
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -38,7 +40,7 @@ import com.squareup.kotlinpoet.ksp.toClassName
  * Main generator for the unified `GeneratedNavigationConfig.kt` file.
  *
  * This generator orchestrates multiple sub-generators to produce a single
- * file that implements [NavigationConfig] using the DSL-based approach.
+ * file that implements [com.jermey.quo.vadis.core.navigation.NavigationConfig] using the DSL-based approach.
  *
  * ## Generated Structure
  *
@@ -276,7 +278,7 @@ class NavigationConfigGenerator(
         imports.forEach { qualifiedName ->
             val lastDotIndex = qualifiedName.lastIndexOf('.')
             if (lastDotIndex > 0) {
-                val packageName = qualifiedName.substring(0, lastDotIndex)
+                val packageName = qualifiedName.take(lastDotIndex)
                 val simpleName = qualifiedName.substring(lastDotIndex + 1)
                 addImport(packageName, simpleName)
             }

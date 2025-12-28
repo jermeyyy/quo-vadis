@@ -5,10 +5,12 @@ import com.jermey.feature1.resultdemo.container.ResultDemoContainer
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileContainer
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
+import com.jermey.navplayground.demo.ui.screens.tabs.DemoTabsContainer
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.flowmvi.navigationContainer
+import com.jermey.quo.vadis.flowmvi.sharedNavigationContainer
 import com.jermey.quo.vadis.generated.ComposeAppNavigationConfig
 import com.jermey.quo.vadis.generated.Feature1NavigationConfig
 import com.jermey.quo.vadis.generated.Feature2NavigationConfig
@@ -62,5 +64,17 @@ val resultDemoModule = module {
     }
     navigationContainer<ItemPickerContainer> { scope ->
         ItemPickerContainer(scope)
+    }
+}
+
+/**
+ * Koin module for the Demo Tabs shared container.
+ *
+ * Registers [DemoTabsContainer] as a shared navigation container,
+ * allowing cross-tab state sharing within the DemoTabs.
+ */
+val tabsDemoModule = module {
+    sharedNavigationContainer<DemoTabsContainer> { scope ->
+        DemoTabsContainer(scope)
     }
 }

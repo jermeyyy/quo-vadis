@@ -665,6 +665,114 @@ data class PaneNode(
 
 ---
 
+## Lifecycle Management
+
+Navigation nodes implement `LifecycleAwareNode` for proper lifecycle state management.
+
+### LifecycleAwareNode Interface
+
+All container and screen nodes implement this interface:
+
+```kotlin
+interface LifecycleAwareNode {
+    val isAttachedToNavigator: Boolean
+    val isDisplayed: Boolean
+    var composeSavedState: Map<String, List<Any?>>?
+    
+    fun attachToNavigator()
+    fun attachToUI()
+    fun detachFromUI()
+    fun detachFromNavigator()
+    fun addOnDestroyCallback(callback: () -> Unit)
+    fun removeOnDestroyCallback(callback: () -> Unit)
+}
+```
+
+### State Transitions
+
+```
+[Created] -> attachToNavigator() -> [Attached] -> attachToUI() -> [Displayed]
+                                          ^                            |
+                                          |                            v
+                                          +---- detachFromUI() --------+
+                                          |
+                                          v
+                              detachFromNavigator() -> [Destroyed]
+```
+
+### Lifecycle Callbacks
+
+External components can register for lifecycle events via `addOnDestroyCallback()`. This is used by MVI containers to close coroutine scopes and Koin scopes when a screen/container is destroyed.
+
+### CompositionLocals
+
+| Local | Type | Description |
+|-------|------|-------------|
+| `LocalScreenNode` | `ScreenNode?` | Current screen node |
+| `LocalContainerNode` | `LifecycleAwareNode?` | Current container node (Tab/Pane) |
+| `LocalNavigator` | `Navigator?` | Navigator instance |
+
+---
+
+## FlowMVI Integration
+
+The `quo-vadis-core-flow-mvi` module provides MVI architecture integration.
+
+### NavigationContainer (Screen-Scoped)
+
+For screen-specific MVI state:
+
+```kotlin
+class ProfileContainer(scope: NavigationContainerScope) :
+    NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
+    
+    override val store = store(ProfileState()) {
+        reduce { intent -> /* handle intent */ }
+    }
+}
+
+// In composable
+val store = rememberContainer<ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()
+```
+
+### SharedNavigationContainer (Container-Scoped)
+
+For shared state across all screens in a Tab/Pane container:
+
+```kotlin
+class MainTabsContainer(scope: SharedContainerScope) :
+    SharedNavigationContainer<TabsState, TabsIntent, TabsAction>(scope) {
+    
+    override val store = store(TabsState()) {
+        reduce { intent -> /* handle intent */ }
+    }
+}
+
+// In tab wrapper composable
+val store = rememberSharedContainer<MainTabsContainer, TabsState, TabsIntent, TabsAction>()
+CompositionLocalProvider(LocalMyStore provides store) {
+    content()
+}
+```
+
+### Koin Registration
+
+```kotlin
+val myModule = module {
+    // Screen-scoped container
+    navigationContainer<ProfileContainer> { scope ->
+        ProfileContainer(scope)
+    }
+    
+    // Container-scoped shared container
+    sharedNavigationContainer<MainTabsContainer> { scope ->
+        MainTabsContainer(scope)
+    }
+}
+```
+
+---
+
 ## Layer Interaction
 
 ### Data Flow
