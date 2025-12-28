@@ -4,17 +4,19 @@ import com.jermey.feature1.resultdemo.ResultDemoDestination
 import com.jermey.feature1.resultdemo.SelectedItem
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Action
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Intent
-import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.navigateForResult
-import com.jermey.quo.vadis.flowmvi.BaseContainer
-import kotlinx.coroutines.flow.StateFlow
+import com.jermey.quo.vadis.flowmvi.NavigationContainer
+import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
 import pro.respawn.flowmvi.api.PipelineContext
 import pro.respawn.flowmvi.dsl.store
+import pro.respawn.flowmvi.plugins.init
 import pro.respawn.flowmvi.plugins.reduce
+import kotlin.time.Duration.Companion.seconds
 
 private typealias Ctx = PipelineContext<ResultDemoState, Intent, Action>
 
@@ -28,7 +30,8 @@ private typealias Ctx = PipelineContext<ResultDemoState, Intent, Action>
 data class ResultDemoState(
     val selectedItem: SelectedItem? = null,
     val isLoading: Boolean = false,
-    val message: String = "No item selected yet"
+    val message: String = "No item selected yet",
+    val timerValue: Int = 0
 ) : MVIState
 
 /**
@@ -36,32 +39,27 @@ data class ResultDemoState(
  *
  * Demonstrates:
  * - Navigation with result using [navigateForResult]
- * - Lifecycle integration via [BaseContainer]
- * - State management with [StateFlow]
+ * - Lifecycle integration via [NavigationContainer]
  *
  * ## Usage
  *
  * ```kotlin
- * val screenKey = LocalScreenNode.current?.key ?: return
- * val container = remember(screenKey) {
- *     ResultDemoContainer(navigator, screenKey)
- * }
- * container.pickItem() // Navigates to picker and awaits result
- * container.state.collect { state ->
- *     // React to state changes
+ * @Composable
+ * fun ResultDemoScreen() {
+ *     val store = rememberContainer<ResultDemoContainer, ResultDemoState, Intent, Action>()
+ *     // use store
  * }
  * ```
  *
- * @param navigator The Navigator instance
- * @param screenKey The unique screen key from LocalScreenNode
+ * @param scope The NavigationContainerScope for navigation and lifecycle
  */
 class ResultDemoContainer(
-    navigator: Navigator,
-    screenKey: String,
-) : BaseContainer<ResultDemoState, Intent, Action>(navigator, screenKey) {
+    scope: NavigationContainerScope,
+) : NavigationContainer<ResultDemoState, Intent, Action>(scope) {
     sealed class Intent : MVIIntent {
         data object PickItem : Intent()
         data object ClearSelection : Intent()
+        data object StartTimer : Intent()
     }
 
     data object Action : MVIAction
@@ -71,11 +69,14 @@ class ResultDemoContainer(
     }
 
     override val store = store(ResultDemoState()) {
-        configure { }
+        init {
+            intent(Intent.StartTimer)
+        }
         reduce { intent ->
             when (intent) {
                 Intent.ClearSelection -> clearSelection()
                 Intent.PickItem -> pickItem()
+                Intent.StartTimer -> startTimer()
             }
         }
     }
@@ -114,11 +115,21 @@ class ResultDemoContainer(
         }
     }
 
-    override fun onEnter() {
-        println("ResultDemoContainer: onEnter")
-    }
-
-    override fun onExit() {
-        println("ResultDemoContainer: onExit")
+    /**
+     * Start a timer to demonstrate lifecycle integration.
+     *
+     * Updates the message every second.
+     */
+    private fun Ctx.startTimer() {
+        coroutineScope.launch {
+            while (true) {
+                updateState {
+                    val newTimer = timerValue + 1
+                    println("ResultDemoContainer: Timer tick: $newTimer")
+                    copy(timerValue = newTimer)
+                }
+                delay(1.seconds)
+            }
+        }
     }
 }

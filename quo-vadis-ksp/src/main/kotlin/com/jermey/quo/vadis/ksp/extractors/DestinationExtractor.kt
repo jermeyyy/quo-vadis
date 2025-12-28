@@ -123,7 +123,7 @@ class DestinationExtractor(
 
             val isArgument = argumentAnnotation != null
             val argumentKey = if (isArgument) {
-                val keyValue = argumentAnnotation?.arguments?.find {
+                val keyValue = argumentAnnotation.arguments.find {
                     it.name?.asString() == "key"
                 }?.value as? String
                 keyValue?.takeIf { it.isNotEmpty() } ?: param.name?.asString() ?: ""
@@ -131,7 +131,7 @@ class DestinationExtractor(
                 ""
             }
             val isOptionalArgument = if (isArgument) {
-                argumentAnnotation?.arguments?.find {
+                argumentAnnotation.arguments.find {
                     it.name?.asString() == "optional"
                 }?.value as? Boolean ?: false
             } else {

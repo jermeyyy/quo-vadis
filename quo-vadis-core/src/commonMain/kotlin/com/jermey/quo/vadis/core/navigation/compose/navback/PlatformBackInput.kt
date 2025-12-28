@@ -15,8 +15,8 @@ import androidx.compose.runtime.Composable
  *   `ComponentActivity.navigationEventDispatcher` (since Activity 1.12.0).
  *   No additional registration needed.
  *
- * - **iOS**: Back gesture is handled via edge swipe gesture detection,
- *   which will be implemented via `IOSEdgeSwipeGestureDetector` in Phase 5.
+ * - **iOS**: Back gesture handled via edge swipe gesture detection.
+ *   Currently no-op; future implementation via `IOSEdgeSwipeGestureDetector`.
  *
  * - **Desktop**: No platform back gesture exists. Back is handled via
  *   keyboard shortcuts or UI buttons.

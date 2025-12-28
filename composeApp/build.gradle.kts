@@ -1,11 +1,9 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.quoVadis)
 }
@@ -15,10 +13,24 @@ quoVadis {
     useLocalKsp = true
 }
 
+// Configure compose resources for the new Android KMP library plugin
+compose.resources {
+    packageOfResClass = "navplayground.composeapp.generated.resources"
+}
+
 kotlin {
-    androidTarget {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+    androidLibrary {
+        namespace = "com.jermey.navplayground.shared"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
+        withHostTestBuilder {
+        }
+
+        withDeviceTestBuilder {
+            sourceSetTreeName = "test"
+        }.configure {
+            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
     }
     
@@ -58,7 +70,6 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
             implementation(compose.materialIconsExtended)
         }
         commonMain.dependencies {
@@ -105,37 +116,6 @@ kotlin {
     }
 }
 
-android {
-    namespace = "com.jermey.navplayground"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    defaultConfig {
-        applicationId = "com.jermey.navplayground"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,MIT}"
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-
-dependencies {
-    debugImplementation(compose.uiTooling)
-}
-
 compose.desktop {
     application {
         mainClass = "com.jermey.navplayground.Main_desktopKt"
@@ -167,6 +147,25 @@ compose.desktop {
                 iconFile.set(project.file("src/desktopMain/resources/icon.png"))
             }
         }
+    }
+}
+
+// TEMPORARY WORKAROUND: Configure compose resources for new Android KMP library plugin
+afterEvaluate {
+    // Set output directory for the copy task
+    tasks.matching { it.name == "copyAndroidMainComposeResourcesToAndroidAssets" }.configureEach {
+        val outputDirProperty = this::class.java.getDeclaredMethod("getOutputDirectory")
+        val outputDir = outputDirProperty.invoke(this) as DirectoryProperty
+        outputDir.set(layout.buildDirectory.dir("generated/compose/resourceGenerator/androidAssets/androidMain"))
+    }
+    
+    // Wire assets copy task to Android java resource processing
+    tasks.matching { it.name == "processAndroidMainJavaRes" }.configureEach {
+        dependsOn("copyAndroidMainComposeResourcesToAndroidAssets")
+        
+        // Add the compose resources to the java resources
+        val javaResTask = this as Sync
+        javaResTask.from(layout.buildDirectory.dir("generated/compose/resourceGenerator/androidAssets/androidMain"))
     }
 }
 

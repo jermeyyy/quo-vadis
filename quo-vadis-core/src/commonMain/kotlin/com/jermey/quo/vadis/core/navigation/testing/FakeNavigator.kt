@@ -7,7 +7,6 @@ import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.NavigationLifecycleManager
 import com.jermey.quo.vadis.core.navigation.core.NavigationResultManager
 import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -72,11 +71,6 @@ class FakeNavigator(
      * Manager for navigation result passing between screens.
      */
     override val resultManager: NavigationResultManager = NavigationResultManager()
-
-    /**
-     * Manager for navigation lifecycle callbacks.
-     */
-    override val lifecycleManager: NavigationLifecycleManager = NavigationLifecycleManager()
 
     // Track navigation calls for verification
     val navigationCalls = mutableListOf<NavigationCall>()

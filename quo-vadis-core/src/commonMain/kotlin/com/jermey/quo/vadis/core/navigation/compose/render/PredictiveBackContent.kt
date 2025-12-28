@@ -85,7 +85,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavNode
  *
  * @see NavRenderScope
  * @see StaticAnimatedVisibilityScope
- * @see PredictiveBackController
+ * @see com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
  */
 @Composable
 internal fun <T : NavNode> PredictiveBackContent(

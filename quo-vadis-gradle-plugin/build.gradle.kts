@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     `kotlin-dsl`
-    alias(libs.plugins.vanniktechMavenPublish)
+    alias(libs.plugins.maven.publish)
 }
 
 group = "io.github.jermeyyy"
@@ -26,7 +26,7 @@ fun Provider<PluginDependency>.toDep() = map {
 
 dependencies {
     compileOnly(libs.plugins.ksp.toDep())
-    compileOnly(libs.plugins.kotlinMultiplatform.toDep())
+    compileOnly(libs.plugins.kotlin.multiplatform.toDep())
 }
 
 gradlePlugin {
@@ -71,7 +71,6 @@ tasks.named("compileKotlin") {
     dependsOn(generateBuildConfig)
 }
 
-@Suppress("UnstableApiUsage")
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()

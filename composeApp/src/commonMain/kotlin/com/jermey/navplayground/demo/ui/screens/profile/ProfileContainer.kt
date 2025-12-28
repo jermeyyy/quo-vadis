@@ -1,9 +1,8 @@
 package com.jermey.navplayground.demo.ui.screens.profile
 
 import com.jermey.navplayground.demo.destinations.MainTabs
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.flowmvi.BaseContainer
-import pro.respawn.flowmvi.api.Container
+import com.jermey.quo.vadis.flowmvi.NavigationContainer
+import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import pro.respawn.flowmvi.api.PipelineContext
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.dsl.store
@@ -25,13 +24,14 @@ private typealias Ctx = PipelineContext<ProfileState, ProfileIntent, ProfileActi
  * - Navigation integration
  * - Error recovery
  * - Side effects (actions)
+ *
+ * Uses [NavigationContainer] for proper lifecycle integration with the navigation system.
  */
 class ProfileContainer(
-    navigator: Navigator,
-    screenKey: String,
+    scope: NavigationContainerScope,
     private val repository: ProfileRepository,
     private val debuggable: Boolean = false
-) : BaseContainer<ProfileState, ProfileIntent, ProfileAction>(navigator, screenKey) {
+) : NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
 
     override val store = store(initial = ProfileState.Loading) {
         configure {

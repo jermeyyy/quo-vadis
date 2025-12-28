@@ -26,11 +26,48 @@ NavNode (root)
 
 | Node | Purpose | Key Features |
 |------|---------|--------------|
-| `NavNode` | Base type for all nodes | Has `key`, parent reference |
-| `ScreenNode` | Single screen/destination | Contains `Destination`, handles content |
+| `NavNode` | Base sealed interface | Has `key`, `parentKey` |
+| `ScreenNode` | Single screen/destination | Contains `NavDestination`, implements `LifecycleAwareNode` |
 | `StackNode` | Stack of screens | Push/pop operations, backstack |
-| `TabNode` | Tab container | Independent stacks per tab |
-| `PaneNode` | Adaptive layout | Primary/detail panes |
+| `TabNode` | Tab container | Independent stacks per tab, implements `LifecycleAwareNode` |
+| `PaneNode` | Adaptive layout | Primary/detail panes, implements `LifecycleAwareNode` |
+
+## Lifecycle Management
+
+Navigation nodes implement `LifecycleAwareNode` for proper lifecycle state management.
+
+### LifecycleAwareNode Interface
+
+```kotlin
+interface LifecycleAwareNode {
+    val isAttachedToNavigator: Boolean
+    val isDisplayed: Boolean
+    var composeSavedState: Map<String, List<Any?>>?
+    
+    fun attachToNavigator()
+    fun attachToUI()
+    fun detachFromUI()
+    fun detachFromNavigator()
+    fun addOnDestroyCallback(callback: () -> Unit)
+    fun removeOnDestroyCallback(callback: () -> Unit)
+}
+```
+
+### State Transitions
+
+```
+[Created] -> attachToNavigator() -> [Attached] -> attachToUI() -> [Displayed]
+                                          ^                            |
+                                          |                            v
+                                          +---- detachFromUI() --------+
+                                          |
+                                          v
+                              detachFromNavigator() -> [Destroyed]
+```
+
+### Lifecycle Callbacks
+
+External components (like MVI containers) can register for lifecycle events via `addOnDestroyCallback()`. This is used to close coroutine scopes and Koin scopes when a screen/container is destroyed.
 
 ## Key Components
 
@@ -41,84 +78,128 @@ The central navigation controller:
 ```kotlin
 interface Navigator {
     val state: StateFlow<NavNode>
+    val currentDestination: StateFlow<NavDestination?>
+    val canNavigateBack: StateFlow<Boolean>
     
-    // Basic navigation
-    fun navigate(destination: Destination)
+    fun navigate(destination: NavDestination)
     fun navigateBack(): Boolean
-    
-    // Tree manipulation
-    fun mutate(mutation: TreeMutator.() -> NavNode?)
-    
-    // Stack operations
-    fun popTo(predicate: (NavNode) -> Boolean): Boolean
-    fun popToRoot(): Boolean
+    fun navigateForResult<T>(destination: ReturnsResult<T>): T?
+    fun navigateBackWithResult<T>(result: T)
 }
 ```
 
 ### TreeMutator
 
-For complex navigation state changes:
+For tree manipulation:
 
 ```kotlin
-navigator.mutate { node ->
-    node.pop()
-}
-
-navigator.mutate { node ->
-    node.popTo { it.destination.route == "home" }
-}
-
-navigator.mutate { node ->
-    node.push(DetailDestination(id))
-}
+// All operations are pure functions
+TreeMutator.push(root, destination, scopeRegistry, keyGenerator)
+TreeMutator.pop(root, behavior)
+TreeMutator.popTo(root, predicate, inclusive)
+TreeMutator.switchTab(root, nodeKey, tabIndex)
+TreeMutator.navigateToPane(root, nodeKey, role, destination, switchFocus, keyGenerator)
 ```
 
-### Destination Pattern
+## FlowMVI Integration
 
-Type-safe destinations using sealed classes:
+The `quo-vadis-core-flow-mvi` module provides MVI architecture integration.
+
+### NavigationContainer (Screen-Scoped)
 
 ```kotlin
-sealed class AppDestination : Destination {
-    @Route("home")
-    data object Home : AppDestination()
+class ProfileContainer(scope: NavigationContainerScope) :
+    NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
     
-    @Route("detail/{id}")
-    @Argument(DetailData::class)
-    data class Detail(val id: String) : AppDestination(),
-        TypedDestination<DetailData> {
-        override val data = DetailData(id)
+    // Access via scope:
+    // - navigator: Navigator
+    // - screenKey: String
+    // - coroutineScope: CoroutineScope
+    
+    override val store = store(ProfileState()) {
+        reduce { intent -> /* handle intent */ }
+    }
+}
+
+// In composable
+val store = rememberContainer<ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()
+```
+
+### SharedNavigationContainer (Container-Scoped)
+
+For shared state across all screens in a Tab/Pane:
+
+```kotlin
+class MainTabsContainer(scope: SharedContainerScope) :
+    SharedNavigationContainer<TabsState, TabsIntent, TabsAction>(scope) {
+    
+    // Access via scope:
+    // - navigator: Navigator
+    // - containerKey: String
+    // - containerScope: CoroutineScope
+    
+    override val store = store(TabsState()) {
+        reduce { intent -> /* handle intent */ }
+    }
+}
+
+// In tab wrapper
+val store = rememberSharedContainer<MainTabsContainer, TabsState, TabsIntent, TabsAction>()
+CompositionLocalProvider(LocalMyStore provides store) {
+    content()
+}
+
+// Child screens access via CompositionLocal
+val tabsStore = LocalMyStore.current
+```
+
+### Koin Registration
+
+```kotlin
+val myModule = module {
+    navigationContainer<ProfileContainer> { scope ->
+        ProfileContainer(scope)
+    }
+    
+    sharedNavigationContainer<MainTabsContainer> { scope ->
+        MainTabsContainer(scope)
     }
 }
 ```
 
 ## Registry System
 
-### Registries
-
-The library uses a registry pattern for decoupling:
-
 | Registry | Purpose |
 |----------|---------|
 | `RouteRegistry` | Maps routes to destinations |
 | `ScreenRegistry` | Maps destinations to composables |
-| `ContainerRegistry` | Maps container nodes to layouts |
+| `ContainerRegistry` | Container info + Tab/Pane wrapper composables |
 | `TransitionRegistry` | Maps destinations to transitions |
-| `ContainerRegistry` | Container info + Tab/Pane wrapper composables (includes former WrapperRegistry) |
-| `BackHandlerRegistry` | Custom back handling |
-| `ScopeRegistry` | Scoped dependencies |
+| `ScopeRegistry` | Scoped navigation |
 
-### Registration (via KSP)
+## CompositionLocals
 
-KSP generates registration code:
+| Local | Type | Description |
+|-------|------|-------------|
+| `LocalScreenNode` | `ScreenNode?` | Current screen node |
+| `LocalContainerNode` | `LifecycleAwareNode?` | Current container node (Tab/Pane) |
+| `LocalNavigator` | `Navigator?` | Navigator instance |
+| `LocalNavRenderScope` | `NavRenderScope?` | Render context with animations |
+
+## Navigation Results
+
+Type-safe result passing between screens:
 
 ```kotlin
-// Generated initializer
-object AppDestinationRouteInitializer {
-    fun initialize() {
-        RouteRegistry.register("home", AppDestination.Home::class)
-        RouteRegistry.register("detail/{id}", AppDestination.Detail::class)
-    }
-}
+// Destination that returns a result
+@Destination(route = "picker")
+data object ItemPicker : MyDestination(), ReturnsResult<SelectedItem>
+
+// Navigate and await result
+val result: SelectedItem? = navigator.navigateForResult(ItemPicker)
+
+// Return result from picker screen
+navigator.navigateBackWithResult(SelectedItem("123", "Apple"))
 ```
 
 ## Rendering Architecture
@@ -126,27 +207,10 @@ object AppDestinationRouteInitializer {
 ### NavTreeRenderer
 
 Renders the navigation tree to Compose UI:
-
-1. Flattens tree to visible nodes
-2. Determines transitions
+1. Dispatches to specialized renderers (ScreenRenderer, StackRenderer, TabRenderer, PaneRenderer)
+2. Manages lifecycle transitions (attachToUI, detachFromUI)
 3. Handles predictive back animation
-4. Manages composition lifecycle
-
-### AnimatedNavContent
-
-Handles screen transitions:
-
-```kotlin
-AnimatedNavContent(
-    targetNode = currentNode,
-    transition = transition,
-    backProgress = backProgress
-) { node ->
-    // Render screen content
-}
-```
-
-## Compose Integration
+4. Provides CompositionLocals for screens
 
 ### NavigationHost
 
@@ -156,113 +220,20 @@ Main entry point for navigation UI:
 @Composable
 fun NavigationHost(
     navigator: Navigator,
+    config: NavigationConfig,
     modifier: Modifier = Modifier,
-    defaultTransition: NavigationTransition = NavigationTransitions.Fade,
-    predictiveBackEnabled: Boolean = true
+    enablePredictiveBack: Boolean = true,
+    windowSizeClass: WindowSizeClass? = null
 )
 ```
 
-### Content Registration
-
-Using `@Content` annotation:
-
-```kotlin
-@Content(AppDestination.Home::class)
-@Composable
-fun HomeContent(navigator: Navigator) {
-    HomeScreen(navigator)
-}
-
-@Content(AppDestination.Detail::class)
-@Composable
-fun DetailContent(data: DetailData, navigator: Navigator) {
-    DetailScreen(data, navigator)
-}
-```
-
-## Predictive Back Navigation
-
-### CascadeBackState
-
-Coordinates back gesture across the tree:
-
-```kotlin
-enum class PredictiveBackMode {
-    None,       // No predictive back
-    Animate,    // Animate during gesture
-    Complete    // Gesture completed
-}
-```
-
-### PredictiveBackController
-
-Handles gesture progress and completion.
-
-## Testing Architecture
+## Testing
 
 ### FakeNavigator
 
-For unit testing navigation logic:
-
 ```kotlin
-val fakeNavigator = FakeNavigator()
-fakeNavigator.navigate(HomeDestination)
-
-assertTrue(fakeNavigator.verifyNavigateTo("home"))
-assertEquals(1, fakeNavigator.navigationStack.size)
-```
-
-### FakeNavRenderScope
-
-For testing composable content in isolation.
-
-## Deep Linking
-
-### DeepLink Pattern
-
-```kotlin
-@DeepLink("myapp://detail/{id}")
-data class DetailDestination(val id: String) : Destination
-
-// Handler
-val handler = GeneratedDeepLinkHandler()
-val destination = handler.handleUri("myapp://detail/123")
-```
-
-## Modular Navigation
-
-### Gray Box Pattern
-
-Feature modules expose navigation without exposing implementation:
-
-```kotlin
-// Feature module exposes
-interface FeatureNavigation {
-    fun navigateToFeature(navigator: Navigator, params: FeatureParams)
-}
-
-// Implementation hidden
-internal class FeatureNavigationImpl : FeatureNavigation {
-    override fun navigateToFeature(navigator: Navigator, params: FeatureParams) {
-        navigator.navigate(FeatureDestination(params))
-    }
-}
-```
-
-## DI Integration
-
-### Koin Support
-
-Built-in Koin integration helpers in `KoinIntegration.kt`:
-
-```kotlin
-@Composable
-fun NavigationHost(
-    navigator: Navigator,
-    koinModule: Module = module { }
-) {
-    KoinContext(modules = listOf(koinModule)) {
-        // Navigation content
-    }
-}
+val navigator = FakeNavigator()
+navigator.navigate(HomeDestination)
+assertTrue(navigator.navigationStack.size == 1)
+assertEquals(HomeDestination, navigator.currentDestination.value)
 ```

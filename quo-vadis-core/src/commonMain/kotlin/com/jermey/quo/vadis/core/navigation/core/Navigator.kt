@@ -111,15 +111,6 @@ interface Navigator : BackPressHandler {
      */
     val resultManager: NavigationResultManager
 
-    /**
-     * Manager for navigation lifecycle callbacks.
-     *
-     * Used internally by [registerNavigationLifecycle] and
-     * [unregisterNavigationLifecycle] extension functions.
-     * Not typically accessed directly.
-     */
-    val lifecycleManager: NavigationLifecycleManager
-
     // =========================================================================
     // CONFIGURATION
     // =========================================================================

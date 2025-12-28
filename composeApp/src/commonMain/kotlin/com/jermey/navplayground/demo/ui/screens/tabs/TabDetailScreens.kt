@@ -17,8 +17,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
@@ -85,11 +85,15 @@ fun MusicDetailScreen(
                 DetailRow(Icons.Default.Person, "Artist", artist),
                 DetailRow(Icons.Default.Album, "Album", "Greatest Hits ${(itemIndex % 5) + 1}"),
                 DetailRow(Icons.Default.CalendarMonth, "Year", "${1970 + (itemIndex * 3) % 50}"),
-                DetailRow(Icons.Default.Star, "Rating", "${"★".repeat((itemIndex % 5) + 1)}${"☆".repeat(5 - (itemIndex % 5) - 1)}")
+                DetailRow(
+                    Icons.Default.Star,
+                    "Rating",
+                    "${"★".repeat((itemIndex % 5) + 1)}${"☆".repeat(5 - (itemIndex % 5) - 1)}"
+                )
             ),
             description = "This is a classic song that has stood the test of time. " +
-                "It showcases the unique musical style of $artist and continues to " +
-                "inspire musicians and fans around the world."
+                    "It showcases the unique musical style of $artist and continues to " +
+                    "inspire musicians and fans around the world."
         )
     }
 }
@@ -154,12 +158,16 @@ fun MoviesDetailScreen(
             details = listOf(
                 DetailRow(Icons.Default.Person, "Director", director),
                 DetailRow(Icons.Default.CalendarMonth, "Year", year),
-                DetailRow(Icons.Default.Star, "Rating", "${"★".repeat((itemIndex % 5) + 1)}${"☆".repeat(5 - (itemIndex % 5) - 1)}"),
+                DetailRow(
+                    Icons.Default.Star,
+                    "Rating",
+                    "${"★".repeat((itemIndex % 5) + 1)}${"☆".repeat(5 - (itemIndex % 5) - 1)}"
+                ),
                 DetailRow(Icons.Default.Movie, "Genre", getMovieGenreById(itemIndex))
             ),
             description = "A critically acclaimed film that has become a landmark in cinema. " +
-                "This movie showcases exceptional storytelling and has left a lasting " +
-                "impact on audiences worldwide."
+                    "This movie showcases exceptional storytelling and has left a lasting " +
+                    "impact on audiences worldwide."
         )
     }
 }
@@ -173,7 +181,8 @@ private fun getMovieTitleById(index: Int): String {
 }
 
 private fun getMovieYearById(index: Int): String {
-    val years = listOf("1994", "1972", "2008", "1994", "1994", "2010", "1999", "1990", "1999", "2014")
+    val years =
+        listOf("1994", "1972", "2008", "1994", "1994", "2010", "1999", "1990", "1999", "2014")
     return years[(index - 1) % years.size]
 }
 
@@ -234,14 +243,26 @@ fun BooksDetailScreen(
             title = title,
             subtitle = "by $author",
             details = listOf(
-                DetailRow(Icons.Default.Person, "Author", author),
-                DetailRow(Icons.Default.CalendarMonth, "Published", getBookYearById(itemIndex)),
-                DetailRow(Icons.Default.Star, "Rating", "${"★".repeat((itemIndex % 5) + 1)}${"☆".repeat(5 - (itemIndex % 5) - 1)}"),
-                DetailRow(Icons.AutoMirrored.Default.MenuBook, "Genre", getBookGenreById(itemIndex))
+                DetailRow(icon = Icons.Default.Person, label = "Author", value = author),
+                DetailRow(
+                    icon = Icons.Default.CalendarMonth,
+                    label = "Published",
+                    value = getBookYearById(itemIndex)
+                ),
+                DetailRow(
+                    icon = Icons.Default.Star,
+                    label = "Rating",
+                    value = "${"★".repeat((itemIndex % 5) + 1)}${"☆".repeat(5 - (itemIndex % 5) - 1)}"
+                ),
+                DetailRow(
+                    icon = Icons.AutoMirrored.Default.MenuBook,
+                    label = "Genre",
+                    value = getBookGenreById(itemIndex)
+                )
             ),
             description = "A timeless literary masterpiece that continues to captivate readers. " +
-                "This book explores profound themes and has influenced generations of writers " +
-                "and thinkers."
+                    "This book explores profound themes and has influenced generations of writers " +
+                    "and thinkers."
         )
     }
 }
@@ -265,7 +286,9 @@ private fun getBookAuthorById(index: Int): String {
 }
 
 private fun getBookYearById(index: Int): String {
-    val years = listOf("1949", "1960", "1925", "1813", "1951", "1954", "1945", "1932", "1937", "1953")
+    val years = listOf(
+        "1949", "1960", "1925", "1813", "1951", "1954", "1945", "1932", "1937", "1953"
+    )
     return years[(index - 1) % years.size]
 }
 

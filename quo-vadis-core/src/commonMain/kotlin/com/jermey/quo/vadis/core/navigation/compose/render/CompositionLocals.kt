@@ -18,6 +18,8 @@ package com.jermey.quo.vadis.core.navigation.compose.render
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.compositionLocalOf
+import com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 
 /**
@@ -93,3 +95,70 @@ val LocalScreenNode = compositionLocalOf<ScreenNode?> { null }
  * @see StaticAnimatedVisibilityScope
  */
 val LocalAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
+
+/**
+ * Provides access to the current [Navigator] instance within the navigation hierarchy.
+ *
+ * This composition local is provided by [com.jermey.quo.vadis.core.navigation.compose.NavigationHost]
+ * at the root level and allows any screen or container content to access the navigator for:
+ * - Programmatic navigation (navigateTo, navigateBack, etc.)
+ * - Reading navigation state
+ * - Accessing navigation configuration
+ *
+ * ## Usage
+ *
+ * ```kotlin
+ * @Composable
+ * fun MyScreen() {
+ *     val navigator = LocalNavigator.current
+ *         ?: error("Must be inside NavigationHost")
+ *
+ *     Button(onClick = { navigator.navigateBack() }) {
+ *         Text("Go Back")
+ *     }
+ * }
+ * ```
+ *
+ * ## Availability
+ *
+ * This local is available within [com.jermey.quo.vadis.core.navigation.compose.NavigationHost] and all its descendants.
+ * Accessing it outside of NavigationHost will return `null`.
+ *
+ * @see Navigator
+ * @see com.jermey.quo.vadis.core.navigation.compose.NavigationHost
+ */
+val LocalNavigator = compositionLocalOf<Navigator?> { null }
+
+/**
+ * Provides access to the current container node ([com.jermey.quo.vadis.core.navigation.core.TabNode] or
+ * [com.jermey.quo.vadis.core.navigation.core.PaneNode]) within the hierarchy.
+ *
+ * This composition local is provided by [TabRenderer] and [PaneRenderer] when rendering
+ * container content. It allows content within containers to access:
+ * - The container's lifecycle state
+ * - Container-level metadata (e.g., tab metadata, pane configurations)
+ * - Container's UUID for scoping purposes
+ *
+ * ## Usage
+ *
+ * ```kotlin
+ * @Composable
+ * fun TabContent() {
+ *     val containerNode = LocalContainerNode.current
+ *     // Use for container-scoped operations like shared MVI containers
+ * }
+ * ```
+ *
+ * ## Availability
+ *
+ * This local is available within:
+ * - Tab wrapper composables and their children
+ * - Pane wrapper composables and their children
+ *
+ * Returns `null` if not inside a container (e.g., at root stack level).
+ *
+ * @see LifecycleAwareNode
+ * @see TabRenderer
+ * @see PaneRenderer
+ */
+val LocalContainerNode = compositionLocalOf<LifecycleAwareNode?> { null }

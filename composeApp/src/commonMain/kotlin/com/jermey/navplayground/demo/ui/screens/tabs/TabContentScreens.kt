@@ -15,13 +15,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +38,7 @@ import com.jermey.navplayground.demo.destinations.MusicDetail
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import org.koin.compose.koinInject
+import pro.respawn.flowmvi.compose.dsl.subscribe
 
 /**
  * Data class representing an item in the tab lists.
@@ -52,6 +57,9 @@ private data class TabItem(
  * Music Tab List Screen - Shows a list of music items.
  *
  * Clicking an item navigates to the detail screen within the music tab stack.
+ * Demonstrates usage of [LocalDemoTabsStore] for cross-tab shared state:
+ * - Tracks items viewed across all tabs
+ * - Allows favoriting items that persist across tab switches
  */
 @Screen(DemoTabs.MusicTab.List::class)
 @Composable
@@ -59,6 +67,10 @@ fun MusicTabListScreen(
     navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
+    // Access the shared store for cross-tab state
+    val sharedStore = LocalDemoTabsStore.current
+    val sharedState by sharedStore.subscribe()
+
     val items = remember {
         (1..20).map {
             TabItem(
@@ -74,9 +86,22 @@ fun MusicTabListScreen(
         items = items,
         icon = Icons.Default.MusicNote,
         headerText = "Music Library",
-        headerDescription = "Tap a song to view details",
+        headerDescription = "Tap a song to view details. Use ♡ to favorite.",
+        favoriteItems = sharedState.favoriteItems,
         onItemClick = { item ->
+            // Increment viewed count when navigating to detail
+            sharedStore.intent(DemoTabsIntent.IncrementViewed)
             navigator.navigate(MusicDetail(itemId = item.id))
+        },
+        onFavoriteClick = { item ->
+            sharedStore.let { store ->
+                val isFavorite = sharedState.favoriteItems.contains(item.id)
+                if (isFavorite) {
+                    store.intent(DemoTabsIntent.RemoveFavorite(item.id))
+                } else {
+                    store.intent(DemoTabsIntent.AddFavorite(item.id))
+                }
+            }
         }
     )
 }
@@ -121,6 +146,7 @@ private fun getMusicArtist(index: Int): String {
  * Movies Tab List Screen - Shows a list of movie items.
  *
  * Clicking an item navigates to the detail screen within the movies tab stack.
+ * Uses shared state for favorites that persist across tab switches.
  */
 @Suppress("MagicNumber")
 @Screen(DemoTabs.MoviesTab.List::class)
@@ -129,6 +155,10 @@ fun MoviesTabListScreen(
     navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
+    // Access the shared store for cross-tab state
+    val sharedStore = LocalDemoTabsStore.current
+    val sharedState by sharedStore.subscribe()
+
     val items = remember {
         (1..20).map {
             TabItem(
@@ -144,9 +174,21 @@ fun MoviesTabListScreen(
         items = items,
         icon = Icons.Default.Movie,
         headerText = "Movie Collection",
-        headerDescription = "Tap a movie to view details",
+        headerDescription = "Tap a movie to view details. Use ♡ to favorite.",
+        favoriteItems = sharedState.favoriteItems,
         onItemClick = { item ->
+            sharedStore.intent(DemoTabsIntent.IncrementViewed)
             navigator.navigate(MoviesDetail(itemId = item.id))
+        },
+        onFavoriteClick = { item ->
+            sharedStore.let { store ->
+                val isFavorite = sharedState.favoriteItems.contains(item.id)
+                if (isFavorite) {
+                    store.intent(DemoTabsIntent.RemoveFavorite(item.id))
+                } else {
+                    store.intent(DemoTabsIntent.AddFavorite(item.id))
+                }
+            }
         }
     )
 }
@@ -191,6 +233,7 @@ private fun getMovieYear(index: Int): String {
  * Books Tab List Screen - Shows a list of book items.
  *
  * Clicking an item navigates to the detail screen within the books tab stack.
+ * Uses shared state for favorites that persist across tab switches.
  */
 @Suppress("MagicNumber")
 @Screen(DemoTabs.BooksTab.List::class)
@@ -199,6 +242,10 @@ fun BooksTabListScreen(
     navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
+    // Access the shared store for cross-tab state
+    val sharedStore = LocalDemoTabsStore.current
+    val sharedState by sharedStore.subscribe()
+
     val items = remember {
         (1..20).map {
             TabItem(
@@ -214,9 +261,21 @@ fun BooksTabListScreen(
         items = items,
         icon = Icons.AutoMirrored.Default.MenuBook,
         headerText = "Book Library",
-        headerDescription = "Tap a book to view details",
+        headerDescription = "Tap a book to view details. Use ♡ to favorite.",
+        favoriteItems = sharedState.favoriteItems,
         onItemClick = { item ->
+            sharedStore.intent(DemoTabsIntent.IncrementViewed)
             navigator.navigate(BooksDetail(itemId = item.id))
+        },
+        onFavoriteClick = { item ->
+            sharedStore.let { store ->
+                val isFavorite = sharedState.favoriteItems.contains(item.id)
+                if (isFavorite) {
+                    store.intent(DemoTabsIntent.RemoveFavorite(item.id))
+                } else {
+                    store.intent(DemoTabsIntent.AddFavorite(item.id))
+                }
+            }
         }
     )
 }
@@ -265,7 +324,9 @@ private fun getBookAuthor(index: Int): String {
  * @param icon Icon to show for each item
  * @param headerText Title text at the top of the list
  * @param headerDescription Description text below the title
+ * @param favoriteItems List of favorited item IDs
  * @param onItemClick Callback when an item is clicked
+ * @param onFavoriteClick Callback when favorite button is clicked
  */
 @Composable
 private fun TabListContent(
@@ -274,7 +335,9 @@ private fun TabListContent(
     icon: ImageVector,
     headerText: String,
     headerDescription: String,
-    onItemClick: (TabItem) -> Unit
+    favoriteItems: List<String> = emptyList(),
+    onItemClick: (TabItem) -> Unit,
+    onFavoriteClick: (TabItem) -> Unit = {}
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -300,24 +363,30 @@ private fun TabListContent(
             TabItemCard(
                 item = item,
                 icon = icon,
-                onClick = { onItemClick(item) }
+                isFavorite = item.id in favoriteItems,
+                onClick = { onItemClick(item) },
+                onFavoriteClick = { onFavoriteClick(item) }
             )
         }
     }
 }
 
 /**
- * Card component for displaying a single tab item.
+ * Card component for displaying a single tab item with favorite support.
  *
  * @param item The item data to display
  * @param icon Icon to show for this item
+ * @param isFavorite Whether this item is favorited
  * @param onClick Callback when the card is clicked
+ * @param onFavoriteClick Callback when the favorite button is clicked
  */
 @Composable
 private fun TabItemCard(
     item: TabItem,
     icon: ImageVector,
-    onClick: () -> Unit
+    isFavorite: Boolean = false,
+    onClick: () -> Unit,
+    onFavoriteClick: () -> Unit = {}
 ) {
     Card(
         onClick = onClick,
@@ -347,6 +416,15 @@ private fun TabItemCard(
                     text = item.subtitle,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Favorite button
+            IconButton(onClick = onFavoriteClick) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

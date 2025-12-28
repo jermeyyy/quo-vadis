@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     kotlin("jvm")
     alias(libs.plugins.dokka)
-    alias(libs.plugins.vanniktechMavenPublish)
+    alias(libs.plugins.maven.publish)
 }
 
 kotlin {

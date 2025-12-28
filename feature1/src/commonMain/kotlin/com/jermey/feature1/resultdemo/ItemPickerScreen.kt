@@ -38,9 +38,7 @@ import com.jermey.feature1.resultdemo.container.ItemPickerContainer.Intent
 import com.jermey.feature1.resultdemo.container.ItemPickerState
 import com.jermey.feature1.resultdemo.container.PickerItem
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.flowmvi.container
-import org.koin.compose.koinInject
+import com.jermey.quo.vadis.flowmvi.rememberContainer
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
 
@@ -62,8 +60,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 @Screen(ResultDemoDestination.ItemPicker::class)
 @Composable
 fun ItemPickerScreen(
-    navigator: Navigator = koinInject(),
-    container: Store<ItemPickerState, Intent, Action> = container<ItemPickerContainer, ItemPickerState, Intent, Action>()
+    container: Store<ItemPickerState, Intent, Action> = rememberContainer<ItemPickerContainer, ItemPickerState, Intent, Action>()
 ) {
 
     val state by container.subscribe()

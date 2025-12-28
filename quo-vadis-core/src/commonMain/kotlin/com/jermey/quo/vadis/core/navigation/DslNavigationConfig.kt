@@ -426,7 +426,7 @@ internal class DslNavigationConfig(
                         ScreenNode(
                             key = "$paneStackKey/root",
                             parentKey = paneStackKey,
-                            destination = entry.content.rootDestination!!
+                            destination = entry.content.rootDestination
                         )
                     ),
                     scopeKey = null

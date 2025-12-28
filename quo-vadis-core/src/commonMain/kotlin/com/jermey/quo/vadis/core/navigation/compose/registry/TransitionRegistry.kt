@@ -39,7 +39,7 @@ import kotlin.reflect.KClass
  * ## Fallback Behavior
  *
  * When no transition is registered for a destination (returns `null`),
- * the [AnimationCoordinator] falls back to default transitions based on
+ * the [com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator] falls back to default transitions based on
  * the navigation context (stack, tab, or pane navigation).
  *
  * @see NavTransition

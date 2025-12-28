@@ -9,9 +9,9 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
 import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.core.StackNode
 
 /**
@@ -33,7 +33,7 @@ import com.jermey.quo.vadis.core.navigation.core.StackNode
  * fun ScreenRenderer(node: ScreenNode, scope: NavRenderScope) {
  *     val cache = scope.cache
  *     val registry = scope.screenRegistry
- *     
+ *
  *     cache.CachedEntry(node.key) {
  *         registry.Content(node.destination, scope.navigator)
  *     }
@@ -44,9 +44,9 @@ import com.jermey.quo.vadis.core.navigation.core.StackNode
  *
  * The scope provides access to animation-related scopes that enable:
  * - Shared element transitions via [sharedTransitionScope]
- * - Animated visibility for enter/exit animations via [withAnimatedVisibilityScope]
+ * - Animated visibility for enter/exit animations via [WithAnimatedVisibilityScope]
  *
- * Renderers should use [withAnimatedVisibilityScope] to provide the correct
+ * Renderers should use [WithAnimatedVisibilityScope] to provide the correct
  * animation context to screen content:
  *
  * ```kotlin
@@ -218,7 +218,7 @@ interface NavRenderScope {
     fun shouldEnablePredictiveBack(node: NavNode): Boolean {
         val cascadeState = predictiveBackController.cascadeState.value
         val isGestureActive = predictiveBackController.isActive.value
-        
+
         // During a CASCADE animation (cascadeDepth > 0), only the appropriate level
         // should handle animation. For non-cascade (normal pop), any stack with
         // children > 1 can handle its own animation.
@@ -232,7 +232,7 @@ interface NavRenderScope {
                 return node is StackNode && node.children.any { it.key == exitingNode.key }
                 // Other stacks should not animate
             }
-            
+
             // True cascade case (cascadeDepth > 0): only root handles animation
             // because the entire container (TabNode etc.) is being removed
             if (node.parentKey != null) {
@@ -265,7 +265,7 @@ interface NavRenderScope {
      * @param content The composable content that needs access to the animation scope
      */
     @Composable
-    fun withAnimatedVisibilityScope(
+    fun WithAnimatedVisibilityScope(
         animatedVisibilityScope: AnimatedVisibilityScope,
         content: @Composable () -> Unit
     )

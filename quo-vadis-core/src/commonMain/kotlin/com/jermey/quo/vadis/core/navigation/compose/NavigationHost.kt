@@ -6,7 +6,6 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -22,30 +21,30 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.render.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.navigation.compose.animation.LocalBackAnimationController
-import com.jermey.quo.vadis.core.navigation.compose.render.NavRenderScope
-import com.jermey.quo.vadis.core.navigation.compose.render.NavNodeRenderer
 import com.jermey.quo.vadis.core.navigation.compose.animation.rememberBackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.navback.NavigateBackHandler
+import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
 import com.jermey.quo.vadis.core.navigation.compose.navback.ScreenNavigationInfo
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
-import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.compose.navback.calculateCascadeBackState
 import com.jermey.quo.vadis.core.navigation.compose.registry.BackHandlerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.compose.registry.LocalBackHandlerRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
+import com.jermey.quo.vadis.core.navigation.compose.render.LocalAnimatedVisibilityScope
+import com.jermey.quo.vadis.core.navigation.compose.render.LocalNavigator
+import com.jermey.quo.vadis.core.navigation.compose.render.NavNodeRenderer
+import com.jermey.quo.vadis.core.navigation.compose.render.NavRenderScope
 import com.jermey.quo.vadis.core.navigation.compose.render.rememberComposableCache
 import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.core.NavNode
+import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.TreeMutator
 import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.core.activeLeaf
@@ -348,6 +347,7 @@ fun NavigationHost(
             // Provide scope to children via CompositionLocal
             CompositionLocalProvider(
                 LocalNavRenderScope provides scope,
+                LocalNavigator provides navigator,
                 LocalBackHandlerRegistry provides backHandlerRegistry,
                 LocalBackAnimationController provides backAnimationController
             ) {
@@ -356,7 +356,6 @@ fun NavigationHost(
                     node = navState,
                     previousNode = previousState,
                     scope = scope,
-                    modifier = Modifier.background(Color.Transparent)
                 )
 
                 // Update previous state after rendering to track state changes
@@ -492,7 +491,7 @@ private class NavRenderScopeImpl(
      * @param content The composable content that needs access to the animation scope
      */
     @Composable
-    override fun withAnimatedVisibilityScope(
+    override fun WithAnimatedVisibilityScope(
         animatedVisibilityScope: AnimatedVisibilityScope,
         content: @Composable () -> Unit
     ) {

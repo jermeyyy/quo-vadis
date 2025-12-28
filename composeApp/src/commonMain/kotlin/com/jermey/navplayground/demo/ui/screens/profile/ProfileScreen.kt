@@ -51,10 +51,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.flowmvi.container
+import com.jermey.quo.vadis.flowmvi.rememberContainer
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
 
@@ -73,8 +71,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 @Screen(MainTabs.ProfileTab::class)
 @Composable
 fun ProfileScreen(
-    navigator: Navigator = koinInject(),
-    container: Store<ProfileState, ProfileIntent, ProfileAction> = container<ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()
+    container: Store<ProfileState, ProfileIntent, ProfileAction> = rememberContainer<ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -119,7 +116,6 @@ fun ProfileScreen(
                 }
             }
         }
-
     }
 
     Scaffold(
