@@ -32,6 +32,7 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
+include(":androidApp")
 include(":quo-vadis-core")
 include(":quo-vadis-core-flow-mvi")
 include(":quo-vadis-annotations")

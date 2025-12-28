@@ -84,14 +84,14 @@ class TabExtractor(
         val isNewPattern = !itemsList.isNullOrEmpty()
 
         if (isNewPattern) {
-            logger.info("@Tab '$name' uses new pattern with items array (${itemsList!!.size} items)")
+            logger.info("@Tab '$name' uses new pattern with items array (${itemsList.size} items)")
         } else {
             logger.warn("@Tab '$name' uses legacy pattern with sealed subclasses - may fail in KMP")
         }
 
         // Extract tabs based on pattern
         val tabs = if (isNewPattern) {
-            extractFromItemsArray(itemsList!!, classDeclaration)
+            extractFromItemsArray(itemsList, classDeclaration)
         } else {
             extractFromSealedSubclasses(classDeclaration)
         }

@@ -3,14 +3,15 @@ plugins {
     // in each subproject's classloader
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.androidLibrary) apply false
-    alias(libs.plugins.composeMultiplatform) apply false
-    alias(libs.plugins.composeCompiler) apply false
-    alias(libs.plugins.kotlinMultiplatform) apply false
-    alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
-    alias(libs.plugins.androidLint) apply false
+    alias(libs.plugins.compose.multiplatform) apply false
+    alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.android.kotlin.multiplatform.library) apply false
+    alias(libs.plugins.android.lint) apply false
     alias(libs.plugins.detekt)
     alias(libs.plugins.dokka)
-    alias(libs.plugins.vanniktechMavenPublish) apply false
+    alias(libs.plugins.maven.publish) apply false
 }
 
 // Apply Dokka to library subprojects for multi-module documentation
@@ -37,8 +38,8 @@ dependencies {
 }
 
 allprojects {
-    // Skip detekt for gradle plugin module to avoid conflicts with kotlin-dsl
-    if (project.name != "quo-vadis-gradle-plugin") {
+    // Skip detekt for gradle plugin module and androidApp to avoid conflicts
+    if (project.name !in listOf("quo-vadis-gradle-plugin", "androidApp")) {
         plugins.apply(rootProject.libs.plugins.detekt.get().pluginId)
 
         afterEvaluate {
