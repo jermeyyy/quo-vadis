@@ -152,15 +152,12 @@ internal fun PaneRenderer(
         DisposableEffect(node) {
             node.attachToUI()
             onDispose {
-                // Phase 3 will add: node.composeSavedState = saveableStateRegistry.performSave()
                 node.detachFromUI()
             }
         }
 
         // Provide container node to children for container-scoped operations
-        CompositionLocalProvider(
-            LocalContainerNode provides node
-        ) {
+        CompositionLocalProvider(LocalContainerNode provides node) {
             if (isExpanded) {
                 // Expanded mode: render wrapper with multiple pane content slots
                 MultiPaneRenderer(

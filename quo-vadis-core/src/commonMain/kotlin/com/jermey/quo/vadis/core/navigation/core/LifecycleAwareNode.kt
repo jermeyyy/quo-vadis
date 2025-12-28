@@ -35,11 +35,11 @@ package com.jermey.quo.vadis.core.navigation.core
  * for this node, enabling state preservation across configuration changes
  * and process death.
  *
- * ## Phase 1 Note
+ * ## Lifecycle Callbacks
  *
- * This is the Phase 1 implementation focusing on navigation lifecycle.
- * Phase 2 will add `LifecycleOwner`, `ViewModelStoreOwner`, and
- * `SavedStateRegistryOwner` for full AndroidX ecosystem compatibility.
+ * External components (like MVI containers) can register for lifecycle events
+ * via [addOnDestroyCallback]. Callbacks are invoked when the node is destroyed
+ * (both detached from navigator and not displayed).
  */
 interface LifecycleAwareNode {
 
@@ -123,4 +123,25 @@ interface LifecycleAwareNode {
      * If the node is not being displayed, this triggers cleanup.
      */
     fun detachFromNavigator()
+
+    /**
+     * Registers a callback to be invoked when this node is destroyed.
+     *
+     * A node is destroyed when it is both:
+     * - Detached from the navigator tree
+     * - Not being displayed
+     *
+     * This is used by MVI containers to close their coroutine scopes
+     * and Koin scopes when the screen/container is destroyed.
+     *
+     * @param callback The callback to invoke on destruction
+     */
+    fun addOnDestroyCallback(callback: () -> Unit)
+
+    /**
+     * Removes a previously registered destroy callback.
+     *
+     * @param callback The callback to remove
+     */
+    fun removeOnDestroyCallback(callback: () -> Unit)
 }

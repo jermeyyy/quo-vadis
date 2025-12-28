@@ -131,7 +131,6 @@ internal fun TabRenderer(
         DisposableEffect(node) {
             node.attachToUI()
             onDispose {
-                // Phase 3 will add: node.composeSavedState = saveableStateRegistry.performSave()
                 node.detachFromUI()
             }
         }

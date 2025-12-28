@@ -145,8 +145,7 @@ val LocalNavigator = compositionLocalOf<Navigator?> { null }
  * @Composable
  * fun TabContent() {
  *     val containerNode = LocalContainerNode.current
- *     // Use for container-scoped operations
- *     // Phase 3: Access shared MVI containers
+ *     // Use for container-scoped operations like shared MVI containers
  * }
  * ```
  *

@@ -13,6 +13,7 @@ import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
 import pro.respawn.flowmvi.api.PipelineContext
+import pro.respawn.flowmvi.dsl.state
 import pro.respawn.flowmvi.dsl.store
 import pro.respawn.flowmvi.plugins.init
 import pro.respawn.flowmvi.plugins.reduce
@@ -123,7 +124,11 @@ class ResultDemoContainer(
     private fun Ctx.startTimer() {
         coroutineScope.launch {
             while (true) {
-                updateState { copy(timerValue = timerValue + 1) }
+                updateState {
+                    val newTimer = timerValue + 1
+                    println("ResultDemoContainer: Timer tick: $newTimer")
+                    copy(timerValue = newTimer)
+                }
                 delay(1.seconds)
             }
         }

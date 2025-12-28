@@ -35,8 +35,8 @@ import kotlin.uuid.Uuid
  *
  * PaneNode implements [LifecycleAwareNode] to provide proper lifecycle
  * state management for the pane container itself. This enables:
- * - Container-scoped ViewModels (Phase 2)
- * - Shared MVI containers for pane coordination (Phase 3)
+ * - Container-scoped state management
+ * - Shared MVI containers for pane coordination
  * - Proper cleanup when the pane container is removed
  *
  * ## Scope-Aware Navigation
@@ -112,6 +112,12 @@ class PaneNode(
     @Transient
     override var composeSavedState: Map<String, List<Any?>>? = null
 
+    /**
+     * Callbacks to invoke when this node is destroyed.
+     */
+    @Transient
+    private val onDestroyCallbacks = mutableListOf<() -> Unit>()
+
     // --- Lifecycle Transitions ---
 
     override fun attachToNavigator() {
@@ -142,11 +148,21 @@ class PaneNode(
         }
     }
 
+    override fun addOnDestroyCallback(callback: () -> Unit) {
+        onDestroyCallbacks.add(callback)
+    }
+
+    override fun removeOnDestroyCallback(callback: () -> Unit) {
+        onDestroyCallbacks.remove(callback)
+    }
+
     /**
      * Cleanup when node is fully detached.
      */
     private fun close() {
-        // Phase 2 will add lifecycle and viewmodel cleanup
+        // Invoke all destroy callbacks
+        onDestroyCallbacks.forEach { it.invoke() }
+        onDestroyCallbacks.clear()
     }
 
     // --- Pane-specific properties ---

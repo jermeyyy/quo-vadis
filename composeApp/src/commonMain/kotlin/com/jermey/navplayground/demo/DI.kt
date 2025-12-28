@@ -12,6 +12,7 @@ import com.jermey.quo.vadis.flowmvi.navigationContainer
 import com.jermey.quo.vadis.generated.ComposeAppNavigationConfig
 import com.jermey.quo.vadis.generated.Feature1NavigationConfig
 import com.jermey.quo.vadis.generated.Feature2NavigationConfig
+import org.koin.core.component.get
 import org.koin.dsl.module
 
 val navigationModule = module {
@@ -48,7 +49,7 @@ val profileModule = module {
     navigationContainer<ProfileContainer> { scope ->
         ProfileContainer(
             scope = scope,
-            repository = scope.getKoin().get(),
+            repository = scope.get(),
             debuggable = true
         )
     }

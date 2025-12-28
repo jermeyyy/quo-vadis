@@ -812,6 +812,9 @@ class TreeNavigator(
         updateDerivedState(newState)
         val toKey = newState.activeLeaf()?.key
 
+        // Notify lifecycle-aware nodes that were removed from the tree
+        notifyRemovedNodesDetached(oldState, newState)
+
         // Cancel results for destroyed screens
         cancelResultsForDestroyedScreens(oldState, newState)
 
@@ -866,6 +869,76 @@ class TreeNavigator(
             is TabNode -> node.stacks.forEach { collectScreenKeysRecursive(it, keys) }
             is PaneNode -> node.paneConfigurations.values.forEach {
                 collectScreenKeysRecursive(it.content, keys)
+            }
+        }
+    }
+
+    /**
+     * Notify lifecycle-aware nodes that were removed from the navigation tree.
+     *
+     * This calls [LifecycleAwareNode.detachFromNavigator] on all nodes
+     * (ScreenNode, TabNode, PaneNode) that existed in the old state but
+     * are not present in the new state.
+     */
+    private fun notifyRemovedNodesDetached(oldState: NavNode, newState: NavNode) {
+        val oldNodes = collectLifecycleAwareNodes(oldState)
+        val newNodeKeys = collectLifecycleAwareNodeKeys(newState)
+
+        oldNodes.forEach { node ->
+            if (node.key !in newNodeKeys) {
+                (node as? LifecycleAwareNode)?.detachFromNavigator()
+            }
+        }
+    }
+
+    /**
+     * Collect all lifecycle-aware nodes from a navigation tree.
+     */
+    private fun collectLifecycleAwareNodes(node: NavNode): List<NavNode> {
+        val nodes = mutableListOf<NavNode>()
+        collectLifecycleAwareNodesRecursive(node, nodes)
+        return nodes
+    }
+
+    private fun collectLifecycleAwareNodesRecursive(node: NavNode, nodes: MutableList<NavNode>) {
+        when (node) {
+            is ScreenNode -> nodes.add(node)
+            is StackNode -> node.children.forEach { collectLifecycleAwareNodesRecursive(it, nodes) }
+            is TabNode -> {
+                nodes.add(node)
+                node.stacks.forEach { collectLifecycleAwareNodesRecursive(it, nodes) }
+            }
+            is PaneNode -> {
+                nodes.add(node)
+                node.paneConfigurations.values.forEach {
+                    collectLifecycleAwareNodesRecursive(it.content, nodes)
+                }
+            }
+        }
+    }
+
+    /**
+     * Collect all lifecycle-aware node keys from a navigation tree.
+     */
+    private fun collectLifecycleAwareNodeKeys(node: NavNode): Set<String> {
+        val keys = mutableSetOf<String>()
+        collectLifecycleAwareNodeKeysRecursive(node, keys)
+        return keys
+    }
+
+    private fun collectLifecycleAwareNodeKeysRecursive(node: NavNode, keys: MutableSet<String>) {
+        when (node) {
+            is ScreenNode -> keys.add(node.key)
+            is StackNode -> node.children.forEach { collectLifecycleAwareNodeKeysRecursive(it, keys) }
+            is TabNode -> {
+                keys.add(node.key)
+                node.stacks.forEach { collectLifecycleAwareNodeKeysRecursive(it, keys) }
+            }
+            is PaneNode -> {
+                keys.add(node.key)
+                node.paneConfigurations.values.forEach {
+                    collectLifecycleAwareNodeKeysRecursive(it.content, keys)
+                }
             }
         }
     }
@@ -940,9 +1013,7 @@ fun <T : NavNode> NavNode.findFirstOfType(clazz: kotlin.reflect.KClass<T>): T? {
         is StackNode -> children.firstNotNullOfOrNull { it.findFirstOfType(clazz) }
         is TabNode -> stacks.firstNotNullOfOrNull { it.findFirstOfType(clazz) }
         is PaneNode -> paneConfigurations.values.firstNotNullOfOrNull {
-            it.content.findFirstOfType(
-                clazz
-            )
+            it.content.findFirstOfType(clazz)
         }
     }
 }

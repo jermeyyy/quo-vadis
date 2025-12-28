@@ -17,9 +17,6 @@ import com.jermey.quo.vadis.core.navigation.core.ScreenNode
  * - Calls [ScreenNode.attachToUI] when the composable enters composition
  * - Calls [ScreenNode.detachFromUI] when the composable leaves composition
  *
- * This enables proper lifecycle state tracking and future integration with
- * ViewModelStoreOwner and SavedStateRegistryOwner (Phase 3).
- *
  * ## State Preservation
  *
  * Uses [ComposableCache.CachedEntry] to preserve composable state across
@@ -64,8 +61,6 @@ internal fun ScreenRenderer(
         DisposableEffect(node) {
             node.attachToUI()
             onDispose {
-                // Save compose state before detaching if node is still in the tree
-                // Phase 3 will add: node.composeSavedState = saveableStateRegistry.performSave()
                 node.detachFromUI()
             }
         }

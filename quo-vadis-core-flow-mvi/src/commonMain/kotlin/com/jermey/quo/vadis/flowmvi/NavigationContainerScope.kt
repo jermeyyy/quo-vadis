@@ -20,8 +20,10 @@ import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import com.jermey.quo.vadis.core.navigation.core.ScreenNode
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import org.koin.core.component.KoinScopeComponent
 import org.koin.core.scope.Scope
+import org.koin.core.scope.ScopeCallback
 
 /**
  * Koin scope for FlowMVI containers tied to a screen's lifecycle.
@@ -69,5 +71,24 @@ class NavigationContainerScope(
      * Unique key for this screen instance.
      */
     val screenKey: String get() = screenNode.key
+
+    /**
+     * Callback registered with the screen node to close scope on destroy.
+     */
+    private val onDestroyCallback: () -> Unit = {
+        scope.close()
+    }
+
+    init {
+        // Cancel coroutine scope when Koin scope is closed
+        scope.registerCallback(object : ScopeCallback {
+            override fun onScopeClose(scope: Scope) {
+                coroutineScope.cancel()
+            }
+        })
+
+        // Close Koin scope when screen node is destroyed
+        screenNode.addOnDestroyCallback(onDestroyCallback)
+    }
 
 }

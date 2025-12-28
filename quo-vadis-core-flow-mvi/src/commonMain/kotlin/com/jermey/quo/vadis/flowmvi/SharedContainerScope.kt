@@ -21,8 +21,10 @@ import com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode
 import com.jermey.quo.vadis.core.navigation.core.NavNode
 import com.jermey.quo.vadis.core.navigation.core.Navigator
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import org.koin.core.component.KoinScopeComponent
 import org.koin.core.scope.Scope
+import org.koin.core.scope.ScopeCallback
 
 /**
  * Koin scope for shared FlowMVI containers bound to a Tab/Pane container.
@@ -66,5 +68,24 @@ class SharedContainerScope(
      * Unique key for this container instance.
      */
     val containerKey: String get() = (containerNode as NavNode).key
+
+    /**
+     * Callback registered with the container node to close scope on destroy.
+     */
+    private val onDestroyCallback: () -> Unit = {
+        scope.close()
+    }
+
+    init {
+        // Cancel coroutine scope when Koin scope is closed
+        scope.registerCallback(object : ScopeCallback {
+            override fun onScopeClose(scope: Scope) {
+                coroutineScope.cancel()
+            }
+        })
+
+        // Close Koin scope when container node is destroyed
+        containerNode.addOnDestroyCallback(onDestroyCallback)
+    }
 
 }

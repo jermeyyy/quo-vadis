@@ -23,8 +23,8 @@ import kotlin.uuid.Uuid
  *
  * TabNode implements [LifecycleAwareNode] to provide proper lifecycle
  * state management for the tab container itself. This enables:
- * - Container-scoped ViewModels (Phase 2)
- * - Shared MVI containers accessible to all child screens (Phase 3)
+ * - Container-scoped state management
+ * - Shared MVI containers accessible to all child screens
  * - Proper cleanup when the tab container is removed
  *
  * ## Scope-Aware Navigation
@@ -105,6 +105,12 @@ class TabNode(
     @Transient
     override var composeSavedState: Map<String, List<Any?>>? = null
 
+    /**
+     * Callbacks to invoke when this node is destroyed.
+     */
+    @Transient
+    private val onDestroyCallbacks = mutableListOf<() -> Unit>()
+
     // --- Lifecycle Transitions ---
 
     override fun attachToNavigator() {
@@ -135,11 +141,21 @@ class TabNode(
         }
     }
 
+    override fun addOnDestroyCallback(callback: () -> Unit) {
+        onDestroyCallbacks.add(callback)
+    }
+
+    override fun removeOnDestroyCallback(callback: () -> Unit) {
+        onDestroyCallbacks.remove(callback)
+    }
+
     /**
      * Cleanup when node is fully detached.
      */
     private fun close() {
-        // Phase 2 will add lifecycle and viewmodel cleanup
+        // Invoke all destroy callbacks
+        onDestroyCallbacks.forEach { it.invoke() }
+        onDestroyCallbacks.clear()
     }
 
     // --- Tab-specific properties ---

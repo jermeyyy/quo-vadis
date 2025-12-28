@@ -4,13 +4,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Leaf node representing a single screen/destination.
  *
  * A ScreenNode is the terminal state in the navigation tree - it cannot
- * contain children. It holds a reference to the [Destination] that defines
+ * contain children. It holds a reference to the [NavDestination] that defines
  * the actual content to render.
  *
  * ## Lifecycle Management
@@ -25,7 +24,7 @@ import kotlin.uuid.Uuid
  * ## Serialization
  *
  * Only persistent navigation state ([key], [parentKey], [destination]) is serialized.
- * Runtime state ([uuid], [isAttachedToNavigator], [isDisplayed], [composeSavedState])
+ * Runtime state ([isAttachedToNavigator], [isDisplayed], [composeSavedState])
  * is marked as `@Transient` and regenerated on restoration.
  *
  * @property key Unique identifier for this screen instance
@@ -42,13 +41,6 @@ class ScreenNode(
 ) : NavNode, LifecycleAwareNode {
 
     // --- Lifecycle Infrastructure (Transient - not serialized) ---
-
-    /**
-     * Unique stable identifier for this node instance.
-     * Generated fresh on creation and after deserialization.
-     */
-    @Transient
-    val uuid: String = Uuid.random().toHexString()
 
     /**
      * Whether this node is attached to the navigator tree.
@@ -70,12 +62,17 @@ class ScreenNode(
     @Transient
     override var composeSavedState: Map<String, List<Any?>>? = null
 
+    /**
+     * Callbacks to invoke when this node is destroyed.
+     */
+    @Transient
+    private val onDestroyCallbacks = mutableListOf<() -> Unit>()
+
     // --- Lifecycle Transitions ---
 
     override fun attachToNavigator() {
         // Idempotent - safe to call multiple times
         isAttachedToNavigator = true
-        // Phase 2 will add: lifecycleRegistry.currentState = Lifecycle.State.CREATED
     }
 
     override fun attachToUI() {
@@ -85,12 +82,10 @@ class ScreenNode(
             attachToNavigator()
         }
         isDisplayed = true
-        // Phase 2 will add: lifecycleRegistry.currentState = Lifecycle.State.RESUMED
     }
 
     override fun detachFromUI() {
         isDisplayed = false
-        // Phase 2 will add: lifecycleRegistry.currentState = Lifecycle.State.STARTED
         if (!isAttachedToNavigator) {
             close()
         }
@@ -103,14 +98,21 @@ class ScreenNode(
         }
     }
 
+    override fun addOnDestroyCallback(callback: () -> Unit) {
+        onDestroyCallbacks.add(callback)
+    }
+
+    override fun removeOnDestroyCallback(callback: () -> Unit) {
+        onDestroyCallbacks.remove(callback)
+    }
+
     /**
      * Cleanup when node is fully detached (not displayed and not in tree).
      */
     private fun close() {
-        // Phase 2 will add:
-        // - retainedValuesStore.disableRetainingExitedValues()
-        // - lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
-        // - viewModelStore.clear()
+        // Invoke all destroy callbacks
+        onDestroyCallbacks.forEach { it.invoke() }
+        onDestroyCallbacks.clear()
     }
 
     // --- Copy function (replacing data class copy) ---
