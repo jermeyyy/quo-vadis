@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import com.jermey.quo.vadis.core.navigation.core.NavNode
+import com.jermey.quo.vadis.core.navigation.NavNode
 
 /**
  * Renders overlapping content during predictive back gestures.

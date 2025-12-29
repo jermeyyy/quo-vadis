@@ -4,9 +4,9 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlin.reflect.KClass
 
 /**

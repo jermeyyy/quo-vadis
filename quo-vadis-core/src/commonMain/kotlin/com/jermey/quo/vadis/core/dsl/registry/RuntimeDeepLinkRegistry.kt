@@ -1,12 +1,11 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
-import com.jermey.quo.vadis.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.DeepLink
-import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.DeepLink
+import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
- * Runtime implementation of [com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry] for registering deep link patterns dynamically.
+ * Runtime implementation of [DeepLinkRegistry] for registering deep link patterns dynamically.
  *
  * This class allows registering deep link patterns at runtime, as opposed to the compile-time
  * registration provided by KSP-generated `GeneratedDeepLinkRegistry`. Use this for:
@@ -43,7 +42,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
  *
  * ## Combining with Generated Registry
  *
- * Use [com.jermey.quo.vadis.core.navigation.core.CompositeDeepLinkRegistry] to combine runtime and generated registries:
+ * Use [CompositeDeepLinkRegistry] to combine runtime and generated registries:
  *
  * ```kotlin
  * val combinedRegistry = CompositeDeepLinkRegistry(
@@ -57,8 +56,8 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
  * This implementation uses mutable lists internally. For concurrent registration,
  * synchronize access externally or register all patterns during initialization.
  *
- * @see com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
- * @see com.jermey.quo.vadis.core.navigation.core.CompositeDeepLinkRegistry
+ * @see DeepLinkRegistry
+ * @see CompositeDeepLinkRegistry
  */
 class RuntimeDeepLinkRegistry : DeepLinkRegistry {
 

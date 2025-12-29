@@ -1,5 +1,10 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import com.jermey.quo.vadis.core.dsl.registry.CompositeDeepLinkRegistry
+import com.jermey.quo.vadis.core.dsl.registry.RuntimeDeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.DeepLink
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -19,7 +24,7 @@ private data class TestDestination(
 }
 
 /**
- * Unit tests for [RuntimeDeepLinkRegistry].
+ * Unit tests for [com.jermey.quo.vadis.core.dsl.registry.RuntimeDeepLinkRegistry].
  *
  * Tests cover:
  * - Pattern registration and resolution
@@ -202,7 +207,7 @@ class RuntimeDeepLinkRegistryTest {
 }
 
 /**
- * Unit tests for [CompositeDeepLinkRegistry].
+ * Unit tests for [com.jermey.quo.vadis.core.dsl.registry.CompositeDeepLinkRegistry].
  *
  * Tests cover:
  * - Runtime registry precedence over generated

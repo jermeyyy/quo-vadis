@@ -1,5 +1,14 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.findByKey
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -209,12 +218,16 @@ class TreeMutatorTabTest {
             key = "tabs",
             parentKey = "root",
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s2", "tab1", ProfileDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s2", "tab1", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -361,12 +374,16 @@ class TreeMutatorTabTest {
             key = "target-tabs",
             parentKey = "inner-stack",
             stacks = listOf(
-                StackNode("target-tab0", "target-tabs", listOf(
-                    ScreenNode("s1", "target-tab0", HomeDestination)
-                )),
-                StackNode("target-tab1", "target-tabs", listOf(
-                    ScreenNode("s2", "target-tab1", ProfileDestination)
-                ))
+                StackNode(
+                    "target-tab0", "target-tabs", listOf(
+                        ScreenNode("s1", "target-tab0", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "target-tab1", "target-tabs", listOf(
+                        ScreenNode("s2", "target-tab1", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -400,12 +417,16 @@ class TreeMutatorTabTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s2", "tab1", ProfileDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s2", "tab1", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -430,13 +451,17 @@ class TreeMutatorTabTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination),
-                    ScreenNode("s2", "tab0", ProfileDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s3", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination),
+                        ScreenNode("s2", "tab0", ProfileDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s3", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )

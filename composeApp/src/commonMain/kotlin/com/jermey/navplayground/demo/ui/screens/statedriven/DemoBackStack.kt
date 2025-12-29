@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens.statedriven
 
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
  * Entry in the demo backstack.

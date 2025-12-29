@@ -21,7 +21,9 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.core.navigation.NavigationConfig
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.activeLeaf
 import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.compose.animation.LocalBackAnimationController
 import com.jermey.quo.vadis.core.compose.animation.LocalTransitionScope
@@ -31,12 +33,6 @@ import com.jermey.quo.vadis.core.compose.navback.NavigateBackHandler
 import com.jermey.quo.vadis.core.compose.navback.PredictiveBackController
 import com.jermey.quo.vadis.core.compose.navback.ScreenNavigationInfo
 import com.jermey.quo.vadis.core.compose.navback.calculateCascadeBackState
-import com.jermey.quo.vadis.core.compose.registry.BackHandlerRegistry
-import com.jermey.quo.vadis.core.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.compose.registry.LocalBackHandlerRegistry
-import com.jermey.quo.vadis.core.compose.registry.ScopeRegistry
-import com.jermey.quo.vadis.core.compose.registry.ScreenRegistry
-import com.jermey.quo.vadis.core.compose.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.compose.render.ComposableCache
 import com.jermey.quo.vadis.core.compose.render.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.compose.render.LocalNavigator
@@ -44,13 +40,17 @@ import com.jermey.quo.vadis.core.compose.render.NavNodeRenderer
 import com.jermey.quo.vadis.core.compose.render.NavRenderScope
 import com.jermey.quo.vadis.core.compose.render.rememberComposableCache
 import com.jermey.quo.vadis.core.compose.wrapper.WindowSizeClass
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.TreeMutator
-import com.jermey.quo.vadis.core.navigation.core.TreeNavigator
-import com.jermey.quo.vadis.core.navigation.core.activeLeaf
-import com.jermey.quo.vadis.core.navigation.core.route
+import com.jermey.quo.vadis.core.dsl.registry.BackHandlerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.LocalBackHandlerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.route
+import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.tree.TreeNavigator
 
 // =============================================================================
 // Composition Local for NavRenderScope
@@ -67,7 +67,7 @@ import com.jermey.quo.vadis.core.navigation.core.route
  * - [com.jermey.quo.vadis.core.compose.render.ComposableCache] for state preservation
  * - [com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator] for transition resolution
  * - [com.jermey.quo.vadis.core.compose.navback.PredictiveBackController] for gesture handling
- * - [com.jermey.quo.vadis.core.compose.registry.ScreenRegistry] and [com.jermey.quo.vadis.core.compose.registry.ContainerRegistry] for content resolution
+ * - [ScreenRegistry] and [ContainerRegistry] for content resolution
  * - [SharedTransitionScope] for shared element transitions
  *
  * ## Usage
@@ -92,7 +92,8 @@ import com.jermey.quo.vadis.core.navigation.core.route
  * @see com.jermey.quo.vadis.core.compose.render.NavRenderScope
  * @see com.jermey.quo.vadis.core.compose.NavigationHost
  */
-val LocalNavRenderScope = compositionLocalOf<com.jermey.quo.vadis.core.compose.render.NavRenderScope?> { null }
+val LocalNavRenderScope =
+    compositionLocalOf<com.jermey.quo.vadis.core.compose.render.NavRenderScope?> { null }
 
 // =============================================================================
 // HierarchicalNavigationHost
@@ -413,15 +414,12 @@ fun NavigationHost(
  * - **Cleaner API**: Fewer parameters to manage
  *
  * @param navigator The Navigator managing navigation state. Must have been created
- *   with a valid [NavigationConfig] (e.g., via [rememberQuoVadisNavigator]).
+ *   with a valid [NavigationConfig].
  * @param modifier Modifier to apply to the host container.
  * @param enablePredictiveBack Whether to enable predictive back gesture support.
  *   When enabled, back gestures provide visual feedback before completing the navigation.
  * @param windowSizeClass Optional window size class for responsive layouts.
  *   When provided, navigation containers can adapt their presentation based on available space.
- *
- * @see rememberQuoVadisNavigator for creating a Navigator with config
- * @see QuoVadisNavigation for a one-liner combining navigator + host
  */
 @Composable
 fun NavigationHost(

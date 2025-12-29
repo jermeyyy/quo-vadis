@@ -2,14 +2,14 @@ package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerInfo
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.PaneNode
-import com.jermey.quo.vadis.core.navigation.core.TabNode
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.core.dsl.registry.ContainerInfo
+import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.NavDestination
 import kotlin.reflect.KClass
 
 /**

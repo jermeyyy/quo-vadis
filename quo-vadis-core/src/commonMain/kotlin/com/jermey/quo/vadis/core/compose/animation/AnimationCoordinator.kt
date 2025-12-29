@@ -1,10 +1,10 @@
 package com.jermey.quo.vadis.core.compose.animation
 
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 
 /**
  * Coordinates transition animations based on NavNode types and annotations.

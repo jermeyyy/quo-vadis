@@ -1,11 +1,11 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.testing.FakeNavRenderScope
+import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
+import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

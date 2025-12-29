@@ -1,9 +1,9 @@
 package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
-import com.jermey.quo.vadis.core.navigation.compose.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.compose.animation.NavTransition
+import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.navigation.NavDestination
 import kotlin.reflect.KClass
 
 /**

@@ -19,7 +19,7 @@ import com.jermey.quo.vadis.ksp.extractors.ScreenExtractor
 import com.jermey.quo.vadis.ksp.extractors.StackExtractor
 import com.jermey.quo.vadis.ksp.extractors.TabExtractor
 import com.jermey.quo.vadis.ksp.extractors.TransitionExtractor
-import com.jermey.quo.vadis.ksp.extractors.WrapperExtractor
+import com.jermey.quo.vadis.ksp.extractors.ContainerExtractor
 import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
 import com.jermey.quo.vadis.ksp.generators.dsl.NavigationConfigGenerator
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
@@ -28,7 +28,7 @@ import com.jermey.quo.vadis.ksp.models.ScreenInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
 import com.jermey.quo.vadis.ksp.models.TransitionInfo
-import com.jermey.quo.vadis.ksp.models.WrapperInfo
+import com.jermey.quo.vadis.ksp.models.ContainerInfoModel
 import com.jermey.quo.vadis.ksp.validation.ValidationEngine
 
 /**
@@ -74,7 +74,7 @@ class QuoVadisSymbolProcessor(
     private val tabExtractor = TabExtractor(destinationExtractor, logger, stackExtractor)
     private val paneExtractor = PaneExtractor(destinationExtractor, logger)
     private val screenExtractor = ScreenExtractor(logger)
-    private val wrapperExtractor = WrapperExtractor(logger)
+    private val containerExtractor = ContainerExtractor(logger)
     private val transitionExtractor = TransitionExtractor(logger)
 
     // =========================================================================
@@ -115,7 +115,7 @@ class QuoVadisSymbolProcessor(
     private val collectedScreens = mutableListOf<ScreenInfo>()
     private val collectedDestinations = mutableListOf<DestinationInfo>()
     private val collectedTransitions = mutableListOf<TransitionInfo>()
-    private val collectedWrappers = mutableListOf<WrapperInfo>()
+    private val collectedContainers = mutableListOf<ContainerInfoModel>()
 
     // Originating files for incremental processing
     private val originatingFiles = mutableSetOf<KSFile>()
@@ -204,7 +204,7 @@ class QuoVadisSymbolProcessor(
         logger.info(
             "QuoVadis: Collected ${collectedStacks.size} stacks, ${collectedTabs.size} tabs, " +
                     "${collectedPanes.size} panes, ${collectedScreens.size} screens, " +
-                    "${collectedDestinations.size} destinations, ${collectedWrappers.size} wrappers, " +
+                    "${collectedDestinations.size} destinations, ${collectedContainers.size} wrappers, " +
                     "${collectedTransitions.size} transitions"
         )
     }
@@ -258,10 +258,10 @@ class QuoVadisSymbolProcessor(
      * Collects @TabsContainer and @PaneContainer annotated functions.
      */
     private fun collectWrappers(resolver: Resolver) {
-        val tabsContainers = wrapperExtractor.extractTabsContainers(resolver)
-        val paneContainers = wrapperExtractor.extractPaneContainers(resolver)
-        collectedWrappers.addAll(tabsContainers)
-        collectedWrappers.addAll(paneContainers)
+        val tabsContainers = containerExtractor.extractTabsContainers(resolver)
+        val paneContainers = containerExtractor.extractPaneContainers(resolver)
+        collectedContainers.addAll(tabsContainers)
+        collectedContainers.addAll(paneContainers)
         // Track originating files from wrappers
         tabsContainers.forEach { wrapper ->
             wrapper.functionDeclaration.containingFile?.let { originatingFiles.add(it) }
@@ -442,7 +442,7 @@ class QuoVadisSymbolProcessor(
             tabs = collectedTabs,
             panes = collectedPanes,
             transitions = collectedTransitions,
-            wrappers = collectedWrappers,
+            wrappers = collectedContainers,
             destinations = collectedDestinations
         )
 

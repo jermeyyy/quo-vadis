@@ -7,17 +7,15 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContent
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowWidthSizeClass
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.calculateWindowSizeClass
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.createPaneContainerScope
-import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.PaneNode
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
-import com.jermey.quo.vadis.core.navigation.core.TreeMutator
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.compose.wrapper.PaneContent
+import com.jermey.quo.vadis.core.compose.wrapper.calculateWindowSizeClass
+import com.jermey.quo.vadis.core.compose.wrapper.createPaneContainerScope
+import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
+import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
 
 /**
  * Renders a [PaneNode] with adaptive layout based on window size.
@@ -28,7 +26,7 @@ import com.jermey.quo.vadis.core.navigation.core.TreeMutator
  *
  * ## Lifecycle Management
  *
- * The renderer manages the pane container's UI lifecycle via [com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode]:
+ * The renderer manages the pane container's UI lifecycle via [com.jermey.quo.vadis.core.navigation.LifecycleAwareNode]:
  * - Calls [PaneNode.attachToUI] when the composable enters composition
  * - Calls [PaneNode.detachFromUI] when the composable leaves composition
  * - Provides [LocalContainerNode] for child screens to access container context
@@ -82,8 +80,8 @@ import com.jermey.quo.vadis.core.navigation.core.TreeMutator
  * @see com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry.PaneContainer
  * @see WindowSizeClass
  * @see LocalContainerNode
- * @see com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode.attachToUI
- * @see com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode.detachFromUI
+ * @see com.jermey.quo.vadis.core.navigation.LifecycleAwareNode.attachToUI
+ * @see com.jermey.quo.vadis.core.navigation.LifecycleAwareNode.detachFromUI
  */
 @Composable
 internal fun PaneRenderer(

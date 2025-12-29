@@ -38,7 +38,7 @@ import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Action
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Intent
 import com.jermey.feature1.resultdemo.container.ResultDemoState
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.compose.render.LocalNavigator
+import com.jermey.quo.vadis.core.compose.render.LocalNavigator
 import com.jermey.quo.vadis.flowmvi.rememberContainer
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
@@ -66,7 +66,7 @@ fun ResultDemoScreen(
     modifier: Modifier = Modifier,
     container: Store<ResultDemoState, Intent, Action> = rememberContainer<ResultDemoContainer, ResultDemoState, Intent, Action>()
 ) {
-    val navigator = LocalNavigator.current ?: error("Navigator not found")
+    val navigator = _root_ide_package_.com.jermey.quo.vadis.core.compose.render.LocalNavigator.current ?: error("Navigator not found")
     val state by container.subscribe()
 
     Scaffold(

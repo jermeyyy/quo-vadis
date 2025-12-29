@@ -2,8 +2,8 @@ package com.jermey.quo.vadis.core.compose.wrapper
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
+import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 
 /**
  * Represents the content of a single pane in a multi-pane layout.

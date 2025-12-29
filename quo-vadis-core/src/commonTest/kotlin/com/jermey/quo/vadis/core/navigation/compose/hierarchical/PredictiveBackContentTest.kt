@@ -1,11 +1,11 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.testing.FakeNavRenderScope
+import com.jermey.quo.vadis.core.compose.navback.PredictiveBackController
+import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -97,7 +97,7 @@ class PredictiveBackContentTest {
     fun `gesture inactive means normal animated content is used`() {
         // Given
         val scope = FakeNavRenderScope()
-        
+
         // When - check if predictive back is active
         val isPredictiveBackActive = scope.predictiveBackController.isActive.value
 
@@ -132,7 +132,7 @@ class PredictiveBackContentTest {
         // When - calculate transforms (from PredictiveBackContent constants)
         val parallaxFactor = 0.3f
         val scaleFactor = 0.1f
-        
+
         val previousTranslationFactor = -parallaxFactor * (1f - progress) // -0.3 at progress=0
         val currentTranslationFactor = progress // 0 at progress=0
         val currentScale = 1f - (progress * scaleFactor) // 1.0 at progress=0
@@ -152,7 +152,7 @@ class PredictiveBackContentTest {
         // When - calculate transforms
         val parallaxFactor = 0.3f
         val scaleFactor = 0.1f
-        
+
         val previousTranslationFactor = -parallaxFactor * (1f - progress) // 0 at progress=1
         val currentTranslationFactor = progress // 1.0 at progress=1
         val currentScale = 1f - (progress * scaleFactor) // 0.9 at progress=1
@@ -171,7 +171,7 @@ class PredictiveBackContentTest {
         // When - calculate transforms
         val parallaxFactor = 0.3f
         val scaleFactor = 0.1f
-        
+
         val previousTranslationFactor = -parallaxFactor * (1f - progress) // -0.15 at progress=0.5
         val currentTranslationFactor = progress // 0.5 at progress=0.5
         val currentScale = 1f - (progress * scaleFactor) // 0.95 at progress=0.5
@@ -321,7 +321,7 @@ class PredictiveBackContentTest {
     fun `cache key remains stable during gesture`() {
         // Given
         val screen = createScreen("stable-key", "stack")
-        
+
         // Simulate progress changes during gesture
         val progressValues = listOf(0f, 0.25f, 0.5f, 0.75f, 1f)
 
@@ -377,8 +377,10 @@ class PredictiveBackContentTest {
         val parallaxFactor = 0.3f
 
         // Then
-        assertTrue(parallaxFactor > 0f && parallaxFactor < 1f, 
-            "Parallax factor should be between 0 and 1")
+        assertTrue(
+            parallaxFactor > 0f && parallaxFactor < 1f,
+            "Parallax factor should be between 0 and 1"
+        )
     }
 
     @Test
@@ -387,9 +389,11 @@ class PredictiveBackContentTest {
         val scaleFactor = 0.1f
 
         // Then
-        assertTrue(scaleFactor > 0f && scaleFactor < 0.5f,
-            "Scale factor should be small for subtle effect")
-        
+        assertTrue(
+            scaleFactor > 0f && scaleFactor < 0.5f,
+            "Scale factor should be small for subtle effect"
+        )
+
         // Minimum scale at full progress
         val minScale = 1f - scaleFactor
         assertTrue(minScale >= 0.5f, "Content should not scale too small")

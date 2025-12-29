@@ -1,7 +1,7 @@
 package com.jermey.feature1.resultdemo.container
 
 import com.jermey.feature1.resultdemo.SelectedItem
-import com.jermey.quo.vadis.core.navigation.core.navigateBackWithResult
+import com.jermey.quo.vadis.core.navigation.navigateBackWithResult
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import pro.respawn.flowmvi.api.MVIAction
@@ -67,7 +67,9 @@ private val defaultItems = listOf(
  */
 class ItemPickerContainer(
     scope: NavigationContainerScope,
-) : NavigationContainer<ItemPickerState, ItemPickerContainer.Intent, ItemPickerContainer.Action>(scope) {
+) : NavigationContainer<ItemPickerState, ItemPickerContainer.Intent, ItemPickerContainer.Action>(
+    scope
+) {
 
     sealed class Intent : MVIIntent {
         data class SelectItem(val item: PickerItem) : Intent()
@@ -108,7 +110,7 @@ class ItemPickerContainer(
     /**
      * Cancel the selection and navigate back without a result.
      *
-     * The caller will receive `null` from [com.jermey.quo.vadis.core.navigation.core.navigateForResult].
+     * The caller will receive `null` from [com.jermey.quo.vadis.core.navigation.navigateForResult].
      */
     private fun cancel() {
         navigator.navigateBack()

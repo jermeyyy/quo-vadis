@@ -6,8 +6,8 @@ package com.jermey.quo.vadis.core.navigation
  * Both container nodes (TabNode, PaneNode) and screen nodes (ScreenNode)
  * implement this to provide consistent lifecycle behavior across the navigation tree.
  *
- * This interface is designed to be implemented alongside [com.jermey.quo.vadis.core.NavNode], not as a
- * replacement for it. The sealed [com.jermey.quo.vadis.core.NavNode] hierarchy handles navigation tree
+ * This interface is designed to be implemented alongside [NavNode], not as a
+ * replacement for it. The sealed [NavNode] hierarchy handles navigation tree
  * structure, while [LifecycleAwareNode] handles runtime lifecycle state.
  *
  * ## Lifecycle States

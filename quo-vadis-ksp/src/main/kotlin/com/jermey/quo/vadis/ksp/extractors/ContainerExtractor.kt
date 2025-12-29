@@ -5,11 +5,11 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
-import com.jermey.quo.vadis.ksp.models.ContainerInfo
+import com.jermey.quo.vadis.ksp.models.ContainerInfoModel
 import com.jermey.quo.vadis.ksp.models.ContainerType
 
 /**
- * Extracts @TabsContainer and @PaneContainer annotations into [ContainerInfo] models.
+ * Extracts @TabsContainer and @PaneContainer annotations into [ContainerInfoModel] models.
  *
  * A wrapper binding connects a @Composable wrapper function to a tab/pane class.
  * This extractor handles:
@@ -47,9 +47,9 @@ class ContainerExtractor(
      * and extracts their metadata for code generation.
      *
      * @param resolver KSP resolver to query for symbols
-     * @return List of [ContainerInfo] for all @TabsContainer-annotated functions
+     * @return List of [ContainerInfoModel] for all @TabsContainer-annotated functions
      */
-    fun extractTabsContainers(resolver: Resolver): List<ContainerInfo> {
+    fun extractTabsContainers(resolver: Resolver): List<ContainerInfoModel> {
         return resolver.getSymbolsWithAnnotation(TABS_CONTAINER_ANNOTATION)
             .filterIsInstance<KSFunctionDeclaration>()
             .mapNotNull { extractTabsContainer(it) }
@@ -63,9 +63,9 @@ class ContainerExtractor(
      * and extracts their metadata for code generation.
      *
      * @param resolver KSP resolver to query for symbols
-     * @return List of [ContainerInfo] for all @PaneContainer-annotated functions
+     * @return List of [ContainerInfoModel] for all @PaneContainer-annotated functions
      */
-    fun extractPaneContainers(resolver: Resolver): List<ContainerInfo> {
+    fun extractPaneContainers(resolver: Resolver): List<ContainerInfoModel> {
         return resolver.getSymbolsWithAnnotation(PANE_CONTAINER_ANNOTATION)
             .filterIsInstance<KSFunctionDeclaration>()
             .mapNotNull { extractPaneContainer(it) }
@@ -76,9 +76,9 @@ class ContainerExtractor(
      * Extract ContainerInfo from a @TabsContainer-annotated function.
      *
      * @param functionDeclaration The @Composable function annotated with @TabsContainer
-     * @return [ContainerInfo] or null if extraction fails
+     * @return [ContainerInfoModel] or null if extraction fails
      */
-    private fun extractTabsContainer(functionDeclaration: KSFunctionDeclaration): ContainerInfo? {
+    private fun extractTabsContainer(functionDeclaration: KSFunctionDeclaration): ContainerInfoModel? {
         return extractWrapper(
             functionDeclaration = functionDeclaration,
             annotationName = "TabsContainer",
@@ -91,9 +91,9 @@ class ContainerExtractor(
      * Extract ContainerInfo from a @PaneContainer-annotated function.
      *
      * @param functionDeclaration The @Composable function annotated with @PaneContainer
-     * @return [ContainerInfo] or null if extraction fails
+     * @return [ContainerInfoModel] or null if extraction fails
      */
-    private fun extractPaneContainer(functionDeclaration: KSFunctionDeclaration): ContainerInfo? {
+    private fun extractPaneContainer(functionDeclaration: KSFunctionDeclaration): ContainerInfoModel? {
         return extractWrapper(
             functionDeclaration = functionDeclaration,
             annotationName = "PaneContainer",
@@ -109,14 +109,14 @@ class ContainerExtractor(
      * @param annotationName Short name of the annotation ("TabsContainer" or "PaneContainer")
      * @param argumentName Name of the class argument ("tabClass" or "paneClass")
      * @param containerType Type of wrapper being extracted
-     * @return [ContainerInfo] or null if extraction fails
+     * @return [ContainerInfoModel] or null if extraction fails
      */
     private fun extractWrapper(
         functionDeclaration: KSFunctionDeclaration,
         annotationName: String,
         argumentName: String,
         containerType: ContainerType
-    ): ContainerInfo? {
+    ): ContainerInfoModel? {
         val functionName = functionDeclaration.simpleName.asString()
 
         // Find the wrapper annotation
@@ -165,7 +165,7 @@ class ContainerExtractor(
             simpleName
         }
 
-        return ContainerInfo(
+        return ContainerInfoModel(
             functionDeclaration = functionDeclaration,
             functionName = functionName,
             packageName = functionDeclaration.packageName.asString(),

@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.ItemCard
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.Navigator
 import org.koin.compose.koinInject
 
 private const val MASTER_LIST_ITEMS_COUNT = 50

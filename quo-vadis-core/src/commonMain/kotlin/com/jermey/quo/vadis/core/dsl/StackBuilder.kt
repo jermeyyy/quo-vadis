@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.dsl
 
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavDestination
 import kotlin.reflect.KClass
 
 /**

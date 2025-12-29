@@ -29,7 +29,7 @@ import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
 import com.jermey.navplayground.demo.ui.components.ReviewRow
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.Navigator
 import org.koin.compose.koinInject
 
 private const val DATA_INDEX_NAME = 0

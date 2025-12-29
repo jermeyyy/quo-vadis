@@ -1,6 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.core
 
-import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -255,7 +257,11 @@ class ScopeRegistryTest {
             // Tab scopes
             "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class),
             // Stack scopes
-            "AuthFlow" to setOf(AuthFlow.Login::class, AuthFlow.Register::class, AuthFlow.ForgotPassword::class),
+            "AuthFlow" to setOf(
+                AuthFlow.Login::class,
+                AuthFlow.Register::class,
+                AuthFlow.ForgotPassword::class
+            ),
             "OnboardingFlow" to setOf(OnboardingFlow.Welcome::class, OnboardingFlow.Tutorial::class)
         )
 

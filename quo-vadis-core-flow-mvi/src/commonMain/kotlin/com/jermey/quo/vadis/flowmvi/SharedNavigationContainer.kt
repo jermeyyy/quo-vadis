@@ -16,7 +16,7 @@
 
 package com.jermey.quo.vadis.flowmvi
 
-import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.Navigator
 import kotlinx.coroutines.CoroutineScope
 import pro.respawn.flowmvi.api.Container
 import pro.respawn.flowmvi.api.MVIAction

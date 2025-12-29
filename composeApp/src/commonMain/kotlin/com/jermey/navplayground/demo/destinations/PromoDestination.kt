@@ -2,7 +2,7 @@ package com.jermey.navplayground.demo.destinations
 
 import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
  * Promo destination for runtime-registered deep links.
@@ -25,7 +25,7 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
  *
  * @property code The promotional code from the deep link
  *
- * @see com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry.register
+ * @see com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry.register
  */
 @Destination
 data class PromoDestination(

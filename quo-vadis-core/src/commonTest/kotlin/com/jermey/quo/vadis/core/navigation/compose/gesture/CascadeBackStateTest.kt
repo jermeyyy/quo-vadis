@@ -1,13 +1,13 @@
 package com.jermey.quo.vadis.core.navigation.compose.gesture
 
-import com.jermey.quo.vadis.core.navigation.compose.navback.calculateCascadeBackState
-import com.jermey.quo.vadis.core.navigation.compose.navback.wouldCascade
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavKeyGenerator
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.TabNode
+import com.jermey.quo.vadis.core.compose.navback.calculateCascadeBackState
+import com.jermey.quo.vadis.core.compose.navback.wouldCascade
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

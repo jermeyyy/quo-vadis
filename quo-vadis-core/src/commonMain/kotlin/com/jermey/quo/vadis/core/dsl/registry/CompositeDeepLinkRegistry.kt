@@ -1,8 +1,8 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
-import com.jermey.quo.vadis.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.DeepLink
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.DeepLink
+import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
  * Composite registry that combines a generated registry with a runtime registry.

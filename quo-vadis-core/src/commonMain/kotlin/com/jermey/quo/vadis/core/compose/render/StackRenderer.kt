@@ -1,7 +1,7 @@
 package com.jermey.quo.vadis.core.compose.render
 
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.core.StackNode
+import com.jermey.quo.vadis.core.navigation.StackNode
 
 /**
  * Renders a [StackNode] with animated transitions between children.

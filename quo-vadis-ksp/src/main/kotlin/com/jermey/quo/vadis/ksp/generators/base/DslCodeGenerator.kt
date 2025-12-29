@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.ksp.generators.base
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.squareup.kotlinpoet.ClassName
@@ -95,7 +96,7 @@ abstract class DslCodeGenerator(
         val simpleNames = mutableListOf<String>()
 
         // Walk up the parent chain to collect all enclosing class names
-        var current: com.google.devtools.ksp.symbol.KSDeclaration? = declaration
+        var current: KSDeclaration? = declaration
         while (current is KSClassDeclaration) {
             simpleNames.add(0, current.simpleName.asString())
             current = current.parentDeclaration

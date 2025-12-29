@@ -3,17 +3,14 @@ package com.jermey.quo.vadis.core.navigation
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
+import com.jermey.quo.vadis.core.dsl.registry.CompositeScreenRegistry
+import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * Tests for [CompositeScreenRegistry].
+ * Tests for [com.jermey.quo.vadis.core.dsl.registry.CompositeScreenRegistry].
  *
  * Tests cover:
  * - Secondary registry priority over primary
@@ -124,8 +121,10 @@ class CompositeScreenRegistryTest {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
-        val primary = createTestRegistry(setOf(PrimaryDestination, SharedDestination), primaryTracker)
-        val secondary = createTestRegistry(setOf(SecondaryDestination, SharedDestination), secondaryTracker)
+        val primary =
+            createTestRegistry(setOf(PrimaryDestination, SharedDestination), primaryTracker)
+        val secondary =
+            createTestRegistry(setOf(SecondaryDestination, SharedDestination), secondaryTracker)
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
@@ -173,8 +172,10 @@ class CompositeScreenRegistryTest {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
-        val primary = createTestRegistry(setOf(PrimaryDestination, SharedDestination), primaryTracker)
-        val secondary = createTestRegistry(setOf(SecondaryDestination, SharedDestination), secondaryTracker)
+        val primary =
+            createTestRegistry(setOf(PrimaryDestination, SharedDestination), primaryTracker)
+        val secondary =
+            createTestRegistry(setOf(SecondaryDestination, SharedDestination), secondaryTracker)
 
         val composite = CompositeScreenRegistry(primary, secondary)
 

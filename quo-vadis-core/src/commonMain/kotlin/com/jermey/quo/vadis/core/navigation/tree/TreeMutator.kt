@@ -1,19 +1,19 @@
 package com.jermey.quo.vadis.core.navigation.tree
 
-import com.jermey.quo.vadis.core.NavNode
-import com.jermey.quo.vadis.core.PaneNode
-import com.jermey.quo.vadis.core.ScreenNode
-import com.jermey.quo.vadis.core.StackNode
-import com.jermey.quo.vadis.core.TabNode
-import com.jermey.quo.vadis.core.activeLeaf
-import com.jermey.quo.vadis.core.activePathToLeaf
-import com.jermey.quo.vadis.core.activeStack
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.activeLeaf
+import com.jermey.quo.vadis.core.navigation.activePathToLeaf
+import com.jermey.quo.vadis.core.navigation.activeStack
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
-import com.jermey.quo.vadis.core.findByKey
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
-import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
+import com.jermey.quo.vadis.core.navigation.findByKey
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
+import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.tree.TreeMutator.canGoBack
 import com.jermey.quo.vadis.core.navigation.tree.TreeMutator.popTo
 import com.jermey.quo.vadis.core.navigation.tree.TreeMutator.push
@@ -825,7 +825,7 @@ object TreeMutator {
     /**
      * Pop with respect to PaneBackBehavior.
      *
-     * This operation considers the [com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior] setting of the active
+     * This operation considers the [PaneBackBehavior] setting of the active
      * PaneNode (if any) and returns a [PopResult] indicating what action
      * was taken or should be taken.
      *

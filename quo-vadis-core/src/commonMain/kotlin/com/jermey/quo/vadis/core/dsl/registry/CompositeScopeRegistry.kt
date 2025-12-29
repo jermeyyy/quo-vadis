@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
  * Composite scope registry that delegates to secondary first, then primary.

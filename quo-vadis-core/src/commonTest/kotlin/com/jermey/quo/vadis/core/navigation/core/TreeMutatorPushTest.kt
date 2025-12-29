@@ -1,5 +1,13 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.findByKey
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -110,9 +118,11 @@ class TreeMutatorPushTest {
                     key = "tabs",
                     parentKey = "root",
                     stacks = listOf(
-                        StackNode("tab0", "tabs", listOf(
-                            ScreenNode("s1", "tab0", HomeDestination)
-                        )),
+                        StackNode(
+                            "tab0", "tabs", listOf(
+                                ScreenNode("s1", "tab0", HomeDestination)
+                            )
+                        ),
                         StackNode("tab1", "tabs", emptyList())
                     ),
                     activeStackIndex = 0
@@ -139,9 +149,11 @@ class TreeMutatorPushTest {
 
     @Test
     fun `push targets deepest active stack in nested tabs`() {
-        val innerStack = StackNode("inner-stack", "tab0", listOf(
-            ScreenNode("s1", "inner-stack", HomeDestination)
-        ))
+        val innerStack = StackNode(
+            "inner-stack", "tab0", listOf(
+                ScreenNode("s1", "inner-stack", HomeDestination)
+            )
+        )
         val root = TabNode(
             key = "tabs",
             parentKey = null,
@@ -301,14 +313,16 @@ class TreeMutatorPushTest {
                     key = "outer-tabs",
                     parentKey = "root",
                     stacks = listOf(
-                        StackNode("tab0", "outer-tabs", listOf(
-                            TabNode(
-                                key = "inner-tabs",
-                                parentKey = "tab0",
-                                stacks = listOf(targetStack),
-                                activeStackIndex = 0
+                        StackNode(
+                            "tab0", "outer-tabs", listOf(
+                                TabNode(
+                                    key = "inner-tabs",
+                                    parentKey = "tab0",
+                                    stacks = listOf(targetStack),
+                                    activeStackIndex = 0
+                                )
                             )
-                        ))
+                        )
                     ),
                     activeStackIndex = 0
                 )
@@ -385,9 +399,11 @@ class TreeMutatorPushTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
                 StackNode("tab1", "tabs", emptyList())
             ),
             activeStackIndex = 0
@@ -458,13 +474,17 @@ class TreeMutatorPushTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination),
-                    ScreenNode("s2", "tab0", ProfileDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s3", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination),
+                        ScreenNode("s2", "tab0", ProfileDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s3", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -503,13 +523,17 @@ class TreeMutatorPushTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s2", "tab1", ProfileDestination),
-                    ScreenNode("s3", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s2", "tab1", ProfileDestination),
+                        ScreenNode("s3", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -557,16 +581,20 @@ class TreeMutatorPushTest {
 
     @Test
     fun `clearStackAndPush preserves structural sharing for other branches`() {
-        val tab1Stack = StackNode("tab1", "tabs", listOf(
-            ScreenNode("s2", "tab1", ProfileDestination)
-        ))
+        val tab1Stack = StackNode(
+            "tab1", "tabs", listOf(
+                ScreenNode("s2", "tab1", ProfileDestination)
+            )
+        )
         val root = TabNode(
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
                 tab1Stack
             ),
             activeStackIndex = 0

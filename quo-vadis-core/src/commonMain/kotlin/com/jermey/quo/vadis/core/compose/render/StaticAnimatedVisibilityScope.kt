@@ -25,9 +25,9 @@ import androidx.compose.animation.core.rememberTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
-import com.jermey.quo.vadis.core.navigation.compose.LocalNavRenderScope
-import com.jermey.quo.vadis.core.navigation.compose.animation.LocalTransitionScope
-import com.jermey.quo.vadis.core.navigation.compose.animation.TransitionScope
+import com.jermey.quo.vadis.core.compose.LocalNavRenderScope
+import com.jermey.quo.vadis.core.compose.animation.LocalTransitionScope
+import com.jermey.quo.vadis.core.compose.animation.TransitionScope
 
 /**
  * Provides a static [AnimatedVisibilityScope] for content rendered

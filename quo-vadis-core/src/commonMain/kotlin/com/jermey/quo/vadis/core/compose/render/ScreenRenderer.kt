@@ -3,7 +3,7 @@ package com.jermey.quo.vadis.core.compose.render
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
 
 /**
  * Renders a [ScreenNode] leaf node.
@@ -13,7 +13,7 @@ import com.jermey.quo.vadis.core.navigation.core.ScreenNode
  *
  * ## Lifecycle Management
  *
- * The renderer manages the screen's UI lifecycle via [com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode]:
+ * The renderer manages the screen's UI lifecycle via [com.jermey.quo.vadis.core.navigation.LifecycleAwareNode]:
  * - Calls [ScreenNode.attachToUI] when the composable enters composition
  * - Calls [ScreenNode.detachFromUI] when the composable leaves composition
  *
@@ -44,8 +44,8 @@ import com.jermey.quo.vadis.core.navigation.core.ScreenNode
  * @see ScreenNode
  * @see LocalScreenNode
  * @see LocalAnimatedVisibilityScope
- * @see com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode.attachToUI
- * @see com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode.detachFromUI
+ * @see com.jermey.quo.vadis.core.navigation.LifecycleAwareNode.attachToUI
+ * @see com.jermey.quo.vadis.core.navigation.LifecycleAwareNode.detachFromUI
  */
 @Composable
 internal fun ScreenRenderer(

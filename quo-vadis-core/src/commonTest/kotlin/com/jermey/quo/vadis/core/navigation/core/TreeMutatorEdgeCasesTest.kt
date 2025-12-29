@@ -1,5 +1,17 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.findByKey
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
+import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -151,9 +163,11 @@ class TreeMutatorEdgeCasesTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
                 unchangedStack
             ),
             activeStackIndex = 0
@@ -248,10 +262,12 @@ class TreeMutatorEdgeCasesTest {
                     key = "tabs",
                     parentKey = "root",
                     stacks = listOf(
-                        StackNode("tab0", "tabs", listOf(
-                            ScreenNode("s1", "tab0", HomeDestination),
-                            ScreenNode("s2", "tab0", ProfileDestination)
-                        ))
+                        StackNode(
+                            "tab0", "tabs", listOf(
+                                ScreenNode("s1", "tab0", HomeDestination),
+                                ScreenNode("s2", "tab0", ProfileDestination)
+                            )
+                        )
                     ),
                     activeStackIndex = 0
                 )
@@ -300,10 +316,12 @@ class TreeMutatorEdgeCasesTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", HomeDestination),
-                        ScreenNode("s2", "primary-stack", ProfileDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", HomeDestination),
+                            ScreenNode("s2", "primary-stack", ProfileDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -388,13 +406,17 @@ class TreeMutatorEdgeCasesTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination),
-                    ScreenNode("s2", "tab0", ProfileDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s3", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination),
+                        ScreenNode("s2", "tab0", ProfileDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s3", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -465,13 +487,17 @@ class TreeMutatorEdgeCasesTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination),
-                    ScreenNode("s2", "tab0", ProfileDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s3", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination),
+                        ScreenNode("s2", "tab0", ProfileDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s3", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -485,13 +511,17 @@ class TreeMutatorEdgeCasesTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination),
-                    ScreenNode("s2", "tab0", ProfileDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s3", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination),
+                        ScreenNode("s2", "tab0", ProfileDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s3", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 1 // tab1 is active with single item
         )
@@ -543,12 +573,16 @@ class TreeMutatorEdgeCasesTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("s2", "tab1", ProfileDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("s2", "tab1", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 1
         )
@@ -565,14 +599,18 @@ class TreeMutatorEdgeCasesTest {
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(
-                        ScreenNode("s1", "primary-stack", ListDestination)
-                    ))
+                    StackNode(
+                        "primary-stack", "panes", listOf(
+                            ScreenNode("s1", "primary-stack", ListDestination)
+                        )
+                    )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", listOf(
-                        ScreenNode("s2", "supporting-stack", DetailDestination)
-                    ))
+                    StackNode(
+                        "supporting-stack", "panes", listOf(
+                            ScreenNode("s2", "supporting-stack", DetailDestination)
+                        )
+                    )
                 )
             ),
             activePaneRole = PaneRole.Supporting
@@ -598,28 +636,44 @@ class TreeMutatorEdgeCasesTest {
                     key = "tabs",
                     parentKey = "root",
                     stacks = listOf(
-                        StackNode("tab0", "tabs", listOf(
-                            PaneNode(
-                                key = "panes",
-                                parentKey = "tab0",
-                                paneConfigurations = mapOf(
-                                    PaneRole.Primary to PaneConfiguration(
-                                        StackNode("primary-stack", "panes", listOf(
-                                            ScreenNode("list", "primary-stack", ListDestination)
-                                        ))
+                        StackNode(
+                            "tab0", "tabs", listOf(
+                                PaneNode(
+                                    key = "panes",
+                                    parentKey = "tab0",
+                                    paneConfigurations = mapOf(
+                                        PaneRole.Primary to PaneConfiguration(
+                                            StackNode(
+                                                "primary-stack", "panes", listOf(
+                                                    ScreenNode(
+                                                        "list",
+                                                        "primary-stack",
+                                                        ListDestination
+                                                    )
+                                                )
+                                            )
+                                        ),
+                                        PaneRole.Supporting to PaneConfiguration(
+                                            StackNode(
+                                                "supporting-stack", "panes", listOf(
+                                                    ScreenNode(
+                                                        "detail",
+                                                        "supporting-stack",
+                                                        DetailDestination
+                                                    )
+                                                )
+                                            )
+                                        )
                                     ),
-                                    PaneRole.Supporting to PaneConfiguration(
-                                        StackNode("supporting-stack", "panes", listOf(
-                                            ScreenNode("detail", "supporting-stack", DetailDestination)
-                                        ))
-                                    )
-                                ),
-                                activePaneRole = PaneRole.Supporting
+                                    activePaneRole = PaneRole.Supporting
+                                )
                             )
-                        )),
-                        StackNode("tab1", "tabs", listOf(
-                            ScreenNode("settings", "tab1", SettingsDestination)
-                        ))
+                        ),
+                        StackNode(
+                            "tab1", "tabs", listOf(
+                                ScreenNode("settings", "tab1", SettingsDestination)
+                            )
+                        )
                     ),
                     activeStackIndex = 0
                 )
@@ -655,9 +709,11 @@ class TreeMutatorEdgeCasesTest {
                     key = "tabs",
                     parentKey = "root",
                     stacks = listOf(
-                        StackNode("tab0", "tabs", listOf(
-                            ScreenNode("home", "tab0", HomeDestination)
-                        )),
+                        StackNode(
+                            "tab0", "tabs", listOf(
+                                ScreenNode("home", "tab0", HomeDestination)
+                            )
+                        ),
                         tab1Stack
                     ),
                     activeStackIndex = 0
@@ -738,9 +794,11 @@ class TreeMutatorEdgeCasesTest {
             key = "tabs",
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s1", "tab0", HomeDestination)
-                )),
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s1", "tab0", HomeDestination)
+                    )
+                ),
                 StackNode("tab1", "tabs", emptyList())
             ),
             activeStackIndex = 0

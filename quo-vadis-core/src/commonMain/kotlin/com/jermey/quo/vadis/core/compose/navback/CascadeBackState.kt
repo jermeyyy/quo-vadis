@@ -1,13 +1,13 @@
 package com.jermey.quo.vadis.core.compose.navback
 
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.PaneNode
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.TabNode
-import com.jermey.quo.vadis.core.navigation.core.activeStack
-import com.jermey.quo.vadis.core.navigation.core.findByKey
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.activeStack
+import com.jermey.quo.vadis.core.navigation.findByKey
 
 /**
  * State information for a predictive back gesture that may cascade.

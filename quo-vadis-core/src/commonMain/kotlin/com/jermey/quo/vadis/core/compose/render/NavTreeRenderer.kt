@@ -1,11 +1,11 @@
 package com.jermey.quo.vadis.core.compose.render
 
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.PaneNode
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.TabNode
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
 
 /**
  * Core recursive renderer that dispatches to node-specific renderers based on [NavNode] type.

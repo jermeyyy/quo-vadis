@@ -1,8 +1,5 @@
 package com.jermey.quo.vadis.core.navigation
 
-import com.jermey.quo.vadis.core.Navigator
-import com.jermey.quo.vadis.core.activeLeaf
-
 /**
  * Navigate to a destination and suspend until it returns a result.
  *

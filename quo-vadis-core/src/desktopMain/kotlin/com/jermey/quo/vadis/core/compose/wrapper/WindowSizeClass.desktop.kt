@@ -3,7 +3,6 @@ package com.jermey.quo.vadis.core.compose.wrapper
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.WindowSizeClass
 
 /**
  * Desktop implementation calculating from window size.
@@ -19,5 +18,5 @@ actual fun calculateWindowSizeClass(): WindowSizeClass {
     val widthDp = with(density) { windowInfo.containerSize.width.toDp() }
     val heightDp = with(density) { windowInfo.containerSize.height.toDp() }
 
-    return WindowSizeClass.Companion.calculateFromSize(widthDp, heightDp)
+    return WindowSizeClass.calculateFromSize(widthDp, heightDp)
 }

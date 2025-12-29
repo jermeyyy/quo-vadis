@@ -1,8 +1,8 @@
 package com.jermey.quo.vadis.ksp.generators.dsl
 
 import com.google.devtools.ksp.processing.KSPLogger
-import com.jermey.quo.vadis.ksp.models.WrapperInfo
-import com.jermey.quo.vadis.ksp.models.WrapperType
+import com.jermey.quo.vadis.ksp.models.ContainerInfoModel
+import com.jermey.quo.vadis.ksp.models.ContainerType
 import com.squareup.kotlinpoet.CodeBlock
 
 /**
@@ -19,7 +19,7 @@ data class WrapperBlockResult(
 /**
  * Generates `tabsContainer` and `paneContainer` DSL blocks.
  *
- * This generator transforms [WrapperInfo] data into KotlinPoet [CodeBlock]s
+ * This generator transforms [ContainerInfoModel] data into KotlinPoet [CodeBlock]s
  * representing wrapper registration DSL calls within the `navigationConfig { }` block.
  *
  * Wrappers provide custom chrome/UI around container content, such as:
@@ -29,7 +29,7 @@ data class WrapperBlockResult(
  *
  * ## Input
  *
- * List of [WrapperInfo] from WrapperExtractor containing:
+ * List of [ContainerInfoModel] from WrapperExtractor containing:
  * - Function declaration for the wrapper composable
  * - Function name
  * - Target class (the container being wrapped)
@@ -72,7 +72,7 @@ class WrapperBlockGenerator(
      * @param wrappers List of wrapper info from extractor
      * @return CodeBlock containing all wrapper definitions
      */
-    fun generate(wrappers: List<WrapperInfo>): CodeBlock {
+    fun generate(wrappers: List<ContainerInfoModel>): CodeBlock {
         return generateWithImports(wrappers).codeBlock
     }
 
@@ -82,14 +82,14 @@ class WrapperBlockGenerator(
      * @param wrappers List of wrapper info from extractor
      * @return [WrapperBlockResult] containing code and required imports
      */
-    fun generateWithImports(wrappers: List<WrapperInfo>): WrapperBlockResult {
+    fun generateWithImports(wrappers: List<ContainerInfoModel>): WrapperBlockResult {
         if (wrappers.isEmpty()) {
             logger.info("WrapperBlockGenerator: No wrappers to generate")
             return WrapperBlockResult(CodeBlock.of(""), emptySet())
         }
 
-        val tabWrappers = wrappers.filter { it.wrapperType == WrapperType.TAB }
-        val paneWrappers = wrappers.filter { it.wrapperType == WrapperType.PANE }
+        val tabWrappers = wrappers.filter { it.containerType == ContainerType.TAB }
+        val paneWrappers = wrappers.filter { it.containerType == ContainerType.PANE }
 
         logger.info("WrapperBlockGenerator: Generating ${wrappers.size} wrapper blocks " +
             "(${tabWrappers.size} tab, ${paneWrappers.size} pane)")
@@ -131,7 +131,7 @@ class WrapperBlockGenerator(
      * @param wrapper The wrapper info to generate code for
      * @return CodeBlock for the tabs container registration
      */
-    private fun generateTabsContainerBlock(wrapper: WrapperInfo): CodeBlock {
+    private fun generateTabsContainerBlock(wrapper: ContainerInfoModel): CodeBlock {
         val wrapperKey = wrapper.targetClassQualifiedName
 
         return CodeBlock.builder()
@@ -150,7 +150,7 @@ class WrapperBlockGenerator(
      * @param wrapper The wrapper info to generate code for
      * @return CodeBlock for the pane container registration
      */
-    private fun generatePaneContainerBlock(wrapper: WrapperInfo): CodeBlock {
+    private fun generatePaneContainerBlock(wrapper: ContainerInfoModel): CodeBlock {
         val wrapperKey = wrapper.targetClassQualifiedName
 
         return CodeBlock.builder()
@@ -178,7 +178,7 @@ class WrapperBlockGenerator(
      * @param wrapper The wrapper info
      * @return CodeBlock for the wrapper content
      */
-    private fun generateWrapperContent(wrapper: WrapperInfo): CodeBlock {
+    private fun generateWrapperContent(wrapper: ContainerInfoModel): CodeBlock {
         // The wrapper function expects (scope, content) parameters
         // In the DSL lambda, 'this' is the scope and 'it' is the content
         return CodeBlock.of("%L(scope = this, content = it)\n", wrapper.functionName)

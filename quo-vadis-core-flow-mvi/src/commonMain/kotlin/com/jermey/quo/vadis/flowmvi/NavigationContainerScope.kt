@@ -17,8 +17,8 @@
 package com.jermey.quo.vadis.flowmvi
 
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
+import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.ScreenNode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import org.koin.core.component.KoinScopeComponent

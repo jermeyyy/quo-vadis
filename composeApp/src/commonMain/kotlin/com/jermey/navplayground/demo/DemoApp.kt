@@ -5,9 +5,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.core.navigation.compose.NavigationHost
-import com.jermey.quo.vadis.core.navigation.compose.rememberQuoVadisNavigator
-import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.compose.NavigationHost
+import com.jermey.quo.vadis.core.navigation.Navigator
 import org.koin.compose.koinInject
 
 /**
@@ -33,15 +32,10 @@ import org.koin.compose.koinInject
  * ```
  *
  * @see GeneratedNavigationConfig KSP-generated unified config object
- * @see rememberQuoVadisNavigator Composable navigator creation
- * @see NavigationHost Display navigation content
+ * @see com.jermey.quo.vadis.core.compose.NavigationHost Display navigation content
  */
 @Composable
 fun DemoApp() {
-//    val navigator = rememberQuoVadisNavigator(
-//        rootDestination = MainTabs::class,
-//        config = GeneratedNavigationConfig
-//    )
     val navigator = koinInject<Navigator>()
 
     // Config is now implicit - NavigationHost reads from navigator

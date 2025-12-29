@@ -1,11 +1,11 @@
 package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.NavNode
-import com.jermey.quo.vadis.core.PaneNode
-import com.jermey.quo.vadis.core.ScreenNode
-import com.jermey.quo.vadis.core.StackNode
-import com.jermey.quo.vadis.core.TabNode
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
 import com.jermey.quo.vadis.core.compose.animation.NavTransition
 import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
@@ -13,19 +13,19 @@ import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.CompositeNavigationConfig
-import com.jermey.quo.vadis.core.navigation.EmptyNavigationConfig
-import com.jermey.quo.vadis.core.navigation.NavigationConfig
-import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
-import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.core.GeneratedTabMetadata
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
+import com.jermey.quo.vadis.core.navigation.config.CompositeNavigationConfig
+import com.jermey.quo.vadis.core.navigation.config.EmptyNavigationConfig
+import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
+import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
+import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.GeneratedTabMetadata
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlin.reflect.KClass
 
 /**
- * Implementation of [com.jermey.quo.vadis.core.navigation.NavigationConfig] that converts DSL builder configurations
+ * Implementation of [NavigationConfig] that converts DSL builder configurations
  * into runtime-usable navigation registries.
  *
  * This class is the concrete implementation created by the [navigationConfig] DSL function.
@@ -57,7 +57,7 @@ import kotlin.reflect.KClass
  * @param tabsContainers Map of wrapper keys to tab container composables
  * @param paneContainers Map of wrapper keys to pane container composables
  *
- * @see com.jermey.quo.vadis.core.navigation.NavigationConfig
+ * @see NavigationConfig
  * @see navigationConfig
  */
 internal class DslNavigationConfig(
@@ -98,7 +98,7 @@ internal class DslNavigationConfig(
     }
 
     /**
-     * Deep link registry - returns [com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry.Companion.Empty] for DSL-based configs.
+     * Deep link registry - returns [DeepLinkRegistry.Companion.Empty] for DSL-based configs.
      * Full deep link support requires KSP generation.
      */
     override val deepLinkRegistry: DeepLinkRegistry = DeepLinkRegistry.Companion.Empty

@@ -4,8 +4,8 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.NavDestination
 import kotlin.reflect.KClass
 
 /**

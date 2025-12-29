@@ -5,7 +5,7 @@ import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.TabItem
 import com.jermey.quo.vadis.annotations.Tabs
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
  * # Quo Vadis Demo App - Navigation Destinations

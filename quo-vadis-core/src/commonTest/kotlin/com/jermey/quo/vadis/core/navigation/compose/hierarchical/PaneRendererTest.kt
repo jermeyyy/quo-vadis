@@ -1,16 +1,16 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
-import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
-import com.jermey.quo.vadis.core.navigation.core.PaneNode
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.testing.FakeNavRenderScope
+import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
+import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
+import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -393,7 +393,10 @@ class PaneRendererTest {
 
         // Then
         assertEquals(PaneBackBehavior.PopLatest, popLatestPanes.backBehavior)
-        assertEquals(PaneBackBehavior.PopUntilCurrentDestinationChange, popDestinationPanes.backBehavior)
+        assertEquals(
+            PaneBackBehavior.PopUntilCurrentDestinationChange,
+            popDestinationPanes.backBehavior
+        )
     }
 
     // =========================================================================
@@ -438,7 +441,10 @@ class PaneRendererTest {
 
         // Then
         assertEquals(3, panes.paneCount)
-        assertEquals(setOf(PaneRole.Primary, PaneRole.Supporting, PaneRole.Extra), panes.configuredRoles)
+        assertEquals(
+            setOf(PaneRole.Primary, PaneRole.Supporting, PaneRole.Extra),
+            panes.configuredRoles
+        )
     }
 
     @Test

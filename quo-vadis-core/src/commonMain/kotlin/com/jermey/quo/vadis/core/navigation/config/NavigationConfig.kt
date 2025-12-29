@@ -1,13 +1,13 @@
 package com.jermey.quo.vadis.core.navigation.config
 
-import com.jermey.quo.vadis.core.NavNode
+import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig.Companion.Empty
-import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.NavDestination
 import kotlin.reflect.KClass
 
 /**

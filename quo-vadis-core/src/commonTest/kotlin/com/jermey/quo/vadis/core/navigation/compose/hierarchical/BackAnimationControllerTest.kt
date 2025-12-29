@@ -1,7 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.navigation.compose.animation.BackAnimationController
-import com.jermey.quo.vadis.core.navigation.compose.navback.BackNavigationEvent
+import com.jermey.quo.vadis.core.compose.animation.BackAnimationController
+import com.jermey.quo.vadis.core.compose.navback.BackNavigationEvent
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -538,7 +538,7 @@ class BackAnimationControllerTest {
 
         controller.startAnimation(BackNavigationEvent(progress = 0f))
         controller.updateProgress(BackNavigationEvent(progress = 0.5f))
-        
+
         // When - user drags finger back
         controller.updateProgress(BackNavigationEvent(progress = 0.3f))
 

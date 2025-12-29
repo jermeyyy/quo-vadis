@@ -23,8 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.TabsContainer
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.core.compose.wrapper.TabMetadata
+import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
 
 /**
  * Tabs container wrapper for the main tabs with bottom navigation.
@@ -37,7 +37,7 @@ import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
  */
 @TabsContainer(MainTabs::class)
 @Composable
-fun MainTabsWrapper(
+fun MainTabsContainer(
     scope: TabsContainerScope,
     content: @Composable () -> Unit
 ) {
@@ -64,7 +64,7 @@ fun MainTabsWrapper(
 /**
  * Bottom navigation bar for the main tabs.
  *
- * Uses [TabMetadata] from [TabsContainerScope] to render navigation items
+ * Uses [com.jermey.quo.vadis.core.compose.wrapper.TabMetadata] from [com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope] to render navigation items
  * with proper selection state and click handling.
  *
  * @param activeTabIndex The currently selected tab index (0-based)
@@ -101,7 +101,7 @@ private fun MainBottomNavigationBar(
 /**
  * Maps route identifier to a fallback Material icon.
  *
- * This is used when [TabMetadata.icon] is null and provides
+ * This is used when [com.jermey.quo.vadis.core.compose.wrapper.TabMetadata.icon] is null and provides
  * default icons based on common route patterns.
  *
  * @param route The tab route identifier

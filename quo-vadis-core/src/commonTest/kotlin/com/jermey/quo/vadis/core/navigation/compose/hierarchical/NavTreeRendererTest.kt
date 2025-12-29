@@ -1,17 +1,17 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
-import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
-import com.jermey.quo.vadis.core.navigation.core.PaneNode
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.TabNode
-import com.jermey.quo.vadis.core.navigation.testing.FakeNavRenderScope
+import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
+import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
+import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -103,7 +103,10 @@ class NavTreeRendererTest {
         scope.navigator.navigate(destination)
 
         // Then
-        assertTrue(navigator.navigationCalls.isNotEmpty(), "Navigator should have recorded navigation")
+        assertTrue(
+            navigator.navigationCalls.isNotEmpty(),
+            "Navigator should have recorded navigation"
+        )
     }
 
     @Test
@@ -292,7 +295,7 @@ class NavTreeRendererTest {
         assertEquals(2, tabs.stacks.size)
         assertEquals(homeStack, tabs.stackAt(0))
         assertEquals(profileStack, tabs.stackAt(1))
-        
+
         // Home stack still has 2 children
         assertEquals(2, tabs.stackAt(0).children.size)
     }

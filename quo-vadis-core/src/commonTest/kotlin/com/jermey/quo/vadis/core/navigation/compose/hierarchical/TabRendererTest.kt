@@ -1,13 +1,13 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.TabNode
-import com.jermey.quo.vadis.core.navigation.testing.FakeNavRenderScope
+import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
+import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -77,11 +77,22 @@ class TabRendererTest {
         // Given
         val homeStack = createStack("home", "tabs", createScreen("home-screen", "home"))
         val profileStack = createStack("profile", "tabs", createScreen("profile-screen", "profile"))
-        val settingsStack = createStack("settings", "tabs", createScreen("settings-screen", "settings"))
+        val settingsStack =
+            createStack("settings", "tabs", createScreen("settings-screen", "settings"))
 
         // When - switch from tab 0 to tab 2
-        val beforeSwitch = createTabs("tabs", null, listOf(homeStack, profileStack, settingsStack), activeIndex = 0)
-        val afterSwitch = createTabs("tabs", null, listOf(homeStack, profileStack, settingsStack), activeIndex = 2)
+        val beforeSwitch = createTabs(
+            "tabs",
+            null,
+            listOf(homeStack, profileStack, settingsStack),
+            activeIndex = 0
+        )
+        val afterSwitch = createTabs(
+            "tabs",
+            null,
+            listOf(homeStack, profileStack, settingsStack),
+            activeIndex = 2
+        )
 
         // Then
         assertEquals(0, beforeSwitch.activeStackIndex)
@@ -275,7 +286,8 @@ class TabRendererTest {
         // Given
         val homeStack = createStack("home_stack", "tabs", createScreen("h", "home_stack"))
         val profileStack = createStack("profile_stack", "tabs", createScreen("p", "profile_stack"))
-        val settingsStack = createStack("settings_stack", "tabs", createScreen("s", "settings_stack"))
+        val settingsStack =
+            createStack("settings_stack", "tabs", createScreen("s", "settings_stack"))
 
         val tabs = createTabs("tabs", null, listOf(homeStack, profileStack, settingsStack))
 
@@ -422,7 +434,7 @@ class TabRendererTest {
         // Then
         assertEquals(4, tabs.activeStack.children.size)
         assertTrue(tabs.activeStack.canGoBack)
-        
+
         // Active leaf should be the last screen in active stack
         assertEquals("home-edit", tabs.activeStack.activeChild?.key)
     }
@@ -439,7 +451,8 @@ class TabRendererTest {
         val profileStack = createStack("profile", "tabs", createScreen("p1", "profile"))
 
         // Switch to profile tab
-        val tabsOnProfile = createTabs("tabs", null, listOf(homeStack, profileStack), activeIndex = 1)
+        val tabsOnProfile =
+            createTabs("tabs", null, listOf(homeStack, profileStack), activeIndex = 1)
 
         // Then - home stack still has 3
         assertEquals(3, tabsOnProfile.stackAt(0).children.size)

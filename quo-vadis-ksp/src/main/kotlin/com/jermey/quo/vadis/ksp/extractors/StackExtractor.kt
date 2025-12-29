@@ -4,6 +4,7 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
 
 /**
@@ -109,9 +110,9 @@ class StackExtractor(
     private fun resolveStartDestination(
         startDestinationClass: KSClassDeclaration?,
         startDestinationString: String,
-        destinations: List<com.jermey.quo.vadis.ksp.models.DestinationInfo>,
+        destinations: List<DestinationInfo>,
         containerClassName: String
-    ): com.jermey.quo.vadis.ksp.models.DestinationInfo? {
+    ): DestinationInfo? {
         // Priority 1: Type-safe KClass reference
         if (startDestinationClass != null) {
             val qualifiedName = startDestinationClass.qualifiedName?.asString()

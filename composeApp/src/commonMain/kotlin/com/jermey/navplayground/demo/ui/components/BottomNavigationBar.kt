@@ -8,7 +8,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
+import com.jermey.quo.vadis.core.compose.wrapper.TabMetadata
 
 /**
  * Bottom navigation bar component using index-based tab selection.
@@ -26,7 +26,7 @@ import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
 @Composable
 fun BottomNavigationBar(
     activeTabIndex: Int,
-    tabMetadata: List<TabMetadata>,
+    tabMetadata: List<com.jermey.quo.vadis.core.compose.wrapper.TabMetadata>,
     onTabSelected: (Int) -> Unit,
     isTransitioning: Boolean = false,
     modifier: Modifier = Modifier

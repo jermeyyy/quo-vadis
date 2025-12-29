@@ -2,7 +2,7 @@ package com.jermey.navplayground.demo.destinations
 
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
  * Deep link demo destination.

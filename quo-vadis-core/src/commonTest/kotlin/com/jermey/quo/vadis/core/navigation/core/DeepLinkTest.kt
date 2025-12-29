@@ -1,11 +1,12 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import com.jermey.quo.vadis.core.navigation.DeepLink
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Unit tests for [DeepLink] parsing and URI reconstruction.
+ * Unit tests for [com.jermey.quo.vadis.core.navigation.DeepLink] parsing and URI reconstruction.
  *
  * Tests cover:
  * - URI parsing (scheme, path, query params)

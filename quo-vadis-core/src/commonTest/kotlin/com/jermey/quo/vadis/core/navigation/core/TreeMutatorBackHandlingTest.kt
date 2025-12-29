@@ -1,5 +1,13 @@
 package com.jermey.quo.vadis.core.navigation.core
 
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -179,10 +187,12 @@ class TreeMutatorBackHandlingTest {
             key = "tabs",
             parentKey = "root",
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s0a", "tab0", HomeDestination),
-                    ScreenNode("s0b", "tab0", ProfileDestination)
-                )),
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s0a", "tab0", HomeDestination),
+                        ScreenNode("s0b", "tab0", ProfileDestination)
+                    )
+                ),
                 StackNode("tab1", "tabs", listOf(ScreenNode("s1", "tab1", SettingsDestination)))
             ),
             activeStackIndex = 0 // Tab 0 with 2 items
@@ -348,10 +358,12 @@ class TreeMutatorBackHandlingTest {
             key = "tabs",
             parentKey = "root",
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("s0a", "tab0", HomeDestination),
-                    ScreenNode("s0b", "tab0", ProfileDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("s0a", "tab0", HomeDestination),
+                        ScreenNode("s0b", "tab0", ProfileDestination)
+                    )
+                )
             ),
             activeStackIndex = 0 // On initial tab but has 2 items
         )
@@ -404,13 +416,17 @@ class TreeMutatorBackHandlingTest {
             key = "tabs",
             parentKey = "root",
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("a", "tab0", HomeDestination),
-                    ScreenNode("b", "tab0", ProfileDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("c", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("a", "tab0", HomeDestination),
+                        ScreenNode("b", "tab0", ProfileDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("c", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 0
         )
@@ -449,13 +465,17 @@ class TreeMutatorBackHandlingTest {
             key = "tabs",
             parentKey = "root",
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(
-                    ScreenNode("a", "tab0", HomeDestination),
-                    ScreenNode("b", "tab0", ProfileDestination)
-                )),
-                StackNode("tab1", "tabs", listOf(
-                    ScreenNode("c", "tab1", SettingsDestination)
-                ))
+                StackNode(
+                    "tab0", "tabs", listOf(
+                        ScreenNode("a", "tab0", HomeDestination),
+                        ScreenNode("b", "tab0", ProfileDestination)
+                    )
+                ),
+                StackNode(
+                    "tab1", "tabs", listOf(
+                        ScreenNode("c", "tab1", SettingsDestination)
+                    )
+                )
             ),
             activeStackIndex = 1 // On tab1
         )

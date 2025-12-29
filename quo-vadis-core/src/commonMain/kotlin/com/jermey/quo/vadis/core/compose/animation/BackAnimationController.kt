@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.jermey.quo.vadis.core.navigation.compose.navback.BackNavigationEvent
+import com.jermey.quo.vadis.core.compose.navback.BackNavigationEvent
 
 /**
  * Controller for predictive back animations in the hierarchical navigation system.

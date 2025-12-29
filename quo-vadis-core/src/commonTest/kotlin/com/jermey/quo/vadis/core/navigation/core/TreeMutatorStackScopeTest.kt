@@ -1,6 +1,14 @@
 package com.jermey.quo.vadis.core.navigation.core
 
-import com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.findByKey
+import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -8,7 +16,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
 /**
- * Tests for stack-scope-aware [TreeMutator] operations.
+ * Tests for stack-scope-aware [com.jermey.quo.vadis.core.navigation.tree.TreeMutator] operations.
  *
  * These tests verify that `TreeMutator.push` with a [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry] correctly routes
  * destinations based on whether they belong to a StackNode's scope.
@@ -82,7 +90,11 @@ class TreeMutatorStackScopeTest {
      */
     private val testRegistry = object : ScopeRegistry {
         private val scopes = mapOf(
-            "AuthFlow" to setOf(AuthFlow.Login::class, AuthFlow.Register::class, AuthFlow.ForgotPassword::class),
+            "AuthFlow" to setOf(
+                AuthFlow.Login::class,
+                AuthFlow.Register::class,
+                AuthFlow.ForgotPassword::class
+            ),
             "MainFlow" to setOf(MainFlow.Home::class, MainFlow.Profile::class)
         )
 
@@ -195,7 +207,10 @@ class TreeMutatorStackScopeTest {
 
         assertEquals(AuthFlow.Login, (resultAuthStack.children[0] as ScreenNode).destination)
         assertEquals(AuthFlow.Register, (resultAuthStack.children[1] as ScreenNode).destination)
-        assertEquals(AuthFlow.ForgotPassword, (resultAuthStack.children[2] as ScreenNode).destination)
+        assertEquals(
+            AuthFlow.ForgotPassword,
+            (resultAuthStack.children[2] as ScreenNode).destination
+        )
     }
 
     // =========================================================================
@@ -619,7 +634,11 @@ class TreeMutatorStackScopeTest {
 
     private val combinedScopeRegistry = object : ScopeRegistry {
         private val scopes = mapOf(
-            "AuthFlow" to setOf(AuthFlow.Login::class, AuthFlow.Register::class, AuthFlow.ForgotPassword::class),
+            "AuthFlow" to setOf(
+                AuthFlow.Login::class,
+                AuthFlow.Register::class,
+                AuthFlow.ForgotPassword::class
+            ),
             "MainFlow" to setOf(MainFlow.Home::class, MainFlow.Profile::class),
             "HomeTabs" to setOf(HomeTabs.Feed::class, HomeTabs.Explore::class)
         )
@@ -787,7 +806,11 @@ class TreeMutatorStackScopeTest {
         val resultRoot = result as StackNode
         val resultAuthStack = resultRoot.children[0] as StackNode
 
-        assertEquals("AuthFlow", resultAuthStack.scopeKey, "scopeKey should be preserved after push")
+        assertEquals(
+            "AuthFlow",
+            resultAuthStack.scopeKey,
+            "scopeKey should be preserved after push"
+        )
         assertEquals("auth", resultAuthStack.key, "key should be preserved")
         assertEquals("root", resultAuthStack.parentKey, "parentKey should be preserved")
     }
@@ -820,6 +843,10 @@ class TreeMutatorStackScopeTest {
         val resultRoot = result as StackNode
         val resultAuthStack = resultRoot.children[0] as StackNode
 
-        assertEquals("AuthFlow", resultAuthStack.scopeKey, "scopeKey should remain after out-of-scope push")
+        assertEquals(
+            "AuthFlow",
+            resultAuthStack.scopeKey,
+            "scopeKey should remain after out-of-scope push"
+        )
     }
 }

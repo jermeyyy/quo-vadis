@@ -4,8 +4,8 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
-import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition.Companion.ANIMATION_DURATION
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransitions
+import com.jermey.quo.vadis.core.compose.animation.NavTransition.Companion.ANIMATION_DURATION
+import com.jermey.quo.vadis.core.navigation.NavigationTransitions
 
 /**
  * Immutable configuration for navigation transitions.

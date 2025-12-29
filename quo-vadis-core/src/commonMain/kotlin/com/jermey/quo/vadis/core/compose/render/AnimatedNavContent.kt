@@ -24,8 +24,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
-import com.jermey.quo.vadis.core.navigation.core.NavNode
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.compose.animation.NavTransition
 
 /**
  * Custom AnimatedContent variant optimized for navigation transitions.

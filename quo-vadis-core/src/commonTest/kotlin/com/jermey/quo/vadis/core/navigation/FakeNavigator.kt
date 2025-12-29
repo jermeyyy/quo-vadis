@@ -2,14 +2,8 @@ package com.jermey.quo.vadis.core.navigation
 
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
-import com.jermey.quo.vadis.core.NavNode
-import com.jermey.quo.vadis.core.Navigator
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.dsl.registry.RuntimeDeepLinkRegistry
-import com.jermey.quo.vadis.core.ScreenNode
-import com.jermey.quo.vadis.core.StackNode
-import com.jermey.quo.vadis.core.activeLeaf
-import com.jermey.quo.vadis.core.activeStack
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

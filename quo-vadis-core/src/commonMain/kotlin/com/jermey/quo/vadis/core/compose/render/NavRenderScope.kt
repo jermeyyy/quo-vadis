@@ -6,13 +6,13 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.SaveableStateHolder
-import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.StackNode
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
+import com.jermey.quo.vadis.core.compose.navback.PredictiveBackController
+import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
 
 /**
  * Core scope interface that provides context to all hierarchical renderers.

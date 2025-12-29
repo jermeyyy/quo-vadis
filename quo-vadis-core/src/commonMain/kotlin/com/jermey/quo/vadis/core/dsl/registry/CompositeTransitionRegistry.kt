@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
-import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
+import com.jermey.quo.vadis.core.compose.animation.NavTransition
 import kotlin.reflect.KClass
 
 /**

@@ -1,12 +1,16 @@
 package com.jermey.quo.vadis.core.navigation.testing
 
-import com.jermey.quo.vadis.core.navigation.compose.render.ComposableCache
-import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.route
+import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
+import com.jermey.quo.vadis.core.compose.navback.PredictiveBackController
+import com.jermey.quo.vadis.core.compose.render.ComposableCache
+import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.EmptyScreenRegistry
+import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
+import com.jermey.quo.vadis.core.navigation.FakeNavigator
+import com.jermey.quo.vadis.core.navigation.FakeSaveableStateHolder
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.route
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals

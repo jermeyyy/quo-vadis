@@ -16,8 +16,8 @@ import kotlinx.coroutines.sync.withLock
  *
  * This class is used internally by the Navigator and its extension functions.
  * Users should interact with results through:
- * - [com.jermey.quo.vadis.core.Navigator.navigateForResult] - to navigate and await a result
- * - [com.jermey.quo.vadis.core.Navigator.navigateBackWithResult] - to return a result
+ * - [Navigator.navigateForResult] - to navigate and await a result
+ * - [Navigator.navigateBackWithResult] - to return a result
  *
  * ## Thread Safety
  *

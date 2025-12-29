@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.ksp.extractors
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
@@ -126,7 +127,7 @@ class TabExtractor(
      * @return The initial tab's class declaration, or null to use first tab
      */
     private fun resolveInitialTabClass(
-        annotation: com.google.devtools.ksp.symbol.KSAnnotation,
+        annotation: KSAnnotation,
         tabs: List<TabItemInfo>
     ): KSClassDeclaration? {
         // Try type-safe initialTab first (new pattern)

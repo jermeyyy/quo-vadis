@@ -1,7 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.pane
 
-import com.jermey.quo.vadis.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.AdaptStrategy
+import com.jermey.quo.vadis.core.navigation.NavNode
 import kotlinx.serialization.Serializable
 
 /**

@@ -30,7 +30,7 @@ import kotlin.uuid.Uuid
  * ## Scope-Aware Navigation
  *
  * When [scopeKey] is set, [com.jermey.quo.vadis.core.navigation.tree.TreeMutator.push] with a
- * [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry] will check
+ * [com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry] will check
  * if destinations belong to this container's scope. Out-of-scope destinations
  * navigate to the parent stack instead, preserving the tab container for
  * predictive back gestures.
@@ -45,7 +45,7 @@ import kotlin.uuid.Uuid
  * @property parentKey Key of the containing node (null if root)
  * @property stacks List of StackNodes, one per tab
  * @property activeStackIndex Index of the currently active tab (0-based)
- * @property wrapperKey Key used to lookup the wrapper in [ContainerRegistry].
+ * @property wrapperKey Key used to lookup the wrapper in [com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry].
  *   This is typically the simple name of the tab class (e.g., "MainTabs")
  *   and is used by the hierarchical renderer to find the correct wrapper.
  *   Defaults to null, which means no custom wrapper is registered.

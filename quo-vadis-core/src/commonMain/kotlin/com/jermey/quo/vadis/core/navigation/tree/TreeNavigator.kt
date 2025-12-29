@@ -1,29 +1,29 @@
 package com.jermey.quo.vadis.core.navigation.tree
 
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.NavNode
-import com.jermey.quo.vadis.core.Navigator
-import com.jermey.quo.vadis.core.PaneNode
-import com.jermey.quo.vadis.core.ScreenNode
-import com.jermey.quo.vadis.core.StackNode
-import com.jermey.quo.vadis.core.TabNode
-import com.jermey.quo.vadis.core.activeLeaf
-import com.jermey.quo.vadis.core.activeStack
+import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.ScreenNode
+import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.activeLeaf
+import com.jermey.quo.vadis.core.navigation.activeStack
 import com.jermey.quo.vadis.core.compose.wrapper.WindowSizeClass
 import com.jermey.quo.vadis.core.dsl.registry.BackHandlerRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ContainerInfo
 import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
-import com.jermey.quo.vadis.core.navigation.core.CompositeDeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.core.DeepLink
-import com.jermey.quo.vadis.core.navigation.core.DeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavigationResultManager
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
-import com.jermey.quo.vadis.core.navigation.core.TransitionState
+import com.jermey.quo.vadis.core.dsl.registry.CompositeDeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.DeepLink
+import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.LifecycleAwareNode
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavigationResultManager
+import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
+import com.jermey.quo.vadis.core.navigation.TransitionState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -224,7 +224,7 @@ class TreeNavigator(
      *
      * When set, pane back behavior adapts:
      * - In compact mode (single pane visible), back behaves like a simple stack
-     * - In expanded mode (multiple panes visible), the configured [com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior] applies
+     * - In expanded mode (multiple panes visible), the configured [com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior] applies
      *
      * When null, defaults to compact behavior for safety.
      */
@@ -913,7 +913,7 @@ class TreeNavigator(
     /**
      * Notify lifecycle-aware nodes that were removed from the navigation tree.
      *
-     * This calls [com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode.detachFromNavigator] on all nodes
+     * This calls [LifecycleAwareNode.detachFromNavigator] on all nodes
      * (ScreenNode, TabNode, PaneNode) that existed in the old state but
      * are not present in the new state.
      */

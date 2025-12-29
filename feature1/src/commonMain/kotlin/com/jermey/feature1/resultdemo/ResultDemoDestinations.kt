@@ -2,8 +2,8 @@ package com.jermey.feature1.resultdemo
 
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.ReturnsResult
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.ReturnsResult
 
 /**
  * Result type returned from [ItemPickerDestination].

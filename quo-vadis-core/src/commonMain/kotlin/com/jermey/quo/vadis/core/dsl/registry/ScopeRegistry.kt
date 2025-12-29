@@ -1,11 +1,11 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
  * Registry for determining navigation scope membership.
  *
- * Used by [com.jermey.quo.vadis.core.navigation.core.TreeMutator] to decide whether a destination belongs to
+ * Used by [com.jermey.quo.vadis.core.navigation.tree.TreeMutator] to decide whether a destination belongs to
  * a container's scope (TabNode/PaneNode) or should navigate outside.
  *
  * ## Purpose
@@ -30,10 +30,10 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
  * sealed class hierarchies. Manual registration is also supported for
  * dynamic scenarios.
  *
- * @see com.jermey.quo.vadis.core.navigation.core.TreeMutator.push for scope-aware navigation
- * @see com.jermey.quo.vadis.core.navigation.core.StackNode.scopeKey for stack container scopes
- * @see com.jermey.quo.vadis.core.navigation.core.TabNode.scopeKey for tab container scopes
- * @see com.jermey.quo.vadis.core.navigation.core.PaneNode.scopeKey for pane container scopes
+ * @see com.jermey.quo.vadis.core.navigation.tree.TreeMutator.push for scope-aware navigation
+ * @see com.jermey.quo.vadis.core.navigation.StackNode.scopeKey for stack container scopes
+ * @see com.jermey.quo.vadis.core.navigation.TabNode.scopeKey for tab container scopes
+ * @see com.jermey.quo.vadis.core.navigation.PaneNode.scopeKey for pane container scopes
  */
 interface ScopeRegistry {
     /**

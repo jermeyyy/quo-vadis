@@ -2,9 +2,9 @@ package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.PaneBackBehavior
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
+import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 
 /**
  * DSL builder for configuring pane container entries.

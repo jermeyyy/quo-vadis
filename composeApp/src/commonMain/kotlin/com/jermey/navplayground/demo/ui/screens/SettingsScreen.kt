@@ -42,7 +42,7 @@ import com.jermey.navplayground.demo.ui.theme.ThemeManager
 import com.jermey.navplayground.demo.ui.theme.ThemeMode
 import com.jermey.navplayground.demo.ui.theme.rememberThemeManager
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.Navigator
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 

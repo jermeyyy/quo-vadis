@@ -1,19 +1,13 @@
 package com.jermey.quo.vadis.core.navigation
 
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerInfo
-import com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
-import com.jermey.quo.vadis.core.navigation.core.NavNode
-import com.jermey.quo.vadis.core.navigation.core.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.core.PaneConfiguration
-import com.jermey.quo.vadis.core.navigation.core.PaneNode
-import com.jermey.quo.vadis.core.navigation.core.PaneRole
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
-import com.jermey.quo.vadis.core.navigation.core.StackNode
-import com.jermey.quo.vadis.core.navigation.core.TabNode
+import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.core.dsl.registry.CompositeContainerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.ContainerInfo
+import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlin.reflect.KClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -24,7 +18,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * Tests for [CompositeContainerRegistry].
+ * Tests for [com.jermey.quo.vadis.core.dsl.registry.CompositeContainerRegistry].
  *
  * Tests cover:
  * - Secondary registry priority over primary for container info
@@ -107,8 +101,16 @@ class CompositeContainerRegistryTest {
             key = key,
             parentKey = parentKey,
             stacks = listOf(
-                StackNode("$key-tab0", key, listOf(ScreenNode("$key-screen0", "$key-tab0", PrimaryTabs.Tab1))),
-                StackNode("$key-tab1", key, listOf(ScreenNode("$key-screen1", "$key-tab1", PrimaryTabs.Tab2)))
+                StackNode(
+                    "$key-tab0",
+                    key,
+                    listOf(ScreenNode("$key-screen0", "$key-tab0", PrimaryTabs.Tab1))
+                ),
+                StackNode(
+                    "$key-tab1",
+                    key,
+                    listOf(ScreenNode("$key-screen1", "$key-tab1", PrimaryTabs.Tab2))
+                )
             ),
             activeStackIndex = initialTabIndex.coerceIn(0, 1),
             scopeKey = scopeKey
@@ -166,7 +168,8 @@ class CompositeContainerRegistryTest {
         }
 
         override fun hasTabsContainer(tabNodeKey: String): Boolean = tabNodeKey in tabsContainerKeys
-        override fun hasPaneContainer(paneNodeKey: String): Boolean = paneNodeKey in paneContainerKeys
+        override fun hasPaneContainer(paneNodeKey: String): Boolean =
+            paneNodeKey in paneContainerKeys
     }
 
     // =========================================================================
@@ -210,7 +213,8 @@ class CompositeContainerRegistryTest {
             secondaryWrapperTracker
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         val info = composite.getContainerInfo(SecondaryTabs.Tab1)
@@ -249,7 +253,8 @@ class CompositeContainerRegistryTest {
             secondaryWrapperTracker
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         val info = composite.getContainerInfo(PrimaryTabs.Tab1)
@@ -278,7 +283,8 @@ class CompositeContainerRegistryTest {
             secondaryWrapperTracker
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertNull(composite.getContainerInfo(UnknownDestination))
@@ -297,7 +303,11 @@ class CompositeContainerRegistryTest {
         )
 
         val secondaryTabInfo = ContainerInfo.TabContainer(
-            builder = createTabNodeBuilder(SharedTabs::class, "SecondarySharedTabs", secondaryTracker),
+            builder = createTabNodeBuilder(
+                SharedTabs::class,
+                "SecondarySharedTabs",
+                secondaryTracker
+            ),
             initialTabIndex = 1,
             scopeKey = "SecondarySharedTabs",
             containerClass = SharedTabs::class
@@ -321,7 +331,8 @@ class CompositeContainerRegistryTest {
             secondaryWrapperTracker
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         val info = composite.getContainerInfo(SharedTabs.Tab1)
@@ -366,19 +377,28 @@ class CompositeContainerRegistryTest {
         )
 
         // Custom navNodeBuilder that tracks calls
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { kclass, key, parentKey ->
-            compositeBuilderTracker.add("composite-builder:$kclass:$key")
-            TabNode(
-                key = key ?: "default-key",
-                parentKey = parentKey,
-                stacks = listOf(
-                    StackNode("stack0", key ?: "default-key", listOf(ScreenNode("screen0", "stack0", PrimaryTabs.Tab1))),
-                    StackNode("stack1", key ?: "default-key", listOf(ScreenNode("screen1", "stack1", PrimaryTabs.Tab2)))
-                ),
-                activeStackIndex = 0,
-                scopeKey = "CompositeScope"
-            )
-        }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { kclass, key, parentKey ->
+                compositeBuilderTracker.add("composite-builder:$kclass:$key")
+                TabNode(
+                    key = key ?: "default-key",
+                    parentKey = parentKey,
+                    stacks = listOf(
+                        StackNode(
+                            "stack0",
+                            key ?: "default-key",
+                            listOf(ScreenNode("screen0", "stack0", PrimaryTabs.Tab1))
+                        ),
+                        StackNode(
+                            "stack1",
+                            key ?: "default-key",
+                            listOf(ScreenNode("screen1", "stack1", PrimaryTabs.Tab2))
+                        )
+                    ),
+                    activeStackIndex = 0,
+                    scopeKey = "CompositeScope"
+                )
+            }
 
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
@@ -428,20 +448,21 @@ class CompositeContainerRegistryTest {
         )
 
         // Custom navNodeBuilder that tracks calls
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { kclass, key, parentKey ->
-            compositeBuilderTracker.add("composite-builder:$kclass:$key")
-            PaneNode(
-                key = key ?: "default-key",
-                parentKey = parentKey,
-                paneConfigurations = mapOf(
-                    PaneRole.Primary to PaneConfiguration(
-                        ScreenNode("pane-screen", key ?: "default-key", PrimaryPane.Pane1)
-                    )
-                ),
-                activePaneRole = PaneRole.Primary,
-                scopeKey = "CompositeScope"
-            )
-        }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { kclass, key, parentKey ->
+                compositeBuilderTracker.add("composite-builder:$kclass:$key")
+                PaneNode(
+                    key = key ?: "default-key",
+                    parentKey = parentKey,
+                    paneConfigurations = mapOf(
+                        PaneRole.Primary to PaneConfiguration(
+                            ScreenNode("pane-screen", key ?: "default-key", PrimaryPane.Pane1)
+                        )
+                    ),
+                    activePaneRole = PaneRole.Primary,
+                    scopeKey = "CompositeScope"
+                )
+            }
 
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
@@ -490,7 +511,8 @@ class CompositeContainerRegistryTest {
         )
 
         // navNodeBuilder that returns null
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
 
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
@@ -528,19 +550,32 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, key, parentKey ->
-            TabNode(
-                key = key ?: "default",
-                parentKey = parentKey,
-                stacks = listOf(
-                    StackNode("stack0", key ?: "default", listOf(ScreenNode("s0", "stack0", PrimaryTabs.Tab1))),
-                    StackNode("stack1", key ?: "default", listOf(ScreenNode("s1", "stack1", PrimaryTabs.Tab2))),
-                    StackNode("stack2", key ?: "default", listOf(ScreenNode("s2", "stack2", PrimaryTabs.Tab1)))
-                ),
-                activeStackIndex = 0,
-                scopeKey = "Test"
-            )
-        }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, key, parentKey ->
+                TabNode(
+                    key = key ?: "default",
+                    parentKey = parentKey,
+                    stacks = listOf(
+                        StackNode(
+                            "stack0",
+                            key ?: "default",
+                            listOf(ScreenNode("s0", "stack0", PrimaryTabs.Tab1))
+                        ),
+                        StackNode(
+                            "stack1",
+                            key ?: "default",
+                            listOf(ScreenNode("s1", "stack1", PrimaryTabs.Tab2))
+                        ),
+                        StackNode(
+                            "stack2",
+                            key ?: "default",
+                            listOf(ScreenNode("s2", "stack2", PrimaryTabs.Tab1))
+                        )
+                    ),
+                    activeStackIndex = 0,
+                    scopeKey = "Test"
+                )
+            }
 
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
@@ -582,7 +617,8 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertTrue(composite.hasTabsContainer("secondary-tab"))
@@ -605,7 +641,8 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertTrue(composite.hasTabsContainer("primary-tab"))
@@ -628,7 +665,8 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertFalse(composite.hasTabsContainer("unknown-tab"))
@@ -651,7 +689,8 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertTrue(composite.hasTabsContainer("shared-tab"))
@@ -674,7 +713,8 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertTrue(composite.hasPaneContainer("secondary-pane"))
@@ -697,7 +737,8 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertTrue(composite.hasPaneContainer("primary-pane"))
@@ -720,7 +761,8 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertFalse(composite.hasPaneContainer("unknown-pane"))
@@ -743,7 +785,8 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertTrue(composite.hasPaneContainer("shared-pane"))
@@ -770,7 +813,8 @@ class CompositeContainerRegistryTest {
             mutableListOf()
         )
 
-        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? = { _, _, _ -> null }
+        val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
+            { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         assertNull(composite.getContainerInfo(PrimaryTabs.Tab1))

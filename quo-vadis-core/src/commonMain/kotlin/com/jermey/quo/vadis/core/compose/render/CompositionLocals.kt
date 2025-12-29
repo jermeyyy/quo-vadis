@@ -18,9 +18,9 @@ package com.jermey.quo.vadis.core.compose.render
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.compositionLocalOf
-import com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import com.jermey.quo.vadis.core.navigation.core.ScreenNode
+import com.jermey.quo.vadis.core.navigation.LifecycleAwareNode
+import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.ScreenNode
 
 /**
  * Provides access to the current [ScreenNode] within the navigation hierarchy.
@@ -130,8 +130,8 @@ val LocalAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> 
 val LocalNavigator = compositionLocalOf<Navigator?> { null }
 
 /**
- * Provides access to the current container node ([com.jermey.quo.vadis.core.navigation.core.TabNode] or
- * [com.jermey.quo.vadis.core.navigation.core.PaneNode]) within the hierarchy.
+ * Provides access to the current container node ([com.jermey.quo.vadis.core.navigation.TabNode] or
+ * [com.jermey.quo.vadis.core.navigation.PaneNode]) within the hierarchy.
  *
  * This composition local is provided by [TabRenderer] and [PaneRenderer] when rendering
  * container content. It allows content within containers to access:

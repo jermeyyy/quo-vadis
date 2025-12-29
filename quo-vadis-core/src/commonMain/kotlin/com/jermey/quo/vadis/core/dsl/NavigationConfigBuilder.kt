@@ -4,12 +4,11 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.navigation.DslNavigationConfig
-import com.jermey.quo.vadis.core.navigation.NavigationConfig
-import com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.NavDestination
+import com.jermey.quo.vadis.core.compose.animation.NavTransition
+import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
+import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
+import com.jermey.quo.vadis.core.navigation.NavDestination
 import kotlin.reflect.KClass
 
 /**
@@ -68,7 +67,8 @@ class NavigationConfigBuilder {
      * Registered container builders indexed by destination class.
      */
     @PublishedApi
-    internal val containers: MutableMap<KClass<out NavDestination>, ContainerBuilder> = mutableMapOf()
+    internal val containers: MutableMap<KClass<out NavDestination>, ContainerBuilder> =
+        mutableMapOf()
 
     /**
      * Scope membership definitions mapping scope keys to sets of destination classes.
@@ -86,17 +86,17 @@ class NavigationConfigBuilder {
      * Custom tabs container wrapper composables indexed by wrapper key.
      */
     internal val tabsContainers: MutableMap<
-        String,
-        @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit
-        > = mutableMapOf()
+            String,
+            @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit
+            > = mutableMapOf()
 
     /**
      * Custom pane container composables indexed by wrapper key.
      */
     internal val paneContainers: MutableMap<
-        String,
-        @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit
-        > = mutableMapOf()
+            String,
+            @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit
+            > = mutableMapOf()
 
     /**
      * Registers a screen with its composable content.
@@ -213,6 +213,7 @@ class NavigationConfigBuilder {
                 is TabEntry.NestedStack -> entry.screens.forEach { screen ->
                     screen.destinationClass?.let { scopeMembers.add(it) }
                 }
+
                 is TabEntry.ContainerReference -> scopeMembers.add(entry.containerClass)
             }
         }

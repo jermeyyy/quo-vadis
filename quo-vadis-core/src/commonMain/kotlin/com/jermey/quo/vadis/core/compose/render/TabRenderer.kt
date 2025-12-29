@@ -7,10 +7,10 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata
-import com.jermey.quo.vadis.core.navigation.compose.wrapper.createTabsContainerScope
-import com.jermey.quo.vadis.core.navigation.core.TabNode
-import com.jermey.quo.vadis.core.navigation.core.TreeMutator
+import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.compose.wrapper.TabMetadata
+import com.jermey.quo.vadis.core.compose.wrapper.createTabsContainerScope
+import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
 
 /**
  * Renders a [TabNode] with wrapper composition and tab switching animations.
@@ -24,7 +24,7 @@ import com.jermey.quo.vadis.core.navigation.core.TreeMutator
  * ## Lifecycle Management
  *
  * The renderer manages the tab container's UI lifecycle via
- * [com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode]:
+ * [com.jermey.quo.vadis.core.navigation.LifecycleAwareNode]:
  * - Calls [TabNode.attachToUI] when the composable enters composition
  * - Calls [TabNode.detachFromUI] when the composable leaves composition
  * - Provides [LocalContainerNode] for child screens to access container context
@@ -75,8 +75,8 @@ import com.jermey.quo.vadis.core.navigation.core.TreeMutator
  * @see com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry.TabsContainer
  * @see AnimatedNavContent
  * @see LocalContainerNode
- * @see com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode.attachToUI
- * @see com.jermey.quo.vadis.core.navigation.core.LifecycleAwareNode.detachFromUI
+ * @see com.jermey.quo.vadis.core.navigation.LifecycleAwareNode.attachToUI
+ * @see com.jermey.quo.vadis.core.navigation.LifecycleAwareNode.detachFromUI
  */
 @Composable
 internal fun TabRenderer(

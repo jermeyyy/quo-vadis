@@ -2,7 +2,7 @@ package com.jermey.quo.vadis.core.compose.wrapper
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.jermey.quo.vadis.core.navigation.core.Navigator
+import com.jermey.quo.vadis.core.navigation.Navigator
 
 /**
  * Metadata for a single tab in a TabNode.

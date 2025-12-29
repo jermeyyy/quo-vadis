@@ -18,10 +18,7 @@ package com.jermey.quo.vadis.flowmvi
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.jermey.quo.vadis.core.navigation.compose.render.LocalContainerNode
-import com.jermey.quo.vadis.core.navigation.compose.render.LocalNavigator
-import com.jermey.quo.vadis.core.navigation.compose.render.LocalScreenNode
-import com.jermey.quo.vadis.core.navigation.core.NavNode
+import com.jermey.quo.vadis.core.navigation.NavNode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -69,9 +66,9 @@ import pro.respawn.flowmvi.api.Store
 inline fun <reified C : NavigationContainer<S, I, A>, S : MVIState, I : MVIIntent, A : MVIAction> rememberContainer(
     noinline params: ParametersDefinition = { emptyParametersHolder() },
 ): Store<S, I, A> {
-    val screenNode = LocalScreenNode.current
+    val screenNode = _root_ide_package_.com.jermey.quo.vadis.core.compose.render.LocalScreenNode.current
         ?: error("rememberContainer must be called within a screen rendered by NavigationHost")
-    val navigator = LocalNavigator.current
+    val navigator = _root_ide_package_.com.jermey.quo.vadis.core.compose.render.LocalNavigator.current
         ?: error("rememberContainer must be called within NavigationHost")
 
     val koin = getKoin()
@@ -147,9 +144,9 @@ inline fun <reified C : NavigationContainer<S, I, A>, S : MVIState, I : MVIInten
 inline fun <reified C : SharedNavigationContainer<S, I, A>, S, I, A> rememberSharedContainer(
     noinline params: ParametersDefinition = { emptyParametersHolder() },
 ): Store<S, I, A> where S : MVIState, I : MVIIntent, A : MVIAction {
-    val containerNode = LocalContainerNode.current
+    val containerNode = _root_ide_package_.com.jermey.quo.vadis.core.compose.render.LocalContainerNode.current
         ?: error("rememberSharedContainer must be called within a Tab/Pane container wrapper")
-    val navigator = LocalNavigator.current
+    val navigator = _root_ide_package_.com.jermey.quo.vadis.core.compose.render.LocalNavigator.current
         ?: error("rememberSharedContainer must be called within NavigationHost")
 
     val koin = getKoin()

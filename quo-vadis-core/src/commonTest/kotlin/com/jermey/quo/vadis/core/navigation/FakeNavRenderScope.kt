@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.SaveableStateHolder
-import com.jermey.quo.vadis.core.Navigator
 import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.compose.navback.PredictiveBackController
 import com.jermey.quo.vadis.core.compose.render.ComposableCache
