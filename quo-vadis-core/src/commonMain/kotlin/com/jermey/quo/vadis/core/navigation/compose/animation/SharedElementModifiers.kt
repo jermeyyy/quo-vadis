@@ -28,7 +28,7 @@ import androidx.compose.runtime.Composable
  *                 modifier = Modifier
  *                     .size(100.dp)
  *                     .sharedElement(
- *                         state = rememberSharedContentState(key = "image_key"),
+ *                         sharedContentState = rememberSharedContentState(key = "image_key"),
  *                         animatedVisibilityScope = scope.animatedVisibilityScope
  *                     )
  *             )
