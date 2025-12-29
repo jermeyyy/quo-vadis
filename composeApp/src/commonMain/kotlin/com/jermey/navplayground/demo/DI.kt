@@ -5,6 +5,7 @@ import com.jermey.feature1.resultdemo.container.ResultDemoContainer
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileContainer
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
+import com.jermey.navplayground.demo.ui.screens.statedriven.StateDrivenContainer
 import com.jermey.navplayground.demo.ui.screens.tabs.DemoTabsContainer
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.core.Navigator
@@ -64,6 +65,15 @@ val resultDemoModule = module {
     }
     navigationContainer<ItemPickerContainer> { scope ->
         ItemPickerContainer(scope)
+    }
+}
+
+/**
+ * Koin module for the State-Driven Navigation Demo shared container.
+ */
+val stateDrivenDemoModule = module {
+    sharedNavigationContainer<StateDrivenContainer> { scope ->
+        StateDrivenContainer(scope)
     }
 }
 

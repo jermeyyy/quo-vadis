@@ -3,7 +3,6 @@ package com.jermey.quo.vadis.core.navigation.compose.animation
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 
 /**
@@ -68,32 +67,3 @@ fun TransitionScope(
  * Returns null if shared elements are not enabled or if not within a transition context.
  */
 val LocalTransitionScope = compositionLocalOf<TransitionScope?> { null }
-
-/**
- * Returns the current [TransitionScope] or null if not available.
- *
- * Use this when you want to conditionally apply shared element modifiers.
- * If null, shared elements are not enabled or not available in the current context.
- *
- * @return The current TransitionScope or null
- */
-@Composable
-fun currentTransitionScope(): TransitionScope? {
-    return LocalTransitionScope.current
-}
-
-/**
- * Returns the current [TransitionScope], throwing an exception if not available.
- *
- * Use this when shared elements are required and their absence is an error.
- *
- * @return The current TransitionScope
- * @throws IllegalStateException if TransitionScope is not available
- */
-@Composable
-fun requireTransitionScope(): TransitionScope {
-    return currentTransitionScope()
-        ?: error("TransitionScope not found. " +
-                "Ensure you are within a navigation transition with shared elements enabled.")
-}
-

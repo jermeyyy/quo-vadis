@@ -28,17 +28,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
+import com.jermey.quo.vadis.annotations.Screen
 
 /**
  * Content screens for the State-Driven Navigation Demo.
  *
  * Each screen represents a destination and displays relevant information
  * about itself, including any parameters passed to it.
+ *
+ * These are registered as proper @Screen composables for the DemoTab stack.
  */
 
 /**
  * Home content screen - the default starting destination.
  */
+@Screen(DemoTab.Home::class)
 @Composable
 fun HomeContent(
     modifier: Modifier = Modifier
@@ -68,11 +73,13 @@ fun HomeContent(
 /**
  * Profile content screen - displays user profile with userId parameter.
  */
+@Screen(DemoTab.Profile::class)
 @Composable
 fun ProfileContent(
-    userId: String,
+    destination: DemoTab.Profile,
     modifier: Modifier = Modifier
 ) {
+    val userId = destination.userId
     DestinationContent(
         modifier = modifier,
         icon = Icons.Default.Person,
@@ -92,6 +99,7 @@ fun ProfileContent(
 /**
  * Settings content screen - app settings.
  */
+@Screen(DemoTab.Settings::class)
 @Composable
 fun SettingsContent(
     modifier: Modifier = Modifier
@@ -120,11 +128,13 @@ fun SettingsContent(
 /**
  * Detail content screen - displays item details with itemId parameter.
  */
+@Screen(DemoTab.Detail::class)
 @Composable
 fun DetailContent(
-    itemId: String,
+    destination: DemoTab.Detail,
     modifier: Modifier = Modifier
 ) {
+    val itemId = destination.itemId
     DestinationContent(
         modifier = modifier,
         icon = Icons.Default.Info,

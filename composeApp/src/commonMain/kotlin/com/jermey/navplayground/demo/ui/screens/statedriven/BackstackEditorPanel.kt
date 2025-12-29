@@ -37,7 +37,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,7 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.StateDrivenDestination
+import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
+import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 /**
  * Panel for editing and viewing the backstack state.
@@ -56,19 +56,18 @@ import com.jermey.navplayground.demo.destinations.StateDrivenDestination
  * - Removing individual entries
  * - Pop, Clear, and Reset operations
  * - Reordering entries (swap, move)
+ *
+ * @param state The current state of the backstack.
+ * @param onIntent Callback to dispatch intents for state changes.
+ * @param modifier Modifier for the panel.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BackstackEditorPanel(
-    backStack: DemoBackStack,
+    state: StateDrivenState,
+    onIntent: (StateDrivenIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showAddDialog by remember { mutableStateOf(false) }
-    // Re-read state to trigger recomposition
-    @Suppress("UNUSED_VARIABLE")
-    val stateValue = backStack.state.collectAsState()
-    val canGoBack = backStack.canNavigateBack
-
     Column(
         modifier = modifier.padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -94,7 +93,7 @@ fun BackstackEditorPanel(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilledTonalButton(
-                onClick = { showAddDialog = true },
+                onClick = { onIntent(StateDrivenIntent.ShowAddDialog) },
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding
             ) {
                 Icon(Icons.Default.Add, null, Modifier.size(18.dp))
@@ -103,8 +102,8 @@ fun BackstackEditorPanel(
             }
 
             OutlinedButton(
-                onClick = { backStack.pop() },
-                enabled = canGoBack,
+                onClick = { onIntent(StateDrivenIntent.Pop) },
+                enabled = state.canNavigateBack,
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding
             ) {
                 Icon(Icons.Default.ArrowUpward, null, Modifier.size(18.dp))
@@ -113,8 +112,8 @@ fun BackstackEditorPanel(
             }
 
             OutlinedButton(
-                onClick = { backStack.clear() },
-                enabled = backStack.isNotEmpty,
+                onClick = { onIntent(StateDrivenIntent.Clear) },
+                enabled = state.isNotEmpty,
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding
             ) {
                 Icon(Icons.Default.Clear, null, Modifier.size(18.dp))
@@ -123,10 +122,7 @@ fun BackstackEditorPanel(
             }
 
             OutlinedButton(
-                onClick = {
-                    backStack.clear()
-                    backStack.push(StateDrivenDestination.Home)
-                },
+                onClick = { onIntent(StateDrivenIntent.Reset) },
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding
             ) {
                 Icon(Icons.Default.Refresh, null, Modifier.size(18.dp))
@@ -139,15 +135,15 @@ fun BackstackEditorPanel(
 
         // Stack label
         Text(
-            text = "Stack (${backStack.size} entries)",
+            text = "Stack (${state.size} entries)",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         // Stack list
-        if (backStack.isEmpty) {
+        if (state.isEmpty) {
             EmptyStackPlaceholder(
-                onAddClick = { showAddDialog = true },
+                onAddClick = { onIntent(StateDrivenIntent.ShowAddDialog) },
                 modifier = Modifier.weight(1f).fillMaxWidth()
             )
         } else {
@@ -156,21 +152,21 @@ fun BackstackEditorPanel(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 itemsIndexed(
-                    items = backStack.entries.toList(),
+                    items = state.entries,
                     key = { _, entry -> entry.id }
                 ) { index, entry ->
-                    val isTop = index == backStack.entries.lastIndex
+                    val isTop = index == state.entries.lastIndex
 
                     BackstackEntryItem(
                         index = index,
-                        destination = entry.destination as StateDrivenDestination,
+                        destination = entry.destination,
                         entryId = entry.id,
                         isTop = isTop,
-                        canMoveUp = index < backStack.entries.lastIndex,
+                        canMoveUp = index < state.entries.lastIndex,
                         canMoveDown = index > 0,
-                        onRemove = { backStack.removeAt(index) },
-                        onMoveUp = { backStack.swap(index, index + 1) },
-                        onMoveDown = { backStack.swap(index, index - 1) }
+                        onRemove = { onIntent(StateDrivenIntent.RemoveAt(index)) },
+                        onMoveUp = { onIntent(StateDrivenIntent.Swap(index, index + 1)) },
+                        onMoveDown = { onIntent(StateDrivenIntent.Swap(index, index - 1)) }
                     )
                 }
             }
@@ -186,12 +182,12 @@ fun BackstackEditorPanel(
     }
 
     // Add destination dialog
-    if (showAddDialog) {
+    if (state.showAddDialog) {
         AddDestinationDialog(
-            onDismiss = { showAddDialog = false },
+            onDismiss = { onIntent(StateDrivenIntent.HideAddDialog) },
             onAdd = { destination ->
-                backStack.push(destination)
-                showAddDialog = false
+                onIntent(StateDrivenIntent.PushDestination(destination))
+                onIntent(StateDrivenIntent.HideAddDialog)
             }
         )
     }
@@ -231,7 +227,7 @@ private fun EmptyStackPlaceholder(
 @Composable
 private fun BackstackEntryItem(
     index: Int,
-    destination: StateDrivenDestination,
+    destination: NavDestination,
     entryId: String,
     isTop: Boolean,
     canMoveUp: Boolean,
@@ -336,7 +332,7 @@ private fun BackstackEntryItem(
 @Composable
 private fun AddDestinationDialog(
     onDismiss: () -> Unit,
-    onAdd: (StateDrivenDestination) -> Unit
+    onAdd: (DemoTab) -> Unit
 ) {
     var selectedType by remember { mutableStateOf("Home") }
     var parameterValue by remember { mutableStateOf("") }
@@ -357,7 +353,7 @@ private fun AddDestinationDialog(
                 )
 
                 Column {
-                    StateDrivenDestination.allTypes.forEach { type ->
+                    DemoTab.allTypes.forEach { type ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
@@ -403,15 +399,15 @@ private fun AddDestinationDialog(
             Button(
                 onClick = {
                     val destination = when (selectedType) {
-                        "Home" -> StateDrivenDestination.Home
-                        "Profile" -> StateDrivenDestination.Profile(
+                        "Home" -> DemoTab.Home
+                        "Profile" -> DemoTab.Profile(
                             parameterValue.ifBlank { "default_user" }
                         )
-                        "Settings" -> StateDrivenDestination.Settings
-                        "Detail" -> StateDrivenDestination.Detail(
+                        "Settings" -> DemoTab.Settings
+                        "Detail" -> DemoTab.Detail(
                             parameterValue.ifBlank { "default_item" }
                         )
-                        else -> StateDrivenDestination.Home
+                        else -> DemoTab.Home
                     }
                     onAdd(destination)
                 },

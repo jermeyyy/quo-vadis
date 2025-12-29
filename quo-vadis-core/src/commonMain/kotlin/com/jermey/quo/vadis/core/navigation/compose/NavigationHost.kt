@@ -24,6 +24,8 @@ import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.navigation.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.compose.animation.LocalBackAnimationController
+import com.jermey.quo.vadis.core.navigation.compose.animation.LocalTransitionScope
+import com.jermey.quo.vadis.core.navigation.compose.animation.TransitionScope
 import com.jermey.quo.vadis.core.navigation.compose.animation.rememberBackAnimationController
 import com.jermey.quo.vadis.core.navigation.compose.navback.NavigateBackHandler
 import com.jermey.quo.vadis.core.navigation.compose.navback.PredictiveBackController
@@ -495,8 +497,14 @@ private class NavRenderScopeImpl(
         animatedVisibilityScope: AnimatedVisibilityScope,
         content: @Composable () -> Unit
     ) {
+        // Create TransitionScope if SharedTransitionScope is available
+        val transitionScope = sharedTransitionScope?.let {
+            TransitionScope(it, animatedVisibilityScope)
+        }
+
         CompositionLocalProvider(
-            LocalAnimatedVisibilityScope provides animatedVisibilityScope
+            LocalAnimatedVisibilityScope provides animatedVisibilityScope,
+            LocalTransitionScope provides transitionScope
         ) {
             content()
         }

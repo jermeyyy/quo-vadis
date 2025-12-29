@@ -66,7 +66,7 @@ kotlin {
 
     // Desktop (JVM) target
     jvm("desktop")
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
@@ -87,7 +87,7 @@ kotlin {
 
             implementation(projects.quoVadisCore)
             implementation(projects.quoVadisCoreFlowMvi)
-            
+
             // Koin
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
@@ -119,10 +119,10 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "com.jermey.navplayground.Main_desktopKt"
-        
+
         // Configure JVM arguments if needed
         jvmArgs += listOf("-Xmx2G")
-        
+
         nativeDistributions {
             targetFormats(
                 org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg,
@@ -134,7 +134,7 @@ compose.desktop {
             description = "Quo Vadis Navigation Library Demo"
             copyright = "© 2025 Jermey. All rights reserved."
             vendor = "Jermey"
-            
+
             macOS {
                 bundleID = "com.jermey.navplayground"
                 iconFile.set(project.file("src/desktopMain/resources/icon.icns"))
@@ -158,11 +158,11 @@ afterEvaluate {
         val outputDir = outputDirProperty.invoke(this) as DirectoryProperty
         outputDir.set(layout.buildDirectory.dir("generated/compose/resourceGenerator/androidAssets/androidMain"))
     }
-    
+
     // Wire assets copy task to Android java resource processing
     tasks.matching { it.name == "processAndroidMainJavaRes" }.configureEach {
         dependsOn("copyAndroidMainComposeResourcesToAndroidAssets")
-        
+
         // Add the compose resources to the java resources
         val javaResTask = this as Sync
         javaResTask.from(layout.buildDirectory.dir("generated/compose/resourceGenerator/androidAssets/androidMain"))

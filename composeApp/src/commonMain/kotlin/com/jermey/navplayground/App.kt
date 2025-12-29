@@ -7,6 +7,7 @@ import com.jermey.navplayground.demo.DemoApp
 import com.jermey.navplayground.demo.navigationModule
 import com.jermey.navplayground.demo.profileModule
 import com.jermey.navplayground.demo.resultDemoModule
+import com.jermey.navplayground.demo.stateDrivenDemoModule
 import com.jermey.navplayground.demo.tabsDemoModule
 import com.jermey.navplayground.demo.ui.theme.NavPlaygroundTheme
 import com.jermey.navplayground.demo.ui.theme.rememberThemeManager
@@ -22,6 +23,7 @@ fun App() {
             navigationModule,
             profileModule,
             resultDemoModule,
+            stateDrivenDemoModule,
             tabsDemoModule
         )
     }

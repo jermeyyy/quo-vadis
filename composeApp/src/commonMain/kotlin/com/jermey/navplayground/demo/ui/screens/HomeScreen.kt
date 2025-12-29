@@ -99,7 +99,7 @@ fun HomeScreen(
             },
             onNavigateToStateDriven = {
                 navigator.navigate(
-                    StateDrivenDemoDestination.Demo,
+                    StateDrivenDemoDestination.DemoTab.Home,
                     NavigationTransitions.SlideHorizontal
                 )
             },
