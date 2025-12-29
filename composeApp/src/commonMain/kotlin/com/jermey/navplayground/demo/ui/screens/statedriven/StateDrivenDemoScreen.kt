@@ -1,10 +1,5 @@
 package com.jermey.navplayground.demo.ui.screens.statedriven
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -17,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -29,64 +22,92 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
-import com.jermey.navplayground.demo.destinations.StateDrivenDestination
-import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.core.Navigator
-import org.koin.compose.koinInject
+import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
+import com.jermey.quo.vadis.annotations.TabsContainer
+import com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.flowmvi.rememberSharedContainer
+import kotlinx.coroutines.launch
+import pro.respawn.flowmvi.compose.dsl.subscribe
 
 /**
- * State-Driven Navigation Demo Screen.
+ * State-Driven Navigation Demo TabsContainer.
  *
  * This screen demonstrates the Navigation 3-style state-driven navigation API.
  * It shows a split view with:
  * - Left/Top: BackstackEditorPanel for manipulating the navigation stack
- * - Right/Bottom: StateNavHost showing the current destination content
+ * - Right/Bottom: The actual NavigationHost content (rendered via the content slot)
  *
  * Key concepts demonstrated:
  * - Direct backstack manipulation (push, pop, insert, remove, swap)
- * - Real-time state observation using Compose's snapshot system
- * - Declarative navigation without NavController
+ * - Real-time state observation using FlowMVI SharedContainer
+ * - The content slot renders the actual StateDrivenDestination screens via NavigationHost
+ *
+ * @param scope The TabsContainerScope providing access to tab state and navigation
+ * @param content The content slot where active tab content (the inner stack) is rendered
  */
-@Screen(StateDrivenDemoDestination.Demo::class)
+@TabsContainer(StateDrivenDemoDestination.Companion::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StateDrivenDemoScreen(
-    navigator: Navigator = koinInject(),
-    modifier: Modifier = Modifier
+fun StateDrivenDemoWrapper(
+    scope: TabsContainerScope,
+    content: @Composable () -> Unit
 ) {
-    val backStack = remember {
-        DemoBackStack().apply {
-            push(StateDrivenDestination.Home)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Get the shared store for state-driven navigation manipulation
+    val sharedStore = rememberSharedContainer<StateDrivenContainer, StateDrivenState, StateDrivenIntent, StateDrivenAction>()
+
+    val state by sharedStore.subscribe { action ->
+        coroutineScope.launch {
+            when (action) {
+                is StateDrivenAction.ShowToast -> {
+                    snackbarHostState.showSnackbar(
+                        message = action.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
         }
     }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text("State-Driven Navigation") },
-                navigationIcon = {
-                    IconButton(onClick = { navigator.navigateBack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+    CompositionLocalProvider(LocalStateDrivenStore provides sharedStore) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = { Text("State-Driven Navigation") },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.navigator.navigateBack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        }
                     }
-                }
+                )
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { padding ->
+            StateDrivenDemoContent(
+                state = state,
+                onIntent = sharedStore::intent,
+                content = content,
+                modifier = Modifier.padding(padding)
             )
         }
-    ) { padding ->
-        StateDrivenDemoContent(
-            backStack = backStack,
-            modifier = Modifier.padding(padding)
-        )
     }
 }
 
@@ -98,7 +119,9 @@ private val WIDE_LAYOUT_BREAKPOINT = 600.dp
 @Suppress("MagicNumber")
 @Composable
 private fun StateDrivenDemoContent(
-    backStack: DemoBackStack,
+    state: StateDrivenState,
+    onIntent: (StateDrivenIntent) -> Unit,
+    content: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -109,7 +132,8 @@ private fun StateDrivenDemoContent(
             Row(modifier = Modifier.fillMaxSize()) {
                 // Left panel: Backstack Editor
                 BackstackEditorPanel(
-                    backStack = backStack,
+                    state = state,
+                    onIntent = onIntent,
                     modifier = Modifier
                         .weight(0.4f)
                         .fillMaxHeight()
@@ -121,44 +145,40 @@ private fun StateDrivenDemoContent(
                     color = MaterialTheme.colorScheme.outlineVariant
                 )
 
-                // Right panel: Content area with StateNavHost
+                // Right panel: Content area with actual NavigationHost
                 Column(
                     modifier = Modifier
                         .weight(0.6f)
                         .fillMaxHeight()
                 ) {
                     StateInfoBar(
-                        backStack = backStack,
+                        state = state,
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    ContentHost(
-                        backStack = backStack,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    // The actual navigation content rendered by NavigationHost
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        content()
+                    }
                 }
             }
         } else {
             // Vertical layout for narrow screens (phones)
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 // State info bar at top
                 StateInfoBar(
-                    backStack = backStack,
+                    state = state,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Content area (fixed height)
-                ContentHost(
-                    backStack = backStack,
+                // Content area - actual NavigationHost content
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                )
+                ) {
+                    content()
+                }
 
                 HorizontalDivider(
                     modifier = Modifier.fillMaxWidth(),
@@ -168,7 +188,8 @@ private fun StateDrivenDemoContent(
 
                 // Backstack Editor below
                 BackstackEditorPanel(
-                    backStack = backStack,
+                    state = state,
+                    onIntent = onIntent,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(400.dp)
@@ -179,50 +200,10 @@ private fun StateDrivenDemoContent(
 }
 
 @Composable
-private fun ContentHost(
-    backStack: DemoBackStack,
-    modifier: Modifier = Modifier
-) {
-    val currentEntry = backStack.current
-
-    Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)) {
-        AnimatedContent(
-            targetState = currentEntry,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            contentKey = { it?.id }
-        ) { entry ->
-            if (entry != null) {
-                when (val destination = entry.destination) {
-                    is StateDrivenDestination.Home -> HomeContent()
-                    is StateDrivenDestination.Profile -> ProfileContent(userId = destination.userId)
-                    is StateDrivenDestination.Settings -> SettingsContent()
-                    is StateDrivenDestination.Detail -> DetailContent(itemId = destination.itemId)
-                    else -> {
-                        // Fallback for any unknown destination
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("Unknown destination: $destination")
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun StateInfoBar(
-    backStack: DemoBackStack,
+    state: StateDrivenState,
     modifier: Modifier = Modifier
 ) {
-    // Re-read the state to trigger recomposition when backstack changes
-    @Suppress("UNUSED_VARIABLE")
-    val stateValue = backStack.state.collectAsState()
-    val canGoBack = backStack.canNavigateBack
-    val current = backStack.current
-
     Card(
         modifier = modifier.padding(8.dp),
         colors = CardDefaults.cardColors(
@@ -238,22 +219,22 @@ private fun StateInfoBar(
         ) {
             StateInfoItem(
                 label = "Stack Size",
-                value = backStack.size.toString()
+                value = state.size.toString()
             )
 
             Spacer(Modifier.width(16.dp))
 
             StateInfoItem(
                 label = "Can Go Back",
-                value = if (canGoBack) "Yes" else "No"
+                value = if (state.canNavigateBack) "Yes" else "No"
             )
 
             Spacer(Modifier.width(16.dp))
 
             StateInfoItem(
                 label = "Current",
-                value = (current?.destination as? StateDrivenDestination)?.let {
-                    StateDrivenDestination.getDisplayName(it)
+                value = (state.currentEntry?.destination as? DemoTab)?.let {
+                    DemoTab.getDisplayName(it)
                 } ?: "None"
             )
         }

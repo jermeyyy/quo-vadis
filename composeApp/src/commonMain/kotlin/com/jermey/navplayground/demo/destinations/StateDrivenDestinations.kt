@@ -1,5 +1,6 @@
 package com.jermey.navplayground.demo.destinations
 
+import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 /**
@@ -8,12 +9,16 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
  * The demo showcases:
  * - Object destinations (Home, Settings) - no parameters
  * - Data class destinations (Profile, Detail) - with parameters
+ *
+ * These destinations are part of the StateDrivenDemoDestination.DemoTab stack,
+ * demonstrating how state-driven navigation works with the real Navigator.
  */
-sealed class StateDrivenDestination : NavDestination {
+sealed class StateDrivenDestination : StateDrivenDemoDestination.DemoTab() {
 
     /**
      * Home destination - the starting point of the demo.
      */
+    @Destination(route = "state-driven/home")
     data object Home : StateDrivenDestination() {
         override fun toString(): String = "Home"
     }
@@ -23,6 +28,7 @@ sealed class StateDrivenDestination : NavDestination {
      *
      * @property userId The ID of the user to display
      */
+    @Destination(route = "state-driven/profile/{userId}")
     data class Profile(val userId: String) : StateDrivenDestination() {
         override fun toString(): String = "Profile($userId)"
     }
@@ -30,6 +36,7 @@ sealed class StateDrivenDestination : NavDestination {
     /**
      * Settings destination - no parameters.
      */
+    @Destination(route = "state-driven/settings")
     data object Settings : StateDrivenDestination() {
         override fun toString(): String = "Settings"
     }
@@ -39,6 +46,7 @@ sealed class StateDrivenDestination : NavDestination {
      *
      * @property itemId The ID of the item to display
      */
+    @Destination(route = "state-driven/detail/{itemId}")
     data class Detail(val itemId: String) : StateDrivenDestination() {
         override fun toString(): String = "Detail($itemId)"
     }

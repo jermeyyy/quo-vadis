@@ -1,7 +1,10 @@
 package com.jermey.navplayground.demo.destinations
 
+import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
+import com.jermey.quo.vadis.annotations.TabItem
+import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.core.navigation.core.NavDestination
 
 /**
@@ -54,10 +57,79 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
  *
  * Demonstrates Navigation 3-style state-driven navigation API with
  * direct backstack manipulation and Compose state observation.
+ *
+ * Uses a single-tab @Tabs structure to contain a stack,
+ * allowing the demo to manipulate the inner stack while rendering custom chrome
+ * (the backstack editor panel).
  */
-@Stack(name = "statedriven", startDestination = StateDrivenDemoDestination.Demo::class)
+@Tabs(
+    name = "stateDrivenDemo",
+    initialTab = DemoTab::class,
+    items = [DemoTab::class]
+)
 sealed class StateDrivenDemoDestination : NavDestination {
-    @Destination(route = "statedriven/demo")
-    data object Demo : StateDrivenDemoDestination()
+
+    companion object : NavDestination
+
+    /**
+     * The single tab containing the state-driven navigation stack.
+     * Destinations are nested inside.
+     */
+    @TabItem(label = "Demo", icon = "layers")
+    @Stack(name = "stateDrivenStack", startDestination = DemoTab.Home::class)
+    sealed class DemoTab : StateDrivenDemoDestination() {
+        /**
+         * Home destination - the starting point of the demo.
+         */
+        @Destination(route = "state-driven/home")
+        data object Home : DemoTab() {
+            override fun toString(): String = "Home"
+        }
+
+        /**
+         * Profile destination with a user ID parameter.
+         *
+         * @property userId The ID of the user to display
+         */
+        @Destination(route = "state-driven/profile/{userId}")
+        data class Profile(val userId: String) : DemoTab() {
+            override fun toString(): String = "Profile($userId)"
+        }
+
+        /**
+         * Settings destination - no parameters.
+         */
+        @Destination(route = "state-driven/settings")
+        data object Settings : DemoTab() {
+            override fun toString(): String = "Settings"
+        }
+
+        /**
+         * Detail destination with an item ID parameter.
+         *
+         * @property itemId The ID of the item to display
+         */
+        @Destination(route = "state-driven/detail/{itemId}")
+        data class Detail(val itemId: String) : DemoTab() {
+            override fun toString(): String = "Detail($itemId)"
+        }
+
+        companion object {
+            /**
+             * Returns a display name for the destination type (for UI).
+             */
+            fun getDisplayName(destination: DemoTab): String = when (destination) {
+                is Home -> "Home"
+                is Profile -> "Profile"
+                is Settings -> "Settings"
+                is Detail -> "Detail"
+            }
+
+            /**
+             * Returns all available destination types for the picker.
+             */
+            val allTypes: List<String> = listOf("Home", "Profile", "Settings", "Detail")
+        }
+    }
 }
 
