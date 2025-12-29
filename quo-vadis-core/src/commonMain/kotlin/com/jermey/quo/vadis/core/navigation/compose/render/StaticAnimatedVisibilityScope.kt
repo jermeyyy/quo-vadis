@@ -18,11 +18,16 @@ package com.jermey.quo.vadis.core.navigation.compose.render
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.rememberTransition
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import com.jermey.quo.vadis.core.navigation.compose.LocalNavRenderScope
+import com.jermey.quo.vadis.core.navigation.compose.animation.LocalTransitionScope
+import com.jermey.quo.vadis.core.navigation.compose.animation.TransitionScope
 
 /**
  * Provides a static [AnimatedVisibilityScope] for content rendered
@@ -47,12 +52,28 @@ import androidx.compose.runtime.remember
  *
  * @param content The composable content requiring an [AnimatedVisibilityScope]
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun StaticAnimatedVisibilityScope(
     content: @Composable AnimatedVisibilityScope.() -> Unit
 ) {
     val scope = rememberStaticAnimatedVisibilityScope()
-    scope.content()
+
+    // Get SharedTransitionScope from NavRenderScope for TransitionScope creation
+    val navRenderScope = LocalNavRenderScope.current
+    val sharedTransitionScope = navRenderScope?.sharedTransitionScope
+
+    // Create TransitionScope if SharedTransitionScope is available
+    val transitionScope = sharedTransitionScope?.let {
+        TransitionScope(it, scope)
+    }
+
+    CompositionLocalProvider(
+        LocalAnimatedVisibilityScope provides scope,
+        LocalTransitionScope provides transitionScope
+    ) {
+        scope.content()
+    }
 }
 
 /**

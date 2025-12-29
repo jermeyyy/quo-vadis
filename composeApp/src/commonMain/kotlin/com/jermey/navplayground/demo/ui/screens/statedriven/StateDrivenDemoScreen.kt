@@ -55,7 +55,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
  * Key concepts demonstrated:
  * - Direct backstack manipulation (push, pop, insert, remove, swap)
  * - Real-time state observation using FlowMVI SharedContainer
- * - The content slot renders the actual StateDrivenDestination screens via NavigationHost
+ * - The content slot renders the actual DemoTab screens via NavigationHost
  *
  * @param scope The TabsContainerScope providing access to tab state and navigation
  * @param content The content slot where active tab content (the inner stack) is rendered
