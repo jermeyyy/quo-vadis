@@ -27,7 +27,7 @@ private typealias Ctx = PipelineContext<StateDrivenState, StateDrivenIntent, Sta
  *
  * Demonstrates state-driven navigation by observing and manipulating the actual
  * [Navigator] state. This showcases how navigation can be controlled directly
- * through the navigation tree state, similar to Navigation 3's approach.
+ * through the navigation tree state, inspired by patterns from advanced navigation libraries.
  *
  * Key concepts:
  * - Observes [Navigator.state] to reflect the real navigation tree
