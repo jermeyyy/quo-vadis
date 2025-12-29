@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.Flow
  * the animation from progressing too far before the gesture is committed.
  * The full 0-1 range is only used during completion/cancellation animations.
  */
-private const val GESTURE_MAX_PROGRESS = 0.15f
+private const val GESTURE_MAX_PROGRESS = 0.17f
 
 /**
  * Centralized controller for predictive back gesture handling.

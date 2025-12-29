@@ -84,6 +84,7 @@ internal fun StackRenderer(
     AnimatedNavContent(
         targetState = activeChild,
         transition = transition,
+        isBackNavigation = isBackNavigation,
         scope = scope,
         predictiveBackEnabled = predictiveBackEnabled,
     ) { child ->

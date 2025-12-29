@@ -148,13 +148,12 @@ internal fun TabRenderer(
                 scope = updatedTabsContainerScope
             ) {
                 // Content slot: animate between tabs (within the wrapper)
+                // Tab switching uses the default tab transition (typically Fade)
+                // The transition is not looked up per-destination since tabs animate between stacks
                 AnimatedNavContent(
                     targetState = activeStack,
-                    transition = scope.animationCoordinator.getTransition(
-                        from = previousNode,
-                        to = node,
-                        isBack = false
-                    ),
+                    transition = scope.animationCoordinator.defaultTabTransition,
+                    isBackNavigation = false,  // Tab switching is never back navigation
                     scope = scope,
                     // Tab switching is NOT via predictive back
                     // Predictive back is handled within each tab's stack

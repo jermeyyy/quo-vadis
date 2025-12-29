@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
@@ -192,9 +193,25 @@ fun NavigationHost(
     val navState by navigator.state.collectAsState()
 
     // Track previous state for animation pairing
-    // We use a separate remember to avoid updating during recomposition
-    var previousState by remember { mutableStateOf<NavNode?>(null) }
+    // Use derivedStateOf to compute previousState synchronously during composition
+    // This ensures the correct previous state is available for transition direction detection
     var lastProcessedState by remember { mutableStateOf<NavNode?>(null) }
+    
+    // Compute previousState synchronously: it's whatever lastProcessedState was before navState changed
+    // We track state transitions: lastProcessedState -> navState
+    val previousState = remember(navState) {
+        val previous = lastProcessedState
+        // Don't update lastProcessedState here - it's done in SideEffect below
+        previous
+    }
+    
+    // Update lastProcessedState after the current composition succeeds
+    // Using SideEffect ensures this runs synchronously at the end of composition
+    SideEffect {
+        if (lastProcessedState != navState) {
+            lastProcessedState = navState
+        }
+    }
 
     // State holder for preserving saveable state
     val saveableStateHolder = rememberSaveableStateHolder()
@@ -372,14 +389,6 @@ fun NavigationHost(
                     previousNode = previousState,
                     scope = scope,
                 )
-
-                // Update previous state after rendering to track state changes
-                LaunchedEffect(navState) {
-                    if (lastProcessedState != navState) {
-                        previousState = lastProcessedState
-                        lastProcessedState = navState
-                    }
-                }
             }
         }
     }

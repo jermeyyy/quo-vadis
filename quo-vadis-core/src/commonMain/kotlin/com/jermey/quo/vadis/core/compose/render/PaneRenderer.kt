@@ -272,9 +272,11 @@ private fun SinglePaneRenderer(
     )
 
     // Animated content switching between panes
+    // Pane switching is never considered back navigation
     AnimatedNavContent(
         targetState = activePaneContent,
         transition = transition,
+        isBackNavigation = false,  // Pane switching is never back navigation
         scope = scope,
         // Pane switching is NOT via predictive back
         // Predictive back is handled within each pane's stack

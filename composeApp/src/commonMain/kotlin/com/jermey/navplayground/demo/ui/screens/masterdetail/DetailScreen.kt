@@ -322,7 +322,8 @@ private fun SpecificationsCard() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
             "Specifications",
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary
         )
 
         Card(modifier = Modifier.fillMaxWidth()) {
@@ -346,7 +347,8 @@ private fun SpecificationsCard() {
 private fun RelatedItemsHeader() {
     Text(
         "Related Items",
-        style = MaterialTheme.typography.titleLarge
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.primary
     )
 }
 

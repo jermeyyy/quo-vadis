@@ -36,17 +36,18 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneRole
  *     isBack = false
  * )
  *
- * // Use in AnimatedContent
+ * // Use in AnimatedContent - direction is applied here
  * AnimatedContent(
  *     targetState = targetNode,
- *     transitionSpec = { transition.createTransitionSpec(isBack) }
+ *     transitionSpec = { transition.createTransitionSpec(isBack = isBackNavigation) }
  * ) { node -> ... }
  * ```
  *
- * ## Direction Awareness
+ * ## Direction Handling
  *
- * When [isBack] is true, the returned transition is automatically reversed
- * to ensure proper animation direction during back navigation.
+ * This coordinator returns the base transition without direction modifications.
+ * The navigation direction (forward/back) is handled by [NavTransition.createTransitionSpec]
+ * which selects the appropriate enter/exit or popEnter/popExit animations.
  *
  * @property transitionRegistry Registry for annotation-based transition lookup
  *
@@ -85,31 +86,43 @@ class AnimationCoordinator(
     /**
      * Gets the appropriate transition for navigation between nodes.
      *
-     * Resolution order:
-     * 1. [TransitionRegistry] lookup for destination annotation
+     * Resolution order for forward navigation:
+     * 1. [TransitionRegistry] lookup for entering destination annotation
+     * 2. Default transition based on node type
+     *
+     * Resolution order for back navigation:
+     * 1. [TransitionRegistry] lookup for exiting destination annotation
      * 2. Default transition based on node type
      *
      * ## Direction Handling
      *
-     * When navigating backwards ([isBack] = true), the transition is
-     * automatically reversed using [NavTransition.reversed].
+     * This method does NOT reverse transitions. The direction is handled by
+     * [NavTransition.createTransitionSpec] which selects the appropriate
+     * enter/exit or popEnter/popExit animations based on direction.
+     *
+     * For back navigation, the transition is looked up from the **exiting** screen
+     * (the `from` node) rather than the entering screen, ensuring the popped
+     * screen's defined exit animation is used.
      *
      * ## Example
      *
      * ```kotlin
-     * // Forward navigation - uses enter/exit
+     * // Forward: use transition from entering screen
      * val forwardTransition = coordinator.getTransition(
      *     from = screenA,
-     *     to = screenB,
+     *     to = screenB,  // B's transition used
      *     isBack = false
      * )
      *
-     * // Back navigation - uses popEnter/popExit
+     * // Back: use transition from exiting screen
      * val backTransition = coordinator.getTransition(
-     *     from = screenB,
+     *     from = screenB,  // B's transition used
      *     to = screenA,
      *     isBack = true
      * )
+     *
+     * // Direction is applied when creating the spec
+     * transition.createTransitionSpec(isBack = isBackNavigation)
      * ```
      *
      * @param from Source node (`null` for initial navigation)
@@ -120,11 +133,14 @@ class AnimationCoordinator(
      * @see NavTransition.createTransitionSpec
      */
     fun getTransition(from: NavNode?, to: NavNode, isBack: Boolean): NavTransition {
-        // First check registry for annotation-based transition on destination
-        val toScreen = to as? ScreenNode
-        toScreen?.destination?.let { dest ->
+        // For back navigation, look up the transition from the exiting screen (from)
+        // For forward navigation, look up the transition from the entering screen (to)
+        val lookupNode = if (isBack) from else to
+
+        val screenNode = lookupNode as? ScreenNode
+        screenNode?.destination?.let { dest ->
             transitionRegistry.getTransition(dest::class)?.let { transition ->
-                return if (isBack) transition.reversed() else transition
+                return transition
             }
         }
 

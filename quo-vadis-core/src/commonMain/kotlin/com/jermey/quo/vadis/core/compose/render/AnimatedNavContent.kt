@@ -34,15 +34,11 @@ import com.jermey.quo.vadis.core.compose.animation.NavTransition
  * It handles transitions between navigation states with support for both standard
  * `AnimatedContent` animations and predictive back gesture-driven animations.
  *
- * ## Animation Direction Detection
+ * ## Animation Direction
  *
- * The component tracks both the currently displayed state and the previous state to
- * determine navigation direction:
- *
- * - **Forward navigation**: New target differs from displayed, and is not the previous state
- * - **Back navigation**: Target state matches the previous state (returning to where we were)
- *
- * This allows transitions to use appropriate enter/exit animations based on direction.
+ * The direction of navigation is determined by the caller (typically the parent renderer
+ * like [StackRenderer]) and passed via the [isBackNavigation] parameter. This ensures
+ * consistent direction detection across different rendering contexts.
  *
  * ## Predictive Back Integration
  *
@@ -52,12 +48,9 @@ import com.jermey.quo.vadis.core.compose.animation.NavTransition
  *
  * ## State Tracking
  *
- * The component maintains two internal states:
- * - **displayedState**: The state currently shown on screen (may lag during animation)
- * - **previousState**: The state that was displayed before the current one
- *
- * These are updated inside the `AnimatedContent` content lambda to ensure proper
- * animation direction detection for subsequent navigations.
+ * The component maintains internal state for predictive back:
+ * - **lastCommittedState**: The state currently shown on screen
+ * - **stateBeforeLast**: The previous state for gesture target resolution
  *
  * ## Usage
  *
@@ -65,6 +58,7 @@ import com.jermey.quo.vadis.core.compose.animation.NavTransition
  * AnimatedNavContent(
  *     targetState = currentNode,
  *     transition = navTransition,
+ *     isBackNavigation = isBack,  // Determined by caller
  *     scope = renderScope,
  *     predictiveBackEnabled = true
  * ) { node ->
@@ -76,6 +70,8 @@ import com.jermey.quo.vadis.core.compose.animation.NavTransition
  * @param T The type of navigation node being animated (must extend [NavNode])
  * @param targetState The current target state to animate to
  * @param transition The [NavTransition] defining enter/exit animations for both directions
+ * @param isBackNavigation Whether this is a back navigation (pop). Used to select
+ *                         the appropriate animation direction (enter/exit vs popEnter/popExit)
  * @param scope The [NavRenderScope] providing access to predictive back controller,
  *              animation scopes, and other rendering dependencies
  * @param predictiveBackEnabled Whether predictive back gesture handling should be active.
@@ -93,20 +89,15 @@ import com.jermey.quo.vadis.core.compose.animation.NavTransition
 internal fun <T : NavNode> AnimatedNavContent(
     targetState: T,
     transition: NavTransition,
+    isBackNavigation: Boolean,
     scope: NavRenderScope,
     predictiveBackEnabled: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable AnimatedVisibilityScope.(T) -> Unit
 ) {
-    // Track the last committed state (what was fully displayed before current animation)
-    // and the state before that for back navigation detection
+    // Track the last committed state for predictive back gesture handling
     var lastCommittedState by remember { mutableStateOf(targetState) }
     var stateBeforeLast by remember { mutableStateOf<T?>(null) }
-
-    // Detect if this is back navigation BEFORE updating tracking state
-    // Back navigation: we're returning to the state that was displayed before the current one
-    val isBackNavigation = targetState.key != lastCommittedState.key &&
-            stateBeforeLast?.key == targetState.key
 
     // Determine if predictive back gesture is currently active
     val isPredictiveBackActive = predictiveBackEnabled &&
@@ -138,7 +129,7 @@ internal fun <T : NavNode> AnimatedNavContent(
             targetState = targetState,
             contentKey = { it.key },
             transitionSpec = {
-                // Use pre-computed direction for proper animation selection
+                // Use the isBackNavigation flag passed from caller for proper animation selection
                 transition.createTransitionSpec(isBack = isBackNavigation)
             },
             modifier = modifier,
@@ -151,7 +142,7 @@ internal fun <T : NavNode> AnimatedNavContent(
         }
 
         // Update state tracking AFTER AnimatedContent starts
-        // This ensures direction detection works for the next navigation
+        // This ensures predictive back has correct targets
         if (targetState.key != lastCommittedState.key) {
             stateBeforeLast = lastCommittedState
             lastCommittedState = targetState
