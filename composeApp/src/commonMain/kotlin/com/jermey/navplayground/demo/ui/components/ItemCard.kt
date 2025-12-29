@@ -32,7 +32,7 @@ fun ItemCard(
     onClick: () -> Unit
 ) {
     // Get transition scope for shared element transitions
-    val transitionScope = _root_ide_package_.com.jermey.quo.vadis.core.compose.animation.LocalTransitionScope.current
+    val transitionScope = LocalTransitionScope.current
 
     // Base card modifier
     val cardModifier = Modifier.fillMaxWidth()

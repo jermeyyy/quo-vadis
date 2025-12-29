@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-12-29
+
+### Fixed
+
+- **Import Fix**: Fixed malformed import in `ItemCard.kt` demo component.
+
 ## [0.3.0] - 2025-12-29
 
 ### ⚠️ Breaking Changes
@@ -48,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added comprehensive lifecycle and savedstate refactoring documentation.
 - Updated shared element transition examples and best practices.
+
+### Known Limitations
+
+- **Gradle Plugin**: `quo-vadis-gradle-plugin` is not yet published to Maven Central. Use the local composite build or publish locally with `./publish-local.sh`.
 
 ## [0.2.1] - 2025-12-23
 
