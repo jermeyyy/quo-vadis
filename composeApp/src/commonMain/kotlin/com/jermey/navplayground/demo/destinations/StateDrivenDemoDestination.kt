@@ -55,8 +55,11 @@ import com.jermey.quo.vadis.core.navigation.core.NavDestination
 /**
  * State-Driven Navigation demo destination.
  *
- * Demonstrates Navigation 3-style state-driven navigation API with
- * direct backstack manipulation and Compose state observation.
+ * Demonstrates a state-driven navigation API inspired by "Navigation 3" patterns,
+ * with direct backstack manipulation and Compose state observation.
+ *
+ * This is a custom implementation built on Quo Vadis and is not the official
+ * Android Navigation 3 library.
  *
  * Uses a single-tab @Tabs structure to contain a stack,
  * allowing the demo to manipulate the inner stack while rendering custom chrome
