@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-12-29
+
+### ⚠️ Breaking Changes
+
+- **Package Restructure**: The library has been reorganized for improved modularity. Imports may need to be updated:
+  - `navigation.compose.*` → `compose.*` (NavigationHost, animations, rendering)
+  - `navigation.compose.wrapper` → `compose.wrapper` (container scopes)
+  - `navigation.compose.navback` → `compose.navback` (back handling)
+  - Core navigation types remain in `navigation.*`
+
+### Added
+
+- **Shared Element Transitions**: First-class support for Compose shared element transitions via `LocalTransitionScope` and `currentSharedTransitionScope()`. Enables smooth hero animations between screens using native Compose APIs.
+- **State-Driven Navigation Demo**: New demo showcasing state-driven navigation patterns with `SharedContainer` integration.
+- **Enhanced MVI Container Lifecycle**: Improved lifecycle management for FlowMVI containers with proper result delivery.
+
+### Changed
+
+- **Package Structure Reorganization**: Code reorganized into logical subpackages for better discoverability:
+  - `compose/` - All Compose UI components (NavigationHost, animations, rendering)
+  - `compose/animation/` - Transitions, shared elements, animation coordination
+  - `compose/render/` - Screen, Stack, Tab, Pane renderers
+  - `compose/navback/` - Back navigation handling, predictive back
+  - `compose/wrapper/` - Container scopes (tabs, panes)
+  - `navigation/` - Core navigation types (Navigator, NavNode, NavDestination)
+  - `navigation/tree/` - TreeNavigator and TreeMutator
+  - `navigation/pane/` - Pane configuration and roles
+  - `navigation/config/` - Navigation configuration
+  - `dsl/` - DSL builders and registries
+- **AGP 9.0 Migration**: Updated to Android Gradle Plugin 9.0 with new KMP Android plugin.
+- **Compose Resources Configuration**: Updated resource handling for multiplatform.
+
+### Fixed
+
+- **NavigateForResult Issues**: Resolved container lifecycle and result delivery problems.
+- **MVI Container Lifecycle**: Fixed lifecycle management ensuring proper cleanup and state preservation.
+
+### Documentation
+
+- Added comprehensive lifecycle and savedstate refactoring documentation.
+- Updated shared element transition examples and best practices.
+
 ## [0.2.1] - 2025-12-23
 
 ### ⚠️ Breaking Changes - Deprecated API Removal
