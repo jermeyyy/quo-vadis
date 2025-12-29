@@ -149,7 +149,7 @@ internal fun <T : NavNode> PredictiveBackContent(
  * A value of 0.3 means the previous content moves at 30% of the speed of the
  * current content's translation.
  */
-private const val PARALLAX_FACTOR = 0.1f
+private const val PARALLAX_FACTOR = 0.15f
 
 /**
  * Scale factor for the current (exiting) content.
@@ -158,4 +158,4 @@ private const val PARALLAX_FACTOR = 0.1f
  * A value of 0.1 means the content scales from 1.0 (100%) to 0.9 (90%)
  * as the gesture progresses from 0 to 1, creating a subtle "receding" effect.
  */
-private const val SCALE_FACTOR = 0.1f
+private const val SCALE_FACTOR = 0.15f

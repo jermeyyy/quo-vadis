@@ -17,6 +17,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -51,6 +52,7 @@ import com.jermey.quo.vadis.core.navigation.NavDestination
 import com.jermey.quo.vadis.core.navigation.route
 import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
 import com.jermey.quo.vadis.core.navigation.tree.TreeNavigator
+import kotlinx.coroutines.launch
 
 // =============================================================================
 // Composition Local for NavRenderScope
@@ -93,7 +95,7 @@ import com.jermey.quo.vadis.core.navigation.tree.TreeNavigator
  * @see com.jermey.quo.vadis.core.compose.NavigationHost
  */
 val LocalNavRenderScope =
-    compositionLocalOf<com.jermey.quo.vadis.core.compose.render.NavRenderScope?> { null }
+    compositionLocalOf<NavRenderScope?> { null }
 
 // =============================================================================
 // HierarchicalNavigationHost
@@ -269,12 +271,16 @@ fun NavigationHost(
     // Speculative state for predictive back - computed when gesture starts
     var speculativePopState by remember { mutableStateOf<NavNode?>(null) }
 
+    // Coroutine scope for launching animations
+    val coroutineScope = rememberCoroutineScope()
+
     // Root container with QuoVadisBackHandler and SharedTransitionLayout
     NavigateBackHandler(
         enabled = enablePredictiveBack && canGoBack,
         currentScreenInfo = currentScreenInfo,
         previousScreenInfo = previousScreenInfo,
         onBackProgress = { event ->
+
             // On first progress event, start the animation
             if (!backAnimationController.isAnimating) {
                 // Compute speculative pop result at gesture start using tab-aware logic
@@ -303,24 +309,30 @@ fun NavigationHost(
         onBackCancelled = {
             // Cancel animation and reset state
             backAnimationController.cancelAnimation()
-            speculativePopState = null
 
-            // Reset predictiveBackController so AnimatedNavContent switches back
-            predictiveBackController.cancelGesture()
+            // Animate the cancellation so PredictiveBackContent smoothly returns to start
+            coroutineScope.launch {
+                predictiveBackController.animateCancelGesture()
+            }
+            speculativePopState = null
         },
         onBackCompleted = {
             // Complete animation and perform navigation
             backAnimationController.completeAnimation()
 
-            // Reset predictiveBackController BEFORE navigation to prevent flash
-            predictiveBackController.completeGesture()
-
             // Use the speculative state computed at gesture start
             val targetState = speculativePopState
-            if (targetState != null) {
-                navigator.updateState(targetState)
-            }
             speculativePopState = null
+
+            // Animate the completion - navigation happens at the start of animation
+            // so PredictiveBackContent shows the correct "previous" screen
+            coroutineScope.launch {
+                predictiveBackController.animateCompleteGesture {
+                    if (targetState != null) {
+                        navigator.updateState(targetState)
+                    }
+                }
+            }
         }
     ) {
         SharedTransitionLayout(modifier = modifier) {

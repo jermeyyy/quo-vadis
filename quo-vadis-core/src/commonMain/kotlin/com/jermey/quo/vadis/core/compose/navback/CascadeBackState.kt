@@ -41,6 +41,13 @@ data class CascadeBackState(
     val targetNode: NavNode?,
 
     /**
+     * The key of the stack that should handle the predictive back animation.
+     * For normal pops (cascadeDepth == 0), this is the parent stack of the exiting node.
+     * For cascade pops, this is the root stack.
+     */
+    val animatingStackKey: String?,
+
+    /**
      * The number of levels the cascade goes.
      * 0 = normal pop (no cascade)
      * 1 = pop to parent
@@ -72,6 +79,7 @@ fun calculateCascadeBackState(root: NavNode): CascadeBackState {
             sourceNode = root,
             exitingNode = root,
             targetNode = null,
+            animatingStackKey = null,
             cascadeDepth = 0,
             delegatesToSystem = true
         )
@@ -84,6 +92,7 @@ fun calculateCascadeBackState(root: NavNode): CascadeBackState {
             sourceNode = activeChild,
             exitingNode = activeChild,
             targetNode = previousChild,
+            animatingStackKey = activeStack.key,
             cascadeDepth = 0,
             delegatesToSystem = false
         )
@@ -110,6 +119,7 @@ private fun calculateCascadeFromStack(
             sourceNode = sourceNode,
             exitingNode = stack.activeChild ?: stack,
             targetNode = null,
+            animatingStackKey = null,
             cascadeDepth = currentDepth,
             delegatesToSystem = true
         )
@@ -131,6 +141,7 @@ private fun calculateCascadeFromStack(
                     sourceNode = sourceNode,
                     exitingNode = stack,
                     targetNode = target,
+                    animatingStackKey = parent.key,
                     cascadeDepth = newDepth,
                     delegatesToSystem = false
                 )
@@ -140,6 +151,7 @@ private fun calculateCascadeFromStack(
                     sourceNode = sourceNode,
                     exitingNode = stack,
                     targetNode = null,
+                    animatingStackKey = null,
                     cascadeDepth = newDepth,
                     delegatesToSystem = true
                 )
@@ -163,6 +175,7 @@ private fun calculateCascadeFromStack(
                 sourceNode = sourceNode,
                 exitingNode = stack,
                 targetNode = null,
+                animatingStackKey = null,
                 cascadeDepth = newDepth,
                 delegatesToSystem = true
             )
@@ -190,6 +203,7 @@ private fun calculateCascadeFromContainer(
             sourceNode = sourceNode,
             exitingNode = container,
             targetNode = null,
+            animatingStackKey = null,
             cascadeDepth = currentDepth,
             delegatesToSystem = true
         )
@@ -210,6 +224,7 @@ private fun calculateCascadeFromContainer(
                     sourceNode = sourceNode,
                     exitingNode = container,
                     targetNode = target,
+                    animatingStackKey = containerParent.key,
                     cascadeDepth = newDepth,
                     delegatesToSystem = false
                 )
@@ -218,6 +233,7 @@ private fun calculateCascadeFromContainer(
                     sourceNode = sourceNode,
                     exitingNode = container,
                     targetNode = null,
+                    animatingStackKey = null,
                     cascadeDepth = newDepth,
                     delegatesToSystem = true
                 )
@@ -234,6 +250,7 @@ private fun calculateCascadeFromContainer(
                 sourceNode = sourceNode,
                 exitingNode = container,
                 targetNode = null,
+                animatingStackKey = null,
                 cascadeDepth = newDepth,
                 delegatesToSystem = true
             )
@@ -242,14 +259,21 @@ private fun calculateCascadeFromContainer(
 }
 
 /**
- * Finds the active descendant (deepest active child) of a node.
+ * Finds the node that should be shown as the back target.
+ * 
+ * For container nodes (TabNode, PaneNode), returns the container itself
+ * since we want to show the entire container during predictive back.
+ * For StackNodes, returns the active child recursively.
+ * For ScreenNodes, returns the screen itself.
  */
 private fun findActiveDescendant(node: NavNode): NavNode? {
     return when (node) {
         is ScreenNode -> node
         is StackNode -> node.activeChild?.let { findActiveDescendant(it) }
-        is TabNode -> node.activeStack.activeChild?.let { findActiveDescendant(it) }
-        is PaneNode -> node.activeStack()?.activeChild?.let { findActiveDescendant(it) }
+        // For TabNode and PaneNode, return the container itself, not the leaf screen
+        // This ensures predictive back shows the full tab wrapper, not just the screen content
+        is TabNode -> node
+        is PaneNode -> node
     }
 }
 

@@ -1,8 +1,8 @@
 package com.jermey.quo.vadis.core.compose.navback
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.Flow
  * the animation from progressing too far before the gesture is committed.
  * The full 0-1 range is only used during completion/cancellation animations.
  */
-private const val GESTURE_MAX_PROGRESS = 0.25f
+private const val GESTURE_MAX_PROGRESS = 0.15f
 
 /**
  * Centralized controller for predictive back gesture handling.
@@ -218,8 +218,9 @@ class PredictiveBackController {
      */
     fun updateGestureProgress(rawProgress: Float) {
         if (_isActive) {
-            // Use the same progress clamping as handleGesture
-            _progress = rawProgress.coerceIn(0f, 1f)
+            // Clamp progress during gesture to prevent excessive movement
+            // Use GESTURE_MAX_PROGRESS to match handleGesture behavior
+            _progress = rawProgress.coerceIn(0f, GESTURE_MAX_PROGRESS)
         }
     }
 
@@ -236,6 +237,19 @@ class PredictiveBackController {
     }
 
     /**
+     * Completes a gesture with animation.
+     *
+     * This animates the progress from current value to 1f, keeping [isActive] true
+     * during the animation so that [PredictiveBackContent] continues rendering.
+     * Call [onNavigate] to trigger navigation before or during the animation.
+     *
+     * @param onNavigate Callback invoked at the start of animation to trigger navigation
+     */
+    suspend fun animateCompleteGesture(onNavigate: () -> Unit) {
+        animateToCompletion(onNavigate)
+    }
+
+    /**
      * Cancels a gesture, reverting to idle state.
      *
      * This immediately resets state without animation, as cancellation
@@ -245,6 +259,16 @@ class PredictiveBackController {
         _isActive = false
         _progress = 0f
         _cascadeState = null
+    }
+
+    /**
+     * Cancels a gesture with animation.
+     *
+     * This animates the progress from current value back to 0f, keeping [isActive] true
+     * during the animation so that [PredictiveBackContent] continues rendering.
+     */
+    suspend fun animateCancelGesture() {
+        animateToCancel()
     }
 
     /**
@@ -288,7 +312,7 @@ class PredictiveBackController {
             // Collect gesture progress
             backEvent.collect { rawProgress ->
                 // Clamp progress during gesture to prevent excessive movement
-                _progress = (rawProgress * GESTURE_MAX_PROGRESS).coerceIn(0f, GESTURE_MAX_PROGRESS)
+                _progress = rawProgress.coerceIn(0f, GESTURE_MAX_PROGRESS)
             }
 
             // Flow completed normally - gesture was committed
@@ -312,25 +336,26 @@ class PredictiveBackController {
      * @param onComplete Callback invoked when animation completes
      */
     private suspend fun animateToCompletion(onComplete: () -> Unit) {
-//        progressAnimatable.snapTo(_progress)
+        // Trigger navigation FIRST - this updates the backstack
+        // The renderer will still show PredictiveBackContent because isActive is true
+        onComplete()
+        
+        // Now animate the exit transition
+        progressAnimatable.snapTo(_progress)
         progressAnimatable.animateTo(
             targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessHigh
+            animationSpec = tween(
+                durationMillis = 300,
+                easing = FastOutSlowInEasing
             )
         ) {
             _progress = value
         }
 
-        // Animation complete - trigger navigation
-        onComplete()
-
-        // Reset state
+        // Animation complete - reset state
         _isActive = false
         _progress = 0f
         _cascadeState = null
-        progressAnimatable.snapTo(0f)
     }
 
     /**
@@ -340,12 +365,12 @@ class PredictiveBackController {
      * when the user cancels the back gesture.
      */
     private suspend fun animateToCancel() {
-//        progressAnimatable.snapTo(_progress)
+        progressAnimatable.snapTo(_progress)
         progressAnimatable.animateTo(
             targetValue = 0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessHigh
+            animationSpec = tween(
+                durationMillis = 200,
+                easing = FastOutSlowInEasing
             )
         ) {
             _progress = value

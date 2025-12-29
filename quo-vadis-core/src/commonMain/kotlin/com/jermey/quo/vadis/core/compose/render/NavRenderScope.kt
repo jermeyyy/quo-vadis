@@ -206,7 +206,7 @@ interface NavRenderScope {
      *
      * This method considers:
      * 1. Whether a cascade animation is currently active
-     * 2. Whether this stack can handle the back action internally
+     * 2. Whether this stack was designated to handle the animation at gesture start
      *
      * For nested stacks inside tabs:
      * - If the stack has > 1 children, back pops within the stack → enable predictive back
@@ -219,18 +219,15 @@ interface NavRenderScope {
         val cascadeState = predictiveBackController.cascadeState.value
         val isGestureActive = predictiveBackController.isActive.value
 
-        // During a CASCADE animation (cascadeDepth > 0), only the appropriate level
-        // should handle animation. For non-cascade (normal pop), any stack with
-        // children > 1 can handle its own animation.
+        // During a gesture or animation, use the pre-calculated animating stack key
+        // This ensures the same stack handles the animation even after navigation happens
         if (cascadeState != null && isGestureActive) {
             // Non-cascade case (normal pop within a stack): cascadeDepth == 0
-            // The exiting node's parent stack should handle the animation
+            // The animatingStackKey tells us which stack should handle the animation
             if (cascadeState.cascadeDepth == 0) {
-                // Check if this node is the stack that contains the exiting node
-                // That stack should enable predictive back for its animation
-                val exitingNode = cascadeState.exitingNode
-                return node is StackNode && node.children.any { it.key == exitingNode.key }
-                // Other stacks should not animate
+                val animatingKey = cascadeState.animatingStackKey
+                // Only the stack with the matching key should handle predictive back
+                return node is StackNode && node.key == animatingKey
             }
 
             // True cascade case (cascadeDepth > 0): only root handles animation
