@@ -49,6 +49,12 @@ jobs:
           sed -i '' "s/VERSION_NAME=.*/VERSION_NAME=${{ steps.version.outputs.version }}/" gradle.properties
           cat gradle.properties | grep VERSION_NAME
       
+      - name: Update VERSION_NAME in gradle plugin gradle.properties
+        run: |
+          # Create gradle.properties for the plugin if it doesn't exist
+          echo "VERSION_NAME=${{ steps.version.outputs.version }}" > quo-vadis-gradle-plugin/gradle.properties
+          cat quo-vadis-gradle-plugin/gradle.properties
+      
       - name: Import GPG key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
@@ -67,6 +73,20 @@ jobs:
             --no-configuration-cache \
             --stacktrace
       
+      - name: Publish Gradle Plugin to Maven Central
+        env:
+          CI: true
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          cd quo-vadis-gradle-plugin
+          ../gradlew \
+            publishAndReleaseToMavenCentral \
+            --no-configuration-cache \
+            --stacktrace
+      
       - name: Create release summary
         if: success()
         run: |
@@ -76,6 +96,10 @@ jobs:
           echo "- \`io.github.jermeyyy:quo-vadis-core:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-annotations:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-ksp:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`io.github.jermeyyy:quo-vadis-gradle-plugin:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Gradle Plugin" >> $GITHUB_STEP_SUMMARY
+          echo "Plugin ID: \`io.github.jermeyyy.quo-vadis\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Maven Central" >> $GITHUB_STEP_SUMMARY
           echo "Search: https://central.sonatype.com/search?q=io.github.jermeyyy" >> $GITHUB_STEP_SUMMARY
