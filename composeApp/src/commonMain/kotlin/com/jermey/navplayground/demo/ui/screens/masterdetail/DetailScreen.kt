@@ -1,6 +1,5 @@
 package com.jermey.navplayground.demo.ui.screens.masterdetail
 
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
