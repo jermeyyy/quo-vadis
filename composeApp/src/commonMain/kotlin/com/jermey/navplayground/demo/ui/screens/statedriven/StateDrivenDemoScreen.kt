@@ -47,7 +47,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 /**
  * State-Driven Navigation Demo TabsContainer.
  *
- * This screen demonstrates the Navigation 3-style state-driven navigation API.
+ * This screen demonstrates a state-driven navigation pattern using the Quo Vadis navigation framework.
  * It shows a split view with:
  * - Left/Top: BackstackEditorPanel for manipulating the navigation stack
  * - Right/Bottom: The actual NavigationHost content (rendered via the content slot)
