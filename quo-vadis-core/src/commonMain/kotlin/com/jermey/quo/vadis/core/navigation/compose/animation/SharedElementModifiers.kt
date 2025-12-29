@@ -69,5 +69,5 @@ import androidx.compose.runtime.Composable
 @ExperimentalSharedTransitionApi
 @Composable
 fun currentSharedTransitionScope(): SharedTransitionScope? {
-    return currentTransitionScope()?.sharedTransitionScope
+    return LocalTransitionScope.current?.sharedTransitionScope
 }
