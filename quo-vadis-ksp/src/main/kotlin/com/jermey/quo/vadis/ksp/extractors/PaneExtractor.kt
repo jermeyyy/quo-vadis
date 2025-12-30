@@ -49,8 +49,17 @@ class PaneExtractor(
         // Parse enum from annotation value - extract simple name from enum entry
         val backBehavior = parseBackBehavior(backBehaviorValue)
 
-        val panes = classDeclaration.getSealedSubclasses()
+        val sealedSubclasses = classDeclaration.getSealedSubclasses().toList()
+
+        // Extract @PaneItem annotated destinations (root destinations for each pane)
+        val panes = sealedSubclasses
             .mapNotNull { extractPaneItem(it) }
+            .toList()
+
+        // Extract ALL destinations from the sealed class (for scope registration)
+        // This includes both @PaneItem destinations and regular @Destination destinations
+        val allDestinations = sealedSubclasses
+            .mapNotNull { destinationExtractor.extract(it) }
             .toList()
 
         return PaneInfo(
@@ -59,7 +68,8 @@ class PaneExtractor(
             className = classDeclaration.simpleName.asString(),
             packageName = classDeclaration.packageName.asString(),
             backBehavior = backBehavior,
-            panes = panes
+            panes = panes,
+            allDestinations = allDestinations
         )
     }
 
@@ -86,21 +96,10 @@ class PaneExtractor(
         }?.value
         val adaptStrategy = parseAdaptStrategy(adaptStrategyValue)
 
-        val rootGraphType = paneItemAnnotation.arguments.find {
-            it.name?.asString() == "rootGraph"
-        }?.value as? KSType
-
-        val rootGraphClass = rootGraphType?.declaration as? KSClassDeclaration
-        if (rootGraphClass == null) {
-            logger.warn("Could not resolve rootGraph for pane item ${classDeclaration.simpleName.asString()}")
-            return null
-        }
-
         return PaneItemInfo(
             destination = destination,
             role = role,
-            adaptStrategy = adaptStrategy,
-            rootGraphClass = rootGraphClass
+            adaptStrategy = adaptStrategy
         )
     }
 

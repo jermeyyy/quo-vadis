@@ -1,7 +1,12 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.navigation.PaneNode
 import com.jermey.quo.vadis.core.navigation.TabNode
 import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
@@ -276,7 +281,8 @@ interface ContainerRegistry {
          *
          * - [getContainerInfo]: Always returns `null`
          * - [TabsContainer]: Renders [content] directly without any wrapper UI
-         * - [PaneContainer]: Renders [content] directly without any container UI
+         * - [PaneContainer]: In expanded mode, renders panes in a Row with equal weights.
+         *   In compact mode, renders [content] directly.
          * - [hasTabsContainer]: Always returns `false`
          * - [hasPaneContainer]: Always returns `false`
          *
@@ -311,8 +317,25 @@ interface ContainerRegistry {
                 scope: PaneContainerScope,
                 content: @Composable () -> Unit
             ) {
-                // Default: render content directly without container
-                content()
+                if (scope.isExpanded) {
+                    // Default expanded layout: Row with equal weights for each visible pane
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        scope.paneContents.filter { it.isVisible }.forEach { pane ->
+                            // Use role-based weights: Primary slightly smaller, Supporting larger
+                            val weight = when (pane.role) {
+                                PaneRole.Primary -> 0.4f
+                                PaneRole.Supporting -> 0.6f
+                                PaneRole.Extra -> 0.25f
+                            }
+                            Box(modifier = Modifier.weight(weight).fillMaxHeight()) {
+                                pane.content()
+                            }
+                        }
+                    }
+                } else {
+                    // Compact mode: render single pane content directly
+                    content()
+                }
             }
 
             override fun hasTabsContainer(tabNodeKey: String): Boolean = false

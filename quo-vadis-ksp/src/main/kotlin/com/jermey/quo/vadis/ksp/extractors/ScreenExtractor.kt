@@ -46,6 +46,15 @@ class ScreenExtractor(
             return null
         }
 
+        // Ensure the destination class has a qualified name (required for code generation)
+        if (destinationClass.qualifiedName == null) {
+            logger.warn(
+                "Destination class for @Screen on ${functionDeclaration.simpleName.asString()} " +
+                    "has no qualified name - skipping. This can happen if the class is local or not yet compiled."
+            )
+            return null
+        }
+
         val parameters = functionDeclaration.parameters
 
         // Check if function has a parameter matching the destination type

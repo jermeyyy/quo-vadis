@@ -13,6 +13,7 @@ import com.jermey.quo.vadis.core.compose.wrapper.WindowSizeClass
 import com.jermey.quo.vadis.core.dsl.registry.BackHandlerRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ContainerInfo
 import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.dsl.registry.CompositeDeepLinkRegistry
@@ -22,6 +23,7 @@ import com.jermey.quo.vadis.core.navigation.LifecycleAwareNode
 import com.jermey.quo.vadis.core.navigation.NavDestination
 import com.jermey.quo.vadis.core.navigation.NavigationResultManager
 import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.TransitionState
 import kotlinx.coroutines.CoroutineScope
@@ -92,6 +94,7 @@ class TreeNavigator(
     // Registries derived from config for internal use
     private val scopeRegistry: ScopeRegistry get() = config.scopeRegistry
     private val containerRegistry: ContainerRegistry get() = config.containerRegistry
+    private val paneRoleRegistry: PaneRoleRegistry get() = config.paneRoleRegistry
 
     // Deep link registry combining generated and runtime handlers
     private val deepLinkRegistry: CompositeDeepLinkRegistry = CompositeDeepLinkRegistry(
@@ -359,7 +362,12 @@ class TreeNavigator(
         fromKey: String?
     ) {
         try {
-            val newState = TreeMutator.push(oldState, destination, scopeRegistry) { generateKey() }
+            val newState = TreeMutator.push(
+                oldState,
+                destination,
+                scopeRegistry,
+                paneRoleRegistry
+            ) { generateKey() }
             val toKey = newState.activeLeaf()?.key
 
             _state.value = newState
@@ -528,9 +536,12 @@ class TreeNavigator(
         }
 
         val currentState = _state.value
+        
+        // Determine compact mode for pane handling
+        val isCompact = windowSizeClass?.isCompactWidth ?: true
 
-        // 2. Use tree-aware back handling
-        return when (val result = TreeMutator.popWithTabBehavior(currentState)) {
+        // 2. Use tree-aware back handling with window size awareness
+        return when (val result = TreeMutator.popWithTabBehavior(currentState, isCompact)) {
             is TreeMutator.BackResult.Handled -> {
                 updateStateWithTransition(result.newState, null)
                 true
@@ -540,7 +551,6 @@ class TreeNavigator(
             is TreeMutator.BackResult.CannotHandle -> {
                 // Fallback to pane-specific behavior with window size awareness
                 // In compact mode, treat as simple stack; in expanded mode, use configured behavior
-                val isCompact = windowSizeClass?.isCompactWidth ?: true
                 val popResult = TreeMutator.popPaneAdaptive(currentState, isCompact)
                 when (popResult) {
                     is TreeMutator.PopResult.Popped -> {
@@ -719,6 +729,66 @@ class TreeNavigator(
         val newState = TreeMutator.replaceNode(currentState, targetStack.key, newStack)
         _state.value = newState
         updateDerivedState(newState)
+    }
+
+    /**
+     * Navigate to a destination in a specific pane, replacing the pane's content.
+     *
+     * This method clears the target pane's stack and pushes the new destination,
+     * effectively replacing the pane's content. It also switches the active pane
+     * to the target role.
+     *
+     * Use this instead of `navigate()` when you want to replace pane content
+     * rather than push onto it. This is ideal for list-detail patterns where
+     * selecting a new item should replace (not push) the detail view.
+     *
+     * @param destination The destination to navigate to
+     * @param role The pane role to navigate in (default: Supporting)
+     *
+     * Example usage:
+     * ```kotlin
+     * // Replace detail pane content when selecting new list item
+     * navigator.navigateToPane(ItemDetail(itemId), PaneRole.Supporting)
+     * ```
+     */
+    override fun navigateToPane(destination: NavDestination, role: PaneRole) {
+        val currentState = _state.value
+        val paneNode = currentState.findFirst<PaneNode>()
+            ?: throw IllegalStateException("No PaneNode found in current navigation state")
+
+        val paneConfig = paneNode.paneConfigurations[role]
+        val paneContent = paneConfig?.content
+        val targetStack = when (paneContent) {
+            is StackNode -> paneContent
+            else -> paneContent?.activeStack()
+        }
+
+        // Create new screen
+        val newScreen = ScreenNode(
+            key = generateKey(),
+            parentKey = targetStack?.key ?: paneNode.key,
+            destination = destination
+        )
+
+        val newState = if (targetStack != null) {
+            // Replace stack content with single new screen
+            val newStack = targetStack.copy(children = listOf(newScreen))
+            var updated = TreeMutator.replaceNode(currentState, targetStack.key, newStack)
+            // Switch to this pane
+            TreeMutator.switchActivePane(updated, paneNode.key, role)
+        } else {
+            // No stack exists for this role - create configuration with new stack
+            val newStack = StackNode(
+                key = generateKey(),
+                parentKey = paneNode.key,
+                children = listOf(newScreen)
+            )
+            val newConfig = PaneConfiguration(content = newStack)
+            var updated = TreeMutator.setPaneConfiguration(currentState, paneNode.key, role, newConfig)
+            TreeMutator.switchActivePane(updated, paneNode.key, role)
+        }
+
+        updateStateWithTransition(newState, null)
     }
 
     // =========================================================================

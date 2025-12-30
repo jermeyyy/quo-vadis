@@ -7,6 +7,7 @@ import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
 import com.jermey.quo.vadis.core.dsl.registry.ContainerInfo
 import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.dsl.registry.RouteRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
@@ -40,6 +41,7 @@ internal object QuoVadisClassNames {
     val DEEP_LINK_RESULT: ClassName = DeepLinkResult::class.toClassName()
     val SCOPE_REGISTRY: ClassName = ScopeRegistry::class.toClassName()
     val TRANSITION_REGISTRY: ClassName = TransitionRegistry::class.toClassName()
+    val PANE_ROLE_REGISTRY: ClassName = PaneRoleRegistry::class.toClassName()
     
     // Deep linking classes
     val DEEP_LINK: ClassName = DeepLink::class.toClassName()

@@ -7,12 +7,14 @@ import com.jermey.quo.vadis.core.dsl.registry.CompositeScopeRegistry
 import com.jermey.quo.vadis.core.dsl.registry.CompositeScreenRegistry
 import com.jermey.quo.vadis.core.dsl.registry.CompositeTransitionRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.DeepLink
 import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlin.reflect.KClass
 
 /**
@@ -135,6 +137,26 @@ class CompositeNavigationConfig(
 
             override fun getRegisteredPatterns(): List<String> =
                 secondaryReg.getRegisteredPatterns() + primaryReg.getRegisteredPatterns()
+        }
+    }
+
+    /**
+     * Composite pane role registry that checks secondary first, then primary.
+     */
+    override val paneRoleRegistry: PaneRoleRegistry = run {
+        val secondaryReg = secondary.paneRoleRegistry
+        val primaryReg = primary.paneRoleRegistry
+        object : PaneRoleRegistry {
+            override fun getPaneRole(scopeKey: String, destination: NavDestination): PaneRole? =
+                secondaryReg.getPaneRole(scopeKey, destination)
+                    ?: primaryReg.getPaneRole(scopeKey, destination)
+
+            override fun getPaneRole(
+                scopeKey: String,
+                destinationClass: kotlin.reflect.KClass<out NavDestination>
+            ): PaneRole? =
+                secondaryReg.getPaneRole(scopeKey, destinationClass)
+                    ?: primaryReg.getPaneRole(scopeKey, destinationClass)
         }
     }
 

@@ -5,6 +5,7 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
@@ -79,6 +80,11 @@ internal object EmptyNavigationConfig : NavigationConfig {
      * Returns [DeepLinkRegistry.Empty] which provides no-op behavior.
      */
     override val deepLinkRegistry: DeepLinkRegistry = DeepLinkRegistry.Empty
+
+    /**
+     * Returns [PaneRoleRegistry.Empty] which returns null for all lookups.
+     */
+    override val paneRoleRegistry: PaneRoleRegistry = PaneRoleRegistry.Empty
 
     /**
      * Always returns null since no destinations are registered.

@@ -38,7 +38,8 @@ enum class PaneBackBehavior {
  * @property className Simple class name
  * @property packageName Package containing this class
  * @property backBehavior Back navigation behavior for panes
- * @property panes List of all @PaneItem subclasses within this sealed class
+ * @property panes List of all @PaneItem subclasses within this sealed class (root destinations for each pane)
+ * @property allDestinations List of ALL destinations within this sealed class (for scope registration)
  */
 data class PaneInfo(
     val classDeclaration: KSClassDeclaration,
@@ -46,7 +47,8 @@ data class PaneInfo(
     val className: String,
     val packageName: String,
     val backBehavior: PaneBackBehavior,
-    val panes: List<PaneItemInfo>
+    val panes: List<PaneItemInfo>,
+    val allDestinations: List<DestinationInfo> = emptyList()
 )
 
 /**
@@ -61,5 +63,4 @@ data class PaneItemInfo(
     val destination: DestinationInfo,
     val role: PaneRole,
     val adaptStrategy: AdaptStrategy,
-    val rootGraphClass: KSClassDeclaration
 )

@@ -14,11 +14,13 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneRole
  * @property role The semantic role of this pane (Primary, Supporting, or Extra)
  * @property content The composable content to render in this pane
  * @property isVisible Whether this pane should be visible in the current layout
+ * @property hasContent Whether this pane has navigable content (non-empty stack)
  */
 data class PaneContent(
     val role: PaneRole,
     val content: @Composable () -> Unit,
-    val isVisible: Boolean = true
+    val isVisible: Boolean = true,
+    val hasContent: Boolean = true
 )
 
 /**
@@ -30,21 +32,30 @@ data class PaneContent(
  *
  * ## Usage
  *
- * The scope is receiver for [PaneContainer] composables:
+ * The scope is receiver for [PaneContainer] composables. In expanded mode,
+ * use [paneContents] to arrange panes in a custom layout:
  *
  * ```kotlin
- * val myPaneContainer: PaneContainer = { paneContents ->
- *     Row(modifier = Modifier.fillMaxSize()) {
- *         paneContents.filter { it.isVisible }.forEach { pane ->
- *             val weight = when (pane.role) {
- *                 PaneRole.Primary -> 0.65f
- *                 PaneRole.Supporting -> 0.35f
- *                 PaneRole.Extra -> 0.25f
- *             }
- *             Box(modifier = Modifier.weight(weight)) {
- *                 pane.content()
+ * @PaneContainer(MyPane::class)
+ * @Composable
+ * fun MyPaneContainer(scope: PaneContainerScope, content: @Composable () -> Unit) {
+ *     if (scope.isExpanded) {
+ *         // Custom layout for expanded mode
+ *         Row(modifier = Modifier.fillMaxSize()) {
+ *             scope.paneContents.filter { it.isVisible }.forEach { pane ->
+ *                 val weight = when (pane.role) {
+ *                     PaneRole.Primary -> 0.4f
+ *                     PaneRole.Supporting -> 0.6f
+ *                     PaneRole.Extra -> 0.25f
+ *                 }
+ *                 Box(modifier = Modifier.weight(weight)) {
+ *                     pane.content()
+ *                 }
  *             }
  *         }
+ *     } else {
+ *         // Compact mode: single pane navigation
+ *         content()
  *     }
  * }
  * ```
@@ -99,6 +110,25 @@ interface PaneContainerScope {
     val isTransitioning: Boolean
 
     /**
+     * List of pane content slots for custom layout arrangement.
+     *
+     * In expanded mode, use this to render panes in a custom layout (e.g., Row).
+     * Each [PaneContent] contains the role, visibility flag, and content composable.
+     *
+     * Example:
+     * ```kotlin
+     * if (scope.isExpanded) {
+     *     Row {
+     *         scope.paneContents.filter { it.isVisible }.forEach { pane ->
+     *             Box(Modifier.weight(1f)) { pane.content() }
+     *         }
+     *     }
+     * }
+     * ```
+     */
+    val paneContents: List<PaneContent>
+
+    /**
      * Navigate to show the specified pane role.
      *
      * In expanded mode, this may highlight or focus the pane.
@@ -121,6 +151,7 @@ interface PaneContainerScope {
  * @property visiblePaneCount Number of currently visible panes
  * @property isExpanded Whether in expanded (multi-pane) mode
  * @property isTransitioning Whether a pane transition is in progress
+ * @property paneContents List of pane content slots for custom layout
  * @property onNavigateToPane Callback invoked when navigating to a pane
  */
 internal class PaneContainerScopeImpl(
@@ -130,6 +161,7 @@ internal class PaneContainerScopeImpl(
     override val visiblePaneCount: Int,
     override val isExpanded: Boolean,
     override val isTransitioning: Boolean,
+    override val paneContents: List<PaneContent>,
     private val onNavigateToPane: (PaneRole) -> Unit
 ) : PaneContainerScope {
 
@@ -145,7 +177,7 @@ internal class PaneContainerScopeImpl(
  *
  * @param navigator The navigator instance
  * @param activePaneRole Currently active pane role
- * @param paneContents List of pane contents with visibility
+ * @param paneContents List of pane contents with visibility and content lambdas
  * @param isExpanded Whether in expanded mode
  * @param isTransitioning Whether transitioning between panes
  * @param onNavigateToPane Callback for pane navigation
@@ -165,5 +197,6 @@ internal fun createPaneContainerScope(
     visiblePaneCount = paneContents.count { it.isVisible },
     isExpanded = isExpanded,
     isTransitioning = isTransitioning,
+    paneContents = paneContents,
     onNavigateToPane = onNavigateToPane
 )

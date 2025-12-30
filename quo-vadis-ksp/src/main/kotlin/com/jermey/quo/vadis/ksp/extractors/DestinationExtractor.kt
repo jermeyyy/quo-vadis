@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
+import com.jermey.quo.vadis.ksp.models.PaneRole
 import com.jermey.quo.vadis.ksp.models.ParamInfo
 import com.jermey.quo.vadis.ksp.models.SerializerType
 
@@ -18,6 +19,7 @@ import com.jermey.quo.vadis.ksp.models.SerializerType
  * - Constructor parameter extraction for data classes
  * - Data object vs data class detection
  * - Parent sealed class detection
+ * - Pane role extraction for pane navigation routing
  *
  * @property logger KSP logger for error/warning output
  */
@@ -39,6 +41,12 @@ class DestinationExtractor(
         val route = annotation.arguments.find {
             it.name?.asString() == "route"
         }?.value as? String
+
+        // Extract paneRole if specified (non-default PRIMARY means it was explicitly set)
+        val paneRoleValue = annotation.arguments.find {
+            it.name?.asString() == "paneRole"
+        }?.value
+        val paneRole = parsePaneRole(paneRoleValue)
 
         val routeParams = route?.let { extractRouteParams(it) } ?: emptyList()
 
@@ -72,8 +80,36 @@ class DestinationExtractor(
             isDataClass = isDataClass,
             isSealedClass = isSealedClass,
             constructorParams = constructorParams,
-            parentSealedClass = parentSealedClass
+            parentSealedClass = parentSealedClass,
+            paneRole = paneRole
         )
+    }
+
+    /**
+     * Parse PaneRole from annotation value.
+     *
+     * Returns null if the value is the default PRIMARY (meaning not explicitly set
+     * for pane routing purposes).
+     *
+     * @param value The raw annotation value from KSP
+     * @return Parsed PaneRole or null if default/unset
+     */
+    private fun parsePaneRole(value: Any?): PaneRole? {
+        if (value == null) return null
+        val str = value.toString()
+        val simpleName = if (str.contains(".")) {
+            str.substringAfterLast(".")
+        } else {
+            str
+        }
+        return try {
+            val role = PaneRole.valueOf(simpleName)
+            // Return null for PRIMARY (the default) - it means "not explicitly set"
+            // Only SECONDARY and EXTRA indicate explicit pane routing
+            if (role == PaneRole.PRIMARY) null else role
+        } catch (e: IllegalArgumentException) {
+            null
+        }
     }
 
     /**

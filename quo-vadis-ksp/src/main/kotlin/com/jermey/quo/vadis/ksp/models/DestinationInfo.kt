@@ -16,6 +16,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
  * @property isSealedClass True if this is a `sealed class` or `sealed interface`
  * @property constructorParams List of constructor parameters (for data classes)
  * @property parentSealedClass Simple name of the parent sealed class, if any
+ * @property paneRole Pane role for pane navigation routing (null if not in a pane context)
  */
 data class DestinationInfo(
     val classDeclaration: KSClassDeclaration,
@@ -28,5 +29,6 @@ data class DestinationInfo(
     val isDataClass: Boolean,
     val isSealedClass: Boolean,
     val constructorParams: List<ParamInfo>,
-    val parentSealedClass: String?
+    val parentSealedClass: String?,
+    val paneRole: PaneRole? = null
 )

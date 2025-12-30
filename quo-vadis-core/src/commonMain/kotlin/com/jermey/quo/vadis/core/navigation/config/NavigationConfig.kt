@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.config
 
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.dsl.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
@@ -96,6 +97,19 @@ interface NavigationConfig {
      * @see DeepLinkRegistry.Empty
      */
     val deepLinkRegistry: DeepLinkRegistry
+
+    /**
+     * Registry for mapping destinations to pane roles.
+     *
+     * Used by the navigation system to determine which pane a destination
+     * belongs to when navigating inside a [PaneNode] context. Enables
+     * transparent pane navigation where `navigate(destination)` automatically
+     * routes to the correct pane's stack.
+     *
+     * @see PaneRoleRegistry
+     */
+    val paneRoleRegistry: PaneRoleRegistry
+        get() = PaneRoleRegistry.Empty
 
     /**
      * Builds the initial NavNode for the given destination class.

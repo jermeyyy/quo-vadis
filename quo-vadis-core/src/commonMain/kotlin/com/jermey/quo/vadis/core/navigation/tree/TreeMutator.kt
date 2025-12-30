@@ -8,6 +8,7 @@ import com.jermey.quo.vadis.core.navigation.TabNode
 import com.jermey.quo.vadis.core.navigation.activeLeaf
 import com.jermey.quo.vadis.core.navigation.activePathToLeaf
 import com.jermey.quo.vadis.core.navigation.activeStack
+import com.jermey.quo.vadis.core.dsl.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.findByKey
 import com.jermey.quo.vadis.core.navigation.NavDestination
@@ -123,6 +124,9 @@ object TreeMutator {
         /** Switch to an existing tab that contains the destination */
         data class SwitchToTab(val tabNode: TabNode, val tabIndex: Int) : PushStrategy()
 
+        /** Push to a specific pane's stack within a PaneNode */
+        data class PushToPaneStack(val paneNode: PaneNode, val role: PaneRole) : PushStrategy()
+
         /** Destination is out of scope - push to parent stack */
         data class PushOutOfScope(val parentStack: StackNode) : PushStrategy()
     }
@@ -220,13 +224,15 @@ object TreeMutator {
     // =========================================================================
 
     /**
-     * Push a destination with scope awareness and tab switching.
+     * Push a destination with scope awareness, tab switching, and pane role routing.
      *
-     * Navigation logic for TabNode context:
+     * Navigation logic:
      * 1. First check if destination is in scope (using [scopeRegistry])
-     * 2. If in scope, check if destination already exists in any TabNode stack
+     * 2. For TabNode: check if destination already exists in any tab's stack
      *    - If found in another tab's stack, switch to that tab instead of pushing
-     * 3. If not found and out of scope, delegate to parent stack
+     * 3. For PaneNode: check if destination has a specific pane role (using [paneRoleRegistry])
+     *    - If destination has a role, push to that pane's stack
+     * 4. If out of scope, delegate to parent stack
      *
      * ## Scope Resolution
      *
@@ -239,28 +245,30 @@ object TreeMutator {
      *
      * When navigating to a destination that already exists in a different tab's
      * stack (within the same TabNode), the navigator will switch to that tab
-     * instead of creating a duplicate entry. This provides intuitive navigation
-     * where calling navigate() with a tab destination switches to that tab.
+     * instead of creating a duplicate entry.
+     *
+     * ## Pane Role Routing
+     *
+     * When inside a PaneNode context, the [paneRoleRegistry] determines which
+     * pane a destination belongs to. If the destination has a registered role,
+     * navigation pushes to that pane's stack instead of the active stack.
      *
      * ## Example
      *
      * ```kotlin
-     * // Given: Root -> Stack -> TabNode(scopeKey="MainTabs") -> Stack(active)
-     * // MainTabs contains: Home (tab 0), Search (tab 1), Profile (tab 2)
+     * // Given: Root -> Stack -> PaneNode(scopeKey="messages") -> Stack(PRIMARY, active)
      *
-     * // HomeDestination is in scope AND exists in tab 0 - switches to tab 0
-     * TreeMutator.push(root, HomeDestination, scopeRegistry)
+     * // ConversationDetail has paneRole=SECONDARY - pushes to SECONDARY pane's stack
+     * TreeMutator.push(root, ConversationDetail("123"), scopeRegistry, paneRoleRegistry)
      *
-     * // NewScreen is in scope but doesn't exist - pushes to active stack
-     * TreeMutator.push(root, NewScreenDestination, scopeRegistry)
-     *
-     * // DetailDestination is NOT in scope - pushes to parent stack (above TabNode)
-     * TreeMutator.push(root, DetailDestination, scopeRegistry)
+     * // DetailDestination is NOT in scope - pushes to parent stack (above PaneNode)
+     * TreeMutator.push(root, DetailDestination, scopeRegistry, paneRoleRegistry)
      * ```
      *
      * @param root The root NavNode of the navigation tree
      * @param destination The destination to navigate to
      * @param scopeRegistry Registry to check scope membership
+     * @param paneRoleRegistry Registry to determine pane roles for destinations
      * @param generateKey Function to generate unique keys for new nodes
      * @return New tree with the destination pushed or tab switched appropriately
      * @throws IllegalStateException if no suitable stack is found
@@ -270,20 +278,25 @@ object TreeMutator {
         root: NavNode,
         destination: NavDestination,
         scopeRegistry: ScopeRegistry,
+        paneRoleRegistry: PaneRoleRegistry = PaneRoleRegistry.Empty,
         generateKey: () -> String = { Uuid.random().toString().take(8) }
     ): NavNode {
         // If no scope registry (or Empty), use the simple push
-        if (scopeRegistry === ScopeRegistry.Empty) {
+        if (scopeRegistry === ScopeRegistry.Empty && paneRoleRegistry === PaneRoleRegistry.Empty) {
             return push(root, destination, generateKey)
         }
 
-        return when (val strategy = determinePushStrategy(root, destination, scopeRegistry)) {
+        return when (val strategy = determinePushStrategy(root, destination, scopeRegistry, paneRoleRegistry)) {
             is PushStrategy.PushToStack -> {
                 pushToActiveStack(root, strategy.targetStack, destination, generateKey)
             }
 
             is PushStrategy.SwitchToTab -> {
                 switchTab(root, strategy.tabNode.key, strategy.tabIndex)
+            }
+
+            is PushStrategy.PushToPaneStack -> {
+                pushToPaneStack(root, strategy.paneNode, strategy.role, destination, generateKey)
             }
 
             is PushStrategy.PushOutOfScope -> {
@@ -293,7 +306,7 @@ object TreeMutator {
     }
 
     /**
-     * Determines the push strategy for a destination considering scope and existing tabs.
+     * Determines the push strategy for a destination considering scope, tabs, and pane roles.
      *
      * Walks up from the deepest active stack, checking each container (TabNode/PaneNode)
      * to determine how the navigation should be handled.
@@ -301,13 +314,15 @@ object TreeMutator {
      * @param root The root NavNode of the navigation tree
      * @param destination The destination to check
      * @param scopeRegistry Registry for scope membership checks
+     * @param paneRoleRegistry Registry for pane role lookups
      * @return The appropriate PushStrategy for this navigation
      * @throws IllegalStateException if no valid strategy can be determined
      */
     private fun determinePushStrategy(
         root: NavNode,
         destination: NavDestination,
-        scopeRegistry: ScopeRegistry
+        scopeRegistry: ScopeRegistry,
+        paneRoleRegistry: PaneRoleRegistry = PaneRoleRegistry.Empty
     ): PushStrategy {
         val activeStack = root.activeStack()
             ?: throw IllegalStateException("No active stack found in tree")
@@ -364,6 +379,16 @@ object TreeMutator {
                         val parent = root.findByKey(parentKey)
                         if (parent is StackNode) {
                             return PushStrategy.PushOutOfScope(parent)
+                        }
+                        continue
+                    }
+
+                    // Destination is in scope - check if it has a specific pane role
+                    if (scopeKey != null) {
+                        val targetRole = paneRoleRegistry.getPaneRole(scopeKey, destination)
+                        if (targetRole != null && node.paneConfigurations.containsKey(targetRole)) {
+                            // Destination has a registered pane role - push to that pane's stack
+                            return PushStrategy.PushToPaneStack(node, targetRole)
                         }
                     }
                 }
@@ -465,6 +490,60 @@ object TreeMutator {
         )
 
         return replaceNode(root, parentStack.key, updatedParentStack)
+    }
+
+    /**
+     * Push a destination to a specific pane's stack within a PaneNode.
+     *
+     * Finds the stack for the given pane role and pushes the destination there,
+     * optionally switching the active pane to the target role.
+     *
+     * @param root The root NavNode of the navigation tree
+     * @param paneNode The PaneNode containing the target pane
+     * @param role The pane role to push to
+     * @param destination The destination to push
+     * @param generateKey Function to generate unique keys for new nodes
+     * @return New tree with the destination pushed to the pane's stack
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    private fun pushToPaneStack(
+        root: NavNode,
+        paneNode: PaneNode,
+        role: PaneRole,
+        destination: NavDestination,
+        generateKey: () -> String
+    ): NavNode {
+        val paneConfig = paneNode.paneConfigurations[role]
+            ?: return root // Role not configured, return unchanged
+
+        val paneStack = paneConfig.content as? StackNode
+            ?: return root // Content is not a StackNode, return unchanged
+
+        // Create new screen node
+        val screenKey = generateKey()
+        val newScreen = ScreenNode(
+            key = screenKey,
+            parentKey = paneStack.key,
+            destination = destination
+        )
+
+        // Update the pane's stack with the new screen
+        val updatedStack = paneStack.copy(
+            children = paneStack.children + newScreen
+        )
+
+        // Update the pane configuration with the new stack
+        val updatedPaneConfig = paneConfig.copy(content = updatedStack)
+        val updatedPaneConfigurations = paneNode.paneConfigurations.toMutableMap()
+        updatedPaneConfigurations[role] = updatedPaneConfig
+
+        // Update the PaneNode with new configurations AND switch active pane
+        val updatedPaneNode = paneNode.copy(
+            paneConfigurations = updatedPaneConfigurations,
+            activePaneRole = role // Switch focus to the target pane
+        )
+
+        return replaceNode(root, paneNode.key, updatedPaneNode)
     }
 
     // =========================================================================
@@ -900,10 +979,34 @@ object TreeMutator {
                     } else {
                         panesWithContent.first()
                     }
-                    popPane(root, paneNode.key, targetRole)?.let { PopResult.Popped(it) }
-                        ?: PopResult.PaneEmpty(paneNode.activePaneRole)
+                    val poppedResult = popPane(root, paneNode.key, targetRole)
+                    if (poppedResult != null) {
+                        // After popping, check if the target pane returned to root state
+                        // If so, and it's not PRIMARY, clear the pane and switch to PRIMARY
+                        val updatedPaneNode = poppedResult.findByKey(paneNode.key) as? PaneNode
+                        if (updatedPaneNode != null && targetRole != PaneRole.Primary) {
+                            val targetStack = updatedPaneNode.paneContent(targetRole)?.activeStack()
+                            if (targetStack != null && targetStack.children.size <= 1) {
+                                // Target pane is now at root - clear it and switch to PRIMARY
+                                var newState = clearPaneStack(poppedResult, paneNode.key, targetRole)
+                                newState = switchActivePane(newState, paneNode.key, PaneRole.Primary)
+                                return PopResult.Popped(newState)
+                            }
+                        }
+                        PopResult.Popped(poppedResult)
+                    } else {
+                        PopResult.PaneEmpty(paneNode.activePaneRole)
+                    }
                 } else {
-                    PopResult.PaneEmpty(paneNode.activePaneRole)
+                    // No panes have content to pop
+                    // If we're on a non-PRIMARY pane, clear it and switch to PRIMARY
+                    if (paneNode.activePaneRole != PaneRole.Primary) {
+                        var newRoot = clearPaneStack(root, paneNode.key, paneNode.activePaneRole)
+                        newRoot = switchActivePane(newRoot, paneNode.key, PaneRole.Primary)
+                        PopResult.Popped(newRoot)
+                    } else {
+                        PopResult.PaneEmpty(paneNode.activePaneRole)
+                    }
                 }
             }
         }
@@ -955,19 +1058,23 @@ object TreeMutator {
      * @return PopResult indicating the outcome
      */
     private fun popFromActivePane(root: NavNode, paneNode: PaneNode): PopResult {
+        val activePaneRole = paneNode.activePaneRole
         val activeStack = paneNode.activePaneContent?.activeStack()
 
         if (activeStack == null) {
-            return PopResult.PaneEmpty(paneNode.activePaneRole)
+            return PopResult.PaneEmpty(activePaneRole)
         }
 
         if (activeStack.children.size <= 1) {
-            // Stack would become empty - switch to Primary if not already there
-            return if (paneNode.activePaneRole != PaneRole.Primary) {
-                val newState = switchActivePane(root, paneNode.key, PaneRole.Primary)
+            // Stack would become empty or is at root state
+            return if (activePaneRole != PaneRole.Primary) {
+                // Non-PRIMARY pane at root: clear this pane's stack and switch to PRIMARY
+                // This ensures back navigation properly clears the secondary pane
+                var newState = clearPaneStack(root, paneNode.key, activePaneRole)
+                newState = switchActivePane(newState, paneNode.key, PaneRole.Primary)
                 PopResult.Popped(newState)
             } else {
-                PopResult.PaneEmpty(paneNode.activePaneRole)
+                PopResult.PaneEmpty(activePaneRole)
             }
         }
 
@@ -976,6 +1083,27 @@ object TreeMutator {
         val newStack = activeStack.copy(children = newChildren)
         val newState = replaceNode(root, activeStack.key, newStack)
         return PopResult.Popped(newState)
+    }
+    
+    /**
+     * Clears a pane's stack, removing all children.
+     * 
+     * @param root The root NavNode
+     * @param paneNodeKey Key of the PaneNode
+     * @param role The pane role to clear
+     * @return New tree with the pane's stack cleared
+     */
+    private fun clearPaneStack(root: NavNode, paneNodeKey: String, role: PaneRole): NavNode {
+        val paneNode = root.findByKey(paneNodeKey) as? PaneNode ?: return root
+        val paneConfig = paneNode.paneConfigurations[role] ?: return root
+        val stackNode = paneConfig.content as? StackNode ?: return root
+        
+        // Clear the stack by removing all children
+        val clearedStack = stackNode.copy(children = emptyList())
+        val newConfig = paneConfig.copy(content = clearedStack)
+        val newConfigurations = paneNode.paneConfigurations + (role to newConfig)
+        val newPaneNode = paneNode.copy(paneConfigurations = newConfigurations)
+        return replaceNode(root, paneNodeKey, newPaneNode)
     }
 
     /**
@@ -1369,9 +1497,11 @@ object TreeMutator {
      * 3. If on initial tab at root → continue to next stack level
      *
      * @param root The root NavNode
+     * @param isCompact Whether in compact mode (single pane visible). Default true.
+     *                  In expanded mode, panes are popped entirely rather than switching.
      * @return BackResult indicating the outcome
      */
-    fun popWithTabBehavior(root: NavNode): BackResult {
+    fun popWithTabBehavior(root: NavNode, isCompact: Boolean = true): BackResult {
         val activeStack = root.activeStack() ?: return BackResult.CannotHandle
 
         // Case 1: Stack has items to pop
@@ -1387,7 +1517,7 @@ object TreeMutator {
         return when (parent) {
             is TabNode -> handleTabBack(root, parent, activeStack)
             is StackNode -> handleNestedStackBack(root, parent, activeStack)
-            is PaneNode -> handlePaneBack(root, parent, activeStack)
+            is PaneNode -> handlePaneBack(root, parent, activeStack, isCompact)
             else -> BackResult.CannotHandle
         }
     }
@@ -1440,7 +1570,7 @@ object TreeMutator {
                     when (grandparent) {
                         is StackNode -> handleNestedStackBack(root, grandparent, tabParent)
                         is TabNode -> handleTabBack(root, grandparent, tabParent)
-                        is PaneNode -> handlePaneBack(root, grandparent, tabParent)
+                        is PaneNode -> handlePaneBack(root, grandparent, tabParent, isCompact = true)
                         else -> BackResult.DelegateToSystem
                     }
                 }
@@ -1485,7 +1615,7 @@ object TreeMutator {
             when (grandparent) {
                 is StackNode -> handleNestedStackBack(root, grandparent, parentStack)
                 is TabNode -> handleTabBack(root, grandparent, parentStack)
-                is PaneNode -> handlePaneBack(root, grandparent, parentStack)
+                is PaneNode -> handlePaneBack(root, grandparent, parentStack, isCompact = true)
                 else -> BackResult.DelegateToSystem
             }
         }
@@ -1494,60 +1624,88 @@ object TreeMutator {
     /**
      * Handle back when active stack is inside a PaneNode.
      *
+     * Behavior depends on window size:
+     * - In compact mode: use pane back behavior (switch panes, pop within panes)
+     * - In expanded mode: always pop the entire PaneNode (back exits the pane view)
+     *
      * Cascade behavior:
-     * - If pane can handle the pop: return handled
      * - If PaneNode is root: delegate to system
      * - If PaneNode's parent can pop it: pop PaneNode
      * - If parent also has only one child: cascade further up the tree
+     * 
+     * @param isCompact Whether in compact/single-pane mode
      */
     private fun handlePaneBack(
         root: NavNode,
         paneNode: PaneNode,
-        activeStack: NavNode
+        activeStack: NavNode,
+        isCompact: Boolean
     ): BackResult {
+        // In expanded mode, always pop the entire PaneNode
+        // Back should exit the pane view, not navigate within it
+        if (!isCompact) {
+            return popEntirePaneNode(root, paneNode)
+        }
+        
+        // In compact mode, use pane behavior (switch panes, pop within panes)
         return when (val result = popWithPaneBehavior(root)) {
             is PopResult.Popped -> BackResult.Handled(result.newState)
             is PopResult.CannotPop, is PopResult.PaneEmpty -> {
-                // Check if PaneNode itself can be popped
-                val paneParentKey = paneNode.parentKey
-                if (paneParentKey == null) {
+                // Pane handling exhausted - pop entire PaneNode
+                popEntirePaneNode(root, paneNode)
+            }
+            is PopResult.RequiresScaffoldChange -> BackResult.CannotHandle
+        }
+    }
+    
+    /**
+     * Pop the entire PaneNode from its parent.
+     */
+    private fun popEntirePaneNode(root: NavNode, paneNode: PaneNode): BackResult {
+        val paneParentKey = paneNode.parentKey
+        if (paneParentKey == null) {
+            return BackResult.DelegateToSystem
+        }
+
+        // Try to pop PaneNode from its parent
+        val paneParent = root.findByKey(paneParentKey)
+        return when (paneParent) {
+            is StackNode -> {
+                if (paneParent.children.size > 1) {
+                    val newState = removeNode(root, paneNode.key)
+                    if (newState != null) BackResult.Handled(newState) else BackResult.CannotHandle
+                } else if (paneParent.parentKey == null) {
                     BackResult.DelegateToSystem
                 } else {
-                    // CASCADE: Try to pop PaneNode from its parent
-                    val paneParent = root.findByKey(paneParentKey)
-                    when (paneParent) {
-                        is StackNode -> {
-                            if (paneParent.children.size > 1) {
-                                val newState = removeNode(root, paneNode.key)
-                                if (newState != null) BackResult.Handled(newState) else BackResult.CannotHandle
-                            } else if (paneParent.parentKey == null) {
-                                BackResult.DelegateToSystem
-                            } else {
-                                // Continue cascading
-                                val grandparentKey = paneParent.parentKey
-                                val grandparent = root.findByKey(grandparentKey)
-                                when (grandparent) {
-                                    is StackNode -> handleNestedStackBack(
-                                        root,
-                                        grandparent,
-                                        paneParent
-                                    )
-
-                                    is TabNode -> handleTabBack(root, grandparent, paneParent)
-                                    is PaneNode -> handlePaneBack(root, grandparent, paneParent)
-                                    else -> BackResult.DelegateToSystem
-                                }
-                            }
-                        }
-
-                        is TabNode -> handleTabBack(root, paneParent, activeStack)
-                        is PaneNode -> handlePaneBack(root, paneParent, activeStack)
+                    // Continue cascading
+                    val grandparentKey = paneParent.parentKey
+                    val grandparent = root.findByKey(grandparentKey)
+                    when (grandparent) {
+                        is StackNode -> handleNestedStackBack(root, grandparent, paneParent)
+                        is TabNode -> handleTabBack(root, grandparent, paneParent)
+                        is PaneNode -> handlePaneBack(root, grandparent, paneParent, true) // compact mode for cascade
                         else -> BackResult.DelegateToSystem
                     }
                 }
             }
 
-            is PopResult.RequiresScaffoldChange -> BackResult.CannotHandle
+            is TabNode -> {
+                val activeStack = paneNode.activePaneContent?.activeStack()
+                if (activeStack != null) {
+                    handleTabBack(root, paneParent, activeStack)
+                } else {
+                    BackResult.DelegateToSystem
+                }
+            }
+            is PaneNode -> {
+                val activeStack = paneNode.activePaneContent?.activeStack()
+                if (activeStack != null) {
+                    handlePaneBack(root, paneParent, activeStack, true) // compact mode for cascade
+                } else {
+                    BackResult.DelegateToSystem
+                }
+            }
+            else -> BackResult.DelegateToSystem
         }
     }
 
@@ -1581,8 +1739,18 @@ object TreeMutator {
             }
 
             is StackNode -> parent.canGoBack
-            is PaneNode -> parent.paneConfigurations.values.any {
-                it.content.activeStack()?.canGoBack == true
+
+            is PaneNode -> {
+                // Check if any pane's stack can go back
+                val anyPaneCanGoBack = parent.paneConfigurations.values.any {
+                    it.content.activeStack()?.canGoBack == true
+                }
+                if (anyPaneCanGoBack) return true
+
+                // If all panes are at root, check if PaneNode itself can be popped
+                val paneParentKey = parent.parentKey ?: return false
+                val paneParent = root.findByKey(paneParentKey)
+                (paneParent as? StackNode)?.children?.size?.let { it > 1 } ?: false
             }
 
             else -> false
