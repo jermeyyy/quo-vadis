@@ -127,7 +127,7 @@ class ContainerBlockGenerator(
 
         // Generate tab entries
         tab.tabs.forEachIndexed { index, tabItem ->
-            builder.add(generateTabEntry(tabItem, tab, index))
+            builder.add(generateTabEntry(tabItem, index))
         }
 
         builder.endControlFlow()
@@ -158,13 +158,11 @@ class ContainerBlockGenerator(
      * uses `containerTab<Type>(...)` syntax to reference the separately defined stack.
      *
      * @param tabItem The tab item info
-     * @param parentTab The parent tab container
      * @param index Index of this tab
      * @return CodeBlock for the tab entry
      */
     private fun generateTabEntry(
         tabItem: TabItemInfo,
-        parentTab: TabInfo,
         @Suppress("UNUSED_PARAMETER") index: Int
     ): CodeBlock {
         val tabClassName = tabItem.classDeclaration.toClassName()
@@ -280,10 +278,7 @@ class ContainerBlockGenerator(
     private fun orderDestinationsWithStartFirst(
         stack: StackInfo
     ): List<com.jermey.quo.vadis.ksp.models.DestinationInfo> {
-        val startDestination = stack.resolvedStartDestination
-        if (startDestination == null) {
-            return stack.destinations
-        }
+        val startDestination = stack.resolvedStartDestination ?: return stack.destinations
 
         val startQualifiedName = startDestination.classDeclaration.qualifiedName?.asString()
         val otherDestinations = stack.destinations.filter {

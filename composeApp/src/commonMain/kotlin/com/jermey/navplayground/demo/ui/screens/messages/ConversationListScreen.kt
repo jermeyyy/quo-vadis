@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MessagesPane
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.Navigator
-import com.jermey.quo.vadis.core.navigation.tree.TreeNavigator
 import org.koin.compose.koinInject
 
 /**
@@ -77,8 +76,8 @@ fun ConversationListScreen(
                 ConversationItem(
                     conversation = conversation,
                     onClick = {
-                        // Use navigateToPane to REPLACE secondary pane content
-                        // This ensures only one detail view at a time, fixing predictive back
+                        // Use navigateToPane to REPLACE the secondary pane content
+                        // so each selection swaps the detail view instead of stacking multiple details
                         navigator.navigateToPane(MessagesPane.ConversationDetail(conversation.id))
                     }
                 )

@@ -3,7 +3,6 @@ package com.jermey.quo.vadis.core.compose.render
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,7 +12,6 @@ import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
 import com.jermey.quo.vadis.core.compose.wrapper.PaneContent
 import com.jermey.quo.vadis.core.compose.wrapper.calculateWindowSizeClass
 import com.jermey.quo.vadis.core.compose.wrapper.createPaneContainerScope
-import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.PaneNode
 import com.jermey.quo.vadis.core.navigation.activeStack
 import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
@@ -196,9 +194,8 @@ private fun MultiPaneRenderer(
     paneContainerScope: PaneContainerScope
 ) {
     // Invoke the registered pane container (KSP-generated or default)
-    // The container receives the scope with paneContents for custom layout.
-    // Prefer scopeKey for wrapper lookup since that's what KSP generates;
-    // fall back to node.key for nodes created without a generated scopeKey.
+    // The container receives the scope with paneContents for custom layout
+    // Use scopeKey for wrapper lookup since that's what KSP generates
     scope.containerRegistry.PaneContainer(
         paneNodeKey = node.scopeKey ?: node.key,
         scope = paneContainerScope
@@ -235,6 +232,7 @@ private fun MultiPaneRenderer(
  * @param previousNode Previous state for animation coordination
  * @param scope The render scope with dependencies
  */
+@Suppress("VariableNeverRead", "AssignedValueIsNeverRead")
 @Composable
 private fun SinglePaneRenderer(
     node: PaneNode,
@@ -257,22 +255,22 @@ private fun SinglePaneRenderer(
     )
 
     // Determine if this is back navigation (switching from non-primary to primary)
-    val isBackNavigation = previousNode != null && 
-        previousNode.activePaneRole != PaneRole.Primary && 
+    val isBackNavigation = previousNode != null &&
+        previousNode.activePaneRole != PaneRole.Primary &&
         node.activePaneRole == PaneRole.Primary
 
     // Check predictive back state
     val cascadeState = scope.predictiveBackController.cascadeState.value
     val isGestureActive = scope.predictiveBackController.isActive.value
-    
+
     // This pane handles predictive back if gesture is active AND cascade state targets this pane
-    val isPredictiveBackActive = isGestureActive && 
-        cascadeState != null && 
+    val isPredictiveBackActive = isGestureActive &&
+        cascadeState != null &&
         cascadeState.animatingStackKey == node.key
 
     // Get the PRIMARY pane content for predictive back animation target
     val primaryPaneContent = node.paneContent(PaneRole.Primary)
-    
+
     if (isPredictiveBackActive && primaryPaneContent != null) {
         // Gesture-driven animation - show PRIMARY behind SECONDARY
         // Use lastCommittedContent (the SECONDARY content before back started)
@@ -310,7 +308,7 @@ private fun SinglePaneRenderer(
                 scope = scope
             )
         }
-        
+
         // Update state tracking AFTER rendering, only when not in predictive back
         // This tracks the "committed" state for when predictive back starts
         if (activePaneContent.key != lastCommittedContent.key) {
@@ -355,10 +353,9 @@ private fun buildPaneContentListWithRenderers(
     scope: NavRenderScope
 ): List<PaneContent> {
     return node.configuredRoles.map { role ->
-        val config = node.paneConfigurations[role]!!
         val paneNavNode = node.paneContent(role)
         val previousPaneNavNode = previousNode?.paneContent(role)
-        
+
         // Check if this pane has actual content (non-empty stack)
         val paneHasContent = paneNavNode?.activeStack()?.children?.isNotEmpty() == true
 
@@ -381,32 +378,3 @@ private fun buildPaneContentListWithRenderers(
     }
 }
 
-/**
- * Builds a list of [PaneContent] for each configured pane in the node.
- *
- * This function creates content slots for the pane wrapper, determining
- * visibility based on the adaptive mode.
- *
- * ## Visibility Logic
- *
- * - **Expanded mode**: All configured panes are visible for side-by-side layout.
- * - **Compact mode**: Only the active pane is visible.
- *
- * @param node The pane node containing configurations
- * @param isExpanded Whether in expanded (multi-pane) mode
- * @return List of [PaneContent] for each configured pane
- */
-internal fun buildPaneContentList(
-    node: PaneNode,
-    isExpanded: Boolean
-): List<PaneContent> {
-    return node.configuredRoles.map { role ->
-        PaneContent(
-            role = role,
-            content = {}, // Content is rendered separately in the wrapper
-            // In expanded mode, ALL configured panes are visible.
-            // In compact mode, only the active pane is visible.
-            isVisible = if (isExpanded) true else role == node.activePaneRole
-        )
-    }
-}

@@ -52,7 +52,7 @@ import com.jermey.quo.vadis.ksp.validation.ValidationEngine
 class QuoVadisSymbolProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
-    private val options: Map<String, String>
+    options: Map<String, String>
 ) : SymbolProcessor {
 
     // =========================================================================

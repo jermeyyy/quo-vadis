@@ -101,10 +101,7 @@ class TreeNavigator(
         generated = config.deepLinkRegistry
     )
 
-    // =========================================================================
     // TREE-BASED STATE
-    // =========================================================================
-
     private val _state: MutableStateFlow<NavNode> = MutableStateFlow(createRootStack(initialState))
 
     /**
@@ -134,11 +131,6 @@ class TreeNavigator(
      * ```
      */
     override val transitionState: StateFlow<TransitionState> = _transitionState.asStateFlow()
-
-    // =========================================================================
-    // DERIVED CONVENIENCE PROPERTIES
-    // Backed by MutableStateFlow for synchronous updates in tests
-    // =========================================================================
 
     private val _currentDestination = MutableStateFlow(
         _state.value.activeLeaf()?.destination
@@ -170,10 +162,6 @@ class TreeNavigator(
      * Flow indicating whether back navigation is possible.
      */
     override val canNavigateBack: StateFlow<Boolean> = _canNavigateBack.asStateFlow()
-
-    // =========================================================================
-    // RESULT AND LIFECYCLE MANAGERS
-    // =========================================================================
 
     /**
      * Manager for navigation result passing between screens.
@@ -208,10 +196,6 @@ class TreeNavigator(
             initialValue = null
         )
 
-    // =========================================================================
-    // BACK HANDLER REGISTRY
-    // =========================================================================
-
     /**
      * Optional back handler registry for user-defined back handlers.
      * Set by the navigation host during composition.
@@ -232,11 +216,6 @@ class TreeNavigator(
      * When null, defaults to compact behavior for safety.
      */
     var windowSizeClass: WindowSizeClass? = null
-
-
-    // =========================================================================
-    // NAVIGATION OPERATIONS
-    // =========================================================================
 
     /**
      * Navigate to a destination with optional transition.
@@ -474,8 +453,7 @@ class TreeNavigator(
         return when (root) {
             is StackNode -> {
                 // Check if any child in the active path is a container
-                val activeChild = root.activeChild
-                when (activeChild) {
+                when (val activeChild = root.activeChild) {
                     is TabNode, is PaneNode -> {
                         // This stack contains a container - return it
                         root
@@ -536,7 +514,7 @@ class TreeNavigator(
         }
 
         val currentState = _state.value
-        
+
         // Determine compact mode for pane handling
         val isCompact = windowSizeClass?.isCompactWidth ?: true
 
@@ -551,8 +529,7 @@ class TreeNavigator(
             is TreeMutator.BackResult.CannotHandle -> {
                 // Fallback to pane-specific behavior with window size awareness
                 // In compact mode, treat as simple stack; in expanded mode, use configured behavior
-                val popResult = TreeMutator.popPaneAdaptive(currentState, isCompact)
-                when (popResult) {
+                when (val popResult = TreeMutator.popPaneAdaptive(currentState, isCompact)) {
                     is TreeMutator.PopResult.Popped -> {
                         updateStateWithTransition(popResult.newState, null)
                         true
@@ -716,8 +693,7 @@ class TreeNavigator(
         val paneConfig = paneNode.paneConfigurations[role]
             ?: throw IllegalArgumentException("Pane role $role not configured")
 
-        val paneContent = paneConfig.content
-        val targetStack = when (paneContent) {
+        val targetStack = when (val paneContent = paneConfig.content) {
             is StackNode -> paneContent
             else -> paneContent.activeStack() ?: return
         }
@@ -757,8 +733,7 @@ class TreeNavigator(
             ?: throw IllegalStateException("No PaneNode found in current navigation state")
 
         val paneConfig = paneNode.paneConfigurations[role]
-        val paneContent = paneConfig?.content
-        val targetStack = when (paneContent) {
+        val targetStack = when (val paneContent = paneConfig?.content) {
             is StackNode -> paneContent
             else -> paneContent?.activeStack()
         }
@@ -773,7 +748,7 @@ class TreeNavigator(
         val newState = if (targetStack != null) {
             // Replace stack content with single new screen
             val newStack = targetStack.copy(children = listOf(newScreen))
-            var updated = TreeMutator.replaceNode(currentState, targetStack.key, newStack)
+            val updated = TreeMutator.replaceNode(currentState, targetStack.key, newStack)
             // Switch to this pane
             TreeMutator.switchActivePane(updated, paneNode.key, role)
         } else {
@@ -784,7 +759,7 @@ class TreeNavigator(
                 children = listOf(newScreen)
             )
             val newConfig = PaneConfiguration(content = newStack)
-            var updated = TreeMutator.setPaneConfiguration(currentState, paneNode.key, role, newConfig)
+            val updated = TreeMutator.setPaneConfiguration(currentState, paneNode.key, role, newConfig)
             TreeMutator.switchActivePane(updated, paneNode.key, role)
         }
 

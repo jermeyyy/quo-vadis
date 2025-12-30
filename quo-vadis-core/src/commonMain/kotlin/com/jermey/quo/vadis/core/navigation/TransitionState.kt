@@ -83,12 +83,6 @@ sealed interface TransitionState {
 }
 
 /**
- * Extension to check if any transition is active.
- */
-val TransitionState.isAnimating: Boolean
-    get() = this !is TransitionState.Idle
-
-/**
  * Extension to get the current progress, regardless of transition type.
  * Returns 0 for [TransitionState.Idle].
  */

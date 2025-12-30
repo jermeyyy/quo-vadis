@@ -358,8 +358,14 @@ class TreeMutatorEdgeCasesTest {
         ) as StackNode
 
         assertEquals(2, result.children.size) // Same size
-        assertEquals(HomeDestination, (result.children[0] as ScreenNode).destination) // First unchanged
-        assertEquals(SettingsDestination, (result.activeChild as ScreenNode).destination) // Top replaced
+        assertEquals(
+            HomeDestination,
+            (result.children[0] as ScreenNode).destination
+        ) // First unchanged
+        assertEquals(
+            SettingsDestination,
+            (result.activeChild as ScreenNode).destination
+        ) // Top replaced
     }
 
     @Test

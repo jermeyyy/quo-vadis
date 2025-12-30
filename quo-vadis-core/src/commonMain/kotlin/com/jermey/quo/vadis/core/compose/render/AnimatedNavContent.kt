@@ -143,12 +143,11 @@ internal fun <T : NavNode> AnimatedNavContent(
             }
         }
 
-        // Update state tracking AFTER AnimatedContent starts
-        // CRITICAL: Compare by object reference, not just key!
+        // Detect changes by semantic equality, not just key.
         // A node's internal state can change (e.g., PaneNode with new pane content)
-        // while keeping the same key. We need to track the actual object for
-        // predictive back to show the correct content.
-        if (targetState !== lastCommittedState) {
+        // while keeping the same key. We need to track when the actual state of
+        // the node changes for predictive back to show the correct content.
+        if (targetState != lastCommittedState) {
             // Only update stateBeforeLast when the key actually changes
             // (real navigation, not just internal state update)
             if (targetState.key != lastCommittedState.key) {
