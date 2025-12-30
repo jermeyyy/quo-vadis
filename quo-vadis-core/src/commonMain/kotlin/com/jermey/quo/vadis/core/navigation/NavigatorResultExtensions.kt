@@ -1,5 +1,7 @@
 package com.jermey.quo.vadis.core.navigation
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+
 /**
  * Navigate to a destination and suspend until it returns a result.
  *
@@ -34,11 +36,14 @@ package com.jermey.quo.vadis.core.navigation
  * @return The result value, or null if navigation was cancelled
  *         (user pressed back without calling [navigateBackWithResult])
  */
+@OptIn(InternalQuoVadisApi::class)
 @Suppress("UNCHECKED_CAST")
 suspend fun <R : Any, D> Navigator.navigateForResult(
     destination: D
 ): R? where D : NavDestination, D : ReturnsResult<R> {
-    println("navigateForResult: navigating to $destination")
+    val resultCapable = this as? ResultCapable
+        ?: throw IllegalStateException("Navigator does not support result passing. Use a Navigator that implements ResultCapable.")
+
     // Navigate to the destination
     navigate(destination)
 
@@ -46,15 +51,11 @@ suspend fun <R : Any, D> Navigator.navigateForResult(
     val targetScreenKey = state.value.activeLeaf()?.key
         ?: throw IllegalStateException("No active screen after navigation")
 
-    println("navigateForResult: target screen key = $targetScreenKey")
-
     // Request a result from the result manager
-    val deferred = resultManager.requestResult(targetScreenKey)
+    val deferred = resultCapable.resultManager.requestResult(targetScreenKey)
 
-    println("navigateForResult: awaiting result...")
     // Await and return the result (cast is safe due to generic constraints)
     val result = deferred.await() as R?
-    println("navigateForResult: received result = $result")
     return result
 }
 
@@ -85,20 +86,19 @@ suspend fun <R : Any, D> Navigator.navigateForResult(
  * @param R The result type
  * @param result The result to pass back
  */
+@OptIn(InternalQuoVadisApi::class)
 fun <R : Any> Navigator.navigateBackWithResult(result: R) {
+    val resultCapable = this as? ResultCapable
+        ?: throw IllegalStateException("Navigator does not support result passing. Use a Navigator that implements ResultCapable.")
+    
     // Get the current screen's key (the one returning the result)
     val currentScreenKey = state.value.activeLeaf()?.key
         ?: throw IllegalStateException("No active screen to return result from")
 
-    println("navigateBackWithResult: current screen key = $currentScreenKey, result = $result")
-    println("navigateBackWithResult: hasPendingResult = ${resultManager.hasPendingResult(currentScreenKey)}")
-
     // Complete the result BEFORE navigating back
     // This is important because navigateBack() may trigger result cancellation
     // for destroyed screens
-    println("navigateBackWithResult: completing result...")
-    resultManager.completeResultSync(currentScreenKey, result)
-    println("navigateBackWithResult: result completed")
+    resultCapable.resultManager.completeResultSync(currentScreenKey, result)
 
     // Navigate back after the result is delivered
     navigateBack()

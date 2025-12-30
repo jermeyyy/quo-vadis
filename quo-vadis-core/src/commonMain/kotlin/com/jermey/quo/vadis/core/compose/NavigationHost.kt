@@ -53,6 +53,7 @@ import com.jermey.quo.vadis.core.navigation.NavDestination
 import com.jermey.quo.vadis.core.navigation.route
 import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
 import com.jermey.quo.vadis.core.navigation.tree.TreeNavigator
+import com.jermey.quo.vadis.core.navigation.tree.result.BackResult
 import kotlinx.coroutines.launch
 
 // =============================================================================
@@ -243,7 +244,7 @@ fun NavigationHost(
     val previousScreenNode = remember(navState, isCompact) {
         // Use popWithTabBehavior to get the correct previous screen
         val backResult = TreeMutator.popWithTabBehavior(navState, isCompact)
-        (backResult as? TreeMutator.BackResult.Handled)?.newState?.activeLeaf()
+        (backResult as? BackResult.Handled)?.newState?.activeLeaf()
     }
 
     // Create ScreenNavigationInfo for predictive back
@@ -305,7 +306,7 @@ fun NavigationHost(
             if (!backAnimationController.isAnimating) {
                 // Compute speculative pop result at gesture start using tab-aware logic
                 val backResult = TreeMutator.popWithTabBehavior(navState, isCompact)
-                val popResult = (backResult as? TreeMutator.BackResult.Handled)?.newState
+                val popResult = (backResult as? BackResult.Handled)?.newState
                 if (popResult != null) {
                     speculativePopState = popResult
 

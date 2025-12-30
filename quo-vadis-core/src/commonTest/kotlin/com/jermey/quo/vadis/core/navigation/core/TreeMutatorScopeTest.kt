@@ -178,7 +178,7 @@ class TreeMutatorScopeTest {
         val generateKey = createKeyGenerator()
 
         // SettingsTab exists in tab 1, currently active is tab 0
-        val result = TreeMutator.push(tree, MainTabs.SettingsTab, testRegistry, generateKey)
+        val result = TreeMutator.push(tree, MainTabs.SettingsTab, testRegistry, generateKey = generateKey)
 
         // Should switch to tab 1 where SettingsTab already exists
         val resultStack = result as StackNode
@@ -198,7 +198,7 @@ class TreeMutatorScopeTest {
         val generateKey = createKeyGenerator()
 
         // HomeTab exists in tab 0 which is already active
-        val result = TreeMutator.push(tree, MainTabs.HomeTab, testRegistry, generateKey)
+        val result = TreeMutator.push(tree, MainTabs.HomeTab, testRegistry, generateKey = generateKey)
 
         // TabNode should still exist with same structure
         val resultStack = result as StackNode
@@ -216,7 +216,7 @@ class TreeMutatorScopeTest {
         val generateKey = createKeyGenerator()
 
         // ProfileTab is in scope but not in any tab's stack
-        val result = TreeMutator.push(tree, MainTabs.ProfileTab, testRegistry, generateKey)
+        val result = TreeMutator.push(tree, MainTabs.ProfileTab, testRegistry, generateKey = generateKey)
 
         // Should push to the active tab's stack (tab 0)
         val resultStack = result as StackNode
@@ -243,7 +243,7 @@ class TreeMutatorScopeTest {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
-        val result = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey)
+        val result = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey = generateKey)
 
         // Should push to root stack, not the tab's active stack
         // Root should now have: TabNode + ScreenNode
@@ -265,7 +265,7 @@ class TreeMutatorScopeTest {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
-        val result = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey)
+        val result = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey = generateKey)
 
         // TabNode should be preserved with original state
         val resultStack = result as StackNode
@@ -287,10 +287,10 @@ class TreeMutatorScopeTest {
         val generateKey = createKeyGenerator()
 
         // Push first out-of-scope destination
-        tree = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey) as StackNode
+        tree = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey = generateKey) as StackNode
 
         // Push second out-of-scope destination
-        tree = TreeMutator.push(tree, DetailDestination, testRegistry, generateKey) as StackNode
+        tree = TreeMutator.push(tree, DetailDestination, testRegistry, generateKey = generateKey) as StackNode
 
         // Root should now have: TabNode + OutOfScope + Detail
         assertEquals(3, tree.children.size)
@@ -312,7 +312,7 @@ class TreeMutatorScopeTest {
         val generateKey = createKeyGenerator()
 
         // With Empty registry, even out-of-scope destinations go to active stack
-        val result = TreeMutator.push(tree, OutOfScopeDestination, ScopeRegistry.Empty, generateKey)
+        val result = TreeMutator.push(tree, OutOfScopeDestination, ScopeRegistry.Empty, generateKey = generateKey)
 
         // Should push to active tab stack (backward compatible behavior)
         val resultStack = result as StackNode
@@ -405,7 +405,7 @@ class TreeMutatorScopeTest {
         val generateKey = createKeyGenerator()
 
         // Even with scope registry, TabNode without scopeKey doesn't enforce scope
-        val result = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey)
+        val result = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey = generateKey)
 
         // Should push to active tab stack (no scope enforcement)
         val resultStack = result as StackNode
@@ -491,7 +491,7 @@ class TreeMutatorScopeTest {
         val tree = buildNestedTestTree()
         val generateKey = createKeyGenerator()
 
-        val result = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey)
+        val result = TreeMutator.push(tree, OutOfScopeDestination, testRegistry, generateKey = generateKey)
 
         // Out-of-scope should go to root stack
         val resultStack = result as StackNode
@@ -513,7 +513,7 @@ class TreeMutatorScopeTest {
         val tree = buildNestedTestTree()
         val generateKey = createKeyGenerator()
 
-        val result = TreeMutator.push(tree, MainTabs.SettingsTab, testRegistry, generateKey)
+        val result = TreeMutator.push(tree, MainTabs.SettingsTab, testRegistry, generateKey = generateKey)
 
         // In-scope should go to active tab stack
         val resultStack = result as StackNode

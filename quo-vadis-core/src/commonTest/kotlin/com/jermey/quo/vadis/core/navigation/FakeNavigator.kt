@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
@@ -17,10 +18,11 @@ import kotlinx.coroutines.flow.asStateFlow
  * @param config Optional navigation configuration for testing scenarios that need registry access.
  *   Defaults to [NavigationConfig.Empty].
  */
+@OptIn(InternalQuoVadisApi::class)
 @Suppress("TooManyFunctions")
 class FakeNavigator(
     override val config: NavigationConfig = NavigationConfig.Empty
-) : Navigator {
+) : PaneNavigator, TransitionController, ResultCapable {
 
     // =========================================================================
     // TREE-BASED STATE
@@ -205,6 +207,11 @@ class FakeNavigator(
     override fun paneContent(role: PaneRole): NavNode? = null
 
     override fun navigateBackInPane(role: PaneRole): Boolean = navigateBack()
+
+    override fun navigateToPane(destination: NavDestination, role: PaneRole) {
+        // Stub: Just navigate normally for testing purposes
+        navigate(destination)
+    }
 
 
 

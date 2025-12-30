@@ -154,7 +154,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing destination in AuthFlow scope
-        val result = TreeMutator.push(root, AuthFlow.Register, testRegistry, generateKey)
+        val result = TreeMutator.push(root, AuthFlow.Register, testRegistry, generateKey = generateKey)
 
         // Then pushed to same stack (authStack)
         val resultRoot = result as StackNode
@@ -195,8 +195,8 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing multiple AuthFlow destinations
-        tree = TreeMutator.push(tree, AuthFlow.Register, testRegistry, generateKey)
-        tree = TreeMutator.push(tree, AuthFlow.ForgotPassword, testRegistry, generateKey)
+        tree = TreeMutator.push(tree, AuthFlow.Register, testRegistry, generateKey = generateKey)
+        tree = TreeMutator.push(tree, AuthFlow.ForgotPassword, testRegistry, generateKey = generateKey)
 
         // Then all pushed to authStack
         val resultRoot = tree as StackNode
@@ -242,7 +242,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing destination NOT in AuthFlow scope
-        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey)
+        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey = generateKey)
 
         // Then new screen created in parent stack (root)
         val resultRoot = result as StackNode
@@ -291,7 +291,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing out-of-scope destination
-        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey)
+        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey = generateKey)
 
         // Then AuthStack is completely preserved
         val resultRoot = result as StackNode
@@ -327,8 +327,8 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing multiple out-of-scope destinations
-        tree = TreeMutator.push(tree, MainFlow.Home, testRegistry, generateKey)
-        tree = TreeMutator.push(tree, MainFlow.Profile, testRegistry, generateKey)
+        tree = TreeMutator.push(tree, MainFlow.Home, testRegistry, generateKey = generateKey)
+        tree = TreeMutator.push(tree, MainFlow.Profile, testRegistry, generateKey = generateKey)
 
         // Then all pushed to root stack
         val resultRoot = tree as StackNode
@@ -378,7 +378,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing destination in MainFlow (outer) but not in AuthFlow (inner)
-        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey)
+        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey = generateKey)
 
         // Then: pushes to outerStack (innerStack's parent)
         val resultRoot = result as StackNode
@@ -429,7 +429,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing destination not in AuthFlow
-        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey)
+        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey = generateKey)
 
         // Then: Should push to root (escaping both auth stacks)
         // Note: This depends on the exact algorithm - verifying behavior
@@ -470,7 +470,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing any destination (even from different scope)
-        val result = TreeMutator.push(root, AuthFlow.Login, testRegistry, generateKey)
+        val result = TreeMutator.push(root, AuthFlow.Login, testRegistry, generateKey = generateKey)
 
         // Then pushed to same stack (existing behavior)
         val resultRoot = result as StackNode
@@ -517,7 +517,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing out-of-AuthFlow destination
-        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey)
+        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey = generateKey)
 
         // Then: escapes scopedStack, goes to unscopedStack (which accepts all)
         val resultRoot = result as StackNode
@@ -564,7 +564,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing out-of-scope with Empty registry
-        val result = TreeMutator.push(root, MainFlow.Home, ScopeRegistry.Empty, generateKey)
+        val result = TreeMutator.push(root, MainFlow.Home, ScopeRegistry.Empty, generateKey = generateKey)
 
         // Then: pushed to authStack anyway (scope not enforced)
         val resultRoot = result as StackNode
@@ -694,7 +694,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing HomeTabs.Feed (in tab scope, not in stack scope)
-        val result = TreeMutator.push(root, HomeTabs.Feed, combinedScopeRegistry, generateKey)
+        val result = TreeMutator.push(root, HomeTabs.Feed, combinedScopeRegistry, generateKey = generateKey)
 
         // Then: escapes AuthFlow stack, goes to tab's stack (tab0)
         val resultRoot = result as StackNode
@@ -751,7 +751,7 @@ class TreeMutatorStackScopeTest {
         val generateKey = createKeyGenerator()
 
         // When pushing MainFlow.Home (not in HomeTabs or AuthFlow)
-        val result = TreeMutator.push(root, MainFlow.Home, combinedScopeRegistry, generateKey)
+        val result = TreeMutator.push(root, MainFlow.Home, combinedScopeRegistry, generateKey = generateKey)
 
         // Then: escapes auth-stack scope to its parent (tab0)
         // This is the innermost scope first - algorithm returns immediate parent when out-of-scope
@@ -801,7 +801,7 @@ class TreeMutatorStackScopeTest {
 
         val generateKey = createKeyGenerator()
 
-        val result = TreeMutator.push(root, AuthFlow.Register, testRegistry, generateKey)
+        val result = TreeMutator.push(root, AuthFlow.Register, testRegistry, generateKey = generateKey)
 
         val resultRoot = result as StackNode
         val resultAuthStack = resultRoot.children[0] as StackNode
@@ -838,7 +838,7 @@ class TreeMutatorStackScopeTest {
 
         val generateKey = createKeyGenerator()
 
-        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey)
+        val result = TreeMutator.push(root, MainFlow.Home, testRegistry, generateKey = generateKey)
 
         val resultRoot = result as StackNode
         val resultAuthStack = resultRoot.children[0] as StackNode

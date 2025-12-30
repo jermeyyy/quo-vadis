@@ -8,6 +8,7 @@ import com.jermey.quo.vadis.core.navigation.NavDestination
 import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.tree.result.BackResult
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -76,7 +77,7 @@ class TreeMutatorBackHandlingTest {
 
         val result = TreeMutator.popWithTabBehavior(root)
 
-        assertIs<TreeMutator.BackResult.Handled>(result)
+        assertIs<BackResult.Handled>(result)
         val newState = result.newState
         assertIs<StackNode>(newState)
         assertEquals(1, newState.children.size)
@@ -95,7 +96,7 @@ class TreeMutatorBackHandlingTest {
 
         val result = TreeMutator.popWithTabBehavior(root)
 
-        assertIs<TreeMutator.BackResult.DelegateToSystem>(result)
+        assertIs<BackResult.DelegateToSystem>(result)
     }
 
     @Test
@@ -109,7 +110,7 @@ class TreeMutatorBackHandlingTest {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Empty root stack delegates to system (same as single-item stack)
-        assertIs<TreeMutator.BackResult.DelegateToSystem>(result)
+        assertIs<BackResult.DelegateToSystem>(result)
     }
 
     @Test
@@ -126,7 +127,7 @@ class TreeMutatorBackHandlingTest {
 
         val result = TreeMutator.popWithTabBehavior(root)
 
-        assertIs<TreeMutator.BackResult.Handled>(result)
+        assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(2, newState.children.size)
         assertEquals(ProfileDestination, (newState.activeChild as ScreenNode).destination)
@@ -156,7 +157,7 @@ class TreeMutatorBackHandlingTest {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // TabNode is only child of root, so delegate to system (no tab switching)
-        assertIs<TreeMutator.BackResult.DelegateToSystem>(result)
+        assertIs<BackResult.DelegateToSystem>(result)
     }
 
     @Test
@@ -178,7 +179,7 @@ class TreeMutatorBackHandlingTest {
 
         val result = TreeMutator.popWithTabBehavior(root)
 
-        assertIs<TreeMutator.BackResult.DelegateToSystem>(result)
+        assertIs<BackResult.DelegateToSystem>(result)
     }
 
     @Test
@@ -205,7 +206,7 @@ class TreeMutatorBackHandlingTest {
 
         val result = TreeMutator.popWithTabBehavior(root)
 
-        assertIs<TreeMutator.BackResult.Handled>(result)
+        assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         val newTabNode = newState.children.first() as TabNode
         assertEquals(1, newTabNode.stacks[0].children.size)
@@ -232,7 +233,7 @@ class TreeMutatorBackHandlingTest {
 
         // Back should delegate to system (TabNode is root's only child, cannot pop)
         val result = TreeMutator.popWithTabBehavior(root)
-        assertIs<TreeMutator.BackResult.DelegateToSystem>(result)
+        assertIs<BackResult.DelegateToSystem>(result)
     }
 
     // =========================================================================
@@ -262,7 +263,7 @@ class TreeMutatorBackHandlingTest {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Should pop from root stack (remove Profile screen)
-        assertIs<TreeMutator.BackResult.Handled>(result)
+        assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(1, newState.children.size)
         assertIs<TabNode>(newState.children.first())
@@ -383,24 +384,24 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `BackResult Handled contains new state`() {
         val newState = StackNode("root", null, listOf(ScreenNode("s1", "root", HomeDestination)))
-        val result = TreeMutator.BackResult.Handled(newState)
+        val result = BackResult.Handled(newState)
 
-        assertIs<TreeMutator.BackResult.Handled>(result)
+        assertIs<BackResult.Handled>(result)
         assertEquals(newState, result.newState)
     }
 
     @Test
     fun `BackResult DelegateToSystem is singleton`() {
-        val result1 = TreeMutator.BackResult.DelegateToSystem
-        val result2 = TreeMutator.BackResult.DelegateToSystem
+        val result1 = BackResult.DelegateToSystem
+        val result2 = BackResult.DelegateToSystem
 
         assertTrue(result1 === result2)
     }
 
     @Test
     fun `BackResult CannotHandle is singleton`() {
-        val result1 = TreeMutator.BackResult.CannotHandle
-        val result2 = TreeMutator.BackResult.CannotHandle
+        val result1 = BackResult.CannotHandle
+        val result2 = BackResult.CannotHandle
 
         assertTrue(result1 === result2)
     }
@@ -441,21 +442,21 @@ class TreeMutatorBackHandlingTest {
 
         // Back 1: Pop D from root
         val result1 = TreeMutator.popWithTabBehavior(root)
-        assertIs<TreeMutator.BackResult.Handled>(result1)
+        assertIs<BackResult.Handled>(result1)
         val state1 = result1.newState as StackNode
         assertEquals(1, state1.children.size)
         assertIs<TabNode>(state1.children.first())
 
         // Back 2: Pop B from tab0
         val result2 = TreeMutator.popWithTabBehavior(state1)
-        assertIs<TreeMutator.BackResult.Handled>(result2)
+        assertIs<BackResult.Handled>(result2)
         val state2 = result2.newState as StackNode
         val tabs2 = state2.children.first() as TabNode
         assertEquals(1, tabs2.stacks[0].children.size)
 
         // Back 3: Tab0 at root, delegate to system
         val result3 = TreeMutator.popWithTabBehavior(state2)
-        assertIs<TreeMutator.BackResult.DelegateToSystem>(result3)
+        assertIs<BackResult.DelegateToSystem>(result3)
     }
 
     @Test
@@ -487,7 +488,7 @@ class TreeMutatorBackHandlingTest {
 
         // Back 1: TabNode is only child of root, delegate to system (no tab switching)
         val result1 = TreeMutator.popWithTabBehavior(root)
-        assertIs<TreeMutator.BackResult.DelegateToSystem>(result1)
+        assertIs<BackResult.DelegateToSystem>(result1)
     }
 
     @Test
@@ -506,7 +507,7 @@ class TreeMutatorBackHandlingTest {
         var backCount = 0
         while (TreeMutator.canHandleBackNavigation(current)) {
             val result = TreeMutator.popWithTabBehavior(current)
-            if (result is TreeMutator.BackResult.Handled) {
+            if (result is BackResult.Handled) {
                 current = result.newState
                 backCount++
             } else {
@@ -548,7 +549,7 @@ class TreeMutatorBackHandlingTest {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should pop childStack from root, revealing rootScreen
-        assertIs<TreeMutator.BackResult.Handled>(result)
+        assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(1, newState.children.size)
         assertEquals("r1", newState.activeChild?.key)
@@ -573,7 +574,7 @@ class TreeMutatorBackHandlingTest {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should delegate to system since root has only 1 child
-        assertIs<TreeMutator.BackResult.DelegateToSystem>(result)
+        assertIs<BackResult.DelegateToSystem>(result)
     }
 
     @Test
@@ -602,7 +603,7 @@ class TreeMutatorBackHandlingTest {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should pop TabNode from root, revealing rootScreen
-        assertIs<TreeMutator.BackResult.Handled>(result)
+        assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(1, newState.children.size)
         assertEquals("r1", newState.activeChild?.key)
@@ -633,7 +634,7 @@ class TreeMutatorBackHandlingTest {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should delegate to system
-        assertIs<TreeMutator.BackResult.DelegateToSystem>(result)
+        assertIs<BackResult.DelegateToSystem>(result)
     }
 
     @Test
@@ -667,7 +668,7 @@ class TreeMutatorBackHandlingTest {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should cascade through TabNode and MiddleStack, popping MiddleStack from root
-        assertIs<TreeMutator.BackResult.Handled>(result)
+        assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(1, newState.children.size)
         assertEquals("r1", newState.activeChild?.key)
@@ -699,7 +700,7 @@ class TreeMutatorBackHandlingTest {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should pop child2Stack (parent has multiple children, no cascade needed)
-        assertIs<TreeMutator.BackResult.Handled>(result)
+        assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(2, newState.children.size)
         assertEquals("child1", newState.activeChild?.key)

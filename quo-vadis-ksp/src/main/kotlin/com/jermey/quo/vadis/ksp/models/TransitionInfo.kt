@@ -8,7 +8,8 @@ import com.google.devtools.ksp.symbol.KSFile
  *
  * Transition info connects a destination class to its transition configuration.
  * The KSP processor uses this to generate `TransitionRegistry` entries
- * that map destination classes to their [NavTransition][com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition] instances.
+ * that map destination classes to their
+ * [NavTransition][com.jermey.quo.vadis.core.navigation.compose.animation.NavTransition] instances.
  *
  * ## Generated Code Usage
  *
