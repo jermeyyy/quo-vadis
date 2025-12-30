@@ -256,6 +256,9 @@ class NavigationConfigGenerator(
         addImport("com.jermey.quo.vadis.core.compose.animation", "NavTransition")
         addImport("kotlin.reflect", "KClass")
 
+        // Pane container imports (for PaneBackBehavior in generated DSL)
+        addImport("com.jermey.quo.vadis.core.navigation.pane", "PaneBackBehavior")
+
         // Compose animation imports (for screen registry)
         addImport("androidx.compose.animation", "SharedTransitionScope", "AnimatedVisibilityScope")
         addImport("androidx.compose.runtime", "Composable")
@@ -289,6 +292,7 @@ class NavigationConfigGenerator(
      */
     private fun buildConfigObject(data: NavigationData): TypeSpec {
         val hasRoutes = data.destinations.any { !it.route.isNullOrBlank() }
+        val paneRoleData = collectPaneRoleData(data)
         
         return TypeSpec.objectBuilder(generatedObjectName)
             .addKdoc(StringTemplates.NAVIGATION_CONFIG_KDOC)
@@ -298,6 +302,7 @@ class NavigationConfigGenerator(
             .addProperty(buildContainerRegistryProperty(data.wrappers, data.tabs, data.panes))
             .addProperties(buildDelegationProperties())
             .addProperty(buildDeepLinkRegistryProperty(hasRoutes))
+            .addProperty(buildPaneRoleRegistryProperty(paneRoleData))
             .addFunction(buildBuildNavNodeFunction())
             .addFunction(buildPlusFunction())
             .addProperty(buildRootsProperty(data))
@@ -425,13 +430,14 @@ class NavigationConfigGenerator(
             }
         }
 
-        // Collect from panes
+        // Collect from panes - include ALL destinations, not just @PaneItem roots
         data.panes.forEach { pane ->
             val scopeKey = pane.name.ifEmpty { pane.className }
             val scopeMembers = scopes.getOrPut(scopeKey) { mutableListOf() }
 
-            pane.panes.forEach { paneItem ->
-                scopeMembers.add(paneItem.destination.classDeclaration.toClassName())
+            // Add all destinations from the pane's sealed class (including ConversationDetail, etc.)
+            pane.allDestinations.forEach { dest ->
+                scopeMembers.add(dest.classDeclaration.toClassName())
             }
         }
 
@@ -473,6 +479,111 @@ class NavigationConfigGenerator(
         return PropertySpec.builder("deepLinkRegistry", propertyType)
             .addModifiers(KModifier.OVERRIDE)
             .initializer(if (hasRoutes) handlerName else "DeepLinkRegistry.Empty")
+            .build()
+    }
+
+    /**
+     * Collects pane role data from pane containers.
+     *
+     * Maps scope keys to a list of (destination class, pane role) pairs.
+     * This includes:
+     * - @PaneItem annotated destinations (root destinations for each pane)
+     * - @Destination(paneRole = ...) annotated destinations (non-root pane members)
+     *
+     * @param data The navigation data
+     * @return Map of scope key to list of (ClassName, PaneRole) pairs
+     */
+    private fun collectPaneRoleData(
+        data: NavigationData
+    ): Map<String, List<Pair<ClassName, com.jermey.quo.vadis.ksp.models.PaneRole>>> {
+        val result = mutableMapOf<String, MutableList<Pair<ClassName, com.jermey.quo.vadis.ksp.models.PaneRole>>>()
+
+        data.panes.forEach { pane ->
+            val scopeKey = pane.name.ifEmpty { pane.className }
+            val rolesList = result.getOrPut(scopeKey) { mutableListOf() }
+
+            // Add @PaneItem root destinations
+            pane.panes.forEach { paneItem ->
+                rolesList.add(paneItem.destination.classDeclaration.toClassName() to paneItem.role)
+            }
+
+            // Add @Destination(paneRole = ...) non-root destinations
+            pane.allDestinations.forEach { dest ->
+                if (dest.paneRole != null) {
+                    rolesList.add(dest.classDeclaration.toClassName() to dest.paneRole)
+                }
+            }
+        }
+
+        return result
+    }
+
+    /**
+     * Builds the paneRoleRegistry property.
+     *
+     * Generates an object implementing PaneRoleRegistry with when-based dispatch
+     * to map destinations to their pane roles.
+     */
+    private fun buildPaneRoleRegistryProperty(
+        paneRoleData: Map<String, List<Pair<ClassName, com.jermey.quo.vadis.ksp.models.PaneRole>>>
+    ): PropertySpec {
+        if (paneRoleData.isEmpty() || paneRoleData.all { it.value.isEmpty() }) {
+            return PropertySpec.builder("paneRoleRegistry", QuoVadisClassNames.PANE_ROLE_REGISTRY)
+                .addModifiers(KModifier.OVERRIDE)
+                .initializer("PaneRoleRegistry.Empty")
+                .build()
+        }
+
+        val kClassDestination = QuoVadisClassNames.KCLASS.parameterizedBy(
+            WildcardTypeName.producerOf(QuoVadisClassNames.NAV_DESTINATION)
+        )
+
+        // Build the getPaneRole(scopeKey, destination) function
+        val getByInstanceBuilder = FunSpec.builder("getPaneRole")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("scopeKey", STRING)
+            .addParameter("destination", QuoVadisClassNames.NAV_DESTINATION)
+            .returns(QuoVadisClassNames.PANE_ROLE.copy(nullable = true))
+            .addStatement("return getPaneRole(scopeKey, destination::class)")
+
+        // Build the getPaneRole(scopeKey, destinationClass) function
+        val getByClassBuilder = FunSpec.builder("getPaneRole")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("scopeKey", STRING)
+            .addParameter("destinationClass", kClassDestination)
+            .returns(QuoVadisClassNames.PANE_ROLE.copy(nullable = true))
+            .beginControlFlow("return when (scopeKey)")
+
+        paneRoleData.forEach { (scopeKey, rolesList) ->
+            if (rolesList.isNotEmpty()) {
+                getByClassBuilder.beginControlFlow("%S ->", scopeKey)
+                getByClassBuilder.beginControlFlow("when (destinationClass)")
+                rolesList.forEach { (destClass, role) ->
+                    val roleName = when (role) {
+                        com.jermey.quo.vadis.ksp.models.PaneRole.PRIMARY -> "Primary"
+                        com.jermey.quo.vadis.ksp.models.PaneRole.SECONDARY -> "Supporting"
+                        com.jermey.quo.vadis.ksp.models.PaneRole.EXTRA -> "Extra"
+                    }
+                    getByClassBuilder.addStatement("%T::class -> PaneRole.%L", destClass, roleName)
+                }
+                getByClassBuilder.addStatement("else -> null")
+                getByClassBuilder.endControlFlow() // when destinationClass
+                getByClassBuilder.endControlFlow() // scopeKey case
+            }
+        }
+
+        getByClassBuilder.addStatement("else -> null")
+        getByClassBuilder.endControlFlow() // when scopeKey
+
+        val registryObject = TypeSpec.anonymousClassBuilder()
+            .addSuperinterface(QuoVadisClassNames.PANE_ROLE_REGISTRY)
+            .addFunction(getByInstanceBuilder.build())
+            .addFunction(getByClassBuilder.build())
+            .build()
+
+        return PropertySpec.builder("paneRoleRegistry", QuoVadisClassNames.PANE_ROLE_REGISTRY)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer("%L", registryObject)
             .build()
     }
 

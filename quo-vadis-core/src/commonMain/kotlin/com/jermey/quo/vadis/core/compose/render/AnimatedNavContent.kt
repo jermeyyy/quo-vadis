@@ -96,6 +96,8 @@ internal fun <T : NavNode> AnimatedNavContent(
     content: @Composable AnimatedVisibilityScope.(T) -> Unit
 ) {
     // Track the last committed state for predictive back gesture handling
+    // Use object reference tracking, not just key, because a node's internal state
+    // can change (e.g., PaneNode content) while keeping the same key
     var lastCommittedState by remember { mutableStateOf(targetState) }
     var stateBeforeLast by remember { mutableStateOf<T?>(null) }
 
@@ -141,10 +143,16 @@ internal fun <T : NavNode> AnimatedNavContent(
             }
         }
 
-        // Update state tracking AFTER AnimatedContent starts
-        // This ensures predictive back has correct targets
-        if (targetState.key != lastCommittedState.key) {
-            stateBeforeLast = lastCommittedState
+        // Detect changes by semantic equality, not just key.
+        // A node's internal state can change (e.g., PaneNode with new pane content)
+        // while keeping the same key. We need to track when the actual state of
+        // the node changes for predictive back to show the correct content.
+        if (targetState != lastCommittedState) {
+            // Only update stateBeforeLast when the key actually changes
+            // (real navigation, not just internal state update)
+            if (targetState.key != lastCommittedState.key) {
+                stateBeforeLast = lastCommittedState
+            }
             lastCommittedState = targetState
         }
     }

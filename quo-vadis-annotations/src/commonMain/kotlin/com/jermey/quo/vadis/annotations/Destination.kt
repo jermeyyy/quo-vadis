@@ -28,6 +28,29 @@ package com.jermey.quo.vadis.annotations
  * - Query parameters: `"search?query={q}"` extracts `q` from query string
  * - Empty route means the destination is not deep-linkable
  *
+ * ## Pane Navigation
+ *
+ * When inside a [@Pane] container, use [paneRole] to specify which pane
+ * this destination belongs to. This enables transparent navigation where
+ * `navigate(destination)` automatically routes to the correct pane's stack.
+ *
+ * ```kotlin
+ * @Pane(name = "messages")
+ * sealed class MessagesPane : NavDestination {
+ *     @PaneItem(role = PaneRole.PRIMARY)
+ *     @Destination(route = "messages/list")
+ *     data object List : MessagesPane()
+ *
+ *     @PaneItem(role = PaneRole.SECONDARY)
+ *     @Destination(route = "messages/empty")
+ *     data object Empty : MessagesPane()
+ *
+ *     // Non-root destination that belongs to SECONDARY pane
+ *     @Destination(route = "messages/detail/{id}", paneRole = PaneRole.SECONDARY)
+ *     data class Detail(val id: String) : MessagesPane()
+ * }
+ * ```
+ *
  * ## NavNode Mapping
  *
  * This annotation maps to [ScreenNode] in the NavNode hierarchy:
@@ -74,10 +97,12 @@ package com.jermey.quo.vadis.annotations
  * @see Stack
  * @see Tabs
  * @see Pane
+ * @see PaneItem
+ * @see PaneRole
  * @see Screen
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class Destination(
-    val route: String = ""
+    val route: String = "",
 )

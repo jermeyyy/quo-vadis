@@ -13,6 +13,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.kotlin.reflect)
     implementation(projects.quoVadisAnnotations)
     implementation(projects.quoVadisCore)
     implementation(libs.symbol.processing.api)

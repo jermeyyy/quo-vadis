@@ -234,12 +234,15 @@ fun NavigationHost(
     val canGoBack by remember(navState) {
         derivedStateOf { TreeMutator.canHandleBackNavigation(navState) }
     }
+    
+    // Determine if in compact mode for pane handling
+    val isCompact = windowSizeClass?.isCompactWidth ?: true
 
     // Get current and previous screen info for QuoVadisBackHandler
     val currentScreenNode = remember(navState) { navState.activeLeaf() }
-    val previousScreenNode = remember(navState) {
+    val previousScreenNode = remember(navState, isCompact) {
         // Use popWithTabBehavior to get the correct previous screen
-        val backResult = TreeMutator.popWithTabBehavior(navState)
+        val backResult = TreeMutator.popWithTabBehavior(navState, isCompact)
         (backResult as? TreeMutator.BackResult.Handled)?.newState?.activeLeaf()
     }
 
@@ -301,13 +304,14 @@ fun NavigationHost(
             // On first progress event, start the animation
             if (!backAnimationController.isAnimating) {
                 // Compute speculative pop result at gesture start using tab-aware logic
-                val backResult = TreeMutator.popWithTabBehavior(navState)
+                val backResult = TreeMutator.popWithTabBehavior(navState, isCompact)
                 val popResult = (backResult as? TreeMutator.BackResult.Handled)?.newState
                 if (popResult != null) {
                     speculativePopState = popResult
 
                     // Calculate cascade state for proper animation targeting
-                    val cascadeState = calculateCascadeBackState(navState)
+                    // Pass isCompact so PaneNode handling is correct for window size
+                    val cascadeState = calculateCascadeBackState(navState, isCompact)
 
                     // Start animation
                     backAnimationController.startAnimation(event)

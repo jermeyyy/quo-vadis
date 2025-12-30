@@ -272,6 +272,37 @@ interface Navigator : BackPressHandler {
     fun updateTransitionProgress(progress: Float)
 
     /**
+     * Navigate to a destination in a specific pane of an adaptive layout.
+     *
+     * Use this when you need to target a particular pane in a multi-pane layout
+     * (for example, a master–detail or split view) without changing the primary
+     * navigation stack. In contrast, [navigate] affects the current active stack
+     * (typically the primary pane) and should be used for standard linear navigation.
+     *
+     * This is especially useful on large-screen or foldable devices where content
+     * can be presented side-by-side. For example, you might keep a list of items
+     * in the primary pane and show item details in a supporting pane.
+     *
+     * @param destination The destination to display in the targeted pane.
+     * @param role The [PaneRole] identifying which pane to navigate within.
+     * Defaults to [PaneRole.Supporting], which typically represents a secondary
+     * or detail pane alongside the primary content.
+     *
+     * ### Example
+     * ```kotlin
+     * // Standard navigation in the primary stack (e.g., phone-sized layout)
+     * navigator.navigate(DetailsDestination(itemId = "42"))
+     *
+     * // On larger screens, show the details in a supporting pane instead
+     * navigator.navigateToPane(
+     *     destination = DetailsDestination(itemId = "42"),
+     *     role = PaneRole.Supporting
+     * )
+     * ```
+     */
+    fun navigateToPane(destination: NavDestination, role: PaneRole = PaneRole.Supporting)
+
+    /**
      * Start a predictive back gesture.
      *
      * Called when the user initiates a back gesture.

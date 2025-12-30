@@ -8,6 +8,7 @@ import com.jermey.quo.vadis.core.navigation.StackNode
 import com.jermey.quo.vadis.core.navigation.TabNode
 import com.jermey.quo.vadis.core.navigation.activeStack
 import com.jermey.quo.vadis.core.navigation.findByKey
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 
 /**
  * State information for a predictive back gesture that may cascade.
@@ -68,9 +69,10 @@ data class CascadeBackState(
  * will do, including whether it will cascade up through multiple container levels.
  *
  * @param root The root of the navigation tree
+ * @param isCompact Whether in compact mode. In expanded mode, PaneNodes are popped entirely.
  * @return CascadeBackState describing what the back action will do
  */
-fun calculateCascadeBackState(root: NavNode): CascadeBackState {
+fun calculateCascadeBackState(root: NavNode, isCompact: Boolean = true): CascadeBackState {
     val activeStack = root.activeStack()
     val activeChild = activeStack?.activeChild
 
@@ -99,7 +101,7 @@ fun calculateCascadeBackState(root: NavNode): CascadeBackState {
     }
 
     // Cascade case: stack has only 1 child, need to walk up the tree
-    return calculateCascadeFromStack(root, activeStack, activeChild)
+    return calculateCascadeFromStack(root, activeStack, activeChild, isCompact = isCompact)
 }
 
 /**
@@ -109,7 +111,8 @@ private fun calculateCascadeFromStack(
     root: NavNode,
     stack: StackNode,
     sourceNode: NavNode,
-    currentDepth: Int = 0
+    currentDepth: Int = 0,
+    isCompact: Boolean = true
 ): CascadeBackState {
     val parentKey = stack.parentKey
 
@@ -157,7 +160,7 @@ private fun calculateCascadeFromStack(
                 )
             } else {
                 // Continue cascade up through parent
-                calculateCascadeFromStack(root, parent, sourceNode, newDepth)
+                calculateCascadeFromStack(root, parent, sourceNode, newDepth, isCompact)
             }
         }
         is TabNode -> {
@@ -166,8 +169,33 @@ private fun calculateCascadeFromStack(
             calculateCascadeFromContainer(root, parent, sourceNode, newDepth)
         }
         is PaneNode -> {
-            // Continue cascade through pane
-            calculateCascadeFromContainer(root, parent, sourceNode, newDepth)
+            if (isCompact) {
+                // Compact mode: Check if we can switch to PRIMARY pane
+                val activePaneRole = parent.activePaneRole
+                if (activePaneRole != PaneRole.Primary) {
+                    // Non-primary pane - back should switch to PRIMARY pane
+                    // Enable predictive back: show PRIMARY pane's StackNode behind SECONDARY
+                    // Use the StackNode directly (not leaf screen) to match what SinglePaneRenderer passes
+                    val primaryPaneContent = parent.paneContent(PaneRole.Primary)
+                    
+                    CascadeBackState(
+                        sourceNode = sourceNode,
+                        exitingNode = sourceNode,
+                        // Use the StackNode, not the leaf - matches AnimatedNavContent's targetState type
+                        targetNode = primaryPaneContent,
+                        // Use the pane node's key as animating key so pane-level animation handles it
+                        animatingStackKey = parent.key,
+                        cascadeDepth = 0,
+                        delegatesToSystem = false
+                    )
+                } else {
+                    // Already on PRIMARY pane with 1 child - cascade to pop PaneNode
+                    calculateCascadeFromContainer(root, parent, sourceNode, newDepth)
+                }
+            } else {
+                // Expanded mode: Always pop the entire PaneNode
+                calculateCascadeFromContainer(root, parent, sourceNode, newDepth)
+            }
         }
         else -> {
             // Unknown parent type - delegate to system

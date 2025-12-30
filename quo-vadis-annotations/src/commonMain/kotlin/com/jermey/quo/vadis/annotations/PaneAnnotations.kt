@@ -330,7 +330,6 @@ annotation class Pane(
  *     @PaneItem(
  *         role = PaneRole.SECONDARY,
  *         adaptStrategy = AdaptStrategy.OVERLAY,
- *         rootGraph = ProductDetailGraph::class
  *     )
  *     @Destination(route = "shop/product/{productId}")
  *     data class ProductDetail(val productId: String) : ShopPane()
@@ -387,7 +386,6 @@ annotation class Pane(
  * @PaneItem(
  *     role = PaneRole.SECONDARY,
  *     adaptStrategy = AdaptStrategy.OVERLAY,
- *     rootGraph = ProductDetailGraph::class
  * )
  * @Destination(route = "shop/product/{productId}")
  * data class ProductDetail(val productId: String) : ShopPane()
@@ -398,7 +396,6 @@ annotation class Pane(
  * @PaneItem(
  *     role = PaneRole.EXTRA,
  *     adaptStrategy = AdaptStrategy.COLLAPSE,
- *     rootGraph = CartGraph::class
  * )
  * @Destination(route = "shop/cart")
  * data object Cart : ShopPane()
@@ -408,9 +405,6 @@ annotation class Pane(
  *   Determines positioning and default visibility.
  * @property adaptStrategy How the pane adapts when screen space is limited.
  *   See [AdaptStrategy]. Defaults to [AdaptStrategy.HIDE].
- * @property rootGraph The root navigation graph class for this pane's content.
- *   Must be a sealed class annotated with [@Stack]. The stack's start
- *   destination becomes the pane's initial screen.
  *
  * @see Pane
  * @see PaneRole
@@ -430,10 +424,4 @@ annotation class PaneItem(
      * Adaptation strategy when space is limited.
      */
     val adaptStrategy: AdaptStrategy = AdaptStrategy.HIDE,
-
-    /**
-     * Root graph for this pane's content.
-     * Must be a sealed class annotated with @Stack.
-     */
-    val rootGraph: KClass<*>
 )

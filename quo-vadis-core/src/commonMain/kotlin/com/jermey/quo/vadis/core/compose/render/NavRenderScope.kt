@@ -212,6 +212,11 @@ interface NavRenderScope {
      * - If the stack has > 1 children, back pops within the stack → enable predictive back
      * - If the stack has 1 child and cascade is happening → only root handles animation
      *
+     * For pane switching in compact mode:
+     * - The animatingStackKey is set to the PaneNode's key
+     * - Only the PaneNode (via SinglePaneRenderer) should handle the animation
+     * - StackNodes should NOT handle predictive back when a PaneNode is animating
+     *
      * @param node The node to check
      * @return true if predictive back gestures should be enabled for this node
      */
@@ -223,11 +228,19 @@ interface NavRenderScope {
         // This ensures the same stack handles the animation even after navigation happens
         if (cascadeState != null && isGestureActive) {
             // Non-cascade case (normal pop within a stack): cascadeDepth == 0
-            // The animatingStackKey tells us which stack should handle the animation
+            // The animatingStackKey tells us which node should handle the animation
             if (cascadeState.cascadeDepth == 0) {
                 val animatingKey = cascadeState.animatingStackKey
-                // Only the stack with the matching key should handle predictive back
-                return node is StackNode && node.key == animatingKey
+                // For pane switching, animatingKey is the PaneNode's key
+                // Only StackNodes should be checked here - PaneNode handles via SinglePaneRenderer
+                if (animatingKey != null && node is StackNode) {
+                    // If the animating key matches this stack, enable predictive back
+                    // If the animating key is a PaneNode key (not matching any stack),
+                    // stacks should NOT handle predictive back - the pane will handle it
+                    return node.key == animatingKey
+                }
+                // If animatingKey is null or node is not a StackNode, disable for this node
+                return animatingKey == null
             }
 
             // True cascade case (cascadeDepth > 0): only root handles animation

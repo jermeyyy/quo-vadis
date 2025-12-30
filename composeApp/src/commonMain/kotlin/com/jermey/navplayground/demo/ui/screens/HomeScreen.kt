@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +44,7 @@ import com.jermey.feature2.AuthFlowDestination
 import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
+import com.jermey.navplayground.demo.destinations.MessagesPane
 import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
@@ -114,6 +116,12 @@ fun HomeScreen(
                     ResultDemoDestination.Demo,
                     NavigationTransitions.SlideHorizontal
                 )
+            },
+            onNavigateToMessagesPane = {
+                navigator.navigate(
+                    MessagesPane.ConversationList,
+                    NavigationTransitions.SlideHorizontal
+                )
             }
         )
     }
@@ -146,13 +154,15 @@ private fun HomeScreenContent(
     onNavigateToProcess: () -> Unit,
     onNavigateToStateDriven: () -> Unit,
     onNavigateToAuthFlow: () -> Unit,
-    onNavigateToResultDemo: () -> Unit
+    onNavigateToResultDemo: () -> Unit,
+    onNavigateToMessagesPane: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(paddingValues)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -217,6 +227,13 @@ private fun HomeScreenContent(
             title = "Navigation with Result",
             description = "Navigate to a screen and await a result",
             onClick = onNavigateToResultDemo
+        )
+
+        NavigationPatternCard(
+            icon = Icons.Default.Smartphone,
+            title = "Adaptive Panes (Foldable)",
+            description = "List-detail pane layout for foldables and tablets",
+            onClick = onNavigateToMessagesPane
         )
 
         Spacer(Modifier.weight(1f))

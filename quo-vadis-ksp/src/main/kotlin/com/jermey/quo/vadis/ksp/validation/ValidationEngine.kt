@@ -108,7 +108,6 @@ class ValidationEngine(
         validateArgumentAnnotations(allDestinations)
 
         // Reference validations
-        validateRootGraphReferences(tabs, panes)
         validateScreenBindings(screens, allDestinations)
 
         // Type validations
@@ -385,30 +384,6 @@ class ValidationEngine(
         val pathPart = route.substringBefore('?')
         val regex = Regex("\\{([^}]+)\\}")
         return regex.findAll(pathPart).map { it.groupValues[1] }.toSet()
-    }
-
-    // =========================================================================
-    // Reference Validations
-    // =========================================================================
-
-    /**
-     * Validates that rootGraph references in @PaneItem point to @Stack classes.
-     * 
-     * Note: For tabs in the new pattern, NESTED_STACK tabs have stackInfo which contains
-     * the @Stack class. Validation for tabs with @Stack is done separately in validateTabItems.
-     */
-    private fun validateRootGraphReferences(
-        tabs: List<TabInfo>,
-        panes: List<PaneInfo>
-    ) {
-        // Note: Tab validation for NESTED_STACK is handled via stackInfo in validateTabItems
-        // No legacy rootGraphClass validation needed anymore
-
-        panes.forEach { pane ->
-            pane.panes.forEach { paneItem ->
-                validateRootGraphClass(paneItem.rootGraphClass, paneItem.destination.classDeclaration)
-            }
-        }
     }
 
     /**
