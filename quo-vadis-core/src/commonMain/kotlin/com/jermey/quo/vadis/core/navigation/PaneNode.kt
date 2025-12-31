@@ -8,7 +8,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Container node for adaptive pane layouts.
@@ -53,8 +52,8 @@ import kotlin.uuid.Uuid
  *
  * ## Serialization
  *
- * Only persistent navigation state is serialized. Runtime state ([uuid],
- * [isAttachedToNavigator], [isDisplayed], [composeSavedState]) is marked
+ * Only persistent navigation state is serialized. Runtime state
+ * ([isAttachedToNavigator], [isDisplayed], [composeSavedState]) is marked
  * as `@Transient` and regenerated on restoration.
  *
  * @property key Unique identifier for this pane container
@@ -88,13 +87,6 @@ class PaneNode(
     }
 
     // --- Lifecycle Infrastructure (Transient - not serialized) ---
-
-    /**
-     * Unique stable identifier for this node instance.
-     * Generated fresh on creation and after deserialization.
-     */
-    @Transient
-    val uuid: String = Uuid.random().toHexString()
 
     /**
      * Whether this node is attached to the navigator tree.

@@ -1,12 +1,16 @@
 package com.jermey.quo.vadis.core.navigation.tree
 
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.PaneNavigator
 import com.jermey.quo.vadis.core.navigation.PaneNode
+import com.jermey.quo.vadis.core.navigation.ResultCapable
 import com.jermey.quo.vadis.core.navigation.ScreenNode
 import com.jermey.quo.vadis.core.navigation.StackNode
 import com.jermey.quo.vadis.core.navigation.TabNode
+import com.jermey.quo.vadis.core.navigation.TransitionController
 import com.jermey.quo.vadis.core.navigation.activeLeaf
 import com.jermey.quo.vadis.core.navigation.activeStack
 import com.jermey.quo.vadis.core.compose.wrapper.WindowSizeClass
@@ -26,6 +30,8 @@ import com.jermey.quo.vadis.core.navigation.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.TransitionState
+import com.jermey.quo.vadis.core.navigation.tree.result.BackResult
+import com.jermey.quo.vadis.core.navigation.tree.result.PopResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -83,13 +89,13 @@ import kotlin.uuid.Uuid
  * @param coroutineScope Scope for derived state computations
  * @param initialState Optional initial navigation state (defaults to empty stack)
  */
-@OptIn(ExperimentalUuidApi::class)
+@OptIn(ExperimentalUuidApi::class, InternalQuoVadisApi::class)
 @Stable
 class TreeNavigator(
     override val config: NavigationConfig = NavigationConfig.Empty,
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
     initialState: NavNode? = null
-) : Navigator {
+) : PaneNavigator, TransitionController, ResultCapable {
 
     // Registries derived from config for internal use
     private val scopeRegistry: ScopeRegistry get() = config.scopeRegistry
@@ -520,17 +526,17 @@ class TreeNavigator(
 
         // 2. Use tree-aware back handling with window size awareness
         return when (val result = TreeMutator.popWithTabBehavior(currentState, isCompact)) {
-            is TreeMutator.BackResult.Handled -> {
+            is BackResult.Handled -> {
                 updateStateWithTransition(result.newState, null)
                 true
             }
 
-            is TreeMutator.BackResult.DelegateToSystem -> false
-            is TreeMutator.BackResult.CannotHandle -> {
+            is BackResult.DelegateToSystem -> false
+            is BackResult.CannotHandle -> {
                 // Fallback to pane-specific behavior with window size awareness
                 // In compact mode, treat as simple stack; in expanded mode, use configured behavior
                 when (val popResult = TreeMutator.popPaneAdaptive(currentState, isCompact)) {
-                    is TreeMutator.PopResult.Popped -> {
+                    is PopResult.Popped -> {
                         updateStateWithTransition(popResult.newState, null)
                         true
                     }

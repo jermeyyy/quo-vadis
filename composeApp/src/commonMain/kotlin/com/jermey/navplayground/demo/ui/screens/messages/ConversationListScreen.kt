@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MessagesPane
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.asPaneNavigator
 import org.koin.compose.koinInject
 
 /**
@@ -78,7 +79,8 @@ fun ConversationListScreen(
                     onClick = {
                         // Use navigateToPane to REPLACE the secondary pane content
                         // so each selection swaps the detail view instead of stacking multiple details
-                        navigator.navigateToPane(MessagesPane.ConversationDetail(conversation.id))
+                        navigator.asPaneNavigator()
+                            ?.navigateToPane(MessagesPane.ConversationDetail(conversation.id))
                     }
                 )
                 HorizontalDivider(

@@ -8,6 +8,7 @@ import com.jermey.quo.vadis.core.navigation.NavDestination
 import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.tree.config.PopBehavior
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -97,7 +98,7 @@ class TreeMutatorPopTest {
             )
         )
 
-        val result = TreeMutator.pop(root, TreeMutator.PopBehavior.PRESERVE_EMPTY)
+        val result = TreeMutator.pop(root, PopBehavior.PRESERVE_EMPTY)
 
         // PRESERVE_EMPTY returns a tree with empty stack
         assertNotNull(result)
@@ -128,7 +129,7 @@ class TreeMutatorPopTest {
             children = listOf(innerStack)
         )
 
-        val result = TreeMutator.pop(outerStack, TreeMutator.PopBehavior.PRESERVE_EMPTY)
+        val result = TreeMutator.pop(outerStack, PopBehavior.PRESERVE_EMPTY)
 
         // PRESERVE_EMPTY keeps the structure - inner stack becomes empty
         assertNotNull(result)
@@ -507,7 +508,7 @@ class TreeMutatorPopTest {
             activeStackIndex = 0
         )
 
-        val result = TreeMutator.pop(tabs, TreeMutator.PopBehavior.CASCADE)
+        val result = TreeMutator.pop(tabs, PopBehavior.CASCADE)
 
         // CASCADE in tabs falls back to preserving empty stack
         assertNotNull(result)
@@ -534,7 +535,7 @@ class TreeMutatorPopTest {
         )
 
         // Pop from inner stack - with CASCADE, should try to remove empty inner
-        val result = TreeMutator.pop(outerStack, TreeMutator.PopBehavior.CASCADE)
+        val result = TreeMutator.pop(outerStack, PopBehavior.CASCADE)
 
         assertNotNull(result)
         val resultOuter = result as StackNode

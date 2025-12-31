@@ -3,7 +3,6 @@ package com.jermey.quo.vadis.core.navigation
 import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -46,6 +45,17 @@ import kotlinx.coroutines.flow.StateFlow
  * Thread-safe and designed to work with MVI architecture pattern.
  *
  * Implements [ParentNavigator] to support hierarchical navigation with child navigators.
+ *
+ * ## Extended Capabilities
+ *
+ * For specialized functionality, cast to extension interfaces:
+ * - [PaneNavigator] - For pane-specific operations via [asPaneNavigator]
+ * - [TransitionController] - For transition/animation control (internal)
+ * - [ResultCapable] - For result passing support (internal)
+ *
+ * @see PaneNavigator
+ * @see TransitionController
+ * @see ResultCapable
  */
 @Stable
 interface Navigator : BackPressHandler {
@@ -61,14 +71,6 @@ interface Navigator : BackPressHandler {
      * UI components observe this flow to render the appropriate content.
      */
     val state: StateFlow<NavNode>
-
-    /**
-     * The current transition state for animations.
-     *
-     * During navigation, this holds transition metadata for animation
-     * coordination. Observe this to drive animations in the renderer.
-     */
-    val transitionState: StateFlow<TransitionState>
 
     // =========================================================================
     // DERIVED CONVENIENCE PROPERTIES
@@ -90,28 +92,9 @@ interface Navigator : BackPressHandler {
     val previousDestination: StateFlow<NavDestination?>
 
     /**
-     * Current transition animation (null if idle).
-     *
-     * Derived from [transitionState] for convenience.
-     */
-    val currentTransition: StateFlow<NavigationTransition?>
-
-    /**
      * Whether back navigation is possible from the current state.
      */
     val canNavigateBack: StateFlow<Boolean>
-
-    // =========================================================================
-    // RESULT AND LIFECYCLE MANAGEMENT
-    // =========================================================================
-
-    /**
-     * Manager for navigation result passing between screens.
-     *
-     * Used internally by [navigateForResult] and [navigateBackWithResult]
-     * extension functions. Not typically accessed directly.
-     */
-    val resultManager: NavigationResultManager
 
     // =========================================================================
     // CONFIGURATION
@@ -184,40 +167,6 @@ interface Navigator : BackPressHandler {
     fun navigateAndClearAll(destination: NavDestination)
 
     // =========================================================================
-    // TAB NAVIGATION
-    // =========================================================================
-
-    // =========================================================================
-    // PANE NAVIGATION
-    // =========================================================================
-
-    /**
-     * Check if a pane role is available in the current state.
-     *
-     * @param role Pane role to check
-     * @return true if the role is configured in the current PaneNode
-     */
-    fun isPaneAvailable(role: PaneRole): Boolean
-
-    /**
-     * Get the current content of a specific pane.
-     *
-     * @param role Pane role to query
-     * @return The NavNode content of the pane, or null if role not configured
-     */
-    fun paneContent(role: PaneRole): NavNode?
-
-    /**
-     * Navigate back within a specific pane.
-     *
-     * Pops from the specified pane's stack regardless of which pane is active.
-     *
-     * @param role Pane role to pop from
-     * @return true if navigation occurred, false if pane stack was empty
-     */
-    fun navigateBackInPane(role: PaneRole): Boolean
-
-    // =========================================================================
     // DEEP LINK & GRAPH REGISTRATION
     // =========================================================================
 
@@ -257,85 +206,4 @@ interface Navigator : BackPressHandler {
      * @param transition Optional transition for animation
      */
     fun updateState(newState: NavNode, transition: NavigationTransition? = null)
-
-    // =========================================================================
-    // TRANSITION CONTROL
-    // =========================================================================
-
-    /**
-     * Update transition progress during animations.
-     *
-     * Called by the renderer to update animation progress.
-     *
-     * @param progress Animation progress from 0.0 to 1.0
-     */
-    fun updateTransitionProgress(progress: Float)
-
-    /**
-     * Navigate to a destination in a specific pane of an adaptive layout.
-     *
-     * Use this when you need to target a particular pane in a multi-pane layout
-     * (for example, a master–detail or split view) without changing the primary
-     * navigation stack. In contrast, [navigate] affects the current active stack
-     * (typically the primary pane) and should be used for standard linear navigation.
-     *
-     * This is especially useful on large-screen or foldable devices where content
-     * can be presented side-by-side. For example, you might keep a list of items
-     * in the primary pane and show item details in a supporting pane.
-     *
-     * @param destination The destination to display in the targeted pane.
-     * @param role The [PaneRole] identifying which pane to navigate within.
-     * Defaults to [PaneRole.Supporting], which typically represents a secondary
-     * or detail pane alongside the primary content.
-     *
-     * ### Example
-     * ```kotlin
-     * // Standard navigation in the primary stack (e.g., phone-sized layout)
-     * navigator.navigate(DetailsDestination(itemId = "42"))
-     *
-     * // On larger screens, show the details in a supporting pane instead
-     * navigator.navigateToPane(
-     *     destination = DetailsDestination(itemId = "42"),
-     *     role = PaneRole.Supporting
-     * )
-     * ```
-     */
-    fun navigateToPane(destination: NavDestination, role: PaneRole = PaneRole.Supporting)
-
-    /**
-     * Start a predictive back gesture.
-     *
-     * Called when the user initiates a back gesture.
-     */
-    fun startPredictiveBack()
-
-    /**
-     * Update predictive back gesture progress.
-     *
-     * @param progress Gesture progress from 0.0 to 1.0
-     * @param touchX Normalized x-coordinate of touch (0-1)
-     * @param touchY Normalized y-coordinate of touch (0-1)
-     */
-    fun updatePredictiveBack(progress: Float, touchX: Float, touchY: Float)
-
-    /**
-     * Cancel the predictive back gesture.
-     *
-     * Called when the user releases the gesture without completing it.
-     */
-    fun cancelPredictiveBack()
-
-    /**
-     * Commit the predictive back gesture.
-     *
-     * Called when the user completes the back gesture.
-     */
-    fun commitPredictiveBack()
-
-    /**
-     * Complete the current transition animation.
-     *
-     * Called when the animation finishes.
-     */
-    fun completeTransition()
 }
