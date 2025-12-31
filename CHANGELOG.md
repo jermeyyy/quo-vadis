@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-12-31
+
+### Added
+
+- **Navigator Interface Segregation**: Refactored Navigator interface following Interface Segregation Principle (ISP):
+  - `PaneNavigator` - Extension interface for pane-specific operations (`navigateToPane`, `navigateBackInPane`, `isPaneAvailable`)
+  - `TransitionController` - Internal interface for animation control (`updateTransitionProgress`, `startPredictiveBack`, etc.)
+  - `ResultCapable` - Internal interface for result passing (`resultManager`)
+  - `InternalQuoVadisApi` - Opt-in annotation for internal APIs
+- **navigateToPane API**: New method for replacing pane content instead of pushing, ideal for list-detail patterns.
+
+### Changed
+
+- **Navigator Interface Slimmed**: Core Navigator interface reduced from 26 to 14 public members (46% reduction). Advanced operations now accessed via extension interfaces.
+- **PaneNode Cache Keys**: Now include `hashCode()` to prevent cache conflicts during predictive back animations.
+
+### Fixed
+
+- **Predictive Back State Tracking**: Fixed `AnimatedNavContent` to use object reference comparison (`===`) instead of key comparison for proper state tracking during predictive back gestures.
+- **Transition Direction Detection**: Fixed transition direction detection during back navigation.
+- **Predictive Back Animation**: Fixed animation jerkiness and incorrect node rendering during predictive back.
+
 ## [0.3.1] - 2025-12-29
 
 ### Fixed
