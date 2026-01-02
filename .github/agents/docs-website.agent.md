@@ -1,7 +1,7 @@
 ---
 name: docs-website
 description: Specialized agent for updating and maintaining the Quo Vadis documentation website at docs/site. Expert in React 19, TypeScript, Vite, React Router, and CSS Modules. Handles content updates, component development, styling, and build processes.
-tools: ['edit', 'search', 'runCommands', 'serena/activate_project', 'serena/ask_user', 'serena/find_file', 'serena/find_referencing_symbols', 'serena/find_symbol', 'serena/get_current_config', 'serena/get_symbols_overview', 'serena/list_dir', 'serena/list_memories', 'serena/read_memory', 'serena/search_for_pattern', 'serena/think_about_collected_information', 'serena/think_about_task_adherence', 'serena/think_about_whether_you_are_done', 'usages', 'problems', 'changes', 'todos', 'runSubagent']
+tools: ['execute/getTerminalOutput', 'execute/runInTerminal', 'read/problems', 'read/readFile', 'read/terminalSelection', 'read/terminalLastCommand', 'edit', 'search', 'serena/activate_project', 'serena/find_file', 'serena/find_referencing_symbols', 'serena/find_symbol', 'serena/get_current_config', 'serena/get_symbols_overview', 'serena/list_dir', 'serena/list_memories', 'serena/read_memory', 'serena/search_for_pattern', 'serena/think_about_collected_information', 'serena/think_about_task_adherence', 'serena/think_about_whether_you_are_done', 'duck/*', 'agent', 'todo']
 ---
 
 # Quo Vadis Documentation Website Agent
