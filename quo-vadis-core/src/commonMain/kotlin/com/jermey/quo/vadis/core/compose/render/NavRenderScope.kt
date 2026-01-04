@@ -1,3 +1,5 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.compose.render
 
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -6,6 +8,7 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.SaveableStateHolder
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.Navigator
 import com.jermey.quo.vadis.core.navigation.StackNode

@@ -1,8 +1,11 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.compose.render
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
@@ -28,6 +31,7 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
  *
  * @param maxCacheSize Maximum number of composables to keep in cache (default 5)
  */
+@InternalQuoVadisApi
 @Stable
 class ComposableCache(
     private val maxCacheSize: Int = 5

@@ -251,9 +251,9 @@ class NavigationConfigGenerator(
      */
     private fun FileSpec.Builder.addImports(): FileSpec.Builder {
         // Core navigation imports (explicit strings for non-ClassName references)
-        addImport("com.jermey.quo.vadis.core.navigation.config", "CompositeNavigationConfig")
+        addImport("com.jermey.quo.vadis.core.navigation.internal.config", "CompositeNavigationConfig")
         addImport("com.jermey.quo.vadis.core.dsl", "navigationConfig")
-        addImport("com.jermey.quo.vadis.core.compose.animation", "NavTransition")
+        addImport("com.jermey.quo.vadis.core.compose.transition", "NavTransition")
         addImport("kotlin.reflect", "KClass")
 
         // Pane container imports (for PaneBackBehavior in generated DSL)

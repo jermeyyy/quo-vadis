@@ -1,8 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.core
 
-import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

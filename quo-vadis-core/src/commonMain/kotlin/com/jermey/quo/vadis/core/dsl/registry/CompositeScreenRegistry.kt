@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.core.dsl.registry
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
@@ -10,6 +11,7 @@ import com.jermey.quo.vadis.core.navigation.NavDestination
  *
  * Priority: secondary > primary (secondary wins for duplicates)
  */
+@InternalQuoVadisApi
 internal class CompositeScreenRegistry(
     private val primary: ScreenRegistry,
     private val secondary: ScreenRegistry

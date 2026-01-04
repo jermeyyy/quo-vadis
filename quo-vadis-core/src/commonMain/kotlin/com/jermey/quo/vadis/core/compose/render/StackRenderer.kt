@@ -1,6 +1,9 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.compose.render
 
 import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.StackNode
 
 /**

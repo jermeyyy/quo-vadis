@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.tree.operations
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.dsl.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.NavDestination
@@ -29,6 +30,7 @@ import kotlin.uuid.Uuid
  * - Multi-destination push
  * - Clear and push patterns
  */
+@InternalQuoVadisApi
 object PushOperations {
 
     @OptIn(ExperimentalUuidApi::class)

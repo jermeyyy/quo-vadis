@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.NavDestination
 import kotlin.reflect.KClass
@@ -46,6 +47,7 @@ import kotlin.reflect.KClass
  * @see ScreenEntry
  * @see NavigationConfigBuilder.screen
  */
+@InternalQuoVadisApi
 @OptIn(ExperimentalSharedTransitionApi::class)
 internal class DslScreenRegistry(
     private val screens: Map<KClass<out NavDestination>, ScreenEntry>

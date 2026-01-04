@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.compose.render
 
 import androidx.compose.animation.AnimatedContent
@@ -24,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.compose.animation.NavTransition
 

@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.compose.animation
 
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.ScreenNode
 import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
@@ -54,6 +55,7 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneRole
  * @see TransitionRegistry
  * @see NavTransition
  */
+@InternalQuoVadisApi
 @Stable
 class AnimationCoordinator(
     private val transitionRegistry: TransitionRegistry = TransitionRegistry.Empty

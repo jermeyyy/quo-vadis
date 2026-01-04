@@ -38,7 +38,7 @@ import com.jermey.navplayground.demo.destinations.BooksDetail
 import com.jermey.navplayground.demo.destinations.MoviesDetail
 import com.jermey.navplayground.demo.destinations.MusicDetail
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
 
 // =============================================================================

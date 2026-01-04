@@ -1,11 +1,13 @@
+@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation.testing
 
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.navigation.ScreenNode
-import com.jermey.quo.vadis.core.navigation.StackNode
-import com.jermey.quo.vadis.core.navigation.tree.TreeNavigator
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 
 /**
  * Test helper extensions for Navigator initialization.

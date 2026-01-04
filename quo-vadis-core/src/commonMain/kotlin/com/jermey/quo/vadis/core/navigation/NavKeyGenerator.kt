@@ -1,8 +1,11 @@
 package com.jermey.quo.vadis.core.navigation
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+
 /**
  * Utility object for generating unique navigation node keys.
  */
+@InternalQuoVadisApi
 object NavKeyGenerator {
     private var counter = 0L
 

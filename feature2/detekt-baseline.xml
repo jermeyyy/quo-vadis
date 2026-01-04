@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:AuthForgotPasswordScreen.kt:@Screen(AuthFlowDestination.ForgotPassword::class) @OptIn(ExperimentalMaterial3Api::class) @Composable fun AuthForgotPasswordScreen(navigator: Navigator = koinInject())</ID>
+    <ID>LongMethod:AuthLoginScreen.kt:@Screen(AuthFlowDestination.Login::class) @OptIn(ExperimentalMaterial3Api::class) @Composable fun AuthLoginScreen(navigator: Navigator = koinInject())</ID>
+    <ID>LongMethod:AuthRegisterScreen.kt:@Screen(AuthFlowDestination.Register::class) @OptIn(ExperimentalMaterial3Api::class) @Composable fun AuthRegisterScreen(navigator: Navigator = koinInject())</ID>
+  </CurrentIssues>
+</SmellBaseline>

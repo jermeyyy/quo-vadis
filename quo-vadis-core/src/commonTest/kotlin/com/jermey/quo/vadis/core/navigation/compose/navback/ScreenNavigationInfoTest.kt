@@ -1,8 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.compose.navback
 
 import androidx.navigationevent.NavigationEventInfo
-import com.jermey.quo.vadis.core.compose.navback.NoScreenInfo
-import com.jermey.quo.vadis.core.compose.navback.ScreenNavigationInfo
+import com.jermey.quo.vadis.core.compose.internal.navback.NoScreenInfo
+import com.jermey.quo.vadis.core.compose.internal.navback.ScreenNavigationInfo
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs

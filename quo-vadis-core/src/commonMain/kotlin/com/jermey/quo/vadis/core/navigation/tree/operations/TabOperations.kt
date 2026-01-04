@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.tree.operations
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.TabNode
 import com.jermey.quo.vadis.core.navigation.activePathToLeaf
@@ -12,6 +13,7 @@ import com.jermey.quo.vadis.core.navigation.findByKey
  * - Switch to tab by key and index
  * - Switch active tab (finds active TabNode automatically)
  */
+@InternalQuoVadisApi
 object TabOperations {
 
     /**

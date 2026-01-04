@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.tree.operations
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.PaneNode
 import com.jermey.quo.vadis.core.navigation.ScreenNode
@@ -17,6 +18,7 @@ import com.jermey.quo.vadis.core.navigation.findByKey
  * These operations are used internally by specialized operation classes
  * (PushOperations, PopOperations, etc.) and the TreeMutator façade.
  */
+@InternalQuoVadisApi
 object TreeNodeOperations {
 
     /**

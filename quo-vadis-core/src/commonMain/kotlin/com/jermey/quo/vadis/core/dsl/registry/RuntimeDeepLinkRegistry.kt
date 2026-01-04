@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.Navigator
 import com.jermey.quo.vadis.core.navigation.DeepLink
 import com.jermey.quo.vadis.core.navigation.NavDestination
@@ -59,6 +60,7 @@ import com.jermey.quo.vadis.core.navigation.NavDestination
  * @see DeepLinkRegistry
  * @see CompositeDeepLinkRegistry
  */
+@InternalQuoVadisApi
 class RuntimeDeepLinkRegistry : DeepLinkRegistry {
 
     private data class PatternRegistration(

@@ -4,7 +4,7 @@ import com.jermey.feature1.resultdemo.ResultDemoDestination
 import com.jermey.feature1.resultdemo.SelectedItem
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Action
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Intent
-import com.jermey.quo.vadis.core.navigation.navigateForResult
+import com.jermey.quo.vadis.core.navigation.result.navigateForResult
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import kotlinx.coroutines.delay

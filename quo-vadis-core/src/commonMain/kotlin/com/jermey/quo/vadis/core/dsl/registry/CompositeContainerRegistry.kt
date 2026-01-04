@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
 import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.PaneNode
 import com.jermey.quo.vadis.core.navigation.TabNode
@@ -31,6 +32,7 @@ import kotlin.reflect.KClass
  * @param navNodeBuilder Function to build NavNodes from destination classes,
  *   using the composite config's resolution logic
  */
+@InternalQuoVadisApi
 internal class CompositeContainerRegistry(
     private val primary: ContainerRegistry,
     private val secondary: ContainerRegistry,

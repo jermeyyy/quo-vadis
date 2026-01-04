@@ -1,5 +1,8 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

@@ -1,8 +1,11 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.compose.animation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +56,7 @@ import com.jermey.quo.vadis.core.compose.navback.BackNavigationEvent
  * @see BackNavigationEvent
  * @see LocalBackAnimationController
  */
+@InternalQuoVadisApi
 @Stable
 class BackAnimationController {
 

@@ -23,8 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.TabsContainer
-import com.jermey.quo.vadis.core.compose.wrapper.TabMetadata
-import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.core.compose.scope.TabMetadata
+import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 
 /**
  * Tabs container wrapper for the main tabs with bottom navigation.

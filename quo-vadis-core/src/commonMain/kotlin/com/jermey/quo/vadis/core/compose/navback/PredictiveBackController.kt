@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -70,6 +71,7 @@ private const val GESTURE_MAX_PROGRESS = 0.17f
  *
  * @see handleGesture
  */
+@InternalQuoVadisApi
 @Stable
 class PredictiveBackController {
 

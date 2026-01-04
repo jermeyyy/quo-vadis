@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import kotlinx.serialization.Serializable
 
 /**
@@ -37,6 +38,7 @@ import kotlinx.serialization.Serializable
  * @property icon Icon identifier string from @TabItem annotation (e.g., "home", "settings")
  * @property route The route identifier for this tab's content
  */
+@InternalQuoVadisApi
 @Serializable
 data class GeneratedTabMetadata(
     val label: String,

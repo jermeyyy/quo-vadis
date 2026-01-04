@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -24,6 +25,7 @@ import kotlinx.coroutines.sync.withLock
  * All operations are thread-safe using [Mutex] for coroutine contexts
  * or direct access for simple single-threaded UI operations.
  */
+@InternalQuoVadisApi
 class NavigationResultManager {
 
     private val mutex = Mutex()

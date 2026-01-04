@@ -6,9 +6,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.compose.NavigationHost
-import com.jermey.quo.vadis.core.compose.wrapper.WindowSizeClass
-import com.jermey.quo.vadis.core.compose.wrapper.calculateWindowSizeClass
-import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.compose.util.calculateWindowSizeClass
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
 
 /**

@@ -1,5 +1,8 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation.config
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.Navigator
 import com.jermey.quo.vadis.core.dsl.registry.CompositeContainerRegistry

@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.PaneNode
 import com.jermey.quo.vadis.core.navigation.TabNode
@@ -66,6 +67,7 @@ import kotlin.reflect.KClass
  * @see NavigationConfigBuilder.tabsContainer
  * @see NavigationConfigBuilder.paneContainer
  */
+@InternalQuoVadisApi
 @Stable
 internal class DslContainerRegistry(
     private val containers: Map<KClass<out NavDestination>, ContainerBuilder>,

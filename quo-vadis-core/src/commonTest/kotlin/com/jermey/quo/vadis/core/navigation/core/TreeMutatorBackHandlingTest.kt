@@ -1,14 +1,15 @@
 package com.jermey.quo.vadis.core.navigation.core
 
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.navigation.ScreenNode
-import com.jermey.quo.vadis.core.navigation.StackNode
-import com.jermey.quo.vadis.core.navigation.TabNode
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
-import com.jermey.quo.vadis.core.navigation.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
-import com.jermey.quo.vadis.core.navigation.tree.result.BackResult
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,6 +28,7 @@ import kotlin.test.assertTrue
  * These tests verify the new back handling architecture introduced in Phase 5 of the
  * back handling refactoring plan.
  */
+@OptIn(InternalQuoVadisApi::class)
 class TreeMutatorBackHandlingTest {
 
     // =========================================================================

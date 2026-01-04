@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.tree.operations
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavDestination
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.PaneNode
@@ -21,6 +22,7 @@ import com.jermey.quo.vadis.core.navigation.tree.operations.TreeNodeOperations.r
  * - Pop to route pattern
  * - Pop to destination type
  */
+@InternalQuoVadisApi
 object PopOperations {
 
     /**

@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.core.compose.animation
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.core.compose.transition.LocalTransitionScope
 
 /**
  * Provides access to [SharedTransitionScope] for shared element transitions.

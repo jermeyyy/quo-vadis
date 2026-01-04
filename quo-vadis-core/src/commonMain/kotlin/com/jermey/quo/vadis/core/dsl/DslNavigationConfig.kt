@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.PaneNode
 import com.jermey.quo.vadis.core.navigation.ScreenNode
@@ -60,6 +61,7 @@ import kotlin.reflect.KClass
  * @see NavigationConfig
  * @see navigationConfig
  */
+@InternalQuoVadisApi
 internal class DslNavigationConfig(
     private val screens: Map<KClass<out NavDestination>, ScreenEntry>,
     private val containers: Map<KClass<out NavDestination>, ContainerBuilder>,

@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.dsl
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.NavDestination
 import kotlin.reflect.KClass
@@ -43,6 +44,7 @@ import kotlin.reflect.KClass
  * @see ScopeRegistry
  * @see NavigationConfigBuilder.scope
  */
+@InternalQuoVadisApi
 internal class DslScopeRegistry(
     private val scopes: Map<String, Set<KClass<out NavDestination>>>
 ) : ScopeRegistry {

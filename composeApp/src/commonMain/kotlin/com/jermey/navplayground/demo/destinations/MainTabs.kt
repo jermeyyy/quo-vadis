@@ -10,7 +10,7 @@ import com.jermey.quo.vadis.annotations.TabItem
 import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.annotations.Transition
 import com.jermey.quo.vadis.annotations.TransitionType
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 /**
  * Home tab - Main entry point and navigation patterns showcase.

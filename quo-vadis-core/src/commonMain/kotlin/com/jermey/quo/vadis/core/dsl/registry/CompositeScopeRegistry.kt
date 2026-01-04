@@ -1,10 +1,12 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavDestination
 
 /**
  * Composite scope registry that delegates to secondary first, then primary.
  */
+@InternalQuoVadisApi
 internal class CompositeScopeRegistry(
     private val primary: ScopeRegistry,
     private val secondary: ScopeRegistry

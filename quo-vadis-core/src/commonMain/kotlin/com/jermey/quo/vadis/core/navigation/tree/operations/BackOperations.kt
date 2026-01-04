@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.tree.operations
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavDestination
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.PaneNode
@@ -23,6 +24,7 @@ import com.jermey.quo.vadis.core.navigation.tree.result.PopResult
  * - Pane back behavior
  * - Query whether back navigation is possible
  */
+@InternalQuoVadisApi
 object BackOperations {
 
     /**

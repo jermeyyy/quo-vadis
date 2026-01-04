@@ -8,7 +8,7 @@ import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.TabItem
 import com.jermey.quo.vadis.annotations.Tabs
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 /**
  * Tabs Demo navigation destinations.

@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.tree.operations
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavDestination
 import com.jermey.quo.vadis.core.navigation.NavNode
 import com.jermey.quo.vadis.core.navigation.PaneNode
@@ -27,6 +28,7 @@ import kotlin.uuid.Uuid
  * - Adaptive pop based on layout configuration
  * - Configure/remove pane configurations
  */
+@InternalQuoVadisApi
 object PaneOperations {
 
     /**

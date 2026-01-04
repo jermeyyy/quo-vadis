@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.animation.NavTransition
 import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.NavDestination
@@ -45,6 +46,7 @@ import kotlin.reflect.KClass
  * @see NavTransition
  * @see NavigationConfigBuilder.transition
  */
+@InternalQuoVadisApi
 @Stable
 internal class DslTransitionRegistry(
     private val transitions: Map<KClass<out NavDestination>, NavTransition>

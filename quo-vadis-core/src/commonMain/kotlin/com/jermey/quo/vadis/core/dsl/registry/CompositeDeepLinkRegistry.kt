@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.dsl.registry
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.Navigator
 import com.jermey.quo.vadis.core.navigation.DeepLink
 import com.jermey.quo.vadis.core.navigation.NavDestination
@@ -13,6 +14,7 @@ import com.jermey.quo.vadis.core.navigation.NavDestination
  * @param generated The generated registry from KSP (nullable for apps without generated handlers)
  * @param runtime The runtime registry for dynamic registrations
  */
+@InternalQuoVadisApi
 class CompositeDeepLinkRegistry(
     private val generated: DeepLinkRegistry?,
     private val runtime: RuntimeDeepLinkRegistry = RuntimeDeepLinkRegistry()
