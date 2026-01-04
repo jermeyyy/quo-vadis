@@ -35,8 +35,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MessagesPane
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.Navigator
-import com.jermey.quo.vadis.core.navigation.asPaneNavigator
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
+import com.jermey.quo.vadis.core.navigation.navigator.asPaneNavigator
 import org.koin.compose.koinInject
 
 /**

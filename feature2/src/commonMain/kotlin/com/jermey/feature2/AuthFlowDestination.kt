@@ -2,7 +2,7 @@ package com.jermey.feature2
 
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 /**
  * Auth flow destinations - Demonstrates scope-aware stack navigation.

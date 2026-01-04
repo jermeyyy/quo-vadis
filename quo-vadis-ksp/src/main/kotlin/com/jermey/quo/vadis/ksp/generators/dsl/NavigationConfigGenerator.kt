@@ -251,17 +251,24 @@ class NavigationConfigGenerator(
      */
     private fun FileSpec.Builder.addImports(): FileSpec.Builder {
         // Core navigation imports (explicit strings for non-ClassName references)
-        addImport("com.jermey.quo.vadis.core.navigation.config", "CompositeNavigationConfig")
+        addImport("com.jermey.quo.vadis.core.navigation.internal.config", "CompositeNavigationConfig")
         addImport("com.jermey.quo.vadis.core.dsl", "navigationConfig")
-        addImport("com.jermey.quo.vadis.core.compose.animation", "NavTransition")
         addImport("kotlin.reflect", "KClass")
 
-        // Pane container imports (for PaneBackBehavior in generated DSL)
-        addImport("com.jermey.quo.vadis.core.navigation.pane", "PaneBackBehavior")
+        // Registry imports
+//        addImport("com.jermey.quo.vadis.core.dsl.registry.", "TransitionRegistry")
+        addImport("com.jermey.quo.vadis.core.registry", "DeepLinkRegistry")
+        addImport("com.jermey.quo.vadis.core.registry", "PaneRoleRegistry")
 
         // Compose animation imports (for screen registry)
         addImport("androidx.compose.animation", "SharedTransitionScope", "AnimatedVisibilityScope")
         addImport("androidx.compose.runtime", "Composable")
+
+        // Pane imports
+        addImport("com.jermey.quo.vadis.core.navigation.pane", "PaneBackBehavior")
+
+        // Transition imports
+        addImport("com.jermey.quo.vadis.core.compose.animation", "NavTransition")
 
         return this
     }
@@ -300,7 +307,7 @@ class NavigationConfigGenerator(
             .addProperty(buildBaseConfigProperty(data))
             .addProperty(buildScreenRegistryProperty(data.screens))
             .addProperty(buildContainerRegistryProperty(data.wrappers, data.tabs, data.panes))
-            .addProperties(buildDelegationProperties())
+            .addProperties(buildDelegationProperties(data))
             .addProperty(buildDeepLinkRegistryProperty(hasRoutes))
             .addProperty(buildPaneRoleRegistryProperty(paneRoleData))
             .addFunction(buildBuildNavNodeFunction())
@@ -445,20 +452,36 @@ class NavigationConfigGenerator(
     }
 
     /**
-     * Builds the delegation properties for NavigationConfig implementation.
-     *
      * NOTE: screenRegistry is NOT delegated here because it is implemented as
      * a custom anonymous object with when-based dispatch. containerRegistry is
      * also implemented with when-based dispatch to handle wrapper composables.
      * deepLinkRegistry is NOT delegated because it references the generated handler
      * object directly instead of baseConfig (which would be null from DSL).
      * Only non-composable registries are delegated to baseConfig.
+     * 
+     * Transition registry is only delegated if there are actual transitions defined,
+     * otherwise we provide TransitionRegistry.Empty as default implementation.
      */
-    private fun buildDelegationProperties(): List<PropertySpec> {
-        return listOf(
-            buildDelegationProperty("scopeRegistry", QuoVadisClassNames.SCOPE_REGISTRY),
-            buildDelegationProperty("transitionRegistry", QuoVadisClassNames.TRANSITION_REGISTRY)
-        )
+    private fun buildDelegationProperties(data: NavigationData): List<PropertySpec> {
+        val properties = mutableListOf<PropertySpec>()
+        
+        // Always delegate scope registry
+        properties.add(buildDelegationProperty("scopeRegistry", QuoVadisClassNames.SCOPE_REGISTRY))
+        
+        // Handle transition registry - delegate if transitions exist, otherwise provide empty default
+        if (data.transitions.isNotEmpty()) {
+            properties.add(buildDelegationProperty("transitionRegistry", QuoVadisClassNames.TRANSITION_REGISTRY))
+        } else {
+            // Provide TransitionRegistry.Empty as default when no transitions are defined
+            properties.add(
+                PropertySpec.builder("transitionRegistry", QuoVadisClassNames.TRANSITION_REGISTRY)
+                    .addModifiers(KModifier.OVERRIDE)
+                    .initializer("%T.Empty", QuoVadisClassNames.TRANSITION_REGISTRY)
+                    .build()
+            )
+        }
+        
+        return properties
     }
 
     /**

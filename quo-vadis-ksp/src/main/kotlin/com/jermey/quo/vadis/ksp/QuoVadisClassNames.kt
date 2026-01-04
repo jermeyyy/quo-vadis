@@ -1,24 +1,5 @@
 package com.jermey.quo.vadis.ksp
 
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.navigation.Navigator
-import com.jermey.quo.vadis.core.compose.animation.TransitionScope
-import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.dsl.registry.ContainerInfo
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.dsl.registry.PaneRoleRegistry
-import com.jermey.quo.vadis.core.dsl.registry.RouteRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
-import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
-import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
-import com.jermey.quo.vadis.core.navigation.DeepLink
-import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.DeepLinkResult
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.squareup.kotlinpoet.ClassName
 import kotlin.reflect.KClass
 
@@ -31,37 +12,37 @@ import kotlin.reflect.KClass
 internal object QuoVadisClassNames {
     
     // Core navigation classes
-    val NAVIGATOR: ClassName = Navigator::class.toClassName()
-    val NAVIGATION_CONFIG: ClassName = NavigationConfig::class.toClassName()
-    val NAVIGATION_TRANSITION: ClassName = NavigationTransition::class.toClassName()
-    val ROUTE_REGISTRY: ClassName = RouteRegistry::class.toClassName()
-    val NAV_DESTINATION: ClassName = NavDestination::class.toClassName()
-    val SCREEN_REGISTRY: ClassName = ScreenRegistry::class.toClassName()
-    val DEEP_LINK_REGISTRY: ClassName = DeepLinkRegistry::class.toClassName()
-    val DEEP_LINK_RESULT: ClassName = DeepLinkResult::class.toClassName()
-    val SCOPE_REGISTRY: ClassName = ScopeRegistry::class.toClassName()
-    val TRANSITION_REGISTRY: ClassName = TransitionRegistry::class.toClassName()
-    val PANE_ROLE_REGISTRY: ClassName = PaneRoleRegistry::class.toClassName()
+    val NAVIGATOR: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.navigator", "Navigator")
+    val NAVIGATION_CONFIG: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.config", "NavigationConfig")
+    val NAVIGATION_TRANSITION: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.transition", "NavigationTransition")
+    val ROUTE_REGISTRY: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "RouteRegistry")
+    val NAV_DESTINATION: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.destination", "NavDestination")
+    val SCREEN_REGISTRY: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "ScreenRegistry")
+    val DEEP_LINK_REGISTRY: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "DeepLinkRegistry")
+    val DEEP_LINK_RESULT: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.destination", "DeepLinkResult")
+    val SCOPE_REGISTRY: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "ScopeRegistry")
+    val TRANSITION_REGISTRY: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "TransitionRegistry")
+    val PANE_ROLE_REGISTRY: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "PaneRoleRegistry")
     
     // Deep linking classes
-    val DEEP_LINK: ClassName = DeepLink::class.toClassName()
+    val DEEP_LINK: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.destination", "DeepLink")
     val DEEP_LINK_RESULT_MATCHED: ClassName = DEEP_LINK_RESULT.nestedClass("Matched")
     val DEEP_LINK_RESULT_NOT_MATCHED: ClassName = DEEP_LINK_RESULT.nestedClass("NotMatched")
     
     // NavNode tree
-    val NAV_NODE: ClassName = NavNode::class.toClassName()
+    val NAV_NODE: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.node", "NavNode")
     
     // Compose classes
-    val TRANSITION_SCOPE: ClassName = TransitionScope::class.toClassName()
+    val TRANSITION_SCOPE: ClassName = ClassName("com.jermey.quo.vadis.core.compose.animation", "TransitionScope")
     
     // Container registry classes (unified container building + wrapper rendering)
-    val CONTAINER_REGISTRY: ClassName = ContainerRegistry::class.toClassName()
-    val CONTAINER_INFO: ClassName = ContainerInfo::class.toClassName()
-    val CONTAINER_INFO_TAB_CONTAINER: ClassName = ContainerInfo.TabContainer::class.toClassName()
-    val CONTAINER_INFO_PANE_CONTAINER: ClassName = ContainerInfo.PaneContainer::class.toClassName()
-    val PANE_ROLE: ClassName = PaneRole::class.toClassName()
-    val TABS_CONTAINER_SCOPE: ClassName = TabsContainerScope::class.toClassName()
-    val PANE_CONTAINER_SCOPE: ClassName = PaneContainerScope::class.toClassName()
+    val CONTAINER_REGISTRY: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "ContainerRegistry")
+    val CONTAINER_INFO: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "ContainerInfo")
+    val CONTAINER_INFO_TAB_CONTAINER: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "ContainerInfo.TabContainer")
+    val CONTAINER_INFO_PANE_CONTAINER: ClassName = ClassName("com.jermey.quo.vadis.core.registry", "ContainerInfo.PaneContainer")
+    val PANE_ROLE: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.pane", "PaneRole")
+    val TABS_CONTAINER_SCOPE: ClassName = ClassName("com.jermey.quo.vadis.core.compose.scope", "TabsContainerScope")
+    val PANE_CONTAINER_SCOPE: ClassName = ClassName("com.jermey.quo.vadis.core.compose.scope", "PaneContainerScope")
     
     // Compose animation classes (from AndroidX - use hardcoded names)
     val COMPOSABLE: ClassName = ClassName("androidx.compose.runtime", "Composable")
@@ -76,15 +57,4 @@ internal object QuoVadisClassNames {
         "com.jermey.quo.vadis.annotations",
         "Argument"
     )
-    
-    /**
-     * Convert KClass to KotlinPoet ClassName.
-     */
-    private fun KClass<*>.toClassName(): ClassName {
-        val qualifiedName = this.qualifiedName 
-            ?: throw IllegalArgumentException("Cannot get qualified name for $this")
-        val packageName = qualifiedName.substringBeforeLast('.', "")
-        val simpleNames = qualifiedName.substringAfterLast('.').split('.')
-        return ClassName(packageName, simpleNames)
-    }
 }

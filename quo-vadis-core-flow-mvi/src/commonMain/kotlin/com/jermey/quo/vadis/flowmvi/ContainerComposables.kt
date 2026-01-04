@@ -18,7 +18,7 @@ package com.jermey.quo.vadis.flowmvi
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NavNode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

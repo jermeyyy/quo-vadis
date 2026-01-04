@@ -1,3 +1,5 @@
+@file:OptIn(InternalQuoVadisApi::class, InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.compose.render
 
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -6,13 +8,14 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.SaveableStateHolder
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.navigation.Navigator
-import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
 import com.jermey.quo.vadis.core.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.ScreenRegistry
 
 /**
  * Core scope interface that provides context to all hierarchical renderers.

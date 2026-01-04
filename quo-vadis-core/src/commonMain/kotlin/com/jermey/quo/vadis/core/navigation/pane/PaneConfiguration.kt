@@ -1,6 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.pane
 
-import com.jermey.quo.vadis.core.navigation.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NavNode
 import kotlinx.serialization.Serializable
 
 /**

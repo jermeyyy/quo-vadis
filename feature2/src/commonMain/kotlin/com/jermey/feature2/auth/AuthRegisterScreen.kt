@@ -29,7 +29,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.jermey.feature2.AuthFlowDestination
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
 
 /**
@@ -127,7 +127,7 @@ fun AuthRegisterScreen(navigator: Navigator = koinInject()) {
 
             Text(
                 "After registration, navigating to MainTabs\n" +
-                    "will exit the AuthFlow scope.",
+                        "will exit the AuthFlow scope.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

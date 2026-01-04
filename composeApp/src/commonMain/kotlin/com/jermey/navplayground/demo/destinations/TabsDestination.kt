@@ -8,7 +8,7 @@ import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.TabItem
 import com.jermey.quo.vadis.annotations.Tabs
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 /**
  * Tabs Demo navigation destinations.
@@ -32,7 +32,7 @@ sealed class DemoTabs : NavDestination {
      * Companion object used as the wrapper key for @TabsContainer.
      * This allows the wrapper to be associated with the DemoTabs container.
      */
-    companion object: NavDestination
+    companion object : NavDestination
 
     /**
      * Music tab - shows a list of music items
@@ -71,7 +71,7 @@ sealed class DemoTabs : NavDestination {
 }
 
 @Destination(route = "demo/tabs/music/detail/{itemId}")
-data class MusicDetail(@Argument val itemId: String): NavDestination
+data class MusicDetail(@Argument val itemId: String) : NavDestination
 
 @Destination(route = "demo/tabs/movies/detail/{itemId}")
 data class MoviesDetail(@Argument val itemId: String) : NavDestination

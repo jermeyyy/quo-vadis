@@ -1,6 +1,10 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.dsl
 
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.dsl.internal.BuiltTabsConfig
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import kotlin.reflect.KClass
 
 /**

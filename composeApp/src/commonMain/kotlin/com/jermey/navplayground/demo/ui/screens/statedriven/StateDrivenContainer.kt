@@ -3,11 +3,11 @@ package com.jermey.navplayground.demo.ui.screens.statedriven
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.navigation.ScreenNode
-import com.jermey.quo.vadis.core.navigation.StackNode
-import com.jermey.quo.vadis.core.navigation.TabNode
-import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
 import com.jermey.quo.vadis.flowmvi.SharedContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedNavigationContainer
 import kotlinx.coroutines.flow.launchIn
@@ -19,7 +19,11 @@ import pro.respawn.flowmvi.plugins.enableLogging
 import pro.respawn.flowmvi.plugins.recover
 import pro.respawn.flowmvi.plugins.reduce
 import pro.respawn.flowmvi.plugins.whileSubscribed
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import kotlin.jvm.JvmSuppressWildcards
+import androidx.compose.runtime.CompositionLocalProvider
 
+@OptIn(InternalQuoVadisApi::class)
 private typealias Ctx = PipelineContext<StateDrivenState, StateDrivenIntent, StateDrivenAction>
 
 /**
@@ -41,6 +45,7 @@ private typealias Ctx = PipelineContext<StateDrivenState, StateDrivenIntent, Sta
  * @param scope The shared container scope providing access to navigator.
  * @param debuggable Whether to enable debug logging for the store.
  */
+@OptIn(InternalQuoVadisApi::class)
 class StateDrivenContainer(
     scope: SharedContainerScope,
     private val debuggable: Boolean = false

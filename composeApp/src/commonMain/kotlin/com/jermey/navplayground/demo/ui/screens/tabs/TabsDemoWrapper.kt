@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.quo.vadis.annotations.TabsContainer
-import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.flowmvi.rememberSharedContainer
 import pro.respawn.flowmvi.compose.dsl.subscribe
 

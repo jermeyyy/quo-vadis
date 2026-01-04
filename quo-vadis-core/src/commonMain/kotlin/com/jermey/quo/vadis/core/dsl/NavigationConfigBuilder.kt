@@ -1,14 +1,19 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.animation.NavTransition
-import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
+import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+import com.jermey.quo.vadis.core.dsl.internal.DslNavigationConfig
+import com.jermey.quo.vadis.core.dsl.internal.ScreenEntry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import kotlin.reflect.KClass
 
 /**

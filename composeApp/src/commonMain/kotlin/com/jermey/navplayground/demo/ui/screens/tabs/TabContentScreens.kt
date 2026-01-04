@@ -36,7 +36,7 @@ import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.navplayground.demo.destinations.MoviesDetail
 import com.jermey.navplayground.demo.destinations.MusicDetail
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
 import pro.respawn.flowmvi.compose.dsl.subscribe
 

@@ -1,7 +1,7 @@
 package com.jermey.feature1.resultdemo.container
 
 import com.jermey.feature1.resultdemo.SelectedItem
-import com.jermey.quo.vadis.core.navigation.navigateBackWithResult
+import com.jermey.quo.vadis.core.navigation.result.navigateBackWithResult
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import pro.respawn.flowmvi.api.MVIAction

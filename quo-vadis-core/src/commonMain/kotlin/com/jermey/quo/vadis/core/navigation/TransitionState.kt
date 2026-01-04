@@ -1,11 +1,19 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation
+
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 
 /**
  * Transition state interface for navigation animations.
  *
+ * **Internal API** - This is an internal implementation detail of Quo Vadis.
+ * The transition state is managed internally by the navigation system.
+ *
  * Represents the current state of a navigation transition,
  * including progress, gesture tracking, and transition metadata.
  */
+@InternalQuoVadisApi
 sealed interface TransitionState {
 
     /**

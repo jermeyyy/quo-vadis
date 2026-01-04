@@ -49,7 +49,7 @@ import com.jermey.navplayground.demo.ui.components.DetailRow
 import com.jermey.navplayground.demo.ui.components.SpecificationRow
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.compose.animation.TransitionScope
-import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
 
 private const val RELATED_ITEMS_COUNT = 5

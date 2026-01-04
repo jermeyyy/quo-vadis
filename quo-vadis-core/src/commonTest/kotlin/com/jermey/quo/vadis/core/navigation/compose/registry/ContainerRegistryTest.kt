@@ -1,8 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.compose.registry
 
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
+import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.core.dsl.registry.ContainerInfo
 import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.NavDestination

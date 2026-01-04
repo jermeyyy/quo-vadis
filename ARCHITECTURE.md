@@ -6,6 +6,7 @@ This document describes the architectural design of the Quo Vadis navigation lib
 
 - [Overview](#overview)
 - [Architecture Diagram](#architecture-diagram)
+- [Package Structure](#package-structure)
 - [Logic Layer](#logic-layer)
   - [Navigator Interface](#navigator-interface)
   - [TreeNavigator Implementation](#treenavigator-implementation)
@@ -20,7 +21,25 @@ This document describes the architectural design of the Quo Vadis navigation lib
   - [StackNode](#stacknode)
   - [TabNode](#tabnode)
   - [PaneNode](#panenode)
+- [Registry System](#registry-system)
+  - [ScreenRegistry](#screenregistry)
+  - [ContainerRegistry](#containerregistry)
+  - [TransitionRegistry](#transitionregistry)
+  - [ScopeRegistry](#scoperegistry)
+  - [DeepLinkRegistry](#deeplinkregistry)
+  - [Composite Registries](#composite-registries)
+- [DSL Configuration](#dsl-configuration)
+  - [NavigationConfigBuilder](#navigationconfigbuilder)
+  - [Screen Configuration](#screen-configuration)
+  - [Container Configuration](#container-configuration)
+  - [Transition Configuration](#transition-configuration)
+  - [Scope Configuration](#scope-configuration)
+  - [Configuration Usage](#configuration-usage)
+  - [DSL Benefits](#dsl-benefits)
+- [Life Cycle Management](#life-cycle-management)
+- [FlowMVI Integration](#flowmvi-integration)
 - [Layer Interaction](#layer-interaction)
+- [Summary](#summary)
 
 ---
 
@@ -29,12 +48,16 @@ This document describes the architectural design of the Quo Vadis navigation lib
 Quo Vadis uses a **tree-based navigation architecture** where:
 
 1. **Logic Layer** manages navigation state as an immutable tree of `NavNode` objects
-2. **Rendering Layer** recursively renders the tree to Compose UI with animations
+2. **Rendering Layer** recursively renders the tree to Compose UI with animations  
+3. **Registry System** provides extensibility for screens, containers, and transitions
+4. **DSL Configuration** offers a clean API for setting up navigation
 
 This separation ensures:
 - **Clean state management**: All navigation logic is isolated in the logic layer
 - **Flexible rendering**: UI adapts to different screen sizes and platforms
 - **Testability**: Logic can be unit tested without UI dependencies
+- **Extensibility**: Registry system allows custom screens, containers, and transitions
+- **Ease of use**: DSL provides a declarative configuration API
 
 ---
 
@@ -92,7 +115,7 @@ This separation ensures:
 │  │  - state: StateFlow<NavNode>                                            │ │
 │  │  - navigate(), navigateBack()                                           │ │
 │  │  - transitionState, currentDestination                                  │ │
-│  └───────────────────────────────────┬─────────────────────────────────────┘ │
+│  │  └───────────────────────────────────┬─────────────────────────────────────┘ │
 │                                      │                                        │
 │                                      ▼                                        │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
@@ -102,7 +125,7 @@ This separation ensures:
 │  │  - Container-aware navigation                                           │ │
 │  │  - Scope-aware navigation                                               │ │
 │  │  - Lifecycle event dispatch                                             │ │
-│  └───────────────────────────────────┬─────────────────────────────────────┘ │
+│  │  └───────────────────────────────────┬─────────────────────────────────────┘ │
 │                                      │                                        │
 │                                      ▼                                        │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
@@ -132,6 +155,42 @@ This separation ensures:
 
 ---
 
+## Package Structure
+
+The Quo Vadis library is organized into four main packages:
+
+### `navigation` - Core Navigation Logic
+- **Navigator interface and TreeNavigator implementation**
+- **NavNode hierarchy** (ScreenNode, StackNode, TabNode, PaneNode)
+- **Navigation operations** (push, pop, tab switching, pane navigation)
+- **Destination and deep link handling**
+- **Transition and result management**
+- **Scope-aware and container-aware navigation**
+
+### `compose` - Compose UI Rendering
+- **HierarchicalNavigationHost** - Main entry point for UI rendering
+- **Specialized renderers** (Screen, Stack, Tab, Pane) with animations
+- **Animation and transition system** including predictive back gestures
+- **Shared element transition support**
+- **CompositionLocals and rendering scopes**
+
+### `registry` - Extensibility System
+- **ScreenRegistry** - Maps destinations to composable content
+- **ContainerRegistry** - Provides custom tab/pane wrappers
+- **TransitionRegistry** - Custom transition animations
+- **ScopeRegistry** - Scope-aware navigation rules
+- **DeepLinkRegistry** - Deep link handling
+- **Composite registries** for modular composition
+
+### `dsl` - Configuration DSL
+- **NavigationConfigBuilder** - Main configuration entry point
+- **StackBuilder, TabsBuilder, PanesBuilder** - Container configuration
+- **Registry integration** - DSL for registering screens, containers, transitions
+- **Type-safe configuration** with builder pattern
+- **Animation and scope configuration**
+
+---
+
 ## Logic Layer
 
 The logic layer is responsible for managing navigation state as an immutable tree structure.
@@ -140,19 +199,17 @@ The logic layer is responsible for managing navigation state as an immutable tre
 
 `Navigator` is the central navigation controller interface that defines the contract for all navigation operations.
 
-**Location**: `quo-vadis-core/.../core/Navigator.kt`
+**Location**: `quo-vadis-core/.../core/navigation/navigator/Navigator.kt`
 
 #### Key Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `state` | `StateFlow<NavNode>` | Current navigation state as immutable tree |
-| `transitionState` | `StateFlow<TransitionState>` | Animation/transition state |
 | `currentDestination` | `StateFlow<NavDestination?>` | Active destination (derived) |
 | `previousDestination` | `StateFlow<NavDestination?>` | Previous destination (derived) |
 | `canNavigateBack` | `StateFlow<Boolean>` | Whether back navigation is possible |
-| `resultManager` | `NavigationResultManager` | Manages navigation result passing |
-| `lifecycleManager` | `NavigationLifecycleManager` | Manages lifecycle callbacks |
+| `config` | `NavigationConfig` | Complete navigation configuration |
 
 #### Navigation Operations
 
@@ -166,56 +223,30 @@ fun navigateAndClearTo(destination: NavDestination, clearRoute: String?, inclusi
 fun navigateAndReplace(destination: NavDestination, transition: NavigationTransition?)
 fun navigateAndClearAll(destination: NavDestination)
 
-// Pane operations
-fun isPaneAvailable(role: PaneRole): Boolean
-fun paneContent(role: PaneRole): NavNode?
-fun navigateBackInPane(role: PaneRole): Boolean
-
 // Deep linking
+fun handleDeepLink(uri: String): Boolean
 fun handleDeepLink(deepLink: DeepLink)
-fun getDeepLinkHandler(): DeepLinkHandler
-
-// State manipulation (advanced)
-fun updateState(newState: NavNode, transition: NavigationTransition?)
 ```
 
-#### Predictive Back Support
+#### Configuration Integration
+
+The Navigator now integrates directly with `NavigationConfig`, eliminating the need to pass configuration separately to NavigationHost:
 
 ```kotlin
-fun startPredictiveBack()
-fun updatePredictiveBack(progress: Float, touchX: Float, touchY: Float)
-fun cancelPredictiveBack()
-fun commitPredictiveBack()
-fun completeTransition()
-```
+val navigator = TreeNavigator(
+    config = GeneratedNavigationConfig,
+    initialState = buildInitialState()
+)
 
----
+// Config is read from navigator
+NavigationHost(navigator)
+```
 
 ### TreeNavigator Implementation
 
 `TreeNavigator` is the concrete implementation of `Navigator` using a tree-based state model.
 
-**Location**: `quo-vadis-core/.../core/TreeNavigator.kt`
-
-#### Constructor Parameters
-
-```kotlin
-class TreeNavigator(
-    private val deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler(),
-    private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
-    initialState: NavNode? = null,
-    private val scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
-    private val containerRegistry: ContainerRegistry = ContainerRegistry.Empty
-) : Navigator
-```
-
-| Parameter | Description |
-|-----------|-------------|
-| `deepLinkHandler` | Handler for deep link navigation |
-| `coroutineScope` | Scope for derived state computations |
-| `initialState` | Optional initial navigation state |
-| `scopeRegistry` | Registry for scope-aware navigation |
-| `containerRegistry` | Registry for container-aware navigation |
+**Location**: `quo-vadis-core/.../core/navigation/navigator/TreeNavigator.kt`
 
 #### Key Features
 
@@ -227,36 +258,35 @@ class TreeNavigator(
 2. **Container-Aware Navigation**
    - Checks if destination needs a container (tabs/panes)
    - Creates container structure when navigating to containerized destinations
-   - Uses `ContainerRegistry` to build appropriate nodes
+   - Uses `NavigationConfig` to build appropriate nodes
 
 3. **Scope-Aware Navigation**
-   - Uses `ScopeRegistry` to determine destination scopes
+   - Uses scope information from `NavigationConfig` to determine destination scopes
    - Out-of-scope destinations push to parent stack
    - Preserves predictive back gestures for container navigation
 
-4. **Derived State Computation**
-   - `currentDestination`, `previousDestination`, `canNavigateBack` are derived
-   - Updated synchronously after state mutations
-   - Backed by `MutableStateFlow` for test compatibility
-
-5. **Lifecycle Event Dispatch**
-   - Dispatches `onScreenExited` and `onScreenDestroyed` events
-   - Cancels pending results for destroyed screens
-   - Uses coroutine for async dispatch
-
----
+4. **Configuration Integration**
+   - Stores complete `NavigationConfig` for rendering layer access
+   - Eliminates config duplication between Navigator and NavigationHost
 
 ### TreeMutator
 
-`TreeMutator` is a singleton object containing pure functions for tree manipulation.
+`TreeMutator` has been refactored into operation-specific modules:
 
-**Location**: `quo-vadis-core/.../core/TreeMutator.kt`
+**Locations**: 
+- `quo-vadis-core/.../core/navigation/tree/operations/PushOperations.kt`
+- `quo-vadis-core/.../core/navigation/tree/operations/PopOperations.kt`
+- `quo-vadis-core/.../core/navigation/tree/operations/TabOperations.kt`
+- `quo-vadis-core/.../core/navigation/tree/operations/PaneOperations.kt`
+- `quo-vadis-core/.../core/navigation/tree/operations/BackOperations.kt`
+- `quo-vadis-core/.../core/navigation/tree/operations/TreeNodeOperations.kt`
 
 #### Design Philosophy
 
 - **Pure Functions**: All operations take a tree and return a new tree
 - **Immutability**: Original tree is never modified
 - **Structural Sharing**: Unchanged subtrees are reused
+- **Modular Organization**: Operations are organized by type (push, pop, tab, pane, back)
 
 #### Key Operations
 
@@ -307,67 +337,19 @@ fun switchActivePane(root: NavNode, nodeKey: String, role: PaneRole): NavNode
 fun popPane(root: NavNode, nodeKey: String, role: PaneRole): NavNode?
 ```
 
-**Back Navigation**
-```kotlin
-fun popWithTabBehavior(root: NavNode): BackResult
-fun canHandleBackNavigation(root: NavNode): Boolean
-```
-
-#### Result Types
-
-```kotlin
-sealed class PopResult {
-    data class Popped(val newState: NavNode) : PopResult()
-    data object AlreadyEmpty : PopResult()
-    data object AtRoot : PopResult()
-}
-
-sealed class BackResult {
-    data class Handled(val newState: NavNode) : BackResult()
-    data object DelegateToSystem : BackResult()
-    data object CannotHandle : BackResult()
-}
-```
-
 ---
 
 ## Rendering Layer
 
-The rendering layer converts the navigation tree to Compose UI.
+The rendering layer converts the navigation tree to Compose UI using hierarchical rendering.
 
 ### NavigationHost
 
-`NavigationHost` is the main entry point for rendering navigation content.
+`NavigationHost` is the main entry point for rendering navigation content, now featuring **hierarchical rendering**.
 
-**Location**: `quo-vadis-core/.../compose/NavigationHost.kt`
+**Location**: `quo-vadis-core/.../core/compose/NavigationHost.kt`
 
-#### Usage
-
-```kotlin
-@Composable
-fun NavigationHost(
-    navigator: Navigator,
-    modifier: Modifier = Modifier,
-    screenRegistry: ScreenRegistry = EmptyScreenRegistry,
-    containerRegistry: ContainerRegistry = ContainerRegistry.Empty,
-    transitionRegistry: TransitionRegistry = TransitionRegistry.Empty,
-    scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
-    enablePredictiveBack: Boolean = true,
-    windowSizeClass: WindowSizeClass? = null
-)
-
-// Or with unified config
-@Composable
-fun NavigationHost(
-    navigator: Navigator,
-    config: NavigationConfig,
-    modifier: Modifier = Modifier,
-    enablePredictiveBack: Boolean = true,
-    windowSizeClass: WindowSizeClass? = null
-)
-```
-
-#### Responsibilities
+#### Key Responsibilities
 
 1. **State Collection**
    - Collects `navigator.state` as Compose state
@@ -380,28 +362,49 @@ fun NavigationHost(
    - Creates `PredictiveBackController` for gesture handling
    - Creates `BackAnimationController` for back animations
 
-3. **Predictive Back Integration**
-   - Wraps content in `NavigateBackHandler`
-   - Computes speculative pop state at gesture start
-   - Updates animation progress during gesture
-   - Commits or cancels navigation on gesture completion
+3. **Hierarchical Rendering**
+   - Preserves parent-child relationships in the navigation tree
+   - Enables scoped animations for each container type
+   - Supports predictive back gestures across entire subtrees
+   - Simplifies state management with container-scoped responsibility
 
-4. **Shared Element Transitions**
-   - Wraps content in `SharedTransitionLayout`
-   - Provides `SharedTransitionScope` via `LocalNavRenderScope`
+4. **Configuration Integration**
+   - Automatically reads configuration from `Navigator.config`
+   - Eliminates need to pass config twice (once to Navigator, once to NavigationHost)
 
-5. **CompositionLocal Setup**
-   - Provides `LocalNavRenderScope` for render context
-   - Provides `LocalBackHandlerRegistry` for custom back handlers
-   - Provides `LocalBackAnimationController` for animations
+#### Usage Patterns
+
+**Simple Usage** (Recommended):
+```kotlin
+@Composable
+fun App() {
+    val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
+    
+    // Config is now implicit - read from navigator
+    NavigationHost(navigator)
+}
+```
+
+**Advanced Usage with Custom Registries**:
+```kotlin
+NavigationHost(
+    navigator = navigator,
+    screenRegistry = MyGeneratedScreenRegistry,
+    containerRegistry = MyGeneratedContainerRegistry,
+    transitionRegistry = MyGeneratedTransitionRegistry,
+    scopeRegistry = MyGeneratedScopeRegistry,
+    enablePredictiveBack = true,
+    windowSizeClass = currentWindowSizeClass()
+)
+```
 
 ---
 
 ### NavNodeRenderer
 
-`NavNodeRenderer` is the core recursive renderer that dispatches to specialized renderers.
+`NavNodeRenderer` is the core recursive renderer that dispatches to specialized renderers based on node type.
 
-**Location**: `quo-vadis-core/.../compose/render/NavTreeRenderer.kt`
+**Location**: `quo-vadis-core/.../core/compose/render/NavNodeRenderer.kt`
 
 #### Dispatch Logic
 
@@ -422,17 +425,18 @@ internal fun NavNodeRenderer(
 }
 ```
 
-#### Design Principles
+#### Hierarchical Design
 
 1. **Hierarchical Rendering**: Preserves parent-child relationships
 2. **Animation Pairing**: Uses `previousNode` for transition detection
 3. **Recursive Traversal**: Each renderer may call `NavNodeRenderer` for children
+4. **Container Scoping**: Each container manages its own animations and state
 
 ---
 
 ### Specialized Renderers
 
-#### ScreenRenderer
+#### HierarchicalScreenRenderer
 
 Renders leaf `ScreenNode` content via the screen registry.
 
@@ -440,20 +444,21 @@ Renders leaf `ScreenNode` content via the screen registry.
 - Uses `ComposableCache` for state preservation
 - Provides `LocalScreenNode` and `LocalAnimatedVisibilityScope`
 - Invokes `ScreenRegistry.Content()` with destination
+- Supports shared element transitions
 
-#### StackRenderer
+#### HierarchicalStackRenderer
 
-Renders `StackNode` with animated transitions.
+Renders `StackNode` with animated stack transitions.
 
 **Features**:
 - Detects navigation direction (forward/back) by comparing stack sizes
-- Uses `AnimatedNavContent` for transitions
+- Uses `AnimatedNavContent` for transitions with proper animation pairing
 - Enables predictive back for root stacks
 - Recursively renders active child via `NavNodeRenderer`
 
-#### TabRenderer
+#### HierarchicalTabRenderer
 
-Renders `TabNode` with wrapper and tab switching.
+Renders `TabNode` with wrapper and tab switching animations.
 
 **Features**:
 - Creates `TabsContainerScope` for wrapper composable
@@ -461,9 +466,9 @@ Renders `TabNode` with wrapper and tab switching.
 - Uses `AnimatedNavContent` for tab switching animations
 - Invokes `ContainerRegistry.TabsContainer()` for custom wrappers
 
-#### PaneRenderer
+#### HierarchicalPaneRenderer
 
-Renders `PaneNode` with adaptive layout.
+Renders `PaneNode` with adaptive multi-pane layouts.
 
 **Features**:
 - Detects window size for expanded/compact mode
@@ -471,6 +476,7 @@ Renders `PaneNode` with adaptive layout.
 - **Compact mode**: Single pane with animations via `SinglePaneRenderer`
 - Creates `PaneContainerScope` for wrapper composable
 - Caches entire PaneNode for smooth layout transitions
+- Configurable back behavior based on display mode
 
 ---
 
@@ -510,7 +516,7 @@ sealed interface NavNode {
 
 Leaf node representing a single screen/destination.
 
-**Location**: `quo-vadis-core/.../core/ScreenNode.kt`
+**Location**: `quo-vadis-core/.../core/navigation/node/ScreenNode.kt`
 
 ```kotlin
 @Serializable
@@ -539,7 +545,7 @@ data class ScreenNode(
 
 Container node representing a linear navigation stack.
 
-**Location**: `quo-vadis-core/.../core/StackNode.kt`
+**Location**: `quo-vadis-core/.../core/navigation/node/StackNode.kt`
 
 ```kotlin
 @Serializable
@@ -571,11 +577,61 @@ data class StackNode(
 
 ---
 
+### PaneNode
+
+Container node for adaptive multi-pane layouts.
+
+**Location**: `quo-vadis-core/.../core/navigation/node/PaneNode.kt`
+
+```kotlin
+@Serializable
+@SerialName("pane")
+data class PaneNode(
+    override val key: String,
+    override val parentKey: String?,
+    val paneConfigurations: Map<PaneRole, PaneConfiguration>,
+    val activePaneRole: PaneRole = PaneRole.Primary,
+    val backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange,
+    val scopeKey: String? = null
+) : NavNode {
+    fun paneContent(role: PaneRole): NavNode?
+    fun adaptStrategy(role: PaneRole): AdaptStrategy?
+    val activePaneContent: NavNode?
+    val paneCount: Int
+    val configuredRoles: Set<PaneRole>
+}
+```
+
+| Property | Description |
+|----------|-------------|
+| `key` | Unique identifier for this pane container |
+| `parentKey` | Key of containing node (null if root) |
+| `paneConfigurations` | Map of pane roles to their configurations |
+| `activePaneRole` | Pane that currently has navigation focus |
+| `backBehavior` | How back navigation should behave |
+| `scopeKey` | Identifier for scope-aware navigation |
+
+**Pane Roles**:
+- `PaneRole.Primary` - Main content pane (required)
+- `PaneRole.Supporting` - Detail/secondary content
+- `PaneRole.Extra` - Additional content (rare)
+
+**Adaptive Behavior**:
+- **Compact mode**: Only `activePaneRole` is visible
+- **Expanded mode**: Multiple panes side-by-side
+- **Hierarchical rendering**: Each pane container manages its own layout
+
+**Requirements**:
+- Must have at least a Primary pane
+- `activePaneRole` must exist in configurations
+
+---
+
 ### TabNode
 
 Container node for tabbed navigation with parallel stacks.
 
-**Location**: `quo-vadis-core/.../core/TabNode.kt`
+**Location**: `quo-vadis-core/.../core/navigation/node/TabNode.kt`
 
 ```kotlin
 @Serializable
@@ -615,163 +671,323 @@ data class TabNode(
 
 ---
 
-### PaneNode
+## Registry System (Extensibility)
 
-Container node for adaptive multi-pane layouts.
+The registry system provides extensibility for screens, containers, transitions, and navigation behavior, now integrated through `NavigationConfig`.
 
-**Location**: `quo-vadis-core/.../core/PaneNode.kt`
+### Core Registries
+
+#### ScreenRegistry
+Maps navigation destinations to composable screen content.
+
+**Location**: `quo-vadis-core/.../core/registry/ScreenRegistry.kt`
 
 ```kotlin
-@Serializable
-@SerialName("pane")
-data class PaneNode(
-    override val key: String,
-    override val parentKey: String?,
-    val paneConfigurations: Map<PaneRole, PaneConfiguration>,
-    val activePaneRole: PaneRole = PaneRole.Primary,
-    val backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange,
-    val scopeKey: String? = null
-) : NavNode {
-    fun paneContent(role: PaneRole): NavNode?
-    fun adaptStrategy(role: PaneRole): AdaptStrategy?
-    val activePaneContent: NavNode?
-    val paneCount: Int
-    val configuredRoles: Set<PaneRole>
+interface ScreenRegistry {
+    @Composable
+    fun Content(
+        destination: NavDestination,
+        sharedTransitionScope: SharedTransitionScope? = null,
+        animatedVisibilityScope: AnimatedVisibilityScope? = null
+    )
 }
 ```
 
-| Property | Description |
-|----------|-------------|
-| `key` | Unique identifier for this pane container |
-| `parentKey` | Key of containing node (null if root) |
-| `paneConfigurations` | Map of pane roles to their configurations |
-| `activePaneRole` | Pane that currently has navigation focus |
-| `backBehavior` | How back navigation should behave |
-| `scopeKey` | Identifier for scope-aware navigation |
+**Usage**:
+- Provides screen content for `ScreenRenderer`
+- Supports shared element transitions
+- Enables coordinator animations
 
-**Pane Roles**:
-- `PaneRole.Primary` - Main content pane (required)
-- `PaneRole.Supporting` - Detail/secondary content
-- `PaneRole.Extra` - Additional content (rare)
+#### ContainerRegistry
+Provides custom wrappers for tab and pane containers.
 
-**Adaptive Behavior**:
-- **Compact screens**: Only `activePaneRole` is visible
-- **Medium screens**: Primary visible, others can levitate
-- **Expanded screens**: Multiple panes side-by-side
+**Location**: `quo-vadis-core/.../core/registry/ContainerRegistry.kt`
 
-**Requirements**:
-- Must have at least a Primary pane
-- `activePaneRole` must exist in configurations
+```kotlin
+interface ContainerRegistry {
+    @Composable
+    fun TabsContainer(
+        node: TabNode,
+        content: @Composable () -> Unit
+    )
+    
+    fun PaneContainer(
+        node: PaneNode,
+        content: @Composable () -> Unit
+    )
+}
+```
+
+**Features**:
+- Custom tab bar implementations
+- Custom pane layouts
+- Container-scoped state management
+
+#### NavigationConfig Integration
+
+All registries are now accessed through `NavigationConfig`:
+
+```kotlin
+val config = navigationConfig {
+    screens {
+        screen<HomeScreen> { dest, sharedScope, animScope ->
+            HomeScreenContent(dest, sharedScope, animScope)
+        }
+    }
+    
+    containers {
+        tabsContainer("main") { content ->
+            MyCustomTabBar(content)
+        }
+    }
+}
+
+val navigator = TreeNavigator(config = config)
+```
+
+This provides better organization and eliminates the need to manually wire registries together.
 
 ---
 
-## Lifecycle Management
+## Navigation Configuration
 
-Navigation nodes implement `LifecycleAwareNode` for proper lifecycle state management.
+The navigation configuration system provides a unified way to define all aspects of navigation behavior, replacing the previous registry-specific approach.
 
-### LifecycleAwareNode Interface
+### NavigationConfig Interface
 
-All container and screen nodes implement this interface:
+**Location**: `quo-vadis-core/.../core/navigation/config/NavigationConfig.kt`
+
+The `NavigationConfig` interface consolidates all navigation-related configuration:
 
 ```kotlin
-interface LifecycleAwareNode {
-    val isAttachedToNavigator: Boolean
-    val isDisplayed: Boolean
-    var composeSavedState: Map<String, List<Any?>>?
-    
-    fun attachToNavigator()
-    fun attachToUI()
-    fun detachFromUI()
-    fun detachFromNavigator()
-    fun addOnDestroyCallback(callback: () -> Unit)
-    fun removeOnDestroyCallback(callback: () -> Unit)
+interface NavigationConfig {
+    val screenRegistry: ScreenRegistry
+    val containerRegistry: ContainerRegistry
+    val transitionRegistry: TransitionRegistry
+    val scopeRegistry: ScopeRegistry
+    val deepLinkRegistry: DeepLinkRegistry
 }
 ```
 
-### State Transitions
+This eliminates the need to manage multiple registries separately and provides a single configuration point.
+
+---
+
+## DSL Configuration
+
+The DSL provides a declarative, type-safe API for configuring navigation, now with better integration and type safety.
+
+### NavigationConfigBuilder
+
+**Location**: `quo-vadis-core/.../core/dsl/NavigationConfigBuilder.kt`
+
+Main entry point for navigation configuration:
+
+```kotlin
+class NavigationConfigBuilder {
+    fun screens(block: ScreenRegistryBuilder.() -> Unit)
+    fun containers(block: ContainerRegistryBuilder.() -> Unit)
+    fun transitions(block: TransitionRegistryBuilder.() -> Unit)
+    fun scopes(block: ScopeRegistryBuilder.() -> Unit)
+    fun deepLinks(block: DeepLinkRegistryBuilder.() -> Unit)
+}
+```
+
+### Screen Configuration
+
+Defines a mapping from `NavDestination` to a composable.
+
+**Location**: `quo-vadis-core/.../dsl/ScreenBuilder.kt`
+
+```kotlin
+class ScreenBuilder {
+    fun screen(destination: NavDestination, content: () -> Unit)
+}
+```
+
+### Container Configuration
+
+Provides configuration for tabs and panes (order, initial configuration, etc.)
+
+**Location**: `quo-vadis-core/.../dsl/ContainerBuilder.kt`
+
+```kotlin
+class TabsBuilder {
+    fun tab(destination: NavDestination) // adds to the tabs list
+}
+
+class PanesBuilder {
+    fun pane(role: PaneRole) // adds to the panes list
+}
+```
+
+### Transition Configuration
+
+Configures animated content scope and animation behavior.
+
+**Location**: `quo-vadis-core/.../dsl/TransitionBuilder.kt`
+
+```kotlin
+class TransitionBuilder {
+    fun <T> scope(block: AnimatedContentScope<T>.() -> Unit)
+    fun <T> content(block: AnimatedContentScope<T>.() -> Unit)
+}
+```
+
+### Scope Configuration
+
+Defines scope boundaries and rules for navigation transitions.
+
+**Location**: `quo-vadis-core/.../dsl/ScopeBuilder.kt`
+
+```kotlin
+class ScopeBuilder {
+    fun <T> rules(role: PaneRole, block: PaneNavigationScopeBuilder<T>.() -> Unit)
+}
+```
+
+### Configuration Usage
+
+```kotlin
+val config = navigationConfig {
+    screens {
+        screen<HomeScreen> { destination, sharedScope, animScope ->
+            HomeScreenContent(destination, sharedScope, animScope)
+        }
+        screen<DetailScreen> { destination, sharedScope, animScope ->
+            DetailScreenContent(destination, sharedScope, animScope)
+        }
+    }
+    
+    containers {
+        stack<MainStack>("main") {
+            screen<HomeScreen>()
+            screen<DetailScreen>()
+        }
+        
+        tabs<MainTabs>("tabs") {
+            initialTab = 0
+            tab(HomeTab, title = "Home", icon = Icons.Home)
+            tab(ProfileTab, title = "Profile", icon = Icons.Profile)
+        }
+        
+        panes<ListDetailPanes>("list-detail") {
+            primary(weight = 0.4f) { root(ListScreen) }
+            supporting(weight = 0.6f) { root(DetailPlaceholder) }
+        }
+    }
+    
+    transitions {
+        transition<DetailScreen>(NavTransition.SlideHorizontal)
+        transition<ModalScreen>(NavTransition.SlideVertical)
+    }
+    
+    containers {
+        tabsContainer("main-tabs") { content ->
+            MyCustomTabBar(content)
+        }
+        
+        paneContainer("list-detail") { content ->
+            MultiPaneLayout(content)
+        }
+    }
+}
+
+// Use with Navigator (config is internal)
+val navigator = TreeNavigator(config = config)
+
+// Use with NavigationHost (config is read from navigator)
+@Composable
+fun App() {
+    NavigationHost(navigator)
+}
+```
+
+### DSL Benefits
+
+1. **Type Safety**: Compile-time route validation and destination compatibility
+2. **Integration**: Single configuration point through `NavigationConfig`
+3. **Readability**: Declarative configuration syntax
+4. **Composability**: Modular configuration blocks
+5. **IDE Support**: Auto-completion and refactoring
+
+---
+
+## Hierarchical Rendering
+
+The rendering layer now uses **hierarchical rendering** that preserves the navigation tree structure in Compose.
+
+### Key Improvements
+
+1. **Structure Preservation**: Parent-child relationships are maintained in Compose UI
+2. **Scoped Animations**: Each container type manages its own animations
+3. **Predictive Back**: Entire subtrees can animate during back gestures
+4. **Simplified State**: Each renderer manages only its immediate concerns
+
+### Rendering Architecture
 
 ```
-[Created] -> attachToNavigator() -> [Attached] -> attachToUI() -> [Displayed]
-                                          ^                            |
-                                          |                            v
-                                          +---- detachFromUI() --------+
-                                          |
-                                          v
-                              detachFromNavigator() -> [Destroyed]
+NavNode Tree                     Compose UI Hierarchy
+┌─ TabNode(MainTabs)             ┌─ TabsContainer
+│  ├─ StackNode(HomeTab)    →    │  ├─ AnimatedContent (tab switch)
+│  │  └─ ScreenNode(Home)        │  │  └─ HomeScreen
+│  └─ StackNode(ProfileTab)     │  └─ AnimatedContent
+│     └─ ScreenNode(Profile)      │     └─ ProfileScreen
 ```
 
-### Lifecycle Callbacks
+### Benefits
 
-External components can register for lifecycle events via `addOnDestroyCallback()`. This is used by MVI containers to close coroutine scopes and Koin scopes when a screen/container is destroyed.
+- **Wrapper Preservation**: Tab bars and pane layouts are preserved during navigation
+- **Animation Coordination**: Container animations are properly coordinated
+- **Performance**: Efficient hierarchy with proper animation pairing
+- **User Experience**: Smooth, intuitive navigation with proper visual feedback
 
-### CompositionLocals
+---
 
-| Local | Type | Description |
-|-------|------|-------------|
-| `LocalScreenNode` | `ScreenNode?` | Current screen node |
-| `LocalContainerNode` | `LifecycleAwareNode?` | Current container node (Tab/Pane) |
-| `LocalNavigator` | `Navigator?` | Navigator instance |
+## Life Cycle Management
 
+The navigation graph is a powerful and intuitive model for state management during navigation.
+
+- The tree is updated immutably (no mutable operations).
+- Forward navigation creates a new "next" branch on the tree while preserving previous states.
+- Back navigation reverts to a previous state from the backstack, if available.
+- Predictive back animations require activating new states without committing them.
 ---
 
 ## FlowMVI Integration
 
-The `quo-vadis-core-flow-mvi` module provides MVI architecture integration.
+With FlowMVI, the main activity can be a composition root and repository for stateful data processing.
 
-### NavigationContainer (Screen-Scoped)
+### Characterization
 
-For screen-specific MVI state:
+1. `TreeNavigator.state` is a `StateFlow<NavNode>`.
+2. `California NavigationConfigBuilder` provides an integral `store` for main activity to control.
 
-```kotlin
-class ProfileContainer(scope: NavigationContainerScope) :
-    NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
-    
-    override val store = store(ProfileState()) {
-        reduce { intent -> /* handle intent */ }
-    }
-}
+### Implementation
 
-// In composable
-val store = rememberContainer<ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()
-```
+- The `store` provides the MVI store implementation for the `TreeNavigator`.
+- `FlowStore` has a `fakeUpdate` method for structure-preserving "predictive" back animations.
 
-### SharedNavigationContainer (Container-Scoped)
+### Integration Example
 
-For shared state across all screens in a Tab/Pane container:
+**Location**: `quo-vadis-demos/.../demo/MainActivity.kt`
 
 ```kotlin
-class MainTabsContainer(scope: SharedContainerScope) :
-    SharedNavigationContainer<TabsState, TabsIntent, TabsAction>(scope) {
-    
-    override val store = store(TabsState()) {
-        reduce { intent -> /* handle intent */ }
-    }
-}
-
-// In tab wrapper composable
-val store = rememberSharedContainer<MainTabsContainer, TabsState, TabsIntent, TabsAction>()
-CompositionLocalProvider(LocalMyStore provides store) {
-    content()
-}
-```
-
-### Koin Registration
-
-```kotlin
-val myModule = module {
-    // Screen-scoped container
-    navigationContainer<ProfileContainer> { scope ->
-        ProfileContainer(scope)
-    }
-    
-    // Container-scoped shared container
-    sharedNavigationContainer<MainTabsContainer> { scope ->
-        MainTabsContainer(scope)
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            val flowStore = rememberFlowStore(VoterCounterStore::class) { VoterCounterStoreImpl() }
+            val navigator = withConfig(
+                navConfig = generatedNavigationConfig,
+                store = flowStore.store,
+                stack = StandardStackFactory
+            ) { navigator }
+            NavigationHost(navigator)
+        }
     }
 }
 ```
-
----
 
 ## Layer Interaction
 
@@ -786,6 +1002,7 @@ User Action (tap, gesture)
 │  • navigate()           │
 │  • navigateBack()       │
 │  • updateState()        │
+│  • config               │
 └───────────┬─────────────┘
             │ TreeMutator operations
             ▼
@@ -793,52 +1010,75 @@ User Action (tap, gesture)
 │    NavNode Tree         │
 │  • Immutable state      │
 │  • Structural sharing   │
+│  • Hierarchical structure│
 └───────────┬─────────────┘
-            │ StateFlow emission
+            │ StateFlow emission + NavigationConfig
             ▼
 ┌─────────────────────────┐
 │   NavigationHost        │
 │  • collectAsState()     │
-│  • Animation setup      │
-│  • Predictive back      │
+│  • Config from Navigator│
+│  • Predictive back        │
 └───────────┬─────────────┘
-            │ Recursive rendering
+            │ Hierarchical rendering
             ▼
 ┌─────────────────────────┐
 │   NavNodeRenderer       │
 │  • Type dispatch        │
 │  • Specialized renders  │
-│  • AnimatedNavContent   │
+│  • Animation pairing    │
+│  • Hierarchy preserved  │
 └───────────┬─────────────┘
             │
             ▼
-      Compose UI
+      Compose UI Hierarchy
+      (Parent-child preserved)
 ```
 
 ### Key Principles
 
 1. **Unidirectional Data Flow**: State flows down, events flow up
-2. **Single Source of Truth**: `Navigator.state` is the only source
+2. **Single Source of Truth**: `Navigator.state` and `Navigator.config` 
 3. **Immutable Updates**: Every navigation creates a new tree
-4. **Separation of Concerns**: Logic layer doesn't know about UI, UI observes state
+4. **Separation of Concerns**: Logic layer doesn't know about UI
+5. **Configuration Consolidation**: Single configuration through Navigator
 
 ---
 
 ## Summary
 
-| Component | Layer | Responsibility |
-|-----------|-------|----------------|
-| `Navigator` | Logic | Navigation operations interface |
-| `TreeNavigator` | Logic | Concrete implementation with StateFlow |
-| `TreeMutator` | Logic | Pure functions for tree manipulation |
-| `NavigationHost` | Rendering | Entry point, infrastructure setup |
-| `NavNodeRenderer` | Rendering | Type-based dispatch to specialized renderers |
-| `ScreenRenderer` | Rendering | Leaf content rendering |
-| `StackRenderer` | Rendering | Animated stack transitions |
-| `TabRenderer` | Rendering | Tab wrapper and switching |
-| `PaneRenderer` | Rendering | Adaptive multi-pane layouts |
-| `NavNode` | Data | Base interface for tree nodes |
-| `ScreenNode` | Data | Single screen destination |
-| `StackNode` | Data | Linear navigation stack |
-| `TabNode` | Data | Parallel tabbed navigation |
-| `PaneNode` | Data | Adaptive multi-pane container |
+| Component | Layer | Responsibility | Location |
+|-----------|-------|----------------|----------|
+| `Navigator` | navigation | Navigation operations interface | `navigation/navigator/Navigator.kt` |
+| `TreeNavigator` | navigation | Implementation with Config integration | `navigation/navigator/TreeNavigator.kt` |
+| `TreeMutator` | navigation | Operations (refactored into modules) | `navigation/tree/operations/*.kt` |
+| `ScreenNode` | navigation | Single screen destination | `navigation/node/ScreenNode.kt` |
+| `StackNode` | navigation | Linear navigation stack | `navigation/node/StackNode.kt` |
+| `TabNode` | navigation | Parallel tabbed navigation | `navigation/node/TabNode.kt` |
+| `PaneNode` | navigation | Adaptive multi-pane container | `navigation/node/PaneNode.kt` |
+| `NavigationHost` | compose | Entry point with Config integration | `compose/NavigationHost.kt` |
+| `NavNodeRenderer` | compose | Type-based dispatch to specialized renderers | `compose/render/NavNodeRenderer.kt` |
+| `ScreenRenderer` | compose | Leaf content rendering with shared elements | `compose/render/ScreenRenderer.kt` |
+| `StackRenderer` | compose | Animated stack transitions | `compose/render/StackRenderer.kt` |
+| `TabRenderer` | compose | Tab wrapper and switching | `compose/render/TabRenderer.kt` |
+| `PaneRenderer` | compose | Adaptive multi-pane layouts | `compose/render/PaneRenderer.kt` |
+| `ScreenRegistry` | registry | Maps destinations to composable content | `registry/ScreenRegistry.kt` |
+| `ContainerRegistry` | registry | Custom tab/pane wrappers | `registry/ContainerRegistry.kt` |
+| `TransitionRegistry` | registry | Custom transition animations | `registry/TransitionRegistry.kt` |
+| `ScopeRegistry` | registry | Scope-aware navigation rules | `registry/ScopeRegistry.kt` |
+| `DeepLinkRegistry` | registry | Deep link handling | `registry/DeepLinkRegistry.kt` |
+| `NavigationConfig` | dsl | Unified configuration interface | `dsl/NavigationConfig.kt` |
+| `NavigationConfigBuilder` | dsl | Main configuration entry point | `dsl/NavigationConfigBuilder.kt` |
+| `StackBuilder` | dsl | Stack configuration DSL | `dsl/StackBuilder.kt` |
+| `TabsBuilder` | dsl | Tab configuration DSL | `dsl/TabsBuilder.kt` |
+| `PanesBuilder` | dsl | Pane configuration DSL | `dsl/PanesBuilder.kt` |
+
+## Key Architectural Changes
+
+1. **Configuration Consolidation**: All registries now managed through single `NavigationConfig`
+2. **Navigator Integration**: `Navigator` now holds complete configuration, eliminating duplication
+3. **Hierarchical Rendering**: Rendering layer preserves navigation tree structure in Compose UI
+4. **Modular TreeMutator**: Navigation operations organized by type (push, pop, tab, pane, back)
+5. **Enhanced Type Safety**: Better integration between DSL, registries, and navigation logic
+
+This architecture provides a clean separation of concerns while maintaining tight integration between the configuration system and navigation runtime, enabling powerful features like hierarchical rendering, predictive back gestures, and adaptive multi-pane layouts.
