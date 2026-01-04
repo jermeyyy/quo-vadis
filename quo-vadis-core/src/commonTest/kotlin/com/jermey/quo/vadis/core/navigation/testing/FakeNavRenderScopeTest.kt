@@ -1,16 +1,19 @@
+@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation.testing
 
-import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.compose.render.ComposableCache
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.compose.internal.AnimationCoordinator
+import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
+import com.jermey.quo.vadis.core.compose.internal.ComposableCache
+import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.EmptyScreenRegistry
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
 import com.jermey.quo.vadis.core.navigation.FakeNavigator
 import com.jermey.quo.vadis.core.navigation.FakeSaveableStateHolder
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.route
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.destination.route
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals

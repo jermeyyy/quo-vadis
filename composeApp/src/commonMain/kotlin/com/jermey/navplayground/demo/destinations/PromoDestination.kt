@@ -2,7 +2,7 @@ package com.jermey.navplayground.demo.destinations
 
 import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 /**
  * Promo destination for runtime-registered deep links.

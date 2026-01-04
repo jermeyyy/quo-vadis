@@ -1,10 +1,27 @@
+@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
-import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.destination.DeepLink
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.route
+import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.internal.NavigationResultManager
+import com.jermey.quo.vadis.core.navigation.internal.ResultCapable
+import com.jermey.quo.vadis.core.navigation.internal.TransitionController
+import com.jermey.quo.vadis.core.navigation.navigator.PaneNavigator
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.activeLeaf
+import com.jermey.quo.vadis.core.navigation.node.activeStack
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.dsl.registry.RuntimeDeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.transition.TransitionState
+import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
+import com.jermey.quo.vadis.core.registry.internal.RuntimeDeepLinkRegistry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

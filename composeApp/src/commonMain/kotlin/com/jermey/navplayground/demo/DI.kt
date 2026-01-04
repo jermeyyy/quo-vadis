@@ -8,8 +8,8 @@ import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
 import com.jermey.navplayground.demo.ui.screens.statedriven.StateDrivenContainer
 import com.jermey.navplayground.demo.ui.screens.tabs.DemoTabsContainer
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
-import com.jermey.quo.vadis.core.navigation.Navigator
-import com.jermey.quo.vadis.core.navigation.tree.TreeNavigator
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
+import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.flowmvi.navigationContainer
 import com.jermey.quo.vadis.flowmvi.sharedNavigationContainer
 import com.jermey.quo.vadis.generated.ComposeAppNavigationConfig

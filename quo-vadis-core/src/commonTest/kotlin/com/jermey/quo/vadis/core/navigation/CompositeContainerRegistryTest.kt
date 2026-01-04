@@ -1,13 +1,22 @@
+@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation
 
 import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.dsl.registry.CompositeContainerRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ContainerInfo
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
+import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.registry.ContainerInfo
+import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.internal.CompositeContainerRegistry
 import kotlin.reflect.KClass
 import kotlin.test.Test
 import kotlin.test.assertEquals

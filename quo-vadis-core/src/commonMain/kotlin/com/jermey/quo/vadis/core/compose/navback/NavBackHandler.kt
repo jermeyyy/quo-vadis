@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import com.jermey.quo.vadis.core.dsl.registry.LocalBackHandlerRegistry
+import com.jermey.quo.vadis.core.registry.LocalBackHandlerRegistry
 
 /**
  * A composable that intercepts back press events for custom handling.

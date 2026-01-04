@@ -1,6 +1,8 @@
+@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation.compose
 
-import com.jermey.quo.vadis.core.dsl.registry.BackHandlerRegistry
+import com.jermey.quo.vadis.core.registry.BackHandlerRegistry
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

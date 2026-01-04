@@ -1,7 +1,9 @@
+@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.compose.animation.BackAnimationController
-import com.jermey.quo.vadis.core.compose.navback.BackNavigationEvent
+import com.jermey.quo.vadis.core.compose.internal.BackAnimationController
+import com.jermey.quo.vadis.core.compose.internal.navback.BackNavigationEvent
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

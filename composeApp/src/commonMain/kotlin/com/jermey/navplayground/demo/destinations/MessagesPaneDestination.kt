@@ -5,7 +5,7 @@ import com.jermey.quo.vadis.annotations.Pane
 import com.jermey.quo.vadis.annotations.PaneBackBehavior
 import com.jermey.quo.vadis.annotations.PaneItem
 import com.jermey.quo.vadis.annotations.PaneRole
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 /**
  * Messages pane container demonstrating adaptive list-detail layout.

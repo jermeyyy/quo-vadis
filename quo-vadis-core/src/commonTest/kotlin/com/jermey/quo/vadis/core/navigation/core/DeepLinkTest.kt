@@ -1,6 +1,8 @@
+@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation.core
 
-import com.jermey.quo.vadis.core.navigation.DeepLink
+import com.jermey.quo.vadis.core.navigation.destination.DeepLink
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
