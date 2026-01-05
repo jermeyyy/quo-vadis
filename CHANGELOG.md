@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-01-05
+
+### Added
+
+- **New `quo-vadis-core-flow-mvi` Module**: Standalone module providing FlowMVI integration for Quo Vadis navigation. Includes:
+  - `NavigationContainer` and `SharedNavigationContainer` for MVI architecture patterns
+  - `ContainerComposables` for Compose integration with FlowMVI containers
+  - `NavigationContainerScope` and `SharedContainerScope` for scoped container access
+  - Full Maven Central publication with Dokka documentation
+  - Available as `io.github.jermeyyy:quo-vadis-core-flow-mvi:<version>`
+
+### Changed
+
+- **Package Structure Refactoring in `quo-vadis-core`**: Complete reorganization of internal packages for better modularity and cleaner API boundaries:
+  - `navigation.compose.*` → `core.compose.*` - All Compose UI components
+  - `navigation.compose.animation.*` → `core.compose.animation.*` - Transitions and animations
+  - `navigation.compose.render.*` → `core.compose.render.*` - Screen, Stack, Tab, Pane renderers
+  - `navigation.compose.navback.*` → `core.compose.navback.*` - Back navigation handling
+  - `navigation.compose.wrapper.*` → `core.compose.wrapper.*` - Container scopes
+  - `navigation.*` → `core.navigation.*` - Core navigation types
+  - `navigation.tree.*` → `core.navigation.tree.*` - TreeNavigator and TreeMutator
+  - `navigation.pane.*` → `core.navigation.pane.*` - Pane configuration
+  - `navigation.config.*` → `core.navigation.config.*` - Navigation configuration
+  - `dsl.*` → `core.dsl.*` - DSL builders and registries
+  - `registry.*` → `core.registry.*` - Container and screen registries
+
+### Migration Guide
+
+If upgrading from 0.3.2, update your imports to include the `core` package segment:
+
+```kotlin
+// Before (0.3.2)
+import com.jermey.quo.vadis.navigation.Navigator
+import com.jermey.quo.vadis.navigation.compose.NavigationHost
+
+// After (0.3.3)
+import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.compose.NavigationHost
+```
+
 ## [0.3.2] - 2025-12-31
 
 ### Added
