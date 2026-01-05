@@ -1,110 +1,142 @@
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
-const setupCode = `@TabGraph(
-    name = "main_tabs",
-    initialTab = "Home",
-    primaryTab = "Home"
+const tabsAnnotationCode = `@Tabs(
+    name = "mainTabs",
+    initialTab = MainTabs.HomeTab::class,
+    items = [MainTabs.HomeTab::class, MainTabs.ExploreTab::class, 
+             MainTabs.ProfileTab::class, MainTabs.SettingsTab::class]
 )
-sealed class MainTabs : TabDefinition {
+sealed class MainTabs : NavDestination {
 
-    @Tab(
-        route = "tab_home",
-        label = "Home",
-        icon = "home",
-        rootGraph = TabDestination::class,
-        rootDestination = TabDestination.Home::class
-    )
-    data object Home : MainTabs() {
-        override val route = "tab_home"
-        override val rootDestination = TabDestination.Home
-    }
+    @TabItem(label = "Home", icon = "home")
+    @Destination(route = "main/home")
+    @Transition(type = TransitionType.Fade)
+    data object HomeTab : MainTabs()
 
-    @Tab(
-        route = "tab_profile",
-        label = "Profile",
-        icon = "person",
-        rootGraph = TabDestination::class,
-        rootDestination = TabDestination.Profile::class
-    )
-    data object Profile : MainTabs() {
-        override val route = "tab_profile"
-        override val rootDestination = TabDestination.Profile
-    }
+    @TabItem(label = "Explore", icon = "explore")
+    @Destination(route = "main/explore")
+    @Transition(type = TransitionType.Fade)
+    data object ExploreTab : MainTabs()
 
-    @Tab(
-        route = "tab_settings",
-        label = "Settings",
-        icon = "settings",
-        rootGraph = TabDestination::class,
-        rootDestination = TabDestination.Settings::class
-    )
-    data object Settings : MainTabs() {
-        override val route = "tab_settings"
-        override val rootDestination = TabDestination.Settings
+    @TabItem(label = "Profile", icon = "person")
+    @Destination(route = "main/profile")
+    @Transition(type = TransitionType.Fade)
+    data object ProfileTab : MainTabs()
+
+    @TabItem(label = "Settings", icon = "settings")
+    @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
+    @Transition(type = TransitionType.Fade)
+    sealed class SettingsTab : MainTabs() {
+        @Destination(route = "settings/main")
+        data object Main : SettingsTab()
+
+        @Destination(route = "settings/profile")
+        @Transition(type = TransitionType.SlideHorizontal)
+        data object Profile : SettingsTab()
     }
 }`
 
-const usageCode = `@Composable
-fun MainTabsScreen(parentNavigator: Navigator) {
-    val tabState = rememberTabNavigator(MainTabsConfig, parentNavigator)
-    val selectedTab by tabState.selectedTab.collectAsState()
-    val tabGraph = remember { buildAppDestinationGraph() }
+const tabNodeStructureCode = `@Serializable
+@SerialName("tab")
+data class TabNode(
+    override val key: String,
+    override val parentKey: String?,
+    val stacks: List<StackNode>,
+    val activeStackIndex: Int = 0,
+    val wrapperKey: String? = null,
+    val tabMetadata: List<GeneratedTabMetadata> = emptyList(),
+    val scopeKey: String? = null
+) : NavNode {
+    val activeStack: StackNode   // Currently selected tab's stack
+    val tabCount: Int            // Number of tabs
+}`
 
-    TabbedNavHost(
-        tabState = tabState,
-        tabGraphs = MainTabsConfig.allTabs.associateWith { tabGraph },
-        navigator = parentNavigator,
-        tabUI = { content ->
-            Scaffold(
-                bottomBar = {
-                    BottomNavigationBar(
-                        currentTab = selectedTab,
-                        onTabSelected = { tab -> tabState.selectTab(tab) }
+const tabsContainerCode = `@TabsContainer(MainTabs::class)
+@Composable
+fun MainTabsWrapper(
+    scope: TabsContainerScope,
+    content: @Composable () -> Unit
+) {
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                scope.tabMetadata.forEachIndexed { index, meta ->
+                    NavigationBarItem(
+                        selected = index == scope.activeTabIndex,
+                        onClick = { scope.switchTab(index) },
+                        icon = { Icon(getTabIcon(meta.icon), meta.label) },
+                        label = { Text(meta.label) },
+                        enabled = !scope.isTransitioning
                     )
-                }
-            ) { padding ->
-                Box(modifier = Modifier.padding(padding)) {
-                    content()
                 }
             }
         }
-    )
-}`
-
-const bottomNavCode = `@Composable
-fun BottomNavigationBar(
-    currentTab: TabDefinition?,
-    onTabSelected: (TabDefinition) -> Unit
-) {
-    NavigationBar {
-        MainTabsConfig.allTabs.forEach { tab ->
-            NavigationBarItem(
-                icon = { Icon(getIconForTab(tab), contentDescription = tab.label) },
-                label = { Text(tab.label ?: "") },
-                selected = currentTab == tab,
-                onClick = { onTabSelected(tab) }
-            )
+    ) { padding ->
+        Box(Modifier.padding(padding)) {
+            content()
         }
     }
 }`
 
-const navigationInTabCode = `@Composable
-fun HomeScreen(navigator: Navigator) {
-    Column {
-        Button(onClick = {
-            // Navigate within current tab
-            navigator.navigate(AppDestination.Details("item123"))
-        }) {
-            Text("View Details")
-        }
+const nestedStacksCode = `@Tabs(
+    name = "appTabs",
+    initialTab = AppTabs.HomeTab::class,
+    items = [AppTabs.HomeTab::class, AppTabs.SearchTab::class]
+)
+sealed class AppTabs : NavDestination {
+
+    // Tab with its own nested navigation stack
+    @TabItem(label = "Home", icon = "home")
+    @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
+    sealed class HomeTab : AppTabs() {
+        @Destination(route = "home/feed")
+        data object Feed : HomeTab()
         
-        Button(onClick = {
-            // This opens another screen in the same tab
-            navigator.navigate(AppDestination.Search)
-        }) {
-            Text("Search")
+        @Destination(route = "home/article/{id}")
+        data class Article(@Argument val id: String) : HomeTab()
+        
+        @Destination(route = "home/comments/{articleId}")
+        data class Comments(@Argument val articleId: String) : HomeTab()
+    }
+
+    // Another tab with its own stack
+    @TabItem(label = "Search", icon = "search")
+    @Stack(name = "searchStack", startDestination = SearchTab.Main::class)
+    sealed class SearchTab : AppTabs() {
+        @Destination(route = "search/main")
+        data object Main : SearchTab()
+        
+        @Destination(route = "search/results/{query}")
+        data class Results(@Argument val query: String) : SearchTab()
+    }
+}`
+
+const sharedStateCode = `class DemoTabsContainer(scope: SharedContainerScope) :
+    SharedNavigationContainer<DemoTabsState, DemoTabsIntent, DemoTabsAction>(scope) {
+    
+    override val store = store(DemoTabsState()) {
+        reduce { intent ->
+            when (intent) {
+                is DemoTabsIntent.IncrementViewed -> updateState {
+                    copy(totalItemsViewed = totalItemsViewed + 1)
+                }
+            }
         }
+    }
+}
+
+// Provide via CompositionLocal
+val LocalDemoTabsStore = staticCompositionLocalOf<Store<...>>()
+
+@TabsContainer(DemoTabs::class)
+@Composable
+fun DemoTabsWrapper(scope: TabsContainerScope, content: @Composable () -> Unit) {
+    val store = rememberSharedContainer<DemoTabsContainer, 
+        DemoTabsState, DemoTabsIntent, DemoTabsAction>()
+    
+    CompositionLocalProvider(LocalDemoTabsStore provides store) {
+        content()
     }
 }`
 
@@ -113,140 +145,272 @@ export default function TabbedNavigation() {
     <article className={styles.features}>
       <h1>Tabbed Navigation</h1>
       <p className={styles.intro}>
-        Generate complex tab layouts with <strong>independent backstacks</strong> using simple annotations.
-        Each tab maintains its own navigation history and state, providing a native app experience
-        similar to popular apps like Instagram, Twitter, or Google Maps.
+        TabNode maintains multiple StackNode instances—one for each tab—with each tab preserving 
+        its own navigation history independently. This enables rich, app-like experiences where 
+        users can switch between sections without losing their place.
       </p>
 
       <section>
         <h2 id="overview">Overview</h2>
         <p>
-          Quo Vadis provides an annotation-driven system for tabbed navigation that eliminates boilerplate
-          while ensuring type safety. KSP (Kotlin Symbol Processing) generates all the necessary
-          configuration code at compile time.
+          Quo Vadis provides a powerful annotation-driven system for tabbed navigation that eliminates 
+          boilerplate while ensuring type safety. Each tab operates as an independent navigation stack, 
+          preserving scroll positions, form data, and navigation history when switching between tabs.
         </p>
         <h3>Key Features</h3>
         <ul>
-          <li><strong>Zero Boilerplate</strong> - KSP generates configuration code automatically</li>
-          <li><strong>Type-Safe</strong> - Compile-time checked tab definitions</li>
-          <li><strong>Independent Stacks</strong> - Each tab has its own navigation history</li>
+          <li><strong>Independent Backstacks</strong> - Each tab maintains its own navigation history</li>
           <li><strong>State Preservation</strong> - Tab content survives tab switches</li>
-          <li><strong>Smart Back Press</strong> - Hierarchical navigation across tabs</li>
-          <li><strong>Flexible UI</strong> - Works with BottomNavigationBar, NavigationRail, or custom UI</li>
+          <li><strong>Nested Stacks</strong> - Tabs can contain their own deep navigation</li>
+          <li><strong>Custom UI</strong> - Full control over tab bar appearance</li>
+          <li><strong>Shared State</strong> - Share data across tabs with MVI containers</li>
+          <li><strong>Platform Icons</strong> - Native icon support per platform</li>
         </ul>
       </section>
 
       <section>
-        <h2 id="setup">Setup</h2>
+        <h2 id="tabs-annotation">@Tabs + @TabItem Annotations</h2>
         <p>
-          Define your tab structure using <code>@TabGraph</code> and <code>@Tab</code> annotations.
-          KSP will generate a <code>MainTabsConfig</code> object containing all tab configuration.
+          Define your tab structure using <code>@Tabs</code> on a sealed class and <code>@TabItem</code> 
+          on each tab destination. The KSP processor generates all configuration code automatically.
         </p>
-        <CodeBlock code={setupCode} language="kotlin" />
-        <h3>Annotation Parameters</h3>
-        <ul>
-          <li><code>name</code> - Base name for generated code (e.g., "main_tabs" → MainTabsConfig)</li>
-          <li><code>initialTab</code> - Tab to display on first launch</li>
-          <li><code>primaryTab</code> - Primary tab for smart back navigation (defaults to initialTab)</li>
-          <li><code>route</code> - Unique identifier for each tab</li>
-          <li><code>label</code> - Display name for UI</li>
-          <li><code>icon</code> - Icon identifier (Material Icons name or custom)</li>
-          <li><code>rootDestination</code> - Initial destination when tab is selected</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2 id="usage">Usage in UI</h2>
+        <CodeBlock code={tabsAnnotationCode} language="kotlin" />
         <p>
-          Use the <code>TabbedNavHost</code> composable to render your tabs with custom UI.
-          This gives you full control over the tab interface (bottom bar, navigation rail, etc.).
-        </p>
-        <CodeBlock code={usageCode} language="kotlin" />
-      </section>
-
-      <section>
-        <h2 id="bottom-navigation">Bottom Navigation Bar</h2>
-        <p>
-          Create a custom bottom navigation bar that integrates with the tab state:
-        </p>
-        <CodeBlock code={bottomNavCode} language="kotlin" />
-      </section>
-
-      <section>
-        <h2 id="navigation-in-tabs">Navigation Within Tabs</h2>
-        <p>
-          Each tab has its own <code>Navigator</code> instance. Navigate within a tab just like regular navigation:
-        </p>
-        <CodeBlock code={navigationInTabCode} language="kotlin" />
-        <p>
-          The navigation stays within the current tab, building up that tab's backstack. When the user
-          switches tabs and returns, they'll see the exact same state.
+          Notice how <code>SettingsTab</code> is both a tab item and contains its own nested stack 
+          with multiple destinations. This enables deep navigation within individual tabs.
         </p>
       </section>
 
       <section>
-        <h2 id="back-behavior">Smart Back Press Behavior</h2>
-        <p>Quo Vadis implements intelligent hierarchical navigation:</p>
-        <ol>
-          <li><strong>Not at root:</strong> Pop from current tab's navigation stack</li>
-          <li><strong>At root (not primary tab):</strong> Switch to the primary tab</li>
-          <li><strong>At root (primary tab):</strong> Delegate to parent navigator (usually exits app)</li>
-        </ol>
+        <h2 id="tabs-properties">@Tabs Properties</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>name</code></td>
+              <td><code>String</code></td>
+              <td>—</td>
+              <td>Unique identifier for the tab container</td>
+            </tr>
+            <tr>
+              <td><code>initialTab</code></td>
+              <td><code>KClass&lt;*&gt;</code></td>
+              <td><code>Unit::class</code></td>
+              <td>Initially selected tab (Unit = first tab)</td>
+            </tr>
+            <tr>
+              <td><code>items</code></td>
+              <td><code>Array&lt;KClass&lt;*&gt;&gt;</code></td>
+              <td><code>[]</code></td>
+              <td>Tab classes in display order</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 id="tabitem-properties">@TabItem Properties</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>label</code></td>
+              <td><code>String</code></td>
+              <td>—</td>
+              <td>Display label for the tab</td>
+            </tr>
+            <tr>
+              <td><code>icon</code></td>
+              <td><code>String</code></td>
+              <td><code>""</code></td>
+              <td>Icon identifier (platform-specific)</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 id="tabnode-structure">TabNode Structure</h2>
         <p>
-          This provides a familiar experience like Instagram or Twitter: pressing back multiple times
-          returns you to the home tab before exiting the app.
+          At runtime, tab navigation is represented by a <code>TabNode</code> in the navigation tree. 
+          This node holds all tab stacks and tracks which tab is currently active.
+        </p>
+        <CodeBlock code={tabNodeStructureCode} language="kotlin" />
+      </section>
+
+      <section>
+        <h2 id="tabnode-behavior">TabNode Behavior</h2>
+        <p>
+          Understanding how TabNode responds to navigation operations helps you design intuitive flows:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Operation</th>
+              <th>Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Switch Tab</strong></td>
+              <td>Updates <code>activeStackIndex</code></td>
+            </tr>
+            <tr>
+              <td><strong>Push</strong></td>
+              <td>Affects only the active stack</td>
+            </tr>
+            <tr>
+              <td><strong>Pop</strong></td>
+              <td>Removes from active stack; may switch tabs</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          When popping from an empty non-primary tab, Quo Vadis can automatically switch to the 
+          primary tab, providing a familiar back-navigation experience.
         </p>
       </section>
 
       <section>
-        <h2 id="architecture">Architecture</h2>
+        <h2 id="tabs-container">@TabsContainer - Custom Tab UI</h2>
         <p>
-          Each tab maintains an independent navigation stack. Switching tabs preserves the entire
-          navigation state, including scroll positions and form data.
+          Use <code>@TabsContainer</code> to create custom tab bar UI with full control over 
+          appearance and behavior. The container receives a <code>TabsContainerScope</code> with 
+          all necessary state and actions.
         </p>
-        <pre className={styles.codeBlock}>
-{`┌─────────────────────────────────────────────┐
-│            TabbedNavHost                     │
-│  ┌─────────┬─────────┬─────────┬─────────┐  │
-│  │ Home    │ Search  │ Profile │Settings │  │
-│  │ Nav     │ Nav     │ Nav     │ Nav     │  │
-│  │         │         │         │         │  │
-│  │┌──────┐ │┌──────┐ │┌──────┐ │┌──────┐ │  │
-│  ││Scr C │ ││Scr F │ ││Scr H │ ││Scr J │ │  │
-│  │├──────┤ │├──────┤ │└──────┘ │└──────┘ │  │
-│  ││Scr B │ ││Scr E │ │         │         │  │
-│  │├──────┤ │├──────┤ │         │         │  │
-│  ││Scr A │ ││Scr D │ │         │         │  │
-│  │└──────┘ │└──────┘ │         │         │  │
-│  └─────────┴─────────┴─────────┴─────────┘  │
-└─────────────────────────────────────────────┘`}
-        </pre>
+        <CodeBlock code={tabsContainerCode} language="kotlin" />
+        <p>
+          This pattern works with any tab UI: bottom navigation bars, navigation rails, 
+          top tabs, or completely custom designs.
+        </p>
       </section>
 
       <section>
-        <h2 id="best-practices">Best Practices</h2>
-        <h3>✅ DO:</h3>
-        <ul>
-          <li>Keep tabs at top level for main app sections</li>
-          <li>Use 3-5 tabs maximum for mobile</li>
-          <li>Set a logical primary tab for back navigation</li>
-          <li>Use clear, recognizable icons</li>
-          <li>Test tab switching and back behavior</li>
-        </ul>
-        <h3>❌ DON'T:</h3>
-        <ul>
-          <li>Don't use tabs for linear flows (use regular navigation)</li>
-          <li>Don't nest too deeply (max 2 levels)</li>
-          <li>Don't change tab structure dynamically</li>
-          <li>Don't ignore back behavior configuration</li>
-        </ul>
+        <h2 id="container-scope">TabsContainerScope Properties</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>navigator</code></td>
+              <td><code>Navigator</code></td>
+              <td>Navigation operations</td>
+            </tr>
+            <tr>
+              <td><code>activeTabIndex</code></td>
+              <td><code>Int</code></td>
+              <td>Currently selected tab (0-based)</td>
+            </tr>
+            <tr>
+              <td><code>tabCount</code></td>
+              <td><code>Int</code></td>
+              <td>Total number of tabs</td>
+            </tr>
+            <tr>
+              <td><code>tabMetadata</code></td>
+              <td><code>List&lt;TabMetadata&gt;</code></td>
+              <td>Labels, icons, routes for tabs</td>
+            </tr>
+            <tr>
+              <td><code>isTransitioning</code></td>
+              <td><code>Boolean</code></td>
+              <td>Whether transition is in progress</td>
+            </tr>
+            <tr>
+              <td><code>switchTab(index)</code></td>
+              <td>Function</td>
+              <td>Switch to different tab</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 id="nested-stacks">Tabs with Nested Stacks</h2>
+        <p>
+          Tabs can contain their own navigation stacks for deep navigation within each tab. 
+          This is perfect for sections like a home feed where users drill into articles, 
+          then comments, while preserving the ability to switch tabs.
+        </p>
+        <CodeBlock code={nestedStacksCode} language="kotlin" />
+        <p>
+          Each tab's stack operates independently. Navigating within the Home tab doesn't 
+          affect the Search tab's state, and vice versa.
+        </p>
+      </section>
+
+      <section>
+        <h2 id="icon-support">Icon Platform Support</h2>
+        <p>
+          The <code>icon</code> property in <code>@TabItem</code> is interpreted differently per platform:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Platform</th>
+              <th>Interpretation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Android</td>
+              <td>Material icon name or drawable resource</td>
+            </tr>
+            <tr>
+              <td>iOS</td>
+              <td>SF Symbol name</td>
+            </tr>
+            <tr>
+              <td>Desktop/Web</td>
+              <td>Icon library identifier</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Your <code>@TabsContainer</code> implementation is responsible for mapping these 
+          identifiers to actual icons using platform-appropriate APIs.
+        </p>
+      </section>
+
+      <section>
+        <h2 id="shared-state">Shared State with SharedNavigationContainer</h2>
+        <p>
+          When tabs need to share state (like a shopping cart count or user preferences), 
+          use <code>SharedNavigationContainer</code> with the FlowMVI integration. The container 
+          is scoped to the tab node's lifecycle.
+        </p>
+        <CodeBlock code={sharedStateCode} language="kotlin" />
+        <p>
+          Screens within any tab can access the shared store via the CompositionLocal, 
+          enabling coordinated state across the entire tab structure.
+        </p>
       </section>
 
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/quo-vadis/api/index.html">API Reference</a> - Complete API documentation</li>
-          <li><a href="/features/annotation-api">Annotation API</a> - Learn more about code generation</li>
+          <li><a href="/features/adaptive-panes">Adaptive Panes</a> - Multi-pane layouts for larger screens</li>
+          <li><a href="/features/mvi-integration">MVI Integration</a> - State management with FlowMVI</li>
+          <li><a href="/features/transitions">Transitions</a> - Animate between tabs and screens</li>
           <li><a href="/demo">Live Demo</a> - See tabbed navigation in action</li>
         </ul>
       </section>

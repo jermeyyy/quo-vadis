@@ -1,434 +1,292 @@
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from './GettingStarted.module.css'
 
-const installationCode = `// build.gradle.kts
-plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization") version "2.2.20"
-    id("com.google.devtools.ksp") version "2.2.20-1.0.29"
+// Installation - Option 1: Gradle Plugin (Recommended)
+const installationGradlePluginCode = `// settings.gradle.kts
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
 }
 
-repositories {
-    mavenCentral()
-    google()
+// build.gradle.kts
+plugins {
+    kotlin("multiplatform")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.devtools.ksp") version "2.3.0"
+    id("io.github.jermeyyy.quo-vadis") version "0.3.3"
 }
 
 kotlin {
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                // Core navigation library
-                implementation("io.github.jermeyyy:quo-vadis-core:0.1.1")
-                
-                // Annotation-based API (recommended)
-                implementation("io.github.jermeyyy:quo-vadis-annotations:0.1.1")
-                
-                // For type-safe arguments
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-            }
+        commonMain.dependencies {
+            implementation("io.github.jermeyyy:quo-vadis-core:0.3.3")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.3.3")
         }
     }
 }
 
-dependencies {
-    // KSP code generator
-    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.1.1")
+// Optional: Configure the plugin
+quoVadis {
+    modulePrefix = "MyApp"  // Generates MyAppNavigationConfig
 }`
 
-const versionCatalogCode = `# libs.versions.toml
-[versions]
-quoVadis = "0.1.1"
-ksp = "2.2.20-1.0.29"
-kotlinxSerialization = "1.6.0"
-
-[libraries]
-quo-vadis-core = { module = "io.github.jermeyyy:quo-vadis-core", version.ref = "quoVadis" }
-quo-vadis-annotations = { module = "io.github.jermeyyy:quo-vadis-annotations", version.ref = "quoVadis" }
-quo-vadis-ksp = { module = "io.github.jermeyyy:quo-vadis-ksp", version.ref = "quoVadis" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
-
-[plugins]
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-
-# In build.gradle.kts
+// Installation - Option 2: Manual Configuration
+const installationManualCode = `// build.gradle.kts
 plugins {
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.kotlinSerialization)
+    kotlin("multiplatform")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.devtools.ksp") version "2.3.0"
 }
 
-repositories {
-    mavenCentral()
-    google()
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.jermeyyy:quo-vadis-core:0.3.3")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.3.3")
+        }
+    }
+    
+    ksp {
+        arg("quoVadis.modulePrefix", "MyApp")
+    }
 }
 
 dependencies {
-    implementation(libs.quo.vadis.core)
-    implementation(libs.quo.vadis.annotations)
-    implementation(libs.kotlinx.serialization.json)
-    add("kspCommonMainMetadata", libs.quo.vadis.ksp)
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.3.3")
+}
+
+// Register generated sources
+kotlin.sourceSets.commonMain {
+    kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+}
+
+// Fix task dependencies
+afterEvaluate {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+        if (!name.startsWith("ksp") && !name.contains("Test", ignoreCase = true)) {
+            dependsOn("kspCommonMainKotlinMetadata")
+        }
+    }
 }`
 
-const destinationsCode = `import com.jermey.quo.vadis.annotations.*
-import com.jermey.quo.vadis.core.navigation.core.*
-import kotlinx.serialization.Serializable
+// Define Navigation Stack
+const defineStackCode = `import com.jermey.quo.vadis.annotations.*
+import com.jermey.quo.vadis.core.navigation.NavDestination
 
-// Define serializable data for typed arguments
-@Serializable
-data class ProfileData(val userId: String, val tab: String = "posts")
+@Stack(name = "home", startDestination = Feed::class)
+sealed class HomeDestination : NavDestination {
 
-@Graph("app")
-sealed class AppDestination : Destination {
-    @Route("app/home")
-    data object Home : AppDestination()
+    @Destination(route = "home/feed")
+    data object Feed : HomeDestination()
+
+    @Destination(route = "home/article/{articleId}")
+    data class Article(
+        @Argument val articleId: String,
+        @Argument(optional = true) val showComments: Boolean = false
+    ) : HomeDestination()
+
+    @Destination(route = "home/settings")
+    data object Settings : HomeDestination()
+}`
+
+// Bind Screens with @Screen
+const bindScreensCode = `import androidx.compose.runtime.Composable
+import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
+
+@Screen(HomeDestination.Feed::class)
+@Composable
+fun FeedScreen(navigator: Navigator) {
+    Column {
+        Text("Feed")
+        Button(onClick = { 
+            navigator.navigate(HomeDestination.Article(articleId = "123"))
+        }) {
+            Text("View Article")
+        }
+    }
+}
+
+@Screen(HomeDestination.Article::class)
+@Composable
+fun ArticleScreen(
+    destination: HomeDestination.Article,
+    navigator: Navigator
+) {
+    Column {
+        Text("Article: \${destination.articleId}")
+        if (destination.showComments) {
+            Text("Comments visible")
+        }
+        Button(onClick = { navigator.navigateBack() }) {
+            Text("Back")
+        }
+    }
+}`
+
+// Setup NavigationHost
+const setupNavHostCode = `import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import com.jermey.quo.vadis.core.compose.NavigationHost
+import com.jermey.quo.vadis.core.navigation.navigator.TreeNavigator
+
+@Composable
+fun App() {
+    // Generated config combines all registries
+    val config = GeneratedNavigationConfig
     
-    @Route("app/profile")
-    @Argument(ProfileData::class)
-    data class UserProfile(val userId: String, val tab: String = "posts") 
-        : AppDestination(), TypedDestination<ProfileData> {
-        override val data = ProfileData(userId, tab)
+    // Build initial navigation state
+    val initialState = remember {
+        config.buildNavNode(
+            destinationClass = HomeDestination::class,
+            parentKey = null
+        )!!
     }
     
-    @Route("app/settings")
-    data object Settings : AppDestination()
-}`
-
-const contentCode = `import androidx.compose.runtime.Composable
-import com.jermey.quo.vadis.annotations.Content
-
-@Content(AppDestination.Home::class)
-@Composable
-fun HomeContent(navigator: Navigator) {
-    HomeScreen(
-        onNavigateToProfile = { userId ->
-            navigator.navigate(AppDestination.UserProfile(userId))
-        },
-        onNavigateToSettings = {
-            navigator.navigate(AppDestination.Settings)
-        }
-    )
-}
-
-// Typed destinations receive data as first parameter
-@Content(AppDestination.UserProfile::class)
-@Composable
-fun ProfileContent(data: ProfileData, navigator: Navigator) {
-    ProfileScreen(
-        userId = data.userId,
-        initialTab = data.tab,
-        onBack = { navigator.navigateBack() }
-    )
-}
-
-@Content(AppDestination.Settings::class)
-@Composable
-fun SettingsContent(navigator: Navigator) {
-    SettingsScreen(
-        onBack = { navigator.navigateBack() }
-    )
-}`
-
-const graphCode = `import com.example.app.destinations.AppDestinationScreenRegistry
-
-// KSP generates a ScreenRegistry for each @Graph
-// Use it with NavigationHost for hierarchical NavNode tree rendering
-val screenRegistry = AppDestinationScreenRegistry`
-
-const navHostCode = `@Composable
-fun App() {
-    val navigator = rememberNavigator(startDestination = AppDestination.Home)
+    // Create the navigator
+    val navigator = remember {
+        TreeNavigator(
+            config = config,
+            initialState = initialState
+        )
+    }
     
+    // Render navigation
     NavigationHost(
         navigator = navigator,
-        screenRegistry = AppDestinationScreenRegistry,
-        defaultTransition = NavigationTransitions.SlideHorizontal,
-        predictiveBackMode = PredictiveBackMode.FULL_CASCADE
+        screenRegistry = config.screenRegistry
     )
 }`
-
-const manualDSLCode = `// Define destinations manually
-sealed class AppDestination : Destination {
-    object Home : AppDestination() {
-        override val route = "home"
-    }
-    
-    data class UserProfile(val userId: String) : AppDestination() {
-        override val route = "profile"
-        override val arguments = mapOf("userId" to userId)
-    }
-}
-
-// Create a ScreenRegistry manually
-val appScreenRegistry = ScreenRegistry {
-    screen(AppDestination.Home) { _, navigator ->
-        HomeScreen(
-            onNavigateToProfile = { userId ->
-                navigator.navigate(AppDestination.UserProfile(userId))
-            }
-        )
-    }
-    
-    screen<AppDestination.UserProfile> { dest, navigator ->
-        ProfileScreen(
-            userId = dest.userId,
-            onBack = { navigator.navigateBack() }
-        )
-    }
-}
-
-// Use with NavigationHost
-NavigationHost(
-    navigator = navigator,
-    screenRegistry = appScreenRegistry
-)`
-
-const basicNavCode = `// Navigate to a destination
-navigator.navigate(AppDestination.UserProfile("user123"))
-
-// Navigate with custom transition
-navigator.navigate(
-    destination = AppDestination.Settings(),
-    transition = NavigationTransitions.FadeThrough
-)
-
-// Navigate back
-navigator.navigateBack()
-
-// Navigate up (parent destination)
-navigator.navigateUp()`
-
-const advancedNavCode = `// Navigate and replace current screen
-navigator.navigateAndReplace(AppDestination.Home)
-
-// Navigate and clear entire navigation stack
-navigator.navigateAndClearAll(AppDestination.Home)
-
-// Navigate and clear to specific destination
-navigator.navigateAndClearTo(
-    destination = AppDestination.Home,
-    clearRoute = "login",
-    inclusive = true
-)`
-
-const transitionsCode = `// Available transitions
-NavigationTransitions.SlideHorizontal
-NavigationTransitions.SlideVertical
-NavigationTransitions.Fade
-NavigationTransitions.FadeThrough
-NavigationTransitions.ScaleIn
-NavigationTransitions.None
-
-// Use with navigation
-navigator.navigate(
-    destination = AppDestination.Details("123"),
-    transition = NavigationTransitions.SlideVertical
-)`
-
-const customTransitionCode = `val customTransition = NavigationTransition(
-    enter = slideInHorizontally(
-        initialOffsetX = { it },
-        animationSpec = tween(300)
-    ) + fadeIn(),
-    exit = slideOutHorizontally(
-        targetOffsetX = { -it / 3 },
-        animationSpec = tween(300)
-    ) + fadeOut()
-)`
-
-const sharedElementCode = `// Define shared element configuration
-val sharedConfig = SharedElementConfig(
-    key = "image_\${item.id}",
-    type = SharedElementType.Bounds
-)
-
-// Source screen
-Image(
-    painter = painterResource(item.image),
-    contentDescription = null,
-    modifier = Modifier
-        .sharedElement(
-            sharedConfig = sharedConfig,
-            navigator = navigator
-        )
-)
-
-// Destination screen - same key!
-Image(
-    painter = painterResource(item.image),
-    contentDescription = null,
-    modifier = Modifier
-        .sharedElement(
-            sharedConfig = sharedConfig,
-            navigator = navigator
-        )
-)`
-
-const deepLinksCode = `// Register deep link patterns
-val graph = navigationGraph("app") {
-    deepLink("myapp://profile/{userId}") { args ->
-        AppDestination.UserProfile(args["userId"] as String)
-    }
-    
-    deepLink("myapp://settings/{section}") { args ->
-        AppDestination.Settings(args["section"] as String)
-    }
-}
-
-// Handle deep link
-navigator.handleDeepLink(
-    DeepLink("myapp://profile/user123")
-)`
-
-const testingCode = `@Test
-fun \`test navigation to profile\`() {
-    val fakeNavigator = FakeNavigator()
-    val viewModel = MyViewModel(fakeNavigator)
-    
-    viewModel.onUserClicked("user123")
-    
-    assertEquals(
-        AppDestination.UserProfile("user123"),
-        fakeNavigator.lastDestination
-    )
-}
-
-@Test
-fun \`test back navigation\`() {
-    val fakeNavigator = FakeNavigator()
-    val viewModel = MyViewModel(fakeNavigator)
-    
-    viewModel.onBack()
-    
-    assertTrue(fakeNavigator.navigatedBack)
-}`
-
-const androidCode = `// Handle system back button with predictive back
-NavigationHost(
-    navigator = navigator,
-    screenRegistry = MainScreenRegistry,
-    predictiveBackMode = PredictiveBackMode.FULL_CASCADE  // Android 13+ predictive back
-)`
 
 export default function GettingStarted() {
   return (
     <article className={styles.gettingStarted}>
       <h1>Getting Started</h1>
 
+      <p>
+        This guide will walk you through setting up Quo Vadis in your Kotlin Multiplatform project.
+        Follow these steps to get navigation working in minutes.
+      </p>
+
       <section>
         <h2 id="installation">Installation</h2>
 
-        <p>Add the Quo Vadis library to your Kotlin Multiplatform project.</p>
+        <p>
+          Choose one of the following installation methods. The Gradle plugin approach is recommended
+          as it handles KSP configuration automatically.
+        </p>
 
-        <h3 id="gradle-kotlin">Gradle (Kotlin DSL) - Recommended</h3>
-        <CodeBlock code={installationCode} language="kotlin" title="build.gradle.kts" />
+        <h3 id="gradle-plugin">Option 1: Using Gradle Plugin (Recommended)</h3>
+        <p>
+          The Gradle plugin automatically configures KSP and registers generated sources, making setup
+          simpler and more reliable.
+        </p>
+        <CodeBlock code={installationGradlePluginCode} language="kotlin" title="build.gradle.kts" />
 
-        <h3 id="version-catalog">Version Catalog</h3>
-        <CodeBlock code={versionCatalogCode} language="bash" title="libs.versions.toml" />
+        <h3 id="manual-config">Option 2: Manual Configuration</h3>
+        <p>
+          If you need more control over the build configuration, you can set up KSP manually.
+        </p>
+        <CodeBlock code={installationManualCode} language="kotlin" title="build.gradle.kts" />
       </section>
 
       <section>
-        <h2 id="basic-setup">Basic Setup (Annotation-based API)</h2>
-        <p>The <strong>annotation-based API</strong> is the recommended approach. It uses KSP to generate navigation code automatically, reducing boilerplate by 70%.</p>
-        
-        <h3 id="step1">Step 1: Define Destinations with Annotations</h3>
-        <p>Create type-safe destinations using sealed classes with annotations:</p>
-        <CodeBlock code={destinationsCode} language="kotlin" title="AppDestination.kt" />
-
-        <h3 id="step2">Step 2: Define Content Functions</h3>
-        <p>Use <code>@Content</code> to wire Composables to destinations:</p>
-        <CodeBlock code={contentCode} language="kotlin" title="Screens.kt" />
-
-        <h3 id="step3">Step 3: Use Generated ScreenRegistry</h3>
-        <p>KSP automatically generates a ScreenRegistry for NavigationHost:</p>
-        <CodeBlock code={graphCode} language="kotlin" title="Navigation.kt" />
-
-        <h3 id="step4">Step 4: Setup NavigationHost</h3>
-        <p>Use NavigationHost for hierarchical NavNode tree rendering:</p>
-        <CodeBlock code={navHostCode} language="kotlin" title="App.kt" />
+        <h2 id="define-stack">Define Your Navigation Stack</h2>
+        <p>
+          Create a sealed class extending <code>NavDestination</code> and annotate it with <code>@Stack</code>.
+          Each destination is defined as a nested class with the <code>@Destination</code> annotation.
+        </p>
+        <CodeBlock code={defineStackCode} language="kotlin" title="HomeDestination.kt" />
 
         <div className={styles.note}>
-          <p><strong>What KSP Generates:</strong></p>
-          <ul>
-            <li><code>AppDestinationRouteInitializer</code> - Automatic route registration</li>
-            <li><code>AppDestinationScreenRegistry</code> - ScreenRegistry for NavigationHost</li>
-            <li><code>navigateToXxx()</code> - Type-safe extensions for destinations with @Argument</li>
-          </ul>
+          <p><strong>💡 Tip:</strong> Use <code>@Argument</code> on data class properties to enable 
+          automatic serialization for deep links. Optional arguments should have default values.</p>
         </div>
       </section>
 
       <section>
-        <h2 id="manual-dsl">Alternative: Manual ScreenRegistry Approach</h2>
-        <p>For dynamic navigation or fine-grained control, create a ScreenRegistry manually:</p>
-        <CodeBlock code={manualDSLCode} language="kotlin" />
+        <h2 id="bind-screens">Bind Screens with @Screen</h2>
+        <p>
+          Use the <code>@Screen</code> annotation to connect your composables to destinations.
+          The navigator is automatically injected, and destination data classes receive the destination instance.
+        </p>
+        <CodeBlock code={bindScreensCode} language="kotlin" title="Screens.kt" />
       </section>
 
       <section>
-        <h2 id="navigation-operations">Navigation Operations</h2>
-        
-        <h3 id="basic-navigation">Basic Navigation</h3>
-        <CodeBlock code={basicNavCode} language="kotlin" />
-
-        <h3 id="advanced-navigation">Advanced Navigation</h3>
-        <CodeBlock code={advancedNavCode} language="kotlin" />
+        <h2 id="setup-navigation-host">Setup NavigationHost</h2>
+        <p>
+          Finally, set up the <code>NavigationHost</code> in your app's entry point. The generated
+          configuration combines all registries from your annotated destinations.
+        </p>
+        <CodeBlock code={setupNavHostCode} language="kotlin" title="App.kt" />
       </section>
 
       <section>
-        <h2 id="transitions">Transitions</h2>
-        <p>Quo Vadis includes several built-in transitions:</p>
-        <CodeBlock code={transitionsCode} language="kotlin" />
+        <h2 id="generated-code">What Gets Generated</h2>
+        <p>
+          KSP generates several classes based on your annotations. The prefix is configurable
+          via <code>modulePrefix</code> in your Gradle configuration.
+        </p>
 
-        <h3 id="custom-transitions">Custom Transitions</h3>
-        <CodeBlock code={customTransitionCode} language="kotlin" />
-      </section>
-
-      <section>
-        <h2 id="shared-elements">Shared Element Transitions</h2>
-        <p>Create stunning shared element animations:</p>
-        <CodeBlock code={sharedElementCode} language="kotlin" />
-      </section>
-
-      <section>
-        <h2 id="deep-links">Deep Links</h2>
-        <p>Handle deep links across all platforms:</p>
-        <CodeBlock code={deepLinksCode} language="kotlin" />
-      </section>
-
-      <section>
-        <h2 id="testing">Testing</h2>
-        <p>Use FakeNavigator for easy unit testing:</p>
-        <CodeBlock code={testingCode} language="kotlin" />
-      </section>
-
-      <section>
-        <h2 id="platform-specific">Platform-Specific Setup</h2>
-        
-        <h3 id="android">Android</h3>
-        <CodeBlock code={androidCode} language="kotlin" />
-
-        <h3 id="ios">iOS</h3>
-        <div className={styles.platformNote}>
-          <p>Swipe gestures work automatically. Universal links handled via deep link system.</p>
-        </div>
-
-        <h3 id="web">Web</h3>
-        <div className={styles.platformNote}>
-          <p>Browser history integration. URL updates automatically with navigation.</p>
-        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Generated Class</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>{'{Prefix}'}NavigationConfig</code></td>
+              <td>Main configuration with all registries</td>
+            </tr>
+            <tr>
+              <td><code>{'{Prefix}'}ScreenRegistry</code></td>
+              <td>Maps destinations to composables</td>
+            </tr>
+            <tr>
+              <td><code>{'{Prefix}'}DeepLinkHandler</code></td>
+              <td>Handles URI-based navigation</td>
+            </tr>
+            <tr>
+              <td><code>{'{Prefix}'}ScopeRegistry</code></td>
+              <td>Scope membership for containers</td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
       <section>
         <h2 id="next-steps">Next Steps</h2>
+        <p>
+          Now that you have basic navigation working, explore more advanced features:
+        </p>
         <ul>
-          <li><a href="/features">Explore all features</a> - Deep dive into advanced capabilities</li>
-          <li><a href="/demo">Check out the demo</a> - See real-world examples</li>
-          <li><a href="/quo-vadis/api/index.html">Browse API reference</a> - Complete API documentation</li>
-          <li><a href="https://github.com/jermeyyy/quo-vadis/tree/main/quo-vadis-core/docs" target="_blank" rel="noopener noreferrer">Read detailed docs</a> - Architecture and implementation guides</li>
+          <li>
+            <a href="/features/annotation-api">Annotation API</a> — Full reference for all annotations
+            including <code>@Tabs</code>, <code>@Pane</code>, and more
+          </li>
+          <li>
+            <a href="/features/tabbed-navigation">Tabbed Navigation</a> — Set up tab-based navigation
+            with independent backstacks
+          </li>
+          <li>
+            <a href="/features/transitions">Transitions</a> — Add custom animations and shared element
+            transitions
+          </li>
+          <li>
+            <a href="/features/flowmvi-integration">FlowMVI Integration</a> — Integrate MVI state
+            management with navigation-scoped containers
+          </li>
         </ul>
       </section>
 
       <div className={styles.note}>
-        <p><strong>💡 Pro Tip:</strong> Start with simple navigation and gradually add features like shared elements, 
-        deep links, and custom transitions as your app grows. The library is designed 
+        <p><strong>💡 Pro Tip:</strong> Start with simple stack navigation and gradually add features 
+        like tabs, panes, and transitions as your app grows. The library is designed 
         to be incrementally adoptable.</p>
       </div>
     </article>

@@ -1,310 +1,417 @@
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
+const dependencyCode = `dependencies {
+    implementation("io.github.jermeyyy:quo-vadis-core-flow-mvi:0.3.3")
+}
+
+// Transitively includes:
+// - FlowMVI (pro.respawn.flowmvi)
+// - Koin (io.insert-koin)
+// - quo-vadis-core`
+
 const contractCode = `// State - What the UI displays
 sealed interface ProfileState : MVIState {
     data object Loading : ProfileState
-    data class Content(val user: User, val isEditing: Boolean = false) : ProfileState
+    data class Content(val user: UserData) : ProfileState
     data class Error(val message: String) : ProfileState
 }
 
 // Intent - What the user wants to do
 sealed interface ProfileIntent : MVIIntent {
     data object LoadProfile : ProfileIntent
-    data object StartEditing : ProfileIntent
-    data class UpdateName(val name: String) : ProfileIntent
-    data object SaveChanges : ProfileIntent
     data object NavigateToSettings : ProfileIntent
     data object NavigateBack : ProfileIntent
 }
 
-// Action - Side effects (toasts, navigation, etc.)
+// Action - Side effects (toasts, etc.)
 sealed interface ProfileAction : MVIAction {
     data class ShowToast(val message: String) : ProfileAction
-    data object ProfileSaved : ProfileAction
 }`
 
-const containerCode = `class ProfileContainer(
-    private val navigator: Navigator,
+const screenContainerCode = `class ProfileContainer(
+    scope: NavigationContainerScope,
     private val repository: ProfileRepository
-) : Container<ProfileState, ProfileIntent, ProfileAction> {
+) : NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
 
-    override val store = store(ProfileState.Loading) {
-        configure {
-            name = "ProfileStore"
-            parallelIntents = false
-        }
-        
-        init {
-            intent(ProfileIntent.LoadProfile)
-        }
+    override val store = store(initial = ProfileState.Loading) {
+        init { intent(ProfileIntent.LoadProfile) }
         
         reduce { intent ->
             when (intent) {
-                is ProfileIntent.LoadProfile -> {
-                    updateState { ProfileState.Loading }
-                    val user = repository.getUser()
-                    updateState { ProfileState.Content(user) }
-                }
-                
+                is ProfileIntent.LoadProfile -> handleLoadProfile()
                 is ProfileIntent.NavigateToSettings -> {
-                    // Navigation as a side-effect
-                    navigator.navigate(SettingsDestination)
+                    navigator.navigate(MainTabs.SettingsTab.Main)
                 }
-                
-                is ProfileIntent.SaveChanges -> {
-                    val current = state as ProfileState.Content
-                    repository.saveUser(current.user)
-                    action(ProfileAction.ProfileSaved)
-                    action(ProfileAction.ShowToast("Profile saved"))
-                }
-                
-                is ProfileIntent.NavigateBack -> {
-                    navigator.navigateBack()
-                }
+                is ProfileIntent.NavigateBack -> navigator.navigateBack()
             }
         }
         
         recover { exception ->
-            action(ProfileAction.ShowToast("Error: \${exception.message}"))
+            action(ProfileAction.ShowToast(exception.message ?: "Error"))
+            updateState { ProfileState.Error(exception.message ?: "Error") }
             null
         }
     }
+
+    private suspend fun Ctx.handleLoadProfile() {
+        updateState { ProfileState.Loading }
+        val user = repository.getUser()
+        updateState { ProfileState.Content(user = user) }
+    }
 }`
 
-const uiCode = `@Composable
-fun ProfileScreen(
-    navigator: Navigator = koinInject(),
-    container: ProfileContainer = koinInject { parametersOf(navigator) }
-) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    
-    StoreScreen(
-        container = container,
-        onAction = { action ->
-            when (action) {
-                is ProfileAction.ShowToast -> {
-                    launch { snackbarHostState.showSnackbar(action.message) }
+const sharedContainerCode = `data class DemoTabsState(
+    val totalItemsViewed: Int = 0,
+    val favoriteItems: List<String> = emptyList()
+) : MVIState
+
+sealed interface DemoTabsIntent : MVIIntent {
+    data object IncrementViewed : DemoTabsIntent
+    data class AddFavorite(val itemId: String) : DemoTabsIntent
+}
+
+sealed interface DemoTabsAction : MVIAction
+
+class DemoTabsContainer(
+    scope: SharedContainerScope
+) : SharedNavigationContainer<DemoTabsState, DemoTabsIntent, DemoTabsAction>(scope) {
+
+    override val store = store(DemoTabsState()) {
+        reduce { intent ->
+            when (intent) {
+                is DemoTabsIntent.IncrementViewed -> updateState {
+                    copy(totalItemsViewed = totalItemsViewed + 1)
                 }
-                ProfileAction.ProfileSaved -> {
-                    // Handle success
+                is DemoTabsIntent.AddFavorite -> updateState {
+                    copy(favoriteItems = favoriteItems + intent.itemId)
                 }
-            }
-        }
-    ) { state, intentReceiver ->
-        Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
-            when (state) {
-                ProfileState.Loading -> CircularProgressIndicator()
-                is ProfileState.Content -> ProfileContent(
-                    user = state.user,
-                    isEditing = state.isEditing,
-                    onIntent = intentReceiver::intent
-                )
-                is ProfileState.Error -> ErrorView(state.message)
             }
         }
     }
 }
 
+// Provide shared store via CompositionLocal
+val LocalDemoTabsStore = staticCompositionLocalOf<Store<DemoTabsState, DemoTabsIntent, DemoTabsAction>> {
+    throw IllegalStateException("No DemoTabsStore provided")
+}`
+
+const rememberContainerCode = `@Screen(MainTabs.ProfileTab::class)
 @Composable
-private fun ProfileContent(
-    user: User,
-    isEditing: Boolean,
-    onIntent: (ProfileIntent) -> Unit
-) {
-    Column {
-        Text("Name: \${user.name}")
-        Text("Email: \${user.email}")
-        
-        Button(onClick = { onIntent(ProfileIntent.NavigateToSettings) }) {
-            Text("Settings")
-        }
-        
-        if (isEditing) {
-            Button(onClick = { onIntent(ProfileIntent.SaveChanges) }) {
-                Text("Save")
+fun ProfileScreen() {
+    val store = rememberContainer<ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    val state by store.subscribe { action ->
+        scope.launch {
+            when (action) {
+                is ProfileAction.ShowToast -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
             }
+        }
+    }
+
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
+        when (state) {
+            is ProfileState.Loading -> LoadingContent()
+            is ProfileState.Content -> ProfileContent(
+                state = state as ProfileState.Content,
+                onIntent = store::intent
+            )
+            is ProfileState.Error -> ErrorContent(
+                message = (state as ProfileState.Error).message,
+                onRetry = { store.intent(ProfileIntent.LoadProfile) }
+            )
         }
     }
 }`
 
-const diCode = `val profileModule = module {
+const rememberSharedContainerCode = `@TabsContainer(DemoTabs::class)
+@Composable
+fun DemoTabsWrapper(
+    scope: TabsContainerScope,
+    content: @Composable () -> Unit
+) {
+    val sharedStore = rememberSharedContainer<DemoTabsContainer, DemoTabsState, DemoTabsIntent, DemoTabsAction>()
+    val state by sharedStore.subscribe()
+
+    CompositionLocalProvider(LocalDemoTabsStore provides sharedStore) {
+        Scaffold(
+            topBar = {
+                TopAppBar(title = { Text("Items viewed: \${state.totalItemsViewed}") })
+            }
+        ) { padding ->
+            Box(Modifier.padding(padding)) { content() }
+        }
+    }
+}
+
+// Child screens access shared state via CompositionLocal
+@Screen(DemoTabs.Music::class)
+@Composable
+fun MusicScreen() {
+    val sharedStore = LocalDemoTabsStore.current
+    
+    LaunchedEffect(Unit) {
+        sharedStore.intent(DemoTabsIntent.IncrementViewed)
+    }
+    
+    // Screen content...
+}`
+
+const koinModuleCode = `val profileModule = module {
     single { ProfileRepository() }
     
-    factory { (navigator: Navigator) ->
-        ProfileContainer(
-            navigator = navigator,
-            repository = get()
+    // Screen-scoped container
+    navigationContainer<ProfileContainer> { scope ->
+        ProfileContainer(scope, scope.get())
+    }
+}
+
+val tabsDemoModule = module {
+    // Container-scoped shared state
+    sharedNavigationContainer<DemoTabsContainer> { scope ->
+        DemoTabsContainer(scope)
+    }
+}
+
+// App initialization
+fun initKoin() {
+    startKoin {
+        modules(
+            navigationModule, // Required base module
+            profileModule,
+            tabsDemoModule
         )
     }
 }`
 
-const testingCode = `@Test
-fun \`navigateToSettings should call navigator\`() = runTest {
-    val navigator = FakeNavigator()
-    val repository = FakeProfileRepository()
-    val container = ProfileContainer(navigator, repository)
-    
-    container.store.subscribeAndTest {
-        container.store.intent(ProfileIntent.NavigateToSettings)
-        
-        assertEquals(SettingsDestination, navigator.lastDestination)
-    }
-}
-
-@Test
-fun \`saveChanges should update repository and show toast\`() = runTest {
-    val navigator = FakeNavigator()
-    val repository = FakeProfileRepository()
-    val container = ProfileContainer(navigator, repository)
-    
-    container.store.subscribeAndTest {
-        // Load profile
-        val content = awaitItem() as ProfileState.Content
-        
-        // Save changes
-        container.store.intent(ProfileIntent.SaveChanges)
-        
-        // Verify action
-        val action = awaitAction() as ProfileAction.ProfileSaved
-        assertTrue(repository.saveCalled)
-    }
-}`
+const lifecycleDiagram = `Screen enters composition
+    │
+    ▼
+rememberContainer called
+    │
+    ▼
+Koin scope created (keyed by screenNode.key)
+  - CoroutineScope declared
+  - NavigationContainerScope declared
+  - Container instance created
+  - Store started
+    │
+    ▼
+Screen is active (processes intents)
+    │
+    ▼
+Screen removed from navigation
+    │
+    ▼
+ScreenNode.onDestroy callback
+  - Koin scope closed
+  - CoroutineScope cancelled
+  - Container cleaned up`
 
 export default function FlowMVI() {
   return (
     <article className={styles.features}>
       <h1>FlowMVI Integration</h1>
       <p className={styles.intro}>
-        First-class support for <a href="https://github.com/respawn-app/FlowMVI" target="_blank" rel="noopener noreferrer">FlowMVI</a> state management.
-        Treat navigation as a <strong>side-effect of your business logic</strong>, keeping your UI clean and testable.
+        The <code>quo-vadis-core-flow-mvi</code> module bridges{' '}
+        <a href="https://github.com/respawn-app/FlowMVI" target="_blank" rel="noopener noreferrer">FlowMVI's</a>{' '}
+        state management with navigation lifecycle, providing automatic container lifecycle management and Koin integration.
       </p>
 
       <section>
         <h2 id="overview">Overview</h2>
         <p>
-          FlowMVI is a Kotlin Multiplatform MVI (Model-View-Intent) framework built on Kotlin Flow.
-          Quo Vadis integrates seamlessly with FlowMVI to provide a clean architecture where
-          navigation decisions are made in your business logic layer, not in your UI.
+          This module provides a seamless integration between FlowMVI's MVI architecture and Quo Vadis navigation,
+          allowing you to treat navigation as a side-effect of your business logic while maintaining proper lifecycle awareness.
         </p>
-        <h3>Why This Matters</h3>
-        <p>
-          Traditional approach mixes navigation with UI code, making it hard to test and maintain.
-          With FlowMVI integration, your UI components simply dispatch intents and render state —
-          they don't need to know where navigation leads.
-        </p>
-        <h3>Key Benefits</h3>
+        <h3>Key Features</h3>
         <ul>
-          <li><strong>Testable</strong> - Test navigation logic without UI using FakeNavigator</li>
-          <li><strong>Predictable</strong> - Navigation as pure side-effect of state changes</li>
-          <li><strong>Centralized</strong> - All navigation logic in one place (Container)</li>
-          <li><strong>Decoupled</strong> - UI doesn't know about destination types</li>
-          <li><strong>Scalable</strong> - Easy to maintain as app grows in complexity</li>
+          <li><strong>Screen-scoped containers</strong> - MVI containers tied to individual screen lifecycle</li>
+          <li><strong>Container-scoped shared state</strong> - Shared state across Tab or Pane navigation containers</li>
+          <li><strong>Automatic lifecycle management</strong> - Containers are created and destroyed with navigation nodes</li>
+          <li><strong>Koin integration</strong> - Scoped dependency injection with automatic cleanup</li>
+          <li><strong>Type-safe navigation</strong> - Navigate from business logic with full type safety</li>
         </ul>
       </section>
 
       <section>
-        <h2 id="installation">Installation</h2>
-        <CodeBlock code={`// build.gradle.kts
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation("io.github.jermeyyy:quo-vadis-core:0.1.1")
-                implementation("io.github.jermeyyy:quo-vadis-core-flow-mvi:0.1.1")
-                
-                implementation("pro.respawn.flowmvi:core:2.6.1")
-                implementation("pro.respawn.flowmvi:compose:2.6.1")
-                
-                // For testing
-                testImplementation("pro.respawn.flowmvi:test:2.6.1")
-            }
-        }
-    }
-}`} language="kotlin" />
+        <h2 id="dependencies">Dependencies</h2>
+        <p>
+          Add the FlowMVI integration module to your project. This module transitively includes FlowMVI, Koin, and quo-vadis-core.
+        </p>
+        <CodeBlock code={dependencyCode} language="kotlin" />
       </section>
 
       <section>
-        <h2 id="concept">Core Concepts</h2>
+        <h2 id="mvi-contract">MVI Contract</h2>
         <p>
           FlowMVI uses three main components: <strong>State</strong> (what UI displays),
-          <strong>Intent</strong> (what user wants to do), and <strong>Action</strong> (side effects like navigation or toasts).
+          <strong>Intent</strong> (user actions), and <strong>Action</strong> (side effects like toasts).
         </p>
         <CodeBlock code={contractCode} language="kotlin" />
       </section>
 
       <section>
-        <h2 id="container">Creating a Container</h2>
+        <h2 id="screen-container">Screen-Scoped Container</h2>
         <p>
-          The Container is where you inject the <code>Navigator</code> and handle navigation as part
-          of your business logic. When an intent comes in, you can call <code>navigator.navigate()</code>
-          directly in the reduce block.
+          <code>NavigationContainer</code> extends FlowMVI's Container with navigation-aware lifecycle management.
+          The container receives a <code>NavigationContainerScope</code> that provides access to the navigator and screen-specific information.
         </p>
-        <CodeBlock code={containerCode} language="kotlin" />
+        <CodeBlock code={screenContainerCode} language="kotlin" />
+        <h3>NavigationContainerScope Properties</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>navigator</code></td>
+              <td><code>Navigator</code></td>
+              <td>For navigation operations</td>
+            </tr>
+            <tr>
+              <td><code>screenKey</code></td>
+              <td><code>String</code></td>
+              <td>Unique screen identifier</td>
+            </tr>
+            <tr>
+              <td><code>coroutineScope</code></td>
+              <td><code>CoroutineScope</code></td>
+              <td>Tied to screen lifecycle</td>
+            </tr>
+            <tr>
+              <td><code>screenNode</code></td>
+              <td><code>ScreenNode</code></td>
+              <td>Navigation node for the screen</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 id="shared-container">Container-Scoped Shared State</h2>
+        <p>
+          <code>SharedNavigationContainer</code> provides state that persists across all screens within a Tab or Pane container.
+          This is useful for sharing data between screens without prop drilling or global state.
+        </p>
+        <CodeBlock code={sharedContainerCode} language="kotlin" />
+        <h3>SharedContainerScope Properties</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>navigator</code></td>
+              <td><code>Navigator</code></td>
+              <td>For navigation operations</td>
+            </tr>
+            <tr>
+              <td><code>containerKey</code></td>
+              <td><code>String</code></td>
+              <td>Unique container identifier</td>
+            </tr>
+            <tr>
+              <td><code>coroutineScope</code></td>
+              <td><code>CoroutineScope</code></td>
+              <td>Tied to container lifecycle</td>
+            </tr>
+            <tr>
+              <td><code>containerNode</code></td>
+              <td><code>LifecycleAwareNode</code></td>
+              <td>TabNode or PaneNode</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 id="remember-container">Using rememberContainer</h2>
+        <p>
+          The <code>rememberContainer</code> composable creates or retrieves a screen-scoped container.
+          It automatically manages the container's lifecycle and provides access to the store.
+        </p>
+        <CodeBlock code={rememberContainerCode} language="kotlin" />
         <h3>Key Points</h3>
         <ul>
-          <li>Navigator is injected via constructor (makes testing easy)</li>
-          <li>Navigation happens in <code>reduce</code> block alongside state updates</li>
-          <li>Use <code>action()</code> for side effects like toasts</li>
-          <li>Use <code>recover</code> plugin for graceful error handling</li>
-          <li>State updates use <code>updateState</code> DSL</li>
+          <li>Container is created when the screen enters composition</li>
+          <li>Store is automatically started and subscribes to state</li>
+          <li>Actions are handled via the subscribe callback</li>
+          <li>Container is cleaned up when screen is removed from navigation</li>
         </ul>
       </section>
 
       <section>
-        <h2 id="ui">Usage in UI</h2>
+        <h2 id="remember-shared-container">Using rememberSharedContainer</h2>
         <p>
-          The <code>quo-vadis-core-flow-mvi</code> module provides the <code>StoreScreen</code> composable
-          that handles state subscription and action dispatching automatically.
+          The <code>rememberSharedContainer</code> composable creates or retrieves a container-scoped shared store.
+          Use it in <code>@TabsContainer</code> or <code>@PaneContainer</code> annotated composables to share state across child screens.
         </p>
-        <CodeBlock code={uiCode} language="kotlin" />
-        <h3>StoreScreen Benefits</h3>
+        <CodeBlock code={rememberSharedContainerCode} language="kotlin" />
+        <h3>Key Points</h3>
         <ul>
-          <li>Automatic state subscription and lifecycle management</li>
-          <li>Type-safe state and intent handling</li>
-          <li>Centralized action handling (toasts, analytics, etc.)</li>
-          <li>Clean separation of UI and business logic</li>
+          <li>Shared container lives as long as the Tab/Pane container</li>
+          <li>Use <code>CompositionLocalProvider</code> to share the store with child screens</li>
+          <li>Child screens access shared state via <code>CompositionLocal</code></li>
+          <li>State persists across tab switches within the container</li>
         </ul>
       </section>
 
       <section>
-        <h2 id="di">Dependency Injection</h2>
+        <h2 id="lifecycle">Lifecycle Management</h2>
         <p>
-          Use Koin (or your preferred DI framework) to inject the Navigator into your Container.
-          This makes testing easy and keeps your code decoupled.
+          The FlowMVI integration automatically manages container lifecycle based on navigation state.
+          Here's how the lifecycle flows:
         </p>
-        <CodeBlock code={diCode} language="kotlin" />
+        <CodeBlock code={lifecycleDiagram} language="text" />
+        <h3>Lifecycle Guarantees</h3>
+        <ul>
+          <li><strong>Creation</strong> - Container and scope created on first access</li>
+          <li><strong>Persistence</strong> - Same instance returned for same screen key</li>
+          <li><strong>Cleanup</strong> - Automatic cleanup when screen is destroyed</li>
+          <li><strong>Coroutine cancellation</strong> - All coroutines cancelled on cleanup</li>
+        </ul>
       </section>
 
       <section>
-        <h2 id="testing">Testing Navigation Logic</h2>
+        <h2 id="koin-setup">Koin Module Registration</h2>
         <p>
-          One of the biggest advantages of this architecture is testability. You can test navigation
-          logic without any UI code using <code>FakeNavigator</code> and FlowMVI's test DSL.
+          Register your containers with Koin using the provided DSL functions.
+          The <code>navigationContainer</code> and <code>sharedNavigationContainer</code> functions
+          handle scoping automatically.
         </p>
-        <CodeBlock code={testingCode} language="kotlin" />
-        <h3>Testing Benefits</h3>
+        <CodeBlock code={koinModuleCode} language="kotlin" />
+        <h3>Registration Functions</h3>
         <ul>
-          <li>No UI required - tests run in milliseconds</li>
-          <li>Test navigation logic in isolation</li>
-          <li>Verify state changes and side effects</li>
-          <li>Easy to mock dependencies</li>
+          <li><code>navigationContainer&lt;T&gt;</code> - Register a screen-scoped container</li>
+          <li><code>sharedNavigationContainer&lt;T&gt;</code> - Register a container-scoped shared container</li>
+          <li><code>navigationModule</code> - Required base module with Navigator binding</li>
         </ul>
       </section>
 
       <section>
         <h2 id="patterns">Common Patterns</h2>
-        <h3>Navigation with Arguments</h3>
-        <CodeBlock code={`sealed interface ProductIntent : MVIIntent {
-    data class NavigateToDetails(val productId: String) : ProductIntent
-}
-
-reduce { intent ->
+        <h3>Navigation from Container</h3>
+        <CodeBlock code={`reduce { intent ->
     when (intent) {
-        is ProductIntent.NavigateToDetails -> {
-            navigator.navigate(
-                ProductDetailsDestination(intent.productId)
-            )
+        is ProfileIntent.NavigateToSettings -> {
+            // Use navigator from scope
+            navigator.navigate(SettingsDestination.Main)
+        }
+        is ProfileIntent.NavigateBack -> {
+            navigator.navigateBack()
         }
     }
 }`} language="kotlin" />
@@ -312,33 +419,38 @@ reduce { intent ->
         <h3>Conditional Navigation</h3>
         <CodeBlock code={`reduce { intent ->
     when (intent) {
-        ProfileIntent.SaveAndExit -> {
+        is ProfileIntent.SaveAndNavigate -> {
             try {
-                repository.save(state.user)
+                repository.save(currentState.data)
                 action(ProfileAction.ShowToast("Saved"))
-                // Only navigate on success
                 navigator.navigateBack()
-            } catch (e: ValidationException) {
-                action(ProfileAction.ShowError(e.message))
-                // Stay on screen if validation fails
+            } catch (e: Exception) {
+                action(ProfileAction.ShowToast("Save failed"))
+                // Stay on screen
             }
         }
     }
 }`} language="kotlin" />
 
-        <h3>Navigation with Multiple Destinations</h3>
-        <CodeBlock code={`reduce { intent ->
-    when (intent) {
-        ProfileIntent.Logout -> {
-            repository.clearSession()
-            // Navigate to different destinations based on state
-            if (hasCompletedOnboarding) {
-                navigator.navigate(LoginDestination)
-            } else {
-                navigator.navigate(OnboardingDestination)
-            }
-        }
+        <h3>Sharing State Between Tabs</h3>
+        <CodeBlock code={`// In tab wrapper - increment view count
+@TabsContainer(MainTabs::class)
+@Composable
+fun MainTabsWrapper(scope: TabsContainerScope, content: @Composable () -> Unit) {
+    val store = rememberSharedContainer<MainTabsContainer, ...>()
+    CompositionLocalProvider(LocalMainTabsStore provides store) {
+        content()
     }
+}
+
+// In any child screen - access shared state
+@Screen(MainTabs.Home::class)
+@Composable
+fun HomeScreen() {
+    val sharedStore = LocalMainTabsStore.current
+    val sharedState by sharedStore.subscribe()
+    
+    Text("Total favorites: \${sharedState.favorites.size}")
 }`} language="kotlin" />
       </section>
 
@@ -346,20 +458,19 @@ reduce { intent ->
         <h2 id="best-practices">Best Practices</h2>
         <h3>✅ DO:</h3>
         <ul>
-          <li>Keep all navigation logic in Container, not UI</li>
-          <li>Use meaningful intent names (e.g., <code>OpenSettings</code> not <code>Navigate</code>)</li>
-          <li>Handle errors gracefully with <code>recover</code> plugin</li>
-          <li>Test navigation logic with <code>FakeNavigator</code></li>
-          <li>Inject Navigator via constructor for testability</li>
-          <li>Use actions for all side effects (toasts, analytics, etc.)</li>
+          <li>Keep navigation logic in containers, not UI</li>
+          <li>Use <code>NavigationContainer</code> for screen-specific state</li>
+          <li>Use <code>SharedNavigationContainer</code> for cross-screen state</li>
+          <li>Handle all errors with <code>recover</code> plugin</li>
+          <li>Use meaningful intent names describing user actions</li>
+          <li>Provide shared stores via <code>CompositionLocal</code></li>
         </ul>
         <h3>❌ DON'T:</h3>
         <ul>
-          <li>Don't navigate directly from UI - always use intents</li>
-          <li>Don't skip error handling - use recover plugin</li>
-          <li>Don't ignore actions - handle all side effects in UI</li>
-          <li>Don't hardcode destinations - use sealed classes</li>
-          <li>Don't mix business logic with UI code</li>
+          <li>Don't navigate directly from UI composables</li>
+          <li>Don't create container instances manually (use <code>rememberContainer</code>)</li>
+          <li>Don't pass navigator as parameter (use scope's navigator)</li>
+          <li>Don't ignore the lifecycle - let the framework manage cleanup</li>
         </ul>
       </section>
 
@@ -367,8 +478,8 @@ reduce { intent ->
         <h2 id="next-steps">Next Steps</h2>
         <ul>
           <li><a href="https://github.com/respawn-app/FlowMVI" target="_blank" rel="noopener noreferrer">FlowMVI Documentation</a> - Learn more about FlowMVI</li>
-          <li><a href="/quo-vadis/api/index.html">API Reference</a> - Complete API documentation</li>
-          <li><a href="/features/testing">Testing Support</a> - Test your MVI navigation</li>
+          <li><a href="/features/tabs-panes">Tabs & Panes</a> - Use shared containers with tab navigation</li>
+          <li><a href="/features/deep-links">Deep Links</a> - Handle deep links with MVI</li>
           <li><a href="/demo">Live Demo</a> - See FlowMVI integration in action</li>
         </ul>
       </section>

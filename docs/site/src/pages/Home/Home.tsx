@@ -2,96 +2,96 @@ import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from './Home.module.css'
 
 const quickstartCode = `[versions]
-quoVadis = "0.1.1"
-ksp = "2.2.20-1.0.29"
+quoVadis = "0.3.3"
+ksp = "2.3.0"
 
 [libraries]
 quo-vadis-core = { module = "io.github.jermeyyy:quo-vadis-core", version.ref = "quoVadis" }
 quo-vadis-annotations = { module = "io.github.jermeyyy:quo-vadis-annotations", version.ref = "quoVadis" }
 
 [plugins]
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }`
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+quo-vadis = { id = "io.github.jermeyyy.quo-vadis", version.ref = "quoVadis" }`
 
-const step1Code = `// Define your graph
-@Graph("app")
-sealed class AppDestination : Destination
+const step1Code = `// Define a navigation stack with destinations
+@Stack(name = "home", startDestination = Feed::class)
+sealed class HomeDestination : NavDestination {
 
-// Add destinations with routes
-@Route("app/home")
-data object Home : AppDestination()
+    @Destination(route = "home/feed")
+    data object Feed : HomeDestination()
 
-@Serializable
-data class DetailData(val id: String)
-
-@Route("app/details")
-@Argument(DetailData::class)
-data class Details(val id: String) : AppDestination(), 
-    TypedDestination<DetailData> {
-    override val data = DetailData(id)
+    @Destination(route = "home/article/{articleId}")
+    data class Article(
+        @Argument val articleId: String,
+        @Argument(optional = true) val showComments: Boolean = false
+    ) : HomeDestination()
 }`
 
-const step2Code = `@Content(Home::class)
+const step2Code = `// Bind screens with @Screen annotation
+@Screen(HomeDestination.Feed::class)
 @Composable
-fun HomeContent(navigator: Navigator) {
-    HomeScreen(
-        onNavigateToDetails = { id ->
-            // Use generated extension
-            navigator.navigateToDetails(id = id)
+fun FeedScreen(navigator: Navigator) {
+    Column {
+        Text("Feed")
+        Button(onClick = { 
+            navigator.navigate(HomeDestination.Article(articleId = "123"))
+        }) {
+            Text("View Article")
         }
-    )
+    }
 }
 
-@Content(Details::class)
+@Screen(HomeDestination.Article::class)
 @Composable
-fun DetailsContent(data: DetailData, navigator: Navigator) {
-    DetailsScreen(
-        itemId = data.id,
-        onBack = { navigator.navigateBack() }
-    )
+fun ArticleScreen(
+    destination: HomeDestination.Article,
+    navigator: Navigator
+) {
+    Column {
+        Text("Article: \${destination.articleId}")
+        Button(onClick = { navigator.navigateBack() }) {
+            Text("Back")
+        }
+    }
 }`
 
 const step3Code = `@Composable
 fun App() {
-    val navigator = rememberNavigator(startDestination = AppDestination.Home)
+    val config = GeneratedNavigationConfig
+    
+    val initialState = remember {
+        config.buildNavNode(
+            destinationClass = HomeDestination::class,
+            parentKey = null
+        )!!
+    }
+    
+    val navigator = remember {
+        TreeNavigator(
+            config = config,
+            initialState = initialState
+        )
+    }
     
     NavigationHost(
         navigator = navigator,
-        screenRegistry = AppDestinationScreenRegistry,
-        defaultTransition = NavigationTransitions.SlideHorizontal
+        screenRegistry = config.screenRegistry
     )
 }`
 
-const manualDSLCode = `// Define destinations manually
-sealed class AppDestination : Destination {
-    object Home : AppDestination() {
-        override val route = "home"
+const manualDSLCode = `// Programmatic configuration with DSL
+val appConfig = navigationConfig {
+    // Register screens
+    screen<HomeDestination.Feed> { destination, _, _ ->
+        { FeedContent() }
     }
     
-    data class Details(val id: String) : AppDestination() {
-        override val route = "details"
-        override val arguments = mapOf("id" to id)
-    }
-}
-
-// Build graph manually
-val appGraph = navigationGraph("app") {
-    startDestination(AppDestination.Home)
-    
-    destination(AppDestination.Home) { _, navigator ->
-        HomeScreen(
-            onNavigateToDetails = { id ->
-                navigator.navigate(AppDestination.Details(id))
-            }
-        )
+    screen<HomeDestination.Article> { destination, _, _ ->
+        { ArticleContent(destination.articleId) }
     }
     
-    destination(AppDestination.Details) { dest, navigator ->
-        val details = dest as AppDestination.Details
-        DetailsScreen(
-            itemId = details.id,
-            onBack = { navigator.navigateBack() }
-        )
-    }
+    // Register transitions
+    transition<HomeDestination.Article>(NavTransition.SlideHorizontal)
 }`
 
 export default function Home() {
@@ -134,7 +134,8 @@ export default function Home() {
         <h2 id="overview">Overview</h2>
         <p>
           <strong>Quo Vadis</strong> (Latin for "Where are you going?") is a comprehensive, type-safe navigation 
-          library for Kotlin Multiplatform and Compose Multiplatform. It provides a clean, intuitive API for 
+          library for Kotlin Multiplatform and Compose Multiplatform. It uses a tree-based navigation architecture 
+          where navigation state is an immutable tree of NavNode objects, providing a clean, intuitive API for 
           managing navigation across Android, iOS, Desktop, and Web platforms with zero string-based routing.
         </p>
       </section>
@@ -154,8 +155,8 @@ export default function Home() {
           </div>
 
           <div className={styles.featureCard}>
-            <h4>70% Less Code</h4>
-            <p>Annotation processor eliminates boilerplate. KSP generates type-safe navigation extensions automatically.</p>
+            <h4>Zero Boilerplate</h4>
+            <p>Use <code>@Stack</code>, <code>@Destination</code>, and <code>@Screen</code> annotations. KSP generates all navigation infrastructure automatically.</p>
           </div>
 
           <div className={styles.featureCard}>
@@ -185,7 +186,7 @@ export default function Home() {
 
           <div className={styles.featureCard}>
             <h4>Tabbed Navigation</h4>
-            <p>Generate complex tab layouts with independent stacks via TabNode using simple <code>@TabGraph</code> annotations.</p>
+            <p>Generate complex tab layouts with independent backstacks via <code>TabNode</code> using <code>@Tabs</code> and <code>@TabItem</code> annotations.</p>
           </div>
 
           <div className={styles.featureCard}>
@@ -227,28 +228,28 @@ export default function Home() {
         <div className={styles.steps}>
           <div className={styles.step}>
             <h3>Step 1: Define Your Destinations</h3>
-            <p>Use annotations to declare your navigation graph and screens:</p>
-            <CodeBlock code={step1Code} language="kotlin" title="AppDestination.kt" />
+            <p>Use annotations to declare your navigation stack and destinations:</p>
+            <CodeBlock code={step1Code} language="kotlin" title="HomeDestination.kt" />
             <div className={styles.stepNote}>
-              <strong>What's Generated:</strong> KSP creates type-safe navigation extensions like <code>navigator.navigateToDetails(id)</code>
+              <strong>What's Generated:</strong> KSP creates <code>NavigationConfig</code>, <code>ScreenRegistry</code>, and <code>DeepLinkHandler</code>
             </div>
           </div>
 
           <div className={styles.step}>
             <h3>Step 2: Define Your Screens</h3>
-            <p>Connect Composable functions to destinations using @Content:</p>
+            <p>Bind Composable functions to destinations using <code>@Screen</code>:</p>
             <CodeBlock code={step2Code} language="kotlin" title="Screens.kt" />
             <div className={styles.stepNote}>
-              <strong>Type Safety:</strong> Arguments are validated at compile time - no runtime errors!
+              <strong>Type Safety:</strong> Destination arguments are automatically serialized for deep links
             </div>
           </div>
 
           <div className={styles.step}>
             <h3>Step 3: Set Up Navigation</h3>
-            <p>Use the generated graph builder in your app:</p>
+            <p>Use the generated config to create your navigator:</p>
             <CodeBlock code={step3Code} language="kotlin" title="App.kt" />
             <div className={styles.stepNote}>
-              <strong>NavigationHost:</strong> Uses the generated ScreenRegistry for hierarchical NavNode tree rendering!
+              <strong>NavigationHost:</strong> Renders the NavNode tree with hierarchical screen composition
             </div>
           </div>
         </div>

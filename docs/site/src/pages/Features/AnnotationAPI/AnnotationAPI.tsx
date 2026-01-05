@@ -1,131 +1,533 @@
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
-const annotationExample = `// 1. Define your graph with annotations
-@Graph("shop")
-sealed class ShopDestination : Destination
+const stackExample = `@Stack(name = "home", startDestination = HomeDestination.Feed::class)
+sealed class HomeDestination : NavDestination {
+    // Destinations defined here
+}`
 
-// 2. Add destinations with routes
-@Route("shop/products")
-data object ProductList : ShopDestination()
+const destinationExample = `@Stack(name = "home", startDestination = HomeDestination.Feed::class)
+sealed class HomeDestination : NavDestination {
 
-// 3. Add typed destinations with arguments
-@Serializable
-data class ProductData(val productId: String, val mode: String = "view")
+    // Simple destination (no arguments)
+    @Destination(route = "home/feed")
+    data object Feed : HomeDestination()
 
-@Route("shop/product/detail")
-@Argument(ProductData::class)
+    // Destination with a path parameter
+    @Destination(route = "home/article/{articleId}")
+    data class Article(@Argument val articleId: String) : HomeDestination()
+
+    // Destination with multiple parameters
+    @Destination(route = "home/user/{userId}/post/{postId}")
+    data class UserPost(
+        @Argument val userId: String,
+        @Argument val postId: String
+    ) : HomeDestination()
+}`
+
+const argumentExample = `@Destination(route = "products/detail/{id}")
 data class ProductDetail(
-    val productId: String,
-    val mode: String = "view"
-) : ShopDestination(), TypedDestination<ProductData> {
-    override val data = ProductData(productId, mode)
-}
+    @Argument val id: String,                              // Required argument
+    @Argument(optional = true) val referrer: String? = null,  // Optional argument
+    @Argument(key = "show") val showReviews: Boolean = false  // Custom URL key
+) : ProductsDestination()`
 
-// 4. Define content with @Content annotation
-@Content(ProductList::class)
+const screenExample = `// Simple destination (data object) - navigator only
+@Screen(HomeDestination.Feed::class)
 @Composable
-fun ProductListContent(navigator: Navigator) {
-    ProductListScreen(
-        onProductClick = { id ->
-            // Type-safe navigation with generated extension
-            navigator.navigateToProductDetail(
-                productId = id,
-                mode = "view"
-            )
+fun FeedScreen(navigator: Navigator) {
+    Column {
+        Text("Feed")
+        Button(onClick = { navigator.navigate(HomeDestination.Article("123")) }) {
+            Text("View Article")
         }
-    )
+    }
 }
 
-@Content(ProductDetail::class)
+// Destination with arguments (data class) - access destination data
+@Screen(HomeDestination.Article::class)
 @Composable
-fun ProductDetailContent(data: ProductData, navigator: Navigator) {
-    ProductDetailScreen(
-        productId = data.productId,
-        mode = data.mode,
-        onBack = { navigator.navigateBack() }
-    )
+fun ArticleScreen(
+    destination: HomeDestination.Article,
+    navigator: Navigator
+) {
+    Column {
+        Text("Article: \${destination.articleId}")
+        Button(onClick = { navigator.navigateBack() }) {
+            Text("Back")
+        }
+    }
+}`
+
+const tabsExample = `@Tabs(
+    name = "mainTabs",
+    initialTab = MainTabs.HomeTab::class,
+    items = [MainTabs.HomeTab::class, MainTabs.ExploreTab::class, MainTabs.ProfileTab::class]
+)
+sealed class MainTabs : NavDestination {
+
+    @TabItem(label = "Home", icon = "home")
+    @Destination(route = "main/home")
+    data object HomeTab : MainTabs()
+
+    @TabItem(label = "Explore", icon = "explore")
+    @Destination(route = "main/explore")
+    data object ExploreTab : MainTabs()
+
+    @TabItem(label = "Profile", icon = "person")
+    @Destination(route = "main/profile")
+    data object ProfileTab : MainTabs()
+}`
+
+const tabsContainerExample = `@TabsContainer(MainTabs::class)
+@Composable
+fun MainTabsWrapper(
+    scope: TabsContainerScope,
+    content: @Composable () -> Unit
+) {
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                scope.tabMetadata.forEachIndexed { index, meta ->
+                    NavigationBarItem(
+                        selected = index == scope.activeTabIndex,
+                        onClick = { scope.switchTab(index) },
+                        icon = { Icon(getIcon(meta.icon), meta.label) },
+                        label = { Text(meta.label) }
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        Box(Modifier.padding(padding)) { content() }
+    }
+}`
+
+const paneExample = `@Pane(name = "messagesPane", backBehavior = PaneBackBehavior.PopUntilContentChange)
+sealed class MessagesPane : NavDestination {
+
+    @PaneItem(role = PaneRole.PRIMARY)
+    @Destination(route = "messages/conversations")
+    data object ConversationList : MessagesPane()
+
+    @PaneItem(role = PaneRole.SECONDARY, adaptStrategy = AdaptStrategy.OVERLAY)
+    @Destination(route = "messages/conversation/{id}")
+    data class ConversationDetail(
+        @Argument val id: String
+    ) : MessagesPane()
+}`
+
+const paneContainerExample = `@PaneContainer(MessagesPane::class)
+@Composable
+fun MessagesPaneContainer(
+    scope: PaneContainerScope,
+    content: @Composable () -> Unit
+) {
+    if (scope.isExpanded) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            scope.paneContents.filter { it.isVisible }.forEach { pane ->
+                Box(
+                    modifier = Modifier.weight(
+                        if (pane.role == PaneRole.PRIMARY) 0.4f else 0.6f
+                    )
+                ) {
+                    pane.content()
+                }
+            }
+        }
+    } else {
+        content()  // Single pane mode
+    }
+}`
+
+const transitionExample = `@Transition(type = TransitionType.SlideHorizontal)
+@Destination(route = "details/{id}")
+data class Details(@Argument val id: String) : HomeDestination()
+
+@Transition(type = TransitionType.SlideVertical)
+@Destination(route = "modal")
+data object Modal : HomeDestination()
+
+@Transition(type = TransitionType.Fade)
+@Destination(route = "help")
+data object Help : HomeDestination()
+
+@Transition(type = TransitionType.None)
+@Destination(route = "instant")
+data object InstantSwitch : HomeDestination()`
+
+const generatedExample = `// Generated NavigationConfig usage
+val navigator = TreeNavigator(
+    config = GeneratedNavigationConfig,
+    initialState = GeneratedNavigationConfig.buildNavNode(
+        HomeDestination::class, 
+        null
+    )!!
+)
+
+// Type-safe navigation (generated)
+navigator.navigate(HomeDestination.Article(articleId = "123"))
+navigator.navigate(MainTabs.ProfileTab)`
+
+const completeExample = `// Define a stack with destinations
+@Stack(name = "app", startDestination = AppDestination.Main::class)
+sealed class AppDestination : NavDestination {
+
+    @Destination(route = "app/main")
+    data object Main : AppDestination()
+
+    @Transition(type = TransitionType.SlideHorizontal)
+    @Destination(route = "app/detail/{itemId}")
+    data class Detail(
+        @Argument val itemId: String,
+        @Argument(optional = true) val highlight: Boolean = false
+    ) : AppDestination()
+
+    @Transition(type = TransitionType.SlideVertical)
+    @Destination(route = "app/settings")
+    data object Settings : AppDestination()
 }
 
-// 5. Use generated graph builder
-val shopGraph = buildShopDestinationGraph()
+// Bind screens to destinations
+@Screen(AppDestination.Main::class)
+@Composable
+fun MainScreen(navigator: Navigator) {
+    Column {
+        Text("Welcome to the App")
+        Button(onClick = { navigator.navigate(AppDestination.Detail("item-1")) }) {
+            Text("View Details")
+        }
+        Button(onClick = { navigator.navigate(AppDestination.Settings) }) {
+            Text("Settings")
+        }
+    }
+}
 
-// That's it! KSP generates:
-// - Route registration (ShopDestinationRouteInitializer)
-// - Graph builder (buildShopDestinationGraph())
-// - Typed navigation extensions (navigateToProductDetail())`
+@Screen(AppDestination.Detail::class)
+@Composable
+fun DetailScreen(destination: AppDestination.Detail, navigator: Navigator) {
+    Column {
+        Text("Item: \${destination.itemId}")
+        if (destination.highlight) {
+            Text("✨ Highlighted!")
+        }
+        Button(onClick = { navigator.navigateBack() }) {
+            Text("Back")
+        }
+    }
+}
+
+@Screen(AppDestination.Settings::class)
+@Composable
+fun SettingsScreen(navigator: Navigator) {
+    Column {
+        Text("Settings")
+        Button(onClick = { navigator.navigateBack() }) {
+            Text("Close")
+        }
+    }
+}
+
+// Initialize navigation
+@Composable
+fun App() {
+    val navigator = remember {
+        TreeNavigator(
+            config = GeneratedNavigationConfig,
+            initialState = GeneratedNavigationConfig.buildNavNode(
+                AppDestination::class, 
+                null
+            )!!
+        )
+    }
+    
+    NavigationHost(navigator = navigator)
+}`
 
 export default function AnnotationAPI() {
   return (
     <article className={styles.features}>
-      <h1>Annotation-Based API with Code Generation</h1>
+      <h1>Annotation-Based API</h1>
       <p className={styles.intro}>
-        The modern, recommended approach to building navigation in Quo Vadis. 
-        Use simple annotations on your destinations and let KSP generate all the boilerplate 
-        code automatically. This approach combines compile-time safety with minimal code.
+        Quo Vadis uses a powerful annotation system to define your navigation structure with minimal boilerplate. 
+        The KSP processor generates all the necessary code for type-safe navigation, deep linking, and screen binding.
       </p>
 
       <div className={styles.highlights}>
         <ul>
-          <li><strong>Zero Boilerplate:</strong> No manual graph builders, route registration, or destination factories</li>
-          <li><strong>Type-Safe Arguments:</strong> Automatic serialization/deserialization with kotlinx.serialization</li>
-          <li><strong>IDE Support:</strong> Full autocompletion and navigation for generated code</li>
-          <li><strong>Compile-Time Verification:</strong> Catch errors before runtime</li>
+          <li><strong>Zero Boilerplate:</strong> Annotations generate graph builders, screen registries, and route handlers</li>
+          <li><strong>Type-Safe Arguments:</strong> Automatic serialization with support for primitives, enums, and @Serializable classes</li>
+          <li><strong>Deep Link Ready:</strong> Route patterns with path parameters are generated automatically</li>
+          <li><strong>Compile-Time Safety:</strong> Catch navigation errors before runtime</li>
         </ul>
       </div>
 
       <section>
-        <h2 id="four-annotations">The Four Annotations</h2>
+        <h2 id="core-annotations">Core Annotations</h2>
         <div className={styles.annotationGrid}>
           <div className={styles.annotationCard}>
-            <h4>@Graph</h4>
-            <p>Marks a sealed class as a navigation graph. Generates graph builder functions.</p>
+            <h4>@Stack</h4>
+            <p>Defines a navigation stack with push/pop behavior and a start destination.</p>
           </div>
           <div className={styles.annotationCard}>
-            <h4>@Route</h4>
-            <p>Specifies the route path. Automatically registers routes with the system.</p>
+            <h4>@Destination</h4>
+            <p>Marks a class as a navigation destination with an optional route for deep linking.</p>
           </div>
           <div className={styles.annotationCard}>
             <h4>@Argument</h4>
-            <p>Defines typed, serializable arguments. Generates typed destination extensions.</p>
+            <p>Marks constructor parameters as navigation arguments with optional keys.</p>
           </div>
           <div className={styles.annotationCard}>
-            <h4>@Content</h4>
-            <p>Connects Composable functions to destinations. Wired automatically in graph.</p>
+            <h4>@Screen</h4>
+            <p>Binds a composable function to render a specific destination.</p>
+          </div>
+        </div>
+
+        <div className={styles.annotationGrid}>
+          <div className={styles.annotationCard}>
+            <h4>@Tabs / @TabItem</h4>
+            <p>Creates tabbed navigation with independent backstacks per tab.</p>
+          </div>
+          <div className={styles.annotationCard}>
+            <h4>@Pane / @PaneItem</h4>
+            <p>Defines adaptive multi-pane layouts for different screen sizes.</p>
+          </div>
+          <div className={styles.annotationCard}>
+            <h4>@Transition</h4>
+            <p>Specifies transition animations for destination entries and exits.</p>
+          </div>
+          <div className={styles.annotationCard}>
+            <h4>@TabsContainer / @PaneContainer</h4>
+            <p>Custom UI wrappers for tabs and pane layouts.</p>
           </div>
         </div>
       </section>
 
       <section>
-        <h2 id="complete-example">Complete Example</h2>
-        <CodeBlock code={annotationExample} language="kotlin" />
+        <h2 id="stack-annotation">@Stack Annotation</h2>
+        <p>
+          The <code>@Stack</code> annotation defines a navigation stack — a collection of destinations 
+          that supports push and pop operations. Every navigation graph starts with a stack.
+        </p>
+
+        <CodeBlock code={stackExample} language="kotlin" />
+
+        <h3>Properties</h3>
+        <ul>
+          <li><code>name: String</code> — Unique identifier for the stack</li>
+          <li><code>startDestination: KClass&lt;*&gt;</code> — The initial destination when the stack is created</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 id="destination-annotation">@Destination Annotation</h2>
+        <p>
+          The <code>@Destination</code> annotation marks a class as a navigation destination. 
+          Use <code>data object</code> for destinations without arguments and <code>data class</code> for those with arguments.
+        </p>
+
+        <CodeBlock code={destinationExample} language="kotlin" />
+
+        <h3>Route Patterns</h3>
+        <ul>
+          <li><strong>Static route:</strong> <code>"home/feed"</code> — No parameters</li>
+          <li><strong>Path parameter:</strong> <code>"article/&#123;articleId&#125;"</code> — Required parameter in URL path</li>
+          <li><strong>Multiple parameters:</strong> <code>"user/&#123;userId&#125;/post/&#123;postId&#125;"</code> — Multiple path params</li>
+          <li><strong>Empty route:</strong> Omit or use <code>""</code> for destinations that aren't deep-linkable</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 id="argument-annotation">@Argument Annotation</h2>
+        <p>
+          The <code>@Argument</code> annotation marks constructor parameters as navigation arguments. 
+          These are automatically serialized for deep linking and state restoration.
+        </p>
+
+        <CodeBlock code={argumentExample} language="kotlin" />
+
+        <h3>Properties</h3>
+        <ul>
+          <li><code>key: String</code> — Custom URL parameter key (defaults to property name)</li>
+          <li><code>optional: Boolean</code> — Whether the argument can be omitted in deep links</li>
+        </ul>
+
+        <h3>Supported Types</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>String</td><td><code>@Argument val id: String</code></td></tr>
+            <tr><td>Int</td><td><code>@Argument val count: Int</code></td></tr>
+            <tr><td>Long</td><td><code>@Argument val timestamp: Long</code></td></tr>
+            <tr><td>Float</td><td><code>@Argument val rating: Float</code></td></tr>
+            <tr><td>Double</td><td><code>@Argument val price: Double</code></td></tr>
+            <tr><td>Boolean</td><td><code>@Argument val enabled: Boolean</code></td></tr>
+            <tr><td>Enum</td><td><code>@Argument val status: OrderStatus</code></td></tr>
+            <tr><td>@Serializable</td><td><code>@Argument val filter: FilterData</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 id="screen-annotation">@Screen Annotation</h2>
+        <p>
+          The <code>@Screen</code> annotation binds a composable function to render a specific destination. 
+          The function can receive the navigator and the destination instance as parameters.
+        </p>
+
+        <CodeBlock code={screenExample} language="kotlin" />
+
+        <h3>Function Parameters</h3>
+        <ul>
+          <li><code>navigator: Navigator</code> — The navigation controller for performing navigation actions</li>
+          <li><code>destination: T</code> — The destination instance (for data class destinations with arguments)</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 id="tabs-annotations">@Tabs and @TabItem Annotations</h2>
+        <p>
+          For tabbed navigation where each tab maintains its own backstack. 
+          Use <code>@Tabs</code> on the sealed class and <code>@TabItem</code> on each tab destination.
+        </p>
+
+        <CodeBlock code={tabsExample} language="kotlin" />
+
+        <h3>@Tabs Properties</h3>
+        <ul>
+          <li><code>name: String</code> — Unique identifier for the tab container</li>
+          <li><code>initialTab: KClass&lt;*&gt;</code> — The initially selected tab</li>
+          <li><code>items: Array&lt;KClass&lt;*&gt;&gt;</code> — Tab classes in display order</li>
+        </ul>
+
+        <h3>@TabItem Properties</h3>
+        <ul>
+          <li><code>label: String</code> — Display label for the tab</li>
+          <li><code>icon: String</code> — Icon identifier for the tab</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 id="tabs-container-annotation">@TabsContainer Annotation</h2>
+        <p>
+          Define a custom tab bar UI with <code>@TabsContainer</code>. 
+          The composable receives a scope with tab metadata and switching functionality.
+        </p>
+
+        <CodeBlock code={tabsContainerExample} language="kotlin" />
+
+        <h3>TabsContainerScope</h3>
+        <ul>
+          <li><code>tabMetadata: List&lt;TabMetadata&gt;</code> — Label and icon info for each tab</li>
+          <li><code>activeTabIndex: Int</code> — Currently selected tab index</li>
+          <li><code>switchTab(index: Int)</code> — Function to switch to a different tab</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 id="pane-annotations">@Pane and @PaneItem Annotations</h2>
+        <p>
+          For adaptive multi-pane layouts that adjust based on screen size. 
+          Use <code>@Pane</code> on the sealed class and <code>@PaneItem</code> on each pane destination.
+        </p>
+
+        <CodeBlock code={paneExample} language="kotlin" />
+
+        <h3>@Pane Properties</h3>
+        <ul>
+          <li><code>name: String</code> — Unique identifier for the pane container</li>
+          <li><code>backBehavior: PaneBackBehavior</code> — Back navigation strategy</li>
+        </ul>
+
+        <h3>@PaneItem Properties</h3>
+        <ul>
+          <li><code>role: PaneRole</code> — <code>PRIMARY</code>, <code>SECONDARY</code>, or <code>EXTRA</code></li>
+          <li><code>adaptStrategy: AdaptStrategy</code> — <code>HIDE</code>, <code>COLLAPSE</code>, <code>OVERLAY</code>, or <code>REFLOW</code></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 id="pane-container-annotation">@PaneContainer Annotation</h2>
+        <p>
+          Define custom pane layout behavior with <code>@PaneContainer</code>. 
+          Control how panes are arranged based on screen size.
+        </p>
+
+        <CodeBlock code={paneContainerExample} language="kotlin" />
+      </section>
+
+      <section>
+        <h2 id="transition-annotation">@Transition Annotation</h2>
+        <p>
+          Specify transition animations for destinations with <code>@Transition</code>. 
+          Different destinations can have different transition styles.
+        </p>
+
+        <CodeBlock code={transitionExample} language="kotlin" />
+
+        <h3>TransitionType Options</h3>
+        <div className={styles.transitionGrid}>
+          <div className={styles.transitionCard}>
+            <h4>SlideHorizontal</h4>
+            <p>Platform-like horizontal slide (default)</p>
+          </div>
+          <div className={styles.transitionCard}>
+            <h4>SlideVertical</h4>
+            <p>Bottom-to-top for modals</p>
+          </div>
+          <div className={styles.transitionCard}>
+            <h4>Fade</h4>
+            <p>Simple crossfade</p>
+          </div>
+          <div className={styles.transitionCard}>
+            <h4>None</h4>
+            <p>Instant switch</p>
+          </div>
+          <div className={styles.transitionCard}>
+            <h4>Custom</h4>
+            <p>User-defined animation</p>
+          </div>
+        </div>
       </section>
 
       <section>
         <h2 id="what-gets-generated">What Gets Generated</h2>
-        <ul>
-          <li><strong>Route Initializers:</strong> Automatic route registration objects</li>
-          <li><strong>Graph Builders:</strong> <code>build&#123;GraphName&#125;Graph()</code> functions</li>
-          <li><strong>Typed Extensions:</strong> <code>navigateTo&#123;DestinationName&#125;()</code> functions</li>
-          <li><strong>Serialization Code:</strong> Argument encoding/decoding logic</li>
-        </ul>
-
-        <p style={{ marginTop: '1.5rem' }}>
-          <strong>Benefits over manual DSL:</strong> Write 50-70% less code, no manual route registration needed, 
-          automatic argument serialization, generated code is type-safe and tested, easier to maintain and refactor.
+        <p>
+          The KSP processor generates several components from your annotated classes:
         </p>
 
-        <div className={styles.note}>
-          <strong>Note:</strong> The manual DSL approach is still fully supported for advanced use cases. 
-          See <a href="/features/type-safe">Type-Safe Navigation</a> for the manual approach.
-        </div>
+        <ul>
+          <li><strong>NavigationConfig:</strong> Central configuration object containing all routes and screen mappings</li>
+          <li><strong>ScreenRegistry:</strong> Maps destinations to their composable screens</li>
+          <li><strong>RouteParser:</strong> Handles deep link parsing and argument extraction</li>
+          <li><strong>NavNode Builders:</strong> Functions to construct the navigation tree</li>
+          <li><strong>Type-safe Extensions:</strong> Generated <code>navigate()</code> extensions for each destination</li>
+        </ul>
+
+        <CodeBlock code={generatedExample} language="kotlin" />
+      </section>
+
+      <section>
+        <h2 id="complete-example">Complete Example</h2>
+        <p>
+          Here's a complete example combining multiple annotation types:
+        </p>
+
+        <CodeBlock code={completeExample} language="kotlin" />
       </section>
 
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
           <li><a href="/getting-started">Get started</a> with the quick start guide</li>
-          <li><a href="/features/type-safe">Type-Safe Navigation</a> - Learn about the manual DSL approach</li>
+          <li><a href="/features/type-safe">Type-Safe Navigation</a> — Learn about programmatic destination building</li>
+          <li><a href="/features/deep-linking">Deep Linking</a> — Configure deep link handling</li>
+          <li><a href="/features/transitions">Transitions</a> — Customize navigation animations</li>
           <li><a href="/demo">See the demo</a> to explore features in action</li>
         </ul>
       </section>
