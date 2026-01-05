@@ -61,7 +61,6 @@ inline fun <reified C : NavigationContainer<S, I, A>, S : MVIState, I : MVIInten
     val koin = getKoin()
 
     // Use screenNode.key for Koin scope identity - key is stable across state updates
-    // unlike uuid which is @Transient and regenerated on each ScreenNode creation
     val containerScope = remember(screenNode.key) {
         val koinScope = koin.getOrCreateScope<NavigationContainerScope>(screenNode.key)
 
@@ -143,7 +142,6 @@ inline fun <reified C : SharedNavigationContainer<S, I, A>, S, I, A> rememberSha
         ?: error("Container node must be a NavNode with a key")
 
     // Use containerKey for Koin scope identity - key is stable across state updates
-    // unlike uuid which is @Transient and regenerated on each node creation
     val sharedScope = remember(containerKey) {
         val koinScope = koin.getOrCreateScope<SharedContainerScope>(containerKey)
 
