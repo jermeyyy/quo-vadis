@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
  * - [PaneNode] represents adaptive multi-pane layouts
  * - [ScreenNode] represents individual destinations
  *
- * All mutations are performed through [com.jermey.quo.vadis.core.navigation.tree.TreeMutator] operations, ensuring
+ * All mutations are performed through [com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator] operations, ensuring
  * immutability, thread safety, and structural sharing.
  *
  * ## Usage
@@ -204,7 +204,7 @@ interface Navigator : BackPressHandler {
      * Update the navigation state directly.
      *
      * Use with caution - prefer higher-level navigation methods.
-     * This is primarily for use by [com.jermey.quo.vadis.core.navigation.tree.TreeMutator] and state restoration.
+     * This is primarily for use by [com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator] and state restoration.
      *
      * @param newState The new navigation tree
      * @param transition Optional transition for animation

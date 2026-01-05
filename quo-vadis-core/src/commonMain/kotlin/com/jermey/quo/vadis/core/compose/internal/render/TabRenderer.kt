@@ -22,7 +22,7 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
  *
  * This renderer maintains the parent-child relationship between tab wrappers
  * and their content, ensuring coordinated animations and predictive back gestures.
- * It creates a [com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope]
+ * It creates a [com.jermey.quo.vadis.core.compose.scope.TabsContainerScope]
  * for the wrapper composable, caches the entire
  * tab structure (wrapper + content), and handles animated transitions between tabs.
  *
@@ -76,7 +76,7 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
  * @param scope The render scope with dependencies and context
  *
  * @see TabNode
- * @see com.jermey.quo.vadis.core.navigation.compose.wrapper.TabsContainerScope
+ * @see com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
  * @see com.jermey.quo.vadis.core.navigation.compose.registry.ContainerRegistry.TabsContainer
  * @see AnimatedNavContent
  * @see LocalContainerNode

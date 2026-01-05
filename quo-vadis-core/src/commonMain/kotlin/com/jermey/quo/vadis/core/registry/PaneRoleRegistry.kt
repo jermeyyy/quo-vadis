@@ -51,7 +51,7 @@ import kotlin.reflect.KClass
  *
  * @see ScopeRegistry
  * @see com.jermey.quo.vadis.core.navigation.PaneNode
- * @see com.jermey.quo.vadis.core.navigation.tree.TreeMutator
+ * @see com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
  */
 interface PaneRoleRegistry {
 

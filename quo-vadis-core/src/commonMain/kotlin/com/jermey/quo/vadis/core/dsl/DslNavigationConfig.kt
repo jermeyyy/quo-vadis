@@ -2,27 +2,30 @@ package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.navigation.PaneNode
-import com.jermey.quo.vadis.core.navigation.ScreenNode
-import com.jermey.quo.vadis.core.navigation.StackNode
-import com.jermey.quo.vadis.core.navigation.TabNode
-import com.jermey.quo.vadis.core.compose.animation.NavTransition
-import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
-import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.core.compose.transition.NavTransition
+import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
+import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.config.CompositeNavigationConfig
-import com.jermey.quo.vadis.core.navigation.config.EmptyNavigationConfig
+import com.jermey.quo.vadis.core.navigation.internal.config.EmptyNavigationConfig
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
-import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.GeneratedTabMetadata
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.internal.GeneratedTabMetadata
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
+import com.jermey.quo.vadis.core.dsl.internal.BuiltPanesConfig
+import com.jermey.quo.vadis.core.dsl.internal.BuiltTabsConfig
+import com.jermey.quo.vadis.core.dsl.internal.ScreenEntry
 import kotlin.reflect.KClass
 
 /**

@@ -63,16 +63,16 @@ import kotlinx.coroutines.launch
 // =============================================================================
 
 /**
- * Provides access to the current [com.jermey.quo.vadis.core.compose.render.NavRenderScope] within the hierarchical navigation tree.
+ * Provides access to the current [com.jermey.quo.vadis.core.compose.scope.NavRenderScope] within the hierarchical navigation tree.
  *
  * This composition local is provided by [com.jermey.quo.vadis.core.compose.NavigationHost] and allows
  * any composable within the navigation hierarchy to access shared resources
  * and state required for rendering, including:
  *
  * - [Navigator] for navigation operations
- * - [com.jermey.quo.vadis.core.compose.render.ComposableCache] for state preservation
+ * - [com.jermey.quo.vadis.core.compose.internal.ComposableCache] for state preservation
  * - [com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator] for transition resolution
- * - [com.jermey.quo.vadis.core.compose.navback.PredictiveBackController] for gesture handling
+ * - [com.jermey.quo.vadis.core.compose.internal.navback.PredictiveBackController] for gesture handling
  * - [ScreenRegistry] and [ContainerRegistry] for content resolution
  * - [SharedTransitionScope] for shared element transitions
  *
@@ -95,7 +95,7 @@ import kotlinx.coroutines.launch
  * This local is only available within content rendered by [com.jermey.quo.vadis.core.compose.NavigationHost].
  * Accessing it outside of this context will return `null`.
  *
- * @see com.jermey.quo.vadis.core.compose.render.NavRenderScope
+ * @see com.jermey.quo.vadis.core.compose.scope.NavRenderScope
  * @see com.jermey.quo.vadis.core.compose.NavigationHost
  */
 val LocalNavRenderScope =
@@ -149,7 +149,7 @@ val LocalNavRenderScope =
  *
  * When [enablePredictiveBack] is `true` (default), the host integrates with
  * platform back gesture APIs to provide visual feedback during back navigation.
- * The [com.jermey.quo.vadis.core.compose.navback.PredictiveBackController] coordinates gesture state across all renderers.
+ * The [com.jermey.quo.vadis.core.compose.internal.navback.PredictiveBackController] coordinates gesture state across all renderers.
  *
  * ## Shared Element Transitions
  *

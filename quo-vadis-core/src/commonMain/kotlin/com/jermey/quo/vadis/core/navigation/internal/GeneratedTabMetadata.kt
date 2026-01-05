@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  *
  * This is a simple string-based representation of tab metadata that is
  * generated at compile-time. For runtime UI rendering with icons,
- * use [com.jermey.quo.vadis.core.navigation.compose.wrapper.TabMetadata] which
+ * use [com.jermey.quo.vadis.core.compose.scope.TabMetadata] which
  * supports ImageVector icons.
  *
  * ## Usage

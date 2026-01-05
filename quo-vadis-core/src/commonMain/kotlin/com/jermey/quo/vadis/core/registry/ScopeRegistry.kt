@@ -5,7 +5,7 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 /**
  * Registry for determining navigation scope membership.
  *
- * Used by [com.jermey.quo.vadis.core.navigation.tree.TreeMutator] to decide whether a destination belongs to
+ * Used by [com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator] to decide whether a destination belongs to
  * a container's scope (TabNode/PaneNode) or should navigate outside.
  *
  * ## Purpose
@@ -30,7 +30,7 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
  * sealed class hierarchies. Manual registration is also supported for
  * dynamic scenarios.
  *
- * @see com.jermey.quo.vadis.core.navigation.tree.TreeMutator.push for scope-aware navigation
+ * @see com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator.push for scope-aware navigation
  * @see com.jermey.quo.vadis.core.navigation.StackNode.scopeKey for stack container scopes
  * @see com.jermey.quo.vadis.core.navigation.TabNode.scopeKey for tab container scopes
  * @see com.jermey.quo.vadis.core.navigation.PaneNode.scopeKey for pane container scopes

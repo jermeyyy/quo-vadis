@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+  "serena": {
+ 	 "type": "stdio",
+  	 "command": "uv",
+  	 "args": [
+  	 "run",
+  	 "--directory",
+  	 "/Users/jermey/Projects/serena",
+  	 "serena",
+  	 "start-mcp-server",
+  	 "--log-level",
+  	 "ERROR",
+  	 "--context",
+  	 "ide-assistant"
+  	 ]
+  	}
+  }
+}

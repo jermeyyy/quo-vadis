@@ -10,7 +10,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * The first handler that returns `true` consumes the event and stops propagation.
  *
  * This registry is typically accessed via [LocalBackHandlerRegistry] and used internally
- * by [com.jermey.quo.vadis.core.navigation.compose.navback.NavBackHandler] composable. Direct usage is rarely needed.
+ * by [com.jermey.quo.vadis.core.compose.internal.navback.NavBackHandler] composable. Direct usage is rarely needed.
  *
  * Thread Safety: This class is not thread-safe and should only be accessed from the
  * main/UI thread, which is the expected usage pattern in Compose.
@@ -62,8 +62,8 @@ class BackHandlerRegistry {
 /**
  * CompositionLocal providing access to the back handler registry.
  *
- * The registry is used by [com.jermey.quo.vadis.core.navigation.compose.navback.NavBackHandler] to register and unregister back handlers.
- * Navigation hosts (like [com.jermey.quo.vadis.core.navigation.compose.NavigationHost]) should provide a registry instance to enable
+ * The registry is used by [com.jermey.quo.vadis.core.compose.internal.navback.NavBackHandler] to register and unregister back handlers.
+ * Navigation hosts (like [com.jermey.quo.vadis.core.compose.NavigationHost]) should provide a registry instance to enable
  * user-defined back handling within their scope.
  *
  * The default value creates a new registry, but navigation hosts typically provide

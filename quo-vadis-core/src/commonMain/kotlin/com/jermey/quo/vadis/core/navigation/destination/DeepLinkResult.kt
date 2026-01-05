@@ -32,7 +32,7 @@ package com.jermey.quo.vadis.core.navigation.destination
  * }
  * ```
  *
- * @see com.jermey.quo.vadis.core.dsl.registry.CompositeDeepLinkRegistry
+ * @see com.jermey.quo.vadis.core.registry.internal.CompositeDeepLinkRegistry
  */
 public sealed class DeepLinkResult {
     /**

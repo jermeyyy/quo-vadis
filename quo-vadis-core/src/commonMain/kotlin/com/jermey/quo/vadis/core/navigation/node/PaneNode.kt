@@ -45,8 +45,8 @@ import kotlin.uuid.ExperimentalUuidApi
  *
  * ## Scope-Aware Navigation
  *
- * When [scopeKey] is set, [com.jermey.quo.vadis.core.navigation.tree.TreeMutator.push] with a
- * [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry] will check
+ * When [scopeKey] is set, [com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator.push] with a
+ * [com.jermey.quo.vadis.core.registry.ScopeRegistry] will check
  * if destinations belong to this container's scope. Out-of-scope destinations
  * navigate to the parent stack instead, preserving the pane container for
  * predictive back gestures.

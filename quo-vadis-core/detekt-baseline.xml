@@ -9,7 +9,6 @@
     <ID>CyclomaticComplexMethod:PushOperations.kt:PushOperations$private fun determinePushStrategy( root: NavNode, destination: NavDestination, scopeRegistry: ScopeRegistry, paneRoleRegistry: PaneRoleRegistry = PaneRoleRegistry.Empty ): PushStrategy</ID>
     <ID>CyclomaticComplexMethod:TreeNodeOperations.kt:TreeNodeOperations$fun removeNode(root: NavNode, targetKey: String): NavNode?</ID>
     <ID>CyclomaticComplexMethod:TreeNodeOperations.kt:TreeNodeOperations$fun replaceNode(root: NavNode, targetKey: String, newNode: NavNode): NavNode</ID>
-    <ID>EmptyKotlinFile:PlatformDefaults.android.kt:com.jermey.quo.vadis.core.compose.PlatformDefaults.android.kt</ID>
     <ID>EmptyKotlinFile:platformDefaultPredictiveBack.kt:com.jermey.quo.vadis.core.compose.platformDefaultPredictiveBack.kt</ID>
     <ID>LargeClass:NavNodeTest.kt:NavNodeTest</ID>
     <ID>LargeClass:TreeMutatorEdgeCasesTest.kt:TreeMutatorEdgeCasesTest</ID>
@@ -36,6 +35,7 @@
     <ID>MaxLineLength:DeepLinkRegistry.kt:DeepLinkRegistry.Companion.&lt;no name provided>$override fun register(pattern: String, factory: (params: Map&lt;String, String>) -> NavDestination)</ID>
     <ID>MaxLineLength:DeepLinkRegistry.kt:DeepLinkRegistry.Companion.&lt;no name provided>$override fun registerAction(pattern: String, action: (navigator: Navigator, params: Map&lt;String, String>) -> Unit)</ID>
     <ID>MaxLineLength:NavigationHost.kt:*</ID>
+    <ID>MaxLineLength:Navigator.kt:Navigator$*</ID>
     <ID>MaxLineLength:NavigatorResultExtensions.kt:?:</ID>
     <ID>MaxLineLength:PaneRenderer.kt:*</ID>
     <ID>MaxLineLength:StackNode.kt:StackNode$*</ID>
@@ -50,6 +50,7 @@
     <ID>NewLineAtEndOfFile:CompositeContainerRegistry.kt:com.jermey.quo.vadis.core.registry.internal.CompositeContainerRegistry.kt</ID>
     <ID>NewLineAtEndOfFile:CompositeDeepLinkRegistry.kt:com.jermey.quo.vadis.core.registry.internal.CompositeDeepLinkRegistry.kt</ID>
     <ID>NewLineAtEndOfFile:DeepLinkRegistry.kt:com.jermey.quo.vadis.core.registry.DeepLinkRegistry.kt</ID>
+    <ID>NewLineAtEndOfFile:DslNavigationConfig.kt:com.jermey.quo.vadis.core.dsl.DslNavigationConfig.kt</ID>
     <ID>NewLineAtEndOfFile:DslNavigationConfig.kt:com.jermey.quo.vadis.core.dsl.internal.DslNavigationConfig.kt</ID>
     <ID>NewLineAtEndOfFile:Navigator.kt:com.jermey.quo.vadis.core.navigation.navigator.Navigator.kt</ID>
     <ID>NewLineAtEndOfFile:PlatformBackInput.android.kt:com.jermey.quo.vadis.core.compose.internal.navback.PlatformBackInput.android.kt</ID>

@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
  *
  * ## Scope-Aware Navigation
  *
- * When [scopeKey] is set, [com.jermey.quo.vadis.core.navigation.tree.TreeMutator.push] with a [com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry] will check
+ * When [scopeKey] is set, [com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator.push] with a [com.jermey.quo.vadis.core.registry.ScopeRegistry] will check
  * if destinations belong to this stack's scope. Out-of-scope destinations
  * navigate to the parent stack instead, preserving this stack for
  * predictive back gestures.
