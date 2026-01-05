@@ -184,7 +184,7 @@ mavenPublishing {
 }
 
 dokka {
-    moduleName.set("FlowMVI")
+    moduleName.set("Flow MVI")
     moduleVersion.set(project.version.toString())
 
     dokkaPublications.html {

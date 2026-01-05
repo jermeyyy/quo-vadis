@@ -94,6 +94,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-core:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`io.github.jermeyyy:quo-vadis-core-flow-mvi:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-annotations:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-ksp:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-gradle-plugin:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
