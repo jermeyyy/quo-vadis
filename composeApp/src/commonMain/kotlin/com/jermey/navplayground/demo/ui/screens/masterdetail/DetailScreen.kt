@@ -48,8 +48,8 @@ import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.DetailRow
 import com.jermey.navplayground.demo.ui.components.SpecificationRow
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.compose.animation.TransitionScope
-import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.compose.transition.TransitionScope
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
 
 private const val RELATED_ITEMS_COUNT = 5
@@ -77,7 +77,7 @@ fun DetailScreen(
     val relatedItems = (1..RELATED_ITEMS_COUNT).map { "Related item $it" }
     
     // Get transition scope - animations are tied to this
-    val transitionScope = _root_ide_package_.com.jermey.quo.vadis.core.compose.animation.LocalTransitionScope.current
+    val transitionScope = com.jermey.quo.vadis.core.compose.transition.LocalTransitionScope.current
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Animated background - fades with navigation

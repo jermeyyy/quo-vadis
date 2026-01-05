@@ -16,7 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)

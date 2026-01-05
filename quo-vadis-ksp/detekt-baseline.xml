@@ -2,18 +2,32 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
+    <ID>ComplexCondition:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor$collectedScreens.isEmpty() &amp;&amp; collectedTabs.isEmpty() &amp;&amp; collectedStacks.isEmpty() &amp;&amp; collectedPanes.isEmpty()</ID>
+    <ID>CyclomaticComplexMethod:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor$private fun collectAllDestinations(resolver: Resolver)</ID>
+    <ID>LargeClass:NavigationConfigGenerator.kt:NavigationConfigGenerator : DslCodeGenerator</ID>
+    <ID>MaxLineLength:ContainerBlockGenerator.kt:ContainerBlockGenerator$addStatement("// TODO: %T is a data class, not an object. Pane roots must be data objects.", destClass)</ID>
     <ID>MaxLineLength:ScreenExtractor.kt:ScreenExtractor$logger.warn("Could not resolve destination class for @Screen on ${functionDeclaration.simpleName.asString()}")</ID>
+    <ID>MaxLineLength:TransitionExtractor.kt:TransitionExtractor$logger.warn("Could not determine containing file for @Transition on ${classDeclaration.simpleName.asString()}")</ID>
+    <ID>NestedBlockDepth:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor$private fun collectAllDestinations(resolver: Resolver)</ID>
+    <ID>ReturnCount:ContainerExtractor.kt:ContainerExtractor$private fun extractWrapper( functionDeclaration: KSFunctionDeclaration, annotationName: String, argumentName: String, containerType: ContainerType ): ContainerInfoModel?</ID>
+    <ID>ReturnCount:NavigationConfigGenerator.kt:NavigationConfigGenerator$private fun getWrapperKey(wrapper: ContainerInfoModel, scopeKeyMap: Map&lt;String, String>): String</ID>
     <ID>ReturnCount:PaneExtractor.kt:PaneExtractor$fun extract(classDeclaration: KSClassDeclaration): PaneInfo?</ID>
     <ID>ReturnCount:PaneExtractor.kt:PaneExtractor$private fun extractPaneItem(classDeclaration: KSClassDeclaration): PaneItemInfo?</ID>
+    <ID>ReturnCount:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor$override fun process(resolver: Resolver): List&lt;KSAnnotated></ID>
+    <ID>ReturnCount:ScopeBlockGenerator.kt:ScopeBlockGenerator$fun generate(scopes: Map&lt;String, List&lt;ClassName>>): CodeBlock</ID>
     <ID>ReturnCount:ScreenExtractor.kt:ScreenExtractor$fun extract(functionDeclaration: KSFunctionDeclaration): ScreenInfo?</ID>
     <ID>ReturnCount:StackExtractor.kt:StackExtractor$fun extract(classDeclaration: KSClassDeclaration): StackInfo?</ID>
     <ID>ReturnCount:TabExtractor.kt:TabExtractor$fun extract(classDeclaration: KSClassDeclaration): TabInfo?</ID>
     <ID>ReturnCount:TabExtractor.kt:TabExtractor$private fun extractTabItemLegacy(classDeclaration: KSClassDeclaration): TabItemInfo?</ID>
-    <ID>ReturnCount:TabExtractor.kt:TabExtractor$private fun resolveInitialTabClass( annotation: com.google.devtools.ksp.symbol.KSAnnotation, tabs: List&lt;TabItemInfo> ): KSClassDeclaration?</ID>
+    <ID>ReturnCount:TabExtractor.kt:TabExtractor$private fun resolveInitialTabClass( annotation: KSAnnotation, tabs: List&lt;TabItemInfo> ): KSClassDeclaration?</ID>
+    <ID>ReturnCount:TransitionExtractor.kt:TransitionExtractor$fun extract(classDeclaration: KSClassDeclaration): TransitionInfo?</ID>
+    <ID>SwallowedException:DestinationExtractor.kt:DestinationExtractor$e: IllegalArgumentException</ID>
     <ID>SwallowedException:PaneExtractor.kt:PaneExtractor$e: IllegalArgumentException</ID>
     <ID>TooManyFunctions:DeepLinkHandlerGenerator.kt:DeepLinkHandlerGenerator</ID>
+    <ID>TooManyFunctions:NavigationConfigGenerator.kt:NavigationConfigGenerator : DslCodeGenerator</ID>
     <ID>TooManyFunctions:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor : SymbolProcessor</ID>
     <ID>TooManyFunctions:ValidationEngine.kt:ValidationEngine</ID>
+    <ID>UnusedParameter:DeepLinkHandlerGenerator.kt:DeepLinkHandlerGenerator$isNullableType: Boolean</ID>
     <ID>UnusedParameter:ValidationEngine.kt:ValidationEngine$resolver: Resolver</ID>
   </CurrentIssues>
 </SmellBaseline>

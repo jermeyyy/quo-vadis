@@ -2,20 +2,52 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
+    <ID>CyclomaticComplexMethod:BackstackEditorPanel.kt:@Composable private fun AddDestinationDialog( onDismiss: () -> Unit, onAdd: (DemoTab) -> Unit )</ID>
     <ID>FunctionNaming:MainViewController.kt:fun MainViewController()</ID>
+    <ID>LongMethod:BackstackEditorPanel.kt:@Composable private fun AddDestinationDialog( onDismiss: () -> Unit, onAdd: (DemoTab) -> Unit )</ID>
+    <ID>LongMethod:BackstackEditorPanel.kt:@Composable private fun BackstackEntryItem( index: Int, destination: NavDestination, entryId: String, isTop: Boolean, canMoveUp: Boolean, canMoveDown: Boolean, onRemove: () -> Unit, onMoveUp: () -> Unit, onMoveDown: () -> Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:BackstackEditorPanel.kt:@OptIn(ExperimentalLayoutApi::class) @Composable fun BackstackEditorPanel( state: StateDrivenState, onIntent: (StateDrivenIntent) -> Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ConversationListScreen.kt:@Composable private fun ConversationItem( conversation: Conversation, onClick: () -> Unit, modifier: Modifier = Modifier, )</ID>
     <ID>LongMethod:DeepLinkDemoScreen.kt:@Composable private fun DeepLinkDemoScreenContent( padding: PaddingValues, onNavigateViaDeepLink: (String) -> Unit )</ID>
-    <ID>LongMethod:NavigationGraphs.kt:fun processGraph()</ID>
-    <ID>LongMethod:ProcessStep1Screen.kt:@Composable private fun ProcessStep1Content( selectedType: String, name: String, onBack: () -> Unit, onNext: (String, String) -> Unit )</ID>
-    <ID>LongMethod:ProcessStep2BScreen.kt:@Composable private fun ProcessStep2BContent( padding: PaddingValues, previousData: String, companyName: String, taxId: String, industry: String, onBack: () -> Unit, onNext: (String) -> Unit )</ID>
+    <ID>LongMethod:DetailScreen.kt:@OptIn(ExperimentalSharedTransitionApi::class) @Composable private fun DetailHeaderCard(itemId: String, transitionScope: TransitionScope?)</ID>
+    <ID>LongMethod:DetailScreen.kt:@Screen(MasterDetailDestination.Detail::class) @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable fun DetailScreen( destination: MasterDetailDestination.Detail, navigator: Navigator = koinInject() )</ID>
+    <ID>LongMethod:HomeScreen.kt:@Composable private fun HomeScreenContent( modifier: Modifier, paddingValues: PaddingValues, onNavigateToMasterDetail: () -> Unit, onNavigateToTabs: () -> Unit, onNavigateToProcess: () -> Unit, onNavigateToStateDriven: () -> Unit, onNavigateToAuthFlow: () -> Unit, onNavigateToResultDemo: () -> Unit, onNavigateToMessagesPane: () -> Unit )</ID>
+    <ID>LongMethod:HomeScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(MainTabs.HomeTab::class) @Composable fun HomeScreen( navigator: Navigator = koinInject(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ItemCard.kt:@OptIn(ExperimentalSharedTransitionApi::class) @Composable fun ItemCard( item: Item, onClick: () -> Unit )</ID>
+    <ID>LongMethod:ProcessStep1Screen.kt:@Composable private fun ProcessStep1Content( selectedType: String, name: String, onSelectedTypeChange: (String) -> Unit, onNameChange: (String) -> Unit, onBack: () -> Unit, onNext: (String, String) -> Unit )</ID>
+    <ID>LongMethod:ProcessStep2BScreen.kt:@Composable private fun ProcessStep2BContent( padding: PaddingValues, previousData: String, companyName: String, taxId: String, industry: String, onCompanyNameChange: (String) -> Unit, onTaxIdChange: (String) -> Unit, onIndustryChange: (String) -> Unit, onBack: () -> Unit, onNext: (String) -> Unit )</ID>
     <ID>LongMethod:ProcessStep3Screen.kt:@Composable private fun ProcessStep3Content( padding: PaddingValues, branch: String, dataParts: List&lt;String>, onBack: () -> Unit, onComplete: () -> Unit )</ID>
-    <ID>LongMethod:TabsScreens.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun TabSubItemScreen( tabId: String, itemId: String, onBack: () -> Unit )</ID>
-    <ID>MatchingDeclarationName:Platform.android.kt:AndroidPlatform : Platform</ID>
-    <ID>MatchingDeclarationName:Platform.desktop.kt:DesktopPlatform : Platform</ID>
-    <ID>MatchingDeclarationName:Platform.ios.kt:IOSPlatform : Platform</ID>
-    <ID>MatchingDeclarationName:Platform.js.kt:JsPlatform : Platform</ID>
-    <ID>MatchingDeclarationName:Platform.wasmJs.kt:WasmPlatform : Platform</ID>
-    <ID>UnusedParameter:MVIExample.kt:itemCount: Int</ID>
-    <ID>UnusedParameter:MVIExample.kt:productId: String</ID>
-    <ID>UnusedParameter:MVIExample.kt:viewModel: ProductViewModel</ID>
+    <ID>LongMethod:ProfileScreen.kt:@Composable private fun ProfileEditForm( state: ProfileState.Content, onIntent: (ProfileIntent) -> Unit )</ID>
+    <ID>LongMethod:ProfileScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(MainTabs.ProfileTab::class) @Composable fun ProfileScreen( container: Store&lt;ProfileState, ProfileIntent, ProfileAction> = rememberContainer&lt;ProfileContainer, ProfileState, ProfileIntent, ProfileAction>() )</ID>
+    <ID>LongMethod:PromoScreen.kt:@Screen(PromoDestination::class) @OptIn(ExperimentalMaterial3Api::class) @Composable fun PromoScreen( destination: PromoDestination, navigator: Navigator = koinInject() )</ID>
+    <ID>LongMethod:SearchResultsScreen.kt:@Composable private fun SearchResultsContent( destination: SearchDestination.Results, padding: PaddingValues )</ID>
+    <ID>LongMethod:TabDetailScreens.kt:@Composable private fun DetailContent( modifier: Modifier = Modifier, icon: ImageVector, title: String, subtitle: String, details: List&lt;DetailRow>, description: String )</ID>
+    <ID>LongMethod:TabsDemoWrapper.kt:@OptIn(ExperimentalMaterial3Api::class) @TabsContainer(DemoTabs.Companion::class) @Composable fun DemoTabsWrapper( scope: TabsContainerScope, content: @Composable () -> Unit )</ID>
+    <ID>MagicNumber:BackstackEditorPanel.kt:8</ID>
+    <ID>MagicNumber:DetailScreen.kt:150</ID>
+    <ID>MagicNumber:DetailScreen.kt:30</ID>
+    <ID>MagicNumber:DetailScreen.kt:4</ID>
+    <ID>MagicNumber:MessagesPaneContainer.kt:0.25f</ID>
+    <ID>MagicNumber:MessagesPaneContainer.kt:0.4f</ID>
+    <ID>MagicNumber:MessagesPaneContainer.kt:0.6f</ID>
+    <ID>MagicNumber:SearchResultsScreen.kt:5</ID>
+    <ID>MagicNumber:TabContentScreens.kt:20</ID>
+    <ID>MatchingDeclarationName:DemoBackStack.kt:BackStackEntry</ID>
+    <ID>MatchingDeclarationName:MessagesPaneDestination.kt:MessagesPane : NavDestination</ID>
+    <ID>MaxLineLength:DetailScreen.kt:enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = 100)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = 100))</ID>
+    <ID>MaxLineLength:DetailScreen.kt:enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = 50)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = 50))</ID>
+    <ID>MaxLineLength:DetailScreen.kt:enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = delay)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = delay))</ID>
+    <ID>MaxLineLength:DetailScreen.kt:exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(tween(ANIMATION_DURATION))</ID>
+    <ID>MaxLineLength:DetailScreen.kt:onNavigateToRelated = { navigator.navigate(MasterDetailDestination.Detail(itemId = relatedId)) }</ID>
+    <ID>MaxLineLength:MainTabsUI.kt:*</ID>
+    <ID>MaxLineLength:ProfileScreen.kt:container: Store&lt;ProfileState, ProfileIntent, ProfileAction> = rememberContainer&lt;ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()</ID>
+    <ID>MaxLineLength:StateDrivenDemoScreen.kt:val sharedStore = rememberSharedContainer&lt;StateDrivenContainer, StateDrivenState, StateDrivenIntent, StateDrivenAction>()</ID>
+    <ID>MaxLineLength:TabContentScreens.kt:tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>ReturnCount:StateDrivenContainer.kt:StateDrivenContainer$private fun clearActiveStack(node: NavNode): NavNode?</ID>
+    <ID>ReturnCount:StateDrivenContainer.kt:StateDrivenContainer$private fun swapInActiveStack(node: NavNode, index1: Int, index2: Int): NavNode?</ID>
+    <ID>SwallowedException:ProfileContainer.kt:ProfileContainer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProfileContainer.kt:ProfileContainer$e: Exception</ID>
+    <ID>TooManyFunctions:StateDrivenContainer.kt:StateDrivenContainer : SharedNavigationContainer</ID>
+    <ID>TooManyFunctions:TabDetailScreens.kt:com.jermey.navplayground.demo.ui.screens.tabs.TabDetailScreens.kt</ID>
   </CurrentIssues>
 </SmellBaseline>

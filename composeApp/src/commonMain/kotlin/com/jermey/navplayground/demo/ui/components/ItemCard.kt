@@ -22,7 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.screens.masterdetail.Item
-import com.jermey.quo.vadis.core.compose.animation.LocalTransitionScope
+import com.jermey.quo.vadis.core.compose.transition.LocalTransitionScope
 
 
 @OptIn(ExperimentalSharedTransitionApi::class)

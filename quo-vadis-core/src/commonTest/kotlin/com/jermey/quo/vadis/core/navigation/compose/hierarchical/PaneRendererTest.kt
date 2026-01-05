@@ -1,12 +1,14 @@
+@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.PaneNode
-import com.jermey.quo.vadis.core.navigation.ScreenNode
-import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration

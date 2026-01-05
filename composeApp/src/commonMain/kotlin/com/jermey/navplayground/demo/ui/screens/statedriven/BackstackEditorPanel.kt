@@ -45,7 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 /**
  * Panel for editing and viewing the backstack state.

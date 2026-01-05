@@ -1,10 +1,11 @@
 package com.jermey.quo.vadis.core.navigation.core
 
-import com.jermey.quo.vadis.core.dsl.registry.CompositeDeepLinkRegistry
-import com.jermey.quo.vadis.core.dsl.registry.RuntimeDeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.DeepLink
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.registry.internal.CompositeDeepLinkRegistry
+import com.jermey.quo.vadis.core.registry.internal.RuntimeDeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.destination.DeepLink
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -33,6 +34,7 @@ private data class TestDestination(
  * - canHandle checks
  * - getRegisteredPatterns
  */
+@OptIn(InternalQuoVadisApi::class)
 class RuntimeDeepLinkRegistryTest {
 
     @Test
@@ -215,6 +217,7 @@ class RuntimeDeepLinkRegistryTest {
  * - Combined pattern listing
  * - canHandle across both registries
  */
+@OptIn(InternalQuoVadisApi::class)
 class CompositeDeepLinkRegistryTest {
 
     @Test

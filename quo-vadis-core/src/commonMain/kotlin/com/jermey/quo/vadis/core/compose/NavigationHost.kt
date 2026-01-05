@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalSharedTransitionApi::class)
+@file:OptIn(ExperimentalSharedTransitionApi::class, InternalQuoVadisApi::class)
 
 package com.jermey.quo.vadis.core.compose
 
@@ -23,37 +23,39 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.navigation.Navigator
-import com.jermey.quo.vadis.core.navigation.activeLeaf
-import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.compose.animation.LocalBackAnimationController
-import com.jermey.quo.vadis.core.compose.animation.LocalTransitionScope
-import com.jermey.quo.vadis.core.compose.animation.TransitionScope
-import com.jermey.quo.vadis.core.compose.animation.rememberBackAnimationController
-import com.jermey.quo.vadis.core.compose.navback.NavigateBackHandler
-import com.jermey.quo.vadis.core.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.compose.navback.ScreenNavigationInfo
-import com.jermey.quo.vadis.core.compose.navback.calculateCascadeBackState
-import com.jermey.quo.vadis.core.compose.render.ComposableCache
-import com.jermey.quo.vadis.core.compose.render.LocalAnimatedVisibilityScope
-import com.jermey.quo.vadis.core.compose.render.LocalNavigator
-import com.jermey.quo.vadis.core.compose.render.NavNodeRenderer
-import com.jermey.quo.vadis.core.compose.render.NavRenderScope
-import com.jermey.quo.vadis.core.compose.render.rememberComposableCache
-import com.jermey.quo.vadis.core.compose.wrapper.WindowSizeClass
-import com.jermey.quo.vadis.core.dsl.registry.BackHandlerRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.dsl.registry.LocalBackHandlerRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
-import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.compose.internal.AnimationCoordinator
+import com.jermey.quo.vadis.core.compose.internal.BackAnimationController
+import com.jermey.quo.vadis.core.compose.internal.ComposableCache
+import com.jermey.quo.vadis.core.compose.internal.LocalBackAnimationController
+import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
+import com.jermey.quo.vadis.core.compose.internal.navback.NavigateBackHandler
+import com.jermey.quo.vadis.core.compose.internal.navback.ScreenNavigationInfo
+import com.jermey.quo.vadis.core.compose.internal.navback.calculateCascadeBackState
+import com.jermey.quo.vadis.core.compose.internal.rememberBackAnimationController
+import com.jermey.quo.vadis.core.compose.internal.rememberComposableCache
+import com.jermey.quo.vadis.core.compose.internal.render.NavNodeRenderer
+import com.jermey.quo.vadis.core.compose.scope.LocalAnimatedVisibilityScope
+import com.jermey.quo.vadis.core.compose.scope.LocalNavigator
+import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
+import com.jermey.quo.vadis.core.compose.transition.LocalTransitionScope
+import com.jermey.quo.vadis.core.compose.transition.TransitionScope
+import com.jermey.quo.vadis.core.compose.util.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.route
-import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
-import com.jermey.quo.vadis.core.navigation.tree.TreeNavigator
-import com.jermey.quo.vadis.core.navigation.tree.result.BackResult
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.destination.route
+import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.activeLeaf
+import com.jermey.quo.vadis.core.registry.BackHandlerRegistry
+import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.LocalBackHandlerRegistry
+import com.jermey.quo.vadis.core.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.registry.TransitionRegistry
 import kotlinx.coroutines.launch
 
 // =============================================================================
@@ -61,16 +63,16 @@ import kotlinx.coroutines.launch
 // =============================================================================
 
 /**
- * Provides access to the current [com.jermey.quo.vadis.core.compose.render.NavRenderScope] within the hierarchical navigation tree.
+ * Provides access to the current [com.jermey.quo.vadis.core.compose.scope.NavRenderScope] within the hierarchical navigation tree.
  *
  * This composition local is provided by [com.jermey.quo.vadis.core.compose.NavigationHost] and allows
  * any composable within the navigation hierarchy to access shared resources
  * and state required for rendering, including:
  *
  * - [Navigator] for navigation operations
- * - [com.jermey.quo.vadis.core.compose.render.ComposableCache] for state preservation
+ * - [com.jermey.quo.vadis.core.compose.internal.ComposableCache] for state preservation
  * - [com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator] for transition resolution
- * - [com.jermey.quo.vadis.core.compose.navback.PredictiveBackController] for gesture handling
+ * - [com.jermey.quo.vadis.core.compose.internal.navback.PredictiveBackController] for gesture handling
  * - [ScreenRegistry] and [ContainerRegistry] for content resolution
  * - [SharedTransitionScope] for shared element transitions
  *
@@ -93,7 +95,7 @@ import kotlinx.coroutines.launch
  * This local is only available within content rendered by [com.jermey.quo.vadis.core.compose.NavigationHost].
  * Accessing it outside of this context will return `null`.
  *
- * @see com.jermey.quo.vadis.core.compose.render.NavRenderScope
+ * @see com.jermey.quo.vadis.core.compose.scope.NavRenderScope
  * @see com.jermey.quo.vadis.core.compose.NavigationHost
  */
 val LocalNavRenderScope =
@@ -147,7 +149,7 @@ val LocalNavRenderScope =
  *
  * When [enablePredictiveBack] is `true` (default), the host integrates with
  * platform back gesture APIs to provide visual feedback during back navigation.
- * The [com.jermey.quo.vadis.core.compose.navback.PredictiveBackController] coordinates gesture state across all renderers.
+ * The [com.jermey.quo.vadis.core.compose.internal.navback.PredictiveBackController] coordinates gesture state across all renderers.
  *
  * ## Shared Element Transitions
  *

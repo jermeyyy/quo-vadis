@@ -1,12 +1,13 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.compose.internal.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.NavigationTransitions
-import com.jermey.quo.vadis.core.navigation.ScreenNode
-import com.jermey.quo.vadis.core.navigation.StackNode
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -22,6 +23,7 @@ import kotlin.test.assertTrue
  * - Forward and back navigation animations
  * - AnimatedContent behavior
  */
+@OptIn(InternalQuoVadisApi::class)
 class AnimatedNavContentTest {
 
     // =========================================================================

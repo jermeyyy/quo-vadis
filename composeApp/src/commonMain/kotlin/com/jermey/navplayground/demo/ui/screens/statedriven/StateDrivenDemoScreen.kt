@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
 import com.jermey.quo.vadis.annotations.TabsContainer
-import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
+import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.flowmvi.rememberSharedContainer
 import kotlinx.coroutines.launch
 import pro.respawn.flowmvi.compose.dsl.subscribe
