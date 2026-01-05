@@ -33,8 +33,8 @@ import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.navigation.NavigationTransitions
-import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 

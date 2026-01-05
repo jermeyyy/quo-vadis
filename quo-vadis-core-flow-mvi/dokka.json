@@ -1,0 +1,36 @@
+{
+  "moduleName": "Quo Vadis FlowMVI Integration",
+  "moduleVersion": "0.1.0-SNAPSHOT",
+  "outputDir": "./build/dokka",
+  "sourceLinks": [
+    {
+      "path": "src",
+      "url": "https://github.com/jermeyyy/quo-vadis/tree/main/quo-vadis-core-flow-mvi/src",
+      "lineSuffix": "#L"
+    }
+  ],
+  "externalDocumentationLinks": [
+    {
+      "url": "https://developer.android.com/reference/",
+      "packageListUrl": "https://developer.android.com/reference/androidx/package-list"
+    },
+    {
+      "url": "https://kotlinlang.org/api/kotlinx.coroutines/"
+    },
+    {
+      "url": "https://kotlinlang.org/api/latest/jvm/stdlib/"
+    }
+  ],
+  "perPackageOptions": [
+    {
+      "matchingRegex": ".*\\.internal.*",
+      "suppress": true,
+      "reportUndocumented": false
+    }
+  ],
+  "suppressObviousFunctions": true,
+  "suppressInheritedMembers": false,
+  "includes": [
+    "docs/README.md"
+  ]
+}

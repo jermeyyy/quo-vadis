@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:ItemPickerScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(ResultDemoDestination.ItemPicker::class) @Composable fun ItemPickerScreen( container: Store&lt;ItemPickerState, Intent, Action> = rememberContainer&lt;ItemPickerContainer, ItemPickerState, Intent, Action>() )</ID>
+    <ID>LongMethod:ResultDemoScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(ResultDemoDestination.Demo::class) @Composable fun ResultDemoScreen( modifier: Modifier = Modifier, container: Store&lt;ResultDemoState, Intent, Action> = rememberContainer&lt;ResultDemoContainer, ResultDemoState, Intent, Action>() )</ID>
+    <ID>MaxLineLength:ItemPickerScreen.kt:container: Store&lt;ItemPickerState, Intent, Action> = rememberContainer&lt;ItemPickerContainer, ItemPickerState, Intent, Action>()</ID>
+    <ID>MaxLineLength:ResultDemoScreen.kt:container: Store&lt;ResultDemoState, Intent, Action> = rememberContainer&lt;ResultDemoContainer, ResultDemoState, Intent, Action>()</ID>
+  </CurrentIssues>
+</SmellBaseline>

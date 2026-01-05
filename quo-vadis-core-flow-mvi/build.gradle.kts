@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.dokka)
+    alias(libs.plugins.maven.publish)
 }
 
 kotlin {
@@ -145,5 +146,81 @@ kotlin {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    pom {
+        name.set("Quo Vadis Flow MVI")
+        description.set("FlowMVI integration for Quo Vadis navigation library - provides MVI architecture support with Koin DI")
+        url.set("https://github.com/jermeyyy/quo-vadis")
+        inceptionYear.set("2025")
+
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+                distribution.set("repo")
+            }
+        }
+
+        developers {
+            developer {
+                id.set("jermeyyy")
+                name.set("Karol Celebi")
+                url.set("https://github.com/jermeyyy")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/jermeyyy/quo-vadis")
+            connection.set("scm:git:git://github.com/jermeyyy/quo-vadis.git")
+            developerConnection.set("scm:git:ssh://git@github.com/jermeyyy/quo-vadis.git")
+        }
+    }
+}
+
+dokka {
+    moduleName.set("Flow MVI")
+    moduleVersion.set(project.version.toString())
+
+    dokkaPublications.html {
+        outputDirectory.set(layout.buildDirectory.dir("dokka/html"))
+
+        // Suppress obvious functions and inherited members at publication level
+        suppressObviousFunctions.set(true)
+        suppressInheritedMembers.set(false)
+    }
+
+    dokkaSourceSets.configureEach {
+        // Source links to GitHub
+        sourceLink {
+            localDirectory.set(file("src/commonMain/kotlin"))
+            remoteUrl("https://github.com/jermeyyy/quo-vadis/tree/main/quo-vadis-core-flow-mvi/src/commonMain/kotlin")
+            remoteLineSuffix.set("")
+        }
+
+        // External documentation links
+        externalDocumentationLinks.create("android") {
+            url("https://developer.android.com/reference/kotlin/")
+            packageListUrl("https://developer.android.com/reference/kotlin/androidx/package-list")
+        }
+
+        externalDocumentationLinks.create("coroutines") {
+            url("https://kotlinlang.org/api/kotlinx.coroutines/")
+        }
+
+        // Package options - suppress internal packages
+        perPackageOption {
+            matchingRegex.set(".*\\.internal.*")
+            suppress.set(true)
+        }
+
+        // Reporting undocumented
+        reportUndocumented.set(false)
+        skipEmptyPackages.set(true)
     }
 }

@@ -1,14 +1,15 @@
 package com.jermey.quo.vadis.core.navigation.config
 
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.dsl.registry.PaneRoleRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScopeRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
-import com.jermey.quo.vadis.core.dsl.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
+import com.jermey.quo.vadis.core.registry.ScopeRegistry
+import com.jermey.quo.vadis.core.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.registry.TransitionRegistry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig.Companion.Empty
-import com.jermey.quo.vadis.core.dsl.registry.DeepLinkRegistry
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.internal.config.EmptyNavigationConfig
 import kotlin.reflect.KClass
 
 /**

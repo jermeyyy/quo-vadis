@@ -1,3 +1,5 @@
+@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.navigation
 
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -7,13 +9,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.SaveableStateHolder
-import com.jermey.quo.vadis.core.compose.animation.AnimationCoordinator
-import com.jermey.quo.vadis.core.compose.navback.PredictiveBackController
-import com.jermey.quo.vadis.core.compose.render.ComposableCache
-import com.jermey.quo.vadis.core.compose.render.LocalAnimatedVisibilityScope
-import com.jermey.quo.vadis.core.compose.render.NavRenderScope
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.dsl.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.compose.internal.AnimationCoordinator
+import com.jermey.quo.vadis.core.compose.internal.ComposableCache
+import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
+import com.jermey.quo.vadis.core.compose.scope.LocalAnimatedVisibilityScope
+import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
+import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.ScreenRegistry
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.EmptyScreenRegistry.Content
 import com.jermey.quo.vadis.core.navigation.EmptyScreenRegistry.hasContent
 

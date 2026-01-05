@@ -1,17 +1,18 @@
 package com.jermey.quo.vadis.core.navigation.core
 
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.navigation.PaneNode
-import com.jermey.quo.vadis.core.navigation.ScreenNode
-import com.jermey.quo.vadis.core.navigation.StackNode
-import com.jermey.quo.vadis.core.navigation.TabNode
-import com.jermey.quo.vadis.core.navigation.findByKey
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
-import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.core.navigation.node.findByKey
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,6 +35,7 @@ import kotlin.test.assertTrue
  * - Deeply nested tree operations
  * - Empty tree edge cases
  */
+@OptIn(InternalQuoVadisApi::class)
 class TreeMutatorEdgeCasesTest {
 
     // =========================================================================

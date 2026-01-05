@@ -35,8 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MessagesPane
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.compose.wrapper.calculateWindowSizeClass
-import com.jermey.quo.vadis.core.navigation.Navigator
+import com.jermey.quo.vadis.core.compose.util.calculateWindowSizeClass
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
 
 /**

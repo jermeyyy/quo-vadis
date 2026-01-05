@@ -2,7 +2,9 @@ package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.dsl.internal.BuiltPaneContent
+import com.jermey.quo.vadis.core.dsl.internal.BuiltPanesConfig
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 

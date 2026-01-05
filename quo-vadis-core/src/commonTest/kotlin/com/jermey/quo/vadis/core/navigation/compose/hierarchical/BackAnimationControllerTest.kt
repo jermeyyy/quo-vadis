@@ -1,7 +1,8 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
-import com.jermey.quo.vadis.core.compose.animation.BackAnimationController
-import com.jermey.quo.vadis.core.compose.navback.BackNavigationEvent
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.compose.internal.BackAnimationController
+import com.jermey.quo.vadis.core.compose.internal.navback.BackNavigationEvent
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -20,6 +21,7 @@ import kotlin.test.assertTrue
  * - cancelAnimation() method
  * - State transitions
  */
+@OptIn(InternalQuoVadisApi::class)
 class BackAnimationControllerTest {
 
     // =========================================================================

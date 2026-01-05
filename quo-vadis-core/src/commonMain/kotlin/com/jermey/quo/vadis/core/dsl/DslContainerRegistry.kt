@@ -2,14 +2,15 @@ package com.jermey.quo.vadis.core.dsl
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.navigation.NavNode
-import com.jermey.quo.vadis.core.navigation.PaneNode
-import com.jermey.quo.vadis.core.navigation.TabNode
-import com.jermey.quo.vadis.core.compose.wrapper.PaneContainerScope
-import com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope
-import com.jermey.quo.vadis.core.dsl.registry.ContainerInfo
-import com.jermey.quo.vadis.core.dsl.registry.ContainerRegistry
-import com.jermey.quo.vadis.core.navigation.NavDestination
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
+import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+import com.jermey.quo.vadis.core.registry.ContainerInfo
+import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import kotlin.reflect.KClass
 
 /**
@@ -66,6 +67,7 @@ import kotlin.reflect.KClass
  * @see NavigationConfigBuilder.tabsContainer
  * @see NavigationConfigBuilder.paneContainer
  */
+@InternalQuoVadisApi
 @Stable
 internal class DslContainerRegistry(
     private val containers: Map<KClass<out NavDestination>, ContainerBuilder>,

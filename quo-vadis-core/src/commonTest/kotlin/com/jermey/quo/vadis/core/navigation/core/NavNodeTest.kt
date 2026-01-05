@@ -1,27 +1,28 @@
 package com.jermey.quo.vadis.core.navigation.core
 
-import com.jermey.quo.vadis.core.navigation.PaneNode
-import com.jermey.quo.vadis.core.navigation.ScreenNode
-import com.jermey.quo.vadis.core.navigation.StackNode
-import com.jermey.quo.vadis.core.navigation.TabNode
-import com.jermey.quo.vadis.core.navigation.activeLeaf
-import com.jermey.quo.vadis.core.navigation.activePathToLeaf
-import com.jermey.quo.vadis.core.navigation.activeStack
-import com.jermey.quo.vadis.core.navigation.allPaneNodes
-import com.jermey.quo.vadis.core.navigation.allScreens
-import com.jermey.quo.vadis.core.navigation.allStackNodes
-import com.jermey.quo.vadis.core.navigation.allTabNodes
-import com.jermey.quo.vadis.core.navigation.depth
-import com.jermey.quo.vadis.core.navigation.findByKey
-import com.jermey.quo.vadis.core.navigation.NavDestination
-import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
-import com.jermey.quo.vadis.core.navigation.NavigationTransition
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.core.navigation.node.activeLeaf
+import com.jermey.quo.vadis.core.navigation.node.activePathToLeaf
+import com.jermey.quo.vadis.core.navigation.node.activeStack
+import com.jermey.quo.vadis.core.navigation.node.allPaneNodes
+import com.jermey.quo.vadis.core.navigation.node.allScreens
+import com.jermey.quo.vadis.core.navigation.node.allStackNodes
+import com.jermey.quo.vadis.core.navigation.node.allTabNodes
+import com.jermey.quo.vadis.core.navigation.node.depth
+import com.jermey.quo.vadis.core.navigation.node.findByKey
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.nodeCount
-import com.jermey.quo.vadis.core.navigation.paneForRole
+import com.jermey.quo.vadis.core.navigation.node.nodeCount
+import com.jermey.quo.vadis.core.navigation.node.paneForRole
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -39,6 +40,7 @@ import kotlin.test.assertTrue
  * - PaneNode: validation, activePane, paneCount
  * - Extension functions: findByKey, activePathToLeaf, activeLeaf, activeStack, allScreens, etc.
  */
+@OptIn(InternalQuoVadisApi::class)
 class NavNodeTest {
 
     // =========================================================================
