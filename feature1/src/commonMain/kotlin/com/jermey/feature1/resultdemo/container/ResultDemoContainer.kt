@@ -9,6 +9,10 @@ import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Qualifier
+import org.koin.core.annotation.Scope
+import org.koin.core.annotation.Scoped
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
@@ -53,6 +57,9 @@ data class ResultDemoState(
  *
  * @param scope The NavigationContainerScope for navigation and lifecycle
  */
+@Scoped
+@Scope(NavigationContainerScope::class)
+@Qualifier(ResultDemoContainer::class)
 class ResultDemoContainer(
     scope: NavigationContainerScope,
 ) : NavigationContainer<ResultDemoState, Intent, Action>(scope) {

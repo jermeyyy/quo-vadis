@@ -14,14 +14,14 @@ import Multiplatform from '@pages/Features/Multiplatform/Multiplatform'
 import StackManagement from '@pages/Features/BackStack/BackStack'
 import DeepLinks from '@pages/Features/DeepLinks/DeepLinks'
 import PredictiveBack from '@pages/Features/PredictiveBack/PredictiveBack'
-import SharedElements from '@pages/Features/SharedElements/SharedElements'
 import Transitions from '@pages/Features/Transitions/Transitions'
 import Testing from '@pages/Features/Testing/Testing'
 import Modular from '@pages/Features/Modular/Modular'
+import DSLConfig from '@pages/Features/DSLConfig/DSLConfig'
 import DIIntegration from '@pages/Features/DIIntegration/DIIntegration'
-import Performance from '@pages/Features/Performance/Performance'
 import TabbedNavigation from '@pages/Features/TabbedNavigation/TabbedNavigation'
-import FlowMVI from '@pages/Features/FlowMVI/FlowMVI'
+import Architecture from '@pages/Features/Architecture/Architecture'
+import PaneLayouts from '@pages/Features/PaneLayouts/PaneLayouts'
 
 function App() {
   const basename = import.meta.env.PROD ? '/quo-vadis' : '/'
@@ -42,14 +42,14 @@ function App() {
               <Route path="/features/stack-management" element={<StackManagement />} />
               <Route path="/features/deep-links" element={<DeepLinks />} />
               <Route path="/features/predictive-back" element={<PredictiveBack />} />
-              <Route path="/features/shared-elements" element={<SharedElements />} />
               <Route path="/features/transitions" element={<Transitions />} />
               <Route path="/features/testing" element={<Testing />} />
               <Route path="/features/modular" element={<Modular />} />
+              <Route path="/features/dsl-config" element={<DSLConfig />} />
               <Route path="/features/di-integration" element={<DIIntegration />} />
-              <Route path="/features/performance" element={<Performance />} />
               <Route path="/features/tabbed-navigation" element={<TabbedNavigation />} />
-              <Route path="/features/flow-mvi" element={<FlowMVI />} />
+              <Route path="/features/pane-layouts" element={<PaneLayouts />} />
+              <Route path="/features/architecture" element={<Architecture />} />
               
               <Route path="/demo" element={<Demo />} />
               <Route path="*" element={<Home />} />

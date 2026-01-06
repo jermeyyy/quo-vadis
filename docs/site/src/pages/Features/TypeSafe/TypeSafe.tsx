@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
@@ -266,10 +267,10 @@ export default function TypeSafe() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/annotation-api">Annotation-Based API</a> - Learn about <code>@Destination</code>, <code>@Stack</code>, and code generation</li>
-          <li><a href="/features/tree-architecture">Tree Architecture</a> - Understand the navigation tree structure</li>
-          <li><a href="/features/adaptive-navigation">Adaptive Navigation</a> - Build responsive layouts with panes</li>
-          <li><a href="/getting-started">Getting Started</a> - Quick start guide</li>
+          <li><Link to="/features/annotation-api">Annotation-Based API</Link> - Learn about <code>@Destination</code>, <code>@Stack</code>, and code generation</li>
+          <li><Link to="/features/tree-architecture">Tree Architecture</Link> - Understand the navigation tree structure</li>
+          <li><Link to="/features/adaptive-navigation">Adaptive Navigation</Link> - Build responsive layouts with panes</li>
+          <li><Link to="/getting-started">Getting Started</Link> - Quick start guide</li>
         </ul>
       </section>
     </article>

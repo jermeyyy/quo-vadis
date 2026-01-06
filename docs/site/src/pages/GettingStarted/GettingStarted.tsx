@@ -278,7 +278,7 @@ export default function GettingStarted() {
             transitions
           </li>
           <li>
-            <a href="/features/flowmvi-integration">FlowMVI Integration</a> — Integrate MVI state
+            <a href="/features/di-integration">FlowMVI & Koin Integration</a> — Integrate MVI state
             management with navigation-scoped containers
           </li>
         </ul>

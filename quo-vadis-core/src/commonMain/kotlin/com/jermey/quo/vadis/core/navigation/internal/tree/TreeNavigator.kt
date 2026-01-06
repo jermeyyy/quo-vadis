@@ -14,7 +14,6 @@ import com.jermey.quo.vadis.core.navigation.internal.ResultCapable
 import com.jermey.quo.vadis.core.navigation.internal.TransitionController
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PopResult
-import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.navigator.PaneNavigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
@@ -35,6 +34,7 @@ import com.jermey.quo.vadis.core.registry.internal.CompositeDeepLinkRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -86,14 +86,12 @@ import kotlin.uuid.Uuid
  * @param config Navigation configuration providing all registries. The navigator derives
  *   [scopeRegistry], [containerRegistry], and [deepLinkRegistry] from this config.
  *   Defaults to [NavigationConfig.Empty].
- * @param coroutineScope Scope for derived state computations
  * @param initialState Optional initial navigation state (defaults to empty stack)
  */
 @OptIn(ExperimentalUuidApi::class, InternalQuoVadisApi::class)
 @Stable
 class TreeNavigator(
     override val config: NavigationConfig = NavigationConfig.Empty,
-    private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
     initialState: NavNode? = null
 ) : PaneNavigator, TransitionController, ResultCapable {
 
@@ -208,7 +206,7 @@ class TreeNavigator(
             }
         }
         .stateIn(
-            scope = coroutineScope,
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
         )
@@ -776,7 +774,8 @@ class TreeNavigator(
                 children = listOf(newScreen)
             )
             val newConfig = PaneConfiguration(content = newStack)
-            val updated = TreeMutator.setPaneConfiguration(currentState, paneNode.key, role, newConfig)
+            val updated =
+                TreeMutator.setPaneConfiguration(currentState, paneNode.key, role, newConfig)
             TreeMutator.switchActivePane(updated, paneNode.key, role)
         }
 
@@ -941,13 +940,14 @@ class TreeNavigator(
 
         // Launch in coroutine scope since cancelResult is a suspend function
         try {
+            val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             coroutineScope.launch {
                 destroyedKeys.forEach { screenKey ->
                     resultManager.cancelResult(screenKey)
                 }
+                coroutineScope.cancel()
             }
         } catch (_: IllegalStateException) {
-            // Dispatcher not available (e.g., Main dispatcher in tests)
             // Result cancellation is optional, so we silently ignore this
         }
     }

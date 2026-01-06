@@ -1,6 +1,19 @@
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
+// Status badge components
+const StatusFull = ({ children = 'Full' }: { children?: string }) => (
+  <span className={`${styles.statusBadge} ${styles.statusFull}`}>{children}</span>
+)
+
+const StatusPartial = ({ children = 'Partial' }: { children?: string }) => (
+  <span className={`${styles.statusBadge} ${styles.statusPartial}`}>{children}</span>
+)
+
+const StatusNo = ({ children = 'No' }: { children?: string }) => (
+  <span className={`${styles.statusBadge} ${styles.statusNo}`}>{children}</span>
+)
+
 const enablePredictiveBackCode = `NavigationHost(
     navigator = navigator,
     enablePredictiveBack = true  // Default
@@ -97,22 +110,22 @@ export default function PredictiveBack() {
           <tbody>
             <tr>
               <td>Android 13+</td>
-              <td>✅ Full</td>
+              <td><StatusFull /></td>
               <td>Predictive back gestures with visual preview</td>
             </tr>
             <tr>
               <td>iOS</td>
-              <td>✅ Full</td>
+              <td><StatusFull /></td>
               <td>Edge swipe-back gesture</td>
             </tr>
             <tr>
               <td>Desktop</td>
-              <td>⚡ Partial</td>
+              <td><StatusPartial /></td>
               <td>Keyboard back (Escape key)</td>
             </tr>
             <tr>
               <td>Web</td>
-              <td>⚡ Partial</td>
+              <td><StatusPartial /></td>
               <td>Browser back button integration</td>
             </tr>
           </tbody>
@@ -217,11 +230,11 @@ export default function PredictiveBack() {
           <tbody>
             <tr>
               <td>Stack navigation</td>
-              <td>✅ Enabled</td>
+              <td><StatusFull>Enabled</StatusFull></td>
             </tr>
             <tr>
               <td>Tab switching</td>
-              <td>❌ Disabled (instant)</td>
+              <td><StatusNo>Disabled</StatusNo></td>
             </tr>
             <tr>
               <td>Pane transitions</td>

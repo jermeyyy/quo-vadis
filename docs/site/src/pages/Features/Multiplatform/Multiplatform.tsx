@@ -1,5 +1,174 @@
+import { Link } from 'react-router-dom'
 import styles from '../Features.module.css'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
+
+// Status badge components
+const StatusFull = ({ children = 'Full' }: { children?: string }) => (
+  <span className={`${styles.statusBadge} ${styles.statusFull}`}>{children}</span>
+)
+
+// Status icon components for dense tables
+const IconYes = () => <span className={`${styles.statusIcon} ${styles.statusIconYes}`} />
+const IconPartial = () => <span className={`${styles.statusIcon} ${styles.statusIconPartial}`} />
+const IconNa = () => <span className={`${styles.statusIcon} ${styles.statusIconNa}`} />
+
+// Architecture diagram styles
+const diagramStyles = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '2rem 1rem',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.85rem',
+  },
+  arrow: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    padding: '0.25rem 0',
+  },
+  arrowLine: {
+    width: '2px',
+    height: '20px',
+    background: 'var(--color-text-muted, #9ca3af)',
+  },
+  arrowHead: {
+    width: '0',
+    height: '0',
+    borderLeft: '6px solid transparent',
+    borderRight: '6px solid transparent',
+    borderTop: '8px solid var(--color-text-muted, #9ca3af)',
+  },
+  mainBox: {
+    width: '100%',
+    maxWidth: '500px',
+    background: 'rgba(139, 92, 246, 0.08)',
+    borderRadius: '12px',
+    padding: '1.25rem',
+    border: '1px solid rgba(139, 92, 246, 0.3)',
+  },
+  mainBoxTitle: {
+    fontSize: '0.7rem',
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.1em',
+    marginBottom: '0.75rem',
+    color: 'var(--color-primary)',
+  },
+  mainBoxContent: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.375rem',
+    fontSize: '0.8rem',
+    color: 'var(--color-text-secondary)',
+  },
+  platformBoxes: {
+    display: 'flex',
+    gap: '1rem',
+    flexWrap: 'wrap' as const,
+    justifyContent: 'center',
+  },
+  platformBox: {
+    background: 'var(--color-bg-elevated)',
+    borderRadius: '8px',
+    padding: '1rem',
+    border: '1px solid var(--color-border)',
+    minWidth: '140px',
+    textAlign: 'center' as const,
+  },
+  platformTitle: {
+    fontWeight: '600' as const,
+    fontSize: '0.875rem',
+    marginBottom: '0.5rem',
+    color: 'var(--color-text-primary)',
+  },
+  platformItems: {
+    fontSize: '0.75rem',
+    color: 'var(--color-text-muted)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.25rem',
+  },
+  codeSharing: {
+    textAlign: 'center' as const,
+    padding: '0.75rem 1.5rem',
+    background: 'rgba(34, 197, 94, 0.1)',
+    borderRadius: '20px',
+    color: '#16a34a',
+    fontWeight: '600' as const,
+    fontSize: '0.875rem',
+  },
+}
+
+const Arrow = () => (
+  <div style={diagramStyles.arrow}>
+    <div style={diagramStyles.arrowLine} />
+    <div style={diagramStyles.arrowHead} />
+  </div>
+)
+
+const PlatformArchitectureDiagram = () => (
+  <div style={diagramStyles.container}>
+    {/* commonMain box */}
+    <div style={diagramStyles.mainBox}>
+      <div style={diagramStyles.mainBoxTitle}>commonMain</div>
+      <div style={diagramStyles.mainBoxContent}>
+        <span>• Destinations (@Stack, @Destination)</span>
+        <span>• Screens (@Screen)</span>
+        <span>• Containers (NavigationContainer)</span>
+        <span>• Business logic</span>
+      </div>
+    </div>
+    
+    <Arrow />
+    
+    {/* Platform-specific boxes */}
+    <div style={diagramStyles.platformBoxes}>
+      <div style={diagramStyles.platformBox}>
+        <div style={diagramStyles.platformTitle}>androidMain</div>
+        <div style={diagramStyles.platformItems}>
+          <span>MainActivity</span>
+          <span>Deep links</span>
+          <span>Back handler</span>
+        </div>
+      </div>
+      
+      <div style={diagramStyles.platformBox}>
+        <div style={diagramStyles.platformTitle}>iosMain</div>
+        <div style={diagramStyles.platformItems}>
+          <span>AppDelegate</span>
+          <span>Universal links</span>
+          <span>Swipe gestures</span>
+        </div>
+      </div>
+      
+      <div style={diagramStyles.platformBox}>
+        <div style={diagramStyles.platformTitle}>desktopMain</div>
+        <div style={diagramStyles.platformItems}>
+          <span>Main window</span>
+          <span>System tray</span>
+          <span>Keyboard nav</span>
+        </div>
+      </div>
+      
+      <div style={diagramStyles.platformBox}>
+        <div style={diagramStyles.platformTitle}>webMain</div>
+        <div style={diagramStyles.platformItems}>
+          <span>Browser entry</span>
+          <span>URL routing</span>
+          <span>History API</span>
+        </div>
+      </div>
+    </div>
+    
+    {/* Code sharing indicator */}
+    <div style={{ marginTop: '1rem' }}>
+      <span style={diagramStyles.codeSharing}>90%+ shared code</span>
+    </div>
+  </div>
+)
 
 export default function Multiplatform() {
   return (
@@ -20,52 +189,58 @@ export default function Multiplatform() {
           <thead>
             <tr>
               <th>Platform</th>
-              <th>Target</th>
-              <th>Status</th>
-              <th>Notes</th>
+              <th>Targets</th>
+              <th style={{ textAlign: 'center' }}>Status</th>
+              <th>Requirements</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Android</td>
-              <td><code>android</code></td>
-              <td>✅ Full</td>
+              <td className={styles.featureCell}>Android</td>
+              <td>
+                <span className={styles.platformBadge}>android</span>
+              </td>
+              <td style={{ textAlign: 'center' }}><StatusFull /></td>
               <td>API 21+</td>
             </tr>
             <tr>
-              <td>iOS</td>
-              <td><code>iosArm64</code>, <code>iosSimulatorArm64</code>, <code>iosX64</code></td>
-              <td>✅ Full</td>
+              <td className={styles.featureCell}>iOS</td>
+              <td>
+                <div className={styles.platformBadges}>
+                  <span className={styles.platformBadge}>iosArm64</span>
+                  <span className={styles.platformBadge}>iosSimulatorArm64</span>
+                  <span className={styles.platformBadge}>iosX64</span>
+                </div>
+              </td>
+              <td style={{ textAlign: 'center' }}><StatusFull /></td>
               <td>iOS 14+</td>
             </tr>
             <tr>
-              <td>Desktop</td>
-              <td><code>jvm</code></td>
-              <td>✅ Full</td>
+              <td className={styles.featureCell}>Desktop</td>
+              <td>
+                <span className={styles.platformBadge}>jvm</span>
+              </td>
+              <td style={{ textAlign: 'center' }}><StatusFull /></td>
               <td>macOS, Windows, Linux</td>
             </tr>
             <tr>
-              <td>JavaScript</td>
-              <td><code>js</code> (IR)</td>
-              <td>✅ Full</td>
-              <td>Browser target</td>
+              <td className={styles.featureCell}>JavaScript</td>
+              <td>
+                <span className={styles.platformBadge}>js (IR)</span>
+              </td>
+              <td style={{ textAlign: 'center' }}><StatusFull /></td>
+              <td>Modern browsers</td>
             </tr>
             <tr>
-              <td>WebAssembly</td>
-              <td><code>wasmJs</code></td>
-              <td>✅ Full</td>
-              <td>WASM browser target</td>
+              <td className={styles.featureCell}>WebAssembly</td>
+              <td>
+                <span className={styles.platformBadge}>wasmJs</span>
+              </td>
+              <td style={{ textAlign: 'center' }}><StatusFull /></td>
+              <td>WASM-compatible browsers</td>
             </tr>
           </tbody>
         </table>
-
-        <div className={styles.badges}>
-          <span className={styles.badge}>Android</span>
-          <span className={styles.badge}>iOS</span>
-          <span className={styles.badge}>Desktop (JVM)</span>
-          <span className={styles.badge}>JavaScript (IR)</span>
-          <span className={styles.badge}>WebAssembly</span>
-        </div>
       </section>
 
       <section>
@@ -96,65 +271,65 @@ fun FeedScreen(navigator: Navigator) {
           native capabilities:
         </p>
         
-        <table>
+        <table className={styles.compactTable}>
           <thead>
             <tr>
               <th>Feature</th>
-              <th>Android</th>
-              <th>iOS</th>
-              <th>Desktop</th>
-              <th>Web</th>
+              <th style={{ textAlign: 'center' }}>Android</th>
+              <th style={{ textAlign: 'center' }}>iOS</th>
+              <th style={{ textAlign: 'center' }}>Desktop</th>
+              <th style={{ textAlign: 'center' }}>Web</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Stack navigation</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>✅</td>
+              <td className={styles.featureCell}>Stack navigation</td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
             </tr>
             <tr>
-              <td>Tab navigation</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>✅</td>
+              <td className={styles.featureCell}>Tab navigation</td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
             </tr>
             <tr>
-              <td>Pane layouts</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>✅</td>
+              <td className={styles.featureCell}>Pane layouts</td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
             </tr>
             <tr>
-              <td>Deep links</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>⚡</td>
-              <td>✅</td>
+              <td className={styles.featureCell}>Deep links</td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconPartial /></td>
+              <td><IconYes /></td>
             </tr>
             <tr>
-              <td>Predictive back</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>—</td>
-              <td>—</td>
+              <td className={styles.featureCell}>Predictive back</td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconNa /></td>
+              <td><IconNa /></td>
             </tr>
             <tr>
-              <td>Shared elements</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>✅</td>
-              <td>✅</td>
+              <td className={styles.featureCell}>Shared elements</td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
+              <td><IconYes /></td>
             </tr>
             <tr>
-              <td>Browser history</td>
-              <td>—</td>
-              <td>—</td>
-              <td>—</td>
-              <td>✅</td>
+              <td className={styles.featureCell}>Browser history</td>
+              <td><IconNa /></td>
+              <td><IconNa /></td>
+              <td><IconNa /></td>
+              <td><IconYes /></td>
             </tr>
           </tbody>
         </table>
@@ -278,20 +453,7 @@ NavigationHost(
           The architecture keeps platform-specific code minimal while maximizing code sharing:
         </p>
         
-        <CodeBlock language="text" code={`┌─────────────────────────────────────────────────────────────┐
-│                        commonMain                            │
-│  - Destinations (@Stack, @Destination)                       │
-│  - Screens (@Screen)                                         │
-│  - Containers (NavigationContainer)                          │
-│  - Business logic                                            │
-└─────────────────────────────────────────────────────────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-        androidMain       iosMain        desktopMain
-        - MainActivity    - AppDelegate  - Main window
-        - Deep links      - Universal    - System tray
-        - Back handler      links        - Keyboard`} />
+        <PlatformArchitectureDiagram />
         
         <p>
           This means 90%+ of your navigation code lives in <code>commonMain</code> and is shared 
@@ -302,9 +464,9 @@ NavigationHost(
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/predictive-back">Predictive Back</a> - Platform-specific back navigation</li>
-          <li><a href="/features/deep-links">Deep Links</a> - URL patterns and deep linking</li>
-          <li><a href="/demo">See the demo</a> running on multiple platforms</li>
+          <li><Link to="/features/predictive-back">Predictive Back</Link> - Platform-specific back navigation</li>
+          <li><Link to="/features/deep-links">Deep Links</Link> - URL patterns and deep linking</li>
+          <li><Link to="/demo">See the demo</Link> running on multiple platforms</li>
         </ul>
       </section>
     </article>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
@@ -52,34 +53,142 @@ fun MyScreen() {
     }
 }`
 
-const sharedElementCode = `Icon(
-    modifier = if (transitionScope != null) {
-        with(transitionScope.sharedTransitionScope) {
-            Modifier.sharedElement(
-                sharedContentState = rememberSharedContentState(key = "icon-\${item.id}"),
-                animatedVisibilityScope = transitionScope.animatedVisibilityScope
-            )
-        }
-    } else Modifier
-)`
+const navigationHostCode = `@Composable
+fun NavigationHost(...) {
+    SharedTransitionLayout(modifier = modifier) {
+        // NavRenderScope gets sharedTransitionScope = this
+        NavNodeRenderer(...)
+    }
+}`
 
-const sharedBoundsCode = `Card(
+const transitionScopeInterfaceCode = `interface TransitionScope {
+    val sharedTransitionScope: SharedTransitionScope
+    val animatedVisibilityScope: AnimatedVisibilityScope
+}`
+
+const sharedElementListCode = `@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun ItemCard(item: Item, onClick: () -> Unit) {
+    val transitionScope = LocalTransitionScope.current
+
+    Card(onClick = onClick) {
+        Row {
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                modifier = if (transitionScope != null) {
+                    with(transitionScope.sharedTransitionScope) {
+                        Modifier.sharedElement(
+                            sharedContentState = rememberSharedContentState(
+                                key = "icon-\${item.id}"
+                            ),
+                            animatedVisibilityScope = transitionScope.animatedVisibilityScope
+                        )
+                    }
+                } else Modifier
+            )
+            Text(item.title)
+        }
+    }
+}`
+
+const sharedElementDetailCode = `@Screen(MasterDetailDestination.Detail::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun DetailScreen(destination: MasterDetailDestination.Detail) {
+    val transitionScope = LocalTransitionScope.current
+    val itemId = destination.itemId
+
+    Column {
+        Icon(
+            imageVector = Icons.Default.AccountCircle,
+            modifier = if (transitionScope != null) {
+                with(transitionScope.sharedTransitionScope) {
+                    Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(
+                            key = "icon-$itemId"
+                        ),
+                        animatedVisibilityScope = transitionScope.animatedVisibilityScope
+                    )
+                }
+            } else Modifier
+        )
+        Text("Details for $itemId")
+    }
+}`
+
+const sharedBoundsCode = `// List item card
+Card(
     modifier = if (transitionScope != null) {
         with(transitionScope.sharedTransitionScope) {
             Modifier.sharedBounds(
-                sharedContentState = rememberSharedContentState(key = "card-\${item.id}"),
+                sharedContentState = rememberSharedContentState(
+                    key = "card-container-\${item.id}"
+                ),
                 animatedVisibilityScope = transitionScope.animatedVisibilityScope
             )
         }
     } else Modifier
-)`
+) {
+    // List item content
+}
+
+// Detail card (same key, bounds morph)
+Card(
+    modifier = if (transitionScope != null) {
+        with(transitionScope.sharedTransitionScope) {
+            Modifier.sharedBounds(
+                sharedContentState = rememberSharedContentState(
+                    key = "card-container-$itemId"
+                ),
+                animatedVisibilityScope = transitionScope.animatedVisibilityScope
+            )
+        }
+    } else Modifier
+) {
+    // Expanded detail content
+}`
+
+const animateEnterExitCode = `@Composable
+fun DetailScreen() {
+    val transitionScope = LocalTransitionScope.current
+
+    Column {
+        // Shared element (morphs)
+        Icon(modifier = sharedElementModifier)
+        
+        // Non-shared content with enter/exit animation
+        Text(
+            "Description",
+            modifier = Modifier.animateEnterExit(
+                transitionScope,
+                enter = fadeIn(tween(300, delayMillis = 100)),
+                exit = fadeOut(tween(200))
+            )
+        )
+    }
+}
+
+// Helper extension
+private fun Modifier.animateEnterExit(
+    transitionScope: TransitionScope?,
+    enter: EnterTransition,
+    exit: ExitTransition
+): Modifier = if (transitionScope != null) {
+    with(transitionScope.animatedVisibilityScope) {
+        this@animateEnterExit.animateEnterExit(enter = enter, exit = exit)
+    }
+} else this`
+
+const transitionTypeNoneCode = `@Transition(type = TransitionType.None)
+@Destination(route = "master_detail/detail/{itemId}")
+data class Detail(@Argument val itemId: String) : MasterDetailDestination()`
 
 export default function Transitions() {
   return (
     <article className={styles.features}>
       <h1>Transitions & Animations</h1>
       <p className={styles.intro}>
-        Rich set of built-in transitions and support for custom animations. 
+        Rich set of built-in transitions, custom animations, and shared element support. 
         Create polished, professional navigation experiences with Quo Vadis's 
         tree-based transition system.
       </p>
@@ -256,43 +365,6 @@ export default function Transitions() {
       </section>
 
       <section>
-        <h2 id="shared-elements">Shared Element Transitions</h2>
-        <p>
-          Quo Vadis integrates with Compose's <code>SharedTransitionLayout</code> for 
-          fluid shared element animations. Access the transition scope via 
-          <code>LocalTransitionScope</code>.
-        </p>
-        
-        <h3>Accessing the Transition Scope</h3>
-        <CodeBlock code={transitionScopeAccessCode} language="kotlin" />
-
-        <h3>sharedElement (Exact Visual Matches)</h3>
-        <p>
-          Use <code>sharedElement</code> for content that remains visually identical 
-          between screens, such as icons, images, or avatars.
-        </p>
-        <CodeBlock code={sharedElementCode} language="kotlin" />
-
-        <h3>sharedBounds (Containers with Different Content)</h3>
-        <p>
-          Use <code>sharedBounds</code> for containers where the bounds transition 
-          but the content may differ, such as expanding cards.
-        </p>
-        <CodeBlock code={sharedBoundsCode} language="kotlin" />
-      </section>
-
-      <section>
-        <h2 id="shared-element-rules">Key Rules for Shared Elements</h2>
-        <ul>
-          <li><strong>Keys must match exactly</strong> between source and destination screens</li>
-          <li><strong>Use unique, stable identifiers:</strong> <code>"icon-{'${item.id}'}"</code>, <code>"card-{'${itemId}'}"</code></li>
-          <li>Works in <strong>both forward AND backward</strong> navigation</li>
-          <li>Use <code>sharedElement</code> for icons/images, <code>sharedBounds</code> for containers</li>
-          <li>Always check for <code>null</code> when accessing <code>LocalTransitionScope</code></li>
-        </ul>
-      </section>
-
-      <section>
         <h2 id="context-behavior">Context-Specific Behavior</h2>
         <p>
           Different navigation contexts use different default transitions optimized 
@@ -330,12 +402,125 @@ export default function Transitions() {
         </p>
       </section>
 
+      {/* =========================================== */}
+      {/* SHARED ELEMENTS SECTION - EXPANDED FROM MERGE */}
+      {/* =========================================== */}
+
+      <section>
+        <h2 id="shared-elements">Shared Element Transitions</h2>
+        <p>
+          Quo Vadis integrates with Compose's <code>SharedTransitionLayout</code> for seamless 
+          element morphing between screens. Elements with matching keys animate smoothly during 
+          navigation, creating stunning visual continuity.
+        </p>
+
+        <h3 id="shared-how-it-works">How It Works</h3>
+        <p>
+          <code>NavigationHost</code> automatically wraps content in <code>SharedTransitionLayout</code>, 
+          providing the transition scope to all child screens:
+        </p>
+        <CodeBlock code={navigationHostCode} language="kotlin" />
+
+        <h3 id="accessing-transition-scope">Accessing TransitionScope</h3>
+        <p>
+          Access the transition scope in any screen using <code>LocalTransitionScope</code>:
+        </p>
+        <CodeBlock code={transitionScopeAccessCode} language="kotlin" />
+        <p>The <code>TransitionScope</code> interface provides:</p>
+        <CodeBlock code={transitionScopeInterfaceCode} language="kotlin" />
+
+        <h3 id="sharedelement-vs-sharedbounds">sharedElement vs sharedBounds</h3>
+        <p>Choose the right modifier based on your use case:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Modifier</th>
+              <th>Use Case</th>
+              <th>Content Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>sharedElement</code></td>
+              <td>Exact visual matches (same icon, same image)</td>
+              <td>Content stays identical during transition</td>
+            </tr>
+            <tr>
+              <td><code>sharedBounds</code></td>
+              <td>Container morphing (card expanding to full screen)</td>
+              <td>Content can change while bounds morph</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="sharedelement-example">sharedElement Example</h3>
+        <p>
+          Use <code>sharedElement</code> for icons, images, and other elements that remain 
+          visually identical between screens.
+        </p>
+        <h4>List Screen</h4>
+        <CodeBlock code={sharedElementListCode} language="kotlin" />
+        <h4>Detail Screen</h4>
+        <CodeBlock code={sharedElementDetailCode} language="kotlin" />
+
+        <h3 id="sharedbounds-example">sharedBounds Example</h3>
+        <p>
+          Use <code>sharedBounds</code> for cards and containers where the content changes 
+          but the bounds should morph smoothly:
+        </p>
+        <CodeBlock code={sharedBoundsCode} language="kotlin" />
+
+        <h3 id="combining-animateenterexit">Combining with animateEnterExit</h3>
+        <p>
+          For non-shared content, use <code>animateEnterExit</code> alongside shared elements 
+          to create coordinated animations:
+        </p>
+        <CodeBlock code={animateEnterExitCode} language="kotlin" />
+
+        <h3 id="transitiontype-none">Using TransitionType.None</h3>
+        <p>
+          When shared elements are your primary transition effect, disable the default 
+          screen transition with <code>TransitionType.None</code>:
+        </p>
+        <CodeBlock code={transitionTypeNoneCode} language="kotlin" />
+        <p>
+          This gives you full control of animations using shared elements and <code>animateEnterExit</code>.
+        </p>
+
+        <h3 id="shared-element-rules">Key Rules for Shared Elements</h3>
+        <ol>
+          <li><strong>Keys must match exactly</strong> between source and destination screens</li>
+          <li>Use unique, stable identifiers: <code>"icon-$&#123;item.id&#125;"</code>, <code>"card-$&#123;itemId&#125;"</code></li>
+          <li>Works in <strong>both forward AND backward</strong> navigation</li>
+          <li>Pattern: <code>"element-type-unique-id"</code> (e.g., <code>"avatar-user123"</code>)</li>
+          <li>Always handle <code>null</code> gracefully for <code>transitionScope</code></li>
+        </ol>
+      </section>
+
+      <section>
+        <h2 id="best-practices">Best Practices</h2>
+        <h3>Screen Transitions</h3>
+        <ul>
+          <li>Use <code>SlideHorizontal</code> for hierarchical navigation</li>
+          <li>Use <code>SlideVertical</code> for modal presentations</li>
+          <li>Use <code>Fade</code> for tab switches and overlays</li>
+          <li>Define all four phases (enter, exit, popEnter, popExit) for custom transitions</li>
+        </ul>
+        <h3>Shared Elements</h3>
+        <ul>
+          <li><strong>Keep keys consistent and predictable</strong> - Use a clear naming convention</li>
+          <li><strong>Use TransitionType.None</strong> when shared elements are the primary transition</li>
+          <li><strong>Test both directions</strong> - Verify forward and backward navigation</li>
+          <li><strong>Don't overdo it</strong> - Avoid sharing too many elements at once</li>
+        </ul>
+      </section>
+
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/predictive-back">Predictive Back</a> - Gesture-driven navigation with preview</li>
-          <li><a href="/features/deep-links">Deep Links</a> - URL-based navigation</li>
-          <li><a href="/demo">See the demo</a> - Experience all transitions in action</li>
+          <li><Link to="/features/predictive-back">Predictive Back</Link> - Gesture-driven navigation with preview</li>
+          <li><Link to="/features/deep-links">Deep Links</Link> - URL-based navigation</li>
+          <li><Link to="/demo">Live Demo</Link> - Experience all transitions in action</li>
         </ul>
       </section>
     </article>

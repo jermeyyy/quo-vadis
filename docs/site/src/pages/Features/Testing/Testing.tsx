@@ -288,7 +288,7 @@ export default function Testing() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/flowmvi-integration">FlowMVI Integration</a> - Learn about MVI container patterns</li>
+          <li><a href="/features/di-integration">FlowMVI & Koin Integration</a> - Learn about MVI container patterns</li>
           <li><a href="/features/navigation-results">Navigation Results</a> - Understand navigating for results</li>
           <li><a href="/features/deep-links">Deep Links</a> - Configure deep link handling</li>
           <li><a href="/demo">Demo Application</a> - See testing examples in action</li>

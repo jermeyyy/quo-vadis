@@ -40,6 +40,7 @@ import com.jermey.feature1.resultdemo.container.ResultDemoState
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.compose.scope.LocalNavigator
 import com.jermey.quo.vadis.flowmvi.rememberContainer
+import org.koin.core.qualifier.qualifier
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
 import pro.respawn.flowmvi.dsl.state
@@ -64,7 +65,7 @@ import pro.respawn.flowmvi.dsl.state
 @Composable
 fun ResultDemoScreen(
     modifier: Modifier = Modifier,
-    container: Store<ResultDemoState, Intent, Action> = rememberContainer<ResultDemoContainer, ResultDemoState, Intent, Action>()
+    container: Store<ResultDemoState, Intent, Action> = rememberContainer(qualifier<ResultDemoContainer>())
 ) {
     val navigator = LocalNavigator.current ?: error("Navigator not found")
     val state by container.subscribe()

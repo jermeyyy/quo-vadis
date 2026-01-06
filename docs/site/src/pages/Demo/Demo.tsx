@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from './Demo.module.css'
 
@@ -371,8 +372,8 @@ export default function Demo() {
         <h2 id="explore-more">Explore More</h2>
         <ul>
           <li><a href="https://github.com/jermeyyy/quo-vadis/tree/main/composeApp" target="_blank" rel="noopener noreferrer">Demo Source Code</a> - Full implementation on GitHub</li>
-          <li><a href="/getting-started">Getting Started</a> - Build your own navigation</li>
-          <li><a href="/features">Features</a> - Learn about all capabilities</li>
+          <li><Link to="/getting-started">Getting Started</Link> - Build your own navigation</li>
+          <li><Link to="/features">Features</Link> - Learn about all capabilities</li>
           <li><a href="/quo-vadis/api/index.html">API Reference</a> - Detailed API documentation</li>
         </ul>
       </section>

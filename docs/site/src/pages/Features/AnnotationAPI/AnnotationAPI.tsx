@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
@@ -265,41 +266,41 @@ export default function AnnotationAPI() {
       <section>
         <h2 id="core-annotations">Core Annotations</h2>
         <div className={styles.annotationGrid}>
-          <div className={styles.annotationCard}>
+          <a href="#stack-annotation" className={styles.annotationCard}>
             <h4>@Stack</h4>
             <p>Defines a navigation stack with push/pop behavior and a start destination.</p>
-          </div>
-          <div className={styles.annotationCard}>
+          </a>
+          <a href="#destination-annotation" className={styles.annotationCard}>
             <h4>@Destination</h4>
             <p>Marks a class as a navigation destination with an optional route for deep linking.</p>
-          </div>
-          <div className={styles.annotationCard}>
+          </a>
+          <a href="#argument-annotation" className={styles.annotationCard}>
             <h4>@Argument</h4>
             <p>Marks constructor parameters as navigation arguments with optional keys.</p>
-          </div>
-          <div className={styles.annotationCard}>
+          </a>
+          <a href="#screen-annotation" className={styles.annotationCard}>
             <h4>@Screen</h4>
             <p>Binds a composable function to render a specific destination.</p>
-          </div>
+          </a>
         </div>
 
         <div className={styles.annotationGrid}>
-          <div className={styles.annotationCard}>
+          <a href="#tabs-annotations" className={styles.annotationCard}>
             <h4>@Tabs / @TabItem</h4>
             <p>Creates tabbed navigation with independent backstacks per tab.</p>
-          </div>
-          <div className={styles.annotationCard}>
+          </a>
+          <a href="#pane-annotations" className={styles.annotationCard}>
             <h4>@Pane / @PaneItem</h4>
             <p>Defines adaptive multi-pane layouts for different screen sizes.</p>
-          </div>
-          <div className={styles.annotationCard}>
+          </a>
+          <a href="#transition-annotation" className={styles.annotationCard}>
             <h4>@Transition</h4>
             <p>Specifies transition animations for destination entries and exits.</p>
-          </div>
-          <div className={styles.annotationCard}>
+          </a>
+          <a href="#tabs-container-annotation" className={styles.annotationCard}>
             <h4>@TabsContainer / @PaneContainer</h4>
             <p>Custom UI wrappers for tabs and pane layouts.</p>
-          </div>
+          </a>
         </div>
       </section>
 
@@ -524,11 +525,11 @@ export default function AnnotationAPI() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/getting-started">Get started</a> with the quick start guide</li>
-          <li><a href="/features/type-safe">Type-Safe Navigation</a> — Learn about programmatic destination building</li>
-          <li><a href="/features/deep-linking">Deep Linking</a> — Configure deep link handling</li>
-          <li><a href="/features/transitions">Transitions</a> — Customize navigation animations</li>
-          <li><a href="/demo">See the demo</a> to explore features in action</li>
+          <li><Link to="/getting-started">Get started</Link> with the quick start guide</li>
+          <li><Link to="/features/type-safe">Type-Safe Navigation</Link> — Learn about programmatic destination building</li>
+          <li><Link to="/features/deep-linking">Deep Linking</Link> — Configure deep link handling</li>
+          <li><Link to="/features/transitions">Transitions</Link> — Customize navigation animations</li>
+          <li><Link to="/demo">See the demo</Link> to explore features in action</li>
         </ul>
       </section>
     </article>

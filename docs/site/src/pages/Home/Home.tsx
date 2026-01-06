@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from './Home.module.css'
 
@@ -124,7 +125,7 @@ export default function Home() {
         </div>
         
         <div className={styles.heroButtons}>
-          <a href="/getting-started" className={styles.btnPrimary}>Get Started in 10 Minutes</a>
+          <Link to="/getting-started" className={styles.btnPrimary}>Get Started in 10 Minutes</Link>
           <a href="https://github.com/jermeyyy/quo-vadis" className={styles.btnSecondary} target="_blank" rel="noopener noreferrer">View on GitHub</a>
         </div>
       </section>
@@ -275,10 +276,10 @@ export default function Home() {
       <section>
         <h2 id="resources">Resources</h2>
         <ul>
-          <li><a href="/getting-started">Getting Started Guide</a> - Installation and basic setup</li>
-          <li><a href="/features">Features Documentation</a> - Detailed feature explanations</li>
+          <li><Link to="/getting-started">Getting Started Guide</Link> - Installation and basic setup</li>
+          <li><Link to="/features">Features Documentation</Link> - Detailed feature explanations</li>
           <li><a href="/quo-vadis/api/index.html">API Reference</a> - Complete API documentation</li>
-          <li><a href="/demo">Demo Application</a> - See all features in action</li>
+          <li><Link to="/demo">Demo Application</Link> - See all features in action</li>
           <li><a href="https://github.com/jermeyyy/quo-vadis" target="_blank" rel="noopener noreferrer">GitHub Repository</a> - Source code and issues</li>
         </ul>
       </section>

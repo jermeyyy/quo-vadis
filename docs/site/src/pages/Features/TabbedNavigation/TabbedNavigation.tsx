@@ -1,6 +1,9 @@
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
+// Status icon for required/no default values in tables
+const IconNa = () => <span className={`${styles.statusIcon} ${styles.statusIconNa}`} />
+
 const tabsAnnotationCode = `@Tabs(
     name = "mainTabs",
     initialTab = MainTabs.HomeTab::class,
@@ -196,7 +199,7 @@ export default function TabbedNavigation() {
             <tr>
               <td><code>name</code></td>
               <td><code>String</code></td>
-              <td>—</td>
+              <td><IconNa /></td>
               <td>Unique identifier for the tab container</td>
             </tr>
             <tr>
@@ -230,7 +233,7 @@ export default function TabbedNavigation() {
             <tr>
               <td><code>label</code></td>
               <td><code>String</code></td>
-              <td>—</td>
+              <td><IconNa /></td>
               <td>Display label for the tab</td>
             </tr>
             <tr>

@@ -13,6 +13,8 @@ import org.koin.compose.getKoin
 import org.koin.core.module.Module
 import org.koin.core.parameter.ParametersDefinition
 import org.koin.core.parameter.emptyParametersHolder
+import org.koin.core.qualifier.Qualifier
+import org.koin.core.qualifier.qualifier
 import pro.respawn.flowmvi.api.FlowMVIDSL
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
@@ -41,18 +43,24 @@ import pro.respawn.flowmvi.api.Store
  * }
  * ```
  *
- * @param C The container type
- * @param S The state type
- * @param I The intent type
- * @param A The action type
+ * @param Container The container type
+ * @param State The state type
+ * @param Intent The intent type
+ * @param Action The action type
  * @param params Optional Koin parameters
  * @return The FlowMVI Store
  */
 @FlowMVIDSL
 @Composable
-inline fun <reified C : NavigationContainer<S, I, A>, S : MVIState, I : MVIIntent, A : MVIAction> rememberContainer(
+inline fun <reified Container, State, Intent, Action> rememberContainer(
+    qualifier: Qualifier,
     noinline params: ParametersDefinition = { emptyParametersHolder() },
-): Store<S, I, A> {
+): Store<State, Intent, Action>
+        where Container : NavigationContainer<State, Intent, Action>,
+              State : MVIState,
+              Intent : MVIIntent,
+              Action : MVIAction {
+
     val screenNode = LocalScreenNode.current
         ?: error("rememberContainer must be called within a screen rendered by NavigationHost")
     val navigator = LocalNavigator.current
@@ -82,7 +90,10 @@ inline fun <reified C : NavigationContainer<S, I, A>, S : MVIState, I : MVIInten
     }
 
     val container = remember(containerScope) {
-        containerScope.scope.get<C>(parameters = params).also {
+        containerScope.scope.get<NavigationContainer<State, Intent, Action>>(
+            qualifier = qualifier,
+            parameters = params
+        ).also {
             if (!it.store.isActive) {
                 it.store.start(containerScope.coroutineScope)
             }
@@ -118,18 +129,24 @@ inline fun <reified C : NavigationContainer<S, I, A>, S : MVIState, I : MVIInten
  * }
  * ```
  *
- * @param C The container type
- * @param S The state type
- * @param I The intent type
- * @param A The action type
+ * @param Container The container type
+ * @param State The state type
+ * @param Intent The intent type
+ * @param Action The action type
  * @param params Optional Koin parameters
  * @return The FlowMVI Store
  */
 @FlowMVIDSL
 @Composable
-inline fun <reified C : SharedNavigationContainer<S, I, A>, S, I, A> rememberSharedContainer(
+inline fun <reified Container, State, Intent, Action> rememberSharedContainer(
+    qualifier: Qualifier,
     noinline params: ParametersDefinition = { emptyParametersHolder() },
-): Store<S, I, A> where S : MVIState, I : MVIIntent, A : MVIAction {
+): Store<State, Intent, Action>
+        where Container : SharedNavigationContainer<State, Intent, Action>,
+              State : MVIState,
+              Intent : MVIIntent,
+              Action : MVIAction {
+
     val containerNode = LocalContainerNode.current
         ?: error("rememberSharedContainer must be called within a Tab/Pane container wrapper")
     val navigator = LocalNavigator.current
@@ -162,7 +179,10 @@ inline fun <reified C : SharedNavigationContainer<S, I, A>, S, I, A> rememberSha
     }
 
     val container = remember(sharedScope) {
-        sharedScope.scope.get<C>(parameters = params).also {
+        sharedScope.scope.get<Container>(
+            qualifier = qualifier,
+            parameters = params
+        ).also {
             if (!it.store.isActive) {
                 it.store.start(sharedScope.coroutineScope)
             }
@@ -188,15 +208,15 @@ inline fun <reified C : SharedNavigationContainer<S, I, A>, S, I, A> rememberSha
  * }
  * ```
  *
- * @param C The container type
+ * @param Container The container type
  * @param factory Factory function that creates the container
  */
 @FlowMVIDSL
-inline fun <reified C : NavigationContainer<*, *, *>> Module.navigationContainer(
-    crossinline factory: (NavigationContainerScope) -> C,
+inline fun <reified Container : NavigationContainer<*, *, *>> Module.navigationContainer(
+    crossinline factory: (NavigationContainerScope) -> Container,
 ) {
     scope<NavigationContainerScope> {
-        scoped<C> { factory(get()) }
+        scoped<Container> { factory(get()) }
     }
 }
 
@@ -216,14 +236,14 @@ inline fun <reified C : NavigationContainer<*, *, *>> Module.navigationContainer
  * }
  * ```
  *
- * @param C The container type
+ * @param Container The container type
  * @param factory Factory function that creates the container
  */
 @FlowMVIDSL
-inline fun <reified C : SharedNavigationContainer<*, *, *>> Module.sharedNavigationContainer(
-    crossinline factory: (SharedContainerScope) -> C,
+inline fun <reified Container : SharedNavigationContainer<*, *, *>> Module.sharedNavigationContainer(
+    crossinline factory: (SharedContainerScope) -> Container,
 ) {
     scope<SharedContainerScope> {
-        scoped<C> { factory(get()) }
+        scoped<Container> { factory(get()) }
     }
 }

@@ -53,6 +53,7 @@ import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.flowmvi.rememberContainer
 import kotlinx.coroutines.launch
+import org.koin.core.qualifier.qualifier
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
 
@@ -71,7 +72,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 @Screen(MainTabs.ProfileTab::class)
 @Composable
 fun ProfileScreen(
-    container: Store<ProfileState, ProfileIntent, ProfileAction> = rememberContainer<ProfileContainer, ProfileState, ProfileIntent, ProfileAction>()
+    container: Store<ProfileState, ProfileIntent, ProfileAction> = rememberContainer(qualifier<ProfileContainer>())
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

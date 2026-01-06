@@ -19,20 +19,20 @@ export const navigationData: NavItem[] = [
   {
     label: 'Features',
     children: [
+      { label: 'Architecture', path: '/features/architecture' },
       { label: 'Annotation-Based API', path: '/features/annotation-api' },
+      { label: 'DSL Configuration', path: '/features/dsl-config' },
       { label: 'Type-Safe Navigation', path: '/features/type-safe' },
       { label: 'Multiplatform Support', path: '/features/multiplatform' },
       { label: 'Stack Management', path: '/features/stack-management' },
       { label: 'Deep Links', path: '/features/deep-links' },
       { label: 'Predictive Back', path: '/features/predictive-back' },
-      { label: 'Shared Elements', path: '/features/shared-elements' },
       { label: 'Transitions & Animations', path: '/features/transitions' },
       { label: 'Tabbed Navigation', path: '/features/tabbed-navigation' },
-      { label: 'FlowMVI Integration', path: '/features/flow-mvi' },
+      { label: 'Pane Layouts', path: '/features/pane-layouts' },
+      { label: 'FlowMVI & Koin', path: '/features/di-integration' },
       { label: 'Testing Support', path: '/features/testing' },
       { label: 'Modular Architecture', path: '/features/modular' },
-      { label: 'DI Integration', path: '/features/di-integration' },
-      { label: 'Performance', path: '/features/performance' }
     ]
   },
   {

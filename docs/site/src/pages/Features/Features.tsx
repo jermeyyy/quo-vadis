@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from './Features.module.css'
 
@@ -316,7 +317,7 @@ export default function Features() {
 
         <div className={styles.note}>
           <strong>Note:</strong> The manual DSL approach is still fully supported for advanced use cases. 
-          See <a href="/getting-started#manual-dsl">Getting Started - Alternative Approach</a>.
+          See <Link to="/getting-started#manual-dsl">Getting Started - Alternative Approach</Link>.
         </div>
       </section>
 
@@ -509,7 +510,7 @@ export default function Features() {
 
         <div className={styles.note}>
           <strong>📦 Module:</strong> Add <code>io.github.jermeyyy:quo-vadis-core-flow-mvi</code> to your dependencies.
-          See the <a href="/features/flow-mvi">FlowMVI Integration Guide</a> for complete documentation.
+          See the <Link to="/features/di-integration">FlowMVI & Koin Integration Guide</Link> for complete documentation.
         </div>
       </section>
 
@@ -639,8 +640,8 @@ export default function Features() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/getting-started">Get started</a> with the quick start guide</li>
-          <li><a href="/demo">See the demo</a> to explore features in action</li>
+          <li><Link to="/getting-started">Get started</Link> with the quick start guide</li>
+          <li><Link to="/demo">See the demo</Link> to explore features in action</li>
           <li><a href="/quo-vadis/api/index.html">Browse API docs</a> for detailed reference</li>
           <li><a href="https://github.com/jermeyyy/quo-vadis/tree/main/quo-vadis-core/docs" target="_blank" rel="noopener noreferrer">Read detailed docs</a> on GitHub</li>
         </ul>

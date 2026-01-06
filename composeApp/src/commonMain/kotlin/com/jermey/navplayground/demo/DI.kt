@@ -1,7 +1,5 @@
 package com.jermey.navplayground.demo
 
-import com.jermey.feature1.resultdemo.container.ItemPickerContainer
-import com.jermey.feature1.resultdemo.container.ResultDemoContainer
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileContainer
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
@@ -55,16 +53,6 @@ val profileModule = module {
             repository = scope.get(),
             debuggable = true
         )
-    }
-}
-
-
-val resultDemoModule = module {
-    navigationContainer<ResultDemoContainer> { scope ->
-        ResultDemoContainer(scope)
-    }
-    navigationContainer<ItemPickerContainer> { scope ->
-        ItemPickerContainer(scope)
     }
 }
 

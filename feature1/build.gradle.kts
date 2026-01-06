@@ -110,6 +110,7 @@ kotlin {
 
                 // Koin
                 implementation(libs.koin.core)
+                api(libs.koin.annotations)
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
             }
@@ -154,4 +155,27 @@ kotlin {
             implementation(compose.materialIconsExtended)
         }
     }
+
+    ksp {
+        arg("KOIN_DEFAULT_MODULE", "true")
+    }
+
+    // KSP Common sourceSet
+    sourceSets.named("commonMain").configure {
+        kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+    }
 }
+
+// KSP Tasks
+dependencies {
+    add("kspCommonMainMetadata", libs.koin.ksp.compiler)
+    add("kspAndroid", libs.koin.ksp.compiler)
+    add("kspIosArm64", libs.koin.ksp.compiler)
+    add("kspIosSimulatorArm64", libs.koin.ksp.compiler)
+}
+
+// Trigger Common Metadata Generation from Native tasks
+tasks.matching { it.name.startsWith("ksp") && it.name != "kspCommonMainKotlinMetadata" }
+    .configureEach {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }

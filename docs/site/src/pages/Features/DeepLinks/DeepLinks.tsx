@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
@@ -289,9 +290,9 @@ export default function DeepLinks() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/multiplatform">Multiplatform Support</a> - Deep links on all platforms</li>
-          <li><a href="/features/type-safety">Type Safety</a> - Type-safe argument handling</li>
-          <li><a href="/getting-started">Get started</a> with deep link setup</li>
+          <li><Link to="/features/multiplatform">Multiplatform Support</Link> - Deep links on all platforms</li>
+          <li><Link to="/features/type-safety">Type Safety</Link> - Type-safe argument handling</li>
+          <li><Link to="/getting-started">Get started</Link> with deep link setup</li>
         </ul>
       </section>
     </article>
