@@ -213,10 +213,11 @@ inline fun <reified Container, State, Intent, Action> rememberSharedContainer(
  */
 @FlowMVIDSL
 inline fun <reified Container : NavigationContainer<*, *, *>> Module.navigationContainer(
+    qualifier: Qualifier = qualifier<Container>(),
     crossinline factory: (NavigationContainerScope) -> Container,
 ) {
     scope<NavigationContainerScope> {
-        scoped<Container> { factory(get()) }
+        scoped<Container>(qualifier = qualifier) { factory(get()) }
     }
 }
 

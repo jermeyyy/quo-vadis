@@ -156,10 +156,6 @@ kotlin {
         }
     }
 
-    ksp {
-        arg("KOIN_DEFAULT_MODULE", "true")
-    }
-
     // KSP Common sourceSet
     sourceSets.named("commonMain").configure {
         kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")

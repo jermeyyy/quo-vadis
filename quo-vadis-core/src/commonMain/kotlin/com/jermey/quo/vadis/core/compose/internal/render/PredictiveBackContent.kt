@@ -65,8 +65,8 @@ import com.jermey.quo.vadis.core.navigation.node.NavNode
  *                 Values outside this range are clamped internally by transform calculations.
  * @param scope The [NavRenderScope] providing access to cache, state holder, and other
  *              rendering dependencies
- * @param content The composable content to render for each node, receiving an
- *                [AnimatedVisibilityScope] for compatibility with animated visibility modifiers
+ * @param content The composable content to render for each node, receiving the node
+ *                and optionally an [AnimatedVisibilityScope] for compatibility with animated visibility modifiers
  *
  * @see NavRenderScope
  * @see StaticAnimatedVisibilityScope

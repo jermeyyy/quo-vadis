@@ -2,7 +2,9 @@ package com.jermey.navplayground.demo.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -18,8 +20,6 @@ import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -35,7 +35,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
+import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
 import com.jermey.navplayground.demo.ui.components.SettingItem
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import com.jermey.navplayground.demo.ui.components.SettingsSection
 import com.jermey.navplayground.demo.ui.components.ThemeSettingItem
 import com.jermey.navplayground.demo.ui.theme.ThemeManager
@@ -59,7 +62,8 @@ fun SettingsScreen(
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    
+    val hazeState = remember { HazeState() }
+
     // Theme manager for theme switching
     val themeManager = rememberThemeManager()
     val currentThemeMode by themeManager.themeMode.collectAsState()
@@ -78,7 +82,7 @@ fun SettingsScreen(
     ) { paddingValues ->
         SettingsScreenContent(
             navigator,
-            modifier,
+            modifier.hazeSource(state = hazeState),
             paddingValues,
             currentThemeMode,
             themeManager
@@ -86,8 +90,9 @@ fun SettingsScreen(
     }
 
     if (showBottomSheet) {
-        ModalBottomSheet(
+        GlassBottomSheet(
             onDismissRequest = { showBottomSheet = false },
+            hazeState = hazeState,
             sheetState = sheetState
         ) {
             NavigationBottomSheetContent(
@@ -117,14 +122,6 @@ private fun SettingsScreenContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item {
-            Text(
-                "Settings",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-
         item {
             SettingsSection("General") {
                 SettingItem(
@@ -171,6 +168,9 @@ private fun SettingsScreenContent(
                 SettingItem("Terms of Service", Icons.Default.Description)
                 SettingItem("Privacy Policy", Icons.Default.Policy)
             }
+        }
+        item {
+            Spacer(modifier = Modifier.height( 64.dp))
         }
     }
 }

@@ -26,7 +26,10 @@ flowmvi = "3.2.1"
 koin = "4.2.0-beta2"
 koin-annotations = "2.3.2-Beta1"
 androidx-security = "1.1.0"
-navigationevent = "1.0.0-rc02"
+navigationevent = "1.0.0"
+haze = "1.7.1"
+coil = "3.3.0"
+ktor = "3.3.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -70,6 +73,20 @@ androidx-security-crypto = { module = "androidx.security:security-crypto", versi
 
 # NavigationEvent
 navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
+
+# Haze (Glassmorphism blur effects)
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
+haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }
+
+# Coil (Image loading)
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+
+# Ktor client (for Coil networking on all platforms)
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

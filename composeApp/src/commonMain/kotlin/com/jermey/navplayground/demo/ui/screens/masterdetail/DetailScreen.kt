@@ -77,7 +77,8 @@ fun DetailScreen(
     val relatedItems = (1..RELATED_ITEMS_COUNT).map { "Related item $it" }
     
     // Get transition scope - animations are tied to this
-    val transitionScope = com.jermey.quo.vadis.core.compose.transition.LocalTransitionScope.current
+    // Use rememberTransitionScope() for proper animation during navigation
+    val transitionScope = com.jermey.quo.vadis.core.compose.transition.rememberTransitionScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Animated background - fades with navigation

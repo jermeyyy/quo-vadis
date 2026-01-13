@@ -26,7 +26,7 @@ fun BottomSheetNavigationItem(
 ) {
     Surface(
         onClick = onClick,
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        color = androidx.compose.ui.graphics.Color.Transparent,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(

@@ -37,6 +37,9 @@ import org.koin.compose.koinInject
  */
 @Composable
 fun DemoApp() {
+    // Configure Coil ImageLoader for image loading
+    ConfigureCoilImageLoader()
+
     val navigator = koinInject<Navigator>()
 
     // Config is now implicit - NavigationHost reads from navigator

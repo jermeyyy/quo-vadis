@@ -27,6 +27,7 @@ import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.quo.vadis.annotations.TabsContainer
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.flowmvi.rememberSharedContainer
+import org.koin.core.qualifier.qualifier
 import pro.respawn.flowmvi.compose.dsl.subscribe
 
 /**
@@ -52,7 +53,9 @@ fun DemoTabsWrapper(
     content: @Composable () -> Unit
 ) {
     // Get the shared store for cross-tab state
-    val sharedStore = rememberSharedContainer<DemoTabsContainer, DemoTabsState, DemoTabsIntent, DemoTabsAction>()
+    val sharedStore = rememberSharedContainer<DemoTabsContainer, DemoTabsState, DemoTabsIntent, DemoTabsAction>(
+        qualifier = qualifier<DemoTabsContainer>()
+    )
     val state by sharedStore.subscribe()
 
     CompositionLocalProvider(LocalDemoTabsStore provides sharedStore) {

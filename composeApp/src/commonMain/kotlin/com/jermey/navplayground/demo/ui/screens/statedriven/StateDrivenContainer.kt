@@ -11,10 +11,14 @@ import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedNavigationContainer
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.core.annotation.Qualifier
+import org.koin.core.annotation.Scope
+import org.koin.core.annotation.Scoped
 import pro.respawn.flowmvi.api.PipelineContext
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.dsl.store
@@ -44,6 +48,9 @@ private typealias Ctx = PipelineContext<StateDrivenState, StateDrivenIntent, Sta
  * @param scope The shared container scope providing access to navigator.
  * @param debuggable Whether to enable debug logging for the store.
  */
+@Scoped
+@Scope(SharedContainerScope::class)
+@Qualifier(StateDrivenContainer::class)
 class StateDrivenContainer(
     scope: SharedContainerScope,
     private val debuggable: Boolean = false

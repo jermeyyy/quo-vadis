@@ -1,25 +1,37 @@
 package com.jermey.navplayground.demo.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Card
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,114 +40,387 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MainTabs
-import com.jermey.navplayground.demo.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
+import com.jermey.navplayground.demo.ui.components.explore.AnimatedSearchBar
+import com.jermey.navplayground.demo.ui.components.explore.CategoryChipsRow
+import com.jermey.navplayground.demo.ui.components.explore.ExploreEmptyState
+import com.jermey.navplayground.demo.ui.components.explore.ExploreGrid
+import com.jermey.navplayground.demo.ui.components.explore.FilterSheet
+import com.jermey.navplayground.demo.ui.components.explore.QuickPreviewSheet
+import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
+import com.jermey.navplayground.demo.ui.screens.explore.ExploreAction
+import com.jermey.navplayground.demo.ui.screens.explore.ExploreContainer
+import com.jermey.navplayground.demo.ui.screens.explore.ExploreIntent
+import com.jermey.navplayground.demo.ui.screens.explore.ExploreState
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
+import com.jermey.quo.vadis.flowmvi.rememberContainer
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-
-private const val EXPLORE_ITEMS_COUNT = 20
+import org.koin.core.qualifier.qualifier
+import pro.respawn.flowmvi.api.Store
+import pro.respawn.flowmvi.compose.dsl.subscribe
 
 /**
- * Explore Screen - Shows a grid/list of items
+ * Explore Screen - Shows a grid of explore items with search, filtering, and preview capabilities.
+ *
+ * Features:
+ * - MVI architecture via [ExploreContainer]
+ * - Animated search bar with glassmorphism
+ * - Category chip filtering
+ * - Sort and rating filter sheet
+ * - Quick preview on long press
+ * - Navigation to detail screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Screen(MainTabs.ExploreTab::class)
+@Screen(MainTabs.ExploreTab.Feed::class)
 @Composable
 fun ExploreScreen(
     navigator: Navigator = koinInject(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    store: Store<ExploreState, ExploreIntent, ExploreAction> = rememberContainer(qualifier<ExploreContainer>())
 ) {
-    val items = remember {
-        (1..EXPLORE_ITEMS_COUNT).map { "Item $it" }
-    }
-
-    val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Explore") },
-                navigationIcon = {
-                    IconButton(onClick = { showBottomSheet = true }) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu")
-                    }
+    // Subscribe to state and handle actions
+    val state by store.subscribe { action ->
+        scope.launch {
+            when (action) {
+                is ExploreAction.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        message = action.message,
+                        duration = SnackbarDuration.Short
+                    )
                 }
-            )
-        }
-    ) { paddingValues ->
-        ExploreScreenContent(
-            modifier = modifier, 
-            paddingValues = paddingValues, 
-            items = items,
-            onItemClick = { itemId ->
-                navigator.navigate(
-                    MasterDetailDestination.Detail(itemId),
-                    NavigationTransitions.SlideHorizontal
-                )
+
+                is ExploreAction.NavigateToDetail -> {
+                    navigator.navigate(MainTabs.ExploreTab.Detail(action.itemId))
+                }
+
+                is ExploreAction.ScrollToTop -> {
+                    // Grid scroll handled internally
+                }
             }
-        )
+        }
     }
 
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            sheetState = sheetState
-        ) {
-            NavigationBottomSheetContent(
-                currentRoute = "explore",
-                onNavigate = { destination ->
-                    navigator.navigate(destination)
-                    scope.launch {
-                        sheetState.hide()
-                        showBottomSheet = false
-                    }
-                }
+    // Navigation bottom sheet
+    var showNavSheet by remember { mutableStateOf(false) }
+
+    when (val currentState = state) {
+        is ExploreState.Loading -> {
+            ExploreLoadingState(modifier = modifier)
+        }
+
+        is ExploreState.Error -> {
+            ExploreErrorState(
+                message = currentState.message,
+                onRetry = { store.intent(ExploreIntent.LoadItems) },
+                modifier = modifier
+            )
+        }
+
+        is ExploreState.Content -> {
+            ExploreContent(
+                state = currentState,
+                store = store,
+                navigator = navigator,
+                snackbarHostState = snackbarHostState,
+                showNavSheet = showNavSheet,
+                onShowNavSheet = { showNavSheet = it },
+                modifier = modifier
             )
         }
     }
 }
 
+/**
+ * Loading state indicator.
+ */
 @Composable
-private fun ExploreScreenContent(
-    modifier: Modifier,
-    paddingValues: PaddingValues,
-    items: List<String>,
-    onItemClick: (String) -> Unit
+private fun ExploreLoadingState(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
+    }
+}
+
+/**
+ * Error state with retry button.
+ */
+@Composable
+private fun ExploreErrorState(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier.padding(paddingValues),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        item {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                "Explore Items",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
+                text = message,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onRetry) {
+                Text("Retry")
+            }
+        }
+    }
+}
+
+/**
+ * Main content state with all explore features.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExploreContent(
+    state: ExploreState.Content,
+    store: Store<ExploreState, ExploreIntent, ExploreAction>,
+    navigator: Navigator,
+    snackbarHostState: SnackbarHostState,
+    showNavSheet: Boolean,
+    onShowNavSheet: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Separate haze state for top bar blur (grid content as source)
+    val topBarHazeState = remember { HazeState() }
+
+    ExploreScaffold(
+        state = state,
+        store = store,
+        navigator = navigator,
+        snackbarHostState = snackbarHostState,
+        topBarHazeState = topBarHazeState,
+        onShowNavSheet = onShowNavSheet,
+        modifier = modifier
+    )
+
+    ExploreBottomSheets(
+        state = state,
+        store = store,
+        navigator = navigator,
+        hazeState = topBarHazeState,
+        showNavSheet = showNavSheet,
+        onShowNavSheet = onShowNavSheet
+    )
+}
+
+/**
+ * Main scaffold with collapsing top bar using proper scroll behavior.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExploreScaffold(
+    state: ExploreState.Content,
+    store: Store<ExploreState, ExploreIntent, ExploreAction>,
+    navigator: Navigator,
+    snackbarHostState: SnackbarHostState,
+    topBarHazeState: HazeState,
+    onShowNavSheet: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val gridState = rememberLazyGridState()
+
+    // Create the TopAppBarScrollBehavior for enter-always collapse/expand
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            ExploreTopBar(
+                state = state,
+                store = store,
+                hazeState = topBarHazeState,
+                scrollBehavior = scrollBehavior,
+                onShowNavSheet = onShowNavSheet
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { contentPadding ->
+        // Calculate bottom padding: navigation bar height + navbar insets + extra spacing
+        val navBarInsets = WindowInsets.navigationBars.asPaddingValues()
+        val bottomPadding = 80.dp + navBarInsets.calculateBottomPadding() + 16.dp
+        
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSource(state = topBarHazeState)
+        ) {
+            ExploreGridContent(
+                state = state,
+                store = store,
+                navigator = navigator,
+                gridState = gridState,
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = contentPadding.calculateTopPadding(),
+                    bottom = bottomPadding
+                )
             )
         }
+    }
+}
 
-        items(items) { item ->
-            Card(
-                onClick = { onItemClick(item) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(item, style = MaterialTheme.typography.bodyLarge)
-                    Icon(Icons.Default.ChevronRight, "Open")
-                }
+/**
+ * Collapsible top bar with search and category chips.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
+@Composable
+private fun ExploreTopBar(
+    state: ExploreState.Content,
+    store: Store<ExploreState, ExploreIntent, ExploreAction>,
+    hazeState: HazeState,
+    scrollBehavior: TopAppBarScrollBehavior,
+    onShowNavSheet: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val hazeStyle = HazeMaterials.ultraThin()
+
+    Column(
+        modifier = modifier
+            .hazeEffect(state = hazeState) {
+                style = hazeStyle
             }
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
+    ) {
+        TopAppBar(
+            title = { Text("Explore") },
+            navigationIcon = {
+                IconButton(onClick = { onShowNavSheet(true) }) {
+                    Icon(Icons.Default.Menu, contentDescription = "Menu")
+                }
+            },
+            actions = {
+                IconButton(onClick = { store.intent(ExploreIntent.ToggleFilterSheet) }) {
+                    BadgedBox(
+                        badge = {
+                            if (state.isFiltered) {
+                                Badge(containerColor = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                    }
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                scrolledContainerColor = Color.Transparent
+            ),
+            scrollBehavior = scrollBehavior
+        )
+        AnimatedSearchBar(
+            query = state.searchQuery,
+            onQueryChange = { store.intent(ExploreIntent.Search(it)) },
+            onFocusChange = { store.intent(ExploreIntent.SetSearchFocus(it)) },
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        Spacer(Modifier.height(4.dp))
+        CategoryChipsRow(
+            categories = state.categories,
+            selectedCategory = state.selectedCategory,
+            onCategorySelected = { store.intent(ExploreIntent.SelectCategory(it)) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(4.dp))
+    }
+}
+
+/**
+ * Grid or empty state content.
+ */
+@Composable
+private fun ExploreGridContent(
+    state: ExploreState.Content,
+    store: Store<ExploreState, ExploreIntent, ExploreAction>,
+    navigator: Navigator,
+    gridState: androidx.compose.foundation.lazy.grid.LazyGridState = rememberLazyGridState(),
+    contentPadding: PaddingValues = PaddingValues(16.dp)
+) {
+    if (state.filteredItems.isEmpty()) {
+        ExploreEmptyState(
+            searchQuery = state.searchQuery,
+            selectedCategory = state.selectedCategory,
+            onClearFilters = { store.intent(ExploreIntent.ClearFilters) },
+            modifier = Modifier.fillMaxSize().padding(contentPadding)
+        )
+    } else {
+        ExploreGrid(
+            items = state.filteredItems,
+            onItemClick = { item -> navigator.navigate(MainTabs.ExploreTab.Detail(item.id)) },
+            onItemLongClick = { item -> store.intent(ExploreIntent.ShowPreview(item)) },
+            contentPadding = contentPadding,
+            gridState = gridState,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+/**
+ * Bottom sheets for preview, filter, and navigation.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExploreBottomSheets(
+    state: ExploreState.Content,
+    store: Store<ExploreState, ExploreIntent, ExploreAction>,
+    navigator: Navigator,
+    hazeState: HazeState,
+    showNavSheet: Boolean,
+    onShowNavSheet: (Boolean) -> Unit
+) {
+    QuickPreviewSheet(
+        item = state.previewItem,
+        onDismiss = { store.intent(ExploreIntent.DismissPreview) },
+        onViewDetails = { item ->
+            store.intent(ExploreIntent.DismissPreview)
+            navigator.navigate(MainTabs.ExploreTab.Detail(item.id))
+        },
+        hazeState = hazeState
+    )
+
+    if (state.isFilterSheetVisible) {
+        FilterSheet(
+            currentSortOrder = state.sortOrder,
+            currentRatingFilter = state.ratingFilter,
+            selectedCategory = state.selectedCategory,
+            categories = state.categories,
+            resultCount = state.filteredItems.size,
+            onSortOrderChange = { store.intent(ExploreIntent.SetSortOrder(it)) },
+            onRatingFilterChange = { store.intent(ExploreIntent.SetRatingFilter(it)) },
+            onCategoryChange = { store.intent(ExploreIntent.SelectCategory(it)) },
+            onApply = { store.intent(ExploreIntent.ToggleFilterSheet) },
+            onReset = { store.intent(ExploreIntent.ClearFilters) },
+            onDismiss = { store.intent(ExploreIntent.ToggleFilterSheet) },
+            hazeState = hazeState
+        )
+    }
+
+    if (showNavSheet) {
+        GlassBottomSheet(
+            onDismissRequest = { onShowNavSheet(false) },
+            hazeState = hazeState
+        ) {
+            NavigationBottomSheetContent(
+                currentRoute = "explore",
+                onNavigate = { destination ->
+                    navigator.navigate(destination)
+                    onShowNavSheet(false)
+                }
+            )
         }
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,6 +40,16 @@ import com.jermey.quo.vadis.core.navigation.node.NavNode
  * The component maintains internal state for predictive back:
  * - **lastCommittedState**: The state currently shown on screen
  * - **stateBeforeLast**: The previous state for gesture target resolution
+ *
+ * ## Shared Element Scope Provision
+ *
+ * The [AnimatedVisibilityScope] is ALWAYS provided to all children during navigation
+ * transitions. This ensures that shared element transitions work correctly because:
+ * - Both entering and exiting content use the SAME AnimatedVisibilityScope object
+ * - Exit content doesn't recompose to read updated composition locals, so passing
+ *   the scope directly via parameter is essential
+ * - Nested structures (screens inside tabs/panes) can access the correct scope
+ *   even during exit animations
  *
  * ## Usage
  *

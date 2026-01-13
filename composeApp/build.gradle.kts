@@ -71,6 +71,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(compose.materialIconsExtended)
+            implementation(libs.ktor.client.okhttp)
         }
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
@@ -96,21 +97,36 @@ kotlin {
 
             implementation(projects.feature1)
             implementation(projects.feature2)
+
+            // Haze for glassmorphism
+            implementation(libs.haze)
+            implementation(libs.haze.materials)
+
+            // Coil for image loading
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
+            implementation(libs.ktor.client.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.flowmvi.test)
         }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
         jsMain.dependencies {
             implementation(compose.html.core)
             implementation(compose.materialIconsExtended)
+            implementation(libs.ktor.client.js)
         }
         wasmJsMain.dependencies {
             implementation(compose.materialIconsExtended)
+            implementation(libs.ktor.client.js)
         }
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation(libs.ktor.client.okhttp)
                 // Desktop JVM doesn't support materialIconsExtended in Compose 1.9.0
             }
         }

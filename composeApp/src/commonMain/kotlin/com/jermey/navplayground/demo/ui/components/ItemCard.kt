@@ -22,7 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.screens.masterdetail.Item
-import com.jermey.quo.vadis.core.compose.transition.LocalTransitionScope
+import com.jermey.quo.vadis.core.compose.transition.rememberTransitionScope
 
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -32,7 +32,8 @@ fun ItemCard(
     onClick: () -> Unit
 ) {
     // Get transition scope for shared element transitions
-    val transitionScope = LocalTransitionScope.current
+    // Use rememberTransitionScope() for proper animation during navigation
+    val transitionScope = rememberTransitionScope()
 
     // Base card modifier
     val cardModifier = Modifier.fillMaxWidth()

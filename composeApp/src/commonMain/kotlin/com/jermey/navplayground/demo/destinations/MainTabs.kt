@@ -4,6 +4,7 @@ import com.jermey.navplayground.demo.destinations.MainTabs.ExploreTab
 import com.jermey.navplayground.demo.destinations.MainTabs.HomeTab
 import com.jermey.navplayground.demo.destinations.MainTabs.ProfileTab
 import com.jermey.navplayground.demo.destinations.MainTabs.SettingsTab
+import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.TabItem
@@ -77,12 +78,44 @@ sealed class MainTabs : NavDestination {
     /**
      * Explore tab - Master-detail patterns and deep navigation.
      *
+     * Uses a dedicated stack for the explore feature with Feed, Detail,
+     * and CategoryView destinations for content discovery.
+     *
      * Icon: "explore" (material icon name)
      */
     @TabItem(label = "Explore", icon = "explore")
-    @Destination(route = "main/explore")
+    @Stack(name = "exploreTabStack", startDestination = ExploreTab.Feed::class)
     @Transition(type = TransitionType.Fade)
-    data object ExploreTab : MainTabs()
+    sealed class ExploreTab : MainTabs() {
+        /**
+         * Main explore feed screen.
+         */
+        @Destination(route = "explore/feed")
+        @Transition(type = TransitionType.Fade)
+        data object Feed : ExploreTab()
+
+        /**
+         * Detail screen for a specific explore item.
+         *
+         * @property itemId The unique identifier of the item to display
+         */
+        @Destination(route = "explore/detail/{itemId}")
+        @Transition(type = TransitionType.SlideHorizontal)
+        data class Detail(
+            @Argument val itemId: String
+        ) : ExploreTab()
+
+        /**
+         * Category view showing items filtered by category.
+         *
+         * @property category The category name to filter by
+         */
+        @Destination(route = "explore/category/{category}")
+        @Transition(type = TransitionType.SlideHorizontal)
+        data class CategoryView(
+            @Argument val category: String
+        ) : ExploreTab()
+    }
 
     /**
      * Profile tab - User profile and settings.

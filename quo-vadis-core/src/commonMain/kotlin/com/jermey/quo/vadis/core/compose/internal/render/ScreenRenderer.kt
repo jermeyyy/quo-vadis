@@ -2,6 +2,7 @@
 
 package com.jermey.quo.vadis.core.compose.internal.render
 
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -37,6 +38,12 @@ import com.jermey.quo.vadis.core.navigation.node.ScreenNode
  * - [LocalScreenNode]: The current ScreenNode for navigation context
  * - [LocalAnimatedVisibilityScope]: Animation scope for enter/exit animations
  *
+ * ## Shared Element Transitions
+ *
+ * The [animatedVisibilityScope] parameter is passed DIRECTLY from the parent
+ * AnimatedContent. This is critical for shared element transitions to work
+ * correctly - both entering and exiting screens must use the SAME scope object.
+ *
  * ## ScreenRegistry Integration
  *
  * Invokes [com.jermey.quo.vadis.core.navigation.compose.registry.ScreenRegistry.Content] with:
@@ -46,6 +53,9 @@ import com.jermey.quo.vadis.core.navigation.node.ScreenNode
  *
  * @param node The screen node containing the destination to render
  * @param scope The render scope with dependencies and context
+ * @param animatedVisibilityScope The AnimatedVisibilityScope from the containing
+ *   AnimatedContent. Passed directly to ensure shared element transitions work.
+ *   May be null when not inside an animating context.
  *
  * @see ScreenNode
  * @see LocalScreenNode
@@ -57,6 +67,7 @@ import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 internal fun ScreenRenderer(
     node: ScreenNode,
     scope: NavRenderScope,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
 ) {
     // Use cache for state preservation across navigation transitions
     scope.cache.CachedEntry(
@@ -71,16 +82,22 @@ internal fun ScreenRenderer(
             }
         }
 
+        // Use the animatedVisibilityScope from AnimatedContent if provided,
+        // otherwise fall back to the composition local. The key() wrapper in
+        // AnimatedNavContent ensures exit content recomposes and picks up
+        // the new scope during transitions.
+        val effectiveScope = animatedVisibilityScope ?: LocalAnimatedVisibilityScope.current
+
         // Provide composition locals for screen content access
         CompositionLocalProvider(
             LocalScreenNode provides node,
-            LocalAnimatedVisibilityScope provides LocalAnimatedVisibilityScope.current
+            LocalAnimatedVisibilityScope provides effectiveScope
         ) {
             // Invoke screen content via registry
             scope.screenRegistry.Content(
                 destination = node.destination,
                 sharedTransitionScope = scope.sharedTransitionScope,
-                animatedVisibilityScope = LocalAnimatedVisibilityScope.current
+                animatedVisibilityScope = effectiveScope
             )
         }
     }

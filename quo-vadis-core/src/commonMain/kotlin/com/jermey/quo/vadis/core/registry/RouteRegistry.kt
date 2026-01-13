@@ -15,7 +15,6 @@ object RouteRegistry {
      * Register a route for a destination class.
      */
     fun register(destinationClass: KClass<*>, route: String) {
-        println("DEBUG: RouteRegistry.register - class=$destinationClass, route=$route")
         routes[destinationClass] = route
     }
     
@@ -23,10 +22,7 @@ object RouteRegistry {
      * Get the registered route for a destination class.
      */
     fun getRoute(destinationClass: KClass<*>): String? {
-        val route = routes[destinationClass]
-        val allRoutes = routes.keys.map { it.simpleName }
-        println("DEBUG: RouteRegistry.getRoute - class=$destinationClass, route=$route, allRoutes=$allRoutes")
-        return route
+        return routes[destinationClass]
     }
 
 }
