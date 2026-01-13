@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from './GettingStarted.module.css'
 
@@ -160,6 +161,9 @@ fun App() {
     )
 }`
 
+const validationExampleError = `Missing @Screen binding for 'HomeDestination.Feed' in file 'HomeDestination.kt' (line 12). 
+Fix: Add a @Composable function annotated with @Screen(HomeDestination.Feed::class)`
+
 export default function GettingStarted() {
   return (
     <article className={styles.gettingStarted}>
@@ -257,6 +261,23 @@ export default function GettingStarted() {
             </tr>
           </tbody>
         </table>
+      </section>
+
+      <section>
+        <h2 id="compile-time-safety">Compile-Time Safety</h2>
+        <p>
+          Quo Vadis validates your navigation configuration at compile time. If there are
+          issues with your annotations, the build will fail with clear error messages
+          showing exactly what's wrong and how to fix it.
+        </p>
+        <p>
+          Example error:
+        </p>
+        <CodeBlock code={validationExampleError} language="text" />
+        <p>
+          See <Link to="/features/annotation-api#validation">Validation & Error Messages</Link> for
+          the complete list of validation rules.
+        </p>
       </section>
 
       <section>

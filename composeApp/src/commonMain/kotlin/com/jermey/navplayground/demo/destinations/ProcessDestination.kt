@@ -15,7 +15,7 @@ sealed class ProcessDestination : NavDestination {
 
     @Destination(route = "process/step1")
     data class Step1(
-        @Argument(optional = true) val userType: String? = null
+        val userType: String? = null
     ) : ProcessDestination()
 
     @Destination(route = "process/step2a/{stepData}")

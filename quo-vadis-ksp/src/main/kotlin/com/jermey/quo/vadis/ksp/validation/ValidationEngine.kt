@@ -3,8 +3,10 @@ package com.jermey.quo.vadis.ksp.validation
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Modifier
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.PaneInfo
@@ -17,26 +19,33 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
  * Comprehensive validation engine for Quo Vadis navigation annotations.
  *
  * This engine performs validation of all navigation annotations and their relationships,
- * providing clear error messages with source locations to help developers quickly identify
- * and fix configuration issues at compile time.
+ * providing clear error messages with source locations and fix suggestions to help developers
+ * quickly identify and resolve configuration issues at compile time.
+ *
+ * ## Error Message Format
+ *
+ * All validation messages follow a consistent inline format:
+ * ```
+ * {Description} in file '{fileName}' (line {lineNumber}). Fix: {Suggestion}
+ * ```
  *
  * ## Validation Categories
  *
  * The engine validates across four main categories:
  *
  * ### 1. Structural Validations
- * - Orphan destinations (not inside @Stack, @Tab, or @Pane)
  * - Invalid start destination references
  * - Invalid initial tab references
  * - Empty containers (no destinations)
  *
  * ### 2. Route Validations
  * - Route parameter mismatches (route param without constructor param)
+ * - Constructor params not in route pattern
  * - Duplicate routes across destinations
  *
  * ### 3. Reference Validations
  * - Invalid root graph references (@TabItem/@PaneItem referencing non-@Stack class)
- * - Missing screen bindings (warning)
+ * - Missing screen bindings
  * - Duplicate screen bindings for same destination
  *
  * ### 4. Type Validations
@@ -95,7 +104,6 @@ class ValidationEngine(
         hasErrors = false
 
         // Structural validations
-        validateOrphanDestinations(allDestinations, stacks, tabs, panes)
         validateContainerStartDestinations(stacks)
         validateTabInitialTabs(tabs)
         validateEmptyContainers(stacks, tabs, panes)
@@ -127,50 +135,7 @@ class ValidationEngine(
     // =========================================================================
 
     /**
-     * Validates that @Destination classes are contained within a @Stack, @Tab, or @Pane.
-     *
-     * Note: Standalone destinations (not inside any container) are allowed but produce
-     * a warning. These are useful for destinations that can be navigated to from
-     * anywhere (e.g., detail screens that can be pushed onto any stack).
-     */
-    private fun validateOrphanDestinations(
-        destinations: List<DestinationInfo>,
-        stacks: List<StackInfo>,
-        tabs: List<TabInfo>,
-        panes: List<PaneInfo>
-    ) {
-        val containedDestinations = mutableSetOf<String>()
-
-        stacks.forEach { stack ->
-            stack.destinations.forEach { containedDestinations.add(it.qualifiedName) }
-        }
-        // Collect destinations from FLAT_SCREEN tabs
-        tabs.forEach { tab ->
-            tab.tabs.forEach { tabItem ->
-                // FLAT_SCREEN tabs have destinationInfo
-                tabItem.destinationInfo?.let { containedDestinations.add(it.qualifiedName) }
-            }
-        }
-        panes.forEach { pane ->
-            pane.panes.forEach { containedDestinations.add(it.destination.qualifiedName) }
-        }
-
-        destinations.forEach { destination ->
-            if (destination.qualifiedName !in containedDestinations) {
-                // Standalone destinations are allowed but produce a warning
-                // These can be navigated to from any stack
-                reportWarning(
-                    destination.classDeclaration,
-                    "@Destination \"${destination.className}\" is a standalone destination " +
-                        "(not inside @Stack, @Tab, or @Pane). This is allowed but ensure it " +
-                        "has a valid @Screen binding."
-                )
-            }
-        }
-    }
-
-    /**
-     * Validates that @Stack(startDestinationLegacy) references an existing destination.
+     * Validates that @Stack(startDestination) references an existing destination.
      */
     private fun validateContainerStartDestinations(stacks: List<StackInfo>) {
         stacks.forEach { stack ->
@@ -178,16 +143,15 @@ class ValidationEngine(
                 val availableDestinations = stack.destinations.map { it.className }
                 reportError(
                     stack.classDeclaration,
-                    "@Stack(startDestinationLegacy = \"${stack.startDestination}\") - " +
-                        "No destination named \"${stack.startDestination}\" found in ${stack.className}. " +
-                        "Available destinations: $availableDestinations"
+                    "Invalid startDestination '${stack.startDestination}' for @Stack '${stack.name}'",
+                    "Use one of the available destinations: $availableDestinations"
                 )
             }
         }
     }
 
     /**
-     * Validates that @Tab(initialTab) references an existing tab item.
+     * Validates that @Tabs(initialTab) references an existing tab item.
      */
     private fun validateTabInitialTabs(tabs: List<TabInfo>) {
         tabs.forEach { tab ->
@@ -201,9 +165,8 @@ class ValidationEngine(
                     val availableTabs = tab.tabs.map { it.classDeclaration.simpleName.asString() }
                     reportError(
                         tab.classDeclaration,
-                        "@Tab(initialTab = ${tab.initialTabClass.simpleName.asString()}::class) - " +
-                            "Class not found in items/tabs. " +
-                            "Available tabs: $availableTabs"
+                        "Invalid initialTab '${tab.initialTabClass.simpleName.asString()}' for @Tabs '${tab.name}'",
+                        "Use one of the available tabs: $availableTabs"
                     )
                 }
             }
@@ -211,7 +174,7 @@ class ValidationEngine(
     }
 
     /**
-     * Validates that @Stack, @Tab, and @Pane containers have at least one destination.
+     * Validates that @Stack, @Tabs, and @Pane containers have at least one destination.
      */
     private fun validateEmptyContainers(
         stacks: List<StackInfo>,
@@ -221,21 +184,24 @@ class ValidationEngine(
         stacks.filter { it.destinations.isEmpty() }.forEach { stack ->
             reportError(
                 stack.classDeclaration,
-                "@Stack on \"${stack.className}\" - Stack must contain at least one @Destination"
+                "@Stack '${stack.className}' has no destinations",
+                "Add at least one @Destination annotated subclass inside this sealed class"
             )
         }
 
         tabs.filter { it.tabs.isEmpty() }.forEach { tab ->
             reportError(
                 tab.classDeclaration,
-                "@Tab on \"${tab.className}\" - Tab container must contain at least one @TabItem"
+                "@Tabs container '${tab.className}' has no @TabItem entries",
+                "Add at least one @TabItem annotated class to the items array"
             )
         }
 
         panes.filter { it.panes.isEmpty() }.forEach { pane ->
             reportError(
                 pane.classDeclaration,
-                "@Pane on \"${pane.className}\" - Pane container must contain at least one @PaneItem"
+                "@Pane container '${pane.className}' has no @PaneItem entries",
+                "Add at least one @PaneItem annotated class to the items array"
             )
         }
     }
@@ -246,35 +212,41 @@ class ValidationEngine(
 
     /**
      * Validates that route parameters have matching constructor parameters.
-     * Also warns about constructor params not in route (won't be available via deep linking).
+     * Only @Argument-annotated params not in route are errors (they're intended for deep linking).
+     * Regular constructor params without @Argument can be passed programmatically.
      */
     private fun validateRouteParameters(destinations: List<DestinationInfo>) {
         destinations.forEach { destination ->
             if (destination.route != null) {
                 val constructorParamNames = destination.constructorParams.map { it.name }.toSet()
+                val argumentParamNames = destination.constructorParams
+                    .filter { it.isArgument }
+                    .map { it.name }
+                    .toSet()
 
                 // Check route params have matching constructor params
                 destination.routeParams.forEach { routeParam ->
                     if (routeParam !in constructorParamNames) {
                         reportError(
                             destination.classDeclaration,
-                            "@Destination(route = \"${destination.route}\") on ${destination.className} - " +
-                                "Route param \"{$routeParam}\" has no matching constructor parameter. " +
-                                "Available params: $constructorParamNames"
+                            "Route param '{$routeParam}' in @Destination on ${destination.className} " +
+                                "has no matching constructor parameter",
+                            "Add a constructor parameter named '$routeParam' or remove '{$routeParam}' from the route"
                         )
                     }
                 }
 
-                // Warn about constructor params not in route (only for data classes)
+                // Error about @Argument params not in route (only for params explicitly marked @Argument)
                 if (destination.isDataClass) {
                     val routeParamSet = destination.routeParams.toSet()
-                    constructorParamNames
+                    argumentParamNames
                         .filter { it !in routeParamSet }
                         .forEach { missingParam ->
-                            reportWarning(
+                            reportError(
                                 destination.classDeclaration,
-                                "Constructor param \"$missingParam\" in ${destination.className} " +
-                                    "is not in route pattern. This param won't be available via deep linking."
+                                "@Argument param '$missingParam' in ${destination.className} " +
+                                    "is not in route pattern '${destination.route}'",
+                                "Add '{$missingParam}' to the route pattern or remove @Argument annotation"
                             )
                         }
                 }
@@ -291,12 +263,13 @@ class ValidationEngine(
             .groupBy { it.route }
 
         routeToDestinations.filter { it.value.size > 1 }.forEach { (route, dests) ->
-            val destNames = dests.map { it.qualifiedName }
+            val destNames = dests.map { it.className }
             dests.forEach { dest ->
+                val otherDests = destNames.filter { it != dest.className }
                 reportError(
                     dest.classDeclaration,
-                    "Duplicate route \"$route\" found on: ${destNames.joinToString(", ")}. " +
-                        "Each destination must have a unique route pattern."
+                    "Duplicate route '$route' - also used by: ${otherDests.joinToString(", ")}",
+                    "Use a unique route pattern for this destination"
                 )
             }
         }
@@ -329,8 +302,8 @@ class ValidationEngine(
                 if (key in seenKeys) {
                     reportError(
                         destination.classDeclaration,
-                        "Duplicate argument key \"$key\" in ${destination.className}. " +
-                            "Each @Argument must have a unique key."
+                        "Duplicate argument key '$key' in ${destination.className}",
+                        "Use unique keys for each @Argument parameter"
                     )
                 }
                 seenKeys.add(key)
@@ -339,8 +312,9 @@ class ValidationEngine(
                 if (param.isOptionalArgument && !param.hasDefault) {
                     reportError(
                         destination.classDeclaration,
-                        "@Argument(optional = true) on \"${param.name}\" in ${destination.className} " +
-                            "requires a default value"
+                        "@Argument(optional = true) on '${param.name}' in ${destination.className} " +
+                            "requires a default value",
+                        "Add a default value: ${param.name}: ${param.type} = defaultValue"
                     )
                 }
 
@@ -348,21 +322,20 @@ class ValidationEngine(
                 if (param.isOptionalArgument && key in pathParams) {
                     reportError(
                         destination.classDeclaration,
-                        "Path parameter \"{$key}\" in ${destination.className} cannot be optional. " +
-                            "Only query parameters can be marked as @Argument(optional = true)"
+                        "Path parameter '{$key}' in ${destination.className} cannot be optional",
+                        "Move this parameter to query parameters (after '?') or remove @Argument(optional = true)"
                     )
                 }
 
                 // If route exists and key is specified, it should match a route param
                 if (destination.route != null && key.isNotEmpty() && key !in routeParams) {
-                    // Only warn if there are route params - otherwise the argument might be
-                    // used for internal state without deep linking
+                    // Error if there are route params - argument key should match
                     if (routeParams.isNotEmpty()) {
-                        reportWarning(
+                        reportError(
                             destination.classDeclaration,
-                            "@Argument key \"$key\" on \"${param.name}\" in ${destination.className} " +
-                                "is not found in route pattern \"${destination.route}\". " +
-                                "This argument won't be available via deep linking."
+                            "@Argument key '$key' on '${param.name}' in ${destination.className} " +
+                                "is not found in route pattern '${destination.route}'",
+                            "Add '{$key}' to the route pattern, or change the argument key to match: $routeParams"
                         )
                     }
                 }
@@ -400,8 +373,8 @@ class ValidationEngine(
         if (!hasStackAnnotation) {
             reportError(
                 usageSite,
-                "rootGraph = ${rootGraphClass.simpleName.asString()}::class - " +
-                    "Referenced class must be annotated with @Stack"
+                "rootGraph '${rootGraphClass.simpleName.asString()}' is not annotated with @Stack",
+                "Add @Stack annotation to ${rootGraphClass.simpleName.asString()}"
             )
         }
     }
@@ -410,7 +383,7 @@ class ValidationEngine(
      * Validates screen bindings:
      * - @Screen must reference a valid @Destination class
      * - Each destination should have at most one @Screen (error if duplicates)
-     * - Warn if destination has no @Screen
+     * - Error if destination has no @Screen (destinations must be rendered)
      */
     private fun validateScreenBindings(
         screens: List<ScreenInfo>,
@@ -426,8 +399,10 @@ class ValidationEngine(
             if (destName !in destinationQualifiedNames) {
                 reportError(
                     screen.functionDeclaration,
-                    "@Screen(${screen.destinationClass.simpleName.asString()}::class) - " +
-                        "Referenced class is not annotated with @Destination"
+                    "@Screen(${screen.destinationClass.simpleName.asString()}::class) " +
+                        "references a class without @Destination",
+                    "Add @Destination annotation to ${screen.destinationClass.simpleName.asString()} " +
+                        "or reference a valid destination"
                 )
             }
 
@@ -441,20 +416,20 @@ class ValidationEngine(
                 reportError(
                     screen.functionDeclaration,
                     "Multiple @Screen bindings for ${screen.destinationClass.simpleName.asString()}: " +
-                        "${screenNames.joinToString(", ")}. Each destination can only have one screen."
+                        "${screenNames.joinToString(", ")}",
+                    "Keep only one @Screen function for this destination"
                 )
             }
         }
 
-        // Warn about destinations without screens
+        // Error: destinations must have screens
         val boundDestinations = screenDestinations.keys
         destinations.forEach { destination ->
             if (destination.qualifiedName !in boundDestinations) {
-                reportWarning(
+                reportError(
                     destination.classDeclaration,
-                    "No @Screen found for ${destination.className} - " +
-                        "This destination will have no content. " +
-                        "Add a @Screen function to render this destination."
+                    "Missing @Screen binding for '${destination.className}'",
+                    "Add a @Composable function annotated with @Screen(${destination.className}::class)"
                 )
             }
         }
@@ -465,7 +440,7 @@ class ValidationEngine(
     // =========================================================================
 
     /**
-     * Validates that @Stack, @Tab, and @Pane are applied to sealed classes.
+     * Validates that @Stack, @Tabs, and @Pane are applied to sealed classes.
      */
     private fun validateContainerTypes(
         stacks: List<StackInfo>,
@@ -476,7 +451,8 @@ class ValidationEngine(
             if (!stack.classDeclaration.isSealed()) {
                 reportError(
                     stack.classDeclaration,
-                    "@Stack on \"${stack.className}\" - Must be applied to a sealed class"
+                    "@Stack '${stack.className}' must be a sealed class",
+                    "Change 'class ${stack.className}' to 'sealed class ${stack.className}'"
                 )
             }
         }
@@ -485,7 +461,8 @@ class ValidationEngine(
             if (!tab.classDeclaration.isSealed()) {
                 reportError(
                     tab.classDeclaration,
-                    "@Tab on \"${tab.className}\" - Must be applied to a sealed class"
+                    "@Tabs '${tab.className}' must be a sealed class",
+                    "Change 'class ${tab.className}' to 'sealed class ${tab.className}'"
                 )
             }
         }
@@ -494,7 +471,8 @@ class ValidationEngine(
             if (!pane.classDeclaration.isSealed()) {
                 reportError(
                     pane.classDeclaration,
-                    "@Pane on \"${pane.className}\" - Must be applied to a sealed class"
+                    "@Pane '${pane.className}' must be a sealed class",
+                    "Change 'class ${pane.className}' to 'sealed class ${pane.className}'"
                 )
             }
         }
@@ -521,8 +499,9 @@ class ValidationEngine(
             if (!destination.isDataObject && !destination.isDataClass) {
                 reportError(
                     destination.classDeclaration,
-                    "@Destination on \"${destination.className}\" - " +
-                        "Must be applied to a data object or data class"
+                    "@Destination '${destination.className}' must be a data object or data class",
+                    "Use 'data object ${destination.className}' for destinations without parameters, " +
+                        "or 'data class ${destination.className}(...)' for destinations with parameters"
                 )
             }
         }
@@ -553,15 +532,17 @@ class ValidationEngine(
                     hasStack && hasDestination -> {
                         reportError(
                             tabItem.classDeclaration,
-                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' cannot have both " +
-                                "@Stack and @Destination. Use @Stack for nested navigation or @Destination for flat screen."
+                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
+                                "has both @Stack and @Destination",
+                            "Use @Stack for nested navigation OR @Destination for flat screen, not both"
                         )
                     }
                     !hasStack && !hasDestination -> {
                         reportError(
                             tabItem.classDeclaration,
-                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' must have either " +
-                                "@Stack (for nested navigation) or @Destination (for flat screen)."
+                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
+                                "has neither @Stack nor @Destination",
+                            "Add @Stack for nested navigation or @Destination for flat screen"
                         )
                     }
                 }
@@ -584,13 +565,15 @@ class ValidationEngine(
                     reportError(
                         tabItem.classDeclaration,
                         "NESTED_STACK tab '${tabItem.classDeclaration.simpleName.asString()}' " +
-                            "must be annotated with @Stack"
+                            "is missing @Stack annotation",
+                        "Add @Stack annotation to this tab class"
                     )
                 } else if (stackInfo.destinations.isEmpty()) {
                     reportError(
                         tabItem.classDeclaration,
-                        "@Stack '${stackInfo.name}' on tab '${tabItem.classDeclaration.simpleName.asString()}' " +
-                            "has no @Destination subclasses"
+                        "@Stack '${stackInfo.name}' on NESTED_STACK tab " +
+                            "'${tabItem.classDeclaration.simpleName.asString()}' has no destinations",
+                        "Add at least one @Destination subclass to this Stack"
                     )
                 }
             }
@@ -617,7 +600,8 @@ class ValidationEngine(
                 if (!isDataObject) {
                     reportError(
                         classDecl,
-                        "FLAT_SCREEN tab '${classDecl.simpleName.asString()}' must be a data object"
+                        "FLAT_SCREEN tab '${classDecl.simpleName.asString()}' must be a data object",
+                        "Change to 'data object ${classDecl.simpleName.asString()}'"
                     )
                 }
 
@@ -626,13 +610,15 @@ class ValidationEngine(
                 if (destInfo == null) {
                     reportError(
                         classDecl,
-                        "FLAT_SCREEN tab '${classDecl.simpleName.asString()}' must have @Destination"
+                        "FLAT_SCREEN tab '${classDecl.simpleName.asString()}' is missing @Destination",
+                        "Add @Destination annotation with a route"
                     )
                 } else if (destInfo.route.isNullOrEmpty()) {
+                    // Keep as warning since it still works without route
                     reportWarning(
                         classDecl,
-                        "@Destination on FLAT_SCREEN tab '${classDecl.simpleName.asString()}' " +
-                            "should have a route for deep linking"
+                        "@Destination on FLAT_SCREEN tab '${classDecl.simpleName.asString()}' has no route",
+                        "Add a route parameter for deep linking support"
                     )
                 }
             }
@@ -653,17 +639,27 @@ class ValidationEngine(
     // Error Reporting
     // =========================================================================
 
-    private fun reportError(node: KSClassDeclaration, message: String) {
-        hasErrors = true
-        logger.error(message, node)
+    /**
+     * Formats a validation message with file location and fix suggestion.
+     * Format: "{Description} in file '{fileName}' (line {lineNumber}). Fix: {Suggestion}"
+     */
+    private fun formatMessage(description: String, fix: String, node: KSNode): String {
+        val location = node.location as? FileLocation
+        val fileName = location?.filePath?.substringAfterLast('/') ?: "unknown"
+        val lineNumber = location?.lineNumber ?: 0
+        return if (lineNumber > 0) {
+            "$description in file '$fileName' (line $lineNumber). Fix: $fix"
+        } else {
+            "$description in file '$fileName'. Fix: $fix"
+        }
     }
 
-    private fun reportError(node: KSFunctionDeclaration, message: String) {
+    private fun reportError(node: KSNode, description: String, fix: String) {
         hasErrors = true
-        logger.error(message, node)
+        logger.error(formatMessage(description, fix, node), node)
     }
 
-    private fun reportWarning(node: KSClassDeclaration, message: String) {
-        logger.warn(message, node)
+    private fun reportWarning(node: KSNode, description: String, fix: String) {
+        logger.warn(formatMessage(description, fix, node), node)
     }
 }
