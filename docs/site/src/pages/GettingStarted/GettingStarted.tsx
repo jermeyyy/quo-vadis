@@ -16,14 +16,14 @@ plugins {
     kotlin("multiplatform")
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.devtools.ksp") version "2.3.0"
-    id("io.github.jermeyyy.quo-vadis") version "0.3.3"
+    id("io.github.jermeyyy.quo-vadis") version "0.3.4"
 }
 
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.jermeyyy:quo-vadis-core:0.3.3")
-            implementation("io.github.jermeyyy:quo-vadis-annotations:0.3.3")
+            implementation("io.github.jermeyyy:quo-vadis-core:0.3.4")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.3.4")
         }
     }
 }
@@ -44,8 +44,8 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.jermeyyy:quo-vadis-core:0.3.3")
-            implementation("io.github.jermeyyy:quo-vadis-annotations:0.3.3")
+            implementation("io.github.jermeyyy:quo-vadis-core:0.3.4")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.3.4")
         }
     }
     
@@ -55,7 +55,7 @@ kotlin {
 }
 
 dependencies {
-    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.3.3")
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.3.4")
 }
 
 // Register generated sources

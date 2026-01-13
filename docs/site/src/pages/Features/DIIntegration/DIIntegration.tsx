@@ -13,7 +13,7 @@ const DontHeading = () => (
 
 // Dependencies
 const dependencyCode = `dependencies {
-    implementation("io.github.jermeyyy:quo-vadis-core-flow-mvi:0.3.3")
+    implementation("io.github.jermeyyy:quo-vadis-core-flow-mvi:0.3.4")
 }
 
 // Transitively includes:

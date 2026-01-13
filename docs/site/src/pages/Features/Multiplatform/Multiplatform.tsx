@@ -369,8 +369,8 @@ kotlin {
     
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.jermeyyy:quo-vadis-core:0.3.3")
-            implementation("io.github.jermeyyy:quo-vadis-annotations:0.3.3")
+            implementation("io.github.jermeyyy:quo-vadis-core:0.3.4")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.3.4")
         }
     }
 }`} />

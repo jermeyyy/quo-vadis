@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-01-13
+
+### ⚠️ Breaking Changes
+
+- **Simplified `@TabItem` Annotation**: Removed `label` and `icon` properties from `@TabItem` annotation. Tab customization (icons, labels) is now done in `@TabsContainer` composable using type-safe pattern matching on destination instances.
+- **`TabsContainerScope` Changes**: Replaced `tabMetadata: List<TabMetadata>` with `tabs: List<NavDestination>` property. The `TabMetadata` data class has been removed.
+
+### Changed
+
+- **New Tab Customization Pattern**: Instead of annotating tabs with metadata, customize tab UI in your `@TabsContainer` wrapper using Kotlin's `when` expression for type-safe pattern matching:
+  ```kotlin
+  // Before (deprecated)
+  @TabItem(label = "Home", icon = "home")
+  @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
+  sealed class HomeTab : NavDestination { ... }
+
+  // After
+  @TabItem
+  @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
+  sealed class HomeTab : NavDestination { ... }
+
+  // In TabsContainer - type-safe pattern matching
+  scope.tabs.forEachIndexed { index, tab ->
+      val (label, icon) = when (tab) {
+          is HomeTab -> "Home" to Icons.Default.Home
+          is ExploreTab -> "Explore" to Icons.Default.Explore
+          else -> "Tab" to Icons.Default.Circle
+      }
+      // Use label and icon...
+  }
+  ```
+
+### Added
+
+- **Koin Annotations Documentation**: Added documentation for using Koin Annotations approach (`@Single`, `@Factory`) for MVI container registration as an alternative to manual DSL registration.
+
+### Improved
+
+- **KSP Validation Engine**: Enhanced validation with better error messages:
+  - More descriptive error messages with context
+  - Improved detection of annotation misconfigurations
+  - Better suggestions for fixing common issues
+
+- **Demo App Explore Screen**: Redesigned with MVI architecture, glassmorphism UI styling, and shared element transitions for a modern look and feel.
+
 ## [0.3.3] - 2026-01-05
 
 ### Added
