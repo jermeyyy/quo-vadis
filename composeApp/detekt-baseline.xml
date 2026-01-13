@@ -4,6 +4,7 @@
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:BackstackEditorPanel.kt:@Composable private fun AddDestinationDialog( onDismiss: () -> Unit, onAdd: (DemoTab) -> Unit )</ID>
     <ID>FunctionNaming:MainViewController.kt:fun MainViewController()</ID>
+    <ID>LongMethod:AnimatedSearchBar.kt:@Composable fun AnimatedSearchBar( query: String, onQueryChange: (String) -> Unit, onFocusChange: (Boolean) -> Unit, modifier: Modifier = Modifier, placeholder: String = "Search..." )</ID>
     <ID>LongMethod:BackstackEditorPanel.kt:@Composable private fun AddDestinationDialog( onDismiss: () -> Unit, onAdd: (DemoTab) -> Unit )</ID>
     <ID>LongMethod:BackstackEditorPanel.kt:@Composable private fun BackstackEntryItem( index: Int, destination: NavDestination, entryId: String, isTop: Boolean, canMoveUp: Boolean, canMoveDown: Boolean, onRemove: () -> Unit, onMoveUp: () -> Unit, onMoveDown: () -> Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:BackstackEditorPanel.kt:@OptIn(ExperimentalLayoutApi::class) @Composable fun BackstackEditorPanel( state: StateDrivenState, onIntent: (StateDrivenIntent) -> Unit, modifier: Modifier = Modifier )</ID>
@@ -11,19 +12,21 @@
     <ID>LongMethod:DeepLinkDemoScreen.kt:@Composable private fun DeepLinkDemoScreenContent( padding: PaddingValues, onNavigateViaDeepLink: (String) -> Unit )</ID>
     <ID>LongMethod:DetailScreen.kt:@OptIn(ExperimentalSharedTransitionApi::class) @Composable private fun DetailHeaderCard(itemId: String, transitionScope: TransitionScope?)</ID>
     <ID>LongMethod:DetailScreen.kt:@Screen(MasterDetailDestination.Detail::class) @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable fun DetailScreen( destination: MasterDetailDestination.Detail, navigator: Navigator = koinInject() )</ID>
-    <ID>LongMethod:ExploreDetailScreen.kt:@Composable private fun DetailHeroImage( item: ExploreItem, hazeState: HazeState, scrollOffset: Float )</ID>
-    <ID>LongMethod:ExploreDetailScreen.kt:@Screen(MainTabs.ExploreTab.Detail::class) @Composable fun ExploreDetailScreen( destination: MainTabs.ExploreTab.Detail, navigator: Navigator = koinInject(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ExploreCard.kt:@OptIn(ExperimentalSharedTransitionApi::class) @Composable fun ExploreCard( item: ExploreItem, onClick: () -> Unit, onLongClick: () -> Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ExploreDetailScreen.kt:@Composable private fun DetailContent(item: ExploreItem, itemId: String)</ID>
+    <ID>LongMethod:ExploreDetailScreen.kt:@OptIn(ExperimentalSharedTransitionApi::class) @Composable private fun CollapsingImageHeader( item: ExploreItem, itemId: String, collapseProgress: Float, statusBarHeight: Dp, onBack: () -> Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ExploreRepository.kt:ExploreRepository$private fun generateItems(): List&lt;ExploreItem></ID>
     <ID>LongMethod:HomeScreen.kt:@Composable private fun HomeScreenContent( modifier: Modifier, paddingValues: PaddingValues, onNavigateToMasterDetail: () -> Unit, onNavigateToTabs: () -> Unit, onNavigateToProcess: () -> Unit, onNavigateToStateDriven: () -> Unit, onNavigateToAuthFlow: () -> Unit, onNavigateToResultDemo: () -> Unit, onNavigateToMessagesPane: () -> Unit )</ID>
     <ID>LongMethod:HomeScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(MainTabs.HomeTab::class) @Composable fun HomeScreen( navigator: Navigator = koinInject(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:ItemCard.kt:@OptIn(ExperimentalSharedTransitionApi::class) @Composable fun ItemCard( item: Item, onClick: () -> Unit )</ID>
+    <ID>LongMethod:NavigationBottomSheetContent.kt:@Composable fun NavigationBottomSheetContent( currentRoute: String?, onNavigate: (NavDestination) -> Unit )</ID>
     <ID>LongMethod:ProcessStep1Screen.kt:@Composable private fun ProcessStep1Content( selectedType: String, name: String, onSelectedTypeChange: (String) -> Unit, onNameChange: (String) -> Unit, onBack: () -> Unit, onNext: (String, String) -> Unit )</ID>
     <ID>LongMethod:ProcessStep2BScreen.kt:@Composable private fun ProcessStep2BContent( padding: PaddingValues, previousData: String, companyName: String, taxId: String, industry: String, onCompanyNameChange: (String) -> Unit, onTaxIdChange: (String) -> Unit, onIndustryChange: (String) -> Unit, onBack: () -> Unit, onNext: (String) -> Unit )</ID>
     <ID>LongMethod:ProcessStep3Screen.kt:@Composable private fun ProcessStep3Content( padding: PaddingValues, branch: String, dataParts: List&lt;String>, onBack: () -> Unit, onComplete: () -> Unit )</ID>
     <ID>LongMethod:ProfileScreen.kt:@Composable private fun ProfileEditForm( state: ProfileState.Content, onIntent: (ProfileIntent) -> Unit )</ID>
-    <ID>LongMethod:ProfileScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(MainTabs.ProfileTab::class) @Composable fun ProfileScreen( container: Store&lt;ProfileState, ProfileIntent, ProfileAction> = rememberContainer(qualifier&lt;ProfileContainer>()) )</ID>
+    <ID>LongMethod:ProfileScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(MainTabs.ProfileTab::class) @Composable fun ProfileScreen( navigator: Navigator = koinInject(), container: Store&lt;ProfileState, ProfileIntent, ProfileAction> = rememberContainer(qualifier&lt;ProfileContainer>()) )</ID>
     <ID>LongMethod:PromoScreen.kt:@Screen(PromoDestination::class) @OptIn(ExperimentalMaterial3Api::class) @Composable fun PromoScreen( destination: PromoDestination, navigator: Navigator = koinInject() )</ID>
-    <ID>LongMethod:QuickPreviewSheet.kt:@Composable private fun PreviewHeroImage( item: ExploreItem, hazeState: HazeState )</ID>
-    <ID>LongMethod:SampleExploreData.kt:SampleExploreData$fun generateItems(): List&lt;ExploreItem></ID>
+    <ID>LongMethod:QuickPreviewSheet.kt:@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalHazeMaterialsApi::class) @Composable private fun PreviewHeroImage( item: ExploreItem, hazeState: HazeState )</ID>
     <ID>LongMethod:SearchResultsScreen.kt:@Composable private fun SearchResultsContent( destination: SearchDestination.Results, padding: PaddingValues )</ID>
     <ID>LongMethod:TabDetailScreens.kt:@Composable private fun DetailContent( modifier: Modifier = Modifier, icon: ImageVector, title: String, subtitle: String, details: List&lt;DetailRow>, description: String )</ID>
     <ID>LongMethod:TabsDemoWrapper.kt:@OptIn(ExperimentalMaterial3Api::class) @TabsContainer(DemoTabs.Companion::class) @Composable fun DemoTabsWrapper( scope: TabsContainerScope, content: @Composable () -> Unit )</ID>
@@ -31,11 +34,9 @@
     <ID>MagicNumber:DetailScreen.kt:150</ID>
     <ID>MagicNumber:DetailScreen.kt:30</ID>
     <ID>MagicNumber:DetailScreen.kt:4</ID>
-    <ID>MagicNumber:ExploreDetailScreen.kt:0.1f</ID>
-    <ID>MagicNumber:ExploreDetailScreen.kt:0.5f</ID>
     <ID>MagicNumber:ExploreDetailScreen.kt:10</ID>
     <ID>MagicNumber:ExploreDetailScreen.kt:10.0</ID>
-    <ID>MagicNumber:ExploreDetailScreen.kt:10f</ID>
+    <ID>MagicNumber:ExploreDetailScreen.kt:4.5f</ID>
     <ID>MagicNumber:FilterSheet.kt:10</ID>
     <ID>MagicNumber:FilterSheet.kt:10.0</ID>
     <ID>MagicNumber:MessagesPaneContainer.kt:0.25f</ID>
@@ -52,19 +53,23 @@
     <ID>MaxLineLength:DetailScreen.kt:enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = delay)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = delay))</ID>
     <ID>MaxLineLength:DetailScreen.kt:exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(tween(ANIMATION_DURATION))</ID>
     <ID>MaxLineLength:DetailScreen.kt:onNavigateToRelated = { navigator.navigate(MasterDetailDestination.Detail(itemId = relatedId)) }</ID>
-    <ID>MaxLineLength:MainTabsUI.kt:*</ID>
+    <ID>MaxLineLength:ExploreDetailScreen.kt:"feedback or suggestions, please don't hesitate to reach out through our support channels.\n\n"</ID>
+    <ID>MaxLineLength:ExploreDetailScreen.kt:text = "• Similar items in this category\n• Popular picks this week\n• Editor's recommendations\n• Trending content"</ID>
     <ID>MaxLineLength:StateDrivenDemoScreen.kt:val</ID>
     <ID>MaxLineLength:TabContentScreens.kt:tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant</ID>
     <ID>ReturnCount:StateDrivenContainer.kt:StateDrivenContainer$private fun clearActiveStack(node: NavNode): NavNode?</ID>
     <ID>ReturnCount:StateDrivenContainer.kt:StateDrivenContainer$private fun swapInActiveStack(node: NavNode, index1: Int, index2: Int): NavNode?</ID>
     <ID>SwallowedException:ExploreContainer.kt:ExploreContainer$e: Exception</ID>
+    <ID>SwallowedException:ExploreDetailContainer.kt:ExploreDetailContainer$e: Exception</ID>
     <ID>SwallowedException:ProfileContainer.kt:ProfileContainer$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ExploreContainer.kt:ExploreContainer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ExploreDetailContainer.kt:ExploreDetailContainer$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ProfileContainer.kt:ProfileContainer$e: Exception</ID>
     <ID>TooManyFunctions:ExploreContainer.kt:ExploreContainer : NavigationContainer</ID>
+    <ID>TooManyFunctions:ExploreDetailScreen.kt:com.jermey.navplayground.demo.ui.screens.explore.ExploreDetailScreen.kt</ID>
     <ID>TooManyFunctions:StateDrivenContainer.kt:StateDrivenContainer : SharedNavigationContainer</ID>
     <ID>TooManyFunctions:TabDetailScreens.kt:com.jermey.navplayground.demo.ui.screens.tabs.TabDetailScreens.kt</ID>
-    <ID>UnusedParameter:FilterSheet.kt:hazeState: HazeState</ID>
+    <ID>UnusedParameter:ExploreDetailScreen.kt:itemId: String</ID>
     <ID>UnusedParameter:QuickPreviewSheet.kt:hazeState: HazeState</ID>
   </CurrentIssues>
 </SmellBaseline>

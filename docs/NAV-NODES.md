@@ -188,7 +188,7 @@ sealed class AuthFlow : NavDestination {
 | `stacks` | `List<StackNode>` | One StackNode per tab |
 | `activeStackIndex` | `Int` | Index of currently active tab (0-based) |
 | `wrapperKey` | `String?` | Key for `ContainerRegistry` wrapper lookup |
-| `tabMetadata` | `List<GeneratedTabMetadata>` | Metadata for each tab (label, icon) |
+| `tabMetadata` | `List<GeneratedTabMetadata>` | Metadata for each tab (route only, for deep linking) |
 | `scopeKey` | `String?` | Identifier for scope-aware navigation |
 
 #### Computed Properties
@@ -232,22 +232,24 @@ From the demo app [MainTabs.kt](composeApp/src/commonMain/kotlin/com/jermey/navp
 )
 sealed class MainTabs : NavDestination {
 
-    @TabItem(label = "Home", icon = "home")
+    companion object : NavDestination  // Wrapper key for @TabsContainer
+
+    @TabItem
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
-    @TabItem(label = "Explore", icon = "explore")
+    @TabItem
     @Destination(route = "main/explore")
     @Transition(type = TransitionType.Fade)
     data object ExploreTab : MainTabs()
 
-    @TabItem(label = "Profile", icon = "person")
+    @TabItem
     @Destination(route = "main/profile")
     @Transition(type = TransitionType.Fade)
     data object ProfileTab : MainTabs()
 
-    @TabItem(label = "Settings", icon = "settings")
+    @TabItem
     @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
     sealed class SettingsTab : MainTabs() {
         @Destination(route = "settings/main")
@@ -258,6 +260,8 @@ sealed class MainTabs : NavDestination {
     }
 }
 ```
+
+> **Note:** `@TabItem` is a marker annotation with no properties. Tab customization (labels, icons) is done in the `@TabsContainer` wrapper using type-safe pattern matching.
 
 #### When to Use
 

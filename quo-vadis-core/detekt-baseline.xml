@@ -19,7 +19,7 @@
     <ID>LongMethod:CascadeBackState.kt:private fun calculateCascadeFromStack( root: NavNode, stack: StackNode, sourceNode: NavNode, currentDepth: Int = 0, isCompact: Boolean = true ): CascadeBackState</ID>
     <ID>LongMethod:NavigationHost.kt:@Composable fun NavigationHost( navigator: Navigator, modifier: Modifier = Modifier, screenRegistry: ScreenRegistry = EmptyScreenRegistry, containerRegistry: ContainerRegistry = ContainerRegistry.Empty, transitionRegistry: TransitionRegistry = TransitionRegistry.Empty, scopeRegistry: ScopeRegistry = ScopeRegistry.Empty, enablePredictiveBack: Boolean = true, windowSizeClass: WindowSizeClass? = null )</ID>
     <ID>LongMethod:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior(root: NavNode): PopResult</ID>
-    <ID>LongMethod:TabRenderer.kt:@Composable internal fun TabRenderer( node: TabNode, previousNode: TabNode?, scope: NavRenderScope, )</ID>
+    <ID>LongMethod:TabRenderer.kt:@Composable internal fun TabRenderer( node: TabNode, previousNode: TabNode?, scope: NavRenderScope, @Suppress("UNUSED_PARAMETER") animatedVisibilityScope: AnimatedVisibilityScope? = null, )</ID>
     <ID>LongMethod:TreeMutatorEdgeCasesTest.kt:TreeMutatorEdgeCasesTest$@Test fun `operations work on deeply nested structure`()</ID>
     <ID>LongMethod:TreeNodeOperations.kt:TreeNodeOperations$fun removeNode(root: NavNode, targetKey: String): NavNode?</ID>
     <ID>LoopWithTooManyJumpStatements:PushOperations.kt:PushOperations$for</ID>

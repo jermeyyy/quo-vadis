@@ -45,7 +45,22 @@ import kotlin.reflect.KClass
  *
  *     tabsContainer("main-tabs") { content ->
  *         Scaffold(
- *             bottomBar = { BottomNavigation(tabMetadata, activeTabIndex) }
+ *             bottomBar = {
+ *                 NavigationBar {
+ *                     tabs.forEachIndexed { index, tab ->
+ *                         val label = when (tab) {
+ *                             is HomeTab -> "Home"
+ *                             is ProfileTab -> "Profile"
+ *                             else -> "Tab"
+ *                         }
+ *                         NavigationBarItem(
+ *                             selected = activeTabIndex == index,
+ *                             onClick = { switchTab(index) },
+ *                             label = { Text(label) }
+ *                         )
+ *                     }
+ *                 }
+ *             }
  *         ) { content() }
  *     }
  *

@@ -715,14 +715,16 @@ From [MainTabs.kt](../composeApp/src/commonMain/kotlin/com/jermey/navplayground/
 @Tabs(name = "mainTabs", initialTab = HomeTab::class, items = [...])
 sealed class MainTabs : NavDestination {
 
+    companion object : NavDestination  // Wrapper key for @TabsContainer
+
     // Tab roots use Fade for instant switching
-    @TabItem(label = "Home", icon = "home")
+    @TabItem
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
     // Nested stack with different transitions
-    @TabItem(label = "Settings", icon = "settings")
+    @TabItem
     @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
     @Transition(type = TransitionType.Fade)
     sealed class SettingsTab : MainTabs() {
@@ -738,6 +740,8 @@ sealed class MainTabs : NavDestination {
     }
 }
 ```
+
+> **Note:** `@TabItem` is a marker annotation with no properties. Tab customization (labels, icons) is done in the `@TabsContainer` wrapper using type-safe pattern matching.
 
 ### Shared Element Example
 

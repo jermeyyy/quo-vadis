@@ -23,7 +23,7 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
  *
  * ## New Pattern Example
  * ```kotlin
- * @TabItem(label = "Home", icon = "home")
+ * @TabItem
  * @Stack(name = "homeStack", startDestinationLegacy = "Feed")
  * sealed class HomeTab : Destination { ... }
  *
@@ -35,7 +35,7 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
  * ```kotlin
  * @Tab(name = "mainTabs", initialTabLegacy = "Home")
  * sealed class MainTabs : Destination {
- *     @TabItem(label = "Home", icon = "home")
+ *     @TabItem
  *     @Destination(route = "tabs/home")
  *     data object Home : MainTabs()
  * }
@@ -242,7 +242,7 @@ class TabExtractor(
      * Extract TabItemInfo for new pattern (@TabItem on top-level class).
      *
      * In the new pattern:
-     * - The class has @TabItem (label, icon)
+     * - The class has @TabItem
      * - The class may have @Stack (NESTED_STACK) or @Destination (FLAT_SCREEN)
      * - The class IS the stack or destination itself
      *
@@ -266,27 +266,16 @@ class TabExtractor(
             return null
         }
 
-        val label = tabItemAnnotation.arguments.find {
-            it.name?.asString() == "label"
-        }?.value as? String ?: ""
-
-        val icon = tabItemAnnotation.arguments.find {
-            it.name?.asString() == "icon"
-        }?.value as? String ?: ""
-
         // Detect tab type and extract type-specific info
         val tabType = detectTabItemType(classDeclaration)
         val (destinationInfo, stackInfo) = extractTypeSpecificInfo(classDeclaration, tabType)
 
         logger.info(
             "Extracted @TabItem '${classDeclaration.simpleName.asString()}' " +
-                "(label='$label', icon='$icon', tabType=$tabType, " +
-                "stackClass=${stackInfo?.classDeclaration?.simpleName?.asString() ?: "self"})"
+                "(tabType=$tabType, stackClass=${stackInfo?.classDeclaration?.simpleName?.asString() ?: "self"})"
         )
 
         return TabItemInfo(
-            label = label,
-            icon = icon,
             classDeclaration = classDeclaration,
             tabType = tabType,
             destinationInfo = destinationInfo,
@@ -384,18 +373,8 @@ class TabExtractor(
             return null
         }
 
-        val label = tabItemAnnotation.arguments.find {
-            it.name?.asString() == "label"
-        }?.value as? String ?: ""
-
-        val icon = tabItemAnnotation.arguments.find {
-            it.name?.asString() == "icon"
-        }?.value as? String ?: ""
-
         // Legacy pattern is now treated as FLAT_SCREEN with the destination info
         return TabItemInfo(
-            label = label,
-            icon = icon,
             classDeclaration = classDeclaration,
             tabType = TabItemType.FLAT_SCREEN,
             destinationInfo = destination,

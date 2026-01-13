@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material3.Badge
@@ -22,10 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.DemoTabs
 import com.jermey.quo.vadis.annotations.TabsContainer
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.flowmvi.rememberSharedContainer
 import org.koin.core.qualifier.qualifier
 import pro.respawn.flowmvi.compose.dsl.subscribe
@@ -46,7 +47,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
  * @param content The content slot where active tab content is rendered
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@TabsContainer(DemoTabs.Companion::class)
+@TabsContainer(DemoTabs::class)
 @Composable
 fun DemoTabsWrapper(
     scope: TabsContainerScope,
@@ -86,13 +87,19 @@ fun DemoTabsWrapper(
                     selectedTabIndex = scope.activeTabIndex,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    scope.tabMetadata.forEachIndexed { index, meta ->
-                        val favoriteCount = getFavoriteCountForTab(meta.route, state.favoriteItems)
+                    scope.tabs.forEachIndexed { index, tab ->
+                        val (label, icon) = when (tab) {
+                            is DemoTabs.MusicTab -> "Music" to Icons.Default.MusicNote
+                            is DemoTabs.MoviesTab -> "Movies" to Icons.Default.Movie
+                            is DemoTabs.BooksTab -> "Books" to Icons.AutoMirrored.Default.MenuBook
+                            else -> "Tab" to Icons.Default.Circle
+                        }
+                        val favoriteCount = getFavoriteCountForTab(tab, state.favoriteItems)
                         Tab(
                             selected = scope.activeTabIndex == index,
                             onClick = { scope.switchTab(index) },
                             enabled = !scope.isTransitioning,
-                            text = { Text(meta.label) },
+                            text = { Text(label) },
                             icon = {
                                 BadgedBox(
                                     badge = {
@@ -102,8 +109,8 @@ fun DemoTabsWrapper(
                                     }
                                 ) {
                                     Icon(
-                                        imageVector = getTabIcon(meta.route),
-                                        contentDescription = meta.contentDescription ?: meta.label
+                                        imageVector = icon,
+                                        contentDescription = label
                                     )
                                 }
                             }
@@ -123,28 +130,15 @@ fun DemoTabsWrapper(
 }
 
 /**
- * Maps route to a Material icon for the demo tabs.
+ * Counts favorites for a specific tab based on the tab type and favorite item IDs.
  *
- * @param route The tab route identifier
- * @return An ImageVector icon for the route
- */
-private fun getTabIcon(route: String): ImageVector = when {
-    route.contains("music", ignoreCase = true) -> Icons.Default.MusicNote
-    route.contains("movies", ignoreCase = true) -> Icons.Default.Movie
-    route.contains("books", ignoreCase = true) -> Icons.AutoMirrored.Default.MenuBook
-    else -> Icons.Default.MusicNote // Fallback
-}
-
-/**
- * Counts favorites for a specific tab based on the route and favorite item IDs.
- *
- * @param route The tab route identifier
+ * @param tab The tab destination
  * @param favoriteItems List of favorited item IDs
  * @return Count of favorites for this tab
  */
-private fun getFavoriteCountForTab(route: String, favoriteItems: List<String>): Int = when {
-    route.contains("music", ignoreCase = true) -> favoriteItems.count { it.startsWith("music_") }
-    route.contains("movies", ignoreCase = true) -> favoriteItems.count { it.startsWith("movie_") }
-    route.contains("books", ignoreCase = true) -> favoriteItems.count { it.startsWith("book_") }
+private fun getFavoriteCountForTab(tab: NavDestination, favoriteItems: List<String>): Int = when (tab) {
+    is DemoTabs.MusicTab -> favoriteItems.count { it.startsWith("music_") }
+    is DemoTabs.MoviesTab -> favoriteItems.count { it.startsWith("movie_") }
+    is DemoTabs.BooksTab -> favoriteItems.count { it.startsWith("book_") }
     else -> 0
 }

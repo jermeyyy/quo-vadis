@@ -880,22 +880,35 @@ fun BottomNavigationBar(navigator: Navigator) {
     val tabNode = state.findFirst<TabNode>()
     val activeIndex = tabNode?.activeStackIndex ?: 0
     
+    // Get tab destinations for pattern matching
+    val tabs = tabNode?.stacks?.mapNotNull { stack ->
+        stack.children.firstOrNull()?.activeLeaf()?.destination
+    } ?: emptyList()
+    
     NavigationBar {
-        tabNode?.tabMetadata?.forEachIndexed { index, meta ->
+        tabs.forEachIndexed { index, tab ->
+            // Type-safe pattern matching for tab UI
+            val (label, icon) = when (tab) {
+                is MainTabs.HomeTab -> "Home" to Icons.Default.Home
+                is MainTabs.SearchTab -> "Search" to Icons.Default.Search
+                is MainTabs.ProfileTab -> "Profile" to Icons.Default.Person
+                is MainTabs.SettingsTab -> "Settings" to Icons.Default.Settings
+                else -> "Tab" to Icons.Default.Circle
+            }
             NavigationBarItem(
                 selected = index == activeIndex,
                 onClick = {
                     // Navigate to tab's start destination
                     // TreeNavigator handles tab switching automatically
-                    val tabDestination = tabNode.stacks[index]
-                        .children.firstOrNull()
+                    val tabDestination = tabNode?.stacks?.get(index)
+                        ?.children?.firstOrNull()
                         ?.activeLeaf()
                         ?.destination
                     
                     tabDestination?.let { navigator.navigate(it) }
                 },
-                icon = { Icon(meta.icon, meta.label) },
-                label = { Text(meta.label) }
+                icon = { Icon(icon, contentDescription = label) },
+                label = { Text(label) }
             )
         }
     }

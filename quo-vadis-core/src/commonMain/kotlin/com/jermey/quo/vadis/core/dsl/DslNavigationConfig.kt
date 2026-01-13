@@ -291,10 +291,8 @@ internal class DslNavigationConfig(
             buildTabStack(tabEntry, key, index)
         }
 
-        val tabMetadata = config.tabs.mapIndexed { index, tabEntry ->
+        val tabMetadata = config.tabs.map { tabEntry ->
             GeneratedTabMetadata(
-                label = tabEntry.title ?: "Tab $index",
-                icon = tabEntry.icon?.toString() ?: "",
                 route = getTabRoute(tabEntry)
             )
         }

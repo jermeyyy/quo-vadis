@@ -1,29 +1,8 @@
 package com.jermey.quo.vadis.core.compose.scope
 
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
-
-/**
- * Metadata for a single tab in a TabNode.
- *
- * This class provides information about a tab that can be used
- * to render navigation UI elements like bottom navigation items
- * or tab bar items.
- *
- * @property label Human-readable label for the tab
- * @property icon Optional icon for the tab
- * @property route The route identifier for this tab
- * @property contentDescription Accessibility content description
- * @property badge Optional badge content (e.g., notification count)
- */
-data class TabMetadata(
-    val label: String,
-    val icon: ImageVector? = null,
-    val route: String,
-    val contentDescription: String? = null,
-    val badge: String? = null
-)
 
 /**
  * Scope interface for tabs container wrapper composables.
@@ -34,33 +13,41 @@ data class TabMetadata(
  *
  * ## Usage
  *
- * The scope is receiver for [TabsContainer] composables:
+ * The scope is receiver for [TabsContainer] composables. Tab UI customization
+ * (labels, icons) is done using type-safe pattern matching on the [tabs] property:
  *
  * ```kotlin
- * val myTabsContainerWrapper: TabsContainer = { tabContent ->
+ * @TabsContainer(MainTabs::class)
+ * @Composable
+ * fun MainTabsContainer(scope: TabsContainerScope, content: @Composable () -> Unit) {
  *     Scaffold(
  *         bottomBar = {
  *             NavigationBar {
- *                 tabMetadata.forEachIndexed { index, meta ->
+ *                 scope.tabs.forEachIndexed { index, tab ->
+ *                     val (label, icon) = when (tab) {
+ *                         is HomeTab -> "Home" to Icons.Default.Home
+ *                         is ExploreTab -> "Explore" to Icons.Default.Explore
+ *                         is ProfileTab -> "Profile" to Icons.Default.Person
+ *                         else -> "Tab" to Icons.Default.Circle
+ *                     }
  *                     NavigationBarItem(
  *                         selected = activeTabIndex == index,
  *                         onClick = { switchTab(index) },
- *                         icon = { Icon(meta.icon, meta.label) },
- *                         label = { Text(meta.label) }
+ *                         icon = { Icon(icon, contentDescription = label) },
+ *                         label = { Text(label) }
  *                     )
  *                 }
  *             }
  *         }
  *     ) { padding ->
  *         Box(modifier = Modifier.padding(padding)) {
- *             tabContent()
+ *             content()
  *         }
  *     }
  * }
  * ```
  *
  * @see TabsContainer
- * @see TabMetadata
  */
 @Stable
 interface TabsContainerScope {
@@ -86,11 +73,21 @@ interface TabsContainerScope {
     val tabCount: Int
 
     /**
-     * Metadata for all tabs in order.
+     * List of destination instances for all tabs in order.
      *
-     * Use this to render tab items with their labels, icons, and routes.
+     * Use this with pattern matching to customize tab UI:
+     * ```kotlin
+     * tabs.forEachIndexed { index, tab ->
+     *     val (label, icon) = when (tab) {
+     *         is HomeTab -> "Home" to Icons.Default.Home
+     *         is ExploreTab -> "Explore" to Icons.Default.Explore
+     *         else -> "Tab" to Icons.Default.Circle
+     *     }
+     *     // Use label and icon in your tab bar
+     * }
+     * ```
      */
-    val tabMetadata: List<TabMetadata>
+    val tabs: List<NavDestination>
 
     /**
      * Whether tab switching animation is currently in progress.
@@ -121,7 +118,7 @@ interface TabsContainerScope {
  * @property navigator The navigator instance for this tab container
  * @property activeTabIndex The currently selected tab index (0-based)
  * @property tabCount Total number of tabs
- * @property tabMetadata Metadata for all tabs in order
+ * @property tabs List of destination instances for all tabs in order
  * @property isTransitioning Whether a tab transition is in progress
  * @property onSwitchTab Callback invoked when user switches tabs
  */
@@ -129,7 +126,7 @@ internal class TabsContainerScopeImpl(
     override val navigator: Navigator,
     override val activeTabIndex: Int,
     override val tabCount: Int,
-    override val tabMetadata: List<TabMetadata>,
+    override val tabs: List<NavDestination>,
     override val isTransitioning: Boolean,
     private val onSwitchTab: (Int) -> Unit
 ) : TabsContainerScope {
@@ -150,7 +147,7 @@ internal class TabsContainerScopeImpl(
  *
  * @param navigator The navigator instance
  * @param activeTabIndex Currently selected tab index
- * @param tabMetadata Metadata for all tabs
+ * @param tabs List of destination instances for all tabs
  * @param isTransitioning Whether transitioning between tabs
  * @param onSwitchTab Callback for tab switching
  * @return A new [TabsContainerScope] implementation
@@ -158,14 +155,14 @@ internal class TabsContainerScopeImpl(
 internal fun createTabsContainerScope(
     navigator: Navigator,
     activeTabIndex: Int,
-    tabMetadata: List<TabMetadata>,
+    tabs: List<NavDestination>,
     isTransitioning: Boolean,
     onSwitchTab: (Int) -> Unit
 ): TabsContainerScope = TabsContainerScopeImpl(
     navigator = navigator,
     activeTabIndex = activeTabIndex,
-    tabCount = tabMetadata.size,
-    tabMetadata = tabMetadata,
+    tabCount = tabs.size,
+    tabs = tabs,
     isTransitioning = isTransitioning,
     onSwitchTab = onSwitchTab
 )

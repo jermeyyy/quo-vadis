@@ -27,12 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.navplayground.demo.destinations.MainTabs
 import com.jermey.navplayground.demo.ui.components.glassmorphism.LocalHazeState
 import com.jermey.quo.vadis.annotations.TabsContainer
-import com.jermey.quo.vadis.core.compose.scope.TabMetadata
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -90,7 +89,7 @@ fun MainTabsContainer(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
             activeTabIndex = scope.activeTabIndex,
-            tabMetadata = scope.tabMetadata,
+            tabs = scope.tabs,
             onTabSelected = { index -> scope.switchTab(index) },
             isTransitioning = scope.isTransitioning,
             hazeState = hazeState
@@ -105,7 +104,7 @@ fun MainTabsContainer(
  * Supports edge-to-edge display with proper navigation bar insets.
  *
  * @param activeTabIndex The currently selected tab index (0-based)
- * @param tabMetadata Metadata for all tabs (labels, icons, routes)
+ * @param tabs List of tab destinations for pattern matching
  * @param onTabSelected Callback when a tab is selected
  * @param isTransitioning Whether tab switch animation is in progress
  * @param hazeState The HazeState for blur effect
@@ -115,7 +114,7 @@ fun MainTabsContainer(
 private fun GlassBottomNavigationBar(
     modifier: Modifier = Modifier,
     activeTabIndex: Int,
-    tabMetadata: List<TabMetadata>,
+    tabs: List<NavDestination>,
     onTabSelected: (Int) -> Unit,
     isTransitioning: Boolean = false,
     hazeState: HazeState
@@ -132,15 +131,22 @@ private fun GlassBottomNavigationBar(
         containerColor = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
-        tabMetadata.forEachIndexed { index, meta ->
+        tabs.forEachIndexed { index, tab ->
+            val (label, icon) = when (tab) {
+                is MainTabs.HomeTab -> "Home" to Icons.Default.Home
+                is MainTabs.ExploreTab -> "Explore" to Icons.Default.Explore
+                is MainTabs.ProfileTab -> "Profile" to Icons.Default.Person
+                is MainTabs.SettingsTab -> "Settings" to Icons.Default.Settings
+                else -> "Tab" to Icons.Default.Circle
+            }
             NavigationBarItem(
                 icon = {
                     Icon(
-                        imageVector = meta.icon ?: getTabIconFallback(meta.route),
-                        contentDescription = meta.contentDescription ?: meta.label
+                        imageVector = icon,
+                        contentDescription = label
                     )
                 },
-                label = { Text(meta.label) },
+                label = { Text(label) },
                 selected = activeTabIndex == index,
                 onClick = { onTabSelected(index) },
                 enabled = !isTransitioning // Disable during animations
@@ -152,11 +158,10 @@ private fun GlassBottomNavigationBar(
 /**
  * Standard bottom navigation bar without blur effect.
  *
- * Uses [com.jermey.quo.vadis.core.compose.wrapper.TabMetadata] from [com.jermey.quo.vadis.core.compose.wrapper.TabsContainerScope] to render navigation items
- * with proper selection state and click handling.
+ * Uses pattern matching on tab destinations to determine labels and icons.
  *
  * @param activeTabIndex The currently selected tab index (0-based)
- * @param tabMetadata Metadata for all tabs (labels, icons, routes)
+ * @param tabs List of tab destinations for pattern matching
  * @param onTabSelected Callback when a tab is selected
  * @param isTransitioning Whether tab switch animation is in progress
  */
@@ -164,43 +169,31 @@ private fun GlassBottomNavigationBar(
 private fun MainBottomNavigationBar(
     modifier: Modifier = Modifier,
     activeTabIndex: Int,
-    tabMetadata: List<TabMetadata>,
+    tabs: List<NavDestination>,
     onTabSelected: (Int) -> Unit,
     isTransitioning: Boolean = false
 ) {
     NavigationBar(modifier = modifier) {
-        tabMetadata.forEachIndexed { index, meta ->
+        tabs.forEachIndexed { index, tab ->
+            val (label, icon) = when (tab) {
+                is MainTabs.HomeTab -> "Home" to Icons.Default.Home
+                is MainTabs.ExploreTab -> "Explore" to Icons.Default.Explore
+                is MainTabs.ProfileTab -> "Profile" to Icons.Default.Person
+                is MainTabs.SettingsTab -> "Settings" to Icons.Default.Settings
+                else -> "Tab" to Icons.Default.Circle
+            }
             NavigationBarItem(
                 icon = {
                     Icon(
-                        imageVector = meta.icon ?: getTabIconFallback(meta.route),
-                        contentDescription = meta.contentDescription ?: meta.label
+                        imageVector = icon,
+                        contentDescription = label
                     )
                 },
-                label = { Text(meta.label) },
+                label = { Text(label) },
                 selected = activeTabIndex == index,
                 onClick = { onTabSelected(index) },
                 enabled = !isTransitioning // Disable during animations
             )
         }
     }
-}
-
-/**
- * Maps route identifier to a fallback Material icon.
- *
- * This is used when [com.jermey.quo.vadis.core.compose.wrapper.TabMetadata.icon] is null and provides
- * default icons based on common route patterns.
- *
- * @param route The tab route identifier
- * @return An [ImageVector] icon for the route
- */
-private fun getTabIconFallback(route: String): ImageVector = when {
-    route.contains("home", ignoreCase = true) -> Icons.Default.Home
-    route.contains("explore", ignoreCase = true) -> Icons.Default.Explore
-    route.contains("person", ignoreCase = true) ||
-            route.contains("profile", ignoreCase = true) -> Icons.Default.Person
-
-    route.contains("settings", ignoreCase = true) -> Icons.Default.Settings
-    else -> Icons.Default.Circle // Fallback
 }

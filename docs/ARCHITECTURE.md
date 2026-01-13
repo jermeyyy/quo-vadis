@@ -601,7 +601,7 @@ data class TabNode(
 | `stacks` | List of StackNodes, one per tab |
 | `activeStackIndex` | Index of currently active tab (0-based) |
 | `wrapperKey` | Key for `ContainerRegistry` wrapper lookup |
-| `tabMetadata` | Metadata for each tab (label, icon, route) |
+| `tabMetadata` | Metadata for each tab (route only, for deep linking and serialization) |
 | `scopeKey` | Identifier for scope-aware navigation |
 
 **Behavior**:
