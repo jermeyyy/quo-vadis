@@ -70,7 +70,7 @@ sealed class MainTabs : NavDestination {
 
     companion object : NavDestination
 
-    @TabItem(label = "Home", icon = "home")
+    @TabItem
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
@@ -83,7 +83,7 @@ sealed class MainTabs : NavDestination {
      *
      * Icon: "explore" (material icon name)
      */
-    @TabItem(label = "Explore", icon = "explore")
+    @TabItem
     @Stack(name = "exploreTabStack", startDestination = ExploreTab.Feed::class)
     @Transition(type = TransitionType.Fade)
     sealed class ExploreTab : MainTabs() {
@@ -122,7 +122,7 @@ sealed class MainTabs : NavDestination {
      *
      * Icon: "person" (material icon name)
      */
-    @TabItem(label = "Profile", icon = "person")
+    @TabItem
     @Destination(route = "main/profile")
     @Transition(type = TransitionType.Fade)
     data object ProfileTab : MainTabs()
@@ -132,7 +132,7 @@ sealed class MainTabs : NavDestination {
      *
      * Icon: "settings" (material icon name)
      */
-    @TabItem(label = "Settings", icon = "settings")
+    @TabItem
     @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
     @Transition(type = TransitionType.Fade)
     sealed class SettingsTab : MainTabs() {

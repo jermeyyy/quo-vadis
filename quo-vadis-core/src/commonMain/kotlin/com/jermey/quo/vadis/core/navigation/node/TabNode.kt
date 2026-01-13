@@ -54,9 +54,10 @@ import kotlin.uuid.Uuid
  *   This is typically the simple name of the tab class (e.g., "MainTabs")
  *   and is used by the hierarchical renderer to find the correct wrapper.
  *   Defaults to null, which means no custom wrapper is registered.
- * @property tabMetadata Metadata for each tab (label, icon, route) from @TabItem annotations.
- *   This is populated by KSP-generated code and used by the renderer to provide
- *   proper tab information to wrapper composables. Empty list uses fallback generation.
+ * @property tabMetadata Metadata for each tab (route only) from @TabItem annotations.
+ *   This is populated by KSP-generated code and used for deep linking and tab
+ *   identification. Tab UI customization (labels, icons) is done in `@TabsContainer`
+ *   wrappers using pattern matching on the `tabs` property. Empty list is valid.
  * @property scopeKey Identifier for scope-aware navigation. When set, destinations
  *   not in this scope will navigate outside the tab container. Typically the
  *   sealed class simple name (e.g., "MainTabs"). Defaults to null (no scope enforcement).

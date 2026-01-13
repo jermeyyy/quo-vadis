@@ -24,10 +24,8 @@ import com.squareup.kotlinpoet.ksp.toClassName
  * ```kotlin
  * tabs<MainTabs>(scopeKey = "MainTabs") {
  *     initialTab = 0
- *     tab(MainTabs.HomeTab, title = "Home", icon = "home")
- *     tab(MainTabs.ExploreTab, title = "Explore") {
- *         screen(ExploreDestination.List)
- *     }
+ *     tab(MainTabs.HomeTab)
+ *     containerTab<MainTabs.ExploreTab>()
  * }
  * ```
  *
@@ -153,9 +151,9 @@ class ContainerBlockGenerator(
     /**
      * Generates a single tab entry.
      *
-     * For tab items that are data objects, uses `tab(Object, ...)` syntax.
+     * For tab items that are data objects, uses `tab(Object)` syntax.
      * For tab items that are classes (e.g., sealed classes with nested stacks),
-     * uses `containerTab<Type>(...)` syntax to reference the separately defined stack.
+     * uses `containerTab<Type>()` syntax to reference the separately defined stack.
      *
      * @param tabItem The tab item info
      * @param index Index of this tab
@@ -171,61 +169,19 @@ class ContainerBlockGenerator(
         return when (tabItem.tabType) {
             TabItemType.NESTED_STACK -> {
                 // Tab with nested stack - use containerTab<Type>() since the stack is defined separately
-                val params = buildTabParamsForContainerTab(tabItem)
-                CodeBlock.of("containerTab<%T>($params)\n", tabClassName)
+                CodeBlock.of("containerTab<%T>()\n", tabClassName)
             }
             TabItemType.FLAT_SCREEN -> {
                 // Simple flat screen tab
                 if (isObject) {
                     // For data objects, use the object reference directly
-                    val params = buildTabParams(tabItem)
-                    CodeBlock.of("tab(%T$params)\n", tabClassName)
+                    CodeBlock.of("tab(%T)\n", tabClassName)
                 } else {
                     // For classes, use containerTab (shouldn't happen for FLAT_SCREEN, but handle gracefully)
-                    val params = buildTabParamsForContainerTab(tabItem)
-                    CodeBlock.of("containerTab<%T>($params)\n", tabClassName)
+                    CodeBlock.of("containerTab<%T>()\n", tabClassName)
                 }
             }
         }
-    }
-
-    /**
-     * Builds tab parameters string (title, icon) for tab() calls.
-     *
-     * @param tabItem The tab item info
-     * @return Parameters string (e.g., ", title = \"Home\", icon = \"home\"")
-     */
-    private fun buildTabParams(tabItem: TabItemInfo): String {
-        val params = mutableListOf<String>()
-
-        if (tabItem.label.isNotEmpty()) {
-            params.add("title = \"${tabItem.label}\"")
-        }
-        if (tabItem.icon.isNotEmpty()) {
-            params.add("icon = \"${tabItem.icon}\"")
-        }
-
-        return if (params.isNotEmpty()) ", ${params.joinToString(", ")}" else ""
-    }
-
-    /**
-     * Builds tab parameters string for containerTab() calls.
-     * Uses named parameters without leading comma.
-     *
-     * @param tabItem The tab item info
-     * @return Parameters string (e.g., "title = \"Home\", icon = \"home\"")
-     */
-    private fun buildTabParamsForContainerTab(tabItem: TabItemInfo): String {
-        val params = mutableListOf<String>()
-
-        if (tabItem.label.isNotEmpty()) {
-            params.add("title = \"${tabItem.label}\"")
-        }
-        if (tabItem.icon.isNotEmpty()) {
-            params.add("icon = \"${tabItem.icon}\"")
-        }
-
-        return params.joinToString(", ")
     }
 
     /**

@@ -29,11 +29,13 @@ import kotlin.reflect.KClass
  *
  * The scope provides:
  * - `navigator` - The Navigator instance for navigation operations
- * - `activeIndex` - The currently selected tab index
- * - `tabs` - List of TabMetadata for all tabs (label, icon)
+ * - `activeTabIndex` - The currently selected tab index
+ * - `tabs` - List of NavDestination instances for pattern matching
  * - `switchTab(index)` - Function to switch to a different tab
  *
- * ## Example: Bottom Navigation Wrapper
+ * ## Tab UI Customization
+ *
+ * Tab labels and icons are customized using type-safe pattern matching on the `tabs` property:
  *
  * ```kotlin
  * @TabsContainer(MainTabs::class)
@@ -46,11 +48,17 @@ import kotlin.reflect.KClass
  *         bottomBar = {
  *             NavigationBar {
  *                 scope.tabs.forEachIndexed { index, tab ->
+ *                     val (label, icon) = when (tab) {
+ *                         is HomeTab -> "Home" to Icons.Default.Home
+ *                         is ExploreTab -> "Explore" to Icons.Default.Explore
+ *                         is ProfileTab -> "Profile" to Icons.Default.Person
+ *                         else -> "Tab" to Icons.Default.Circle
+ *                     }
  *                     NavigationBarItem(
- *                         selected = index == scope.activeIndex,
+ *                         selected = index == scope.activeTabIndex,
  *                         onClick = { scope.switchTab(index) },
- *                         icon = { Icon(tabIcon(tab.icon), contentDescription = tab.label) },
- *                         label = { Text(tab.label) }
+ *                         icon = { Icon(icon, contentDescription = label) },
+ *                         label = { Text(label) }
  *                     )
  *                 }
  *             }
@@ -75,11 +83,16 @@ import kotlin.reflect.KClass
  *     Row {
  *         NavigationRail {
  *             scope.tabs.forEachIndexed { index, tab ->
+ *                 val (label, icon) = when (tab) {
+ *                     is HomeTab -> "Home" to Icons.Default.Home
+ *                     is ExploreTab -> "Explore" to Icons.Default.Explore
+ *                     else -> "Tab" to Icons.Default.Circle
+ *                 }
  *                 NavigationRailItem(
- *                     selected = index == scope.activeIndex,
+ *                     selected = index == scope.activeTabIndex,
  *                     onClick = { scope.switchTab(index) },
- *                     icon = { Icon(tabIcon(tab.icon), contentDescription = tab.label) },
- *                     label = { Text(tab.label) }
+ *                     icon = { Icon(icon, contentDescription = label) },
+ *                     label = { Text(label) }
  *                 )
  *             }
  *         }
@@ -105,7 +118,7 @@ import kotlin.reflect.KClass
  * - Proper state preservation across tab changes
  *
  * @property tabClass The tab container class this wrapper wraps.
- *   Must be a class annotated with [@Tab].
+ *   Must be a class annotated with [@Tabs].
  *
  * @see Tabs
  * @see TabItem

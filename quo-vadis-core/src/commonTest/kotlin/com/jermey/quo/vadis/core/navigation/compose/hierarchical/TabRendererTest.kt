@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
  * - Tab state preservation across switches
  * - Tab wrapper integration
  * - Tab animation direction
- * - TabMetadata creation
+ * - Tab destination extraction
  */
 class TabRendererTest {
 
@@ -300,19 +300,75 @@ class TabRendererTest {
     }
 
     @Test
-    fun `tab metadata label extraction from key`() {
-        // Given - simulating createTabMetadataFromStacks logic
-        val stackKeys = listOf("home_stack", "profile_stack", "settings_stack")
+    fun `tab destination extraction from stacks`() {
+        // Given - simulating getTabDestinations logic
+        val homeScreen = createScreen("h", "home_stack", HomeDestination)
+        val profileScreen = createScreen("p", "profile_stack", ProfileDestination)
+        val settingsScreen = createScreen("s", "settings_stack", SettingsDestination)
+        
+        val homeStack = createStack("home_stack", "tabs", homeScreen)
+        val profileStack = createStack("profile_stack", "tabs", profileScreen)
+        val settingsStack = createStack("settings_stack", "tabs", settingsScreen)
+        
+        val tabs = createTabs("tabs", null, listOf(homeStack, profileStack, settingsStack))
 
-        // When - extract labels from keys
-        val labels = stackKeys.map { key ->
-            key.substringAfterLast("_").takeIf { it.isNotEmpty() } ?: "Tab"
+        // When - extract destinations from stacks
+        val destinations = tabs.stacks.mapNotNull { stack ->
+            (stack.children.firstOrNull() as? ScreenNode)?.destination
         }
 
-        // Then
-        assertEquals("stack", labels[0])
-        assertEquals("stack", labels[1])
-        assertEquals("stack", labels[2])
+        // Then - destinations can be used for pattern matching
+        assertEquals(3, destinations.size)
+        assertEquals(HomeDestination, destinations[0])
+        assertEquals(ProfileDestination, destinations[1])
+        assertEquals(SettingsDestination, destinations[2])
+    }
+
+    @Test
+    fun `tab destination extraction from nested stacks (@TabItem @Stack pattern)`() {
+        // Given - simulating @TabItem @Stack structure where each tab's wrapper stack
+        // contains a nested StackNode, which contains the actual ScreenNode
+        // Structure: TabNode > StackNode (wrapper) > StackNode (nested) > ScreenNode
+        val homeScreen = createScreen("h", "music-stack", HomeDestination)
+        val profileScreen = createScreen("p", "movies-stack", ProfileDestination)
+        val settingsScreen = createScreen("s", "books-stack", SettingsDestination)
+
+        // Nested stacks (like @TabItem @Stack creates)
+        val musicNestedStack = createStack("music-stack", "tab0", homeScreen)
+        val moviesNestedStack = createStack("movies-stack", "tab1", profileScreen)
+        val booksNestedStack = createStack("books-stack", "tab2", settingsScreen)
+
+        // Wrapper stacks (each tab's wrapper contains the nested stack)
+        val tab0Wrapper = StackNode("tab0", "tabs", listOf(musicNestedStack))
+        val tab1Wrapper = StackNode("tab1", "tabs", listOf(moviesNestedStack))
+        val tab2Wrapper = StackNode("tab2", "tabs", listOf(booksNestedStack))
+
+        val tabs = createTabs("tabs", null, listOf(tab0Wrapper, tab1Wrapper, tab2Wrapper))
+
+        // When - extract destinations using recursive approach (matches getTabDestinations)
+        val destinations = tabs.stacks.mapNotNull { stack ->
+            findFirstScreenDestination(stack)
+        }
+
+        // Then - destinations are correctly extracted from nested structure
+        assertEquals(3, destinations.size)
+        assertEquals(HomeDestination, destinations[0])
+        assertEquals(ProfileDestination, destinations[1])
+        assertEquals(SettingsDestination, destinations[2])
+    }
+
+    /**
+     * Recursively finds the first ScreenNode's destination in a node tree.
+     * This mirrors the implementation in TabRenderer.
+     */
+    private fun findFirstScreenDestination(node: com.jermey.quo.vadis.core.navigation.node.NavNode): NavDestination? {
+        return when (node) {
+            is ScreenNode -> node.destination
+            is StackNode -> node.children.firstOrNull()?.let { findFirstScreenDestination(it) }
+            is TabNode -> node.stacks.firstOrNull()?.let { findFirstScreenDestination(it) }
+            is com.jermey.quo.vadis.core.navigation.node.PaneNode -> 
+                node.paneConfigurations.values.firstOrNull()?.let { findFirstScreenDestination(it.content) }
+        }
     }
 
     // =========================================================================

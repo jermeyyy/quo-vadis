@@ -13,9 +13,13 @@ import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.scope.LocalContainerNode
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
-import com.jermey.quo.vadis.core.compose.scope.TabMetadata
 import com.jermey.quo.vadis.core.compose.scope.createTabsContainerScope
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 
 /**
@@ -104,7 +108,7 @@ internal fun TabRenderer(
         createTabsContainerScope(
             navigator = scope.navigator,
             activeTabIndex = node.activeStackIndex,
-            tabMetadata = createTabMetadataFromStacks(node),
+            tabs = getTabDestinations(node),
             isTransitioning = false, // Transition state is tracked by AnimatedNavContent
             onSwitchTab = { index ->
                 val newState = TreeMutator.switchActiveTab(scope.navigator.state.value, index)
@@ -119,7 +123,7 @@ internal fun TabRenderer(
             createTabsContainerScope(
                 navigator = scope.navigator,
                 activeTabIndex = node.activeStackIndex,
-                tabMetadata = createTabMetadataFromStacks(node),
+                tabs = getTabDestinations(node),
                 isTransitioning = false,
                 onSwitchTab = { index ->
                     val newState = TreeMutator.switchActiveTab(scope.navigator.state.value, index)
@@ -183,38 +187,48 @@ internal fun TabRenderer(
 }
 
 /**
- * Creates [TabMetadata] list from a [TabNode].
+ * Gets the list of destination instances for each tab in a [TabNode].
  *
- * If the [TabNode.tabMetadata] list (from KSP-generated code) is non-empty,
- * it is converted to runtime [TabMetadata] objects. Otherwise, fallback metadata
- * is generated from stack keys and indices.
+ * For each stack in the TabNode, extracts the destination from the first
+ * (root) screen node. This allows `@TabsContainer` wrappers to use
+ * type-safe pattern matching for tab UI customization.
  *
- * @param node The TabNode to extract metadata from
- * @return List of [TabMetadata] for each tab in order
+ * ## Usage in TabsContainer
+ *
+ * ```kotlin
+ * scope.tabs.forEachIndexed { index, tab ->
+ *     val (label, icon) = when (tab) {
+ *         is HomeTab -> "Home" to Icons.Default.Home
+ *         is ExploreTab -> "Explore" to Icons.Default.Explore
+ *         else -> "Tab" to Icons.Default.Circle
+ *     }
+ *     NavigationBarItem(...)
+ * }
+ * ```
+ *
+ * @param node The TabNode to extract destinations from
+ * @return List of [NavDestination] instances for each tab in order
  */
-internal fun createTabMetadataFromStacks(node: TabNode): List<TabMetadata> {
-    // Use KSP-generated metadata if available
-    if (node.tabMetadata.isNotEmpty()) {
-        return node.tabMetadata.map { generated ->
-            TabMetadata(
-                label = generated.label,
-                icon = null, // Icons are resolved by wrapper via route-based fallback
-                route = generated.route,
-                contentDescription = null,
-                badge = null
-            )
-        }
+internal fun getTabDestinations(node: TabNode): List<NavDestination> {
+    return node.stacks.mapNotNull { stack ->
+        findFirstScreenDestination(stack)
     }
+}
 
-    // Fallback: generate metadata from stack keys
-    return node.stacks.mapIndexed { index, stack ->
-        TabMetadata(
-            label = stack.key.substringAfterLast("/").takeIf { it.isNotEmpty() }
-                ?: "Tab ${index + 1}",
-            icon = null,
-            route = stack.key,
-            contentDescription = null,
-            badge = null
-        )
+/**
+ * Recursively finds the first [ScreenNode]'s destination in a node tree.
+ *
+ * This handles nested structures like `@TabItem @Stack` where the tab's wrapper stack
+ * contains a nested StackNode, which in turn contains the actual ScreenNode.
+ *
+ * @param node The node to search from
+ * @return The destination of the first ScreenNode found, or null if none exists
+ */
+private fun findFirstScreenDestination(node: NavNode): NavDestination? {
+    return when (node) {
+        is ScreenNode -> node.destination
+        is StackNode -> node.children.firstOrNull()?.let { findFirstScreenDestination(it) }
+        is TabNode -> node.stacks.firstOrNull()?.let { findFirstScreenDestination(it) }
+        is PaneNode -> node.paneConfigurations.values.firstOrNull()?.let { findFirstScreenDestination(it.content) }
     }
 }

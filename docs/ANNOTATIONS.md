@@ -312,12 +312,9 @@ Define tabbed navigation containers with independent back stacks per tab, state 
 | `initialTab` | `KClass<*>` | `Unit::class` | Initially selected tab. `Unit::class` = first tab. |
 | `items` | `Array<KClass<*>>` | `[]` | Tab classes in display order |
 
-### @TabItem Properties
+### @TabItem Usage
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `label` | `String` | — | Display label for the tab |
-| `icon` | `String` | `""` | Icon identifier (platform-specific interpretation) |
+`@TabItem` is a **marker annotation** with no properties. Tab customization (labels, icons) is handled in the `@TabsContainer` wrapper using type-safe pattern matching on `scope.tabs`.
 
 ### Pattern: Nested Sealed Classes
 
@@ -332,17 +329,19 @@ For tabs with a single destination each:
 )
 sealed class MainTabs : NavDestination {
 
-    @TabItem(label = "Home", icon = "home")
+    companion object : NavDestination  // Wrapper key for @TabsContainer
+
+    @TabItem
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
-    @TabItem(label = "Explore", icon = "explore")
+    @TabItem
     @Destination(route = "main/explore")
     @Transition(type = TransitionType.Fade)
     data object ExploreTab : MainTabs()
 
-    @TabItem(label = "Profile", icon = "person")
+    @TabItem
     @Destination(route = "main/profile")
     @Transition(type = TransitionType.Fade)
     data object ProfileTab : MainTabs()
@@ -363,21 +362,21 @@ sealed class DemoTabs : NavDestination {
 
     companion object : NavDestination  // Wrapper key for @TabsContainer
 
-    @TabItem(label = "Music", icon = "music_note")
+    @TabItem
     @Stack(name = "musicStack", startDestination = MusicTab.List::class)
     sealed class MusicTab : DemoTabs() {
         @Destination(route = "demo/tabs/music/list")
         data object List : MusicTab()
     }
 
-    @TabItem(label = "Movies", icon = "movie")
+    @TabItem
     @Stack(name = "moviesStack", startDestination = MoviesTab.List::class)
     sealed class MoviesTab : DemoTabs() {
         @Destination(route = "demo/tabs/movies/list")
         data object List : MoviesTab()
     }
 
-    @TabItem(label = "Books", icon = "book")
+    @TabItem
     @Stack(name = "booksStack", startDestination = BooksTab.List::class)
     sealed class BooksTab : DemoTabs() {
         @Destination(route = "demo/tabs/books/list")
@@ -395,16 +394,6 @@ data class MoviesDetail(@Argument val itemId: String) : NavDestination
 @Destination(route = "demo/tabs/books/detail/{itemId}")
 data class BooksDetail(@Argument val itemId: String) : NavDestination
 ```
-
-### Icon Platforms
-
-The `icon` property has platform-specific interpretation:
-
-| Platform | Interpretation |
-|----------|----------------|
-| Android | Material icon name (e.g., "home", "search") or drawable resource |
-| iOS | SF Symbol name |
-| Desktop/Web | Icon library identifier |
 
 ---
 
@@ -506,11 +495,11 @@ fun DemoTabsWrapper(
 |----------|------|-------------|
 | `navigator` | `Navigator` | Navigation operations |
 | `activeTabIndex` | `Int` | Currently selected tab index |
-| `tabMetadata` | `List<TabMetadata>` | Metadata for all tabs (label, icon, route) |
+| `tabs` | `List<NavDestination>` | Tab destinations for type-safe pattern matching |
 | `isTransitioning` | `Boolean` | Whether a transition is in progress |
 | `switchTab(index)` | Function | Switch to a different tab |
 
-**Example: Tab Strip Wrapper**
+**Example: Tab Strip Wrapper with Pattern Matching**
 
 ```kotlin
 @TabsContainer(DemoTabs.Companion::class)
@@ -534,15 +523,21 @@ fun DemoTabsWrapper(
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
-            // Tab strip
+            // Tab strip with type-safe pattern matching
             TabRow(selectedTabIndex = scope.activeTabIndex) {
-                scope.tabMetadata.forEachIndexed { index, meta ->
+                scope.tabs.forEachIndexed { index, tab ->
+                    val (label, icon) = when (tab) {
+                        is DemoTabs.MusicTab -> "Music" to Icons.Default.MusicNote
+                        is DemoTabs.MoviesTab -> "Movies" to Icons.Default.Movie
+                        is DemoTabs.BooksTab -> "Books" to Icons.Default.Book
+                        else -> "Tab" to Icons.Default.Circle
+                    }
                     Tab(
                         selected = scope.activeTabIndex == index,
                         onClick = { scope.switchTab(index) },
                         enabled = !scope.isTransitioning,
-                        text = { Text(meta.label) },
-                        icon = { Icon(getTabIcon(meta.route), meta.label) }
+                        text = { Text(label) },
+                        icon = { Icon(icon, contentDescription = label) }
                     )
                 }
             }
@@ -555,6 +550,12 @@ fun DemoTabsWrapper(
     }
 }
 ```
+
+**Benefits of Pattern Matching:**
+- **Type safety** — Compiler ensures all tab types are handled
+- **Full control** — Use any icon library (Material, custom vectors, etc.)
+- **Localization** — Labels can use string resources
+- **Dynamic styling** — Different styles per tab (badges, colors, etc.)
 
 ### @PaneContainer
 
@@ -768,12 +769,22 @@ sealed class MainTabs : NavDestination {
 
     companion object : NavDestination
 
-    @TabItem(label = "Home", icon = "home")
+    @TabItem
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
-    @TabItem(label = "Settings", icon = "settings")
+    @TabItem
+    @Destination(route = "main/explore")
+    @Transition(type = TransitionType.Fade)
+    data object ExploreTab : MainTabs()
+
+    @TabItem
+    @Destination(route = "main/profile")
+    @Transition(type = TransitionType.Fade)
+    data object ProfileTab : MainTabs()
+
+    @TabItem
     @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
     @Transition(type = TransitionType.Fade)
     sealed class SettingsTab : MainTabs() {
@@ -827,15 +838,35 @@ fun DetailScreen(
 ### 5. Container Wrappers
 
 ```kotlin
-@TabsContainer(DemoTabs.Companion::class)
+@TabsContainer(MainTabs.Companion::class)
 @Composable
-fun DemoTabsWrapper(
+fun MainTabsWrapper(
     scope: TabsContainerScope,
     content: @Composable () -> Unit
 ) {
-    Scaffold(topBar = { /* ... */ }) {
-        Column {
-            TabRow(selectedTabIndex = scope.activeTabIndex) { /* ... */ }
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                scope.tabs.forEachIndexed { index, tab ->
+                    val (label, icon) = when (tab) {
+                        is MainTabs.HomeTab -> "Home" to Icons.Default.Home
+                        is MainTabs.ExploreTab -> "Explore" to Icons.Default.Explore
+                        is MainTabs.ProfileTab -> "Profile" to Icons.Default.Person
+                        is MainTabs.SettingsTab -> "Settings" to Icons.Default.Settings
+                        else -> "Tab" to Icons.Default.Circle
+                    }
+                    NavigationBarItem(
+                        selected = index == scope.activeTabIndex,
+                        onClick = { scope.switchTab(index) },
+                        icon = { Icon(icon, contentDescription = label) },
+                        label = { Text(label) },
+                        enabled = !scope.isTransitioning
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        Box(Modifier.padding(padding)) {
             content()
         }
     }
@@ -932,6 +963,8 @@ Quo Vadis validates annotation usage at compile time. When validation fails, the
 | Empty tabs | Error | `@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one @TabItem annotated class to the items array` |
 
 ### @TabItem Validation
+
+`@TabItem` is a marker annotation — it has no properties to validate. The validation focuses on structural requirements:
 
 | Rule | Severity | Example Message |
 |------|----------|-----------------|

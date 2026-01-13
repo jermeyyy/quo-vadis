@@ -272,12 +272,18 @@ navigationConfig {
         Scaffold(
             bottomBar = {
                 NavigationBar {
-                    tabMetadata.forEachIndexed { index, meta ->
+                    tabs.forEachIndexed { index, tab ->
+                        val (label, icon) = when (tab) {
+                            is MainTabs.HomeTab -> "Home" to Icons.Default.Home
+                            is MainTabs.SearchTab -> "Search" to Icons.Default.Search
+                            is MainTabs.ProfileTab -> "Profile" to Icons.Default.Person
+                            else -> "Tab" to Icons.Default.Circle
+                        }
                         NavigationBarItem(
                             selected = activeTabIndex == index,
                             onClick = { switchTab(index) },
-                            icon = { Icon(meta.icon, meta.label) },
-                            label = { Text(meta.label) }
+                            icon = { Icon(icon, contentDescription = label) },
+                            label = { Text(label) }
                         )
                     }
                 }
@@ -291,6 +297,12 @@ navigationConfig {
 }
 ```
 
+**Benefits of Pattern Matching:**
+- **Type safety** — Compiler ensures all tab types are handled
+- **Full control** — Use any icon library (Material, custom vectors, etc.)
+- **Localization** — Labels can use string resources
+- **Dynamic styling** — Different styles per tab (badges, colors, etc.)
+
 ### TabsContainerScope Properties
 
 The `TabsContainerScope` provides access to tab state:
@@ -300,7 +312,7 @@ The `TabsContainerScope` provides access to tab state:
 | `navigator` | `Navigator` | Navigator instance for programmatic navigation |
 | `activeTabIndex` | `Int` | Currently selected tab (0-based) |
 | `tabCount` | `Int` | Total number of tabs |
-| `tabMetadata` | `List<TabMetadata>` | Labels, icons, and routes for all tabs |
+| `tabs` | `List<NavDestination>` | Tab destinations for type-safe pattern matching |
 | `isTransitioning` | `Boolean` | Whether tab switch animation is in progress |
 
 | Method | Description |
@@ -605,17 +617,19 @@ val appNavigationConfig = navigationConfig {
                 content()
             }
             NavigationBar {
-                tabMetadata.forEachIndexed { index, meta ->
+                tabs.forEachIndexed { index, tab ->
+                    val (label, icon) = when (tab) {
+                        is HomeTab -> "Home" to Icons.Default.Home
+                        is SearchTab -> "Search" to Icons.Default.Search
+                        is ProfileTab -> "Profile" to Icons.Default.Person
+                        is SettingsTab -> "Settings" to Icons.Default.Settings
+                        else -> "Tab" to Icons.Default.Circle
+                    }
                     NavigationBarItem(
                         selected = activeTabIndex == index,
                         onClick = { switchTab(index) },
-                        icon = { 
-                            Icon(
-                                imageVector = meta.icon ?: Icons.Default.Circle,
-                                contentDescription = meta.label
-                            )
-                        },
-                        label = { Text(meta.label) },
+                        icon = { Icon(icon, contentDescription = label) },
+                        label = { Text(label) },
                         enabled = !isTransitioning
                     )
                 }

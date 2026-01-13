@@ -22,9 +22,9 @@ import kotlin.reflect.KClass
  *
  * Define each tab as a separate `@TabItem` + `@Stack` class at the top level:
  * ```kotlin
- * @TabItem(label = "Home", icon = "home")
+ * @TabItem
  * @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
- * sealed class HomeTab : Destination {
+ * sealed class HomeTab : NavDestination {
  *     @Destination(route = "home/feed")
  *     data object Feed : HomeTab()
  *
@@ -32,14 +32,14 @@ import kotlin.reflect.KClass
  *     data class Article(val articleId: String) : HomeTab()
  * }
  *
- * @TabItem(label = "Explore", icon = "explore")
+ * @TabItem
  * @Stack(name = "exploreStack", startDestination = ExploreTab.ExploreRoot::class)
- * sealed class ExploreTab : Destination {
+ * sealed class ExploreTab : NavDestination {
  *     @Destination(route = "explore/root")
  *     data object ExploreRoot : ExploreTab()
  * }
  *
- * @Tab(
+ * @Tabs(
  *     name = "mainTabs",
  *     initialTab = HomeTab::class,
  *     items = [HomeTab::class, ExploreTab::class]
@@ -70,11 +70,7 @@ import kotlin.reflect.KClass
  *         buildHomeTabNavNode().copy(parentKey = "mainTabs"),
  *         buildExploreTabNavNode().copy(parentKey = "mainTabs")
  *     ),
- *     activeStackIndex = 0,  // HomeTab is initial
- *     tabMetadata = listOf(
- *         TabMetadata(label = "Home", icon = "home"),
- *         TabMetadata(label = "Explore", icon = "explore")
- *     )
+ *     activeStackIndex = 0  // HomeTab is initial
  * )
  * ```
  *
@@ -90,9 +86,9 @@ import kotlin.reflect.KClass
  * KSP limitations in KMP metadata compilation:
  * ```kotlin
  * // DEPRECATED - Do not use this pattern
- * @Tab(name = "mainTabs", initialTabLegacy = "Home")
- * sealed class MainTabs : Destination {
- *     @TabItem(label = "Home", icon = "home")
+ * @Tabs(name = "mainTabs", initialTabLegacy = "Home")
+ * sealed class MainTabs : NavDestination {
+ *     @TabItem
  *     @Destination(route = "tabs/home")
  *     data object Home : MainTabs()
  * }
@@ -123,20 +119,19 @@ annotation class Tabs(
 )
 
 /**
- * Provides UI metadata for a tab within a [@Tab] navigation container.
+ * Marks a `@Stack`-annotated class as a tab within a [@Tabs] navigation container.
  *
- * Apply this annotation to a `@Stack`-annotated class to make it available
- * as a tab. The annotated class serves dual purposes:
- * 1. Defines the tab's UI properties (label, icon)
- * 2. Defines the tab's navigation content (as a `@Stack`)
+ * Apply this annotation alongside `@Stack` on a top-level sealed class to make it
+ * available as a tab item. Tab UI customization (labels, icons) is done in the
+ * `@TabsContainer` wrapper composable using type-safe pattern matching.
  *
- * ## New Pattern (Recommended)
+ * ## Usage
  *
- * Apply `@TabItem` alongside `@Stack` on the same top-level class:
+ * Define each tab as a separate `@TabItem` + `@Stack` class:
  * ```kotlin
- * @TabItem(label = "Home", icon = "home")
+ * @TabItem
  * @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
- * sealed class HomeTab : Destination {
+ * sealed class HomeTab : NavDestination {
  *     @Destination(route = "home/feed")
  *     data object Feed : HomeTab()
  *
@@ -144,15 +139,15 @@ annotation class Tabs(
  *     data class Article(val id: String) : HomeTab()
  * }
  *
- * @TabItem(label = "Explore", icon = "explore")
+ * @TabItem
  * @Stack(name = "exploreStack", startDestination = ExploreTab.ExploreRoot::class)
- * sealed class ExploreTab : Destination {
+ * sealed class ExploreTab : NavDestination {
  *     @Destination(route = "explore/root")
  *     data object ExploreRoot : ExploreTab()
  * }
  *
- * // Then reference in @Tab container:
- * @Tab(
+ * // Reference in @Tabs container:
+ * @Tabs(
  *     name = "mainTabs",
  *     initialTab = HomeTab::class,
  *     items = [HomeTab::class, ExploreTab::class]
@@ -160,13 +155,30 @@ annotation class Tabs(
  * object MainTabs
  * ```
  *
- * ## Icon Platforms
+ * ## Tab UI Customization
  *
- * The [icon] parameter has platform-specific interpretation:
- * - **Android**: Material icon name (e.g., "home", "search", "person")
- *   or drawable resource reference
- * - **iOS**: SF Symbol name
- * - **Desktop/Web**: Icon library identifier
+ * Customize tab labels and icons in your `@TabsContainer` wrapper using pattern matching:
+ * ```kotlin
+ * @TabsContainer(MainTabs::class)
+ * @Composable
+ * fun MainTabsContainer(scope: TabsContainerScope, content: @Composable () -> Unit) {
+ *     NavigationBar {
+ *         scope.tabs.forEachIndexed { index, tab ->
+ *             val (label, icon) = when (tab) {
+ *                 is HomeTab -> "Home" to Icons.Default.Home
+ *                 is ExploreTab -> "Explore" to Icons.Default.Explore
+ *                 else -> "Tab" to Icons.Default.Circle
+ *             }
+ *             NavigationBarItem(
+ *                 selected = index == scope.activeTabIndex,
+ *                 onClick = { scope.switchTab(index) },
+ *                 icon = { Icon(icon, contentDescription = label) },
+ *                 label = { Text(label) }
+ *             )
+ *         }
+ *     }
+ * }
+ * ```
  *
  * ## Deep Linking
  *
@@ -176,45 +188,10 @@ annotation class Tabs(
  * // Opens Home tab with Article screen
  * ```
  *
- * ## Generated Metadata
- *
- * KSP generates `TabMetadata` for each tab item, used for UI rendering:
- * ```kotlin
- * data class TabMetadata(
- *     val label: String,
- *     val icon: String
- * )
- * ```
- *
- * ## Legacy Pattern (Deprecated)
- *
- * The old pattern applied `@TabItem` to nested sealed subclasses.
- * This is deprecated due to KSP limitations in KMP metadata compilation:
- * ```kotlin
- * // DEPRECATED - Do not use this pattern
- * @Tab(name = "mainTabs")
- * sealed class MainTabs : Destination {
- *     @TabItem(label = "Home", icon = "home")
- *     @Destination(route = "tabs/home")
- *     data object Home : MainTabs()
- * }
- * ```
- *
- * @property label Display label for the tab shown in the tab bar UI.
- *   Should be localized for internationalization support.
- * @property icon Icon identifier for the tab. Platform-specific interpretation:
- *   - Android: Material icon name or resource reference
- *   - iOS: SF Symbol name
- *   - Desktop/Web: Icon library identifier
- *   Empty string means no icon.
- *
  * @see Tabs
  * @see Stack
  * @see Destination
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class TabItem(
-    val label: String,
-    val icon: String = "",
-)
+annotation class TabItem
