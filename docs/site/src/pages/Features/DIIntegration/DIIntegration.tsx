@@ -422,6 +422,47 @@ fun HomeScreen() {
     Text("Total favorites: \${sharedState.favorites.size}")
 }`
 
+// Koin Annotations - Container registration
+const koinAnnotationsContainerCode = `// Screen-scoped container with annotations
+@Scoped
+@Scope(NavigationContainerScope::class)
+@Qualifier(ProfileContainer::class)
+class ProfileContainer(
+    scope: NavigationContainerScope,
+    private val repository: ProfileRepository
+) : NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
+    override val store = store(initial = ProfileState.Loading) {
+        // Store implementation...
+    }
+}
+
+// Shared container with annotations
+@Scoped
+@Scope(SharedContainerScope::class)
+@Qualifier(DemoTabsContainer::class)
+class DemoTabsContainer(
+    scope: SharedContainerScope
+) : SharedNavigationContainer<DemoTabsState, DemoTabsIntent, DemoTabsAction>(scope) {
+    override val store = store(DemoTabsState()) {
+        // Store implementation...
+    }
+}`
+
+const koinAnnotationsModuleCode = `// Dependencies with annotations
+@Factory
+class ProfileRepository {
+    suspend fun getUser(): UserData = /* ... */
+}
+
+// Module with auto-discovery
+@Module
+@ComponentScan("com.example.feature.profile")
+class ProfileModule
+
+@Module
+@ComponentScan("com.example.feature.tabs")
+class TabsModule`
+
 // Complete App Setup
 const completeSetupCode = `// Application.kt
 class MyApplication : Application() {
@@ -525,6 +566,54 @@ export default function DIIntegration() {
           <li><code>sharedNavigationContainer&lt;T&gt;</code> - Register a container-scoped shared container</li>
           <li><code>navigationModule</code> - Required base module with Navigator binding</li>
         </ul>
+      </section>
+
+      {/* Section: Koin Annotations Alternative */}
+      <section>
+        <h2 id="koin-annotations">Koin Annotations Approach</h2>
+        <p>
+          As an alternative to manual DSL registration, you can use <strong>Koin Annotations</strong> (4.1+)
+          for compile-time dependency resolution with less boilerplate.
+        </p>
+
+        <h3>Annotating Containers</h3>
+        <p>
+          Use <code>@Scoped</code> with the appropriate scope class to register containers:
+        </p>
+        <CodeBlock code={koinAnnotationsContainerCode} language="kotlin" />
+
+        <h3>Module with ComponentScan</h3>
+        <p>
+          Create modules that auto-discover annotated components in a package:
+        </p>
+        <CodeBlock code={koinAnnotationsModuleCode} language="kotlin" />
+
+        <h3>Choosing an Approach</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>DSL Approach</th>
+              <th>Annotations Approach</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Runtime flexibility</td>
+              <td>Compile-time safety</td>
+            </tr>
+            <tr>
+              <td>Complex factory logic</td>
+              <td>Standard patterns</td>
+            </tr>
+            <tr>
+              <td>Advanced Koin features</td>
+              <td>Minimal boilerplate</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Both approaches work with <code>rememberContainer</code> and <code>rememberSharedContainer</code> – choose based on your project needs.
+        </p>
       </section>
 
       {/* Section 5: Screen-Scoped Containers */}

@@ -10,6 +10,7 @@ This document covers the `quo-vadis-core-flow-mvi` module, which provides MVI st
 - [Container-Scoped Containers](#container-scoped-containers-sharednavigationcontainer)
 - [Composable Integration](#composable-integration)
 - [Koin DI Setup](#koin-di-setup)
+- [Koin Annotations Approach](#koin-annotations-approach-alternative)
 - [Lifecycle Integration](#lifecycle-integration)
 - [State Flow Integration](#state-flow-integration)
 - [Common Patterns](#common-patterns)
@@ -71,6 +72,8 @@ The module transitively includes:
 | `koin-core` | Koin dependency injection |
 | `koin-compose` | Koin Compose integration |
 | `koin-compose-viewmodel` | ViewModel support |
+
+> **Note:** For Koin Annotations support (alternative to DSL registration), ensure you're using Koin 4.1+ and have configured the Koin KSP processor.
 
 ---
 
@@ -567,6 +570,79 @@ fun initKoin() {
     }
 }
 ```
+
+---
+
+## Koin Annotations Approach (Alternative)
+
+As an alternative to the manual DSL registration, you can use **Koin Annotations** for compile-time dependency resolution. This approach requires **Koin 4.1+** and the Koin KSP annotation processor.
+
+### Annotating Screen-Scoped Containers
+
+Use `@Scoped` with `@Scope(NavigationContainerScope::class)` to register a container that's scoped to the screen's lifecycle:
+
+```kotlin
+@Scoped
+@Scope(NavigationContainerScope::class)
+@Qualifier(ProfileContainer::class)
+class ProfileContainer(
+    scope: NavigationContainerScope,
+    private val repository: ProfileRepository
+) : NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
+    // Container implementation...
+}
+```
+
+### Annotating Shared Containers
+
+Use `@Scoped` with `@Scope(SharedContainerScope::class)` for containers shared across tabs/panes:
+
+```kotlin
+@Scoped
+@Scope(SharedContainerScope::class)
+@Qualifier(DemoTabsContainer::class)
+class DemoTabsContainer(
+    scope: SharedContainerScope,
+) : SharedNavigationContainer<DemoTabsState, DemoTabsIntent, DemoTabsAction>(scope) {
+    // Container implementation...
+}
+```
+
+### Annotating Dependencies
+
+Use `@Factory` for stateless dependencies (new instance each time) or `@Single` for singletons:
+
+```kotlin
+@Factory
+class ProfileRepository {
+    suspend fun getUser(): UserData { /* ... */ }
+}
+```
+
+### Module with ComponentScan
+
+Create a Koin module that automatically discovers annotated components:
+
+```kotlin
+@Module
+@ComponentScan("com.example.feature.profile")
+class ProfileModule
+
+@Module
+@ComponentScan("com.example.feature.tabs")
+class TabsModule
+```
+
+### Choosing Between Approaches
+
+| Use DSL When | Use Annotations When |
+|--------------|---------------------|
+| You need runtime dependency customization | You prefer compile-time safety |
+| Complex factory logic is required | Standard dependency patterns suffice |
+| Migrating from existing DSL code | Starting a new feature module |
+| Advanced Koin features needed | Minimal boilerplate is preferred |
+
+Both approaches work correctly with `rememberContainer` and `rememberSharedContainer` - the choice depends on your project's needs.
 
 ---
 
