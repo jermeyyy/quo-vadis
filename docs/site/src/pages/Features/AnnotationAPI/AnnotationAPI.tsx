@@ -245,6 +245,11 @@ fun App() {
     NavigationHost(navigator = navigator)
 }`
 
+const errorFormatExample = `{Description} in file '{fileName}' (line {lineNumber}). Fix: {Suggestion}`
+
+const errorMessageExample = `Missing @Screen binding for 'HomeDestination.Feed' in file 'HomeDestination.kt' (line 12). 
+Fix: Add a @Composable function annotated with @Screen(HomeDestination.Feed::class)`
+
 export default function AnnotationAPI() {
   return (
     <article className={styles.features}>
@@ -300,6 +305,10 @@ export default function AnnotationAPI() {
           <a href="#tabs-container-annotation" className={styles.annotationCard}>
             <h4>@TabsContainer / @PaneContainer</h4>
             <p>Custom UI wrappers for tabs and pane layouts.</p>
+          </a>
+          <a href="#validation" className={styles.annotationCard}>
+            <h4>Validation</h4>
+            <p>Compile-time validation rules and error messages for all annotations.</p>
           </a>
         </div>
       </section>
@@ -520,6 +529,226 @@ export default function AnnotationAPI() {
         </p>
 
         <CodeBlock code={completeExample} language="kotlin" />
+      </section>
+
+      <section>
+        <h2 id="validation">Validation & Error Messages</h2>
+        <p>
+          Quo Vadis validates annotation usage at compile time. When validation fails,
+          the build fails with clear error messages that include:
+        </p>
+        <ul>
+          <li><strong>Location:</strong> File name and line number</li>
+          <li><strong>Problem:</strong> What's wrong</li>
+          <li><strong>Fix:</strong> How to resolve the issue</li>
+        </ul>
+
+        <h3>Error Message Format</h3>
+        <p>All validation messages follow this consistent format:</p>
+        <CodeBlock code={errorFormatExample} language="text" />
+
+        <p>Example error message:</p>
+        <CodeBlock code={errorMessageExample} language="text" />
+
+        <h3>@Stack Validation</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Severity</th>
+              <th>Example Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Must be sealed class</td>
+              <td>Error</td>
+              <td><code>@Stack 'HomeStack' must be a sealed class in file 'HomeStack.kt' (line 5). Fix: Change 'class HomeStack' to 'sealed class HomeStack'</code></td>
+            </tr>
+            <tr>
+              <td>Start destination must exist</td>
+              <td>Error</td>
+              <td><code>Invalid startDestination 'InvalidScreen' for @Stack 'homeStack' in file 'HomeStack.kt' (line 5). Fix: Use one of the available destinations: [Feed, Profile, Settings]</code></td>
+            </tr>
+            <tr>
+              <td>Must have destinations</td>
+              <td>Error</td>
+              <td><code>@Stack 'EmptyStack' has no destinations in file 'EmptyStack.kt' (line 3). Fix: Add at least one @Destination annotated subclass inside this sealed class</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>@Destination Validation</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Severity</th>
+              <th>Example Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Must be data object/class</td>
+              <td>Error</td>
+              <td><code>@Destination 'InvalidDest' must be a data object or data class in file 'Destinations.kt' (line 10). Fix: Use 'data object InvalidDest' or 'data class InvalidDest(...)'</code></td>
+            </tr>
+            <tr>
+              <td>Route param requires constructor param</td>
+              <td>Error</td>
+              <td><code>Route param '&#123;userId&#125;' in @Destination on UserProfile has no matching constructor parameter in file 'UserProfile.kt' (line 8). Fix: Add a constructor parameter named 'userId' or remove '&#123;userId&#125;' from the route</code></td>
+            </tr>
+            <tr>
+              <td>@Argument param must be in route</td>
+              <td>Error</td>
+              <td><code>@Argument param 'extraData' in UserProfile is not in route pattern 'user/&#123;userId&#125;' in file 'UserProfile.kt' (line 8). Fix: Add '&#123;extraData&#125;' to the route pattern or remove @Argument annotation</code></td>
+            </tr>
+            <tr>
+              <td>Duplicate routes</td>
+              <td>Error</td>
+              <td><code>Duplicate route 'home/feed' - also used by: FeedScreen in file 'Feed.kt' (line 12). Fix: Use a unique route pattern for this destination</code></td>
+            </tr>
+            <tr>
+              <td>Must have @Screen binding</td>
+              <td>Error</td>
+              <td><code>Missing @Screen binding for 'HomeDestination.Feed' in file 'HomeDestination.kt' (line 12). Fix: Add a @Composable function annotated with @Screen(HomeDestination.Feed::class)</code></td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>Note:</strong> Constructor parameters without <code>@Argument</code> annotation are not 
+          required to be in the route. They can be passed programmatically (not via deep links).
+        </p>
+
+        <h3>@Argument Validation</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Severity</th>
+              <th>Example Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Optional requires default</td>
+              <td>Error</td>
+              <td><code>@Argument(optional = true) on 'page' in SearchResults requires a default value in file 'Search.kt' (line 15). Fix: Add a default value: page: Int = defaultValue</code></td>
+            </tr>
+            <tr>
+              <td>Path param cannot be optional</td>
+              <td>Error</td>
+              <td><code>Path parameter '&#123;userId&#125;' in UserProfile cannot be optional in file 'UserProfile.kt' (line 8). Fix: Move this parameter to query parameters (after '?') or remove @Argument(optional = true)</code></td>
+            </tr>
+            <tr>
+              <td>Duplicate argument keys</td>
+              <td>Error</td>
+              <td><code>Duplicate argument key 'id' in ArticleDetail in file 'Article.kt' (line 20). Fix: Use unique keys for each @Argument parameter</code></td>
+            </tr>
+            <tr>
+              <td>Key not in route</td>
+              <td>Error</td>
+              <td><code>@Argument key 'userId' on 'user' in Profile is not found in route pattern 'profile/&#123;profileId&#125;' in file 'Profile.kt' (line 10). Fix: Add '&#123;userId&#125;' to the route pattern, or change the argument key to match: [profileId]</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>@Screen Validation</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Severity</th>
+              <th>Example Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Invalid destination reference</td>
+              <td>Error</td>
+              <td><code>@Screen(InvalidClass::class) references a class without @Destination in file 'Screens.kt' (line 25). Fix: Add @Destination annotation to InvalidClass or reference a valid destination</code></td>
+            </tr>
+            <tr>
+              <td>Duplicate screen bindings</td>
+              <td>Error</td>
+              <td><code>Multiple @Screen bindings for HomeDestination.Feed: FeedScreen, FeedScreenDuplicate in file 'Screens.kt' (line 30). Fix: Keep only one @Screen function for this destination</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>@Tabs Validation</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Severity</th>
+              <th>Example Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Must be sealed class</td>
+              <td>Error</td>
+              <td><code>@Tabs 'MainTabs' must be a sealed class in file 'MainTabs.kt' (line 5). Fix: Change 'class MainTabs' to 'sealed class MainTabs'</code></td>
+            </tr>
+            <tr>
+              <td>Invalid initial tab</td>
+              <td>Error</td>
+              <td><code>Invalid initialTab 'InvalidTab' for @Tabs 'mainTabs' in file 'MainTabs.kt' (line 5). Fix: Use one of the available tabs: [HomeTab, ProfileTab, SettingsTab]</code></td>
+            </tr>
+            <tr>
+              <td>Empty tabs</td>
+              <td>Error</td>
+              <td><code>@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one @TabItem annotated class to the items array</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>@TabItem Validation</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Severity</th>
+              <th>Example Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Must have @Stack or @Destination</td>
+              <td>Error</td>
+              <td><code>@TabItem 'HomeTab' has neither @Stack nor @Destination in file 'Tabs.kt' (line 15). Fix: Add @Stack for nested navigation or @Destination for flat screen</code></td>
+            </tr>
+            <tr>
+              <td>Cannot have both @Stack and @Destination</td>
+              <td>Error</td>
+              <td><code>@TabItem 'InvalidTab' has both @Stack and @Destination in file 'Tabs.kt' (line 20). Fix: Use @Stack for nested navigation OR @Destination for flat screen, not both</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>@Pane Validation</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Severity</th>
+              <th>Example Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Must be sealed class</td>
+              <td>Error</td>
+              <td><code>@Pane 'DetailPane' must be a sealed class in file 'DetailPane.kt' (line 5). Fix: Change 'class DetailPane' to 'sealed class DetailPane'</code></td>
+            </tr>
+            <tr>
+              <td>Empty pane</td>
+              <td>Error</td>
+              <td><code>@Pane container 'EmptyPane' has no @PaneItem entries in file 'EmptyPane.kt' (line 3). Fix: Add at least one @PaneItem annotated class to the items array</code></td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
       <section>

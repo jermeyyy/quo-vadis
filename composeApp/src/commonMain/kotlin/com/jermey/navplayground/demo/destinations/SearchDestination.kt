@@ -39,51 +39,35 @@ sealed class SearchDestination : NavDestination {
     /**
      * Search results with typed query parameters.
      *
-     * KSP generates:
-     * ```kotlin
-     * fun Navigator.navigateToSearchResults(
-     *     query: String,
-     *     page: Int = 1,
-     *     sortAsc: Boolean = true,
-     *     transition: NavigationTransition? = null
-     * )
-     * ```
-     *
-     * Deep link handler uses type conversions:
-     * ```kotlin
-     * RoutePattern("search/results", listOf()) { params ->
-     *     SearchDestination.Results(
-     *         query = params["query"]!!,
-     *         page = params["page"]?.toIntOrNull() ?: 1,
-     *         sortAsc = params["sortAsc"]?.toBooleanStrictOrNull() ?: true
-     *     )
-     * }
-     * ```
+     * Note: Query parameters are passed programmatically, not via deep links,
+     * due to KSP generator limitations with optional route params.
      *
      * @property query The search query string (required)
      * @property page Page number for pagination (optional, defaults to 1)
      * @property sortAsc Sort direction: true = ascending, false = descending (optional, defaults to true)
      */
-    @Destination(route = "search/results")
+    @Destination(route = "search/results/{query}")
     data class Results(
         @Argument val query: String,
-        @Argument(optional = true) val page: Int = 1,
-        @Argument(optional = true) val sortAsc: Boolean = true
+        val page: Int = 1,
+        val sortAsc: Boolean = true
     ) : SearchDestination()
 
     /**
      * Item detail within search results.
      *
-     * Demonstrates path parameter with optional query params.
+     * Demonstrates path parameter with optional programmatic params.
+     * Note: highlightTerm and showRelated are not in the route because they're
+     * passed programmatically (not via deep links).
      *
      * @property itemId The ID of the item to display (path param)
-     * @property highlightTerm Optional term to highlight in detail view
-     * @property showRelated Whether to show related items section
+     * @property highlightTerm Optional term to highlight in detail view (programmatic only)
+     * @property showRelated Whether to show related items section (programmatic only)
      */
     @Destination(route = "search/detail/{itemId}")
     data class Detail(
         @Argument val itemId: String,
-        @Argument(optional = true) val highlightTerm: String? = null,
-        @Argument(optional = true) val showRelated: Boolean = true
+        val highlightTerm: String? = null,
+        val showRelated: Boolean = true
     ) : SearchDestination()
 }

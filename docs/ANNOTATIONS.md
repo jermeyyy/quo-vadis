@@ -873,6 +873,91 @@ fun App() {
 
 ---
 
+## Validation & Error Messages
+
+Quo Vadis validates annotation usage at compile time. When validation fails, the build fails with clear error messages that include:
+
+- **Location**: File name and line number
+- **Problem**: What's wrong
+- **Fix**: How to resolve the issue
+
+### Error Message Format
+
+```
+{Description} in file '{fileName}' (line {lineNumber}). Fix: {Suggestion}
+```
+
+### @Stack Validation
+
+| Rule | Severity | Example Message |
+|------|----------|-----------------|
+| Must be sealed class | Error | `@Stack 'HomeStack' must be a sealed class in file 'HomeStack.kt' (line 5). Fix: Change 'class HomeStack' to 'sealed class HomeStack'` |
+| Start destination must exist | Error | `Invalid startDestination 'InvalidScreen' for @Stack 'homeStack' in file 'HomeStack.kt' (line 5). Fix: Use one of the available destinations: [Feed, Profile, Settings]` |
+| Must have destinations | Error | `@Stack 'EmptyStack' has no destinations in file 'EmptyStack.kt' (line 3). Fix: Add at least one @Destination annotated subclass inside this sealed class` |
+
+### @Destination Validation
+
+| Rule | Severity | Example Message |
+|------|----------|-----------------|
+| Must be data object/class | Error | `@Destination 'InvalidDest' must be a data object or data class in file 'Destinations.kt' (line 10). Fix: Use 'data object InvalidDest' or 'data class InvalidDest(...)'` |
+| Route param requires constructor param | Error | `Route param '{userId}' in @Destination on UserProfile has no matching constructor parameter in file 'UserProfile.kt' (line 8). Fix: Add a constructor parameter named 'userId' or remove '{userId}' from the route` |
+| @Argument param must be in route | Error | `@Argument param 'extraData' in UserProfile is not in route pattern 'user/{userId}' in file 'UserProfile.kt' (line 8). Fix: Add '{extraData}' to the route pattern or remove @Argument annotation` |
+| Duplicate routes | Error | `Duplicate route 'home/feed' - also used by: FeedScreen in file 'Feed.kt' (line 12). Fix: Use a unique route pattern for this destination` |
+| Must have @Screen binding | Error | `Missing @Screen binding for 'HomeDestination.Feed' in file 'HomeDestination.kt' (line 12). Fix: Add a @Composable function annotated with @Screen(HomeDestination.Feed::class)` |
+
+**Note:** Constructor parameters without `@Argument` annotation are not required to be in the route. They can be passed programmatically (not via deep links).
+
+### @Argument Validation
+
+| Rule | Severity | Example Message |
+|------|----------|-----------------|
+| Optional requires default | Error | `@Argument(optional = true) on 'page' in SearchResults requires a default value in file 'Search.kt' (line 15). Fix: Add a default value: page: Int = defaultValue` |
+| Path param cannot be optional | Error | `Path parameter '{userId}' in UserProfile cannot be optional in file 'UserProfile.kt' (line 8). Fix: Move this parameter to query parameters (after '?') or remove @Argument(optional = true)` |
+| Duplicate argument keys | Error | `Duplicate argument key 'id' in ArticleDetail in file 'Article.kt' (line 20). Fix: Use unique keys for each @Argument parameter` |
+| Key not in route | Error | `@Argument key 'userId' on 'user' in Profile is not found in route pattern 'profile/{profileId}' in file 'Profile.kt' (line 10). Fix: Add '{userId}' to the route pattern, or change the argument key to match: [profileId]` |
+
+### @Screen Validation
+
+| Rule | Severity | Example Message |
+|------|----------|-----------------|
+| Invalid destination reference | Error | `@Screen(InvalidClass::class) references a class without @Destination in file 'Screens.kt' (line 25). Fix: Add @Destination annotation to InvalidClass or reference a valid destination` |
+| Duplicate screen bindings | Error | `Multiple @Screen bindings for HomeDestination.Feed: FeedScreen, FeedScreenDuplicate in file 'Screens.kt' (line 30). Fix: Keep only one @Screen function for this destination` |
+
+### @Tabs Validation
+
+| Rule | Severity | Example Message |
+|------|----------|-----------------|
+| Must be sealed class | Error | `@Tabs 'MainTabs' must be a sealed class in file 'MainTabs.kt' (line 5). Fix: Change 'class MainTabs' to 'sealed class MainTabs'` |
+| Invalid initial tab | Error | `Invalid initialTab 'InvalidTab' for @Tabs 'mainTabs' in file 'MainTabs.kt' (line 5). Fix: Use one of the available tabs: [HomeTab, ProfileTab, SettingsTab]` |
+| Empty tabs | Error | `@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one @TabItem annotated class to the items array` |
+
+### @TabItem Validation
+
+| Rule | Severity | Example Message |
+|------|----------|-----------------|
+| Must have @Stack or @Destination | Error | `@TabItem 'HomeTab' has neither @Stack nor @Destination in file 'Tabs.kt' (line 15). Fix: Add @Stack for nested navigation or @Destination for flat screen` |
+| Cannot have both @Stack and @Destination | Error | `@TabItem 'InvalidTab' has both @Stack and @Destination in file 'Tabs.kt' (line 20). Fix: Use @Stack for nested navigation OR @Destination for flat screen, not both` |
+| NESTED_STACK requires @Stack | Error | `NESTED_STACK tab 'SettingsTab' is missing @Stack annotation in file 'Tabs.kt' (line 25). Fix: Add @Stack annotation to this tab class` |
+| NESTED_STACK @Stack must have destinations | Error | `@Stack 'settingsStack' on NESTED_STACK tab 'SettingsTab' has no destinations in file 'Tabs.kt' (line 25). Fix: Add at least one @Destination subclass to this Stack` |
+| FLAT_SCREEN must be data object | Error | `FLAT_SCREEN tab 'HomeTab' must be a data object in file 'Tabs.kt' (line 10). Fix: Change to 'data object HomeTab'` |
+| FLAT_SCREEN requires @Destination | Error | `FLAT_SCREEN tab 'HomeTab' is missing @Destination in file 'Tabs.kt' (line 10). Fix: Add @Destination annotation with a route` |
+| FLAT_SCREEN should have route | Warning | `@Destination on FLAT_SCREEN tab 'HomeTab' has no route in file 'Tabs.kt' (line 10). Fix: Add a route parameter for deep linking support` |
+
+### @Pane Validation
+
+| Rule | Severity | Example Message |
+|------|----------|-----------------|
+| Must be sealed class | Error | `@Pane 'DetailPane' must be a sealed class in file 'DetailPane.kt' (line 5). Fix: Change 'class DetailPane' to 'sealed class DetailPane'` |
+| Empty pane | Error | `@Pane container 'EmptyPane' has no @PaneItem entries in file 'EmptyPane.kt' (line 3). Fix: Add at least one @PaneItem annotated class to the items array` |
+
+### Other Validations
+
+| Rule | Severity | Example Message |
+|------|----------|-----------------|
+| rootGraph must have @Stack | Error | `rootGraph 'InvalidRoot' is not annotated with @Stack in file 'NavConfig.kt' (line 8). Fix: Add @Stack annotation to InvalidRoot` |
+
+---
+
 ## See Also
 
 - [DSL-CONFIG.md](DSL-CONFIG.md) — Programmatic navigation configuration
