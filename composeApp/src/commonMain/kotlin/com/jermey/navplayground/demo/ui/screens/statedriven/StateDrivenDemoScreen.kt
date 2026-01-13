@@ -42,6 +42,7 @@ import com.jermey.quo.vadis.annotations.TabsContainer
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.flowmvi.rememberSharedContainer
 import kotlinx.coroutines.launch
+import org.koin.core.qualifier.qualifier
 import pro.respawn.flowmvi.compose.dsl.subscribe
 
 /**
@@ -71,7 +72,9 @@ fun StateDrivenDemoContainer(
     val coroutineScope = rememberCoroutineScope()
 
     // Get the shared store for state-driven navigation manipulation
-    val sharedStore = rememberSharedContainer<StateDrivenContainer, StateDrivenState, StateDrivenIntent, StateDrivenAction>()
+    val sharedStore = rememberSharedContainer<StateDrivenContainer, StateDrivenState, StateDrivenIntent, StateDrivenAction>(
+        qualifier = qualifier<StateDrivenContainer>()
+    )
 
     val state by sharedStore.subscribe { action ->
         coroutineScope.launch {

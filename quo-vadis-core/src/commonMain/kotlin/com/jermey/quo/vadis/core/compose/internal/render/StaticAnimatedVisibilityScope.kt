@@ -29,13 +29,13 @@ import com.jermey.quo.vadis.core.compose.transition.TransitionScope
  *
  * ## Usage
  * ```kotlin
- * StaticAnimatedVisibilityScope {
+ * StaticAnimatedVisibilityScope { scope ->
  *     // Content that needs AnimatedVisibilityScope
- *     content(previous)
+ *     content(node, scope)
  * }
  * ```
  *
- * @param content The composable content requiring an [AnimatedVisibilityScope]
+ * @param content The composable content receiving the [AnimatedVisibilityScope]
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -57,7 +57,7 @@ internal fun StaticAnimatedVisibilityScope(
         LocalAnimatedVisibilityScope provides scope,
         LocalTransitionScope provides transitionScope
     ) {
-        scope.content()
+        content(scope)
     }
 }
 

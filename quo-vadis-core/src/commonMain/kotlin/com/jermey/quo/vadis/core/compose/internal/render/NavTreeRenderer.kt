@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.compose.internal.render
 
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
 import com.jermey.quo.vadis.core.navigation.node.NavNode
@@ -49,6 +50,18 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
  * When [previousNode] is null (initial render), renderers should handle gracefully
  * by using default enter animations or no animation.
  *
+ * ## Shared Element Transitions
+ *
+ * The [animatedVisibilityScope] parameter enables shared element transitions by
+ * providing the AnimatedVisibilityScope from the containing AnimatedContent.
+ * When screens use shared elements, they need this scope to coordinate the
+ * animation between source and target screens.
+ *
+ * **Critical**: This scope is passed DIRECTLY from AnimatedContent to ensure
+ * both entering and exiting screens use the SAME scope object during transitions.
+ * Using composition locals for this would break shared elements because exit
+ * content doesn't recompose to read new composition local values.
+ *
  * ## Example Usage
  *
  * ```kotlin
@@ -56,11 +69,10 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
  * val currentState by navigator.state.collectAsState()
  * var previousState by remember { mutableStateOf<NavNode?>(null) }
  *
- * NavTreeRenderer(
+ * NavNodeRenderer(
  *     node = currentState,
  *     previousNode = previousState,
  *     scope = navRenderScope,
- *     modifier = Modifier.fillMaxSize()
  * )
  *
  * LaunchedEffect(currentState) {
@@ -74,8 +86,9 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
  *   May be null on initial render or when previous state is unavailable.
  * @param scope The render scope providing context, dependencies, and resources
  *   required by all renderers in the hierarchy.
- * @param modifier Modifier to apply to the rendered content. Applied by the
- *   top-level renderer component.
+ * @param animatedVisibilityScope The AnimatedVisibilityScope from the containing
+ *   AnimatedContent. Passed directly to ensure shared element transitions work
+ *   correctly. May be null when not inside an animating context.
  *
  * @see NavRenderScope
  * @see ScreenNode
@@ -88,29 +101,34 @@ internal fun NavNodeRenderer(
     node: NavNode,
     previousNode: NavNode?,
     scope: NavRenderScope,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
 ) {
     when (node) {
         is ScreenNode -> ScreenRenderer(
             node = node,
             scope = scope,
+            animatedVisibilityScope = animatedVisibilityScope,
         )
 
         is StackNode -> StackRenderer(
             node = node,
             previousNode = previousNode as? StackNode,
             scope = scope,
+            animatedVisibilityScope = animatedVisibilityScope,
         )
 
         is TabNode -> TabRenderer(
             node = node,
             previousNode = previousNode as? TabNode,
             scope = scope,
+            animatedVisibilityScope = animatedVisibilityScope,
         )
 
         is PaneNode -> PaneRenderer(
             node = node,
             previousNode = previousNode as? PaneNode,
             scope = scope,
+            animatedVisibilityScope = animatedVisibilityScope,
         )
     }
 }

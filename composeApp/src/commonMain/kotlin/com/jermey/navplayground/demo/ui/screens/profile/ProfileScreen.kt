@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -40,19 +41,28 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.destinations.MainTabs
+import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
+import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
 import com.jermey.quo.vadis.annotations.Screen
+import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.flowmvi.rememberContainer
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import org.koin.core.qualifier.qualifier
 import pro.respawn.flowmvi.api.Store
 import pro.respawn.flowmvi.compose.dsl.subscribe
@@ -72,10 +82,14 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 @Screen(MainTabs.ProfileTab::class)
 @Composable
 fun ProfileScreen(
+    navigator: Navigator = koinInject(),
     container: Store<ProfileState, ProfileIntent, ProfileAction> = rememberContainer(qualifier<ProfileContainer>())
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val hazeState = remember { HazeState() }
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     val state by container.subscribe { action ->
         scope.launch {
@@ -123,6 +137,11 @@ fun ProfileScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Profile") },
+                navigationIcon = {
+                    IconButton(onClick = { showBottomSheet = true }) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                    }
+                },
                 actions = {
                     if ((state as? ProfileState.Content)?.isEditing ?: false) {
                         IconButton(onClick = { container.intent(ProfileIntent.NavigateToSettings) }) {
@@ -138,6 +157,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .hazeSource(state = hazeState)
         ) {
             when (state) {
                 is ProfileState.Loading -> LoadingContent()
@@ -151,6 +171,25 @@ fun ProfileScreen(
                     onRetry = { container.intent(ProfileIntent.LoadProfile) }
                 )
             }
+        }
+    }
+
+    if (showBottomSheet) {
+        GlassBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            hazeState = hazeState,
+            sheetState = sheetState
+        ) {
+            NavigationBottomSheetContent(
+                currentRoute = "profile",
+                onNavigate = { destination ->
+                    navigator.navigate(destination)
+                    scope.launch {
+                        sheetState.hide()
+                        showBottomSheet = false
+                    }
+                }
+            )
         }
     }
 }

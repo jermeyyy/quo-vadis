@@ -7,9 +7,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AssistantDirection
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +39,7 @@ fun NavigationBottomSheetContent(
         Text(
             "Navigation Patterns",
             style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(16.dp)
         )
 
@@ -47,6 +51,22 @@ fun NavigationBottomSheetContent(
             description = "Main dashboard",
             selected = currentRoute == "home",
             onClick = { onNavigate(MainTabs.HomeTab) }
+        )
+
+        BottomSheetNavigationItem(
+            icon = Icons.Default.Explore,
+            label = "Explore",
+            description = "Discover new content",
+            selected = currentRoute == "explore",
+            onClick = { onNavigate(MainTabs.ExploreTab.Feed) }
+        )
+
+        BottomSheetNavigationItem(
+            icon = Icons.Default.Person,
+            label = "Profile",
+            description = "User profile",
+            selected = currentRoute == "profile",
+            onClick = { onNavigate(MainTabs.ProfileTab) }
         )
 
         BottomSheetNavigationItem(

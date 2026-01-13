@@ -1,19 +1,15 @@
 package com.jermey.navplayground.demo
 
 import com.jermey.navplayground.demo.destinations.MainTabs
-import com.jermey.navplayground.demo.ui.screens.profile.ProfileContainer
 import com.jermey.navplayground.demo.ui.screens.profile.ProfileRepository
-import com.jermey.navplayground.demo.ui.screens.statedriven.StateDrivenContainer
-import com.jermey.navplayground.demo.ui.screens.tabs.DemoTabsContainer
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
-import com.jermey.quo.vadis.flowmvi.navigationContainer
-import com.jermey.quo.vadis.flowmvi.sharedNavigationContainer
 import com.jermey.quo.vadis.generated.ComposeAppNavigationConfig
 import com.jermey.quo.vadis.generated.Feature1NavigationConfig
 import com.jermey.quo.vadis.generated.Feature2NavigationConfig
-import org.koin.core.component.get
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Module
 import org.koin.dsl.module
 
 val navigationModule = module {
@@ -46,33 +42,20 @@ val navigationModule = module {
 val profileModule = module {
 
     single { ProfileRepository() }
-
-    navigationContainer<ProfileContainer> { scope ->
-        ProfileContainer(
-            scope = scope,
-            repository = scope.get(),
-            debuggable = true
-        )
-    }
 }
 
-/**
- * Koin module for the State-Driven Navigation Demo shared container.
- */
-val stateDrivenDemoModule = module {
-    sharedNavigationContainer<StateDrivenContainer> { scope ->
-        StateDrivenContainer(scope)
-    }
-}
+@Module
+@ComponentScan("com.jermey.navplayground.demo.ui.screens.statedriven")
+class StateDrivenDemoModule
 
-/**
- * Koin module for the Demo Tabs shared container.
- *
- * Registers [DemoTabsContainer] as a shared navigation container,
- * allowing cross-tab state sharing within the DemoTabs.
- */
-val tabsDemoModule = module {
-    sharedNavigationContainer<DemoTabsContainer> { scope ->
-        DemoTabsContainer(scope)
-    }
-}
+@Module
+@ComponentScan("com.jermey.navplayground.demo.ui.screens.tabs")
+class TabsDemoModule
+
+@Module
+@ComponentScan("com.jermey.navplayground.demo.ui.screens.profile")
+class ProfileModule
+
+@Module
+@ComponentScan("com.jermey.navplayground.demo.ui.screens.explore")
+class ExploreModule

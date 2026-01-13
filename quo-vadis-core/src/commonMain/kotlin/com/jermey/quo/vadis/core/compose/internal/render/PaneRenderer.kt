@@ -2,6 +2,7 @@
 
 package com.jermey.quo.vadis.core.compose.internal.render
 
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -93,6 +94,8 @@ internal fun PaneRenderer(
     node: PaneNode,
     previousNode: PaneNode?,
     scope: NavRenderScope,
+    @Suppress("UNUSED_PARAMETER")
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
 ) {
     // Detect window size class for adaptive layout decision
     val windowSizeClass = calculateWindowSizeClass()
@@ -285,13 +288,11 @@ private fun SinglePaneRenderer(
             scope = scope
         ) { paneNavNode ->
             // Render each pane content via NavNodeRenderer
-            StaticAnimatedVisibilityScope {
-                NavNodeRenderer(
-                    node = paneNavNode,
-                    previousNode = null,
-                    scope = scope
-                )
-            }
+            NavNodeRenderer(
+                node = paneNavNode,
+                previousNode = null,
+                scope = scope,
+            )
         }
         // Note: Do NOT update lastCommittedContent during predictive back
         // We want to keep showing the "old" state (SECONDARY) as current

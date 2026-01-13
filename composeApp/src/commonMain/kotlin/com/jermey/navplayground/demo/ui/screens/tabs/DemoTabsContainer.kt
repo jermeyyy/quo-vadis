@@ -2,8 +2,12 @@ package com.jermey.navplayground.demo.ui.screens.tabs
 
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedNavigationContainer
+import org.koin.core.annotation.Qualifier
+import org.koin.core.annotation.Scope
+import org.koin.core.annotation.Scoped
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
@@ -80,6 +84,9 @@ sealed interface DemoTabsAction : MVIAction
  *
  * @param scope The shared container scope providing access to navigator and lifecycle
  */
+@Scoped
+@Scope(SharedContainerScope::class)
+@Qualifier(DemoTabsContainer::class)
 class DemoTabsContainer(
     scope: SharedContainerScope,
 ) : SharedNavigationContainer<DemoTabsState, DemoTabsIntent, DemoTabsAction>(scope) {

@@ -2,6 +2,7 @@
 
 package com.jermey.quo.vadis.core.compose.internal.render
 
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
@@ -37,6 +38,13 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
  * If the stack is empty (no children), this renderer returns early without
  * producing any UI. Parent nodes should handle cascading empty stack removal.
  *
+ * ## Shared Element Transitions
+ *
+ * The [animatedVisibilityScope] parameter is passed through from the parent.
+ * When AnimatedNavContent renders screen nodes, it provides its own scope
+ * directly to NavNodeRenderer, ensuring both entering and exiting screens
+ * use the same scope for shared element transitions.
+ *
  * ## Example
  *
  * ```kotlin
@@ -54,6 +62,8 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
  * @param previousNode The previous stack state for animation direction detection.
  *   Used to determine if this is forward or back navigation.
  * @param scope The render scope with dependencies (AnimationCoordinator, etc.)
+ * @param animatedVisibilityScope Optional AnimatedVisibilityScope from parent.
+ *   Not used directly here but part of the signature for consistency.
  *
  * @see StackNode
  * @see AnimatedNavContent
@@ -64,6 +74,8 @@ internal fun StackRenderer(
     node: StackNode,
     previousNode: StackNode?,
     scope: NavRenderScope,
+    @Suppress("UNUSED_PARAMETER")
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
 ) {
     // Early return for empty stack - no content to render
     val activeChild = node.activeChild ?: return

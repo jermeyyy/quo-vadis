@@ -24,7 +24,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -49,7 +48,10 @@ import com.jermey.navplayground.demo.destinations.ProcessDestination
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.NavigationPatternCard
+import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
 import com.jermey.quo.vadis.annotations.Screen
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
 import kotlinx.coroutines.launch
@@ -71,6 +73,7 @@ fun HomeScreen(
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val hazeState = remember { HazeState() }
 
     Scaffold(
         topBar = {
@@ -85,7 +88,7 @@ fun HomeScreen(
         }
     ) { paddingValues ->
         HomeScreenContent(
-            modifier = modifier,
+            modifier = modifier.hazeSource(state = hazeState),
             paddingValues = paddingValues,
             onNavigateToMasterDetail = {
                 navigator.navigate(
@@ -127,8 +130,9 @@ fun HomeScreen(
     }
 
     if (showBottomSheet) {
-        ModalBottomSheet(
+        GlassBottomSheet(
             onDismissRequest = { showBottomSheet = false },
+            hazeState = hazeState,
             sheetState = sheetState
         ) {
             NavigationBottomSheetContent(
@@ -235,15 +239,7 @@ private fun HomeScreenContent(
             description = "List-detail pane layout for foldables and tablets",
             onClick = onNavigateToMessagesPane
         )
-
-        Spacer(Modifier.weight(1f))
-
-        Text(
-            "Use the bottom navigation to switch between main sections",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
+        Spacer(modifier = Modifier.height(64.dp))
     }
 }
 

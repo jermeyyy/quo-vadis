@@ -2,6 +2,7 @@
 
 package com.jermey.quo.vadis.core.compose.internal.render
 
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -74,6 +75,8 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
  * @param node The tab node to render
  * @param previousNode The previous tab state for animation direction detection
  * @param scope The render scope with dependencies and context
+ * @param animatedVisibilityScope Optional AnimatedVisibilityScope from parent.
+ *   Not used directly here but part of the signature for consistency.
  *
  * @see TabNode
  * @see com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
@@ -88,6 +91,8 @@ internal fun TabRenderer(
     node: TabNode,
     previousNode: TabNode?,
     scope: NavRenderScope,
+    @Suppress("UNUSED_PARAMETER")
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
 ) {
     // Get active stack for the current and previous state
     val activeStack = node.activeStack
