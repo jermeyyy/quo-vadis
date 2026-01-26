@@ -16,7 +16,7 @@ const TABS_SCOPE_PROPERTIES: ScopeProperty[] = [
   { property: 'navigator', type: 'Navigator', description: 'Navigation operations' },
   { property: 'activeTabIndex', type: 'Int', description: 'Currently selected tab (0-based)' },
   { property: 'tabCount', type: 'Int', description: 'Total number of tabs' },
-  { property: 'tabMetadata', type: 'List<TabMetadata>', description: 'Labels, icons, routes for tabs' },
+  { property: 'tabs', type: 'List<NavDestination>', description: 'Tab destinations for custom labels, icons, and behavior' },
   { property: 'isTransitioning', type: 'Boolean', description: 'Whether transition is in progress' },
   { property: 'switchTab(index)', type: 'Function', description: 'Switch to different tab' },
 ];
