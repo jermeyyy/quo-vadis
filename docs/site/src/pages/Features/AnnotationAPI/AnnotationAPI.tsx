@@ -1,29 +1,20 @@
 import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
+import { TransitionTypesDisplay } from '@components/TransitionTypesDisplay'
+import {
+  stackDestinationComprehensive,
+  screenBindingBasic,
+  tabsAnnotationBasic,
+  tabsContainerWrapper,
+  paneAnnotationBasic,
+  paneContainerWrapper,
+  generatedConfigUsage,
+} from '@data/codeExamples'
 import styles from '../Features.module.css'
 
 const stackExample = `@Stack(name = "home", startDestination = HomeDestination.Feed::class)
 sealed class HomeDestination : NavDestination {
     // Destinations defined here
-}`
-
-const destinationExample = `@Stack(name = "home", startDestination = HomeDestination.Feed::class)
-sealed class HomeDestination : NavDestination {
-
-    // Simple destination (no arguments)
-    @Destination(route = "home/feed")
-    data object Feed : HomeDestination()
-
-    // Destination with a path parameter
-    @Destination(route = "home/article/{articleId}")
-    data class Article(@Argument val articleId: String) : HomeDestination()
-
-    // Destination with multiple parameters
-    @Destination(route = "home/user/{userId}/post/{postId}")
-    data class UserPost(
-        @Argument val userId: String,
-        @Argument val postId: String
-    ) : HomeDestination()
 }`
 
 const argumentExample = `@Destination(route = "products/detail/{id}")
@@ -32,114 +23,6 @@ data class ProductDetail(
     @Argument(optional = true) val referrer: String? = null,  // Optional argument
     @Argument(key = "show") val showReviews: Boolean = false  // Custom URL key
 ) : ProductsDestination()`
-
-const screenExample = `// Simple destination (data object) - navigator only
-@Screen(HomeDestination.Feed::class)
-@Composable
-fun FeedScreen(navigator: Navigator) {
-    Column {
-        Text("Feed")
-        Button(onClick = { navigator.navigate(HomeDestination.Article("123")) }) {
-            Text("View Article")
-        }
-    }
-}
-
-// Destination with arguments (data class) - access destination data
-@Screen(HomeDestination.Article::class)
-@Composable
-fun ArticleScreen(
-    destination: HomeDestination.Article,
-    navigator: Navigator
-) {
-    Column {
-        Text("Article: \${destination.articleId}")
-        Button(onClick = { navigator.navigateBack() }) {
-            Text("Back")
-        }
-    }
-}`
-
-const tabsExample = `@Tabs(
-    name = "mainTabs",
-    initialTab = MainTabs.HomeTab::class,
-    items = [MainTabs.HomeTab::class, MainTabs.ExploreTab::class, MainTabs.ProfileTab::class]
-)
-sealed class MainTabs : NavDestination {
-
-    @TabItem(label = "Home", icon = "home")
-    @Destination(route = "main/home")
-    data object HomeTab : MainTabs()
-
-    @TabItem(label = "Explore", icon = "explore")
-    @Destination(route = "main/explore")
-    data object ExploreTab : MainTabs()
-
-    @TabItem(label = "Profile", icon = "person")
-    @Destination(route = "main/profile")
-    data object ProfileTab : MainTabs()
-}`
-
-const tabsContainerExample = `@TabsContainer(MainTabs::class)
-@Composable
-fun MainTabsWrapper(
-    scope: TabsContainerScope,
-    content: @Composable () -> Unit
-) {
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                scope.tabMetadata.forEachIndexed { index, meta ->
-                    NavigationBarItem(
-                        selected = index == scope.activeTabIndex,
-                        onClick = { scope.switchTab(index) },
-                        icon = { Icon(getIcon(meta.icon), meta.label) },
-                        label = { Text(meta.label) }
-                    )
-                }
-            }
-        }
-    ) { padding ->
-        Box(Modifier.padding(padding)) { content() }
-    }
-}`
-
-const paneExample = `@Pane(name = "messagesPane", backBehavior = PaneBackBehavior.PopUntilContentChange)
-sealed class MessagesPane : NavDestination {
-
-    @PaneItem(role = PaneRole.PRIMARY)
-    @Destination(route = "messages/conversations")
-    data object ConversationList : MessagesPane()
-
-    @PaneItem(role = PaneRole.SECONDARY, adaptStrategy = AdaptStrategy.OVERLAY)
-    @Destination(route = "messages/conversation/{id}")
-    data class ConversationDetail(
-        @Argument val id: String
-    ) : MessagesPane()
-}`
-
-const paneContainerExample = `@PaneContainer(MessagesPane::class)
-@Composable
-fun MessagesPaneContainer(
-    scope: PaneContainerScope,
-    content: @Composable () -> Unit
-) {
-    if (scope.isExpanded) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            scope.paneContents.filter { it.isVisible }.forEach { pane ->
-                Box(
-                    modifier = Modifier.weight(
-                        if (pane.role == PaneRole.PRIMARY) 0.4f else 0.6f
-                    )
-                ) {
-                    pane.content()
-                }
-            }
-        }
-    } else {
-        content()  // Single pane mode
-    }
-}`
 
 const transitionExample = `@Transition(type = TransitionType.SlideHorizontal)
 @Destination(route = "details/{id}")
@@ -156,19 +39,6 @@ data object Help : HomeDestination()
 @Transition(type = TransitionType.None)
 @Destination(route = "instant")
 data object InstantSwitch : HomeDestination()`
-
-const generatedExample = `// Generated NavigationConfig usage
-val navigator = TreeNavigator(
-    config = GeneratedNavigationConfig,
-    initialState = GeneratedNavigationConfig.buildNavNode(
-        HomeDestination::class, 
-        null
-    )!!
-)
-
-// Type-safe navigation (generated)
-navigator.navigate(HomeDestination.Article(articleId = "123"))
-navigator.navigate(MainTabs.ProfileTab)`
 
 const completeExample = `// Define a stack with destinations
 @Stack(name = "app", startDestination = AppDestination.Main::class)
@@ -336,7 +206,7 @@ export default function AnnotationAPI() {
           Use <code>data object</code> for destinations without arguments and <code>data class</code> for those with arguments.
         </p>
 
-        <CodeBlock code={destinationExample} language="kotlin" />
+        <CodeBlock code={stackDestinationComprehensive} language="kotlin" />
 
         <h3>Route Patterns</h3>
         <ul>
@@ -345,6 +215,9 @@ export default function AnnotationAPI() {
           <li><strong>Multiple parameters:</strong> <code>"user/&#123;userId&#125;/post/&#123;postId&#125;"</code> — Multiple path params</li>
           <li><strong>Empty route:</strong> Omit or use <code>""</code> for destinations that aren't deep-linkable</li>
         </ul>
+        <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
+          See <Link to="/features/deep-links">Deep Linking</Link> for advanced route configuration and URL handling.
+        </p>
       </section>
 
       <section>
@@ -390,7 +263,7 @@ export default function AnnotationAPI() {
           The function can receive the navigator and the destination instance as parameters.
         </p>
 
-        <CodeBlock code={screenExample} language="kotlin" />
+        <CodeBlock code={screenBindingBasic} language="kotlin" />
 
         <h3>Function Parameters</h3>
         <ul>
@@ -404,9 +277,10 @@ export default function AnnotationAPI() {
         <p>
           For tabbed navigation where each tab maintains its own backstack. 
           Use <code>@Tabs</code> on the sealed class and <code>@TabItem</code> on each tab destination.
+          Tab UI customization (labels, icons) is done in the <code>@TabsContainer</code> wrapper using type-safe pattern matching.
         </p>
 
-        <CodeBlock code={tabsExample} language="kotlin" />
+        <CodeBlock code={tabsAnnotationBasic} language="kotlin" />
 
         <h3>@Tabs Properties</h3>
         <ul>
@@ -415,27 +289,30 @@ export default function AnnotationAPI() {
           <li><code>items: Array&lt;KClass&lt;*&gt;&gt;</code> — Tab classes in display order</li>
         </ul>
 
-        <h3>@TabItem Properties</h3>
-        <ul>
-          <li><code>label: String</code> — Display label for the tab</li>
-          <li><code>icon: String</code> — Icon identifier for the tab</li>
-        </ul>
+        <h3>@TabItem</h3>
+        <p>
+          <code>@TabItem</code> is a marker annotation with no parameters. 
+          Labels, icons, and other UI customization are handled in the <code>@TabsContainer</code> wrapper 
+          via pattern matching on the destination types.
+        </p>
       </section>
 
       <section>
         <h2 id="tabs-container-annotation">@TabsContainer Annotation</h2>
         <p>
           Define a custom tab bar UI with <code>@TabsContainer</code>. 
-          The composable receives a scope with tab metadata and switching functionality.
+          The composable receives a scope with tab destinations that you can pattern match 
+          to customize labels, icons, and behavior for each tab.
         </p>
 
-        <CodeBlock code={tabsContainerExample} language="kotlin" />
+        <CodeBlock code={tabsContainerWrapper} language="kotlin" />
 
         <h3>TabsContainerScope</h3>
         <ul>
-          <li><code>tabMetadata: List&lt;TabMetadata&gt;</code> — Label and icon info for each tab</li>
+          <li><code>tabs: List&lt;NavDestination&gt;</code> — Tab destinations for custom labels, icons, and behavior</li>
           <li><code>activeTabIndex: Int</code> — Currently selected tab index</li>
           <li><code>switchTab(index: Int)</code> — Function to switch to a different tab</li>
+          <li><code>isTransitioning: Boolean</code> — Whether tab switching animation is in progress</li>
         </ul>
       </section>
 
@@ -446,7 +323,7 @@ export default function AnnotationAPI() {
           Use <code>@Pane</code> on the sealed class and <code>@PaneItem</code> on each pane destination.
         </p>
 
-        <CodeBlock code={paneExample} language="kotlin" />
+        <CodeBlock code={paneAnnotationBasic} language="kotlin" />
 
         <h3>@Pane Properties</h3>
         <ul>
@@ -468,7 +345,7 @@ export default function AnnotationAPI() {
           Control how panes are arranged based on screen size.
         </p>
 
-        <CodeBlock code={paneContainerExample} language="kotlin" />
+        <CodeBlock code={paneContainerWrapper} language="kotlin" />
       </section>
 
       <section>
@@ -481,28 +358,19 @@ export default function AnnotationAPI() {
         <CodeBlock code={transitionExample} language="kotlin" />
 
         <h3>TransitionType Options</h3>
-        <div className={styles.transitionGrid}>
-          <div className={styles.transitionCard}>
-            <h4>SlideHorizontal</h4>
-            <p>Platform-like horizontal slide (default)</p>
-          </div>
-          <div className={styles.transitionCard}>
-            <h4>SlideVertical</h4>
-            <p>Bottom-to-top for modals</p>
-          </div>
-          <div className={styles.transitionCard}>
-            <h4>Fade</h4>
-            <p>Simple crossfade</p>
-          </div>
-          <div className={styles.transitionCard}>
-            <h4>None</h4>
-            <p>Instant switch</p>
-          </div>
-          <div className={styles.transitionCard}>
-            <h4>Custom</h4>
-            <p>User-defined animation</p>
-          </div>
-        </div>
+        <TransitionTypesDisplay 
+          variant="grid" 
+          transitions={[
+            { name: 'SlideHorizontal', description: 'Platform-like horizontal slide (default)' },
+            { name: 'SlideVertical', description: 'Bottom-to-top for modals' },
+            { name: 'Fade', description: 'Simple crossfade' },
+            { name: 'None', description: 'Instant switch' },
+            { name: 'Custom', description: 'User-defined animation' },
+          ]}
+        />
+        <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
+          For detailed animation customization, see <Link to="/features/transitions">Transitions</Link>.
+        </p>
       </section>
 
       <section>
@@ -519,7 +387,7 @@ export default function AnnotationAPI() {
           <li><strong>Type-safe Extensions:</strong> Generated <code>navigate()</code> extensions for each destination</li>
         </ul>
 
-        <CodeBlock code={generatedExample} language="kotlin" />
+        <CodeBlock code={generatedConfigUsage} language="kotlin" />
       </section>
 
       <section>

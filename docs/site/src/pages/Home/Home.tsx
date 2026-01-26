@@ -1,84 +1,12 @@
 import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
+import {
+  stackDestinationBasic,
+  screenBindingBasic,
+  navigationHostBasic,
+  versionCatalogConfig,
+} from '@data/codeExamples'
 import styles from './Home.module.css'
-
-const quickstartCode = `[versions]
-quoVadis = "0.3.4"
-ksp = "2.3.0"
-
-[libraries]
-quo-vadis-core = { module = "io.github.jermeyyy:quo-vadis-core", version.ref = "quoVadis" }
-quo-vadis-annotations = { module = "io.github.jermeyyy:quo-vadis-annotations", version.ref = "quoVadis" }
-
-[plugins]
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-quo-vadis = { id = "io.github.jermeyyy.quo-vadis", version.ref = "quoVadis" }`
-
-const step1Code = `// Define a navigation stack with destinations
-@Stack(name = "home", startDestination = Feed::class)
-sealed class HomeDestination : NavDestination {
-
-    @Destination(route = "home/feed")
-    data object Feed : HomeDestination()
-
-    @Destination(route = "home/article/{articleId}")
-    data class Article(
-        @Argument val articleId: String,
-        @Argument(optional = true) val showComments: Boolean = false
-    ) : HomeDestination()
-}`
-
-const step2Code = `// Bind screens with @Screen annotation
-@Screen(HomeDestination.Feed::class)
-@Composable
-fun FeedScreen(navigator: Navigator) {
-    Column {
-        Text("Feed")
-        Button(onClick = { 
-            navigator.navigate(HomeDestination.Article(articleId = "123"))
-        }) {
-            Text("View Article")
-        }
-    }
-}
-
-@Screen(HomeDestination.Article::class)
-@Composable
-fun ArticleScreen(
-    destination: HomeDestination.Article,
-    navigator: Navigator
-) {
-    Column {
-        Text("Article: \${destination.articleId}")
-        Button(onClick = { navigator.navigateBack() }) {
-            Text("Back")
-        }
-    }
-}`
-
-const step3Code = `@Composable
-fun App() {
-    val config = GeneratedNavigationConfig
-    
-    val initialState = remember {
-        config.buildNavNode(
-            destinationClass = HomeDestination::class,
-            parentKey = null
-        )!!
-    }
-    
-    val navigator = remember {
-        TreeNavigator(
-            config = config,
-            initialState = initialState
-        )
-    }
-    
-    NavigationHost(
-        navigator = navigator,
-        screenRegistry = config.screenRegistry
-    )
-}`
 
 const manualDSLCode = `// Programmatic configuration with DSL
 val appConfig = navigationConfig {
@@ -100,6 +28,11 @@ export default function Home() {
     <article className={styles.home}>
       {/* Hero Section */}
       <section className={styles.hero}>
+        <img 
+          src={`${import.meta.env.BASE_URL}logo.jpg`}
+          alt="Quo Vadis" 
+          className={styles.logo}
+        />
         <h1>Quo Vadis Navigation Library</h1>
         <p className={styles.subtitle}>
           Type-safe, multiplatform navigation for Compose Multiplatform
@@ -209,7 +142,7 @@ export default function Home() {
           Add Quo Vadis to your project with just a few lines of code. Copy the configuration below
           and you'll have type-safe navigation running in minutes.
         </p>
-        <CodeBlock code={quickstartCode} language="bash" title="libs.versions.toml" />
+        <CodeBlock code={versionCatalogConfig} language="bash" title="libs.versions.toml" />
         
         <div className={styles.callout}>
           <div>
@@ -230,7 +163,7 @@ export default function Home() {
           <div className={styles.step}>
             <h3>Step 1: Define Your Destinations</h3>
             <p>Use annotations to declare your navigation stack and destinations:</p>
-            <CodeBlock code={step1Code} language="kotlin" title="HomeDestination.kt" />
+            <CodeBlock code={stackDestinationBasic} language="kotlin" title="HomeDestination.kt" />
             <div className={styles.stepNote}>
               <strong>What's Generated:</strong> KSP creates <code>NavigationConfig</code>, <code>ScreenRegistry</code>, and <code>DeepLinkHandler</code>
             </div>
@@ -239,7 +172,7 @@ export default function Home() {
           <div className={styles.step}>
             <h3>Step 2: Define Your Screens</h3>
             <p>Bind Composable functions to destinations using <code>@Screen</code>:</p>
-            <CodeBlock code={step2Code} language="kotlin" title="Screens.kt" />
+            <CodeBlock code={screenBindingBasic} language="kotlin" title="Screens.kt" />
             <div className={styles.stepNote}>
               <strong>Type Safety:</strong> Destination arguments are automatically serialized for deep links
             </div>
@@ -248,7 +181,7 @@ export default function Home() {
           <div className={styles.step}>
             <h3>Step 3: Set Up Navigation</h3>
             <p>Use the generated config to create your navigator:</p>
-            <CodeBlock code={step3Code} language="kotlin" title="App.kt" />
+            <CodeBlock code={navigationHostBasic} language="kotlin" title="App.kt" />
             <div className={styles.stepNote}>
               <strong>NavigationHost:</strong> Renders the NavNode tree with hierarchical screen composition
             </div>

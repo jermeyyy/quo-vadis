@@ -1,44 +1,10 @@
 import CodeBlock from '@components/CodeBlock/CodeBlock'
+import { ScopePropertiesTable } from '@components/ScopePropertiesTable/ScopePropertiesTable'
+import { tabsAnnotationWithNestedStack } from '@data/codeExamples'
 import styles from '../Features.module.css'
 
 // Status icon for required/no default values in tables
 const IconNa = () => <span className={`${styles.statusIcon} ${styles.statusIconNa}`} />
-
-const tabsAnnotationCode = `@Tabs(
-    name = "mainTabs",
-    initialTab = MainTabs.HomeTab::class,
-    items = [MainTabs.HomeTab::class, MainTabs.ExploreTab::class, 
-             MainTabs.ProfileTab::class, MainTabs.SettingsTab::class]
-)
-sealed class MainTabs : NavDestination {
-
-    @TabItem(label = "Home", icon = "home")
-    @Destination(route = "main/home")
-    @Transition(type = TransitionType.Fade)
-    data object HomeTab : MainTabs()
-
-    @TabItem(label = "Explore", icon = "explore")
-    @Destination(route = "main/explore")
-    @Transition(type = TransitionType.Fade)
-    data object ExploreTab : MainTabs()
-
-    @TabItem(label = "Profile", icon = "person")
-    @Destination(route = "main/profile")
-    @Transition(type = TransitionType.Fade)
-    data object ProfileTab : MainTabs()
-
-    @TabItem(label = "Settings", icon = "settings")
-    @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
-    @Transition(type = TransitionType.Fade)
-    sealed class SettingsTab : MainTabs() {
-        @Destination(route = "settings/main")
-        data object Main : SettingsTab()
-
-        @Destination(route = "settings/profile")
-        @Transition(type = TransitionType.SlideHorizontal)
-        data object Profile : SettingsTab()
-    }
-}`
 
 const tabNodeStructureCode = `@Serializable
 @SerialName("tab")
@@ -177,7 +143,7 @@ export default function TabbedNavigation() {
           Define your tab structure using <code>@Tabs</code> on a sealed class and <code>@TabItem</code> 
           on each tab destination. The KSP processor generates all configuration code automatically.
         </p>
-        <CodeBlock code={tabsAnnotationCode} language="kotlin" />
+        <CodeBlock code={tabsAnnotationWithNestedStack} language="kotlin" />
         <p>
           Notice how <code>SettingsTab</code> is both a tab item and contains its own nested stack 
           with multiple destinations. This enables deep navigation within individual tabs.
@@ -302,49 +268,8 @@ export default function TabbedNavigation() {
         </p>
       </section>
 
-      <section>
-        <h2 id="container-scope">TabsContainerScope Properties</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>navigator</code></td>
-              <td><code>Navigator</code></td>
-              <td>Navigation operations</td>
-            </tr>
-            <tr>
-              <td><code>activeTabIndex</code></td>
-              <td><code>Int</code></td>
-              <td>Currently selected tab (0-based)</td>
-            </tr>
-            <tr>
-              <td><code>tabCount</code></td>
-              <td><code>Int</code></td>
-              <td>Total number of tabs</td>
-            </tr>
-            <tr>
-              <td><code>tabMetadata</code></td>
-              <td><code>List&lt;TabMetadata&gt;</code></td>
-              <td>Labels, icons, routes for tabs</td>
-            </tr>
-            <tr>
-              <td><code>isTransitioning</code></td>
-              <td><code>Boolean</code></td>
-              <td>Whether transition is in progress</td>
-            </tr>
-            <tr>
-              <td><code>switchTab(index)</code></td>
-              <td>Function</td>
-              <td>Switch to different tab</td>
-            </tr>
-          </tbody>
-        </table>
+      <section id="container-scope">
+        <ScopePropertiesTable scopeType="tabs" />
       </section>
 
       <section>

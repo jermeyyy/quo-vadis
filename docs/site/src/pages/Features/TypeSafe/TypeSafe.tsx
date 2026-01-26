@@ -164,7 +164,7 @@ export default function TypeSafe() {
             <tr>
               <td><code>state</code></td>
               <td><code>StateFlow&lt;NavNode&gt;</code></td>
-              <td>Complete navigation tree (single source of truth)</td>
+              <td>Complete <Link to="/features/core-concepts#navnode-tree">navigation tree</Link> (single source of truth)</td>
             </tr>
             <tr>
               <td><code>currentDestination</code></td>

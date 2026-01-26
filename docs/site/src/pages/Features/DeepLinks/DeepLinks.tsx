@@ -242,6 +242,15 @@ export default function DeepLinks() {
       </section>
 
       <section>
+        <h2 id="platform-integration">Platform Integration</h2>
+        <p>
+          Deep links work across all platforms. See{' '}
+          <Link to="/features/multiplatform#platform-setup">Multiplatform Support</Link>{' '}
+          for general platform setup, then follow the platform-specific deep link configuration below.
+        </p>
+      </section>
+
+      <section>
         <h2 id="android-setup">Android Deep Link Setup</h2>
         <p>
           Configure intent filters in your Android manifest to handle incoming deep links:

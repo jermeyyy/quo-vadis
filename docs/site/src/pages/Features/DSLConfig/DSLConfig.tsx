@@ -1,5 +1,12 @@
 import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
+import { ScopePropertiesTable } from '@components/ScopePropertiesTable'
+import { TransitionTypesDisplay } from '@components/TransitionTypesDisplay'
+import {
+  navigationConfigInterface,
+  tabsAnnotationDSL,
+  panesAnnotationDSL,
+} from '@data/codeExamples'
 import styles from '../Features.module.css'
 
 // Status badge components
@@ -10,23 +17,6 @@ const StatusFull = ({ children = 'Full' }: { children?: string }) => (
 const StatusNo = ({ children = 'No' }: { children?: string }) => (
   <span className={`${styles.statusBadge} ${styles.statusNo}`}>{children}</span>
 )
-
-const navigationConfigInterface = `interface NavigationConfig {
-    val screenRegistry: ScreenRegistry
-    val scopeRegistry: ScopeRegistry
-    val transitionRegistry: TransitionRegistry
-    val containerRegistry: ContainerRegistry
-    val deepLinkRegistry: DeepLinkRegistry
-    val paneRoleRegistry: PaneRoleRegistry
-    
-    fun buildNavNode(
-        destinationClass: KClass<out NavDestination>,
-        key: String? = null,
-        parentKey: String? = null
-    ): NavNode?
-    
-    operator fun plus(other: NavigationConfig): NavigationConfig
-}`
 
 const basicConfigExample = `val config = navigationConfig {
     // Register screens
@@ -88,39 +78,6 @@ const stackExample = `navigationConfig {
         screen<HomeScreen>()
         screen<DetailScreen>()
         screen<SettingsScreen>()
-    }
-}`
-
-const tabsExample = `navigationConfig {
-    tabs<MainTabs>("main-tabs") {
-        initialTab = 0
-        
-        // Simple flat tabs
-        tab(HomeTab, title = "Home", icon = Icons.Default.Home)
-        tab(SearchTab, title = "Search", icon = Icons.Default.Search)
-        
-        // Tab with nested navigation stack
-        tab(ProfileTab, title = "Profile", icon = Icons.Default.Person) {
-            screen<ProfileScreen>()
-            screen<EditProfileScreen>()
-            screen<ProfileSettingsScreen>()
-        }
-    }
-}`
-
-const panesExample = `navigationConfig {
-    panes<ListDetailPanes>("list-detail") {
-        initialPane = PaneRole.Primary
-        backBehavior = PaneBackBehavior.PopUntilScaffoldValueChange
-        
-        primary(weight = 0.4f, minWidth = 300.dp) {
-            root(ListScreen)
-            alwaysVisible()
-        }
-        
-        secondary(weight = 0.6f) {
-            root(DetailPlaceholder)
-        }
     }
 }`
 
@@ -543,11 +500,11 @@ export default function DSLConfig() {
 
         <h3>Tab Registration</h3>
         <p>Register tab-based navigation with the <code>tabs&lt;D&gt;</code> builder:</p>
-        <CodeBlock code={tabsExample} language="kotlin" />
+        <CodeBlock code={tabsAnnotationDSL} language="kotlin" />
 
         <h3>Pane Registration</h3>
         <p>Register adaptive multi-pane layouts:</p>
-        <CodeBlock code={panesExample} language="kotlin" />
+        <CodeBlock code={panesAnnotationDSL} language="kotlin" />
 
         <h3>Container Wrappers</h3>
         <p>
@@ -556,84 +513,24 @@ export default function DSLConfig() {
         </p>
         <CodeBlock code={tabsContainerWrapper} language="kotlin" />
 
-        <h4>TabsContainerScope Properties</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>navigator</code></td>
-              <td><code>Navigator</code></td>
-              <td>Navigator instance for programmatic navigation</td>
-            </tr>
-            <tr>
-              <td><code>activeTabIndex</code></td>
-              <td><code>Int</code></td>
-              <td>Currently selected tab (0-based)</td>
-            </tr>
-            <tr>
-              <td><code>tabCount</code></td>
-              <td><code>Int</code></td>
-              <td>Total number of tabs</td>
-            </tr>
-            <tr>
-              <td><code>tabMetadata</code></td>
-              <td><code>List&lt;TabMetadata&gt;</code></td>
-              <td>Labels, icons, and routes for all tabs</td>
-            </tr>
-            <tr>
-              <td><code>isTransitioning</code></td>
-              <td><code>Boolean</code></td>
-              <td>Whether tab switch animation is in progress</td>
-            </tr>
-          </tbody>
-        </table>
+        <ScopePropertiesTable scopeType="tabs" />
+        <div className={styles.note}>
+          <p>
+            See <Link to="/features/tabbed-navigation">Tabbed Navigation</Link> for complete
+            tab configuration patterns and advanced examples.
+          </p>
+        </div>
 
         <p>Register custom pane layout wrappers:</p>
         <CodeBlock code={paneContainerWrapper} language="kotlin" />
 
-        <h4>PaneContainerScope Properties</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>navigator</code></td>
-              <td><code>Navigator</code></td>
-              <td>Navigator instance</td>
-            </tr>
-            <tr>
-              <td><code>activePaneRole</code></td>
-              <td><code>PaneRole</code></td>
-              <td>Currently active pane</td>
-            </tr>
-            <tr>
-              <td><code>isExpanded</code></td>
-              <td><code>Boolean</code></td>
-              <td>Multi-pane mode active</td>
-            </tr>
-            <tr>
-              <td><code>paneContents</code></td>
-              <td><code>List&lt;PaneContent&gt;</code></td>
-              <td>Content slots for custom layout</td>
-            </tr>
-            <tr>
-              <td><code>isTransitioning</code></td>
-              <td><code>Boolean</code></td>
-              <td>Pane transition in progress</td>
-            </tr>
-          </tbody>
-        </table>
+        <ScopePropertiesTable scopeType="pane" />
+        <div className={styles.note}>
+          <p>
+            See <Link to="/features/pane-layouts">Pane Layouts</Link> for comprehensive
+            adaptive layout patterns.
+          </p>
+        </div>
       </section>
 
       <section>
@@ -644,36 +541,13 @@ export default function DSLConfig() {
         <CodeBlock code={transitionsExample} language="kotlin" />
 
         <h3>Preset Transitions</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Transition</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>NavTransition.SlideHorizontal</code></td>
-              <td>Slide from right with fade (default for stacks)</td>
-            </tr>
-            <tr>
-              <td><code>NavTransition.SlideVertical</code></td>
-              <td>Slide from bottom with fade (modal-style)</td>
-            </tr>
-            <tr>
-              <td><code>NavTransition.Fade</code></td>
-              <td>Simple fade in/out</td>
-            </tr>
-            <tr>
-              <td><code>NavTransition.ScaleIn</code></td>
-              <td>Scale with fade (zoom effect)</td>
-            </tr>
-            <tr>
-              <td><code>NavTransition.None</code></td>
-              <td>Instant switch, no animation</td>
-            </tr>
-          </tbody>
-        </table>
+        <TransitionTypesDisplay variant="table" />
+        <div className={styles.note}>
+          <p>
+            For detailed transition configuration and custom animations, see{' '}
+            <Link to="/features/transitions">Transitions & Animations</Link>.
+          </p>
+        </div>
 
         <h3>Custom Transitions</h3>
         <p>Create custom transitions by combining Compose animation primitives:</p>

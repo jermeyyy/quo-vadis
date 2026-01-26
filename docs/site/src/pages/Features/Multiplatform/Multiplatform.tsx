@@ -1,16 +1,7 @@
 import { Link } from 'react-router-dom'
 import styles from '../Features.module.css'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
-
-// Status badge components
-const StatusFull = ({ children = 'Full' }: { children?: string }) => (
-  <span className={`${styles.statusBadge} ${styles.statusFull}`}>{children}</span>
-)
-
-// Status icon components for dense tables
-const IconYes = () => <span className={`${styles.statusIcon} ${styles.statusIconYes}`} />
-const IconPartial = () => <span className={`${styles.statusIcon} ${styles.statusIconPartial}`} />
-const IconNa = () => <span className={`${styles.statusIcon} ${styles.statusIconNa}`} />
+import { PlatformSupportGrid } from '@components/PlatformSupportGrid/PlatformSupportGrid'
 
 // Architecture diagram styles
 const diagramStyles = {
@@ -185,62 +176,7 @@ export default function Multiplatform() {
           Quo Vadis supports all major Kotlin Multiplatform targets with full feature parity:
         </p>
         
-        <table>
-          <thead>
-            <tr>
-              <th>Platform</th>
-              <th>Targets</th>
-              <th style={{ textAlign: 'center' }}>Status</th>
-              <th>Requirements</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className={styles.featureCell}>Android</td>
-              <td>
-                <span className={styles.platformBadge}>android</span>
-              </td>
-              <td style={{ textAlign: 'center' }}><StatusFull /></td>
-              <td>API 21+</td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>iOS</td>
-              <td>
-                <div className={styles.platformBadges}>
-                  <span className={styles.platformBadge}>iosArm64</span>
-                  <span className={styles.platformBadge}>iosSimulatorArm64</span>
-                  <span className={styles.platformBadge}>iosX64</span>
-                </div>
-              </td>
-              <td style={{ textAlign: 'center' }}><StatusFull /></td>
-              <td>iOS 14+</td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>Desktop</td>
-              <td>
-                <span className={styles.platformBadge}>jvm</span>
-              </td>
-              <td style={{ textAlign: 'center' }}><StatusFull /></td>
-              <td>macOS, Windows, Linux</td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>JavaScript</td>
-              <td>
-                <span className={styles.platformBadge}>js (IR)</span>
-              </td>
-              <td style={{ textAlign: 'center' }}><StatusFull /></td>
-              <td>Modern browsers</td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>WebAssembly</td>
-              <td>
-                <span className={styles.platformBadge}>wasmJs</span>
-              </td>
-              <td style={{ textAlign: 'center' }}><StatusFull /></td>
-              <td>WASM-compatible browsers</td>
-            </tr>
-          </tbody>
-        </table>
+        <PlatformSupportGrid variant="detailed" showRequirements />
       </section>
 
       <section>
@@ -271,68 +207,7 @@ fun FeedScreen(navigator: Navigator) {
           native capabilities:
         </p>
         
-        <table className={styles.compactTable}>
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th style={{ textAlign: 'center' }}>Android</th>
-              <th style={{ textAlign: 'center' }}>iOS</th>
-              <th style={{ textAlign: 'center' }}>Desktop</th>
-              <th style={{ textAlign: 'center' }}>Web</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className={styles.featureCell}>Stack navigation</td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>Tab navigation</td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>Pane layouts</td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>Deep links</td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconPartial /></td>
-              <td><IconYes /></td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>Predictive back</td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconNa /></td>
-              <td><IconNa /></td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>Shared elements</td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-              <td><IconYes /></td>
-            </tr>
-            <tr>
-              <td className={styles.featureCell}>Browser history</td>
-              <td><IconNa /></td>
-              <td><IconNa /></td>
-              <td><IconNa /></td>
-              <td><IconYes /></td>
-            </tr>
-          </tbody>
-        </table>
+        <PlatformSupportGrid variant="compact" />
       </section>
 
       <section>
@@ -399,6 +274,14 @@ kotlin {
       </section>
 
       <section>
+        <h2 id="platform-setup">Platform-Specific Setup</h2>
+        <p>
+          Each platform requires minimal configuration to integrate deep links and native gestures.
+          See the platform sections below for setup details.
+        </p>
+      </section>
+
+      <section>
         <h2 id="web-features">Web-Specific Features</h2>
         <p>
           On web platforms, Quo Vadis integrates with browser history and URL routing:
@@ -445,6 +328,16 @@ NavigationHost(
     navigator = navigator,
     windowSizeClass = windowSizeClass  // Triggers pane layout changes
 )`} />
+      </section>
+
+      <section>
+        <h2 id="known-limitations">Known Limitations</h2>
+        <ul>
+          <li><strong>iOS:</strong> Requires CocoaPods or SPM for framework integration</li>
+          <li><strong>Web (WASM):</strong> Larger initial bundle size compared to JS target</li>
+          <li><strong>Desktop:</strong> No native system back gesture; uses keyboard shortcuts</li>
+          <li><strong>Android &lt; 13:</strong> Predictive back preview not available (instant back still works)</li>
+        </ul>
       </section>
 
       <section>
