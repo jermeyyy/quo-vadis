@@ -1,7 +1,7 @@
 ---
 name: docs-website
 description: Documentation content orchestrator for the Quo Vadis website. Transforms authoritative markdown docs into website content using existing components. Uses human-in-the-loop pattern and delegates implementation to Simple-Developer.
-tools: ['read', 'search', 'web', 'serena/activate_project', 'serena/find_file', 'serena/find_symbol', 'serena/get_symbols_overview', 'serena/list_dir', 'serena/list_memories', 'serena/read_memory', 'serena/search_for_pattern', 'serena/think_about_task_adherence', 'serena/think_about_whether_you_are_done', 'duck/*', 'agent', 'todo']
+tools: ['execute', 'read', 'agent', 'search', 'web', 'serena/activate_project', 'serena/find_file', 'serena/find_symbol', 'serena/get_symbols_overview', 'serena/list_dir', 'serena/list_memories', 'serena/read_memory', 'serena/search_for_pattern', 'serena/think_about_task_adherence', 'serena/think_about_whether_you_are_done', 'duck/*', 'todo']
 ---
 
 # Quo Vadis Documentation Website Agent (Orchestrator)
