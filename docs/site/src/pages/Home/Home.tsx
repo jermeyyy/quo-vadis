@@ -29,7 +29,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className={styles.hero}>
         <img 
-          src="/logo.jpg" 
+          src={`${import.meta.env.BASE_URL}logo.jpg`}
           alt="Quo Vadis" 
           className={styles.logo}
         />
