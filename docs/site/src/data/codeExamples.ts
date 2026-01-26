@@ -217,15 +217,15 @@ export const tabsAnnotationBasic = `@Tabs(
 )
 sealed class MainTabs : NavDestination {
 
-    @TabItem(label = "Home", icon = "home")
+    @TabItem
     @Destination(route = "main/home")
     data object HomeTab : MainTabs()
 
-    @TabItem(label = "Explore", icon = "explore")
+    @TabItem
     @Destination(route = "main/explore")
     data object ExploreTab : MainTabs()
 
-    @TabItem(label = "Profile", icon = "person")
+    @TabItem
     @Destination(route = "main/profile")
     data object ProfileTab : MainTabs()
 }`;
