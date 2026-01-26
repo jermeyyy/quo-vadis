@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
       '@utils': path.resolve(__dirname, './src/utils'),
       '@hooks': path.resolve(__dirname, './src/hooks'),
       '@styles': path.resolve(__dirname, './src/styles'),
+      '@data': path.resolve(__dirname, './src/data'),
     }
   },
   base: mode === 'production' ? '/quo-vadis/' : '/',
