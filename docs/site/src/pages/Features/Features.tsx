@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
+import { PlatformSupportGrid } from '@components/PlatformSupportGrid/PlatformSupportGrid'
+import { TransitionTypesDisplay } from '@components/TransitionTypesDisplay/TransitionTypesDisplay'
 import styles from './Features.module.css'
 
 const annotationExample = `// 1. Define your graph with annotations
@@ -357,46 +359,12 @@ export default function Features() {
           Write your navigation logic once and deploy everywhere.
         </p>
 
-        <div className={styles.platformGrid}>
-          <div className={styles.platformCard}>
-            <h3>Android</h3>
-            <ul>
-              <li>System back button integration</li>
-              <li>Predictive back gestures (Android 13+)</li>
-              <li>Deep link support</li>
-              <li>SavedStateHandle integration</li>
-            </ul>
-          </div>
+        <PlatformSupportGrid variant="cards" />
 
-          <div className={styles.platformCard}>
-            <h3>iOS</h3>
-            <ul>
-              <li>Native swipe gestures</li>
-              <li>Predictive back animations</li>
-              <li>Universal Links support</li>
-              <li>Navigation bar integration</li>
-            </ul>
-          </div>
-
-          <div className={styles.platformCard}>
-            <h3>Desktop</h3>
-            <ul>
-              <li>Keyboard shortcuts (Alt+Left/Right)</li>
-              <li>Mouse button navigation</li>
-              <li>Window state persistence</li>
-              <li>All core features</li>
-            </ul>
-          </div>
-
-          <div className={styles.platformCard}>
-            <h3>Web</h3>
-            <ul>
-              <li>Browser history integration</li>
-              <li>URL routing</li>
-              <li>Forward/back buttons</li>
-              <li>Deep linking via URLs</li>
-            </ul>
-          </div>
+        <div className={styles.note}>
+          <strong>📖 Platform Details:</strong> See the{' '}
+          <Link to="/features/multiplatform">Multiplatform page</Link> for 
+          platform-specific setup, requirements, and feature matrix.
         </div>
       </section>
 
@@ -522,31 +490,12 @@ export default function Features() {
         </p>
 
         <h3>Built-in Transitions</h3>
-        <div className={styles.transitionGrid}>
-          <div className={styles.transitionCard}>
-            <h4>SlideHorizontal</h4>
-            <p>Standard horizontal slide, ideal for hierarchical navigation</p>
-          </div>
-          <div className={styles.transitionCard}>
-            <h4>SlideVertical</h4>
-            <p>Vertical slide, perfect for modal presentations</p>
-          </div>
-          <div className={styles.transitionCard}>
-            <h4>Fade</h4>
-            <p>Simple cross-fade between screens</p>
-          </div>
-          <div className={styles.transitionCard}>
-            <h4>FadeThrough</h4>
-            <p>Material Design fade through pattern</p>
-          </div>
-          <div className={styles.transitionCard}>
-            <h4>ScaleIn</h4>
-            <p>Scale animation for emphasizing content</p>
-          </div>
-          <div className={styles.transitionCard}>
-            <h4>None</h4>
-            <p>Instant navigation without animation</p>
-          </div>
+        <TransitionTypesDisplay variant="grid" />
+
+        <div className={styles.note}>
+          <strong>📖 Deep Dive:</strong> See the{' '}
+          <Link to="/features/transitions">Transitions page</Link> for custom 
+          transitions, per-destination configuration, and animation details.
         </div>
 
         <h3>Custom Transitions</h3>
@@ -570,6 +519,12 @@ export default function Features() {
           <li><code>clearCalls()</code> - Reset navigation call history</li>
           <li><code>navigationCalls</code> - Access full navigation history</li>
         </ul>
+
+        <div className={styles.note}>
+          <strong>📖 More Examples:</strong> See the{' '}
+          <Link to="/features/testing">Testing page</Link> for comprehensive 
+          FakeNavigator usage, integration testing, and state verification.
+        </div>
       </section>
 
       <section>
