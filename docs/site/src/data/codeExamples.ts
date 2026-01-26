@@ -464,6 +464,69 @@ afterEvaluate {
 }`;
 
 // ============================================================================
+// DSL CONFIGURATION EXAMPLES
+// ============================================================================
+
+/**
+ * NavigationConfig interface definition
+ */
+export const navigationConfigInterface = `interface NavigationConfig {
+    val screenRegistry: ScreenRegistry
+    val scopeRegistry: ScopeRegistry
+    val transitionRegistry: TransitionRegistry
+    val containerRegistry: ContainerRegistry
+    val deepLinkRegistry: DeepLinkRegistry
+    val paneRoleRegistry: PaneRoleRegistry
+    
+    fun buildNavNode(
+        destinationClass: KClass<out NavDestination>,
+        key: String? = null,
+        parentKey: String? = null
+    ): NavNode?
+    
+    operator fun plus(other: NavigationConfig): NavigationConfig
+}`;
+
+/**
+ * DSL-style tabs configuration
+ */
+export const tabsAnnotationDSL = `navigationConfig {
+    tabs<MainTabs>("main-tabs") {
+        initialTab = 0
+        
+        // Simple flat tabs
+        tab(HomeTab, title = "Home", icon = Icons.Default.Home)
+        tab(SearchTab, title = "Search", icon = Icons.Default.Search)
+        
+        // Tab with nested navigation stack
+        tab(ProfileTab, title = "Profile", icon = Icons.Default.Person) {
+            screen<ProfileScreen>()
+            screen<EditProfileScreen>()
+            screen<ProfileSettingsScreen>()
+        }
+    }
+}`;
+
+/**
+ * DSL-style panes configuration
+ */
+export const panesAnnotationDSL = `navigationConfig {
+    panes<ListDetailPanes>("list-detail") {
+        initialPane = PaneRole.Primary
+        backBehavior = PaneBackBehavior.PopUntilScaffoldValueChange
+        
+        primary(weight = 0.4f, minWidth = 300.dp) {
+            root(ListScreen)
+            alwaysVisible()
+        }
+        
+        secondary(weight = 0.6f) {
+            root(DetailPlaceholder)
+        }
+    }
+}`;
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -483,4 +546,7 @@ export type CodeExampleKey =
   | 'generatedConfigUsage'
   | 'versionCatalogConfig'
   | 'gradlePluginInstallation'
-  | 'manualKspConfiguration';
+  | 'manualKspConfiguration'
+  | 'navigationConfigInterface'
+  | 'tabsAnnotationDSL'
+  | 'panesAnnotationDSL';
