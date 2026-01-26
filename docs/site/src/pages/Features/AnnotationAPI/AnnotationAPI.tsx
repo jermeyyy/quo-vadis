@@ -216,7 +216,7 @@ export default function AnnotationAPI() {
           <li><strong>Empty route:</strong> Omit or use <code>""</code> for destinations that aren't deep-linkable</li>
         </ul>
         <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
-          See <Link to="/features/deep-linking">Deep Linking</Link> for advanced route configuration and URL handling.
+          See <Link to="/features/deep-links">Deep Linking</Link> for advanced route configuration and URL handling.
         </p>
       </section>
 
@@ -277,6 +277,7 @@ export default function AnnotationAPI() {
         <p>
           For tabbed navigation where each tab maintains its own backstack. 
           Use <code>@Tabs</code> on the sealed class and <code>@TabItem</code> on each tab destination.
+          Tab UI customization (labels, icons) is done in the <code>@TabsContainer</code> wrapper using type-safe pattern matching.
         </p>
 
         <CodeBlock code={tabsAnnotationBasic} language="kotlin" />
@@ -288,27 +289,30 @@ export default function AnnotationAPI() {
           <li><code>items: Array&lt;KClass&lt;*&gt;&gt;</code> — Tab classes in display order</li>
         </ul>
 
-        <h3>@TabItem Properties</h3>
-        <ul>
-          <li><code>label: String</code> — Display label for the tab</li>
-          <li><code>icon: String</code> — Icon identifier for the tab</li>
-        </ul>
+        <h3>@TabItem</h3>
+        <p>
+          <code>@TabItem</code> is a marker annotation with no parameters. 
+          Labels, icons, and other UI customization are handled in the <code>@TabsContainer</code> wrapper 
+          via pattern matching on the destination types.
+        </p>
       </section>
 
       <section>
         <h2 id="tabs-container-annotation">@TabsContainer Annotation</h2>
         <p>
           Define a custom tab bar UI with <code>@TabsContainer</code>. 
-          The composable receives a scope with tab metadata and switching functionality.
+          The composable receives a scope with tab destinations that you can pattern match 
+          to customize labels, icons, and behavior for each tab.
         </p>
 
         <CodeBlock code={tabsContainerWrapper} language="kotlin" />
 
         <h3>TabsContainerScope</h3>
         <ul>
-          <li><code>tabMetadata: List&lt;TabMetadata&gt;</code> — Label and icon info for each tab</li>
+          <li><code>tabs: List&lt;NavDestination&gt;</code> — Tab destinations for custom labels, icons, and behavior</li>
           <li><code>activeTabIndex: Int</code> — Currently selected tab index</li>
           <li><code>switchTab(index: Int)</code> — Function to switch to a different tab</li>
+          <li><code>isTransitioning: Boolean</code> — Whether tab switching animation is in progress</li>
         </ul>
       </section>
 

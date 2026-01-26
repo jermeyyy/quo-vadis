@@ -241,22 +241,22 @@ export const tabsAnnotationWithNestedStack = `@Tabs(
 )
 sealed class MainTabs : NavDestination {
 
-    @TabItem(label = "Home", icon = "home")
+    @TabItem
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
-    @TabItem(label = "Explore", icon = "explore")
+    @TabItem
     @Destination(route = "main/explore")
     @Transition(type = TransitionType.Fade)
     data object ExploreTab : MainTabs()
 
-    @TabItem(label = "Profile", icon = "person")
+    @TabItem
     @Destination(route = "main/profile")
     @Transition(type = TransitionType.Fade)
     data object ProfileTab : MainTabs()
 
-    @TabItem(label = "Settings", icon = "settings")
+    @TabItem
     @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
     @Transition(type = TransitionType.Fade)
     sealed class SettingsTab : MainTabs() {
@@ -281,12 +281,20 @@ fun MainTabsWrapper(
     Scaffold(
         bottomBar = {
             NavigationBar {
-                scope.tabMetadata.forEachIndexed { index, meta ->
+                scope.tabs.forEachIndexed { index, destination ->
+                    val (label, icon) = when (destination) {
+                        is MainTabs.HomeTab -> "Home" to "home"
+                        is MainTabs.ExploreTab -> "Explore" to "explore"
+                        is MainTabs.ProfileTab -> "Profile" to "person"
+                        is MainTabs.SettingsTab.Main,
+                        is MainTabs.SettingsTab.Profile -> "Settings" to "settings"
+                        else -> "Tab" to "circle"
+                    }
                     NavigationBarItem(
                         selected = index == scope.activeTabIndex,
                         onClick = { scope.switchTab(index) },
-                        icon = { Icon(getTabIcon(meta.icon), meta.label) },
-                        label = { Text(meta.label) },
+                        icon = { Icon(getTabIcon(icon), label) },
+                        label = { Text(label) },
                         enabled = !scope.isTransitioning
                     )
                 }

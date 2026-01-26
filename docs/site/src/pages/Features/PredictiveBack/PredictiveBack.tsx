@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
@@ -132,7 +133,7 @@ export default function PredictiveBack() {
         </table>
         <p>
           For general platform capabilities, see{' '}
-          <a href="/features/multiplatform">Multiplatform Support</a>.
+          <Link to="/features/multiplatform">Multiplatform Support</Link>.
         </p>
       </section>
 
