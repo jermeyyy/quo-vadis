@@ -351,6 +351,26 @@ fun MessagesPaneContainer(
 }`;
 
 // ============================================================================
+// GENERATED CODE USAGE EXAMPLES
+// ============================================================================
+
+/**
+ * Generated NavigationConfig usage - type-safe navigation
+ */
+export const generatedConfigUsage = `// Generated NavigationConfig usage
+val navigator = TreeNavigator(
+    config = GeneratedNavigationConfig,
+    initialState = GeneratedNavigationConfig.buildNavNode(
+        HomeDestination::class, 
+        null
+    )!!
+)
+
+// Type-safe navigation (generated)
+navigator.navigate(HomeDestination.Article(articleId = "123"))
+navigator.navigate(MainTabs.ProfileTab)`;
+
+// ============================================================================
 // GRADLE/BUILD CONFIGURATION EXAMPLES
 // ============================================================================
 
@@ -460,6 +480,7 @@ export type CodeExampleKey =
   | 'tabsContainerWrapper'
   | 'paneAnnotationBasic'
   | 'paneContainerWrapper'
+  | 'generatedConfigUsage'
   | 'versionCatalogConfig'
   | 'gradlePluginInstallation'
   | 'manualKspConfiguration';
