@@ -130,6 +130,10 @@ export default function PredictiveBack() {
             </tr>
           </tbody>
         </table>
+        <p>
+          For general platform capabilities, see{' '}
+          <a href="/features/multiplatform">Multiplatform Support</a>.
+        </p>
       </section>
 
       <section>

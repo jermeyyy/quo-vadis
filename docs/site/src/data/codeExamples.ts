@@ -527,6 +527,223 @@ export const panesAnnotationDSL = `navigationConfig {
 }`;
 
 // ============================================================================
+// ARCHITECTURE & CORE CONCEPTS EXAMPLES
+// ============================================================================
+
+/**
+ * Navigator interface definition - central navigation controller
+ */
+export const navigatorInterfaceCode = `interface Navigator {
+    // Core state
+    val state: StateFlow<NavNode>
+    val transitionState: StateFlow<TransitionState>
+    val currentDestination: StateFlow<NavDestination?>
+    val canNavigateBack: StateFlow<Boolean>
+    
+    // Navigation operations
+    fun navigate(destination: NavDestination, transition: NavigationTransition? = null)
+    fun navigateBack(): Boolean
+    fun navigateAndClearTo(destination: NavDestination, clearRoute: String?, inclusive: Boolean)
+    fun navigateAndReplace(destination: NavDestination, transition: NavigationTransition?)
+    fun navigateAndClearAll(destination: NavDestination)
+    
+    // Deep linking
+    fun handleDeepLink(deepLink: DeepLink)
+    
+    // State manipulation (advanced)
+    fun updateState(newState: NavNode, transition: NavigationTransition?)
+}`;
+
+/**
+ * TreeNavigator class - concrete Navigator implementation
+ */
+export const treeNavigatorCode = `class TreeNavigator(
+    private val deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler(),
+    private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+    initialState: NavNode? = null,
+    private val scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
+    private val containerRegistry: ContainerRegistry = ContainerRegistry.Empty
+) : Navigator {
+    // Immutable state management
+    private val _state = MutableStateFlow<NavNode>(initialState ?: ScreenNode.empty())
+    override val state: StateFlow<NavNode> = _state.asStateFlow()
+    
+    // Derived state computed synchronously
+    override val currentDestination: StateFlow<NavDestination?>
+    override val canNavigateBack: StateFlow<Boolean>
+}`;
+
+/**
+ * TreeMutator object - pure functions for tree manipulation
+ */
+export const treeMutatorCode = `object TreeMutator {
+    // Push operations - return new immutable tree
+    fun push(
+        root: NavNode,
+        destination: NavDestination,
+        scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
+        keyGenerator: () -> String
+    ): NavNode
+    
+    // Pop operations
+    fun pop(root: NavNode, behavior: PopBehavior = PopBehavior.RemoveEmptyStacks): PopResult
+    fun popTo(root: NavNode, predicate: (NavNode) -> Boolean, inclusive: Boolean = false): NavNode
+    
+    // Tab operations
+    fun switchTab(root: NavNode, nodeKey: String, tabIndex: Int): NavNode
+    
+    // Pane operations
+    fun navigateToPane(root: NavNode, nodeKey: String, role: PaneRole, destination: NavDestination): NavNode
+}`;
+
+/**
+ * Tree structure example - ASCII representation of NavNode hierarchy
+ */
+export const treeStructureExample = `StackNode (root)
+└── TabNode (MainTabs)
+    ├── StackNode (HomeTab)
+    │   ├── ScreenNode (Home)
+    │   └── ScreenNode (Detail)
+    └── StackNode (ProfileTab)
+        └── ScreenNode (Profile)`;
+
+/**
+ * Tree traversal extensions - querying and navigating the tree
+ */
+export const treeTraversalCode = `// Find node by key
+val node = rootNode.findByKey("screen-123")
+
+// Get active path from root to leaf
+val path: List<NavNode> = rootNode.activePathToLeaf()
+
+// Get deepest active screen
+val activeScreen: ScreenNode? = rootNode.activeLeaf()
+
+// Get active stack (for push/pop operations)
+val stack: StackNode? = rootNode.activeStack()
+
+// Get all screens in subtree
+val screens: List<ScreenNode> = rootNode.allScreens()
+
+// Check if node can handle back internally
+val canHandleBack: Boolean = rootNode.canHandleBackInternally()`;
+
+/**
+ * Navigator back operations - high-level back navigation methods
+ */
+export const navigatorBackCode = `// Simple back navigation
+navigator.navigateBack()
+
+// Navigate and clear to specific point
+navigator.navigateAndClearTo(
+    destination = HomeDestination.Feed,
+    clearRoute = "auth/login",
+    inclusive = true
+)
+
+// Replace current screen
+navigator.navigateAndReplace(
+    destination = ProfileDestination.Edit,
+    transition = NavigationTransitions.Fade
+)
+
+// Clear entire backstack
+navigator.navigateAndClearAll(AuthDestination.Login)`;
+
+/**
+ * TreeMutator operations - advanced tree manipulation examples
+ */
+export const treeMutatorOperationsCode = `// Push onto active stack
+val newTree = TreeMutator.push(currentTree, destination)
+navigator.updateState(newTree, transition)
+
+// Pop from active stack
+val newTree = TreeMutator.pop(currentTree, PopBehavior.CASCADE)
+
+// Pop to specific destination type
+val newTree = TreeMutator.popToDestination<HomeDestination>(currentTree, inclusive = false)
+
+// Pop to route string
+val newTree = TreeMutator.popToRoute(currentTree, "home/feed", inclusive = false)
+
+// Push multiple destinations
+val newTree = TreeMutator.pushAll(currentTree, listOf(
+    OrderListDestination,
+    OrderDetailDestination("123"),
+    TrackingDestination("123")
+))
+
+// Clear and push
+val newTree = TreeMutator.clearAndPush(currentTree, HomeDestination.Feed)
+
+// Replace current
+val newTree = TreeMutator.replaceCurrent(currentTree, DashboardDestination)`;
+
+/**
+ * Tab operations - TreeMutator tab switching
+ */
+export const tabOperationsCode = `// Switch to specific tab
+val newTree = TreeMutator.switchTab(currentTree, tabNodeKey, newIndex)
+
+// Switch active TabNode's tab
+val newTree = TreeMutator.switchActiveTab(currentTree, 0)`;
+
+/**
+ * Pane operations - multi-pane navigation
+ */
+export const paneOperationsCode = `// Navigate within specific pane
+val newTree = TreeMutator.navigateToPane(
+    root = currentTree,
+    nodeKey = paneNode.key,
+    role = PaneRole.Supporting,
+    destination = ItemDetailDestination(itemId),
+    switchFocus = true
+)
+
+// Pop from specific pane
+val newTree = TreeMutator.popPane(currentTree, paneNode.key, PaneRole.Supporting)
+
+// Switch pane focus
+val newTree = TreeMutator.switchActivePane(currentTree, paneNode.key, PaneRole.Primary)`;
+
+/**
+ * Back with tab awareness - handling back navigation with tabs
+ */
+export const backWithTabsCode = `fun handleBack(): Boolean {
+    val result = TreeMutator.popWithTabBehavior(
+        root = navigator.state.value,
+        isCompact = windowSizeClass.isCompact
+    )
+    
+    return when (result) {
+        is BackResult.Handled -> {
+            navigator.updateState(result.newState, null)
+            true
+        }
+        is BackResult.DelegateToSystem -> false
+        is BackResult.CannotHandle -> false
+    }
+}`;
+
+/**
+ * BackResult types - sealed class for pop operation results
+ */
+export const backResultCode = `sealed class BackResult {
+    data class Handled(val newState: NavNode) : BackResult()
+    data object DelegateToSystem : BackResult()
+    data object CannotHandle : BackResult()
+}`;
+
+/**
+ * Check back availability - querying back navigation state
+ */
+export const checkBackCode = `// Simple check
+val canGoBack = navigator.canNavigateBack.value
+
+// Or via TreeMutator
+val canHandle = TreeMutator.canHandleBackNavigation(navigator.state.value)`;
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -549,4 +766,16 @@ export type CodeExampleKey =
   | 'manualKspConfiguration'
   | 'navigationConfigInterface'
   | 'tabsAnnotationDSL'
-  | 'panesAnnotationDSL';
+  | 'panesAnnotationDSL'
+  | 'navigatorInterfaceCode'
+  | 'treeNavigatorCode'
+  | 'treeMutatorCode'
+  | 'treeStructureExample'
+  | 'treeTraversalCode'
+  | 'navigatorBackCode'
+  | 'treeMutatorOperationsCode'
+  | 'tabOperationsCode'
+  | 'paneOperationsCode'
+  | 'backWithTabsCode'
+  | 'backResultCode'
+  | 'checkBackCode';

@@ -1,5 +1,20 @@
 import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
+import { NavNodeTypesTable } from '@components/NavNodeTypesTable'
+import {
+  navigatorInterfaceCode,
+  treeNavigatorCode,
+  treeMutatorCode,
+  treeStructureExample,
+  treeTraversalCode,
+  navigatorBackCode,
+  treeMutatorOperationsCode,
+  tabOperationsCode,
+  paneOperationsCode,
+  backWithTabsCode,
+  backResultCode,
+  checkBackCode,
+} from '@data/codeExamples'
 import styles from '../Features.module.css'
 
 // Architecture Diagram Styles
@@ -166,63 +181,6 @@ const ArchitectureDiagram = () => (
   </div>
 )
 
-const navigatorInterfaceCode = `interface Navigator {
-    // Core state
-    val state: StateFlow<NavNode>
-    val transitionState: StateFlow<TransitionState>
-    val currentDestination: StateFlow<NavDestination?>
-    val canNavigateBack: StateFlow<Boolean>
-    
-    // Navigation operations
-    fun navigate(destination: NavDestination, transition: NavigationTransition? = null)
-    fun navigateBack(): Boolean
-    fun navigateAndClearTo(destination: NavDestination, clearRoute: String?, inclusive: Boolean)
-    fun navigateAndReplace(destination: NavDestination, transition: NavigationTransition?)
-    fun navigateAndClearAll(destination: NavDestination)
-    
-    // Deep linking
-    fun handleDeepLink(deepLink: DeepLink)
-    
-    // State manipulation (advanced)
-    fun updateState(newState: NavNode, transition: NavigationTransition?)
-}`
-
-const treeNavigatorCode = `class TreeNavigator(
-    private val deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler(),
-    private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
-    initialState: NavNode? = null,
-    private val scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
-    private val containerRegistry: ContainerRegistry = ContainerRegistry.Empty
-) : Navigator {
-    // Immutable state management
-    private val _state = MutableStateFlow<NavNode>(initialState ?: ScreenNode.empty())
-    override val state: StateFlow<NavNode> = _state.asStateFlow()
-    
-    // Derived state computed synchronously
-    override val currentDestination: StateFlow<NavDestination?>
-    override val canNavigateBack: StateFlow<Boolean>
-}`
-
-const treeMutatorCode = `object TreeMutator {
-    // Push operations - return new immutable tree
-    fun push(
-        root: NavNode,
-        destination: NavDestination,
-        scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
-        keyGenerator: () -> String
-    ): NavNode
-    
-    // Pop operations
-    fun pop(root: NavNode, behavior: PopBehavior = PopBehavior.RemoveEmptyStacks): PopResult
-    fun popTo(root: NavNode, predicate: (NavNode) -> Boolean, inclusive: Boolean = false): NavNode
-    
-    // Tab operations
-    fun switchTab(root: NavNode, nodeKey: String, tabIndex: Int): NavNode
-    
-    // Pane operations
-    fun navigateToPane(root: NavNode, nodeKey: String, role: PaneRole, destination: NavDestination): NavNode
-}`
-
 // Data Flow Diagram Styles
 const dataFlowStyles = {
   container: {
@@ -346,32 +304,16 @@ const DataFlowDiagram = () => (
   </div>
 )
 
-const treeStructureExample = `StackNode (root)
-└── TabNode (MainTabs)
-    ├── StackNode (HomeTab)
-    │   ├── ScreenNode (Home)
-    │   └── ScreenNode (Detail)
-    └── StackNode (ProfileTab)
-        └── ScreenNode (Profile)`
-
-export default function Architecture() {
+export default function CoreConcepts() {
   return (
     <article className={styles.features}>
-      <h1>Architecture</h1>
+      <h1>Core Concepts</h1>
       <p className={styles.intro}>
         Quo Vadis uses a tree-based navigation architecture where navigation state 
-        is an immutable tree of NavNode objects, providing clean separation between 
-        logic and rendering.
+        is an immutable tree of NavNode objects. This design provides clean separation 
+        between logic and rendering, enabling predictable, testable, and serializable 
+        navigation behavior.
       </p>
-
-      <div className={styles.highlights}>
-        <ul>
-          <li><strong>Clean state management:</strong> All navigation logic is isolated in the logic layer</li>
-          <li><strong>Flexible rendering:</strong> UI adapts to different screen sizes and platforms</li>
-          <li><strong>Testability:</strong> Logic can be unit tested without UI dependencies</li>
-          <li><strong>Predictable state:</strong> Immutable updates ensure reproducible behavior</li>
-        </ul>
-      </div>
 
       <section>
         <h2 id="overview">Overview</h2>
@@ -383,19 +325,29 @@ export default function Architecture() {
           <li><strong>Logic Layer</strong> manages navigation state as an immutable tree of <code>NavNode</code> objects</li>
           <li><strong>Rendering Layer</strong> recursively renders the tree to Compose UI with animations</li>
         </ul>
-        <p>
-          The Logic Layer exposes navigation state through Kotlin <code>StateFlow</code>, which the 
-          Rendering Layer observes and converts to Compose UI. User interactions in the UI trigger 
-          navigation operations that flow back up to the Logic Layer.
-        </p>
+        <ArchitectureDiagram />
       </section>
 
       <section>
-        <h2 id="architecture-diagram">Architecture Diagram</h2>
+        <h2 id="navnode-tree">NavNode Tree Structure</h2>
         <p>
-          The following diagram shows how the layers interact and the flow of data through the system:
+          The navigation state is represented as an immutable tree of NavNode objects. 
+          Different node types support different navigation patterns:
         </p>
-        <ArchitectureDiagram />
+        <pre className={styles.treeStructure}>
+{treeStructureExample}
+        </pre>
+
+        <h3>NavNode Types</h3>
+        <NavNodeTypesTable />
+
+        <div className={styles.note}>
+          <p>
+            The NavNode tree represents <strong>logical navigation state</strong>, not visual layout. 
+            The renderer determines which nodes are visible and how they're arranged based on 
+            window size and adaptation strategies.
+          </p>
+        </div>
       </section>
 
       <section>
@@ -405,7 +357,7 @@ export default function Architecture() {
           It consists of three key components:
         </p>
 
-        <h3>Navigator Interface</h3>
+        <h3 id="navigator-interface">Navigator Interface</h3>
         <p>
           <code>Navigator</code> is the central navigation controller interface that defines the 
           contract for all navigation operations:
@@ -444,7 +396,7 @@ export default function Architecture() {
           </tbody>
         </table>
 
-        <h3>TreeNavigator Implementation</h3>
+        <h3 id="tree-navigator">TreeNavigator Implementation</h3>
         <p>
           <code>TreeNavigator</code> is the concrete implementation of Navigator using a tree-based state model:
         </p>
@@ -457,20 +409,115 @@ export default function Architecture() {
           <li><strong>Lifecycle Event Dispatch:</strong> Dispatches <code>onScreenExited</code> and <code>onScreenDestroyed</code> events</li>
         </ul>
 
-        <h3>TreeMutator</h3>
+        <h3 id="tree-mutator">TreeMutator</h3>
         <p>
           <code>TreeMutator</code> is a singleton object containing pure functions for tree manipulation.
           All operations take a tree and return a new tree without modifying the original:
         </p>
         <CodeBlock code={treeMutatorCode} language="kotlin" />
-        <p>
-          Design principles:
-        </p>
+        <p>Design principles:</p>
         <ul>
           <li><strong>Pure Functions:</strong> All operations take a tree and return a new tree</li>
           <li><strong>Immutability:</strong> Original tree is never modified</li>
           <li><strong>Structural Sharing:</strong> Unchanged subtrees are reused for efficiency</li>
         </ul>
+      </section>
+
+      <section>
+        <h2 id="stack-operations">Stack Operations</h2>
+
+        <h3 id="tree-traversal">Tree Traversal Extensions</h3>
+        <p>
+          NavNode provides extension functions for traversing and querying the tree:
+        </p>
+        <CodeBlock code={treeTraversalCode} language="kotlin" />
+
+        <h3 id="navigator-back">Navigator Back Operations</h3>
+        <p>
+          Navigator provides high-level methods for common back navigation scenarios:
+        </p>
+        <CodeBlock code={navigatorBackCode} language="kotlin" />
+
+        <h3 id="mutator-operations">TreeMutator Operations</h3>
+        <p>
+          For advanced scenarios, use TreeMutator's pure functions for tree manipulation. 
+          All operations return new immutable trees without modifying the original:
+        </p>
+        <CodeBlock code={treeMutatorOperationsCode} language="kotlin" />
+
+        <h3 id="pop-behavior">PopBehavior Options</h3>
+        <p>
+          Control how empty stacks are handled after a pop operation:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Behavior</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>PRESERVE_EMPTY</code></td>
+              <td>Keep empty stacks in place</td>
+            </tr>
+            <tr>
+              <td><code>CASCADE</code></td>
+              <td>Remove empty stacks, cascading up the tree</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 id="tab-operations">Tab Operations</h2>
+        <p>
+          TreeMutator provides operations for tab-based navigation:
+        </p>
+        <CodeBlock code={tabOperationsCode} language="kotlin" />
+        <p>
+          For comprehensive tab navigation patterns including tab containers, nested stacks, 
+          and custom tab UI, see <Link to="/features/tabbed-navigation">Tabbed Navigation</Link>.
+        </p>
+      </section>
+
+      <section>
+        <h2 id="pane-operations">Pane Operations</h2>
+        <p>
+          For adaptive multi-pane layouts, use pane-specific operations:
+        </p>
+        <CodeBlock code={paneOperationsCode} language="kotlin" />
+        <p>
+          For comprehensive pane navigation patterns including adaptive layouts and 
+          pane containers, see <Link to="/features/pane-layouts">Pane Layouts</Link>.
+        </p>
+      </section>
+
+      <section>
+        <h2 id="back-with-tabs">Back Navigation with Tab Awareness</h2>
+        <p>
+          Handle back navigation that properly accounts for tab state:
+        </p>
+        <CodeBlock code={backWithTabsCode} language="kotlin" />
+
+        <h3>BackResult Types</h3>
+        <p>
+          The <code>popWithTabBehavior</code> function returns a sealed class indicating the result:
+        </p>
+        <CodeBlock code={backResultCode} language="kotlin" />
+        <ul>
+          <li><strong>Handled:</strong> Back was processed, apply the new state</li>
+          <li><strong>DelegateToSystem:</strong> Let the platform handle back (e.g., exit app)</li>
+          <li><strong>CannotHandle:</strong> Navigation cannot process this back gesture</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 id="check-back">Checking Back Availability</h2>
+        <p>
+          Check whether back navigation is possible before showing UI elements:
+        </p>
+        <CodeBlock code={checkBackCode} language="kotlin" />
       </section>
 
       <section>
@@ -506,68 +553,6 @@ export default function Architecture() {
       </section>
 
       <section>
-        <h2 id="navnode-types">NavNode Types</h2>
-        <p>
-          The navigation tree consists of four node types forming a sealed hierarchy. 
-          Each type supports different navigation patterns:
-        </p>
-        
-        <table>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Purpose</th>
-              <th>Contains</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>ScreenNode</code></td>
-              <td>Leaf destination</td>
-              <td>Destination data</td>
-            </tr>
-            <tr>
-              <td><code>StackNode</code></td>
-              <td>Linear navigation</td>
-              <td>List of children (last = active)</td>
-            </tr>
-            <tr>
-              <td><code>TabNode</code></td>
-              <td>Parallel tabs</td>
-              <td>List of StackNodes</td>
-            </tr>
-            <tr>
-              <td><code>PaneNode</code></td>
-              <td>Adaptive panes</td>
-              <td>Map of PaneRole to configuration</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3>Tree Structure Example</h3>
-        <p>
-          Here's an example of how nodes combine to form a navigation hierarchy:
-        </p>
-        <CodeBlock code={treeStructureExample} language="text" />
-        
-        <div className={styles.note}>
-          <p>
-            The NavNode tree represents <strong>logical navigation state</strong>, not visual layout. 
-            The renderer determines which nodes are visible and how they're arranged based on 
-            window size and adaptation strategies.
-          </p>
-        </div>
-
-        <p>
-          For detailed documentation on each node type, see:
-        </p>
-        <ul>
-          <li><Link to="/features/stack-management">Stack Management</Link> - StackNode and linear navigation patterns</li>
-          <li><Link to="/features/tabbed-navigation">Tabbed Navigation</Link> - TabNode and parallel tab stacks</li>
-        </ul>
-      </section>
-
-      <section>
         <h2 id="data-flow">Data Flow</h2>
         <p>
           Navigation follows a unidirectional data flow pattern:
@@ -584,43 +569,17 @@ export default function Architecture() {
       </section>
 
       <section>
-        <h2 id="summary">Component Summary</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Component</th>
-              <th>Layer</th>
-              <th>Responsibility</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>Navigator</code></td>
-              <td>Logic</td>
-              <td>Navigation operations interface</td>
-            </tr>
-            <tr>
-              <td><code>TreeNavigator</code></td>
-              <td>Logic</td>
-              <td>Concrete implementation with StateFlow</td>
-            </tr>
-            <tr>
-              <td><code>TreeMutator</code></td>
-              <td>Logic</td>
-              <td>Pure functions for tree manipulation</td>
-            </tr>
-            <tr>
-              <td><code>NavigationHost</code></td>
-              <td>Rendering</td>
-              <td>Entry point, infrastructure setup</td>
-            </tr>
-            <tr>
-              <td><code>NavNodeRenderer</code></td>
-              <td>Rendering</td>
-              <td>Type-based dispatch to specialized renderers</td>
-            </tr>
-          </tbody>
-        </table>
+        <h2 id="best-practices">Best Practices</h2>
+        <ul>
+          <li><strong>Use Navigator for standard operations:</strong> It handles common cases and provides type safety</li>
+          <li><strong>Use TreeMutator for batch operations:</strong> When you need multiple mutations or custom logic</li>
+          <li><strong>The original tree is never modified:</strong> All operations are immutable</li>
+          <li><strong>Unchanged subtrees are reused:</strong> Structural sharing ensures efficiency</li>
+          <li><strong>All TreeMutator operations are thread-safe:</strong> Pure functions can be called from any context</li>
+          <li><strong>Clean state management:</strong> All navigation logic is isolated in the logic layer</li>
+          <li><strong>Flexible rendering:</strong> UI adapts to different screen sizes and platforms</li>
+          <li><strong>Testability:</strong> Logic can be unit tested without UI dependencies</li>
+        </ul>
       </section>
 
       <section>
@@ -628,6 +587,7 @@ export default function Architecture() {
         <ul>
           <li><Link to="/features/stack-management">Stack Management</Link> - Linear navigation stacks and back stack operations</li>
           <li><Link to="/features/tabbed-navigation">Tabbed Navigation</Link> - Parallel tab stacks with independent history</li>
+          <li><Link to="/features/pane-layouts">Pane Layouts</Link> - Adaptive multi-pane navigation</li>
           <li><Link to="/features/transitions">Transitions & Animations</Link> - Customize navigation animations</li>
           <li><Link to="/features/predictive-back">Predictive Back</Link> - Gesture-driven back navigation</li>
         </ul>

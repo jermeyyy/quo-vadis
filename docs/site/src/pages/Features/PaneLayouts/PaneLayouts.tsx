@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
+import { ScopePropertiesTable } from '@components/ScopePropertiesTable/ScopePropertiesTable'
 import styles from '../Features.module.css'
 
 const paneNodeStructureCode = `@Serializable
@@ -391,53 +392,7 @@ export default function PaneLayouts() {
         </p>
         <CodeBlock code={containerExampleCode} language="kotlin" />
         
-        <h3>PaneContainerScope Properties</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>navigator</code></td>
-              <td><code>Navigator</code></td>
-              <td>Navigator instance for programmatic navigation</td>
-            </tr>
-            <tr>
-              <td><code>activePaneRole</code></td>
-              <td><code>PaneRole</code></td>
-              <td>Currently active/focused pane</td>
-            </tr>
-            <tr>
-              <td><code>paneCount</code></td>
-              <td><code>Int</code></td>
-              <td>Total configured panes</td>
-            </tr>
-            <tr>
-              <td><code>visiblePaneCount</code></td>
-              <td><code>Int</code></td>
-              <td>Currently visible panes</td>
-            </tr>
-            <tr>
-              <td><code>isExpanded</code></td>
-              <td><code>Boolean</code></td>
-              <td>Whether multi-pane mode is active</td>
-            </tr>
-            <tr>
-              <td><code>isTransitioning</code></td>
-              <td><code>Boolean</code></td>
-              <td>Whether pane transition is in progress</td>
-            </tr>
-            <tr>
-              <td><code>paneContents</code></td>
-              <td><code>List&lt;PaneContent&gt;</code></td>
-              <td>Content slots for custom layout rendering</td>
-            </tr>
-          </tbody>
-        </table>
+        <ScopePropertiesTable scopeType="pane" />
 
         <h3>DSL-Based Container Wrapper</h3>
         <p>
@@ -466,7 +421,7 @@ export default function PaneLayouts() {
       <section>
         <h2 id="tree-structure">Tree Structure</h2>
         <p>
-          In the navigation tree, a <code>PaneNode</code> contains separate <code>StackNode</code>s 
+          In the <Link to="/features/core-concepts#navnode-tree">NavNode tree</Link>, a <code>PaneNode</code> contains separate <code>StackNode</code>s 
           for each pane role:
         </p>
         <CodeBlock code={treeStructureCode} language="text" />
