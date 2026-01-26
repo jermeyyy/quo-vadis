@@ -52,6 +52,8 @@ function App() {
               <Route path="/features/tabbed-navigation" element={<TabbedNavigation />} />
               <Route path="/features/pane-layouts" element={<PaneLayouts />} />
               <Route path="/features/core-concepts" element={<CoreConcepts />} />
+              <Route path="/features/architecture" element={<CoreConcepts />} />
+              <Route path="/features/stack-management" element={<CoreConcepts />} />
               
               <Route path="/demo" element={<Demo />} />
               <Route path="*" element={<Home />} />
