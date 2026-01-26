@@ -28,6 +28,11 @@ export default function Home() {
     <article className={styles.home}>
       {/* Hero Section */}
       <section className={styles.hero}>
+        <img 
+          src="/logo.jpg" 
+          alt="Quo Vadis" 
+          className={styles.logo}
+        />
         <h1>Quo Vadis Navigation Library</h1>
         <p className={styles.subtitle}>
           Type-safe, multiplatform navigation for Compose Multiplatform
