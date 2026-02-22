@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -59,13 +60,13 @@ class PaneRendererTest {
         key: String,
         parentKey: String? = null,
         destination: NavDestination = ListDestination
-    ): ScreenNode = ScreenNode(key, parentKey, destination)
+    ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
     private fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
-    ): StackNode = StackNode(key, parentKey, screens.toList())
+    ): StackNode = StackNode(NodeKey(key), parentKey?.let { NodeKey(it) }, screens.toList())
 
     private fun createPanes(
         key: String,
@@ -73,7 +74,7 @@ class PaneRendererTest {
         configurations: Map<PaneRole, PaneConfiguration>,
         activeRole: PaneRole = PaneRole.Primary,
         backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange
-    ): PaneNode = PaneNode(key, parentKey, configurations, activeRole, backBehavior)
+    ): PaneNode = PaneNode(NodeKey(key), parentKey?.let { NodeKey(it) }, configurations, activeRole, backBehavior)
 
     /**
      * Simulates buildPaneContentList logic for testing.

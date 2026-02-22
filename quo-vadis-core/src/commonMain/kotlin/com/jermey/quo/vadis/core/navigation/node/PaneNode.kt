@@ -7,7 +7,6 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
@@ -70,13 +69,13 @@ import kotlin.uuid.ExperimentalUuidApi
 @Serializable
 @SerialName("pane")
 class PaneNode(
-    override val key: String,
-    override val parentKey: String?,
+    override val key: NodeKey,
+    override val parentKey: NodeKey?,
     val paneConfigurations: Map<PaneRole, PaneConfiguration>,
     val activePaneRole: PaneRole = PaneRole.Primary,
     val backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange,
     val scopeKey: String? = null
-) : NavNode, LifecycleAwareNode {
+) : NavNode, LifecycleAwareNode by LifecycleDelegate() {
 
     init {
         require(paneConfigurations.containsKey(PaneRole.Primary)) {
@@ -85,81 +84,6 @@ class PaneNode(
         require(paneConfigurations.containsKey(activePaneRole)) {
             "activePaneRole ($activePaneRole) must exist in paneConfigurations"
         }
-    }
-
-    // --- Lifecycle Infrastructure (Transient - not serialized) ---
-
-    /**
-     * Whether this node is attached to the navigator tree.
-     */
-    @Transient
-    override var isAttachedToNavigator: Boolean = false
-        private set
-
-    /**
-     * Whether this node is currently being displayed.
-     */
-    @Transient
-    override var isDisplayed: Boolean = false
-        private set
-
-    /**
-     * Saved state for Compose rememberSaveable.
-     */
-    @Transient
-    override var composeSavedState: Map<String, List<Any?>>? = null
-
-    /**
-     * Callbacks to invoke when this node is destroyed.
-     */
-    @Transient
-    private val onDestroyCallbacks = mutableListOf<() -> Unit>()
-
-    // --- Lifecycle Transitions ---
-
-    override fun attachToNavigator() {
-        // Idempotent - safe to call multiple times
-        isAttachedToNavigator = true
-    }
-
-    override fun attachToUI() {
-        // Auto-attach to navigator if not already attached
-        // This handles cases where nodes are created and immediately rendered
-        if (!isAttachedToNavigator) {
-            attachToNavigator()
-        }
-        isDisplayed = true
-    }
-
-    override fun detachFromUI() {
-        isDisplayed = false
-        if (!isAttachedToNavigator) {
-            close()
-        }
-    }
-
-    override fun detachFromNavigator() {
-        isAttachedToNavigator = false
-        if (!isDisplayed) {
-            close()
-        }
-    }
-
-    override fun addOnDestroyCallback(callback: () -> Unit) {
-        onDestroyCallbacks.add(callback)
-    }
-
-    override fun removeOnDestroyCallback(callback: () -> Unit) {
-        onDestroyCallbacks.remove(callback)
-    }
-
-    /**
-     * Cleanup when node is fully detached.
-     */
-    private fun close() {
-        // Invoke all destroy callbacks
-        onDestroyCallbacks.forEach { it.invoke() }
-        onDestroyCallbacks.clear()
     }
 
     // --- Pane-specific properties ---
@@ -199,8 +123,8 @@ class PaneNode(
      * Only navigation state is copied; lifecycle state is reset.
      */
     fun copy(
-        key: String = this.key,
-        parentKey: String? = this.parentKey,
+        key: NodeKey = this.key,
+        parentKey: NodeKey? = this.parentKey,
         paneConfigurations: Map<PaneRole, PaneConfiguration> = this.paneConfigurations,
         activePaneRole: PaneRole = this.activePaneRole,
         backBehavior: PaneBackBehavior = this.backBehavior,

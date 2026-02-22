@@ -8,6 +8,7 @@ import com.jermey.quo.vadis.core.navigation.FakeSaveableStateHolder
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import kotlin.test.Test
@@ -55,7 +56,7 @@ class ScreenRendererTest {
         key: String,
         parentKey: String? = null,
         destination: NavDestination = HomeDestination
-    ): ScreenNode = ScreenNode(key, parentKey, destination)
+    ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
     // =========================================================================
     // SCREEN NODE DESTINATION TESTS
@@ -98,7 +99,7 @@ class ScreenRendererTest {
         val screenNode = createScreen("unique-screen-key")
 
         // Then
-        assertEquals("unique-screen-key", screenNode.key)
+        assertEquals(NodeKey("unique-screen-key"), screenNode.key)
     }
 
     @Test
@@ -107,7 +108,7 @@ class ScreenRendererTest {
         val screenNode = createScreen("child-screen", parentKey = "parent-stack")
 
         // Then
-        assertEquals("parent-stack", screenNode.parentKey)
+        assertEquals(NodeKey("parent-stack"), screenNode.parentKey)
     }
 
     // =========================================================================
@@ -149,8 +150,8 @@ class ScreenRendererTest {
 
         // Then
         screens.forEach { screen ->
-            assertFalse(screen.key.isEmpty(), "Screen key should not be empty")
-            assertFalse(screen.key.contains("/"), "Screen key should not contain path separators")
+            assertFalse(screen.key.value.isEmpty(), "Screen key should not be empty")
+            assertFalse(screen.key.value.contains("/"), "Screen key should not contain path separators")
         }
     }
 
@@ -186,8 +187,8 @@ class ScreenRendererTest {
     @Test
     fun `screen nodes with same properties are equal`() {
         // Given
-        val screen1 = ScreenNode("key1", "parent", HomeDestination)
-        val screen2 = ScreenNode("key1", "parent", HomeDestination)
+        val screen1 = ScreenNode(NodeKey("key1"), NodeKey("parent"), HomeDestination)
+        val screen2 = ScreenNode(NodeKey("key1"), NodeKey("parent"), HomeDestination)
 
         // Then
         assertEquals(screen1, screen2)
@@ -197,8 +198,8 @@ class ScreenRendererTest {
     @Test
     fun `screen nodes with different keys are not equal`() {
         // Given
-        val screen1 = ScreenNode("key1", "parent", HomeDestination)
-        val screen2 = ScreenNode("key2", "parent", HomeDestination)
+        val screen1 = ScreenNode(NodeKey("key1"), NodeKey("parent"), HomeDestination)
+        val screen2 = ScreenNode(NodeKey("key2"), NodeKey("parent"), HomeDestination)
 
         // Then
         assertFalse(screen1 == screen2)
@@ -207,8 +208,8 @@ class ScreenRendererTest {
     @Test
     fun `screen nodes with different parent keys are not equal`() {
         // Given
-        val screen1 = ScreenNode("key", "parent1", HomeDestination)
-        val screen2 = ScreenNode("key", "parent2", HomeDestination)
+        val screen1 = ScreenNode(NodeKey("key"), NodeKey("parent1"), HomeDestination)
+        val screen2 = ScreenNode(NodeKey("key"), NodeKey("parent2"), HomeDestination)
 
         // Then
         assertFalse(screen1 == screen2)
@@ -217,8 +218,8 @@ class ScreenRendererTest {
     @Test
     fun `screen nodes with different destinations are not equal`() {
         // Given
-        val screen1 = ScreenNode("key", "parent", HomeDestination)
-        val screen2 = ScreenNode("key", "parent", ProfileDestination)
+        val screen1 = ScreenNode(NodeKey("key"), NodeKey("parent"), HomeDestination)
+        val screen2 = ScreenNode(NodeKey("key"), NodeKey("parent"), ProfileDestination)
 
         // Then
         assertFalse(screen1 == screen2)
@@ -232,10 +233,10 @@ class ScreenRendererTest {
     fun `screen in stack has correct parent key`() {
         // Given
         val screen = createScreen("screen", parentKey = "my-stack")
-        val stack = StackNode("my-stack", null, listOf(screen))
+        val stack = StackNode(NodeKey("my-stack"), null, listOf(screen))
 
         // Then
-        assertEquals("my-stack", screen.parentKey)
+        assertEquals(NodeKey("my-stack"), screen.parentKey)
         assertEquals(screen, stack.activeChild)
     }
 
@@ -245,7 +246,7 @@ class ScreenRendererTest {
         val screen1 = createScreen("s1", "stack", HomeDestination)
         val screen2 = createScreen("s2", "stack", ProfileDestination)
         val screen3 = createScreen("s3", "stack", SettingsDestination)
-        val stack = StackNode("stack", null, listOf(screen1, screen2, screen3))
+        val stack = StackNode(NodeKey("stack"), null, listOf(screen1, screen2, screen3))
 
         // Then
         assertEquals(3, stack.children.size)

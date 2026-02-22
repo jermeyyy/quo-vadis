@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.internal.tree.util
 
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -17,16 +18,16 @@ import kotlin.uuid.Uuid
  *
  * // Custom generator
  * val counter = AtomicInteger(0)
- * val customGenerator = KeyGenerator { "node-${counter.incrementAndGet()}" }
+ * val customGenerator = KeyGenerator { NodeKey("node-${counter.incrementAndGet()}") }
  * ```
  */
 fun interface KeyGenerator {
     /**
      * Generates a unique key for a navigation node.
      *
-     * @return A unique string key
+     * @return A unique [NodeKey]
      */
-    fun generate(): String
+    fun generate(): NodeKey
 
     companion object {
         /**
@@ -36,6 +37,6 @@ fun interface KeyGenerator {
          * while maintaining uniqueness.
          */
         @OptIn(ExperimentalUuidApi::class)
-        val Default: KeyGenerator = KeyGenerator { Uuid.random().toString().take(8) }
+        val Default: KeyGenerator = KeyGenerator { NodeKey(Uuid.random().toString().take(8)) }
     }
 }

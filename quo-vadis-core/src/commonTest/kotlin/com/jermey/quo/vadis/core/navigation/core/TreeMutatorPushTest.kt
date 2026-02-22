@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.core
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -61,9 +62,9 @@ class TreeMutatorPushTest {
     // TEST SETUP
     // =========================================================================
 
-    private fun createKeyGenerator(): () -> String {
+    private fun createKeyGenerator(): () -> NodeKey {
         var counter = 0
-        return { "key-${counter++}" }
+        return { NodeKey("key-${counter++}") }
     }
 
     @BeforeTest
@@ -77,7 +78,7 @@ class TreeMutatorPushTest {
 
     @Test
     fun `push adds screen to empty stack`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         val result = TreeMutator.push(
             root = root,
@@ -89,13 +90,13 @@ class TreeMutatorPushTest {
         assertEquals(1, (result as StackNode).children.size)
         val screen = result.activeChild as ScreenNode
         assertEquals(HomeDestination, screen.destination)
-        assertEquals("root", screen.parentKey)
+        assertEquals(NodeKey("root"), screen.parentKey)
     }
 
     @Test
     fun `push appends to existing stack`() {
-        val screen1 = ScreenNode("s1", "root", HomeDestination)
-        val root = StackNode("root", null, listOf(screen1))
+        val screen1 = ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
+        val root = StackNode(NodeKey("root"), null, listOf(screen1))
 
         val result = TreeMutator.push(
             root = root,
@@ -113,19 +114,18 @@ class TreeMutatorPushTest {
     @Test
     fun `push targets deepest active stack in tabs`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
                 TabNode(
-                    key = "tabs",
-                    parentKey = "root",
+                    key = NodeKey("tabs"),
+                    parentKey = NodeKey("root"),
                     stacks = listOf(
-                        StackNode(
-                            "tab0", "tabs", listOf(
-                                ScreenNode("s1", "tab0", HomeDestination)
+                        StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                                ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                             )
                         ),
-                        StackNode("tab1", "tabs", emptyList())
+                        StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
                     ),
                     activeStackIndex = 0
                 )
@@ -151,17 +151,16 @@ class TreeMutatorPushTest {
 
     @Test
     fun `push targets deepest active stack in nested tabs`() {
-        val innerStack = StackNode(
-            "inner-stack", "tab0", listOf(
-                ScreenNode("s1", "inner-stack", HomeDestination)
+        val innerStack = StackNode(NodeKey("inner-stack"), NodeKey("tab0"), listOf(
+                ScreenNode(NodeKey("s1"), NodeKey("inner-stack"), HomeDestination)
             )
         )
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(innerStack)),
-                StackNode("tab1", "tabs", emptyList())
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(innerStack)),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
@@ -183,8 +182,8 @@ class TreeMutatorPushTest {
 
     @Test
     fun `push preserves structural sharing`() {
-        val screen1 = ScreenNode("s1", "root", HomeDestination)
-        val root = StackNode("root", null, listOf(screen1))
+        val screen1 = ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
+        val root = StackNode(NodeKey("root"), null, listOf(screen1))
 
         val result = TreeMutator.push(
             root = root,
@@ -198,15 +197,15 @@ class TreeMutatorPushTest {
 
     @Test
     fun `push preserves structural sharing in tabs for inactive stacks`() {
-        val screen1 = ScreenNode("s1", "tab0", HomeDestination)
-        val screen2 = ScreenNode("s2", "tab1", ProfileDestination)
-        val tab1Stack = StackNode("tab1", "tabs", listOf(screen2))
+        val screen1 = ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
+        val screen2 = ScreenNode(NodeKey("s2"), NodeKey("tab1"), ProfileDestination)
+        val tab1Stack = StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(screen2))
 
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(screen1)),
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(screen1)),
                 tab1Stack
             ),
             activeStackIndex = 0
@@ -227,7 +226,7 @@ class TreeMutatorPushTest {
     @Test
     fun `push throws when no active stack found`() {
         // ScreenNode has no active stack
-        val root = ScreenNode("screen", null, HomeDestination)
+        val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         assertFailsWith<IllegalStateException> {
             TreeMutator.push(root, ProfileDestination)
@@ -241,11 +240,11 @@ class TreeMutatorPushTest {
     @Test
     fun `pushToStack targets specific stack`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", emptyList()),
-                StackNode("tab1", "tabs", emptyList())
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList()),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
@@ -253,7 +252,7 @@ class TreeMutatorPushTest {
         // Push to tab1 even though tab0 is active
         val result = TreeMutator.pushToStack(
             root = root,
-            stackKey = "tab1",
+            stackKey = NodeKey("tab1"),
             destination = ProfileDestination,
             generateKey = createKeyGenerator()
         ) as TabNode
@@ -265,12 +264,12 @@ class TreeMutatorPushTest {
 
     @Test
     fun `pushToStack adds to existing stack content`() {
-        val screen1 = ScreenNode("s1", "stack", HomeDestination)
-        val root = StackNode("stack", null, listOf(screen1))
+        val screen1 = ScreenNode(NodeKey("s1"), NodeKey("stack"), HomeDestination)
+        val root = StackNode(NodeKey("stack"), null, listOf(screen1))
 
         val result = TreeMutator.pushToStack(
             root = root,
-            stackKey = "stack",
+            stackKey = NodeKey("stack"),
             destination = ProfileDestination,
             generateKey = createKeyGenerator()
         ) as StackNode
@@ -282,44 +281,43 @@ class TreeMutatorPushTest {
 
     @Test
     fun `pushToStack throws for invalid key`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.pushToStack(root, "nonexistent", HomeDestination)
+            TreeMutator.pushToStack(root, NodeKey("nonexistent"), HomeDestination)
         }
     }
 
     @Test
     fun `pushToStack throws for non-stack node`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("screen", "root", HomeDestination)
+                ScreenNode(NodeKey("screen"), NodeKey("root"), HomeDestination)
             )
         )
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.pushToStack(root, "screen", ProfileDestination)
+            TreeMutator.pushToStack(root, NodeKey("screen"), ProfileDestination)
         }
     }
 
     @Test
     fun `pushToStack works with deeply nested stack`() {
-        val targetStack = StackNode("target", "inner-tabs", emptyList())
+        val targetStack = StackNode(NodeKey("target"), NodeKey("inner-tabs"), emptyList())
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
                 TabNode(
-                    key = "outer-tabs",
-                    parentKey = "root",
+                    key = NodeKey("outer-tabs"),
+                    parentKey = NodeKey("root"),
                     stacks = listOf(
-                        StackNode(
-                            "tab0", "outer-tabs", listOf(
+                        StackNode(NodeKey("tab0"), NodeKey("outer-tabs"), listOf(
                                 TabNode(
-                                    key = "inner-tabs",
-                                    parentKey = "tab0",
+                                    key = NodeKey("inner-tabs"),
+                                    parentKey = NodeKey("tab0"),
                                     stacks = listOf(targetStack),
                                     activeStackIndex = 0
                                 )
@@ -333,13 +331,13 @@ class TreeMutatorPushTest {
 
         val result = TreeMutator.pushToStack(
             root = root,
-            stackKey = "target",
+            stackKey = NodeKey("target"),
             destination = ProfileDestination,
             generateKey = createKeyGenerator()
         )
 
         // Find the target stack and verify it has the new screen
-        val foundStack = result.findByKey("target") as StackNode
+        val foundStack = result.findByKey(NodeKey("target")) as StackNode
         assertEquals(1, foundStack.children.size)
         assertEquals(ProfileDestination, (foundStack.activeChild as ScreenNode).destination)
     }
@@ -350,7 +348,7 @@ class TreeMutatorPushTest {
 
     @Test
     fun `pushAll adds multiple screens`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         val result = TreeMutator.pushAll(
             root = root,
@@ -366,8 +364,8 @@ class TreeMutatorPushTest {
 
     @Test
     fun `pushAll appends to existing stack`() {
-        val screen1 = ScreenNode("s1", "root", HomeDestination)
-        val root = StackNode("root", null, listOf(screen1))
+        val screen1 = ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
+        val root = StackNode(NodeKey("root"), null, listOf(screen1))
 
         val result = TreeMutator.pushAll(
             root = root,
@@ -383,8 +381,8 @@ class TreeMutatorPushTest {
 
     @Test
     fun `pushAll with empty list returns same tree`() {
-        val screen1 = ScreenNode("s1", "root", HomeDestination)
-        val root = StackNode("root", null, listOf(screen1))
+        val screen1 = ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
+        val root = StackNode(NodeKey("root"), null, listOf(screen1))
 
         val result = TreeMutator.pushAll(
             root = root,
@@ -398,15 +396,14 @@ class TreeMutatorPushTest {
     @Test
     fun `pushAll targets deepest active stack`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 ),
-                StackNode("tab1", "tabs", emptyList())
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
@@ -423,7 +420,7 @@ class TreeMutatorPushTest {
 
     @Test
     fun `pushAll throws when no active stack found`() {
-        val root = ScreenNode("screen", null, HomeDestination)
+        val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         assertFailsWith<IllegalStateException> {
             TreeMutator.pushAll(root, listOf(ProfileDestination))
@@ -437,12 +434,12 @@ class TreeMutatorPushTest {
     @Test
     fun `clearAndPush clears and adds single screen`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -458,7 +455,7 @@ class TreeMutatorPushTest {
 
     @Test
     fun `clearAndPush works on empty stack`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         val result = TreeMutator.clearAndPush(
             root = root,
@@ -473,18 +470,16 @@ class TreeMutatorPushTest {
     @Test
     fun `clearAndPush targets deepest active stack in tabs`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination),
-                        ScreenNode("s2", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s3", "tab1", SettingsDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
             ),
@@ -508,7 +503,7 @@ class TreeMutatorPushTest {
 
     @Test
     fun `clearAndPush throws when no active stack found`() {
-        val root = ScreenNode("screen", null, HomeDestination)
+        val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         assertFailsWith<IllegalStateException> {
             TreeMutator.clearAndPush(root, ProfileDestination)
@@ -522,18 +517,16 @@ class TreeMutatorPushTest {
     @Test
     fun `clearStackAndPush targets specific stack`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s2", "tab1", ProfileDestination),
-                        ScreenNode("s3", "tab1", SettingsDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s2"), NodeKey("tab1"), ProfileDestination),
+                        ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
             ),
@@ -543,7 +536,7 @@ class TreeMutatorPushTest {
         // Clear and push to tab1 even though tab0 is active
         val result = TreeMutator.clearStackAndPush(
             root = root,
-            stackKey = "tab1",
+            stackKey = NodeKey("tab1"),
             destination = DetailDestination,
             generateKey = createKeyGenerator()
         ) as TabNode
@@ -559,42 +552,40 @@ class TreeMutatorPushTest {
 
     @Test
     fun `clearStackAndPush throws for invalid key`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.clearStackAndPush(root, "nonexistent", HomeDestination)
+            TreeMutator.clearStackAndPush(root, NodeKey("nonexistent"), HomeDestination)
         }
     }
 
     @Test
     fun `clearStackAndPush throws for non-stack node`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("screen", "root", HomeDestination)
+                ScreenNode(NodeKey("screen"), NodeKey("root"), HomeDestination)
             )
         )
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.clearStackAndPush(root, "screen", ProfileDestination)
+            TreeMutator.clearStackAndPush(root, NodeKey("screen"), ProfileDestination)
         }
     }
 
     @Test
     fun `clearStackAndPush preserves structural sharing for other branches`() {
-        val tab1Stack = StackNode(
-            "tab1", "tabs", listOf(
-                ScreenNode("s2", "tab1", ProfileDestination)
+        val tab1Stack = StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                ScreenNode(NodeKey("s2"), NodeKey("tab1"), ProfileDestination)
             )
         )
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 ),
                 tab1Stack
@@ -604,7 +595,7 @@ class TreeMutatorPushTest {
 
         val result = TreeMutator.clearStackAndPush(
             root = root,
-            stackKey = "tab0",
+            stackKey = NodeKey("tab0"),
             destination = DetailDestination,
             generateKey = createKeyGenerator()
         ) as TabNode

@@ -4,6 +4,7 @@ import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -110,8 +111,8 @@ class TreeMutatorScopeTest {
 
     private var keyCounter = 0
 
-    private fun createKeyGenerator(): () -> String {
-        return { "key-${keyCounter++}" }
+    private fun createKeyGenerator(): () -> NodeKey {
+        return { NodeKey("key-${keyCounter++}") }
     }
 
     @BeforeTest
@@ -122,49 +123,49 @@ class TreeMutatorScopeTest {
     /**
      * Build a test tree:
      * ```
-     * StackNode (root, key="root")
-     *   └── TabNode (key="tabs", scopeKey="MainTabs")
-     *        ├── StackNode (key="tab0") ← ACTIVE
+     * StackNode (root, key=NodeKey("root"))
+     *   └── TabNode (key=NodeKey("tabs"), scopeKey="MainTabs")
+     *        ├── StackNode (key=NodeKey("tab0")) ← ACTIVE
      *        │     └── ScreenNode (HomeTab)
-     *        └── StackNode (key="tab1")
+     *        └── StackNode (key=NodeKey("tab1"))
      *              └── ScreenNode (SettingsTab)
      * ```
      */
     private fun buildTestTree(): StackNode {
         val homeScreen = ScreenNode(
-            key = "home-screen",
-            parentKey = "tab0",
+            key = NodeKey("home-screen"),
+            parentKey = NodeKey("tab0"),
             destination = MainTabs.HomeTab
         )
 
         val settingsScreen = ScreenNode(
-            key = "settings-screen",
-            parentKey = "tab1",
+            key = NodeKey("settings-screen"),
+            parentKey = NodeKey("tab1"),
             destination = MainTabs.SettingsTab
         )
 
         val homeStack = StackNode(
-            key = "tab0",
-            parentKey = "tabs",
+            key = NodeKey("tab0"),
+            parentKey = NodeKey("tabs"),
             children = listOf(homeScreen)
         )
 
         val settingsStack = StackNode(
-            key = "tab1",
-            parentKey = "tabs",
+            key = NodeKey("tab1"),
+            parentKey = NodeKey("tabs"),
             children = listOf(settingsScreen)
         )
 
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(homeStack, settingsStack),
             activeStackIndex = 0,
             scopeKey = "MainTabs"
         )
 
         return StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -259,7 +260,7 @@ class TreeMutatorScopeTest {
         val newScreen = resultStack.children[1]
         assertIs<ScreenNode>(newScreen)
         assertEquals(OutOfScopeDestination, newScreen.destination)
-        assertEquals("root", newScreen.parentKey)
+        assertEquals(NodeKey("root"), newScreen.parentKey)
     }
 
     @Test
@@ -369,33 +370,33 @@ class TreeMutatorScopeTest {
      */
     private fun buildTreeWithoutScopeKey(): StackNode {
         val homeScreen = ScreenNode(
-            key = "home-screen",
-            parentKey = "tab0",
+            key = NodeKey("home-screen"),
+            parentKey = NodeKey("tab0"),
             destination = MainTabs.HomeTab
         )
 
         val homeStack = StackNode(
-            key = "tab0",
-            parentKey = "tabs",
+            key = NodeKey("tab0"),
+            parentKey = NodeKey("tabs"),
             children = listOf(homeScreen)
         )
 
         val settingsStack = StackNode(
-            key = "tab1",
-            parentKey = "tabs",
+            key = NodeKey("tab1"),
+            parentKey = NodeKey("tabs"),
             children = emptyList()
         )
 
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(homeStack, settingsStack),
             activeStackIndex = 0,
             scopeKey = null // No scope key!
         )
 
         return StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -444,45 +445,45 @@ class TreeMutatorScopeTest {
      */
     private fun buildNestedTestTree(): StackNode {
         val rootScreen = ScreenNode(
-            key = "root-screen",
-            parentKey = "root",
+            key = NodeKey("root-screen"),
+            parentKey = NodeKey("root"),
             destination = MainTabs.HomeTab
         )
 
         val homeScreen = ScreenNode(
-            key = "home-screen",
-            parentKey = "tab0",
+            key = NodeKey("home-screen"),
+            parentKey = NodeKey("tab0"),
             destination = MainTabs.HomeTab
         )
 
         val homeDetailScreen = ScreenNode(
-            key = "home-detail",
-            parentKey = "tab0",
+            key = NodeKey("home-detail"),
+            parentKey = NodeKey("tab0"),
             destination = MainTabs.HomeTab
         )
 
         val homeStack = StackNode(
-            key = "tab0",
-            parentKey = "tabs",
+            key = NodeKey("tab0"),
+            parentKey = NodeKey("tabs"),
             children = listOf(homeScreen, homeDetailScreen)
         )
 
         val settingsStack = StackNode(
-            key = "tab1",
-            parentKey = "tabs",
+            key = NodeKey("tab1"),
+            parentKey = NodeKey("tabs"),
             children = emptyList()
         )
 
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(homeStack, settingsStack),
             activeStackIndex = 0,
             scopeKey = "MainTabs"
         )
 
         return StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(rootScreen, tabNode)
         )
@@ -507,7 +508,7 @@ class TreeMutatorScopeTest {
         // New screen should be at the end
         val newScreen = resultStack.children[2] as ScreenNode
         assertEquals(OutOfScopeDestination, newScreen.destination)
-        assertEquals("root", newScreen.parentKey)
+        assertEquals(NodeKey("root"), newScreen.parentKey)
     }
 
     @Test
@@ -545,34 +546,34 @@ class TreeMutatorScopeTest {
         val activeStack = tree.activeStack()
 
         assertNotNull(activeStack)
-        assertEquals("tab0", activeStack.key)
+        assertEquals(NodeKey("tab0"), activeStack.key)
     }
 
     @Test
     fun `activeStack follows active tab index`() {
         // Create tree with second tab active
         val homeStack = StackNode(
-            key = "tab0",
-            parentKey = "tabs",
-            children = listOf(ScreenNode("s1", "tab0", MainTabs.HomeTab))
+            key = NodeKey("tab0"),
+            parentKey = NodeKey("tabs"),
+            children = listOf(ScreenNode(NodeKey("s1"), NodeKey("tab0"), MainTabs.HomeTab))
         )
 
         val settingsStack = StackNode(
-            key = "tab1",
-            parentKey = "tabs",
-            children = listOf(ScreenNode("s2", "tab1", MainTabs.SettingsTab))
+            key = NodeKey("tab1"),
+            parentKey = NodeKey("tabs"),
+            children = listOf(ScreenNode(NodeKey("s2"), NodeKey("tab1"), MainTabs.SettingsTab))
         )
 
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(homeStack, settingsStack),
             activeStackIndex = 1, // Settings tab active
             scopeKey = "MainTabs"
         )
 
         val tree = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -580,6 +581,6 @@ class TreeMutatorScopeTest {
         val activeStack = tree.activeStack()
 
         assertNotNull(activeStack)
-        assertEquals("tab1", activeStack.key)
+        assertEquals(NodeKey("tab1"), activeStack.key)
     }
 }

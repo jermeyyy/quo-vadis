@@ -209,5 +209,10 @@ interface Navigator : BackPressHandler {
      * @param newState The new navigation tree
      * @param transition Optional transition for animation
      */
+    @Deprecated(
+        message = "Use navigate(), navigateBack(), or navigateAndClearTo() instead. " +
+            "Direct state manipulation bypasses validation and lifecycle management.",
+        level = DeprecationLevel.WARNING,
+    )
     fun updateState(newState: NavNode, transition: NavigationTransition? = null)
 }

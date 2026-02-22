@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.core
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -70,9 +71,9 @@ class TreeMutatorPaneTest {
     // TEST SETUP
     // =========================================================================
 
-    private fun createKeyGenerator(): () -> String {
+    private fun createKeyGenerator(): () -> NodeKey {
         var counter = 0
-        return { "pane-key-${counter++}" }
+        return { NodeKey("pane-key-${counter++}") }
     }
 
     @BeforeTest
@@ -83,20 +84,18 @@ class TreeMutatorPaneTest {
     // Helper to create a standard pane setup
     private fun createStandardPaneNode(): PaneNode {
         return PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("list-screen", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("list-screen"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode(
-                        "supporting-stack", "panes", listOf(
-                            ScreenNode("detail-screen", "supporting-stack", DetailDestination)
+                    StackNode(NodeKey("supporting-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("detail-screen"), NodeKey("supporting-stack"), DetailDestination)
                         )
                     )
                 )
@@ -115,7 +114,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.navigateToPane(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting,
             destination = SettingsDestination,
             switchFocus = false,
@@ -137,7 +136,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.navigateToPane(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting,
             destination = SettingsDestination,
             switchFocus = true,
@@ -151,13 +150,12 @@ class TreeMutatorPaneTest {
     @Test
     fun `navigateToPane does not switch focus when already on target pane`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("list-screen", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("list-screen"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 )
@@ -167,7 +165,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.navigateToPane(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Primary,
             destination = SettingsDestination,
             switchFocus = true,
@@ -186,7 +184,7 @@ class TreeMutatorPaneTest {
         assertFailsWith<IllegalArgumentException> {
             TreeMutator.navigateToPane(
                 root = panes,
-                nodeKey = "nonexistent",
+                nodeKey = NodeKey("nonexistent"),
                 role = PaneRole.Primary,
                 destination = SettingsDestination
             )
@@ -196,11 +194,11 @@ class TreeMutatorPaneTest {
     @Test
     fun `navigateToPane throws for unconfigured pane role`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", emptyList())
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), emptyList())
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -209,7 +207,7 @@ class TreeMutatorPaneTest {
         assertFailsWith<IllegalArgumentException> {
             TreeMutator.navigateToPane(
                 root = panes,
-                nodeKey = "panes",
+                nodeKey = NodeKey("panes"),
                 role = PaneRole.Supporting, // Not configured
                 destination = SettingsDestination
             )
@@ -218,18 +216,17 @@ class TreeMutatorPaneTest {
 
     @Test
     fun `navigateToPane preserves other panes unchanged`() {
-        val primaryScreen = ScreenNode("list-screen", "primary-stack", ListDestination)
+        val primaryScreen = ScreenNode(NodeKey("list-screen"), NodeKey("primary-stack"), ListDestination)
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(primaryScreen))
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(primaryScreen))
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode(
-                        "supporting-stack", "panes", listOf(
-                            ScreenNode("detail-screen", "supporting-stack", DetailDestination)
+                    StackNode(NodeKey("supporting-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("detail-screen"), NodeKey("supporting-stack"), DetailDestination)
                         )
                     )
                 )
@@ -239,7 +236,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.navigateToPane(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting,
             destination = SettingsDestination,
             switchFocus = false,
@@ -262,7 +259,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.switchActivePane(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting
         ) as PaneNode
 
@@ -275,7 +272,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.switchActivePane(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Primary // Already active
         )
 
@@ -287,25 +284,25 @@ class TreeMutatorPaneTest {
         val panes = createStandardPaneNode()
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.switchActivePane(panes, "nonexistent", PaneRole.Supporting)
+            TreeMutator.switchActivePane(panes, NodeKey("nonexistent"), PaneRole.Supporting)
         }
     }
 
     @Test
     fun `switchActivePane throws for unconfigured role`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", emptyList())
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), emptyList())
                 )
             ),
             activePaneRole = PaneRole.Primary
         )
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.switchActivePane(panes, "panes", PaneRole.Supporting)
+            TreeMutator.switchActivePane(panes, NodeKey("panes"), PaneRole.Supporting)
         }
     }
 
@@ -315,7 +312,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.switchActivePane(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting
         ) as PaneNode
 
@@ -337,14 +334,13 @@ class TreeMutatorPaneTest {
     @Test
     fun `popPane removes from active pane`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination),
-                            ScreenNode("s2", "primary-stack", DetailDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination),
+                            ScreenNode(NodeKey("s2"), NodeKey("primary-stack"), DetailDestination)
                         )
                     )
                 )
@@ -354,7 +350,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.popPane(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Primary
         )
 
@@ -368,13 +364,12 @@ class TreeMutatorPaneTest {
     @Test
     fun `popPane returns null when pane stack has single item`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 )
@@ -382,7 +377,7 @@ class TreeMutatorPaneTest {
             activePaneRole = PaneRole.Primary
         )
 
-        val result = TreeMutator.popPane(panes, "panes", PaneRole.Primary)
+        val result = TreeMutator.popPane(panes, NodeKey("panes"), PaneRole.Primary)
 
         assertNull(result)
     }
@@ -390,17 +385,17 @@ class TreeMutatorPaneTest {
     @Test
     fun `popPane returns null when pane stack is empty`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", emptyList())
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), emptyList())
                 )
             ),
             activePaneRole = PaneRole.Primary
         )
 
-        val result = TreeMutator.popPane(panes, "panes", PaneRole.Primary)
+        val result = TreeMutator.popPane(panes, NodeKey("panes"), PaneRole.Primary)
 
         assertNull(result)
     }
@@ -410,46 +405,44 @@ class TreeMutatorPaneTest {
         val panes = createStandardPaneNode()
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.popPane(panes, "nonexistent", PaneRole.Primary)
+            TreeMutator.popPane(panes, NodeKey("nonexistent"), PaneRole.Primary)
         }
     }
 
     @Test
     fun `popPane throws for unconfigured role`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", emptyList())
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), emptyList())
                 )
             ),
             activePaneRole = PaneRole.Primary
         )
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.popPane(panes, "panes", PaneRole.Supporting)
+            TreeMutator.popPane(panes, NodeKey("panes"), PaneRole.Supporting)
         }
     }
 
     @Test
     fun `popPane from inactive pane does not affect active pane`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode(
-                        "supporting-stack", "panes", listOf(
-                            ScreenNode("s2", "supporting-stack", DetailDestination),
-                            ScreenNode("s3", "supporting-stack", SettingsDestination)
+                    StackNode(NodeKey("supporting-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s2"), NodeKey("supporting-stack"), DetailDestination),
+                            ScreenNode(NodeKey("s3"), NodeKey("supporting-stack"), SettingsDestination)
                         )
                     )
                 )
@@ -457,7 +450,7 @@ class TreeMutatorPaneTest {
             activePaneRole = PaneRole.Primary
         )
 
-        val result = TreeMutator.popPane(panes, "panes", PaneRole.Supporting)
+        val result = TreeMutator.popPane(panes, NodeKey("panes"), PaneRole.Supporting)
 
         assertNotNull(result)
         val resultPanes = result as PaneNode
@@ -479,14 +472,13 @@ class TreeMutatorPaneTest {
     @Test
     fun `popWithPaneBehavior returns Popped when stack has content`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination),
-                            ScreenNode("s2", "primary-stack", DetailDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination),
+                            ScreenNode(NodeKey("s2"), NodeKey("primary-stack"), DetailDestination)
                         )
                     )
                 )
@@ -505,13 +497,12 @@ class TreeMutatorPaneTest {
     @Test
     fun `popWithPaneBehavior with PopLatest returns Popped with empty stack when single item`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 )
@@ -532,20 +523,18 @@ class TreeMutatorPaneTest {
     @Test
     fun `popWithPaneBehavior with PopUntilScaffoldValueChange switches to Primary`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode(
-                        "supporting-stack", "panes", listOf(
-                            ScreenNode("s2", "supporting-stack", DetailDestination)
+                    StackNode(NodeKey("supporting-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s2"), NodeKey("supporting-stack"), DetailDestination)
                         )
                     )
                 )
@@ -564,13 +553,12 @@ class TreeMutatorPaneTest {
     @Test
     fun `popWithPaneBehavior with PopUntilScaffoldValueChange returns RequiresScaffoldChange on Primary`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 )
@@ -587,11 +575,11 @@ class TreeMutatorPaneTest {
     @Test
     fun `popWithPaneBehavior without PaneNode does regular pop`() {
         val stack = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", ListDestination),
-                ScreenNode("s2", "root", DetailDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), ListDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), DetailDestination)
             )
         )
 
@@ -605,10 +593,10 @@ class TreeMutatorPaneTest {
     @Test
     fun `popWithPaneBehavior without PaneNode pops to empty stack at root`() {
         val stack = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", ListDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), ListDestination)
             )
         )
 
@@ -627,13 +615,12 @@ class TreeMutatorPaneTest {
     @Test
     fun `setPaneConfiguration updates pane config`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 )
@@ -642,9 +629,8 @@ class TreeMutatorPaneTest {
         )
 
         val newConfig = PaneConfiguration(
-            content = StackNode(
-                "supporting-stack", "panes", listOf(
-                    ScreenNode("s2", "supporting-stack", DetailDestination)
+            content = StackNode(NodeKey("supporting-stack"), NodeKey("panes"), listOf(
+                    ScreenNode(NodeKey("s2"), NodeKey("supporting-stack"), DetailDestination)
                 )
             ),
             adaptStrategy = AdaptStrategy.Levitate
@@ -652,7 +638,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.setPaneConfiguration(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting,
             config = newConfig
         ) as PaneNode
@@ -666,9 +652,8 @@ class TreeMutatorPaneTest {
     fun `setPaneConfiguration replaces existing config`() {
         val panes = createStandardPaneNode()
 
-        val newContent = StackNode(
-            "new-supporting-stack", "panes", listOf(
-                ScreenNode("new-screen", "new-supporting-stack", SettingsDestination)
+        val newContent = StackNode(NodeKey("new-supporting-stack"), NodeKey("panes"), listOf(
+                ScreenNode(NodeKey("new-screen"), NodeKey("new-supporting-stack"), SettingsDestination)
             )
         )
         val newConfig = PaneConfiguration(
@@ -678,13 +663,13 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.setPaneConfiguration(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting,
             config = newConfig
         ) as PaneNode
 
         val supportingContent = result.paneContent(PaneRole.Supporting)
-        assertEquals("new-supporting-stack", (supportingContent as StackNode).key)
+        assertEquals(NodeKey("new-supporting-stack"), (supportingContent as StackNode).key)
         assertEquals(AdaptStrategy.Hide, result.adaptStrategy(PaneRole.Supporting))
     }
 
@@ -695,9 +680,9 @@ class TreeMutatorPaneTest {
         assertFailsWith<IllegalArgumentException> {
             TreeMutator.setPaneConfiguration(
                 root = panes,
-                nodeKey = "nonexistent",
+                nodeKey = NodeKey("nonexistent"),
                 role = PaneRole.Extra,
-                config = PaneConfiguration(ScreenNode("s", "nonexistent", ListDestination))
+                config = PaneConfiguration(ScreenNode(NodeKey("s"), NodeKey("nonexistent"), ListDestination))
             )
         }
     }
@@ -709,20 +694,18 @@ class TreeMutatorPaneTest {
     @Test
     fun `removePaneConfiguration removes config`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode(
-                        "supporting-stack", "panes", listOf(
-                            ScreenNode("s2", "supporting-stack", DetailDestination)
+                    StackNode(NodeKey("supporting-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s2"), NodeKey("supporting-stack"), DetailDestination)
                         )
                     )
                 )
@@ -732,7 +715,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.removePaneConfiguration(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting
         ) as PaneNode
 
@@ -744,20 +727,18 @@ class TreeMutatorPaneTest {
     @Test
     fun `removePaneConfiguration switches to Primary when removing active pane`() {
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode(
-                        "supporting-stack", "panes", listOf(
-                            ScreenNode("s2", "supporting-stack", DetailDestination)
+                    StackNode(NodeKey("supporting-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s2"), NodeKey("supporting-stack"), DetailDestination)
                         )
                     )
                 )
@@ -767,7 +748,7 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.removePaneConfiguration(
             root = panes,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting
         ) as PaneNode
 
@@ -779,7 +760,7 @@ class TreeMutatorPaneTest {
         val panes = createStandardPaneNode()
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.removePaneConfiguration(panes, "panes", PaneRole.Primary)
+            TreeMutator.removePaneConfiguration(panes, NodeKey("panes"), PaneRole.Primary)
         }
     }
 
@@ -788,7 +769,7 @@ class TreeMutatorPaneTest {
         val panes = createStandardPaneNode()
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.removePaneConfiguration(panes, "nonexistent", PaneRole.Supporting)
+            TreeMutator.removePaneConfiguration(panes, NodeKey("nonexistent"), PaneRole.Supporting)
         }
     }
 
@@ -799,18 +780,17 @@ class TreeMutatorPaneTest {
     @Test
     fun `full pane workflow - navigate then switch then pop`() {
         var current: NavNode = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("list", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("list"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", emptyList())
+                    StackNode(NodeKey("supporting-stack"), NodeKey("panes"), emptyList())
                 )
             ),
             activePaneRole = PaneRole.Primary
@@ -819,7 +799,7 @@ class TreeMutatorPaneTest {
         // Navigate to supporting pane
         current = TreeMutator.navigateToPane(
             root = current,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting,
             destination = DetailDestination,
             switchFocus = true,
@@ -833,7 +813,7 @@ class TreeMutatorPaneTest {
         // Navigate again to supporting
         current = TreeMutator.navigateToPane(
             root = current,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting,
             destination = SettingsDestination,
             switchFocus = false,
@@ -844,14 +824,14 @@ class TreeMutatorPaneTest {
         assertEquals(2, (panes.paneContent(PaneRole.Supporting) as StackNode).children.size)
 
         // Pop from supporting
-        val popResult = TreeMutator.popPane(current, "panes", PaneRole.Supporting)
+        val popResult = TreeMutator.popPane(current, NodeKey("panes"), PaneRole.Supporting)
         assertNotNull(popResult)
 
         panes = popResult as PaneNode
         assertEquals(1, (panes.paneContent(PaneRole.Supporting) as StackNode).children.size)
 
         // Switch back to primary
-        current = TreeMutator.switchActivePane(panes, "panes", PaneRole.Primary)
+        current = TreeMutator.switchActivePane(panes, NodeKey("panes"), PaneRole.Primary)
         panes = current as PaneNode
         assertEquals(PaneRole.Primary, panes.activePaneRole)
     }
@@ -859,39 +839,38 @@ class TreeMutatorPaneTest {
     @Test
     fun `pane in nested structure works correctly`() {
         val panes = PaneNode(
-            key = "panes",
-            parentKey = "stack",
+            key = NodeKey("panes"),
+            parentKey = NodeKey("stack"),
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode("supporting-stack", "panes", emptyList())
+                    StackNode(NodeKey("supporting-stack"), NodeKey("panes"), emptyList())
                 )
             ),
             activePaneRole = PaneRole.Primary
         )
 
         val root = StackNode(
-            key = "stack",
+            key = NodeKey("stack"),
             parentKey = null,
             children = listOf(panes)
         )
 
         val result = TreeMutator.navigateToPane(
             root = root,
-            nodeKey = "panes",
+            nodeKey = NodeKey("panes"),
             role = PaneRole.Supporting,
             destination = DetailDestination,
             switchFocus = true,
             generateKey = createKeyGenerator()
         )
 
-        val resultPanes = result.findByKey("panes") as PaneNode
+        val resultPanes = result.findByKey(NodeKey("panes")) as PaneNode
         assertEquals(PaneRole.Supporting, resultPanes.activePaneRole)
         val supportingStack = resultPanes.paneContent(PaneRole.Supporting) as StackNode
         assertEquals(1, supportingStack.children.size)

@@ -3,7 +3,7 @@
 package com.jermey.quo.vadis.core.compose.internal
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import androidx.compose.runtime.mutableStateMapOf
@@ -39,6 +39,7 @@ class ComposableCache(
     private val accessTimeMap = mutableStateMapOf<String, Long>()
     private val lockedEntries = mutableStateSetOf<String>()
     private val priorityEntries = mutableStateSetOf<String>()
+    // TODO: Replace with AtomicLong when kotlinx-atomicfu is added as a dependency
     private var counter = 0L
 
     /**
@@ -141,9 +142,9 @@ class ComposableCache(
         saveableStateHolder: SaveableStateHolder,
         content: @Composable () -> Unit
     ) {
-        DisposableEffect(key) {
+        SideEffect {
             // Update access time on composition
-            accessTimeMap[key] = counter++
+            accessTimeMap[key] = ++counter
 
             // Cleanup old entries if cache is full
             if (accessTimeMap.size > maxCacheSize) {
@@ -156,10 +157,6 @@ class ComposableCache(
                         saveableStateHolder.removeState(oldId)
                     }
                 }
-            }
-
-            onDispose {
-                // Don't remove on dispose - keep in cache
             }
         }
 

@@ -1,7 +1,8 @@
 ---
 name: Architect
 description: Senior software architect agent for solving architectural problems and creating implementation plans. Expert in system design, code organization, and project planning with human-in-the-loop decision making. Specialized in Kotlin Multiplatform development.
-tools: ['read', 'edit/createDirectory', 'edit/createFile', 'edit/editFiles', 'search', 'web', 'serena/activate_project', 'serena/find_file', 'serena/find_referencing_symbols', 'serena/find_symbol', 'serena/get_symbols_overview', 'serena/list_dir', 'serena/list_memories', 'serena/read_memory', 'serena/search_for_pattern', 'serena/think_about_task_adherence', 'serena/think_about_whether_you_are_done', 'serena/write_memory', 'duck/*', 'agent', 'todo']
+tools: ['read', 'agent', 'edit/createDirectory', 'edit/createFile', 'edit/editFiles', 'search', 'web', 'serena/activate_project', 'serena/find_file', 'serena/find_referencing_symbols', 'serena/find_symbol', 'serena/get_symbols_overview', 'serena/list_dir', 'serena/list_memories', 'serena/read_memory', 'serena/search_for_pattern', 'serena/think_about_collected_information', 'serena/think_about_task_adherence', 'serena/think_about_whether_you_are_done', 'serena/write_memory', 'duck/*', 'todo']
+agents: ['Simple-Developer', 'Simple-Architect']
 ---
 
 # Architect Agent (Orchestrator)
@@ -192,8 +193,7 @@ duck/select_option:
 
 ### How Delegation Works
 
-- Only **one agent processes at a time** - main agent or one subagent
-- Main agent can call `runSubagent` multiple times, but **subagents execute sequentially**
+- Main agent can call `runSubagent` multiple times, subagents will run in parallel
 - **Subagents cannot spawn subagents** - only main agent has `runSubagent` tool
 - Subagents return a single message with their results
 

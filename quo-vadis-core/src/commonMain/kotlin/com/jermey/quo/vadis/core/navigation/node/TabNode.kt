@@ -66,14 +66,14 @@ import kotlin.uuid.Uuid
 @Serializable
 @SerialName("tab")
 class TabNode(
-    override val key: String,
-    override val parentKey: String?,
+    override val key: NodeKey,
+    override val parentKey: NodeKey?,
     val stacks: List<StackNode>,
     val activeStackIndex: Int = 0,
     val wrapperKey: String? = null,
     val tabMetadata: List<GeneratedTabMetadata> = emptyList(),
     val scopeKey: String? = null
-) : NavNode, LifecycleAwareNode {
+) : NavNode, LifecycleAwareNode by LifecycleDelegate() {
 
     init {
         require(stacks.isNotEmpty()) { "TabNode must have at least one stack" }
@@ -82,87 +82,12 @@ class TabNode(
         }
     }
 
-    // --- Lifecycle Infrastructure (Transient - not serialized) ---
-
     /**
      * Unique stable identifier for this node instance.
      * Generated fresh on creation and after deserialization.
      */
     @Transient
     val uuid: String = Uuid.random().toHexString()
-
-    /**
-     * Whether this node is attached to the navigator tree.
-     */
-    @Transient
-    override var isAttachedToNavigator: Boolean = false
-        private set
-
-    /**
-     * Whether this node is currently being displayed.
-     */
-    @Transient
-    override var isDisplayed: Boolean = false
-        private set
-
-    /**
-     * Saved state for Compose rememberSaveable.
-     */
-    @Transient
-    override var composeSavedState: Map<String, List<Any?>>? = null
-
-    /**
-     * Callbacks to invoke when this node is destroyed.
-     */
-    @Transient
-    private val onDestroyCallbacks = mutableListOf<() -> Unit>()
-
-    // --- Lifecycle Transitions ---
-
-    override fun attachToNavigator() {
-        // Idempotent - safe to call multiple times
-        isAttachedToNavigator = true
-    }
-
-    override fun attachToUI() {
-        // Auto-attach to navigator if not already attached
-        // This handles cases where nodes are created and immediately rendered
-        if (!isAttachedToNavigator) {
-            attachToNavigator()
-        }
-        isDisplayed = true
-    }
-
-    override fun detachFromUI() {
-        isDisplayed = false
-        if (!isAttachedToNavigator) {
-            close()
-        }
-    }
-
-    override fun detachFromNavigator() {
-        isAttachedToNavigator = false
-        if (!isDisplayed) {
-            close()
-        }
-    }
-
-    override fun addOnDestroyCallback(callback: () -> Unit) {
-        onDestroyCallbacks.add(callback)
-    }
-
-    override fun removeOnDestroyCallback(callback: () -> Unit) {
-        onDestroyCallbacks.remove(callback)
-    }
-
-    /**
-     * Cleanup when node is fully detached.
-     */
-    private fun close() {
-        // Invoke all destroy callbacks
-        onDestroyCallbacks.forEach { it.invoke() }
-        onDestroyCallbacks.clear()
-    }
 
     // --- Tab-specific properties ---
 
@@ -191,8 +116,8 @@ class TabNode(
      * Only navigation state is copied; lifecycle state is reset.
      */
     fun copy(
-        key: String = this.key,
-        parentKey: String? = this.parentKey,
+        key: NodeKey = this.key,
+        parentKey: NodeKey? = this.parentKey,
         stacks: List<StackNode> = this.stacks,
         activeStackIndex: Int = this.activeStackIndex,
         wrapperKey: String? = this.wrapperKey,

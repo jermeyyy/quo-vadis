@@ -71,7 +71,7 @@ internal fun ScreenRenderer(
 ) {
     // Use cache for state preservation across navigation transitions
     scope.cache.CachedEntry(
-        key = node.key,
+        key = node.key.value,
         saveableStateHolder = scope.saveableStateHolder
     ) {
         // Lifecycle management: attach/detach UI lifecycle

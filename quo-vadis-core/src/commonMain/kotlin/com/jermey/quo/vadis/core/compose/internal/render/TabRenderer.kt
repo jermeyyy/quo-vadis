@@ -112,6 +112,7 @@ internal fun TabRenderer(
             isTransitioning = false, // Transition state is tracked by AnimatedNavContent
             onSwitchTab = { index ->
                 val newState = TreeMutator.switchActiveTab(scope.navigator.state.value, index)
+                @Suppress("DEPRECATION")
                 scope.navigator.updateState(newState)
             }
         )
@@ -127,6 +128,7 @@ internal fun TabRenderer(
                 isTransitioning = false,
                 onSwitchTab = { index ->
                     val newState = TreeMutator.switchActiveTab(scope.navigator.state.value, index)
+                    @Suppress("DEPRECATION")
                     scope.navigator.updateState(newState)
                 }
             )
@@ -138,7 +140,7 @@ internal fun TabRenderer(
     // Note: During cascade back, the parent StackRenderer's PredictiveBackContent
     // handles animating this TabNode - we just render content normally
     scope.cache.CachedEntry(
-        key = node.key,
+        key = node.key.value,
         saveableStateHolder = scope.saveableStateHolder
     ) {
         // Lifecycle management: attach/detach UI lifecycle
@@ -158,7 +160,7 @@ internal fun TabRenderer(
             // The wrapper receives the scope and a content slot
             // Use wrapperKey for registry lookup (class simple name), fallback to node.key
             scope.containerRegistry.TabsContainer(
-                tabNodeKey = node.wrapperKey ?: node.key,
+                tabNodeKey = node.wrapperKey ?: node.key.value,
                 scope = updatedTabsContainerScope
             ) {
                 // Content slot: animate between tabs (within the wrapper)

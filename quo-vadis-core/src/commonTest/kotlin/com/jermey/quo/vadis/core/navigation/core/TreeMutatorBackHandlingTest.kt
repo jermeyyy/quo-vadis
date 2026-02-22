@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.core
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -69,11 +70,11 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `popWithTabBehavior pops from stack when possible`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("screen1", "root", HomeDestination),
-                ScreenNode("screen2", "root", ProfileDestination)
+                ScreenNode(NodeKey("screen1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("screen2"), NodeKey("root"), ProfileDestination)
             )
         )
 
@@ -89,10 +90,10 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `popWithTabBehavior returns DelegateToSystem for root with one item`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("screen1", "root", HomeDestination)
+                ScreenNode(NodeKey("screen1"), NodeKey("root"), HomeDestination)
             )
         )
 
@@ -104,7 +105,7 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `popWithTabBehavior returns DelegateToSystem for empty stack`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = emptyList()
         )
@@ -118,12 +119,12 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `popWithTabBehavior handles deep stack correctly`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -142,16 +143,16 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `popWithTabBehavior switches to initial tab when on non-initial tab at root`() {
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(ScreenNode("s0", "tab0", HomeDestination))),
-                StackNode("tab1", "tabs", listOf(ScreenNode("s1", "tab1", ProfileDestination)))
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
             ),
             activeStackIndex = 1 // Currently on tab 1
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -165,16 +166,16 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `popWithTabBehavior delegates to system when on initial tab at root`() {
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(ScreenNode("s0", "tab0", HomeDestination))),
-                StackNode("tab1", "tabs", listOf(ScreenNode("s1", "tab1", ProfileDestination)))
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
             ),
             activeStackIndex = 0 // On initial tab
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -187,21 +188,20 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `popWithTabBehavior pops from tab stack when stack has items`() {
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s0a", "tab0", HomeDestination),
-                        ScreenNode("s0b", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s0a"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s0b"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode("tab1", "tabs", listOf(ScreenNode("s1", "tab1", SettingsDestination)))
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), SettingsDestination)))
             ),
             activeStackIndex = 0 // Tab 0 with 2 items
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -219,16 +219,16 @@ class TreeMutatorBackHandlingTest {
     fun `popWithTabBehavior delegates to system when TabNode is only child regardless of tab index`() {
         // Start on non-initial tab with single item - TabNode is only child of root
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(ScreenNode("s0", "tab0", HomeDestination))),
-                StackNode("tab1", "tabs", listOf(ScreenNode("s1", "tab1", ProfileDestination)))
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
             ),
             activeStackIndex = 1 // On tab 1
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -246,19 +246,19 @@ class TreeMutatorBackHandlingTest {
     fun `popWithTabBehavior handles stack above tabs`() {
         // Stack > TabNode structure
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(ScreenNode("s0", "tab0", HomeDestination)))
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination)))
             ),
             activeStackIndex = 0
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
                 tabNode,
-                ScreenNode("s1", "root", ProfileDestination) // Screen above tabs
+                ScreenNode(NodeKey("s1"), NodeKey("root"), ProfileDestination) // Screen above tabs
             )
         )
 
@@ -278,11 +278,11 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `canHandleBackNavigation returns true when stack can pop`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("screen1", "root", HomeDestination),
-                ScreenNode("screen2", "root", ProfileDestination)
+                ScreenNode(NodeKey("screen1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("screen2"), NodeKey("root"), ProfileDestination)
             )
         )
 
@@ -292,10 +292,10 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `canHandleBackNavigation returns false for root with one item`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("screen1", "root", HomeDestination)
+                ScreenNode(NodeKey("screen1"), NodeKey("root"), HomeDestination)
             )
         )
 
@@ -305,7 +305,7 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `canHandleBackNavigation returns false for empty stack`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = emptyList()
         )
@@ -317,16 +317,16 @@ class TreeMutatorBackHandlingTest {
     fun `canHandleBackNavigation returns false when TabNode is root's only child`() {
         // TabNode on non-initial tab - but TabNode is root's only child so cannot be popped
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(ScreenNode("s0", "tab0", HomeDestination))),
-                StackNode("tab1", "tabs", listOf(ScreenNode("s1", "tab1", ProfileDestination)))
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
             ),
             activeStackIndex = 1 // Not on initial tab
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -338,16 +338,16 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `canHandleBackNavigation returns false when on initial tab at root`() {
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode("tab0", "tabs", listOf(ScreenNode("s0", "tab0", HomeDestination))),
-                StackNode("tab1", "tabs", listOf(ScreenNode("s1", "tab1", ProfileDestination)))
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
             ),
             activeStackIndex = 0 // On initial tab
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -358,20 +358,19 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `canHandleBackNavigation returns true when tab stack has items to pop`() {
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s0a", "tab0", HomeDestination),
-                        ScreenNode("s0b", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s0a"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s0b"), NodeKey("tab0"), ProfileDestination)
                     )
                 )
             ),
             activeStackIndex = 0 // On initial tab but has 2 items
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -385,7 +384,7 @@ class TreeMutatorBackHandlingTest {
 
     @Test
     fun `BackResult Handled contains new state`() {
-        val newState = StackNode("root", null, listOf(ScreenNode("s1", "root", HomeDestination)))
+        val newState = StackNode(NodeKey("root"), null, listOf(ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)))
         val result = BackResult.Handled(newState)
 
         assertIs<BackResult.Handled>(result)
@@ -416,29 +415,27 @@ class TreeMutatorBackHandlingTest {
     fun `full back navigation scenario - stack with tabs`() {
         // Build: Stack[Tab[Stack[A,B], Stack[C]], D]
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("a", "tab0", HomeDestination),
-                        ScreenNode("b", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("a"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("b"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("c", "tab1", SettingsDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("c"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
             ),
             activeStackIndex = 0
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
                 tabNode,
-                ScreenNode("d", "root", HomeDestination) // Screen pushed over tabs
+                ScreenNode(NodeKey("d"), NodeKey("root"), HomeDestination) // Screen pushed over tabs
             )
         )
 
@@ -465,25 +462,23 @@ class TreeMutatorBackHandlingTest {
     fun `back navigation with tab switching`() {
         // Start on tab1 with single item
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("a", "tab0", HomeDestination),
-                        ScreenNode("b", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("a"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("b"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("c", "tab1", SettingsDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("c"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
             ),
             activeStackIndex = 1 // On tab1
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -496,12 +491,12 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `canHandleBackNavigation tracks through full scenario`() {
         var current: NavNode = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -529,20 +524,20 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `nested stack cascade - parent has 1 child - cascades to grandparent`() {
         // Given: RootStack → ChildStack(1 item - GrandchildStack) → GrandchildStack(1 item)
-        val grandchildScreen = ScreenNode("gc1", "grandchild", HomeDestination)
+        val grandchildScreen = ScreenNode(NodeKey("gc1"), NodeKey("grandchild"), HomeDestination)
         val grandchildStack = StackNode(
-            key = "grandchild",
-            parentKey = "child",
+            key = NodeKey("grandchild"),
+            parentKey = NodeKey("child"),
             children = listOf(grandchildScreen)
         )
         val childStack = StackNode(
-            key = "child",
-            parentKey = "root",
+            key = NodeKey("child"),
+            parentKey = NodeKey("root"),
             children = listOf(grandchildStack)
         )
-        val rootScreen = ScreenNode("r1", "root", ProfileDestination)
+        val rootScreen = ScreenNode(NodeKey("r1"), NodeKey("root"), ProfileDestination)
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(rootScreen, childStack)
         )
@@ -554,20 +549,20 @@ class TreeMutatorBackHandlingTest {
         assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(1, newState.children.size)
-        assertEquals("r1", newState.activeChild?.key)
+        assertEquals(NodeKey("r1"), newState.activeChild?.key)
     }
 
     @Test
     fun `nested stack cascade - parent is root with 1 child - delegates to system`() {
         // Given: RootStack(1 child) → ChildStack(1 item)
-        val childScreen = ScreenNode("c1", "child", HomeDestination)
+        val childScreen = ScreenNode(NodeKey("c1"), NodeKey("child"), HomeDestination)
         val childStack = StackNode(
-            key = "child",
-            parentKey = "root",
+            key = NodeKey("child"),
+            parentKey = NodeKey("root"),
             children = listOf(childScreen)
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(childStack)
         )
@@ -582,21 +577,21 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `tab cascade - initial tab with 1 item - pops entire TabNode`() {
         // Given: RootStack → [Screen1, TabNode(initial tab with 1 item)]
-        val tabScreen = ScreenNode("t1", "tab-stack-0", HomeDestination)
+        val tabScreen = ScreenNode(NodeKey("t1"), NodeKey("tab-stack-0"), HomeDestination)
         val tabStack = StackNode(
-            key = "tab-stack-0",
-            parentKey = "tabs",
+            key = NodeKey("tab-stack-0"),
+            parentKey = NodeKey("tabs"),
             children = listOf(tabScreen)
         )
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(tabStack),
             activeStackIndex = 0
         )
-        val rootScreen = ScreenNode("r1", "root", ProfileDestination)
+        val rootScreen = ScreenNode(NodeKey("r1"), NodeKey("root"), ProfileDestination)
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(rootScreen, tabNode)
         )
@@ -608,26 +603,26 @@ class TreeMutatorBackHandlingTest {
         assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(1, newState.children.size)
-        assertEquals("r1", newState.activeChild?.key)
+        assertEquals(NodeKey("r1"), newState.activeChild?.key)
     }
 
     @Test
     fun `tab cascade - initial tab with 1 item at root - delegates to system`() {
         // Given: RootStack(only TabNode) → TabNode(initial tab with 1 item)
-        val tabScreen = ScreenNode("t1", "tab-stack-0", HomeDestination)
+        val tabScreen = ScreenNode(NodeKey("t1"), NodeKey("tab-stack-0"), HomeDestination)
         val tabStack = StackNode(
-            key = "tab-stack-0",
-            parentKey = "tabs",
+            key = NodeKey("tab-stack-0"),
+            parentKey = NodeKey("tabs"),
             children = listOf(tabScreen)
         )
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(tabStack),
             activeStackIndex = 0
         )
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -642,26 +637,26 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `deep cascade - stack in tab in stack all with 1 item - cascades to grandparent`() {
         // Given: RootStack → [Screen1, MiddleStack(only TabNode) → TabNode(initial tab with 1 item)]
-        val deepScreen = ScreenNode("d1", "tab-stack-0", HomeDestination)
+        val deepScreen = ScreenNode(NodeKey("d1"), NodeKey("tab-stack-0"), HomeDestination)
         val tabStack = StackNode(
-            key = "tab-stack-0",
-            parentKey = "tabs",
+            key = NodeKey("tab-stack-0"),
+            parentKey = NodeKey("tabs"),
             children = listOf(deepScreen)
         )
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "middle",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("middle"),
             stacks = listOf(tabStack),
             activeStackIndex = 0
         )
         val middleStack = StackNode(
-            key = "middle",
-            parentKey = "root",
+            key = NodeKey("middle"),
+            parentKey = NodeKey("root"),
             children = listOf(tabNode)
         )
-        val rootScreen = ScreenNode("r1", "root", ProfileDestination)
+        val rootScreen = ScreenNode(NodeKey("r1"), NodeKey("root"), ProfileDestination)
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(rootScreen, middleStack)
         )
@@ -673,27 +668,27 @@ class TreeMutatorBackHandlingTest {
         assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(1, newState.children.size)
-        assertEquals("r1", newState.activeChild?.key)
+        assertEquals(NodeKey("r1"), newState.activeChild?.key)
     }
 
     @Test
     fun `nested stack no cascade - parent has multiple children - normal pop`() {
         // Given: RootStack → [Screen1, ChildStack(1 item), ChildStack(1 item)]
-        val child1Screen = ScreenNode("c1", "child1", HomeDestination)
+        val child1Screen = ScreenNode(NodeKey("c1"), NodeKey("child1"), HomeDestination)
         val child1Stack = StackNode(
-            key = "child1",
-            parentKey = "root",
+            key = NodeKey("child1"),
+            parentKey = NodeKey("root"),
             children = listOf(child1Screen)
         )
-        val child2Screen = ScreenNode("c2", "child2", ProfileDestination)
+        val child2Screen = ScreenNode(NodeKey("c2"), NodeKey("child2"), ProfileDestination)
         val child2Stack = StackNode(
-            key = "child2",
-            parentKey = "root",
+            key = NodeKey("child2"),
+            parentKey = NodeKey("root"),
             children = listOf(child2Screen)
         )
-        val rootScreen = ScreenNode("r1", "root", SettingsDestination)
+        val rootScreen = ScreenNode(NodeKey("r1"), NodeKey("root"), SettingsDestination)
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(rootScreen, child1Stack, child2Stack)
         )
@@ -705,21 +700,21 @@ class TreeMutatorBackHandlingTest {
         assertIs<BackResult.Handled>(result)
         val newState = result.newState as StackNode
         assertEquals(2, newState.children.size)
-        assertEquals("child1", newState.activeChild?.key)
+        assertEquals(NodeKey("child1"), newState.activeChild?.key)
     }
 
     @Test
     fun `canHandleBackNavigation returns true when cascade would handle back`() {
         // Given: RootStack → [Screen1, ChildStack(1 item)]
-        val childScreen = ScreenNode("c1", "child", HomeDestination)
+        val childScreen = ScreenNode(NodeKey("c1"), NodeKey("child"), HomeDestination)
         val childStack = StackNode(
-            key = "child",
-            parentKey = "root",
+            key = NodeKey("child"),
+            parentKey = NodeKey("root"),
             children = listOf(childScreen)
         )
-        val rootScreen = ScreenNode("r1", "root", ProfileDestination)
+        val rootScreen = ScreenNode(NodeKey("r1"), NodeKey("root"), ProfileDestination)
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(rootScreen, childStack)
         )
@@ -731,21 +726,21 @@ class TreeMutatorBackHandlingTest {
     @Test
     fun `canHandleBackNavigation returns true when TabNode can be cascade-popped`() {
         // Given: RootStack → [Screen1, TabNode(initial tab with 1 item)]
-        val tabScreen = ScreenNode("t1", "tab-stack-0", HomeDestination)
+        val tabScreen = ScreenNode(NodeKey("t1"), NodeKey("tab-stack-0"), HomeDestination)
         val tabStack = StackNode(
-            key = "tab-stack-0",
-            parentKey = "tabs",
+            key = NodeKey("tab-stack-0"),
+            parentKey = NodeKey("tabs"),
             children = listOf(tabScreen)
         )
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(tabStack),
             activeStackIndex = 0
         )
-        val rootScreen = ScreenNode("r1", "root", ProfileDestination)
+        val rootScreen = ScreenNode(NodeKey("r1"), NodeKey("root"), ProfileDestination)
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(rootScreen, tabNode)
         )

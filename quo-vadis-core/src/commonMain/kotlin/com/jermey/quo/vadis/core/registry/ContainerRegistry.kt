@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
@@ -19,24 +20,24 @@ import kotlin.reflect.KClass
  * Information about a container and how to create it.
  *
  * When navigating to a destination that belongs to a `@Tabs` or `@Pane`
- * container, this sealed class provides the builder function and initial
+ * container, this sealed interface provides the builder function and initial
  * state needed to create the appropriate container node structure.
  */
-sealed class ContainerInfo {
+sealed interface ContainerInfo {
 
     /**
      * The scope key for this container, typically the sealed class simple name.
      * Used for scope-aware navigation to determine if we're already inside
      * the required container.
      */
-    abstract val scopeKey: String
+    val scopeKey: String
 
     /**
      * The destination class that defines this container.
      * Used for rebuilding the container with a different navNodeBuilder
      * when combining navigation configs.
      */
-    abstract val containerClass: KClass<out NavDestination>
+    val containerClass: KClass<out NavDestination>
 
     /**
      * Tab container information.
@@ -56,11 +57,11 @@ sealed class ContainerInfo {
      * @property containerClass The destination class that defines this container.
      */
     data class TabContainer(
-        val builder: (key: String, parentKey: String?, initialTabIndex: Int) -> TabNode,
+        val builder: (key: NodeKey, parentKey: NodeKey?, initialTabIndex: Int) -> TabNode,
         val initialTabIndex: Int,
         override val scopeKey: String,
         override val containerClass: KClass<out NavDestination>
-    ) : ContainerInfo()
+    ) : ContainerInfo
 
     /**
      * Pane container information.
@@ -78,11 +79,11 @@ sealed class ContainerInfo {
      * @property containerClass The destination class that defines this container.
      */
     data class PaneContainer(
-        val builder: (key: String, parentKey: String?) -> PaneNode,
+        val builder: (key: NodeKey, parentKey: NodeKey?) -> PaneNode,
         val initialPane: PaneRole,
         override val scopeKey: String,
         override val containerClass: KClass<out NavDestination>
-    ) : ContainerInfo()
+    ) : ContainerInfo
 }
 
 /**

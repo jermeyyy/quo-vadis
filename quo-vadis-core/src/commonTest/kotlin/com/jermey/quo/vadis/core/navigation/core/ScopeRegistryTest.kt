@@ -8,6 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 
 /**
  * Tests for [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry] interface and implementations.

@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.core
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -76,9 +77,9 @@ class TreeMutatorEdgeCasesTest {
     // TEST SETUP
     // =========================================================================
 
-    private fun createKeyGenerator(): () -> String {
+    private fun createKeyGenerator(): () -> NodeKey {
         var counter = 0
-        return { "edge-key-${counter++}" }
+        return { NodeKey("edge-key-${counter++}") }
     }
 
     @BeforeTest
@@ -92,29 +93,29 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `replaceNode replaces root node`() {
-        val oldRoot = StackNode("root", null, emptyList())
+        val oldRoot = StackNode(NodeKey("root"), null, emptyList())
         val newRoot = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
-            children = listOf(ScreenNode("s1", "root", HomeDestination))
+            children = listOf(ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination))
         )
 
-        val result = TreeMutator.replaceNode(oldRoot, "root", newRoot)
+        val result = TreeMutator.replaceNode(oldRoot, NodeKey("root"), newRoot)
 
         assertSame(newRoot, result)
     }
 
     @Test
     fun `replaceNode replaces nested screen`() {
-        val targetScreen = ScreenNode("target", "stack", HomeDestination)
+        val targetScreen = ScreenNode(NodeKey("target"), NodeKey("stack"), HomeDestination)
         val root = StackNode(
-            key = "stack",
+            key = NodeKey("stack"),
             parentKey = null,
             children = listOf(targetScreen)
         )
 
-        val newScreen = ScreenNode("target", "stack", ProfileDestination)
-        val result = TreeMutator.replaceNode(root, "target", newScreen)
+        val newScreen = ScreenNode(NodeKey("target"), NodeKey("stack"), ProfileDestination)
+        val result = TreeMutator.replaceNode(root, NodeKey("target"), newScreen)
 
         val resultStack = result as StackNode
         assertEquals(1, resultStack.children.size)
@@ -124,24 +125,24 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `replaceNode replaces node in TabNode`() {
-        val targetStack = StackNode("tab0", "tabs", emptyList())
+        val targetStack = StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList())
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
                 targetStack,
-                StackNode("tab1", "tabs", emptyList())
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
 
         val newStack = StackNode(
-            key = "tab0",
-            parentKey = "tabs",
-            children = listOf(ScreenNode("s1", "tab0", HomeDestination))
+            key = NodeKey("tab0"),
+            parentKey = NodeKey("tabs"),
+            children = listOf(ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination))
         )
 
-        val result = TreeMutator.replaceNode(root, "tab0", newStack) as TabNode
+        val result = TreeMutator.replaceNode(root, NodeKey("tab0"), newStack) as TabNode
 
         assertEquals(1, result.stacks[0].children.size)
         assertEquals(0, result.stacks[1].children.size)
@@ -149,25 +150,24 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `replaceNode throws for non-existent key`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.replaceNode(root, "nonexistent", ScreenNode("new", null, HomeDestination))
+            TreeMutator.replaceNode(root, NodeKey("nonexistent"), ScreenNode(NodeKey("new"), null, HomeDestination))
         }
     }
 
     @Test
     fun `replaceNode preserves structural sharing for unchanged branches`() {
-        val unchangedScreen = ScreenNode("s2", "tab1", ProfileDestination)
-        val unchangedStack = StackNode("tab1", "tabs", listOf(unchangedScreen))
+        val unchangedScreen = ScreenNode(NodeKey("s2"), NodeKey("tab1"), ProfileDestination)
+        val unchangedStack = StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(unchangedScreen))
 
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 ),
                 unchangedStack
@@ -175,8 +175,8 @@ class TreeMutatorEdgeCasesTest {
             activeStackIndex = 0
         )
 
-        val newScreen = ScreenNode("s1", "tab0", SettingsDestination)
-        val result = TreeMutator.replaceNode(root, "s1", newScreen) as TabNode
+        val newScreen = ScreenNode(NodeKey("s1"), NodeKey("tab0"), SettingsDestination)
+        val result = TreeMutator.replaceNode(root, NodeKey("s1"), newScreen) as TabNode
 
         // tab1 stack should be same reference
         assertSame(unchangedStack, result.stacks[1])
@@ -185,20 +185,20 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `replaceNode works with PaneNode`() {
-        val targetScreen = ScreenNode("target", "primary-stack", HomeDestination)
+        val targetScreen = ScreenNode(NodeKey("target"), NodeKey("primary-stack"), HomeDestination)
         val root = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode("primary-stack", "panes", listOf(targetScreen))
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(targetScreen))
                 )
             ),
             activePaneRole = PaneRole.Primary
         )
 
-        val newScreen = ScreenNode("target", "primary-stack", ProfileDestination)
-        val result = TreeMutator.replaceNode(root, "target", newScreen) as PaneNode
+        val newScreen = ScreenNode(NodeKey("target"), NodeKey("primary-stack"), ProfileDestination)
+        val result = TreeMutator.replaceNode(root, NodeKey("target"), newScreen) as PaneNode
 
         val primaryStack = result.paneContent(PaneRole.Primary) as StackNode
         val replacedScreen = primaryStack.children[0] as ScreenNode
@@ -212,27 +212,27 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `removeNode removes screen from stack`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination)
             )
         )
 
-        val result = TreeMutator.removeNode(root, "s2")
+        val result = TreeMutator.removeNode(root, NodeKey("s2"))
 
         assertNotNull(result)
         val resultStack = result as StackNode
         assertEquals(1, resultStack.children.size)
-        assertEquals("s1", resultStack.children[0].key)
+        assertEquals(NodeKey("s1"), resultStack.children[0].key)
     }
 
     @Test
     fun `removeNode returns null when removing root`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
-        val result = TreeMutator.removeNode(root, "root")
+        val result = TreeMutator.removeNode(root, NodeKey("root"))
 
         assertNull(result)
     }
@@ -240,34 +240,33 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `removeNode throws when removing stack from TabNode`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", emptyList()),
-                StackNode("tab1", "tabs", emptyList())
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList()),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.removeNode(root, "tab0")
+            TreeMutator.removeNode(root, NodeKey("tab0"))
         }
     }
 
     @Test
     fun `removeNode removes node from nested stack`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
                 TabNode(
-                    key = "tabs",
-                    parentKey = "root",
+                    key = NodeKey("tabs"),
+                    parentKey = NodeKey("root"),
                     stacks = listOf(
-                        StackNode(
-                            "tab0", "tabs", listOf(
-                                ScreenNode("s1", "tab0", HomeDestination),
-                                ScreenNode("s2", "tab0", ProfileDestination)
+                        StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                                ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination),
+                                ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
                             )
                         )
                     ),
@@ -276,29 +275,29 @@ class TreeMutatorEdgeCasesTest {
             )
         )
 
-        val result = TreeMutator.removeNode(root, "s2")
+        val result = TreeMutator.removeNode(root, NodeKey("s2"))
 
         assertNotNull(result)
         val tabs = (result as StackNode).children[0] as TabNode
         val tab0 = tabs.stacks[0]
         assertEquals(1, tab0.children.size)
-        assertEquals("s1", tab0.children[0].key)
+        assertEquals(NodeKey("s1"), tab0.children[0].key)
     }
 
     @Test
     fun `removeNode throws for non-existent key`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.removeNode(root, "nonexistent")
+            TreeMutator.removeNode(root, NodeKey("nonexistent"))
         }
     }
 
     @Test
     fun `removeNode throws when removing pane content directly`() {
-        val primaryContent = ScreenNode("primary", "panes", HomeDestination)
+        val primaryContent = ScreenNode(NodeKey("primary"), NodeKey("panes"), HomeDestination)
         val root = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(primaryContent)
@@ -307,21 +306,20 @@ class TreeMutatorEdgeCasesTest {
         )
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.removeNode(root, "primary")
+            TreeMutator.removeNode(root, NodeKey("primary"))
         }
     }
 
     @Test
     fun `removeNode removes nested content from PaneNode`() {
         val root = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", HomeDestination),
-                            ScreenNode("s2", "primary-stack", ProfileDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), HomeDestination),
+                            ScreenNode(NodeKey("s2"), NodeKey("primary-stack"), ProfileDestination)
                         )
                     )
                 )
@@ -329,13 +327,13 @@ class TreeMutatorEdgeCasesTest {
             activePaneRole = PaneRole.Primary
         )
 
-        val result = TreeMutator.removeNode(root, "s2")
+        val result = TreeMutator.removeNode(root, NodeKey("s2"))
 
         assertNotNull(result)
         val resultPanes = result as PaneNode
         val primaryStack = resultPanes.paneContent(PaneRole.Primary) as StackNode
         assertEquals(1, primaryStack.children.size)
-        assertEquals("s1", primaryStack.children[0].key)
+        assertEquals(NodeKey("s1"), primaryStack.children[0].key)
     }
 
     // =========================================================================
@@ -345,11 +343,11 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `replaceCurrent replaces top screen`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination)
             )
         )
 
@@ -373,10 +371,10 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `replaceCurrent works with single screen`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
             )
         )
 
@@ -392,7 +390,7 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `replaceCurrent throws on empty stack`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         assertFailsWith<IllegalArgumentException> {
             TreeMutator.replaceCurrent(root, HomeDestination)
@@ -401,7 +399,7 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `replaceCurrent throws when no active stack`() {
-        val root = ScreenNode("screen", null, HomeDestination)
+        val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         assertFailsWith<IllegalStateException> {
             TreeMutator.replaceCurrent(root, ProfileDestination)
@@ -411,18 +409,16 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `replaceCurrent targets deepest active stack in tabs`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination),
-                        ScreenNode("s2", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s3", "tab1", SettingsDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
             ),
@@ -451,11 +447,11 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `canGoBack returns true when stack has multiple items`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination)
             )
         )
 
@@ -465,10 +461,10 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `canGoBack returns false when stack has single item`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
             )
         )
 
@@ -477,14 +473,14 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `canGoBack returns false for empty stack`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         assertFalse(TreeMutator.canGoBack(root))
     }
 
     @Test
     fun `canGoBack returns false for ScreenNode`() {
-        val root = ScreenNode("screen", null, HomeDestination)
+        val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         assertFalse(TreeMutator.canGoBack(root))
     }
@@ -492,18 +488,16 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `canGoBack checks deepest active stack in tabs`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination),
-                        ScreenNode("s2", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s3", "tab1", SettingsDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
             ),
@@ -516,18 +510,16 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `canGoBack reflects active tab state`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination),
-                        ScreenNode("s2", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s3", "tab1", SettingsDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
             ),
@@ -544,11 +536,11 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `currentDestination returns active destination`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination)
             )
         )
 
@@ -559,7 +551,7 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `currentDestination returns null for empty stack`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         val current = TreeMutator.currentDestination(root)
 
@@ -568,7 +560,7 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `currentDestination returns destination from ScreenNode`() {
-        val root = ScreenNode("screen", null, HomeDestination)
+        val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         val current = TreeMutator.currentDestination(root)
 
@@ -578,17 +570,15 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `currentDestination follows active path in tabs`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s2", "tab1", ProfileDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s2"), NodeKey("tab1"), ProfileDestination)
                     )
                 )
             ),
@@ -603,20 +593,18 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `currentDestination follows active pane`() {
         val root = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    StackNode(
-                        "primary-stack", "panes", listOf(
-                            ScreenNode("s1", "primary-stack", ListDestination)
+                    StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s1"), NodeKey("primary-stack"), ListDestination)
                         )
                     )
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    StackNode(
-                        "supporting-stack", "panes", listOf(
-                            ScreenNode("s2", "supporting-stack", DetailDestination)
+                    StackNode(NodeKey("supporting-stack"), NodeKey("panes"), listOf(
+                            ScreenNode(NodeKey("s2"), NodeKey("supporting-stack"), DetailDestination)
                         )
                     )
                 )
@@ -636,37 +624,30 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `operations work on deeply nested structure`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("intro", "root", HomeDestination),
+                ScreenNode(NodeKey("intro"), NodeKey("root"), HomeDestination),
                 TabNode(
-                    key = "tabs",
-                    parentKey = "root",
+                    key = NodeKey("tabs"),
+                    parentKey = NodeKey("root"),
                     stacks = listOf(
-                        StackNode(
-                            "tab0", "tabs", listOf(
+                        StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
                                 PaneNode(
-                                    key = "panes",
-                                    parentKey = "tab0",
+                                    key = NodeKey("panes"),
+                                    parentKey = NodeKey("tab0"),
                                     paneConfigurations = mapOf(
                                         PaneRole.Primary to PaneConfiguration(
-                                            StackNode(
-                                                "primary-stack", "panes", listOf(
-                                                    ScreenNode(
-                                                        "list",
-                                                        "primary-stack",
+                                            StackNode(NodeKey("primary-stack"), NodeKey("panes"), listOf(
+                                                    ScreenNode(NodeKey("list"), NodeKey("primary-stack"),
                                                         ListDestination
                                                     )
                                                 )
                                             )
                                         ),
                                         PaneRole.Supporting to PaneConfiguration(
-                                            StackNode(
-                                                "supporting-stack", "panes", listOf(
-                                                    ScreenNode(
-                                                        "detail",
-                                                        "supporting-stack",
+                                            StackNode(NodeKey("supporting-stack"), NodeKey("panes"), listOf(
+                                                    ScreenNode(NodeKey("detail"), NodeKey("supporting-stack"),
                                                         DetailDestination
                                                     )
                                                 )
@@ -677,9 +658,8 @@ class TreeMutatorEdgeCasesTest {
                                 )
                             )
                         ),
-                        StackNode(
-                            "tab1", "tabs", listOf(
-                                ScreenNode("settings", "tab1", SettingsDestination)
+                        StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                                ScreenNode(NodeKey("settings"), NodeKey("tab1"), SettingsDestination)
                             )
                         )
                     ),
@@ -692,12 +672,12 @@ class TreeMutatorEdgeCasesTest {
         assertEquals(DetailDestination, TreeMutator.currentDestination(root))
 
         // Push to deepest active stack
-        val afterPush = TreeMutator.push(root, ProfileDestination) { "new-screen" }
-        val supportingStack = afterPush.findByKey("supporting-stack") as StackNode
+        val afterPush = TreeMutator.push(root, ProfileDestination) { NodeKey("new-screen") }
+        val supportingStack = afterPush.findByKey(NodeKey("supporting-stack")) as StackNode
         assertEquals(2, supportingStack.children.size)
 
         // Switch tab
-        val afterTabSwitch = TreeMutator.switchTab(afterPush, "tabs", 1)
+        val afterTabSwitch = TreeMutator.switchTab(afterPush, NodeKey("tabs"), 1)
         assertEquals(SettingsDestination, TreeMutator.currentDestination(afterTabSwitch))
 
         // CanGoBack should check active path
@@ -706,20 +686,19 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `structural sharing preserved in deeply nested operations`() {
-        val tab1Screen = ScreenNode("settings", "tab1", SettingsDestination)
-        val tab1Stack = StackNode("tab1", "tabs", listOf(tab1Screen))
+        val tab1Screen = ScreenNode(NodeKey("settings"), NodeKey("tab1"), SettingsDestination)
+        val tab1Stack = StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(tab1Screen))
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
                 TabNode(
-                    key = "tabs",
-                    parentKey = "root",
+                    key = NodeKey("tabs"),
+                    parentKey = NodeKey("root"),
                     stacks = listOf(
-                        StackNode(
-                            "tab0", "tabs", listOf(
-                                ScreenNode("home", "tab0", HomeDestination)
+                        StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                                ScreenNode(NodeKey("home"), NodeKey("tab0"), HomeDestination)
                             )
                         ),
                         tab1Stack
@@ -729,7 +708,7 @@ class TreeMutatorEdgeCasesTest {
             )
         )
 
-        val result = TreeMutator.push(root, ProfileDestination) { "new" }
+        val result = TreeMutator.push(root, ProfileDestination) { NodeKey("new") }
 
         // tab1 branch should be completely unchanged
         val resultTabs = (result as StackNode).children[0] as TabNode
@@ -743,9 +722,9 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `push to empty root stack`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
-        val result = TreeMutator.push(root, HomeDestination) { "first" }
+        val result = TreeMutator.push(root, HomeDestination) { NodeKey("first") }
 
         val resultStack = result as StackNode
         assertEquals(1, resultStack.children.size)
@@ -754,10 +733,10 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `pop from tree with single screen returns empty stack`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("only", "root", HomeDestination)
+                ScreenNode(NodeKey("only"), NodeKey("root"), HomeDestination)
             )
         )
 
@@ -771,11 +750,11 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `operations on empty TabNode stacks`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", emptyList()),
-                StackNode("tab1", "tabs", emptyList())
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList()),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
@@ -790,7 +769,7 @@ class TreeMutatorEdgeCasesTest {
         assertNull(TreeMutator.pop(root))
 
         // push should work
-        val afterPush = TreeMutator.push(root, HomeDestination) { "first" }
+        val afterPush = TreeMutator.push(root, HomeDestination) { NodeKey("first") }
         val tabs = afterPush as TabNode
         assertEquals(1, tabs.stacks[0].children.size)
         assertEquals(0, tabs.stacks[1].children.size)
@@ -799,20 +778,19 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `switchTab preserves empty stack state`() {
         val root = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 ),
-                StackNode("tab1", "tabs", emptyList())
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
 
-        val result = TreeMutator.switchTab(root, "tabs", 1) as TabNode
+        val result = TreeMutator.switchTab(root, NodeKey("tabs"), 1) as TabNode
 
         assertEquals(1, result.activeStackIndex)
         assertEquals(1, result.stacks[0].children.size) // tab0 unchanged
@@ -825,12 +803,12 @@ class TreeMutatorEdgeCasesTest {
 
     @Test
     fun `multiple sequential operations maintain integrity`() {
-        var state: NavNode = StackNode("root", null, emptyList())
+        var state: NavNode = StackNode(NodeKey("root"), null, emptyList())
 
         // Push multiple screens
-        state = TreeMutator.push(state, HomeDestination) { "s1" }
-        state = TreeMutator.push(state, ProfileDestination) { "s2" }
-        state = TreeMutator.push(state, SettingsDestination) { "s3" }
+        state = TreeMutator.push(state, HomeDestination) { NodeKey("s1") }
+        state = TreeMutator.push(state, ProfileDestination) { NodeKey("s2") }
+        state = TreeMutator.push(state, SettingsDestination) { NodeKey("s3") }
 
         assertEquals(3, (state as StackNode).children.size)
         assertEquals(SettingsDestination, TreeMutator.currentDestination(state))
@@ -841,12 +819,12 @@ class TreeMutatorEdgeCasesTest {
         assertEquals(ProfileDestination, TreeMutator.currentDestination(state))
 
         // Replace current
-        state = TreeMutator.replaceCurrent(state, DetailDestination) { "s4" }
+        state = TreeMutator.replaceCurrent(state, DetailDestination) { NodeKey("s4") }
         assertEquals(2, (state as StackNode).children.size)
         assertEquals(DetailDestination, TreeMutator.currentDestination(state))
 
         // Clear and push
-        state = TreeMutator.clearAndPush(state, ListDestination) { "s5" }
+        state = TreeMutator.clearAndPush(state, ListDestination) { NodeKey("s5") }
         assertEquals(1, (state as StackNode).children.size)
         assertEquals(ListDestination, TreeMutator.currentDestination(state))
     }
@@ -854,14 +832,14 @@ class TreeMutatorEdgeCasesTest {
     @Test
     fun `immutability ensures old state is unchanged`() {
         val original = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
             )
         )
 
-        val modified = TreeMutator.push(original, ProfileDestination) { "s2" }
+        val modified = TreeMutator.push(original, ProfileDestination) { NodeKey("s2") }
 
         // Original should be unchanged
         assertEquals(1, original.children.size)

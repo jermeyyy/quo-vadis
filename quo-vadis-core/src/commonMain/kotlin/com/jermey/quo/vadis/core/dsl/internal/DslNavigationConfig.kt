@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.dsl.ContainerBuilder
 import com.jermey.quo.vadis.core.dsl.StackScreenEntry
 import com.jermey.quo.vadis.core.dsl.TabEntry
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -231,8 +232,8 @@ internal class DslNavigationConfig(
     ): StackNode {
         val children = buildStackChildren(builder.screens, key)
         return StackNode(
-            key = key,
-            parentKey = parentKey,
+            key = NodeKey(key),
+            parentKey = parentKey?.let { NodeKey(it) },
             children = children,
             scopeKey = builder.scopeKey
         )
@@ -263,8 +264,8 @@ internal class DslNavigationConfig(
         val rootKey = "$stackKey/root"
         return listOf(
             ScreenNode(
-                key = rootKey,
-                parentKey = stackKey,
+                key = NodeKey(rootKey),
+                parentKey = NodeKey(stackKey),
                 destination = rootDestination
             )
         )
@@ -298,8 +299,8 @@ internal class DslNavigationConfig(
         }
 
         return TabNode(
-            key = key,
-            parentKey = parentKey,
+            key = NodeKey(key),
+            parentKey = parentKey?.let { NodeKey(it) },
             stacks = stacks,
             activeStackIndex = config.initialTab,
             wrapperKey = builder.scopeKey,
@@ -327,8 +328,8 @@ internal class DslNavigationConfig(
             is TabEntry.FlatScreen -> {
                 listOf(
                     ScreenNode(
-                        key = "$stackKey/root",
-                        parentKey = stackKey,
+                        key = NodeKey("$stackKey/root"),
+                        parentKey = NodeKey(stackKey),
                         destination = tabEntry.destination
                     )
                 )
@@ -337,8 +338,8 @@ internal class DslNavigationConfig(
             is TabEntry.NestedStack -> {
                 listOf(
                     ScreenNode(
-                        key = "$stackKey/root",
-                        parentKey = stackKey,
+                        key = NodeKey("$stackKey/root"),
+                        parentKey = NodeKey(stackKey),
                         destination = tabEntry.rootDestination
                     )
                 )
@@ -360,8 +361,8 @@ internal class DslNavigationConfig(
         }
 
         return StackNode(
-            key = stackKey,
-            parentKey = tabNodeKey,
+            key = NodeKey(stackKey),
+            parentKey = NodeKey(tabNodeKey),
             children = children,
             scopeKey = null // Tab stacks don't have their own scope
         )
@@ -398,8 +399,8 @@ internal class DslNavigationConfig(
         val paneConfigurations = buildPaneConfigurations(config, key)
 
         return PaneNode(
-            key = key,
-            parentKey = parentKey,
+            key = NodeKey(key),
+            parentKey = parentKey?.let { NodeKey(it) },
             paneConfigurations = paneConfigurations,
             activePaneRole = config.initialPane,
             backBehavior = config.backBehavior,
@@ -423,12 +424,12 @@ internal class DslNavigationConfig(
 
             val stackContent = if (entry.content.rootDestination != null) {
                 StackNode(
-                    key = paneStackKey,
-                    parentKey = paneNodeKey,
+                    key = NodeKey(paneStackKey),
+                    parentKey = NodeKey(paneNodeKey),
                     children = listOf(
                         ScreenNode(
-                            key = "$paneStackKey/root",
-                            parentKey = paneStackKey,
+                            key = NodeKey("$paneStackKey/root"),
+                            parentKey = NodeKey(paneStackKey),
                             destination = entry.content.rootDestination
                         )
                     ),
@@ -436,8 +437,8 @@ internal class DslNavigationConfig(
                 )
             } else {
                 StackNode(
-                    key = paneStackKey,
-                    parentKey = paneNodeKey,
+                    key = NodeKey(paneStackKey),
+                    parentKey = NodeKey(paneNodeKey),
                     children = emptyList(),
                     scopeKey = null
                 )

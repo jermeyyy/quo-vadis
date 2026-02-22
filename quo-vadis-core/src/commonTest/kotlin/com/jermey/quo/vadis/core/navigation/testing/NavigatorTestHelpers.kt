@@ -5,6 +5,7 @@ package com.jermey.quo.vadis.core.navigation.testing
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
@@ -32,11 +33,11 @@ import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
  * Complex state setup:
  * ```kotlin
  * val customStack = StackNode(
- *     key = "root",
+ *     key = NodeKey("root"),
  *     parentKey = null,
  *     children = listOf(
- *         ScreenNode(key = "home", parentKey = "root", destination = HomeDestination),
- *         ScreenNode(key = "detail", parentKey = "root", destination = DetailDestination)
+ *         ScreenNode(key = NodeKey("home"), parentKey = NodeKey("root"), destination = HomeDestination),
+ *         ScreenNode(key = NodeKey("detail"), parentKey = NodeKey("root"), destination = DetailDestination)
  *     )
  * )
  * val navigator = TreeNavigator.withState(customStack)
@@ -52,8 +53,8 @@ import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
  */
 @Suppress("UnusedReceiverParameter")
 fun TreeNavigator.Companion.withDestination(destination: NavDestination): TreeNavigator {
-    val stackKey = NavKeyGenerator.generate()
-    val screenKey = NavKeyGenerator.generate()
+    val stackKey = NodeKey(NavKeyGenerator.generate())
+    val screenKey = NodeKey(NavKeyGenerator.generate())
     val screenNode = ScreenNode(
         key = screenKey,
         parentKey = stackKey,
@@ -88,8 +89,8 @@ fun TreeNavigator.Companion.withState(initialState: NavNode): TreeNavigator {
  */
 @Suppress("UnusedReceiverParameter")
 fun StackNode.Companion.singleScreen(destination: NavDestination): StackNode {
-    val stackKey = NavKeyGenerator.generate()
-    val screenKey = NavKeyGenerator.generate()
+    val stackKey = NodeKey(NavKeyGenerator.generate())
+    val screenKey = NodeKey(NavKeyGenerator.generate())
     val screenNode = ScreenNode(
         key = screenKey,
         parentKey = stackKey,

@@ -1,11 +1,13 @@
 package com.jermey.quo.vadis.core.navigation.internal.tree.operations
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TabOperations.switchTab
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.replaceNode
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PushStrategy
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -34,7 +36,7 @@ import kotlin.uuid.Uuid
 object PushOperations {
 
     @OptIn(ExperimentalUuidApi::class)
-    private val keyGenerator: () -> String = { Uuid.random().toString().take(8) }
+    private val keyGenerator: NavKeyGenerator = { NodeKey(Uuid.random().toString().take(8)) }
 
     /**
      * Push a destination onto the deepest active stack.
@@ -61,7 +63,7 @@ object PushOperations {
     fun push(
         root: NavNode,
         destination: NavDestination,
-        generateKey: () -> String = keyGenerator
+        generateKey: NavKeyGenerator = keyGenerator
     ): NavNode {
         val targetStack = root.activeStack()
             ?: throw IllegalStateException("No active stack found in tree")
@@ -96,9 +98,9 @@ object PushOperations {
     @OptIn(ExperimentalUuidApi::class)
     fun pushToStack(
         root: NavNode,
-        stackKey: String,
+        stackKey: NodeKey,
         destination: NavDestination,
-        generateKey: () -> String = keyGenerator
+        generateKey: NavKeyGenerator = keyGenerator
     ): NavNode {
         val targetNode = root.findByKey(stackKey)
             ?: throw IllegalArgumentException("Node with key '$stackKey' not found")
@@ -176,7 +178,7 @@ object PushOperations {
         destination: NavDestination,
         scopeRegistry: ScopeRegistry,
         paneRoleRegistry: PaneRoleRegistry = PaneRoleRegistry.Empty,
-        generateKey: () -> String = keyGenerator
+        generateKey: NavKeyGenerator = keyGenerator
     ): NavNode {
         // If no scope registry (or Empty), use the simple push
         if (scopeRegistry === ScopeRegistry.Empty && paneRoleRegistry === PaneRoleRegistry.Empty) {
@@ -219,7 +221,7 @@ object PushOperations {
     fun clearAndPush(
         root: NavNode,
         destination: NavDestination,
-        generateKey: () -> String = keyGenerator
+        generateKey: NavKeyGenerator = keyGenerator
     ): NavNode {
         val targetStack = root.activeStack()
             ?: throw IllegalStateException("No active stack found in tree")
@@ -247,9 +249,9 @@ object PushOperations {
     @OptIn(ExperimentalUuidApi::class)
     fun clearStackAndPush(
         root: NavNode,
-        stackKey: String,
+        stackKey: NodeKey,
         destination: NavDestination,
-        generateKey: () -> String = keyGenerator
+        generateKey: NavKeyGenerator = keyGenerator
     ): NavNode {
         val targetNode = root.findByKey(stackKey)
             ?: throw IllegalArgumentException("Node with key '$stackKey' not found")
@@ -284,7 +286,7 @@ object PushOperations {
     fun replaceCurrent(
         root: NavNode,
         destination: NavDestination,
-        generateKey: () -> String = keyGenerator
+        generateKey: NavKeyGenerator = keyGenerator
     ): NavNode {
         val targetStack = root.activeStack()
             ?: throw IllegalStateException("No active stack found in tree")
@@ -321,7 +323,7 @@ object PushOperations {
     fun pushAll(
         root: NavNode,
         destinations: List<NavDestination>,
-        generateKey: () -> String = keyGenerator
+        generateKey: NavKeyGenerator = keyGenerator
     ): NavNode {
         if (destinations.isEmpty()) return root
 
@@ -479,7 +481,7 @@ object PushOperations {
         root: NavNode,
         targetStack: StackNode,
         destination: NavDestination,
-        generateKey: () -> String
+        generateKey: NavKeyGenerator
     ): NavNode {
         val newScreen = ScreenNode(
             key = generateKey(),
@@ -512,7 +514,7 @@ object PushOperations {
         root: NavNode,
         parentStack: StackNode,
         destination: NavDestination,
-        generateKey: () -> String
+        generateKey: NavKeyGenerator
     ): NavNode {
         val screenKey = generateKey()
 
@@ -550,7 +552,7 @@ object PushOperations {
         paneNode: PaneNode,
         role: PaneRole,
         destination: NavDestination,
-        generateKey: () -> String
+        generateKey: NavKeyGenerator
     ): NavNode {
         val paneConfig = paneNode.paneConfigurations[role]
             ?: return root // Role not configured, return unchanged

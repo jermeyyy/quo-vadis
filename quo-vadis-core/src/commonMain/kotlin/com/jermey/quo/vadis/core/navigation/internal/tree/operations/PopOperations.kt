@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.navigation.internal.tree.config.PopBehavior
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.removeNode
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.replaceNode
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -83,7 +84,7 @@ object PopOperations {
      * @param predicate Function to identify the target node
      * @return New tree with nodes popped, or original tree if no match found
      */
-    fun popTo(
+    inline fun popTo(
         root: NavNode,
         inclusive: Boolean = false,
         predicate: (NavNode) -> Boolean
@@ -115,7 +116,7 @@ object PopOperations {
      */
     fun popTo(
         root: NavNode,
-        targetKey: String,
+        targetKey: NodeKey,
         inclusive: Boolean = false
     ): NavNode {
         return popTo(root, inclusive) { node ->

@@ -2,9 +2,15 @@ package com.jermey.navplayground.demo.ui.components.explore
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope.OverlayClip
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -37,11 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -92,10 +99,11 @@ fun ExploreCard(
     item: ExploreItem,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    parallaxOffset: Float = 0f
 ) {
     var isPressed by remember { mutableStateOf(false) }
-    val hazeState = remember { HazeState() }
+    val hazeState = remember(item.id) { HazeState() }
     // Use rememberTransitionScope() to get a fresh TransitionScope that always uses
     // the current LocalAnimatedVisibilityScope - this ensures shared elements animate
     // correctly even for exit content during navigation transitions
@@ -147,9 +155,10 @@ fun ExploreCard(
         
         Box(modifier = finalContentModifier) {
             CardBackgroundImage(
-                imageUrl = item.imageUrl,
+                imageUrl = item.cardImageUrl,
                 contentDescription = item.title,
-                hazeState = hazeState
+                hazeState = hazeState,
+                parallaxOffset = parallaxOffset
             )
 
             GlassOverlay(
@@ -174,7 +183,8 @@ fun ExploreCard(
 private fun CardBackgroundImage(
     imageUrl: String,
     contentDescription: String,
-    hazeState: HazeState
+    hazeState: HazeState,
+    parallaxOffset: Float = 0f
 ) {
     val context = LocalPlatformContext.current
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
@@ -194,7 +204,9 @@ private fun CardBackgroundImage(
                 .crossfade(true)
                 .build(),
             contentDescription = contentDescription,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { translationY = parallaxOffset },
             contentScale = ContentScale.Crop,
             onState = { imageState = it }
         )
@@ -207,20 +219,49 @@ private fun CardBackgroundImage(
     }
 }
 
+private const val SHIMMER_DURATION_MS = 1200
+private const val SHIMMER_TRANSLATE_TARGET = 1000f
+private const val SHIMMER_TRANSLATE_OFFSET = 500f
+
+/**
+ * Shimmer loading placeholder for card images.
+ *
+ * Displays a diagonal sweep gradient animation that matches card dimensions,
+ * replacing the previous static spinner for a more polished loading experience.
+ */
 @Composable
 private fun LoadingPlaceholder() {
+    val shimmerColors = listOf(
+        MaterialTheme.colorScheme.surfaceContainerHighest,
+        MaterialTheme.colorScheme.surfaceContainerHigh,
+        MaterialTheme.colorScheme.surfaceContainerHighest
+    )
+
+    val transition = rememberInfiniteTransition(label = "shimmer")
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = SHIMMER_TRANSLATE_TARGET,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = SHIMMER_DURATION_MS,
+                easing = LinearEasing
+            ),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmerTranslate"
+    )
+
+    val brush = Brush.linearGradient(
+        colors = shimmerColors,
+        start = Offset(translateAnim - SHIMMER_TRANSLATE_OFFSET, translateAnim - SHIMMER_TRANSLATE_OFFSET),
+        end = Offset(translateAnim, translateAnim)
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(24.dp),
-            strokeWidth = 2.dp,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
+            .background(brush)
+    )
 }
 
 @Composable

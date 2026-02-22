@@ -1,11 +1,13 @@
 package com.jermey.quo.vadis.core.navigation.internal.tree.operations
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.PopOperations.pop
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.replaceNode
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PopResult
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -50,11 +52,11 @@ object PaneOperations {
     @OptIn(ExperimentalUuidApi::class)
     fun navigateToPane(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole,
         destination: NavDestination,
         switchFocus: Boolean = true,
-        generateKey: () -> String = { Uuid.random().toString().take(8) }
+        generateKey: NavKeyGenerator = { NodeKey(Uuid.random().toString().take(8)) }
     ): NavNode {
         val paneNode = root.findByKey(nodeKey) as? PaneNode
             ?: throw IllegalArgumentException("PaneNode with key '$nodeKey' not found")
@@ -104,7 +106,7 @@ object PaneOperations {
      */
     fun switchActivePane(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole
     ): NavNode {
         val paneNode = root.findByKey(nodeKey) as? PaneNode
@@ -130,7 +132,7 @@ object PaneOperations {
      */
     fun popPane(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole
     ): NavNode? {
         val paneNode = root.findByKey(nodeKey) as? PaneNode
@@ -347,7 +349,7 @@ object PaneOperations {
      * @param role The pane role to clear
      * @return New tree with the pane's stack cleared
      */
-    private fun clearPaneStack(root: NavNode, paneNodeKey: String, role: PaneRole): NavNode {
+    private fun clearPaneStack(root: NavNode, paneNodeKey: NodeKey, role: PaneRole): NavNode {
         val paneNode = root.findByKey(paneNodeKey) as? PaneNode ?: return root
         val paneConfig = paneNode.paneConfigurations[role] ?: return root
         val stackNode = paneConfig.content as? StackNode ?: return root
@@ -372,7 +374,7 @@ object PaneOperations {
      */
     fun setPaneConfiguration(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole,
         config: PaneConfiguration
     ): NavNode {
@@ -395,7 +397,7 @@ object PaneOperations {
      */
     fun removePaneConfiguration(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole
     ): NavNode {
         require(role != PaneRole.Primary) {

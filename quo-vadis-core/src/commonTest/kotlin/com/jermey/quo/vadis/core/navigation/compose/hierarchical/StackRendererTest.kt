@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.compose.internal.AnimationCoordinator
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import kotlin.test.Test
@@ -59,13 +60,13 @@ class StackRendererTest {
         key: String,
         parentKey: String? = null,
         destination: NavDestination = HomeDestination
-    ): ScreenNode = ScreenNode(key, parentKey, destination)
+    ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
     private fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
-    ): StackNode = StackNode(key, parentKey, screens.toList())
+    ): StackNode = StackNode(NodeKey(key), parentKey?.let { NodeKey(it) }, screens.toList())
 
     /**
      * Helper to detect back navigation by comparing stack sizes.
@@ -243,7 +244,7 @@ class StackRendererTest {
     fun `stack pop to root leaves single screen`() {
         // Given
         val screens = (1..5).map { createScreen("s$it", "stack") }
-        val fullStack = StackNode("stack", null, screens)
+        val fullStack = StackNode(NodeKey("stack"), null, screens)
 
         // When - pop to root
         val rootOnlyStack = createStack("stack", null, screens.first())
@@ -296,7 +297,7 @@ class StackRendererTest {
         )
 
         // Then
-        assertEquals("parent-tabs", nestedStack.parentKey)
+        assertEquals(NodeKey("parent-tabs"), nestedStack.parentKey)
     }
 
     @Test
@@ -362,7 +363,7 @@ class StackRendererTest {
     @Test
     fun `empty stack has no active child`() {
         // Given
-        val emptyStack = StackNode("stack", null, emptyList())
+        val emptyStack = StackNode(NodeKey("stack"), null, emptyList())
 
         // Then
         assertNull(emptyStack.activeChild)
@@ -374,7 +375,7 @@ class StackRendererTest {
     @Test
     fun `empty stack to single screen is not back navigation`() {
         // Given
-        val emptyStack = StackNode("stack", null, emptyList())
+        val emptyStack = StackNode(NodeKey("stack"), null, emptyList())
         val singleStack = createStack("stack", null, createScreen("s1", "stack"))
 
         // When
@@ -392,7 +393,7 @@ class StackRendererTest {
     fun `stack preserves all children order`() {
         // Given
         val children = (1..10).map { createScreen("screen-$it", "stack") }
-        val stack = StackNode("stack", null, children)
+        val stack = StackNode(NodeKey("stack"), null, children)
 
         // Then
         assertEquals(10, stack.children.size)
@@ -404,9 +405,9 @@ class StackRendererTest {
     @Test
     fun `stack key is consistent across state changes`() {
         // Given
-        val key = "my-stack"
-        val stack1 = createStack(key, null, createScreen("s1", key))
-        val stack2 = createStack(key, null, createScreen("s1", key), createScreen("s2", key))
+        val key = NodeKey("my-stack")
+        val stack1 = createStack(key.value, null, createScreen("s1", key.value))
+        val stack2 = createStack(key.value, null, createScreen("s1", key.value), createScreen("s2", key.value))
 
         // Then
         assertEquals(key, stack1.key)
@@ -423,10 +424,10 @@ class StackRendererTest {
         // Given - outer stack containing inner stack
         val innerScreen = createScreen("inner-screen", "inner-stack")
         val innerStack = createStack("inner-stack", "outer-stack", innerScreen)
-        val outerStack = StackNode("outer-stack", null, listOf(innerStack))
+        val outerStack = StackNode(NodeKey("outer-stack"), null, listOf(innerStack))
 
         // Then
-        assertEquals("outer-stack", innerStack.parentKey)
+        assertEquals(NodeKey("outer-stack"), innerStack.parentKey)
         assertNull(outerStack.parentKey)
         assertEquals(innerStack, outerStack.activeChild)
     }
@@ -436,13 +437,13 @@ class StackRendererTest {
         // Given - 3 levels deep
         val screen = createScreen("screen", "level2")
         val level2 = createStack("level2", "level1", screen)
-        val level1 = StackNode("level1", "root", listOf(level2))
-        val root = StackNode("root", null, listOf(level1))
+        val level1 = StackNode(NodeKey("level1"), NodeKey("root"), listOf(level2))
+        val root = StackNode(NodeKey("root"), null, listOf(level1))
 
         // Then
         assertNull(root.parentKey)
-        assertEquals("root", level1.parentKey)
-        assertEquals("level1", level2.parentKey)
-        assertEquals("level2", screen.parentKey)
+        assertEquals(NodeKey("root"), level1.parentKey)
+        assertEquals(NodeKey("level1"), level2.parentKey)
+        assertEquals(NodeKey("level2"), screen.parentKey)
     }
 }

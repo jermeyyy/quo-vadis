@@ -253,17 +253,17 @@ fun NavigationHost(
     val currentScreenInfo = remember(currentScreenNode) {
         currentScreenNode?.let {
             ScreenNavigationInfo(
-                screenId = it.key,
+                screenId = it.key.value,
                 displayName = it.destination::class.simpleName,
                 route = runCatching { it.destination.route }.getOrNull()
             )
-        } ?: ScreenNavigationInfo(screenId = navState.key)
+        } ?: ScreenNavigationInfo(screenId = navState.key.value)
     }
 
     val previousScreenInfo = remember(previousScreenNode) {
         previousScreenNode?.let {
             ScreenNavigationInfo(
-                screenId = it.key,
+                screenId = it.key.value,
                 displayName = it.destination::class.simpleName,
                 route = runCatching { it.destination.route }.getOrNull()
             )
@@ -353,6 +353,7 @@ fun NavigationHost(
             coroutineScope.launch {
                 predictiveBackController.animateCompleteGesture {
                     if (targetState != null) {
+                        @Suppress("DEPRECATION")
                         navigator.updateState(targetState)
                     }
                 }

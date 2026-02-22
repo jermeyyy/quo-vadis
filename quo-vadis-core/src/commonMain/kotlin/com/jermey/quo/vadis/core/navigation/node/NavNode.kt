@@ -49,12 +49,12 @@ sealed interface NavNode {
      * Recommended format: UUID or structured path (e.g., "root/stack0/screen1")
      * for debugging purposes.
      */
-    val key: String
+    val key: NodeKey
 
     /**
      * Key of the parent node, or null if this is the root node.
      */
-    val parentKey: String?
+    val parentKey: NodeKey?
 }
 
 // =============================================================================
@@ -69,7 +69,7 @@ sealed interface NavNode {
  * Recursively finds a node by its key.
  * @return The node with the given key, or null if not found
  */
-fun NavNode.findByKey(key: String): NavNode? {
+fun NavNode.findByKey(key: NodeKey): NavNode? {
     if (this.key == key) return this
 
     return when (this) {
@@ -134,12 +134,14 @@ fun NavNode.activeStack(): StackNode? {
 /**
  * Returns all ScreenNodes in this subtree.
  */
-fun NavNode.allScreens(): List<ScreenNode> {
-    return when (this) {
-        is ScreenNode -> listOf(this)
-        is StackNode -> children.flatMap { it.allScreens() }
-        is TabNode -> stacks.flatMap { it.allScreens() }
-        is PaneNode -> paneConfigurations.values.flatMap { it.content.allScreens() }
+fun NavNode.allScreens(): List<ScreenNode> = buildList { collectScreens(this@allScreens) }
+
+private fun MutableList<ScreenNode>.collectScreens(node: NavNode) {
+    when (node) {
+        is ScreenNode -> add(node)
+        is StackNode -> node.children.forEach { collectScreens(it) }
+        is TabNode -> node.stacks.forEach { collectScreens(it) }
+        is PaneNode -> node.paneConfigurations.values.forEach { collectScreens(it.content) }
     }
 }
 
@@ -160,36 +162,99 @@ fun NavNode.paneForRole(role: PaneRole): NavNode? {
 /**
  * Returns all PaneNodes in this subtree.
  */
-fun NavNode.allPaneNodes(): List<PaneNode> {
-    return when (this) {
-        is ScreenNode -> emptyList()
-        is StackNode -> children.flatMap { it.allPaneNodes() }
-        is TabNode -> stacks.flatMap { it.allPaneNodes() }
-        is PaneNode -> listOf(this) + paneConfigurations.values.flatMap { it.content.allPaneNodes() }
+fun NavNode.allPaneNodes(): List<PaneNode> = buildList { collectPaneNodes(this@allPaneNodes) }
+
+private fun MutableList<PaneNode>.collectPaneNodes(node: NavNode) {
+    when (node) {
+        is ScreenNode -> Unit
+        is StackNode -> node.children.forEach { collectPaneNodes(it) }
+        is TabNode -> node.stacks.forEach { collectPaneNodes(it) }
+        is PaneNode -> {
+            add(node)
+            node.paneConfigurations.values.forEach { collectPaneNodes(it.content) }
+        }
     }
 }
 
 /**
  * Returns all TabNodes in this subtree.
  */
-fun NavNode.allTabNodes(): List<TabNode> {
-    return when (this) {
-        is ScreenNode -> emptyList()
-        is StackNode -> children.flatMap { it.allTabNodes() }
-        is TabNode -> listOf(this) + stacks.flatMap { it.allTabNodes() }
-        is PaneNode -> paneConfigurations.values.flatMap { it.content.allTabNodes() }
+fun NavNode.allTabNodes(): List<TabNode> = buildList { collectTabNodes(this@allTabNodes) }
+
+private fun MutableList<TabNode>.collectTabNodes(node: NavNode) {
+    when (node) {
+        is ScreenNode -> Unit
+        is StackNode -> node.children.forEach { collectTabNodes(it) }
+        is TabNode -> {
+            add(node)
+            node.stacks.forEach { collectTabNodes(it) }
+        }
+        is PaneNode -> node.paneConfigurations.values.forEach { collectTabNodes(it.content) }
     }
 }
 
 /**
  * Returns all StackNodes in this subtree.
  */
-fun NavNode.allStackNodes(): List<StackNode> {
+fun NavNode.allStackNodes(): List<StackNode> = buildList { collectStackNodes(this@allStackNodes) }
+
+private fun MutableList<StackNode>.collectStackNodes(node: NavNode) {
+    when (node) {
+        is ScreenNode -> Unit
+        is StackNode -> {
+            add(node)
+            node.children.forEach { collectStackNodes(it) }
+        }
+        is TabNode -> node.stacks.forEach { collectStackNodes(it) }
+        is PaneNode -> node.paneConfigurations.values.forEach { collectStackNodes(it.content) }
+    }
+}
+
+// =============================================================================
+// Generic Tree Traversal
+// =============================================================================
+
+/**
+ * Folds the navigation tree, applying [transform] to each node and combining results with [combine].
+ *
+ * This is the generic tree traversal primitive. All specific traversal functions
+ * (like [allScreens], [allTabNodes]) can be expressed in terms of fold.
+ *
+ * @param initial The initial accumulator value
+ * @param combine Function to combine two accumulated results
+ * @param transform Function to extract a value from each node
+ * @return The combined result of applying transform to all nodes
+ */
+fun <R> NavNode.fold(
+    initial: R,
+    combine: (R, R) -> R,
+    transform: (NavNode) -> R,
+): R {
+    val current = transform(this)
     return when (this) {
-        is ScreenNode -> emptyList()
-        is StackNode -> listOf(this) + children.flatMap { it.allStackNodes() }
-        is TabNode -> stacks.flatMap { it.allStackNodes() }
-        is PaneNode -> paneConfigurations.values.flatMap { it.content.allStackNodes() }
+        is ScreenNode -> current
+        is StackNode -> children.fold(current) { acc, child ->
+            combine(acc, child.fold(initial, combine, transform))
+        }
+        is TabNode -> stacks.fold(current) { acc, stack ->
+            combine(acc, stack.fold(initial, combine, transform))
+        }
+        is PaneNode -> paneConfigurations.values.fold(current) { acc, config ->
+            combine(acc, config.content.fold(initial, combine, transform))
+        }
+    }
+}
+
+/**
+ * Visits each node in the navigation tree, invoking [action] on each.
+ */
+fun NavNode.forEachNode(action: (NavNode) -> Unit) {
+    action(this)
+    when (this) {
+        is ScreenNode -> { /* leaf */ }
+        is StackNode -> children.forEach { it.forEachNode(action) }
+        is TabNode -> stacks.forEach { it.forEachNode(action) }
+        is PaneNode -> paneConfigurations.values.forEach { it.content.forEachNode(action) }
     }
 }
 
@@ -209,14 +274,7 @@ fun NavNode.depth(): Int {
 /**
  * Returns the total count of all nodes in this subtree (including this node).
  */
-fun NavNode.nodeCount(): Int {
-    return when (this) {
-        is ScreenNode -> 1
-        is StackNode -> 1 + children.sumOf { it.nodeCount() }
-        is TabNode -> 1 + stacks.sumOf { it.nodeCount() }
-        is PaneNode -> 1 + paneConfigurations.values.sumOf { it.content.nodeCount() }
-    }
-}
+fun NavNode.nodeCount(): Int = fold(0, Int::plus) { 1 }
 
 /**
  * Determines if this node can handle back internally (has content to pop/switch).

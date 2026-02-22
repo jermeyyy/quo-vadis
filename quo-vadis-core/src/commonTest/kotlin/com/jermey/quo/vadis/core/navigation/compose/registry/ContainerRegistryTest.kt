@@ -9,6 +9,7 @@ import com.jermey.quo.vadis.core.registry.ContainerInfo
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -81,21 +82,21 @@ class ContainerRegistryTest {
     /**
      * Creates a minimal TabNode builder for testing.
      */
-    private fun createTabNodeBuilder(): (String, String?, Int) -> TabNode =
+    private fun createTabNodeBuilder(): (NodeKey, NodeKey?, Int) -> TabNode =
         { key, parentKey, initialTabIndex ->
             TabNode(
                 key = key,
                 parentKey = parentKey,
                 stacks = listOf(
                     StackNode(
-                        "$key-tab0",
+                        NodeKey("$key-tab0"),
                         key,
-                        listOf(ScreenNode("$key-screen0", "$key-tab0", MainTabs.HomeTab))
+                        listOf(ScreenNode(NodeKey("$key-screen0"), NodeKey("$key-tab0"), MainTabs.HomeTab))
                     ),
                     StackNode(
-                        "$key-tab1",
+                        NodeKey("$key-tab1"),
                         key,
-                        listOf(ScreenNode("$key-screen1", "$key-tab1", MainTabs.SettingsTab))
+                        listOf(ScreenNode(NodeKey("$key-screen1"), NodeKey("$key-tab1"), MainTabs.SettingsTab))
                     )
                 ),
                 activeStackIndex = initialTabIndex.coerceIn(0, 1),
@@ -106,16 +107,16 @@ class ContainerRegistryTest {
     /**
      * Creates a minimal PaneNode builder for testing.
      */
-    private fun createPaneNodeBuilder(): (String, String?) -> PaneNode = { key, parentKey ->
+    private fun createPaneNodeBuilder(): (NodeKey, NodeKey?) -> PaneNode = { key, parentKey ->
         PaneNode(
             key = key,
             parentKey = parentKey,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    ScreenNode("$key-primary", key, DetailPane.ListItem)
+                    ScreenNode(NodeKey("$key-primary"), key, DetailPane.ListItem)
                 ),
                 PaneRole.Supporting to PaneConfiguration(
-                    ScreenNode("$key-supporting", key, DetailPane.DetailItem)
+                    ScreenNode(NodeKey("$key-supporting"), key, DetailPane.DetailItem)
                 )
             ),
             activePaneRole = PaneRole.Primary,
@@ -182,10 +183,10 @@ class ContainerRegistryTest {
             containerClass = MainTabs::class
         )
 
-        val tabNode = info.builder("test-tabs", "parent", 1)
+        val tabNode = info.builder(NodeKey("test-tabs"), NodeKey("parent"), 1)
 
-        assertEquals("test-tabs", tabNode.key)
-        assertEquals("parent", tabNode.parentKey)
+        assertEquals(NodeKey("test-tabs"), tabNode.key)
+        assertEquals(NodeKey("parent"), tabNode.parentKey)
         assertEquals(1, tabNode.activeStackIndex)
         assertEquals(2, tabNode.tabCount)
     }
@@ -200,7 +201,7 @@ class ContainerRegistryTest {
             containerClass = MainTabs::class
         )
 
-        val tabNode = info.builder("tabs", null, info.initialTabIndex)
+        val tabNode = info.builder(NodeKey("tabs"), null, info.initialTabIndex)
 
         assertEquals(0, tabNode.activeStackIndex)
     }
@@ -290,10 +291,10 @@ class ContainerRegistryTest {
             containerClass = DetailPane::class
         )
 
-        val paneNode = info.builder("test-panes", "parent")
+        val paneNode = info.builder(NodeKey("test-panes"), NodeKey("parent"))
 
-        assertEquals("test-panes", paneNode.key)
-        assertEquals("parent", paneNode.parentKey)
+        assertEquals(NodeKey("test-panes"), paneNode.key)
+        assertEquals(NodeKey("parent"), paneNode.parentKey)
         assertEquals(2, paneNode.paneCount)
         assertEquals(setOf(PaneRole.Primary, PaneRole.Supporting), paneNode.configuredRoles)
     }

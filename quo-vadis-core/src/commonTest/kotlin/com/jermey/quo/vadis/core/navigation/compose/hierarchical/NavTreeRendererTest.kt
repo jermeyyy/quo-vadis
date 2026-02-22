@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -65,13 +66,13 @@ class NavTreeRendererTest {
         key: String,
         parentKey: String? = null,
         destination: NavDestination = HomeDestination
-    ): ScreenNode = ScreenNode(key, parentKey, destination)
+    ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
     private fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
-    ): StackNode = StackNode(key, parentKey, screens.toList())
+    ): StackNode = StackNode(NodeKey(key), parentKey?.let { NodeKey(it) }, screens.toList())
 
     private fun createFakeScope(): FakeNavRenderScope = FakeNavRenderScope()
 
@@ -133,7 +134,7 @@ class NavTreeRendererTest {
         val screenNode = createScreen("profile-screen", destination = destination)
 
         // Then
-        assertEquals("profile-screen", screenNode.key)
+        assertEquals(NodeKey("profile-screen"), screenNode.key)
         assertEquals(destination, screenNode.destination)
     }
 
@@ -152,7 +153,7 @@ class NavTreeRendererTest {
         val screenNode = createScreen("child-screen", parentKey = "parent-stack")
 
         // Then
-        assertEquals("parent-stack", screenNode.parentKey)
+        assertEquals(NodeKey("parent-stack"), screenNode.parentKey)
     }
 
     // =========================================================================
@@ -174,7 +175,7 @@ class NavTreeRendererTest {
     @Test
     fun `stack node activeChild returns null for empty stack`() {
         // Given
-        val stack = StackNode("stack", null, emptyList())
+        val stack = StackNode(NodeKey("stack"), null, emptyList())
 
         // Then
         assertNull(stack.activeChild)
@@ -216,7 +217,7 @@ class NavTreeRendererTest {
         // Then - only the last screen is "active"
         assertEquals(screen2, activeChild)
         assertNotNull(activeChild)
-        assertEquals("s2", activeChild.key)
+        assertEquals(NodeKey("s2"), activeChild.key)
     }
 
     // =========================================================================
@@ -235,7 +236,7 @@ class NavTreeRendererTest {
             createScreen("profile", "profile-stack")
         )
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(homeStack, profileStack),
             activeStackIndex = 1
@@ -255,14 +256,14 @@ class NavTreeRendererTest {
         val stack2 = createStack("tab2", "tabs", createScreen("s2", "tab2"))
 
         val previousTabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(stack0, stack1, stack2),
             activeStackIndex = 0
         )
 
         val currentTabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(stack0, stack1, stack2),
             activeStackIndex = 2
@@ -287,7 +288,7 @@ class NavTreeRendererTest {
         )
 
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(homeStack, profileStack),
             activeStackIndex = 1
@@ -313,7 +314,7 @@ class NavTreeRendererTest {
         val supportingContent = createScreen("supporting", "panes", DetailDestination)
 
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(primaryContent),
@@ -331,7 +332,7 @@ class NavTreeRendererTest {
     fun `pane node respects adapt strategy`() {
         // Given
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
@@ -355,7 +356,7 @@ class NavTreeRendererTest {
     fun `pane node has correct back behavior`() {
         // Given - default back behavior
         val panesDefault = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(createScreen("p", "panes"))
@@ -365,7 +366,7 @@ class NavTreeRendererTest {
 
         // Given - custom back behavior
         val panesCustom = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(createScreen("p", "panes"))
@@ -394,13 +395,13 @@ class NavTreeRendererTest {
         val settingsStack = createStack("settings-stack", "tabs", settingsScreen)
 
         val tabs = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(homeStack, settingsStack),
             activeStackIndex = 0
         )
 
-        val rootStack = StackNode("root", null, listOf(tabs))
+        val rootStack = StackNode(NodeKey("root"), null, listOf(tabs))
 
         // Then - verify the full hierarchy
         assertEquals(tabs, rootStack.activeChild)
@@ -419,7 +420,7 @@ class NavTreeRendererTest {
         val detailStack = createStack("detail-stack", "panes", detailScreen1, detailScreen2)
 
         val panes = PaneNode(
-            key = "panes",
+            key = NodeKey("panes"),
             parentKey = null,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(listStack),

@@ -14,6 +14,20 @@ sealed interface TransitionState {
     data object Idle : TransitionState
 
     /**
+     * Common interface for all active (non-idle) transition states.
+     *
+     * Provides uniform access to [progress] and a type-safe way to
+     * update progress without pattern-matching each subtype.
+     */
+    sealed interface Active : TransitionState {
+        /** Animation progress from 0.0 to 1.0. */
+        val progress: Float
+
+        /** Returns a copy of this state with the given [progress]. */
+        fun withProgress(progress: Float): Active
+    }
+
+    /**
      * A transition is in progress.
      *
      * @property transition The transition definition being applied
@@ -23,13 +37,15 @@ sealed interface TransitionState {
      */
     data class InProgress(
         val transition: NavigationTransition,
-        val progress: Float = 0f,
+        override val progress: Float = 0f,
         val fromKey: String? = null,
         val toKey: String? = null
-    ) : TransitionState {
+    ) : Active {
         init {
             require(progress in 0f..1f) { "Progress must be between 0 and 1, was: $progress" }
         }
+
+        override fun withProgress(progress: Float) = copy(progress = progress)
     }
 
     /**
@@ -46,19 +62,20 @@ sealed interface TransitionState {
      * @property isCommitted Whether the gesture has passed the commit threshold
      */
     data class PredictiveBack(
-        val progress: Float,
+        override val progress: Float,
         val currentKey: String? = null,
         val previousKey: String? = null,
         val touchX: Float = 0f,
         val touchY: Float = 0f,
         val isCommitted: Boolean = false
-    ) : TransitionState {
+    ) : Active {
         init {
             require(progress in 0f..1f) { "Progress must be between 0 and 1, was: $progress" }
             require(touchX in 0f..1f) { "touchX must be between 0 and 1, was: $touchX" }
             require(touchY in 0f..1f) { "touchY must be between 0 and 1, was: $touchY" }
         }
 
+        override fun withProgress(progress: Float) = copy(progress = progress)
     }
 
     /**
@@ -73,12 +90,14 @@ sealed interface TransitionState {
      */
     data class Seeking(
         val transition: NavigationTransition,
-        val progress: Float,
+        override val progress: Float,
         val isPaused: Boolean = false
-    ) : TransitionState {
+    ) : Active {
         init {
             require(progress in 0f..1f) { "Progress must be between 0 and 1, was: $progress" }
         }
+
+        override fun withProgress(progress: Float) = copy(progress = progress)
     }
 }
 
@@ -89,7 +108,5 @@ sealed interface TransitionState {
 val TransitionState.progress: Float
     get() = when (this) {
         is TransitionState.Idle -> 0f
-        is TransitionState.InProgress -> progress
-        is TransitionState.PredictiveBack -> progress
-        is TransitionState.Seeking -> progress
+        is TransitionState.Active -> progress
     }

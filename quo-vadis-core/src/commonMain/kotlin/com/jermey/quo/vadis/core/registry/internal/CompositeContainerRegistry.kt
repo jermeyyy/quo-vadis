@@ -77,7 +77,7 @@ internal class CompositeContainerRegistry(
                 builder = { key, parentKey, initialTabIndex ->
                     // Use the composite's navNodeBuilder to build the node,
                     // ensuring cross-config resolution
-                    val node = navNodeBuilder(info.containerClass, key, parentKey)
+                    val node = navNodeBuilder(info.containerClass, key.value, parentKey?.value)
                         ?: throw IllegalStateException(
                             "Failed to build TabNode for ${info.containerClass}"
                         )
@@ -100,7 +100,7 @@ internal class CompositeContainerRegistry(
             is ContainerInfo.PaneContainer -> ContainerInfo.PaneContainer(
                 builder = { key, parentKey ->
                     // Use the composite's navNodeBuilder to build the node
-                    val node = navNodeBuilder(info.containerClass, key, parentKey)
+                    val node = navNodeBuilder(info.containerClass, key.value, parentKey?.value)
                         ?: throw IllegalStateException(
                             "Failed to build PaneNode for ${info.containerClass}"
                         )

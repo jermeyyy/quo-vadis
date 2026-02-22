@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import kotlin.test.Ignore
@@ -49,13 +50,13 @@ class PredictiveBackContentTest {
         key: String,
         parentKey: String? = null,
         destination: NavDestination = CurrentDestination
-    ): ScreenNode = ScreenNode(key, parentKey, destination)
+    ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
     private fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
-    ): StackNode = StackNode(key, parentKey, screens.toList())
+    ): StackNode = StackNode(NodeKey(key), parentKey?.let { NodeKey(it) }, screens.toList())
 
     // =========================================================================
     // PREDICTIVE BACK CONTROLLER TESTS
@@ -212,8 +213,8 @@ class PredictiveBackContentTest {
 
         // Then
         assertNotNull(previous)
-        assertEquals("screen-a", previous.key)
-        assertEquals("screen-b", current.key)
+        assertEquals(NodeKey("screen-a"), previous.key)
+        assertEquals(NodeKey("screen-b"), current.key)
     }
 
     @Test
@@ -270,7 +271,7 @@ class PredictiveBackContentTest {
     @Test
     fun `empty stack has no content for predictive back`() {
         // Given
-        val stack = StackNode("stack", null, emptyList())
+        val stack = StackNode(NodeKey("stack"), null, emptyList())
 
         // When
         val currentChild = stack.activeChild
@@ -329,7 +330,7 @@ class PredictiveBackContentTest {
 
         // Then - key doesn't change
         progressValues.forEach { _ ->
-            assertEquals("stable-key", screen.key)
+            assertEquals(NodeKey("stable-key"), screen.key)
         }
     }
 
@@ -341,7 +342,7 @@ class PredictiveBackContentTest {
     fun `deep stack supports predictive back with correct previous`() {
         // Given
         val screens = (1..10).map { createScreen("s$it", "stack") }
-        val stack = StackNode("stack", null, screens)
+        val stack = StackNode(NodeKey("stack"), null, screens)
 
         // When
         val currentChild = stack.activeChild
@@ -350,8 +351,8 @@ class PredictiveBackContentTest {
         } else null
 
         // Then
-        assertEquals("s10", currentChild?.key)
-        assertEquals("s9", previousChild?.key)
+        assertEquals(NodeKey("s10"), currentChild?.key)
+        assertEquals(NodeKey("s9"), previousChild?.key)
     }
 
     @Test

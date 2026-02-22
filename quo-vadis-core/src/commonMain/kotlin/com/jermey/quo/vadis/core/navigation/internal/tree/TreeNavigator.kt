@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.util.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.destination.DeepLink
-import com.jermey.quo.vadis.core.navigation.navigator.LifecycleAwareNode
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.transition.TransitionState
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
@@ -14,8 +13,10 @@ import com.jermey.quo.vadis.core.navigation.internal.ResultCapable
 import com.jermey.quo.vadis.core.navigation.internal.TransitionController
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PopResult
+import com.jermey.quo.vadis.core.navigation.navigator.NavigationErrorHandler
 import com.jermey.quo.vadis.core.navigation.navigator.PaneNavigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -31,17 +32,15 @@ import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
 import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.registry.internal.CompositeDeepLinkRegistry
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 import kotlin.reflect.KClass
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -87,12 +86,15 @@ import kotlin.uuid.Uuid
  *   [scopeRegistry], [containerRegistry], and [deepLinkRegistry] from this config.
  *   Defaults to [NavigationConfig.Empty].
  * @param initialState Optional initial navigation state (defaults to empty stack)
+ * @param coroutineContext Optional coroutine context for internal scope (defaults to Main.immediate).
+ *   Use [kotlinx.coroutines.test.UnconfinedTestDispatcher] in tests.
  */
 @OptIn(ExperimentalUuidApi::class, InternalQuoVadisApi::class)
 @Stable
 class TreeNavigator(
     override val config: NavigationConfig = NavigationConfig.Empty,
-    initialState: NavNode? = null
+    initialState: NavNode? = null,
+    coroutineContext: CoroutineContext = Dispatchers.Main.immediate
 ) : PaneNavigator, TransitionController, ResultCapable {
 
     // Registries derived from config for internal use
@@ -107,6 +109,14 @@ class TreeNavigator(
 
     // TREE-BASED STATE
     private val _state: MutableStateFlow<NavNode> = MutableStateFlow(createRootStack(initialState))
+    private val navigatorScope = CoroutineScope(SupervisorJob() + coroutineContext)
+
+    // Delegate: Transition management
+    private val transitionManager = TransitionManager(
+        navigatorScope = navigatorScope,
+        stateProvider = { _state.value },
+        onCommitBack = { onBack() }
+    )
 
     /**
      * The current navigation state as an immutable tree.
@@ -116,25 +126,7 @@ class TreeNavigator(
      */
     override val state: StateFlow<NavNode> = _state.asStateFlow()
 
-    private val _transitionState: MutableStateFlow<TransitionState> =
-        MutableStateFlow(TransitionState.Idle)
-
-    /**
-     * The current transition state for animations.
-     *
-     * Observe this to coordinate navigation animations:
-     *
-     * ```kotlin
-     * navigator.transitionState.collect { state ->
-     *     when (state) {
-     *         is TransitionState.Idle -> hideAnimation()
-     *         is TransitionState.InProgress -> animateProgress(state.progress)
-     *         is TransitionState.PredictiveBack -> handleGesture(state)
-     *     }
-     * }
-     * ```
-     */
-    override val transitionState: StateFlow<TransitionState> = _transitionState.asStateFlow()
+    override val transitionState: StateFlow<TransitionState> get() = transitionManager.transitionState
 
     private val _currentDestination = MutableStateFlow(
         _state.value.activeLeaf()?.destination
@@ -184,6 +176,20 @@ class TreeNavigator(
     override val resultManager: NavigationResultManager = NavigationResultManager()
 
     /**
+     * Error handler for navigation operations. Defaults to logging and recovering.
+     */
+    var errorHandler: NavigationErrorHandler = NavigationErrorHandler.LogAndRecover
+
+    // Delegate: Lifecycle notifications
+    private val lifecycleNotifier = LifecycleNotifier()
+
+    // Delegate: Screen key collection and result cancellation
+    private val screenKeyCollector = ScreenKeyCollector(
+        navigatorScope = navigatorScope,
+        resultManager = resultManager
+    )
+
+    /**
      * Updates derived state properties when the main state changes.
      * Called after every state mutation to keep derived values in sync.
      */
@@ -193,23 +199,8 @@ class TreeNavigator(
         _canNavigateBack.value = TreeMutator.canHandleBackNavigation(newState)
     }
 
-    /**
-     * Current transition (derived from transitionState).
-     */
-    override val currentTransition: StateFlow<NavigationTransition?> = _transitionState
-        .map { transitionState ->
-            when (transitionState) {
-                is TransitionState.Idle -> null
-                is TransitionState.InProgress -> transitionState.transition
-                is TransitionState.PredictiveBack -> null
-                is TransitionState.Seeking -> transitionState.transition
-            }
-        }
-        .stateIn(
-            scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
+    override val currentTransition: StateFlow<NavigationTransition?>
+        get() = transitionManager.currentTransition
 
     /**
      * Optional back handler registry for user-defined back handlers.
@@ -292,24 +283,20 @@ class TreeNavigator(
         oldState: NavNode,
         containerInfo: ContainerInfo,
         effectiveTransition: NavigationTransition?,
-        fromKey: String?
+        fromKey: NodeKey?
     ) {
         try {
             val newState = pushContainer(oldState, containerInfo)
             val toKey = newState.activeLeaf()?.key
 
-            _state.value = newState
+            _state.update { newState }
             updateDerivedState(newState)
 
             if (effectiveTransition != null) {
-                _transitionState.value = TransitionState.InProgress(
-                    transition = effectiveTransition,
-                    progress = 0f,
-                    fromKey = fromKey,
-                    toKey = toKey
-                )
+                transitionManager.startNavigationTransition(effectiveTransition, fromKey?.value, toKey?.value)
             }
-        } catch (_: IllegalStateException) {
+        } catch (e: IllegalStateException) {
+            errorHandler.onNavigationError(e, null, "navigateWithContainer")
             // If no active stack, create root stack with container
             val rootKey = generateKey()
             val containerKey = generateKey()
@@ -332,15 +319,12 @@ class TreeNavigator(
                 parentKey = null,
                 children = listOf(containerNode)
             )
-            _state.value = newState
+            _state.update { newState }
             updateDerivedState(newState)
 
             if (effectiveTransition != null) {
-                _transitionState.value = TransitionState.InProgress(
-                    transition = effectiveTransition,
-                    progress = 0f,
-                    fromKey = fromKey,
-                    toKey = newState.activeLeaf()?.key
+                transitionManager.startNavigationTransition(
+                    effectiveTransition, fromKey?.value, newState.activeLeaf()?.key?.value
                 )
             }
         }
@@ -353,7 +337,7 @@ class TreeNavigator(
         oldState: NavNode,
         destination: NavDestination,
         effectiveTransition: NavigationTransition?,
-        fromKey: String?
+        fromKey: NodeKey?
     ) {
         try {
             val newState = TreeMutator.push(
@@ -364,19 +348,15 @@ class TreeNavigator(
             ) { generateKey() }
             val toKey = newState.activeLeaf()?.key
 
-            _state.value = newState
+            _state.update { newState }
             updateDerivedState(newState)
 
             // Update transition state
             if (effectiveTransition != null) {
-                _transitionState.value = TransitionState.InProgress(
-                    transition = effectiveTransition,
-                    progress = 0f,
-                    fromKey = fromKey,
-                    toKey = toKey
-                )
+                transitionManager.startNavigationTransition(effectiveTransition, fromKey?.value, toKey?.value)
             }
-        } catch (_: IllegalStateException) {
+        } catch (e: IllegalStateException) {
+            errorHandler.onNavigationError(e, destination, "navigateDefault")
             // No active stack found, create one
             val screenKey = generateKey()
             val stackKey = generateKey()
@@ -387,16 +367,11 @@ class TreeNavigator(
                     ScreenNode(key = screenKey, parentKey = stackKey, destination = destination)
                 )
             )
-            _state.value = newState
+            _state.update { newState }
             updateDerivedState(newState)
 
             if (effectiveTransition != null) {
-                _transitionState.value = TransitionState.InProgress(
-                    transition = effectiveTransition,
-                    progress = 0f,
-                    fromKey = fromKey,
-                    toKey = screenKey
-                )
+                transitionManager.startNavigationTransition(effectiveTransition, fromKey?.value, screenKey.value)
             }
         }
     }
@@ -681,7 +656,7 @@ class TreeNavigator(
 
         val newState = TreeMutator.popPane(currentState, paneNode.key, role)
         if (newState != null) {
-            _state.value = newState
+            _state.update { newState }
             updateDerivedState(newState)
             return true
         }
@@ -703,10 +678,18 @@ class TreeNavigator(
     fun clearPane(role: PaneRole) {
         val currentState = _state.value
         val paneNode = currentState.findFirst<PaneNode>()
-            ?: throw IllegalStateException("No PaneNode found in current navigation state")
+            ?: run {
+                val error = IllegalStateException("No PaneNode found in current navigation state")
+                errorHandler.onNavigationError(error, null, "clearPane")
+                return
+            }
 
         val paneConfig = paneNode.paneConfigurations[role]
-            ?: throw IllegalArgumentException("Pane role $role not configured")
+            ?: run {
+                val error = IllegalArgumentException("Pane role $role not configured")
+                errorHandler.onNavigationError(error, null, "clearPane")
+                return
+            }
 
         val targetStack = when (val paneContent = paneConfig.content) {
             is StackNode -> paneContent
@@ -718,7 +701,7 @@ class TreeNavigator(
 
         val newStack = targetStack.copy(children = listOf(targetStack.children.first()))
         val newState = TreeMutator.replaceNode(currentState, targetStack.key, newStack)
-        _state.value = newState
+        _state.update { newState }
         updateDerivedState(newState)
     }
 
@@ -807,96 +790,38 @@ class TreeNavigator(
      * @param newState The new navigation state
      * @param transition Optional transition for animation
      */
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        message = "Use navigate(), navigateBack(), or navigateAndClearTo() instead. " +
+            "Direct state manipulation bypasses validation and lifecycle management.",
+        level = DeprecationLevel.WARNING,
+    )
     override fun updateState(newState: NavNode, transition: NavigationTransition?) {
         updateStateWithTransition(newState, transition)
     }
 
-    /**
-     * Update transition progress during animations.
-     *
-     * Called by the renderer to update animation progress.
-     *
-     * @param progress Animation progress from 0.0 to 1.0
-     */
     override fun updateTransitionProgress(progress: Float) {
-        val current = _transitionState.value
-        _transitionState.value = when (current) {
-            is TransitionState.Idle -> current
-            is TransitionState.InProgress -> current.copy(progress = progress)
-            is TransitionState.PredictiveBack -> current.copy(progress = progress)
-            is TransitionState.Seeking -> current.copy(progress = progress)
-        }
+        transitionManager.updateTransitionProgress(progress)
     }
 
-    /**
-     * Start a predictive back gesture.
-     *
-     * Called when the user initiates a back gesture.
-     */
     override fun startPredictiveBack() {
-        val currentKey = _state.value.activeLeaf()?.key
-        val activeStack = _state.value.activeStack()
-        val previousKey = if (activeStack != null && activeStack.children.size >= 2) {
-            activeStack.children[activeStack.children.size - 2].activeLeaf()?.key
-        } else {
-            null
-        }
-
-        _transitionState.value = TransitionState.PredictiveBack(
-            progress = 0f,
-            currentKey = currentKey,
-            previousKey = previousKey
-        )
+        transitionManager.startPredictiveBack()
     }
 
-    /**
-     * Update predictive back gesture progress.
-     *
-     * @param progress Gesture progress from 0.0 to 1.0
-     * @param touchX Normalized x-coordinate of touch (0-1)
-     * @param touchY Normalized y-coordinate of touch (0-1)
-     */
     override fun updatePredictiveBack(progress: Float, touchX: Float, touchY: Float) {
-        val current = _transitionState.value
-        if (current is TransitionState.PredictiveBack) {
-            _transitionState.value = current.copy(
-                progress = progress.coerceIn(0f, 1f),
-                touchX = touchX.coerceIn(0f, 1f),
-                touchY = touchY.coerceIn(0f, 1f)
-            )
-        }
+        transitionManager.updatePredictiveBack(progress, touchX, touchY)
     }
 
-    /**
-     * Cancel the predictive back gesture.
-     *
-     * Called when the user releases the gesture without completing it.
-     */
     override fun cancelPredictiveBack() {
-        _transitionState.value = TransitionState.Idle
+        transitionManager.cancelPredictiveBack()
     }
 
-    /**
-     * Commit the predictive back gesture.
-     *
-     * Called when the user completes the back gesture.
-     */
     override fun commitPredictiveBack() {
-        val current = _transitionState.value
-        if (current is TransitionState.PredictiveBack) {
-            _transitionState.value = current.copy(isCommitted = true)
-            onBack()
-            _transitionState.value = TransitionState.Idle
-        }
+        transitionManager.commitPredictiveBack()
     }
 
-    /**
-     * Complete the current transition animation.
-     *
-     * Called when the animation finishes.
-     */
     override fun completeTransition() {
-        _transitionState.value = TransitionState.Idle
+        transitionManager.completeTransition()
     }
 
     // =========================================================================
@@ -906,148 +831,16 @@ class TreeNavigator(
     private fun updateStateWithTransition(newState: NavNode, transition: NavigationTransition?) {
         val oldState = _state.value
         val fromKey = oldState.activeLeaf()?.key
-        _state.value = newState
+        _state.update { newState }
         updateDerivedState(newState)
         val toKey = newState.activeLeaf()?.key
 
-        // Notify lifecycle-aware nodes that were removed from the tree
-        notifyRemovedNodesDetached(oldState, newState)
+        // Single-pass tree diff (replaces separate lifecycle + screen key traversals)
+        val diff = TreeDiffCalculator.computeDiff(oldState, newState)
+        lifecycleNotifier.notifyRemovedNodes(diff.removedLifecycleNodes)
+        screenKeyCollector.cancelResultsForKeys(diff.removedScreenKeys)
 
-        // Cancel results for destroyed screens
-        cancelResultsForDestroyedScreens(oldState, newState)
-
-        if (transition != null) {
-            _transitionState.value = TransitionState.InProgress(
-                transition = transition,
-                progress = 0f,
-                fromKey = fromKey,
-                toKey = toKey
-            )
-        } else {
-            _transitionState.value = TransitionState.Idle
-        }
-    }
-
-    /**
-     * Cancel pending results for screens that were removed from the tree.
-     */
-    private fun cancelResultsForDestroyedScreens(oldState: NavNode, newState: NavNode) {
-        val oldScreenKeys = collectScreenKeys(oldState)
-        val newScreenKeys = collectScreenKeys(newState)
-        val destroyedKeys = oldScreenKeys - newScreenKeys
-
-        if (destroyedKeys.isEmpty()) return
-
-        // Launch in coroutine scope since cancelResult is a suspend function
-        try {
-            val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            coroutineScope.launch {
-                destroyedKeys.forEach { screenKey ->
-                    resultManager.cancelResult(screenKey)
-                }
-                coroutineScope.cancel()
-            }
-        } catch (_: IllegalStateException) {
-            // Result cancellation is optional, so we silently ignore this
-        }
-    }
-
-    /**
-     * Collect all screen keys from a navigation tree.
-     */
-    private fun collectScreenKeys(node: NavNode): Set<String> {
-        val keys = mutableSetOf<String>()
-        collectScreenKeysRecursive(node, keys)
-        return keys
-    }
-
-    private fun collectScreenKeysRecursive(node: NavNode, keys: MutableSet<String>) {
-        when (node) {
-            is ScreenNode -> keys.add(node.key)
-            is StackNode -> node.children.forEach { collectScreenKeysRecursive(it, keys) }
-            is TabNode -> node.stacks.forEach { collectScreenKeysRecursive(it, keys) }
-            is PaneNode -> node.paneConfigurations.values.forEach {
-                collectScreenKeysRecursive(it.content, keys)
-            }
-        }
-    }
-
-    /**
-     * Notify lifecycle-aware nodes that were removed from the navigation tree.
-     *
-     * This calls [LifecycleAwareNode.detachFromNavigator] on all nodes
-     * (ScreenNode, TabNode, PaneNode) that existed in the old state but
-     * are not present in the new state.
-     */
-    private fun notifyRemovedNodesDetached(oldState: NavNode, newState: NavNode) {
-        val oldNodes = collectLifecycleAwareNodes(oldState)
-        val newNodeKeys = collectLifecycleAwareNodeKeys(newState)
-
-        oldNodes.forEach { node ->
-            if (node.key !in newNodeKeys) {
-                (node as? LifecycleAwareNode)?.detachFromNavigator()
-            }
-        }
-    }
-
-    /**
-     * Collect all lifecycle-aware nodes from a navigation tree.
-     */
-    private fun collectLifecycleAwareNodes(node: NavNode): List<NavNode> {
-        val nodes = mutableListOf<NavNode>()
-        collectLifecycleAwareNodesRecursive(node, nodes)
-        return nodes
-    }
-
-    private fun collectLifecycleAwareNodesRecursive(node: NavNode, nodes: MutableList<NavNode>) {
-        when (node) {
-            is ScreenNode -> nodes.add(node)
-            is StackNode -> node.children.forEach { collectLifecycleAwareNodesRecursive(it, nodes) }
-            is TabNode -> {
-                nodes.add(node)
-                node.stacks.forEach { collectLifecycleAwareNodesRecursive(it, nodes) }
-            }
-
-            is PaneNode -> {
-                nodes.add(node)
-                node.paneConfigurations.values.forEach {
-                    collectLifecycleAwareNodesRecursive(it.content, nodes)
-                }
-            }
-        }
-    }
-
-    /**
-     * Collect all lifecycle-aware node keys from a navigation tree.
-     */
-    private fun collectLifecycleAwareNodeKeys(node: NavNode): Set<String> {
-        val keys = mutableSetOf<String>()
-        collectLifecycleAwareNodeKeysRecursive(node, keys)
-        return keys
-    }
-
-    private fun collectLifecycleAwareNodeKeysRecursive(node: NavNode, keys: MutableSet<String>) {
-        when (node) {
-            is ScreenNode -> keys.add(node.key)
-            is StackNode -> node.children.forEach {
-                collectLifecycleAwareNodeKeysRecursive(
-                    it,
-                    keys
-                )
-            }
-
-            is TabNode -> {
-                keys.add(node.key)
-                node.stacks.forEach { collectLifecycleAwareNodeKeysRecursive(it, keys) }
-            }
-
-            is PaneNode -> {
-                keys.add(node.key)
-                node.paneConfigurations.values.forEach {
-                    collectLifecycleAwareNodeKeysRecursive(it.content, keys)
-                }
-            }
-        }
+        transitionManager.startNavigationTransition(transition, fromKey?.value, toKey?.value)
     }
 
     private fun computePreviousDestination(state: NavNode): NavDestination? {
@@ -1090,7 +883,15 @@ class TreeNavigator(
         )
     }
 
-    private fun generateKey(): String = Uuid.random().toString().take(8)
+    private fun generateKey(): NodeKey = NodeKey(Uuid.random().toString().take(8))
+
+    /**
+     * Destroys this navigator, cancelling all internal coroutines.
+     * Should be called when the navigator is no longer needed.
+     */
+    fun destroy() {
+        navigatorScope.cancel()
+    }
 
     companion object
 }
