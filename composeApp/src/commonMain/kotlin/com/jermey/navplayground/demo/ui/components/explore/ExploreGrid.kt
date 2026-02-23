@@ -87,10 +87,6 @@ private fun GridContent(
     gridState: LazyGridState,
     staggerState: StaggerAnimationState? = null
 ) {
-    val maxParallaxPx = with(LocalDensity.current) { MAX_PARALLAX_DP.dp.toPx() }
-    val viewportHeight = gridState.layoutInfo.viewportSize.height.toFloat()
-    val viewportCenter = viewportHeight / 2f
-
     LazyVerticalGrid(
         columns = GridCells.Fixed(GRID_COLUMNS),
         modifier = Modifier.fillMaxSize(),
@@ -104,24 +100,17 @@ private fun GridContent(
             key = { _, item -> item.id },
             contentType = { _, _ -> "explore_card" }
         ) { index, item ->
-            val itemInfo = gridState.layoutInfo.visibleItemsInfo.find { it.key == item.id }
-            val parallaxOffset = if (itemInfo != null) {
-                val itemCenter = itemInfo.offset.y + itemInfo.size.height / 2f
-                val delta = (itemCenter - viewportCenter) * PARALLAX_FACTOR
-                delta.coerceIn(-maxParallaxPx, maxParallaxPx)
-            } else {
-                0f
-            }
-
             ExploreCard(
                 item = item,
                 onClick = { onItemClick(item) },
                 onLongClick = { onItemLongClick(item) },
-                parallaxOffset = parallaxOffset,
                 modifier = Modifier
                     .fillMaxWidth()
                     .let { mod ->
-                        if (staggerState != null) mod.staggeredItemAnimation(index, staggerState) else mod
+                        if (staggerState != null) mod.staggeredItemAnimation(
+                            index,
+                            staggerState
+                        ) else mod
                     }
                     .animateItem()
             )

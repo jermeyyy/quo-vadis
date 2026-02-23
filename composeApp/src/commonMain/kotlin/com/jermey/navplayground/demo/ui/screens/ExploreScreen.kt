@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -468,7 +469,7 @@ private fun ExploreGridContent(
     state: ExploreState.Content,
     store: Store<ExploreState, ExploreIntent, ExploreAction>,
     navigator: Navigator,
-    gridState: androidx.compose.foundation.lazy.grid.LazyGridState = rememberLazyGridState(),
+    gridState: LazyGridState = rememberLazyGridState(),
     contentPadding: PaddingValues = PaddingValues(16.dp)
 ) {
     val filterState = rememberExploreFilterState()

@@ -1,7 +1,6 @@
 package com.jermey.navplayground.demo.ui.components.explore
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope.OverlayClip
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -48,7 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -99,8 +97,7 @@ fun ExploreCard(
     item: ExploreItem,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    parallaxOffset: Float = 0f
+    modifier: Modifier = Modifier
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val hazeState = remember(item.id) { HazeState() }
@@ -152,13 +149,12 @@ fun ExploreCard(
         } else {
             contentModifier
         }
-        
+
         Box(modifier = finalContentModifier) {
             CardBackgroundImage(
                 imageUrl = item.cardImageUrl,
                 contentDescription = item.title,
-                hazeState = hazeState,
-                parallaxOffset = parallaxOffset
+                hazeState = hazeState
             )
 
             GlassOverlay(
@@ -167,7 +163,7 @@ fun ExploreCard(
             ) {
                 CardContent(item = item)
             }
-            
+
             // Category badge positioned above glass overlay (same as detail screen)
             CategoryBadge(
                 category = item.category,
@@ -183,8 +179,7 @@ fun ExploreCard(
 private fun CardBackgroundImage(
     imageUrl: String,
     contentDescription: String,
-    hazeState: HazeState,
-    parallaxOffset: Float = 0f
+    hazeState: HazeState
 ) {
     val context = LocalPlatformContext.current
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
@@ -205,8 +200,7 @@ private fun CardBackgroundImage(
                 .build(),
             contentDescription = contentDescription,
             modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer { translationY = parallaxOffset },
+                .fillMaxSize(),
             contentScale = ContentScale.Crop,
             onState = { imageState = it }
         )
@@ -214,7 +208,8 @@ private fun CardBackgroundImage(
         when (imageState) {
             is AsyncImagePainter.State.Loading -> LoadingPlaceholder()
             is AsyncImagePainter.State.Error -> ErrorPlaceholder()
-            else -> { /* Success or Empty - no overlay needed */ }
+            else -> { /* Success or Empty - no overlay needed */
+            }
         }
     }
 }
@@ -253,7 +248,10 @@ private fun LoadingPlaceholder() {
 
     val brush = Brush.linearGradient(
         colors = shimmerColors,
-        start = Offset(translateAnim - SHIMMER_TRANSLATE_OFFSET, translateAnim - SHIMMER_TRANSLATE_OFFSET),
+        start = Offset(
+            translateAnim - SHIMMER_TRANSLATE_OFFSET,
+            translateAnim - SHIMMER_TRANSLATE_OFFSET
+        ),
         end = Offset(translateAnim, translateAnim)
     )
 
@@ -296,7 +294,10 @@ private fun GlassOverlay(
     GlassOverlayBox(
         hazeState = hazeState,
         height = (CARD_HEIGHT * OVERLAY_HEIGHT_FRACTION).dp,
-        cornerRadius = RoundedCornerShape(bottomStart = CORNER_RADIUS.dp, bottomEnd = CORNER_RADIUS.dp),
+        cornerRadius = RoundedCornerShape(
+            bottomStart = CORNER_RADIUS.dp,
+            bottomEnd = CORNER_RADIUS.dp
+        ),
         modifier = modifier,
         content = content
     )
@@ -351,7 +352,7 @@ private fun CardContent(item: ExploreItem) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Text(
                 text = item.subtitle,
                 style = MaterialTheme.typography.bodySmall,
