@@ -13,6 +13,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import com.jermey.quo.vadis.core.dsl.NavigationConfigDsl
 
 /**
  * Defines navigation transitions between screens.
@@ -142,6 +143,7 @@ object NavigationTransitions {
 /**
  * Custom transition builder for creating custom animations.
  */
+@NavigationConfigDsl
 class TransitionBuilder {
     var enter: EnterTransition = NavigationTransitions.Fade.enter
     var exit: ExitTransition = NavigationTransitions.Fade.exit

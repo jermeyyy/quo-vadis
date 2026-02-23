@@ -13,11 +13,14 @@ import com.jermey.quo.vadis.core.navigation.internal.ResultCapable
 import com.jermey.quo.vadis.core.navigation.internal.TransitionController
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PopResult
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.TreeOperationResult
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.getOrElse
 import com.jermey.quo.vadis.core.navigation.navigator.NavigationErrorHandler
 import com.jermey.quo.vadis.core.navigation.navigator.PaneNavigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -38,12 +41,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlin.reflect.KClass
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import kotlin.random.Random
 
 /**
  * Tree-based implementation of Navigator using StateFlow<NavNode>.
@@ -89,7 +94,7 @@ import kotlin.uuid.Uuid
  * @param coroutineContext Optional coroutine context for internal scope (defaults to Main.immediate).
  *   Use [kotlinx.coroutines.test.UnconfinedTestDispatcher] in tests.
  */
-@OptIn(ExperimentalUuidApi::class, InternalQuoVadisApi::class)
+@OptIn(InternalQuoVadisApi::class)
 @Stable
 class TreeNavigator(
     override val config: NavigationConfig = NavigationConfig.Empty,
@@ -161,14 +166,13 @@ class TreeNavigator(
             is ScreenNode -> null
         }
 
-    private val _canNavigateBack = MutableStateFlow(
-        TreeMutator.canHandleBackNavigation(_state.value)
-    )
-
     /**
      * Flow indicating whether back navigation is possible.
+     * Derived from [state] - automatically updates when navigation state changes.
      */
-    override val canNavigateBack: StateFlow<Boolean> = _canNavigateBack.asStateFlow()
+    override val canNavigateBack: StateFlow<Boolean> = _state
+        .map { TreeMutator.canHandleBackNavigation(it) }
+        .stateIn(navigatorScope, SharingStarted.Eagerly, TreeMutator.canHandleBackNavigation(_state.value))
 
     /**
      * Manager for navigation result passing between screens.
@@ -196,7 +200,6 @@ class TreeNavigator(
     private fun updateDerivedState(newState: NavNode) {
         _currentDestination.value = newState.activeLeaf()?.destination
         _previousDestination.value = computePreviousDestination(newState)
-        _canNavigateBack.value = TreeMutator.canHandleBackNavigation(newState)
     }
 
     override val currentTransition: StateFlow<NavigationTransition?>
@@ -210,6 +213,7 @@ class TreeNavigator(
      * before falling back to tree-based back navigation.
      */
     var backHandlerRegistry: BackHandlerRegistry? = null
+        internal set
 
     /**
      * Current window size class for adaptive pane behavior.
@@ -222,6 +226,7 @@ class TreeNavigator(
      * When null, defaults to compact behavior for safety.
      */
     var windowSizeClass: WindowSizeClass? = null
+        internal set
 
     /**
      * Navigate to a destination with optional transition.
@@ -261,7 +266,7 @@ class TreeNavigator(
      *
      * Traverses to the active container (TabNode or PaneNode) and returns its scopeKey.
      */
-    private fun getCurrentScopeKey(state: NavNode): String? {
+    private fun getCurrentScopeKey(state: NavNode): ScopeKey? {
         return when (state) {
             is TabNode -> state.scopeKey
             is PaneNode -> state.scopeKey
@@ -416,7 +421,7 @@ class TreeNavigator(
                 val newStack = targetStack.copy(
                     children = targetStack.children + tabNode
                 )
-                TreeMutator.replaceNode(root, targetStack.key, newStack)
+                TreeMutator.replaceNode(root, targetStack.key, newStack).getOrElse(root)
             }
 
             is ContainerInfo.PaneContainer -> {
@@ -425,7 +430,7 @@ class TreeNavigator(
                 val newStack = targetStack.copy(
                     children = targetStack.children + paneNode
                 )
-                TreeMutator.replaceNode(root, targetStack.key, newStack)
+                TreeMutator.replaceNode(root, targetStack.key, newStack).getOrElse(root)
             }
         }
     }
@@ -700,9 +705,19 @@ class TreeNavigator(
         if (targetStack.children.size <= 1) return
 
         val newStack = targetStack.copy(children = listOf(targetStack.children.first()))
-        val newState = TreeMutator.replaceNode(currentState, targetStack.key, newStack)
-        _state.update { newState }
-        updateDerivedState(newState)
+        when (val result = TreeMutator.replaceNode(currentState, targetStack.key, newStack)) {
+            is TreeOperationResult.Success -> {
+                _state.update { result.newTree }
+                updateDerivedState(result.newTree)
+            }
+            is TreeOperationResult.NodeNotFound -> {
+                errorHandler.onNavigationError(
+                    IllegalArgumentException("Node with key '${result.key}' not found"),
+                    null,
+                    "clearPane"
+                )
+            }
+        }
     }
 
     /**
@@ -746,9 +761,18 @@ class TreeNavigator(
         val newState = if (targetStack != null) {
             // Replace stack content with single new screen
             val newStack = targetStack.copy(children = listOf(newScreen))
-            val updated = TreeMutator.replaceNode(currentState, targetStack.key, newStack)
-            // Switch to this pane
-            TreeMutator.switchActivePane(updated, paneNode.key, role)
+            when (val result = TreeMutator.replaceNode(currentState, targetStack.key, newStack)) {
+                is TreeOperationResult.Success ->
+                    TreeMutator.switchActivePane(result.newTree, paneNode.key, role)
+                is TreeOperationResult.NodeNotFound -> {
+                    errorHandler.onNavigationError(
+                        IllegalArgumentException("Node with key '${result.key}' not found"),
+                        destination,
+                        "navigateToPane"
+                    )
+                    return
+                }
+            }
         } else {
             // No stack exists for this role - create configuration with new stack
             val newStack = StackNode(
@@ -883,7 +907,7 @@ class TreeNavigator(
         )
     }
 
-    private fun generateKey(): NodeKey = NodeKey(Uuid.random().toString().take(8))
+    private fun generateKey(): NodeKey = NodeKey(Random.nextLong().toULong().toString(36))
 
     /**
      * Destroys this navigator, cancelling all internal coroutines.

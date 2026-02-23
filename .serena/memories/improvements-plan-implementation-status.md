@@ -1,60 +1,32 @@
 # Quo Vadis Improvements Plan - Implementation Status
 
 **Branch:** `improvements`  
-**Date:** February 9, 2026  
-**Status:** All 4 phases implemented and building successfully
+**Last Updated:** February 23, 2026  
+**Status:** ALL items implemented except future/KSP/large-refactor items ✅
 
-## Phase 1: Critical Fixes ✅
-- **PERF-1 + PERF-2**: Fixed leaked CoroutineScopes — shared `navigatorScope` in TreeNavigator, `destroy()` method added
-- **ARCH-5**: Thread-safe state mutations — all `_state.value = X` replaced with `_state.update {}` (CAS)
+## Phases 1-4: All Implemented ✅
+PERF-1/2, ARCH-1/2/3/4/5/7, PERF-3/4/5/7/8, KOTLIN-1/5/6/8/9, API-1
 
-## Phase 2: Architecture Cleanup ✅
-- **ARCH-2**: Extracted `LifecycleDelegate` class — ScreenNode, TabNode, PaneNode use `LifecycleAwareNode by LifecycleDelegate()`
-- **ARCH-3**: Converted `ScreenNode` to `data class` (enabled by ARCH-2)
-- **ARCH-1**: Extracted TreeNavigator delegates — `TransitionManager`, `LifecycleNotifier`, `ScreenKeyCollector` (901 lines → 901 + 3 delegate files)
-- **PERF-3**: Combined tree traversals — `TreeDiffCalculator` does single-pass diff (2 traversals instead of 4+)
-
-## Phase 3: Performance & Polish ✅
-- **PERF-4**: Allocation optimizations — `allScreens()` etc use `buildList` accumulator pattern
-- **PERF-5**: Optimized `replaceNode` — single-traversal `tryReplaceNode` approach
-- **PERF-7**: ComposableCache — eviction moved from `DisposableEffect` to `SideEffect`
-- **PERF-8**: NavigationResultManager — consistent Mutex protection on all operations
-- **ARCH-7**: Consistent error handling — `NavigationErrorHandler` interface with `LogAndRecover` and `ThrowOnError` strategies
-
-## Phase 4: Kotlin Modernization ✅
-- **KOTLIN-5**: Inlined `popTo` lambda predicates
-- **KOTLIN-6**: Sealed interfaces for `BackResult`, `PopResult`, `PushStrategy`, `ContainerInfo`
-- **KOTLIN-8**: `TransitionState.Active` interface with `withProgress()`
-- **KOTLIN-9**: Type aliases (`NavKeyGenerator`, `OnDestroyCallback`, `NavTransitionProvider`)
-- **ARCH-4**: Generic `fold()` and `forEachNode()` tree traversal utilities
-- **API-1**: `updateState()` deprecated with migration guidance
-- **KOTLIN-1**: `NodeKey` value class for type-safe node keys across entire codebase
-
-## New Files Created
-- `quo-vadis-core/.../node/LifecycleDelegate.kt`
-- `quo-vadis-core/.../node/NodeKey.kt`
-- `quo-vadis-core/.../internal/tree/TransitionManager.kt`
-- `quo-vadis-core/.../internal/tree/LifecycleNotifier.kt`
-- `quo-vadis-core/.../internal/tree/ScreenKeyCollector.kt`
-- `quo-vadis-core/.../internal/tree/TreeDiffCalculator.kt`
-- `quo-vadis-core/.../navigator/NavigationErrorHandler.kt`
-- `quo-vadis-core/.../navigation/TypeAliases.kt`
+## Additional Items Implemented (Feb 23, Round 2) ✅
+- **KOTLIN-7**: `@NavigationConfigDsl` verified on all builders. Fixed missing annotation on `TransitionBuilder`.
+- **TEST-1**: Navigation test DSL created at `NavigationTestDsl.kt` in commonTest
+- **PERF-6**: Key generation optimized — UUID replaced with `Random.nextLong().toULong().toString(36)`. Cleaned 14 `@OptIn` annotations.
+- **KOTLIN-2**: `ScopeKey` value class introduced. All scope key String usages replaced.
+- **KOTLIN-3**: Contracts added — 8 functions in new `NavNodeTypeChecks.kt` with 16 tests.
+- **KOTLIN-10**: `TreeOperationResult` sealed interface. `replaceNode`/`removeNode` return results instead of throwing.
+- **API-2**: `backHandlerRegistry` and `windowSizeClass` now have `internal set`.
+- **PERF-10**: `canNavigateBack` derived from `_state.map { ... }.stateIn(...)`.
+- **MEM-1**: Callback cleanup improved (WeakReference N/A in KMP; proper null-safety + snapshot-before-invoke).
+- **MEM-2**: `onDestroyCallbacks` lazily initialized.
 
 ## Build Status
-- Full project `compileKotlinDesktop`: BUILD SUCCESSFUL
-- All modules compile cleanly (quo-vadis-core, quo-vadis-core-flow-mvi, quo-vadis-ksp, composeApp, feature1, feature2)
+- All tests pass ✅, all modules compile clean ✅
 
-## Items NOT Implemented (Low priority / Future)
-- KOTLIN-2: ScopeKey value class (low priority)
-- KOTLIN-3: Contracts on extension functions (low priority)
-- KOTLIN-4: Context parameters (future, Kotlin 2.2+)
-- KOTLIN-7: DslMarker verification (low priority)
-- KOTLIN-10: Sealed results for tree ops (low priority, internal API)
-- ARCH-6: BackResult already converted to sealed interface via KOTLIN-6
-- ARCH-8: Registry system consolidation (low priority, large effort)
-- API-2: Restrict mutable properties (low priority)
-- KSP-1/2/3: KSP improvements (low priority)
-- TEST-1/2: Test DSL and snapshot testing (would need separate effort)
-- MEM-1/2: Memory optimizations (low priority)
-- PERF-6: UUID key generation optimization (low priority)
-- PERF-9/10: Compose-specific optimizations (need profiling)
+## Items NOT Implemented (Intentionally Skipped)
+- **KOTLIN-4**: Context parameters — Kotlin 2.2+ experimental
+- **ARCH-6**: Already done via KOTLIN-6
+- **ARCH-8**: Registry consolidation — Large, risky
+- **API-3.2/3.3**: Breaking API changes, need design
+- **KSP-1/2/3**: Low priority
+- **TEST-2**: Snapshot testing — Low priority
+- **PERF-9**: Needs profiling data

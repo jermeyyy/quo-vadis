@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.core
 
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -56,15 +57,15 @@ class ScopeRegistryTest {
             "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey] ?: return true
+        override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
+            val scopeClasses = scopes[scopeKey.value] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: NavDestination): String? {
+        override fun getScopeKey(destination: NavDestination): ScopeKey? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
-            }?.key
+            }?.key?.let { ScopeKey(it) }
         }
     }
 
@@ -74,8 +75,8 @@ class ScopeRegistryTest {
 
     @Test
     fun `Empty registry always returns true for isInScope`() {
-        assertTrue(ScopeRegistry.Empty.isInScope("AnyScope", MainTabs.HomeTab))
-        assertTrue(ScopeRegistry.Empty.isInScope("AnyScope", OutOfScopeDestination))
+        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey("AnyScope"), MainTabs.HomeTab))
+        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey("AnyScope"), OutOfScopeDestination))
     }
 
     @Test
@@ -87,9 +88,9 @@ class ScopeRegistryTest {
     @Test
     fun `Empty registry allows any destination in any scope`() {
         // This is the backward-compatible behavior
-        assertTrue(ScopeRegistry.Empty.isInScope("MainTabs", OutOfScopeDestination))
-        assertTrue(ScopeRegistry.Empty.isInScope("NonExistent", MainTabs.HomeTab))
-        assertTrue(ScopeRegistry.Empty.isInScope("", MainTabs.SettingsTab))
+        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey("MainTabs"), OutOfScopeDestination))
+        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey("NonExistent"), MainTabs.HomeTab))
+        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey(""), MainTabs.SettingsTab))
     }
 
     // =========================================================================
@@ -98,28 +99,28 @@ class ScopeRegistryTest {
 
     @Test
     fun `isInScope returns true for destinations in scope`() {
-        assertTrue(testRegistry.isInScope("MainTabs", MainTabs.HomeTab))
-        assertTrue(testRegistry.isInScope("MainTabs", MainTabs.SettingsTab))
+        assertTrue(testRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.HomeTab))
+        assertTrue(testRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.SettingsTab))
     }
 
     @Test
     fun `isInScope returns false for destinations out of scope`() {
-        assertFalse(testRegistry.isInScope("MainTabs", OutOfScopeDestination))
+        assertFalse(testRegistry.isInScope(ScopeKey("MainTabs"), OutOfScopeDestination))
     }
 
     @Test
     fun `isInScope returns true for unknown scope keys`() {
         // Unknown scope keys allow all destinations (defensive behavior)
         // This prevents crashes when scope configuration is incomplete
-        assertTrue(testRegistry.isInScope("UnknownScope", MainTabs.HomeTab))
-        assertTrue(testRegistry.isInScope("UnknownScope", OutOfScopeDestination))
+        assertTrue(testRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab))
+        assertTrue(testRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination))
     }
 
     @Test
     fun `isInScope handles empty scope key`() {
         // Empty scope key is treated as unknown (allows all)
-        assertTrue(testRegistry.isInScope("", MainTabs.HomeTab))
-        assertTrue(testRegistry.isInScope("", OutOfScopeDestination))
+        assertTrue(testRegistry.isInScope(ScopeKey(""), MainTabs.HomeTab))
+        assertTrue(testRegistry.isInScope(ScopeKey(""), OutOfScopeDestination))
     }
 
     // =========================================================================
@@ -128,8 +129,8 @@ class ScopeRegistryTest {
 
     @Test
     fun `getScopeKey returns correct scope for in-scope destinations`() {
-        assertEquals("MainTabs", testRegistry.getScopeKey(MainTabs.HomeTab))
-        assertEquals("MainTabs", testRegistry.getScopeKey(MainTabs.SettingsTab))
+        assertEquals(ScopeKey("MainTabs"), testRegistry.getScopeKey(MainTabs.HomeTab))
+        assertEquals(ScopeKey("MainTabs"), testRegistry.getScopeKey(MainTabs.SettingsTab))
     }
 
     @Test
@@ -165,43 +166,43 @@ class ScopeRegistryTest {
             "ProfileTabs" to setOf(ProfileTabs.OverviewTab::class, ProfileTabs.HistoryTab::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey] ?: return true
+        override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
+            val scopeClasses = scopes[scopeKey.value] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: NavDestination): String? {
+        override fun getScopeKey(destination: NavDestination): ScopeKey? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
-            }?.key
+            }?.key?.let { ScopeKey(it) }
         }
     }
 
     @Test
     fun `Multiple scopes - each destination maps to correct scope`() {
-        assertEquals("MainTabs", multiScopeRegistry.getScopeKey(MainTabs.HomeTab))
-        assertEquals("MainTabs", multiScopeRegistry.getScopeKey(MainTabs.SettingsTab))
-        assertEquals("ProfileTabs", multiScopeRegistry.getScopeKey(ProfileTabs.OverviewTab))
-        assertEquals("ProfileTabs", multiScopeRegistry.getScopeKey(ProfileTabs.HistoryTab))
+        assertEquals(ScopeKey("MainTabs"), multiScopeRegistry.getScopeKey(MainTabs.HomeTab))
+        assertEquals(ScopeKey("MainTabs"), multiScopeRegistry.getScopeKey(MainTabs.SettingsTab))
+        assertEquals(ScopeKey("ProfileTabs"), multiScopeRegistry.getScopeKey(ProfileTabs.OverviewTab))
+        assertEquals(ScopeKey("ProfileTabs"), multiScopeRegistry.getScopeKey(ProfileTabs.HistoryTab))
     }
 
     @Test
     fun `Multiple scopes - destinations are not in wrong scope`() {
         // MainTabs destinations should not be in ProfileTabs scope
-        assertFalse(multiScopeRegistry.isInScope("ProfileTabs", MainTabs.HomeTab))
-        assertFalse(multiScopeRegistry.isInScope("ProfileTabs", MainTabs.SettingsTab))
+        assertFalse(multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), MainTabs.HomeTab))
+        assertFalse(multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), MainTabs.SettingsTab))
 
         // ProfileTabs destinations should not be in MainTabs scope
-        assertFalse(multiScopeRegistry.isInScope("MainTabs", ProfileTabs.OverviewTab))
-        assertFalse(multiScopeRegistry.isInScope("MainTabs", ProfileTabs.HistoryTab))
+        assertFalse(multiScopeRegistry.isInScope(ScopeKey("MainTabs"), ProfileTabs.OverviewTab))
+        assertFalse(multiScopeRegistry.isInScope(ScopeKey("MainTabs"), ProfileTabs.HistoryTab))
     }
 
     @Test
     fun `Multiple scopes - destinations are in correct scope`() {
-        assertTrue(multiScopeRegistry.isInScope("MainTabs", MainTabs.HomeTab))
-        assertTrue(multiScopeRegistry.isInScope("MainTabs", MainTabs.SettingsTab))
-        assertTrue(multiScopeRegistry.isInScope("ProfileTabs", ProfileTabs.OverviewTab))
-        assertTrue(multiScopeRegistry.isInScope("ProfileTabs", ProfileTabs.HistoryTab))
+        assertTrue(multiScopeRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.HomeTab))
+        assertTrue(multiScopeRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.SettingsTab))
+        assertTrue(multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), ProfileTabs.OverviewTab))
+        assertTrue(multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), ProfileTabs.HistoryTab))
     }
 
     @Test
@@ -266,63 +267,63 @@ class ScopeRegistryTest {
             "OnboardingFlow" to setOf(OnboardingFlow.Welcome::class, OnboardingFlow.Tutorial::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey] ?: return true
+        override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
+            val scopeClasses = scopes[scopeKey.value] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: NavDestination): String? {
+        override fun getScopeKey(destination: NavDestination): ScopeKey? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
-            }?.key
+            }?.key?.let { ScopeKey(it) }
         }
     }
 
     @Test
     fun `registry includes stack destinations`() {
         // Verify stack destinations are in scope map
-        assertTrue(stackScopeRegistry.isInScope("AuthFlow", AuthFlow.Login))
-        assertTrue(stackScopeRegistry.isInScope("AuthFlow", AuthFlow.Register))
-        assertTrue(stackScopeRegistry.isInScope("AuthFlow", AuthFlow.ForgotPassword))
+        assertTrue(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), AuthFlow.Login))
+        assertTrue(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), AuthFlow.Register))
+        assertTrue(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), AuthFlow.ForgotPassword))
 
-        assertTrue(stackScopeRegistry.isInScope("OnboardingFlow", OnboardingFlow.Welcome))
-        assertTrue(stackScopeRegistry.isInScope("OnboardingFlow", OnboardingFlow.Tutorial))
+        assertTrue(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), OnboardingFlow.Welcome))
+        assertTrue(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), OnboardingFlow.Tutorial))
     }
 
     @Test
     fun `getScopeKey returns stack scope for stack destinations`() {
         // Verify scope key lookup works for stack destinations
-        assertEquals("AuthFlow", stackScopeRegistry.getScopeKey(AuthFlow.Login))
-        assertEquals("AuthFlow", stackScopeRegistry.getScopeKey(AuthFlow.Register))
-        assertEquals("AuthFlow", stackScopeRegistry.getScopeKey(AuthFlow.ForgotPassword))
+        assertEquals(ScopeKey("AuthFlow"), stackScopeRegistry.getScopeKey(AuthFlow.Login))
+        assertEquals(ScopeKey("AuthFlow"), stackScopeRegistry.getScopeKey(AuthFlow.Register))
+        assertEquals(ScopeKey("AuthFlow"), stackScopeRegistry.getScopeKey(AuthFlow.ForgotPassword))
 
-        assertEquals("OnboardingFlow", stackScopeRegistry.getScopeKey(OnboardingFlow.Welcome))
-        assertEquals("OnboardingFlow", stackScopeRegistry.getScopeKey(OnboardingFlow.Tutorial))
+        assertEquals(ScopeKey("OnboardingFlow"), stackScopeRegistry.getScopeKey(OnboardingFlow.Welcome))
+        assertEquals(ScopeKey("OnboardingFlow"), stackScopeRegistry.getScopeKey(OnboardingFlow.Tutorial))
     }
 
     @Test
     fun `stack destinations are not in wrong stack scope`() {
         // AuthFlow destinations should not be in OnboardingFlow scope
-        assertFalse(stackScopeRegistry.isInScope("OnboardingFlow", AuthFlow.Login))
-        assertFalse(stackScopeRegistry.isInScope("OnboardingFlow", AuthFlow.Register))
+        assertFalse(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), AuthFlow.Login))
+        assertFalse(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), AuthFlow.Register))
 
         // OnboardingFlow destinations should not be in AuthFlow scope
-        assertFalse(stackScopeRegistry.isInScope("AuthFlow", OnboardingFlow.Welcome))
-        assertFalse(stackScopeRegistry.isInScope("AuthFlow", OnboardingFlow.Tutorial))
+        assertFalse(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), OnboardingFlow.Welcome))
+        assertFalse(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), OnboardingFlow.Tutorial))
     }
 
     @Test
     fun `stack destinations are not in tab scope`() {
         // Stack destinations should not be in tab scopes
-        assertFalse(stackScopeRegistry.isInScope("MainTabs", AuthFlow.Login))
-        assertFalse(stackScopeRegistry.isInScope("MainTabs", OnboardingFlow.Welcome))
+        assertFalse(stackScopeRegistry.isInScope(ScopeKey("MainTabs"), AuthFlow.Login))
+        assertFalse(stackScopeRegistry.isInScope(ScopeKey("MainTabs"), OnboardingFlow.Welcome))
     }
 
     @Test
     fun `tab destinations are not in stack scope`() {
         // Tab destinations should not be in stack scopes
-        assertFalse(stackScopeRegistry.isInScope("AuthFlow", MainTabs.HomeTab))
-        assertFalse(stackScopeRegistry.isInScope("OnboardingFlow", MainTabs.SettingsTab))
+        assertFalse(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), MainTabs.HomeTab))
+        assertFalse(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), MainTabs.SettingsTab))
     }
 
     @Test
@@ -333,9 +334,9 @@ class ScopeRegistryTest {
     @Test
     fun `unknown scope key allows all destinations including stack destinations`() {
         // Unknown scope keys should still allow all (defensive behavior)
-        assertTrue(stackScopeRegistry.isInScope("UnknownScope", AuthFlow.Login))
-        assertTrue(stackScopeRegistry.isInScope("UnknownScope", OnboardingFlow.Welcome))
-        assertTrue(stackScopeRegistry.isInScope("UnknownScope", MainTabs.HomeTab))
-        assertTrue(stackScopeRegistry.isInScope("UnknownScope", OutOfScopeDestination))
+        assertTrue(stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), AuthFlow.Login))
+        assertTrue(stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OnboardingFlow.Welcome))
+        assertTrue(stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab))
+        assertTrue(stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination))
     }
 }

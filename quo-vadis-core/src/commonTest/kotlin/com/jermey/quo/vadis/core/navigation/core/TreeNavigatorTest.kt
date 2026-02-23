@@ -18,6 +18,8 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.testing.withDestination
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
+import com.jermey.quo.vadis.core.navigation.navigator.NavigationErrorHandler
+import kotlinx.coroutines.Dispatchers
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -106,7 +108,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `default constructor creates navigator with empty root stack`() {
-        val navigator = TreeNavigator()
+        val navigator = TreeNavigator(coroutineContext = Dispatchers.Unconfined)
 
         val state = navigator.state.value
         assertTrue(state is StackNode)
@@ -124,7 +126,7 @@ class TreeNavigatorTest {
             )
         )
 
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         val state = navigator.state.value as StackNode
         assertEquals(2, state.children.size)
@@ -215,7 +217,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `navigate to empty navigator creates new stack`() {
-        val navigator = TreeNavigator()
+        val navigator = TreeNavigator(coroutineContext = Dispatchers.Unconfined)
 
         navigator.navigate(HomeDestination)
 
@@ -409,7 +411,7 @@ class TreeNavigatorTest {
                 )
             )
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         val newState = TreeMutator.switchActiveTab(navigator.state.value, 1)
         navigator.updateState(newState)
@@ -443,7 +445,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(tabNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         val newState = TreeMutator.switchActiveTab(navigator.state.value, 1)
         navigator.updateState(newState)
@@ -467,7 +469,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(tabNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         assertFailsWith<IllegalArgumentException> {
             TreeMutator.switchActiveTab(navigator.state.value, 5)
@@ -487,7 +489,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(tabNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         assertFailsWith<IllegalArgumentException> {
             TreeMutator.switchActiveTab(navigator.state.value, -1)
@@ -510,7 +512,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(tabNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         assertEquals(1, navigator.activeTabIndex)
     }
@@ -544,7 +546,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(tabNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         navigator.navigate(SettingsDestination)
 
@@ -578,7 +580,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(paneNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         assertTrue(navigator.isPaneAvailable(PaneRole.Primary))
         assertTrue(navigator.isPaneAvailable(PaneRole.Supporting))
@@ -601,7 +603,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(paneNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         assertFalse(navigator.isPaneAvailable(PaneRole.Extra))
     }
@@ -631,7 +633,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(paneNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         // Note: The actual content nodes may have updated parentKeys after wrapping
         val primary = navigator.paneContent(PaneRole.Primary) as? ScreenNode
@@ -657,7 +659,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(paneNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         assertNull(navigator.paneContent(PaneRole.Extra))
     }
@@ -693,7 +695,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(paneNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         val result = navigator.navigateBackInPane(PaneRole.Supporting)
 
@@ -724,7 +726,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(paneNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         val result = navigator.navigateBackInPane(PaneRole.Supporting)
 
@@ -765,7 +767,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(paneNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         navigator.clearPane(PaneRole.Supporting)
 
@@ -779,6 +781,7 @@ class TreeNavigatorTest {
     @Test
     fun `clearPane throws when no PaneNode exists`() {
         val navigator = TreeNavigator.withDestination(HomeDestination)
+        navigator.errorHandler = NavigationErrorHandler.ThrowOnError
 
         assertFailsWith<IllegalStateException> {
             navigator.clearPane(PaneRole.Supporting)
@@ -911,7 +914,7 @@ class TreeNavigatorTest {
 
     @Test
     fun `getDeepLinkRegistry returns registry for pattern registration`() {
-        val navigator = TreeNavigator()
+        val navigator = TreeNavigator(coroutineContext = Dispatchers.Unconfined)
 
         val registry = navigator.getDeepLinkRegistry()
 
@@ -1095,7 +1098,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(tabNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         val newState = TreeMutator.switchActiveTab(navigator.state.value, 1)
         navigator.updateState(newState)
@@ -1130,7 +1133,7 @@ class TreeNavigatorTest {
             parentKey = null,
             children = listOf(tabNode)
         )
-        val navigator = TreeNavigator(initialState = initialState)
+        val navigator = TreeNavigator(initialState = initialState, coroutineContext = Dispatchers.Unconfined)
 
         // Navigate in home tab
         navigator.navigate(DetailDestination)

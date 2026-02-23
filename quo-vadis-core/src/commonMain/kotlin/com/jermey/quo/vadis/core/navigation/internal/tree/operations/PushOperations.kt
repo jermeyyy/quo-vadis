@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TabOperations.switchTab
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.replaceNode
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PushStrategy
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.getOrElse
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
@@ -18,8 +19,7 @@ import com.jermey.quo.vadis.core.navigation.node.findByKey
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import kotlin.random.Random
 
 /**
  * Push operations for the navigation tree.
@@ -35,8 +35,7 @@ import kotlin.uuid.Uuid
 @InternalQuoVadisApi
 object PushOperations {
 
-    @OptIn(ExperimentalUuidApi::class)
-    private val keyGenerator: NavKeyGenerator = { NodeKey(Uuid.random().toString().take(8)) }
+    private val keyGenerator: NavKeyGenerator = { NodeKey(Random.nextLong().toULong().toString(36)) }
 
     /**
      * Push a destination onto the deepest active stack.
@@ -59,7 +58,6 @@ object PushOperations {
      * @return New tree with the destination pushed to the active stack
      * @throws IllegalStateException if no active stack is found
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun push(
         root: NavNode,
         destination: NavDestination,
@@ -78,7 +76,7 @@ object PushOperations {
             children = targetStack.children + newScreen
         )
 
-        return replaceNode(root, targetStack.key, newStack)
+        return replaceNode(root, targetStack.key, newStack).getOrElse(root)
     }
 
     /**
@@ -95,7 +93,6 @@ object PushOperations {
      * @return New tree with the destination pushed to the specified stack
      * @throws IllegalArgumentException if stackKey doesn't exist or isn't a StackNode
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun pushToStack(
         root: NavNode,
         stackKey: NodeKey,
@@ -119,7 +116,7 @@ object PushOperations {
             children = targetNode.children + newScreen
         )
 
-        return replaceNode(root, stackKey, newStack)
+        return replaceNode(root, stackKey, newStack).getOrElse(root)
     }
 
     /**
@@ -172,7 +169,6 @@ object PushOperations {
      * @return New tree with the destination pushed or tab switched appropriately
      * @throws IllegalStateException if no suitable stack is found
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun push(
         root: NavNode,
         destination: NavDestination,
@@ -217,7 +213,6 @@ object PushOperations {
      * @return New tree with cleared stack containing only the new screen
      * @throws IllegalStateException if no active stack found
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun clearAndPush(
         root: NavNode,
         destination: NavDestination,
@@ -233,7 +228,7 @@ object PushOperations {
         )
 
         val newStack = targetStack.copy(children = listOf(newScreen))
-        return replaceNode(root, targetStack.key, newStack)
+        return replaceNode(root, targetStack.key, newStack).getOrElse(root)
     }
 
     /**
@@ -246,7 +241,6 @@ object PushOperations {
      * @return New tree with cleared stack containing only the new screen
      * @throws IllegalArgumentException if stackKey not found or not a StackNode
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun clearStackAndPush(
         root: NavNode,
         stackKey: NodeKey,
@@ -267,7 +261,7 @@ object PushOperations {
         )
 
         val newStack = targetNode.copy(children = listOf(newScreen))
-        return replaceNode(root, stackKey, newStack)
+        return replaceNode(root, stackKey, newStack).getOrElse(root)
     }
 
     /**
@@ -282,7 +276,6 @@ object PushOperations {
      * @return New tree with the top screen replaced
      * @throws IllegalStateException if no active stack or stack is empty
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun replaceCurrent(
         root: NavNode,
         destination: NavDestination,
@@ -303,7 +296,7 @@ object PushOperations {
 
         val newChildren = targetStack.children.dropLast(1) + newScreen
         val newStack = targetStack.copy(children = newChildren)
-        return replaceNode(root, targetStack.key, newStack)
+        return replaceNode(root, targetStack.key, newStack).getOrElse(root)
     }
 
     /**
@@ -319,7 +312,6 @@ object PushOperations {
      * @return New tree with all destinations pushed
      * @throws IllegalStateException if no active stack found
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun pushAll(
         root: NavNode,
         destinations: List<NavDestination>,
@@ -339,7 +331,7 @@ object PushOperations {
         }
 
         val newStack = targetStack.copy(children = targetStack.children + newScreens)
-        return replaceNode(root, targetStack.key, newStack)
+        return replaceNode(root, targetStack.key, newStack).getOrElse(root)
     }
 
     // =========================================================================
@@ -476,7 +468,6 @@ object PushOperations {
      * @param generateKey Function to generate unique keys for new nodes
      * @return New tree with the destination pushed to the target stack
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun pushToActiveStack(
         root: NavNode,
         targetStack: StackNode,
@@ -493,7 +484,7 @@ object PushOperations {
             children = targetStack.children + newScreen
         )
 
-        return replaceNode(root, targetStack.key, newStack)
+        return replaceNode(root, targetStack.key, newStack).getOrElse(root)
     }
 
     /**
@@ -509,7 +500,6 @@ object PushOperations {
      * @param generateKey Function to generate unique keys for new nodes
      * @return New tree with the destination pushed to the parent stack
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun pushOutOfScope(
         root: NavNode,
         parentStack: StackNode,
@@ -530,7 +520,7 @@ object PushOperations {
             children = parentStack.children + newScreen
         )
 
-        return replaceNode(root, parentStack.key, updatedParentStack)
+        return replaceNode(root, parentStack.key, updatedParentStack).getOrElse(root)
     }
 
     /**
@@ -546,7 +536,6 @@ object PushOperations {
      * @param generateKey Function to generate unique keys for new nodes
      * @return New tree with the destination pushed to the pane's stack
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun pushToPaneStack(
         root: NavNode,
         paneNode: PaneNode,
@@ -584,6 +573,6 @@ object PushOperations {
             activePaneRole = role // Switch focus to the target pane
         )
 
-        return replaceNode(root, paneNode.key, updatedPaneNode)
+        return replaceNode(root, paneNode.key, updatedPaneNode).getOrElse(root)
     }
 }

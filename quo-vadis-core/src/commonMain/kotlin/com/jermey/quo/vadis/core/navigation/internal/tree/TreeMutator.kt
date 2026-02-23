@@ -14,6 +14,7 @@ import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TabOperatio
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PopResult
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.TreeOperationResult
 import com.jermey.quo.vadis.core.navigation.internal.tree.util.KeyGenerator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
@@ -319,7 +320,7 @@ object TreeMutator {
      *
      * @see TreeNodeOperations.replaceNode
      */
-    fun replaceNode(root: NavNode, targetKey: NodeKey, newNode: NavNode): NavNode =
+    fun replaceNode(root: NavNode, targetKey: NodeKey, newNode: NavNode): TreeOperationResult =
         TreeNodeOperations.replaceNode(root, targetKey, newNode)
 
     /**
@@ -327,7 +328,7 @@ object TreeMutator {
      *
      * @see TreeNodeOperations.removeNode
      */
-    fun removeNode(root: NavNode, targetKey: NodeKey): NavNode? =
+    fun removeNode(root: NavNode, targetKey: NodeKey): TreeOperationResult? =
         TreeNodeOperations.removeNode(root, targetKey)
 
     // =========================================================================

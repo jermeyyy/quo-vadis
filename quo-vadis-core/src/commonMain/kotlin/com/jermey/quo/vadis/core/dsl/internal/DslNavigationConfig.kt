@@ -8,6 +8,7 @@ import com.jermey.quo.vadis.core.dsl.TabEntry
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -69,7 +70,7 @@ import kotlin.reflect.KClass
 internal class DslNavigationConfig(
     private val screens: Map<KClass<out NavDestination>, ScreenEntry>,
     private val containers: Map<KClass<out NavDestination>, ContainerBuilder>,
-    private val scopes: Map<String, Set<KClass<out NavDestination>>>,
+    private val scopes: Map<ScopeKey, Set<KClass<out NavDestination>>>,
     private val transitions: Map<KClass<out NavDestination>, NavTransition>,
     private val tabsContainers: Map<String, @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit>,
     private val paneContainers: Map<String, @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit>
@@ -126,7 +127,7 @@ internal class DslNavigationConfig(
         parentKey: String?
     ): NavNode? {
         val containerBuilder = containers[destinationClass] ?: return null
-        val effectiveKey = key ?: containerBuilder.scopeKey
+        val effectiveKey = key ?: containerBuilder.scopeKey.value
 
         return when (containerBuilder) {
             is ContainerBuilder.Stack -> buildStackNode(containerBuilder, effectiveKey, parentKey)
@@ -155,7 +156,7 @@ internal class DslNavigationConfig(
      *
      * @return Combined map of scope keys to destination class sets
      */
-    private fun buildCombinedScopes(): Map<String, Set<KClass<out NavDestination>>> {
+    private fun buildCombinedScopes(): Map<ScopeKey, Set<KClass<out NavDestination>>> {
         val combined = scopes.toMutableMap()
 
         // Add container-inferred scopes
@@ -303,7 +304,7 @@ internal class DslNavigationConfig(
             parentKey = parentKey?.let { NodeKey(it) },
             stacks = stacks,
             activeStackIndex = config.initialTab,
-            wrapperKey = builder.scopeKey,
+            wrapperKey = builder.scopeKey.value,
             tabMetadata = tabMetadata,
             scopeKey = builder.scopeKey
         )

@@ -9,6 +9,7 @@ import com.jermey.quo.vadis.core.navigation.destination.DeepLinkResult
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.ContainerInfo
@@ -39,6 +40,7 @@ internal object QuoVadisClassNames {
     val SCREEN_REGISTRY: ClassName = ScreenRegistry::class.toClassName()
     val DEEP_LINK_REGISTRY: ClassName = DeepLinkRegistry::class.toClassName()
     val DEEP_LINK_RESULT: ClassName = DeepLinkResult::class.toClassName()
+    val SCOPE_KEY: ClassName = ScopeKey::class.toClassName()
     val SCOPE_REGISTRY: ClassName = ScopeRegistry::class.toClassName()
     val TRANSITION_REGISTRY: ClassName = TransitionRegistry::class.toClassName()
     val PANE_ROLE_REGISTRY: ClassName = PaneRoleRegistry::class.toClassName()

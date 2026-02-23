@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.internal.tree.operations
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.TreeOperationResult
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
@@ -32,12 +33,12 @@ object TreeNodeOperations {
      * @param root The root NavNode of the navigation tree
      * @param targetKey Key of the node to replace
      * @param newNode The replacement node
-     * @return New tree with the node replaced
-     * @throws IllegalArgumentException if targetKey not found
+     * @return [TreeOperationResult.Success] with the new tree, or [TreeOperationResult.NodeNotFound]
      */
-    fun replaceNode(root: NavNode, targetKey: NodeKey, newNode: NavNode): NavNode {
+    fun replaceNode(root: NavNode, targetKey: NodeKey, newNode: NavNode): TreeOperationResult {
         return tryReplaceNode(root, targetKey, newNode)
-            ?: throw IllegalArgumentException("Node with key '$targetKey' not found")
+            ?.let { TreeOperationResult.Success(it) }
+            ?: TreeOperationResult.NodeNotFound(targetKey)
     }
 
     /**
@@ -102,20 +103,33 @@ object TreeNodeOperations {
      *
      * @param root The root NavNode of the navigation tree
      * @param targetKey Key of the node to remove
-     * @return New tree with the node removed, or null if root itself would be removed
-     * @throws IllegalArgumentException if targetKey not found or removal not allowed
+     * @return [TreeOperationResult.Success] with the new tree,
+     *         [TreeOperationResult.NodeNotFound] if key not found,
+     *         or null if root itself would be removed
+     * @throws IllegalArgumentException if removal is not allowed (e.g. removing a tab stack)
      */
-    fun removeNode(root: NavNode, targetKey: NodeKey): NavNode? {
+    fun removeNode(root: NavNode, targetKey: NodeKey): TreeOperationResult? {
         // Cannot remove the root
         if (root.key == targetKey) return null
 
+        return tryRemoveNode(root, targetKey)
+            ?.let { TreeOperationResult.Success(it) }
+            ?: TreeOperationResult.NodeNotFound(targetKey)
+    }
+
+    /**
+     * Attempts to remove a node from the subtree rooted at [root].
+     *
+     * @return The modified subtree if [targetKey] was found and removed, or null if not found.
+     * @throws IllegalArgumentException if removal is structurally not allowed
+     */
+    @Suppress("ThrowsCount", "CyclomaticComplexMethod")
+    private fun tryRemoveNode(root: NavNode, targetKey: NodeKey): NavNode? {
         return when (root) {
-            is ScreenNode -> {
-                throw IllegalArgumentException("Node with key '$targetKey' not found")
-            }
+            is ScreenNode -> null
 
             is StackNode -> {
-                // Check if any child has this key
+                // Check if any direct child has this key
                 val childIndex = root.children.indexOfFirst { it.key == targetKey }
                 if (childIndex != -1) {
                     val newChildren = root.children.toMutableList().apply { removeAt(childIndex) }
@@ -123,16 +137,16 @@ object TreeNodeOperations {
                 }
 
                 // Search recursively
+                var found = false
                 val newChildren = root.children.map { child ->
-                    if (child.findByKey(targetKey) != null) {
-                        removeNode(child, targetKey)
+                    if (!found && child.findByKey(targetKey) != null) {
+                        val removed = tryRemoveNode(child, targetKey)
                             ?: throw IllegalArgumentException("Cannot remove root of subtree '$targetKey'")
+                        found = true
+                        removed
                     } else child
                 }
-                if (newChildren == root.children) {
-                    throw IllegalArgumentException("Node with key '$targetKey' not found")
-                }
-                root.copy(children = newChildren)
+                if (found) root.copy(children = newChildren) else null
             }
 
             is TabNode -> {
@@ -143,16 +157,16 @@ object TreeNodeOperations {
                     )
                 }
 
+                var found = false
                 val newStacks = root.stacks.map { stack ->
-                    if (stack.findByKey(targetKey) != null) {
-                        removeNode(stack, targetKey) as? StackNode
+                    if (!found && stack.findByKey(targetKey) != null) {
+                        val removed = tryRemoveNode(stack, targetKey) as? StackNode
                             ?: throw IllegalArgumentException("Cannot remove root of subtree '$targetKey'")
+                        found = true
+                        removed
                     } else stack
                 }
-                if (newStacks == root.stacks) {
-                    throw IllegalArgumentException("Node with key '$targetKey' not found")
-                }
-                root.copy(stacks = newStacks)
+                if (found) root.copy(stacks = newStacks) else null
             }
 
             is PaneNode -> {
@@ -163,19 +177,18 @@ object TreeNodeOperations {
                     )
                 }
 
+                var found = false
                 val newConfigurations = root.paneConfigurations.mapValues { (_, config) ->
-                    if (config.content.findByKey(targetKey) != null) {
-                        val newContent = removeNode(config.content, targetKey)
+                    if (!found && config.content.findByKey(targetKey) != null) {
+                        val newContent = tryRemoveNode(config.content, targetKey)
                             ?: throw IllegalArgumentException("Cannot remove root of subtree '$targetKey'")
+                        found = true
                         config.copy(content = newContent)
                     } else {
                         config
                     }
                 }
-                if (newConfigurations == root.paneConfigurations) {
-                    throw IllegalArgumentException("Node with key '$targetKey' not found")
-                }
-                root.copy(paneConfigurations = newConfigurations)
+                if (found) root.copy(paneConfigurations = newConfigurations) else null
             }
         }
     }

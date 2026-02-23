@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.registry
 
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlin.reflect.KClass
 
@@ -62,7 +63,7 @@ interface PaneRoleRegistry {
      * @param destination The destination to look up
      * @return The [PaneRole] if registered, null otherwise
      */
-    fun getPaneRole(scopeKey: String, destination: NavDestination): PaneRole?
+    fun getPaneRole(scopeKey: ScopeKey, destination: NavDestination): PaneRole?
 
     /**
      * Gets the pane role for a destination class, if registered.
@@ -71,7 +72,7 @@ interface PaneRoleRegistry {
      * @param destinationClass The destination class to look up
      * @return The [PaneRole] if registered, null otherwise
      */
-    fun getPaneRole(scopeKey: String, destinationClass: KClass<out NavDestination>): PaneRole?
+    fun getPaneRole(scopeKey: ScopeKey, destinationClass: KClass<out NavDestination>): PaneRole?
 
     /**
      * Checks if a destination has a registered pane role.
@@ -80,7 +81,7 @@ interface PaneRoleRegistry {
      * @param destination The destination to check
      * @return true if the destination has a registered pane role
      */
-    fun hasPaneRole(scopeKey: String, destination: NavDestination): Boolean =
+    fun hasPaneRole(scopeKey: ScopeKey, destination: NavDestination): Boolean =
         getPaneRole(scopeKey, destination) != null
 
     companion object {
@@ -88,9 +89,9 @@ interface PaneRoleRegistry {
          * Empty registry that returns null for all lookups.
          */
         val Empty: PaneRoleRegistry = object : PaneRoleRegistry {
-            override fun getPaneRole(scopeKey: String, destination: NavDestination): PaneRole? = null
+            override fun getPaneRole(scopeKey: ScopeKey, destination: NavDestination): PaneRole? = null
             override fun getPaneRole(
-                scopeKey: String,
+                scopeKey: ScopeKey,
                 destinationClass: KClass<out NavDestination>
             ): PaneRole? = null
         }

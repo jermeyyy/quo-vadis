@@ -9,6 +9,8 @@ import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.Dispatchers
 
 /**
  * Test helper extensions for Navigator initialization.
@@ -52,7 +54,10 @@ import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
  * @return A TreeNavigator with the destination as its initial state
  */
 @Suppress("UnusedReceiverParameter")
-fun TreeNavigator.Companion.withDestination(destination: NavDestination): TreeNavigator {
+fun TreeNavigator.Companion.withDestination(
+    destination: NavDestination,
+    coroutineContext: CoroutineContext = Dispatchers.Unconfined
+): TreeNavigator {
     val stackKey = NodeKey(NavKeyGenerator.generate())
     val screenKey = NodeKey(NavKeyGenerator.generate())
     val screenNode = ScreenNode(
@@ -65,7 +70,7 @@ fun TreeNavigator.Companion.withDestination(destination: NavDestination): TreeNa
         parentKey = null,
         children = listOf(screenNode)
     )
-    return TreeNavigator(initialState = rootStack)
+    return TreeNavigator(initialState = rootStack, coroutineContext = coroutineContext)
 }
 
 /**
@@ -76,8 +81,11 @@ fun TreeNavigator.Companion.withDestination(destination: NavDestination): TreeNa
  * @return A TreeNavigator with the provided initial state
  */
 @Suppress("UnusedReceiverParameter")
-fun TreeNavigator.Companion.withState(initialState: NavNode): TreeNavigator {
-    return TreeNavigator(initialState = initialState)
+fun TreeNavigator.Companion.withState(
+    initialState: NavNode,
+    coroutineContext: CoroutineContext = Dispatchers.Unconfined
+): TreeNavigator {
+    return TreeNavigator(initialState = initialState, coroutineContext = coroutineContext)
 }
 
 /**

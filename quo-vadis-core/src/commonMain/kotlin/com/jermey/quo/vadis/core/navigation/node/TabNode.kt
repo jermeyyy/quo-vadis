@@ -72,7 +72,7 @@ class TabNode(
     val activeStackIndex: Int = 0,
     val wrapperKey: String? = null,
     val tabMetadata: List<GeneratedTabMetadata> = emptyList(),
-    val scopeKey: String? = null
+    val scopeKey: ScopeKey? = null
 ) : NavNode, LifecycleAwareNode by LifecycleDelegate() {
 
     init {
@@ -122,7 +122,7 @@ class TabNode(
         activeStackIndex: Int = this.activeStackIndex,
         wrapperKey: String? = this.wrapperKey,
         tabMetadata: List<GeneratedTabMetadata> = this.tabMetadata,
-        scopeKey: String? = this.scopeKey
+        scopeKey: ScopeKey? = this.scopeKey
     ): TabNode = TabNode(
         key = key,
         parentKey = parentKey,

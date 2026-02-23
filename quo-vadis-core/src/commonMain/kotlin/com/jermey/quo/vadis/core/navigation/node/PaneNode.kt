@@ -7,7 +7,6 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Container node for adaptive pane layouts.
@@ -65,7 +64,6 @@ import kotlin.uuid.ExperimentalUuidApi
  *   not in this scope will navigate outside the pane container. Typically the
  *   sealed class simple name. Defaults to null (no scope enforcement).
  */
-@OptIn(ExperimentalUuidApi::class)
 @Serializable
 @SerialName("pane")
 class PaneNode(
@@ -74,7 +72,7 @@ class PaneNode(
     val paneConfigurations: Map<PaneRole, PaneConfiguration>,
     val activePaneRole: PaneRole = PaneRole.Primary,
     val backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange,
-    val scopeKey: String? = null
+    val scopeKey: ScopeKey? = null
 ) : NavNode, LifecycleAwareNode by LifecycleDelegate() {
 
     init {
@@ -128,7 +126,7 @@ class PaneNode(
         paneConfigurations: Map<PaneRole, PaneConfiguration> = this.paneConfigurations,
         activePaneRole: PaneRole = this.activePaneRole,
         backBehavior: PaneBackBehavior = this.backBehavior,
-        scopeKey: String? = this.scopeKey
+        scopeKey: ScopeKey? = this.scopeKey
     ): PaneNode = PaneNode(
         key = key,
         parentKey = parentKey,

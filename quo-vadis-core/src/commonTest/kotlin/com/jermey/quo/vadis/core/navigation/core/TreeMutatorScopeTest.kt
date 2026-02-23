@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.core.navigation.core
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
@@ -93,15 +94,15 @@ class TreeMutatorScopeTest {
             )
         )
 
-        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey] ?: return true
+        override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
+            val scopeClasses = scopes[scopeKey.value] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: NavDestination): String? {
+        override fun getScopeKey(destination: NavDestination): ScopeKey? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
-            }?.key
+            }?.key?.let { ScopeKey(it) }
         }
     }
 
@@ -161,7 +162,7 @@ class TreeMutatorScopeTest {
             parentKey = NodeKey("root"),
             stacks = listOf(homeStack, settingsStack),
             activeStackIndex = 0,
-            scopeKey = "MainTabs"
+            scopeKey = ScopeKey("MainTabs")
         )
 
         return StackNode(
@@ -210,7 +211,7 @@ class TreeMutatorScopeTest {
         // Tab structure preserved - no change since already on HomeTab
         assertEquals(2, tabNode.stacks.size)
         assertEquals(0, tabNode.activeStackIndex)
-        assertEquals("MainTabs", tabNode.scopeKey)
+        assertEquals(ScopeKey("MainTabs"), tabNode.scopeKey)
     }
 
     @Test
@@ -277,7 +278,7 @@ class TreeMutatorScopeTest {
         // Tab structure unchanged
         assertEquals(2, tabNode.stacks.size)
         assertEquals(0, tabNode.activeStackIndex)
-        assertEquals("MainTabs", tabNode.scopeKey)
+        assertEquals(ScopeKey("MainTabs"), tabNode.scopeKey)
 
         // Tab content unchanged
         assertEquals(1, tabNode.stacks[0].children.size)
@@ -479,7 +480,7 @@ class TreeMutatorScopeTest {
             parentKey = NodeKey("root"),
             stacks = listOf(homeStack, settingsStack),
             activeStackIndex = 0,
-            scopeKey = "MainTabs"
+            scopeKey = ScopeKey("MainTabs")
         )
 
         return StackNode(
@@ -569,7 +570,7 @@ class TreeMutatorScopeTest {
             parentKey = NodeKey("root"),
             stacks = listOf(homeStack, settingsStack),
             activeStackIndex = 1, // Settings tab active
-            scopeKey = "MainTabs"
+            scopeKey = ScopeKey("MainTabs")
         )
 
         val tree = StackNode(

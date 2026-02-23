@@ -14,11 +14,14 @@ import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.TreeOperationResult
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.getOrElse
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -102,7 +105,8 @@ class TreeMutatorEdgeCasesTest {
 
         val result = TreeMutator.replaceNode(oldRoot, NodeKey("root"), newRoot)
 
-        assertSame(newRoot, result)
+        assertIs<TreeOperationResult.Success>(result)
+        assertSame(newRoot, result.newTree)
     }
 
     @Test
@@ -117,7 +121,8 @@ class TreeMutatorEdgeCasesTest {
         val newScreen = ScreenNode(NodeKey("target"), NodeKey("stack"), ProfileDestination)
         val result = TreeMutator.replaceNode(root, NodeKey("target"), newScreen)
 
-        val resultStack = result as StackNode
+        assertIs<TreeOperationResult.Success>(result)
+        val resultStack = result.newTree as StackNode
         assertEquals(1, resultStack.children.size)
         val replacedScreen = resultStack.children[0] as ScreenNode
         assertEquals(ProfileDestination, replacedScreen.destination)
@@ -142,19 +147,24 @@ class TreeMutatorEdgeCasesTest {
             children = listOf(ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination))
         )
 
-        val result = TreeMutator.replaceNode(root, NodeKey("tab0"), newStack) as TabNode
+        val result = TreeMutator.replaceNode(root, NodeKey("tab0"), newStack)
 
-        assertEquals(1, result.stacks[0].children.size)
-        assertEquals(0, result.stacks[1].children.size)
+        assertIs<TreeOperationResult.Success>(result)
+        val resultTab = result.newTree as TabNode
+        assertEquals(1, resultTab.stacks[0].children.size)
+        assertEquals(0, resultTab.stacks[1].children.size)
     }
 
     @Test
-    fun `replaceNode throws for non-existent key`() {
+    fun `replaceNode returns NodeNotFound for non-existent key`() {
         val root = StackNode(NodeKey("root"), null, emptyList())
 
-        assertFailsWith<IllegalArgumentException> {
-            TreeMutator.replaceNode(root, NodeKey("nonexistent"), ScreenNode(NodeKey("new"), null, HomeDestination))
-        }
+        val result = TreeMutator.replaceNode(
+            root, NodeKey("nonexistent"), ScreenNode(NodeKey("new"), null, HomeDestination)
+        )
+
+        assertIs<TreeOperationResult.NodeNotFound>(result)
+        assertEquals(NodeKey("nonexistent"), result.key)
     }
 
     @Test
@@ -176,11 +186,13 @@ class TreeMutatorEdgeCasesTest {
         )
 
         val newScreen = ScreenNode(NodeKey("s1"), NodeKey("tab0"), SettingsDestination)
-        val result = TreeMutator.replaceNode(root, NodeKey("s1"), newScreen) as TabNode
+        val result = TreeMutator.replaceNode(root, NodeKey("s1"), newScreen)
 
+        assertIs<TreeOperationResult.Success>(result)
+        val resultTab = result.newTree as TabNode
         // tab1 stack should be same reference
-        assertSame(unchangedStack, result.stacks[1])
-        assertSame(unchangedScreen, result.stacks[1].children[0])
+        assertSame(unchangedStack, resultTab.stacks[1])
+        assertSame(unchangedScreen, resultTab.stacks[1].children[0])
     }
 
     @Test
@@ -198,9 +210,11 @@ class TreeMutatorEdgeCasesTest {
         )
 
         val newScreen = ScreenNode(NodeKey("target"), NodeKey("primary-stack"), ProfileDestination)
-        val result = TreeMutator.replaceNode(root, NodeKey("target"), newScreen) as PaneNode
+        val result = TreeMutator.replaceNode(root, NodeKey("target"), newScreen)
 
-        val primaryStack = result.paneContent(PaneRole.Primary) as StackNode
+        assertIs<TreeOperationResult.Success>(result)
+        val resultPanes = result.newTree as PaneNode
+        val primaryStack = resultPanes.paneContent(PaneRole.Primary) as StackNode
         val replacedScreen = primaryStack.children[0] as ScreenNode
         assertEquals(ProfileDestination, replacedScreen.destination)
     }
@@ -222,8 +236,8 @@ class TreeMutatorEdgeCasesTest {
 
         val result = TreeMutator.removeNode(root, NodeKey("s2"))
 
-        assertNotNull(result)
-        val resultStack = result as StackNode
+        assertIs<TreeOperationResult.Success>(result)
+        val resultStack = result.newTree as StackNode
         assertEquals(1, resultStack.children.size)
         assertEquals(NodeKey("s1"), resultStack.children[0].key)
     }
@@ -277,20 +291,21 @@ class TreeMutatorEdgeCasesTest {
 
         val result = TreeMutator.removeNode(root, NodeKey("s2"))
 
-        assertNotNull(result)
-        val tabs = (result as StackNode).children[0] as TabNode
+        assertIs<TreeOperationResult.Success>(result)
+        val tabs = (result.newTree as StackNode).children[0] as TabNode
         val tab0 = tabs.stacks[0]
         assertEquals(1, tab0.children.size)
         assertEquals(NodeKey("s1"), tab0.children[0].key)
     }
 
     @Test
-    fun `removeNode throws for non-existent key`() {
+    fun `removeNode returns NodeNotFound for non-existent key`() {
         val root = StackNode(NodeKey("root"), null, emptyList())
 
-        assertFailsWith<IllegalArgumentException> {
-            TreeMutator.removeNode(root, NodeKey("nonexistent"))
-        }
+        val result = TreeMutator.removeNode(root, NodeKey("nonexistent"))
+
+        assertIs<TreeOperationResult.NodeNotFound>(result)
+        assertEquals(NodeKey("nonexistent"), result.key)
     }
 
     @Test
@@ -329,8 +344,8 @@ class TreeMutatorEdgeCasesTest {
 
         val result = TreeMutator.removeNode(root, NodeKey("s2"))
 
-        assertNotNull(result)
-        val resultPanes = result as PaneNode
+        assertIs<TreeOperationResult.Success>(result)
+        val resultPanes = result.newTree as PaneNode
         val primaryStack = resultPanes.paneContent(PaneRole.Primary) as StackNode
         assertEquals(1, primaryStack.children.size)
         assertEquals(NodeKey("s1"), primaryStack.children[0].key)

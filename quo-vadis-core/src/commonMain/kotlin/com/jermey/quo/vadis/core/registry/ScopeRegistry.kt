@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.core.registry
 
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 
 /**
  * Registry for determining navigation scope membership.
@@ -43,7 +44,7 @@ interface ScopeRegistry {
      * @param destination The destination to check
      * @return true if the destination is in scope, false otherwise
      */
-    fun isInScope(scopeKey: String, destination: NavDestination): Boolean
+    fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean
 
     /**
      * Gets the scope key for a destination, if it belongs to any registered scope.
@@ -51,7 +52,7 @@ interface ScopeRegistry {
      * @param destination The destination to lookup
      * @return The scope key if found, null otherwise
      */
-    fun getScopeKey(destination: NavDestination): String?
+    fun getScopeKey(destination: NavDestination): ScopeKey?
 
     companion object {
         /**
@@ -59,8 +60,8 @@ interface ScopeRegistry {
          * Use this for backward compatibility when scope checking is disabled.
          */
         val Empty: ScopeRegistry = object : ScopeRegistry {
-            override fun isInScope(scopeKey: String, destination: NavDestination): Boolean = true
-            override fun getScopeKey(destination: NavDestination): String? = null
+            override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean = true
+            override fun getScopeKey(destination: NavDestination): ScopeKey? = null
         }
     }
 }

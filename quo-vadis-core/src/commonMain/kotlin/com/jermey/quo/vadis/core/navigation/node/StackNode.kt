@@ -36,7 +36,7 @@ data class StackNode(
     override val key: NodeKey,
     override val parentKey: NodeKey?,
     val children: List<NavNode> = emptyList(),
-    val scopeKey: String? = null
+    val scopeKey: ScopeKey? = null
 ) : NavNode {
 
     /**

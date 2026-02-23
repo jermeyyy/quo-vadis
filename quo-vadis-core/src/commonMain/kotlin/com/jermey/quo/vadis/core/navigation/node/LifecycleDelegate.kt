@@ -30,7 +30,16 @@ class LifecycleDelegate : LifecycleAwareNode {
 
     override var composeSavedState: Map<String, List<Any?>>? = null
 
-    private val onDestroyCallbacks = mutableListOf<() -> Unit>()
+    /**
+     * Lazily initialized list of callbacks invoked when the node is destroyed.
+     * Null until the first callback is registered, avoiding allocation for nodes
+     * that never use lifecycle callbacks.
+     *
+     * Note: WeakReference is not available in Kotlin common (KMP limitation).
+     * Callers must use [removeOnDestroyCallback] if they need to unregister,
+     * or rely on automatic cleanup in [close] when the node is destroyed.
+     */
+    private var onDestroyCallbacks: MutableList<() -> Unit>? = null
 
     override fun attachToNavigator() {
         isAttachedToNavigator = true
@@ -58,15 +67,19 @@ class LifecycleDelegate : LifecycleAwareNode {
     }
 
     override fun addOnDestroyCallback(callback: () -> Unit) {
-        onDestroyCallbacks.add(callback)
+        val callbacks = onDestroyCallbacks ?: mutableListOf<() -> Unit>().also { onDestroyCallbacks = it }
+        callbacks.add(callback)
     }
 
     override fun removeOnDestroyCallback(callback: () -> Unit) {
-        onDestroyCallbacks.remove(callback)
+        onDestroyCallbacks?.remove(callback)
     }
 
     private fun close() {
-        onDestroyCallbacks.forEach { it.invoke() }
-        onDestroyCallbacks.clear()
+        val callbacks = onDestroyCallbacks ?: return
+        val snapshot = callbacks.toList()
+        callbacks.clear()
+        onDestroyCallbacks = null
+        snapshot.forEach { it.invoke() }
     }
 }

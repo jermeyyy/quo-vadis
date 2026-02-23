@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.core.dsl
 import com.jermey.quo.vadis.core.dsl.internal.BuiltPanesConfig
 import com.jermey.quo.vadis.core.dsl.internal.BuiltTabsConfig
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import kotlin.reflect.KClass
 
 /**
@@ -32,7 +33,7 @@ sealed class ContainerBuilder {
      *
      * Used to determine which destinations belong to this container's scope.
      */
-    abstract val scopeKey: String
+    abstract val scopeKey: ScopeKey
 
     /**
      * Stack container configuration.
@@ -46,7 +47,7 @@ sealed class ContainerBuilder {
      */
     data class Stack(
         override val destinationClass: KClass<out NavDestination>,
-        override val scopeKey: String,
+        override val scopeKey: ScopeKey,
         val screens: List<StackScreenEntry>
     ) : ContainerBuilder()
 
@@ -62,7 +63,7 @@ sealed class ContainerBuilder {
      */
     data class Tabs(
         override val destinationClass: KClass<out NavDestination>,
-        override val scopeKey: String,
+        override val scopeKey: ScopeKey,
         val config: BuiltTabsConfig
     ) : ContainerBuilder()
 
@@ -78,7 +79,7 @@ sealed class ContainerBuilder {
      */
     data class Panes(
         override val destinationClass: KClass<out NavDestination>,
-        override val scopeKey: String,
+        override val scopeKey: ScopeKey,
         val config: BuiltPanesConfig
     ) : ContainerBuilder()
 }

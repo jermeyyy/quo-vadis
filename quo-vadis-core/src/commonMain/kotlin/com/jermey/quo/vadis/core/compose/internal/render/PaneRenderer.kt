@@ -205,7 +205,7 @@ private fun MultiPaneRenderer(
     // The container receives the scope with paneContents for custom layout
     // Use scopeKey for wrapper lookup since that's what KSP generates
     scope.containerRegistry.PaneContainer(
-        paneNodeKey = node.scopeKey ?: node.key.value,
+        paneNodeKey = node.scopeKey?.value ?: node.key.value,
         scope = paneContainerScope
     ) {
         // Default content slot: renders each visible pane sequentially

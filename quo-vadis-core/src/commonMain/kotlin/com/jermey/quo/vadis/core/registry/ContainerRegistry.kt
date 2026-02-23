@@ -9,6 +9,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
@@ -30,7 +31,7 @@ sealed interface ContainerInfo {
      * Used for scope-aware navigation to determine if we're already inside
      * the required container.
      */
-    val scopeKey: String
+    val scopeKey: ScopeKey
 
     /**
      * The destination class that defines this container.
@@ -59,7 +60,7 @@ sealed interface ContainerInfo {
     data class TabContainer(
         val builder: (key: NodeKey, parentKey: NodeKey?, initialTabIndex: Int) -> TabNode,
         val initialTabIndex: Int,
-        override val scopeKey: String,
+        override val scopeKey: ScopeKey,
         override val containerClass: KClass<out NavDestination>
     ) : ContainerInfo
 
@@ -81,7 +82,7 @@ sealed interface ContainerInfo {
     data class PaneContainer(
         val builder: (key: NodeKey, parentKey: NodeKey?) -> PaneNode,
         val initialPane: PaneRole,
-        override val scopeKey: String,
+        override val scopeKey: ScopeKey,
         override val containerClass: KClass<out NavDestination>
     ) : ContainerInfo
 }

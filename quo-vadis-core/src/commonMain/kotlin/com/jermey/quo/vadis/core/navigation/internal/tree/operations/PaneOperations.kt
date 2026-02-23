@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.PopOperations.pop
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.replaceNode
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PopResult
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.getOrElse
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
@@ -17,8 +18,7 @@ import com.jermey.quo.vadis.core.navigation.node.findByKey
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import kotlin.random.Random
 
 /**
  * Pane navigation operations for PaneNode.
@@ -49,14 +49,13 @@ object PaneOperations {
      * @return New tree with navigation applied
      * @throws IllegalArgumentException if nodeKey not found or role not configured
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun navigateToPane(
         root: NavNode,
         nodeKey: NodeKey,
         role: PaneRole,
         destination: NavDestination,
         switchFocus: Boolean = true,
-        generateKey: NavKeyGenerator = { NodeKey(Uuid.random().toString().take(8)) }
+        generateKey: NavKeyGenerator = { NodeKey(Random.nextLong().toULong().toString(36)) }
     ): NavNode {
         val paneNode = root.findByKey(nodeKey) as? PaneNode
             ?: throw IllegalArgumentException("PaneNode with key '$nodeKey' not found")
@@ -82,7 +81,7 @@ object PaneOperations {
         val newStack = targetStack.copy(children = targetStack.children + newScreen)
 
         // Replace the stack in the tree
-        var result = replaceNode(root, targetStack.key, newStack)
+        var result = replaceNode(root, targetStack.key, newStack).getOrElse(root)
 
         // Optionally switch focus
         if (switchFocus && paneNode.activePaneRole != role) {
@@ -119,7 +118,7 @@ object PaneOperations {
         if (paneNode.activePaneRole == role) return root
 
         val newPaneNode = paneNode.copy(activePaneRole = role)
-        return replaceNode(root, nodeKey, newPaneNode)
+        return replaceNode(root, nodeKey, newPaneNode).getOrElse(root)
     }
 
     /**
@@ -152,7 +151,7 @@ object PaneOperations {
 
         val newChildren = targetStack.children.dropLast(1)
         val newStack = targetStack.copy(children = newChildren)
-        return replaceNode(root, targetStack.key, newStack)
+        return replaceNode(root, targetStack.key, newStack).getOrElse(root)
     }
 
     /**
@@ -337,7 +336,7 @@ object PaneOperations {
         // Pop from the active stack
         val newChildren = activeStack.children.dropLast(1)
         val newStack = activeStack.copy(children = newChildren)
-        val newState = replaceNode(root, activeStack.key, newStack)
+        val newState = replaceNode(root, activeStack.key, newStack).getOrElse(root)
         return PopResult.Popped(newState)
     }
 
@@ -359,7 +358,7 @@ object PaneOperations {
         val newConfig = paneConfig.copy(content = clearedStack)
         val newConfigurations = paneNode.paneConfigurations + (role to newConfig)
         val newPaneNode = paneNode.copy(paneConfigurations = newConfigurations)
-        return replaceNode(root, paneNodeKey, newPaneNode)
+        return replaceNode(root, paneNodeKey, newPaneNode).getOrElse(root)
     }
 
     /**
@@ -383,7 +382,7 @@ object PaneOperations {
 
         val newConfigurations = paneNode.paneConfigurations + (role to config)
         val newPaneNode = paneNode.copy(paneConfigurations = newConfigurations)
-        return replaceNode(root, nodeKey, newPaneNode)
+        return replaceNode(root, nodeKey, newPaneNode).getOrElse(root)
     }
 
     /**
@@ -420,6 +419,6 @@ object PaneOperations {
             paneConfigurations = newConfigurations,
             activePaneRole = newActiveRole
         )
-        return replaceNode(root, nodeKey, newPaneNode)
+        return replaceNode(root, nodeKey, newPaneNode).getOrElse(root)
     }
 }
