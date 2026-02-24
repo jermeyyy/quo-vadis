@@ -230,17 +230,17 @@ fun <R> NavNode.fold(
     combine: (R, R) -> R,
     transform: (NavNode) -> R,
 ): R {
-    val current = transform(this)
+    val current = combine(initial, transform(this))
     return when (this) {
         is ScreenNode -> current
         is StackNode -> children.fold(current) { acc, child ->
-            combine(acc, child.fold(initial, combine, transform))
+            child.fold(acc, combine, transform)
         }
         is TabNode -> stacks.fold(current) { acc, stack ->
-            combine(acc, stack.fold(initial, combine, transform))
+            stack.fold(acc, combine, transform)
         }
         is PaneNode -> paneConfigurations.values.fold(current) { acc, config ->
-            combine(acc, config.content.fold(initial, combine, transform))
+            config.content.fold(acc, combine, transform)
         }
     }
 }
