@@ -1,7 +1,7 @@
 package com.jermey.quo.vadis.core.navigation.internal.tree.util
 
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
+import kotlin.random.Random
 
 /**
  * Abstraction for generating unique node keys.
@@ -17,25 +17,24 @@ import kotlin.uuid.Uuid
  *
  * // Custom generator
  * val counter = AtomicInteger(0)
- * val customGenerator = KeyGenerator { "node-${counter.incrementAndGet()}" }
+ * val customGenerator = KeyGenerator { NodeKey("node-${counter.incrementAndGet()}") }
  * ```
  */
 fun interface KeyGenerator {
     /**
      * Generates a unique key for a navigation node.
      *
-     * @return A unique string key
+     * @return A unique [NodeKey]
      */
-    fun generate(): String
+    fun generate(): NodeKey
 
     companion object {
         /**
-         * Default key generator using UUID.
+         * Default key generator using random Long values.
          *
-         * Generates 8-character keys from random UUIDs for compact representation
-         * while maintaining uniqueness.
+         * Generates compact base-36 keys from random Longs for efficient
+         * key generation while maintaining uniqueness (64 bits of entropy).
          */
-        @OptIn(ExperimentalUuidApi::class)
-        val Default: KeyGenerator = KeyGenerator { Uuid.random().toString().take(8) }
+        val Default: KeyGenerator = KeyGenerator { NodeKey(Random.nextLong().toULong().toString(36)) }
     }
 }

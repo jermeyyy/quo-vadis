@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.registry.internal
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 
 /**
@@ -13,7 +14,7 @@ internal class CompositeScopeRegistry(
     private val secondary: ScopeRegistry
 ) : ScopeRegistry {
 
-    override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
+    override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
         // Check secondary first for an explicit registration
         val secondaryScopeKey = secondary.getScopeKey(destination)
         if (secondaryScopeKey != null) {
@@ -23,7 +24,7 @@ internal class CompositeScopeRegistry(
         return primary.isInScope(scopeKey, destination)
     }
 
-    override fun getScopeKey(destination: NavDestination): String? {
+    override fun getScopeKey(destination: NavDestination): ScopeKey? {
         return secondary.getScopeKey(destination) ?: primary.getScopeKey(destination)
     }
 }

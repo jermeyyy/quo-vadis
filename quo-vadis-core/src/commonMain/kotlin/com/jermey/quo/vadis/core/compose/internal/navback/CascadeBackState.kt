@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.compose.internal.navback
 
 import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -46,7 +47,7 @@ data class CascadeBackState(
      * For normal pops (cascadeDepth == 0), this is the parent stack of the exiting node.
      * For cascade pops, this is the root stack.
      */
-    val animatingStackKey: String?,
+    val animatingStackKey: NodeKey?,
 
     /**
      * The number of levels the cascade goes.

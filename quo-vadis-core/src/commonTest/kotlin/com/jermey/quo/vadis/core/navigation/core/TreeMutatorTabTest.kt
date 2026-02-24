@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.core
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -64,38 +65,38 @@ class TreeMutatorTabTest {
     @Test
     fun `switchTab updates activeStackIndex`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", emptyList()),
-                StackNode("tab1", "tabs", emptyList()),
-                StackNode("tab2", "tabs", emptyList())
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList()),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList()),
+                StackNode(NodeKey("tab2"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
 
-        val result = TreeMutator.switchTab(tabs, "tabs", 2)
+        val result = TreeMutator.switchTab(tabs, NodeKey("tabs"), 2)
 
         assertEquals(2, (result as TabNode).activeStackIndex)
     }
 
     @Test
     fun `switchTab preserves all stacks`() {
-        val screen1 = ScreenNode("s1", "tab0", HomeDestination)
-        val screen2 = ScreenNode("s2", "tab1", ProfileDestination)
-        val screen3 = ScreenNode("s3", "tab1", SettingsDestination)
+        val screen1 = ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
+        val screen2 = ScreenNode(NodeKey("s2"), NodeKey("tab1"), ProfileDestination)
+        val screen3 = ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
 
-        val stack0 = StackNode("tab0", "tabs", listOf(screen1))
-        val stack1 = StackNode("tab1", "tabs", listOf(screen2, screen3))
+        val stack0 = StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(screen1))
+        val stack1 = StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(screen2, screen3))
 
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(stack0, stack1),
             activeStackIndex = 0
         )
 
-        val result = TreeMutator.switchTab(tabs, "tabs", 1) as TabNode
+        val result = TreeMutator.switchTab(tabs, NodeKey("tabs"), 1) as TabNode
 
         assertEquals(1, result.activeStackIndex)
         assertEquals(1, result.stacks[0].children.size) // tab0 unchanged
@@ -104,20 +105,20 @@ class TreeMutatorTabTest {
 
     @Test
     fun `switchTab preserves structural sharing`() {
-        val screen1 = ScreenNode("s1", "tab0", HomeDestination)
-        val screen2 = ScreenNode("s2", "tab1", ProfileDestination)
+        val screen1 = ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
+        val screen2 = ScreenNode(NodeKey("s2"), NodeKey("tab1"), ProfileDestination)
 
-        val stack0 = StackNode("tab0", "tabs", listOf(screen1))
-        val stack1 = StackNode("tab1", "tabs", listOf(screen2))
+        val stack0 = StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(screen1))
+        val stack1 = StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(screen2))
 
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(stack0, stack1),
             activeStackIndex = 0
         )
 
-        val result = TreeMutator.switchTab(tabs, "tabs", 1) as TabNode
+        val result = TreeMutator.switchTab(tabs, NodeKey("tabs"), 1) as TabNode
 
         // Both stacks should be same references
         assertSame(stack0, result.stacks[0])
@@ -129,16 +130,16 @@ class TreeMutatorTabTest {
     @Test
     fun `switchTab returns same state when already on target tab`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", emptyList()),
-                StackNode("tab1", "tabs", emptyList())
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList()),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 1
         )
 
-        val result = TreeMutator.switchTab(tabs, "tabs", 1)
+        val result = TreeMutator.switchTab(tabs, NodeKey("tabs"), 1)
 
         // Should be same reference (no change)
         assertSame(tabs, result)
@@ -147,67 +148,67 @@ class TreeMutatorTabTest {
     @Test
     fun `switchTab throws for invalid index - too high`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
-            stacks = listOf(StackNode("tab0", "tabs", emptyList())),
+            stacks = listOf(StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList())),
             activeStackIndex = 0
         )
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.switchTab(tabs, "tabs", 5)
+            TreeMutator.switchTab(tabs, NodeKey("tabs"), 5)
         }
     }
 
     @Test
     fun `switchTab throws for negative index`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
-            stacks = listOf(StackNode("tab0", "tabs", emptyList())),
+            stacks = listOf(StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList())),
             activeStackIndex = 0
         )
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.switchTab(tabs, "tabs", -1)
+            TreeMutator.switchTab(tabs, NodeKey("tabs"), -1)
         }
     }
 
     @Test
     fun `switchTab throws for non-existent TabNode key`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
-            stacks = listOf(StackNode("tab0", "tabs", emptyList())),
+            stacks = listOf(StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList())),
             activeStackIndex = 0
         )
 
         assertFailsWith<IllegalArgumentException> {
-            TreeMutator.switchTab(tabs, "nonexistent", 0)
+            TreeMutator.switchTab(tabs, NodeKey("nonexistent"), 0)
         }
     }
 
     @Test
     fun `switchTab works with nested TabNode`() {
         val innerTabs = TabNode(
-            key = "inner-tabs",
-            parentKey = "tab0",
+            key = NodeKey("inner-tabs"),
+            parentKey = NodeKey("tab0"),
             stacks = listOf(
-                StackNode("inner-tab0", "inner-tabs", emptyList()),
-                StackNode("inner-tab1", "inner-tabs", emptyList())
+                StackNode(NodeKey("inner-tab0"), NodeKey("inner-tabs"), emptyList()),
+                StackNode(NodeKey("inner-tab1"), NodeKey("inner-tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
 
         val root = TabNode(
-            key = "outer-tabs",
+            key = NodeKey("outer-tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "outer-tabs", listOf(innerTabs))
+                StackNode(NodeKey("tab0"), NodeKey("outer-tabs"), listOf(innerTabs))
             ),
             activeStackIndex = 0
         )
 
-        val result = TreeMutator.switchTab(root, "inner-tabs", 1)
+        val result = TreeMutator.switchTab(root, NodeKey("inner-tabs"), 1)
 
         val resultOuterTabs = result as TabNode
         val resultInnerTabs = resultOuterTabs.stacks[0].children[0] as TabNode
@@ -217,17 +218,15 @@ class TreeMutatorTabTest {
     @Test
     fun `switchTab in StackNode containing TabNode`() {
         val tabs = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s2", "tab1", ProfileDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s2"), NodeKey("tab1"), ProfileDestination)
                     )
                 )
             ),
@@ -235,12 +234,12 @@ class TreeMutatorTabTest {
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabs)
         )
 
-        val result = TreeMutator.switchTab(root, "tabs", 1)
+        val result = TreeMutator.switchTab(root, NodeKey("tabs"), 1)
 
         val resultStack = result as StackNode
         val resultTabs = resultStack.children[0] as TabNode
@@ -254,15 +253,15 @@ class TreeMutatorTabTest {
     @Test
     fun `switchActiveTab finds TabNode in active path`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
                 TabNode(
-                    key = "tabs",
-                    parentKey = "root",
+                    key = NodeKey("tabs"),
+                    parentKey = NodeKey("root"),
                     stacks = listOf(
-                        StackNode("tab0", "tabs", emptyList()),
-                        StackNode("tab1", "tabs", emptyList())
+                        StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList()),
+                        StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
                     ),
                     activeStackIndex = 0
                 )
@@ -278,10 +277,10 @@ class TreeMutatorTabTest {
     @Test
     fun `switchActiveTab throws when no TabNode in path`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
             )
         )
 
@@ -292,7 +291,7 @@ class TreeMutatorTabTest {
 
     @Test
     fun `switchActiveTab throws for empty stack`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         assertFailsWith<IllegalStateException> {
             TreeMutator.switchActiveTab(root, 0)
@@ -303,21 +302,21 @@ class TreeMutatorTabTest {
     fun `switchActiveTab finds first TabNode in active path with multiple tabs`() {
         // Nested tabs scenario - should find the FIRST tab in active path
         val innerTabs = TabNode(
-            key = "inner-tabs",
-            parentKey = "tab0",
+            key = NodeKey("inner-tabs"),
+            parentKey = NodeKey("tab0"),
             stacks = listOf(
-                StackNode("inner-tab0", "inner-tabs", emptyList()),
-                StackNode("inner-tab1", "inner-tabs", emptyList())
+                StackNode(NodeKey("inner-tab0"), NodeKey("inner-tabs"), emptyList()),
+                StackNode(NodeKey("inner-tab1"), NodeKey("inner-tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
 
         val outerTabs = TabNode(
-            key = "outer-tabs",
+            key = NodeKey("outer-tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "outer-tabs", listOf(innerTabs)),
-                StackNode("tab1", "outer-tabs", emptyList())
+                StackNode(NodeKey("tab0"), NodeKey("outer-tabs"), listOf(innerTabs)),
+                StackNode(NodeKey("tab1"), NodeKey("outer-tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
@@ -327,23 +326,23 @@ class TreeMutatorTabTest {
         // Should switch the FIRST TabNode found (outer-tabs)
         val resultTabs = result as TabNode
         assertEquals(1, resultTabs.activeStackIndex)
-        assertEquals("outer-tabs", resultTabs.key)
+        assertEquals(NodeKey("outer-tabs"), resultTabs.key)
     }
 
     @Test
     fun `switchActiveTab returns same state when already on target index`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", emptyList()),
-                StackNode("tab1", "tabs", emptyList())
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList()),
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 1
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabs)
         )
@@ -357,10 +356,10 @@ class TreeMutatorTabTest {
     @Test
     fun `switchActiveTab throws for invalid index`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode("tab0", "tabs", emptyList())
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), emptyList())
             ),
             activeStackIndex = 0
         )
@@ -373,17 +372,15 @@ class TreeMutatorTabTest {
     @Test
     fun `switchActiveTab works with deeply nested structure`() {
         val targetTabs = TabNode(
-            key = "target-tabs",
-            parentKey = "inner-stack",
+            key = NodeKey("target-tabs"),
+            parentKey = NodeKey("inner-stack"),
             stacks = listOf(
-                StackNode(
-                    "target-tab0", "target-tabs", listOf(
-                        ScreenNode("s1", "target-tab0", HomeDestination)
+                StackNode(NodeKey("target-tab0"), NodeKey("target-tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("target-tab0"), HomeDestination)
                     )
                 ),
-                StackNode(
-                    "target-tab1", "target-tabs", listOf(
-                        ScreenNode("s2", "target-tab1", ProfileDestination)
+                StackNode(NodeKey("target-tab1"), NodeKey("target-tabs"), listOf(
+                        ScreenNode(NodeKey("s2"), NodeKey("target-tab1"), ProfileDestination)
                     )
                 )
             ),
@@ -391,12 +388,12 @@ class TreeMutatorTabTest {
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
                 StackNode(
-                    key = "inner-stack",
-                    parentKey = "root",
+                    key = NodeKey("inner-stack"),
+                    parentKey = NodeKey("root"),
                     children = listOf(targetTabs)
                 )
             )
@@ -405,7 +402,7 @@ class TreeMutatorTabTest {
         val result = TreeMutator.switchActiveTab(root, 1)
 
         // Find the target-tabs and verify it switched
-        val foundTabs = result.findByKey("target-tabs") as TabNode
+        val foundTabs = result.findByKey(NodeKey("target-tabs")) as TabNode
         assertEquals(1, foundTabs.activeStackIndex)
     }
 
@@ -416,17 +413,15 @@ class TreeMutatorTabTest {
     @Test
     fun `switching tabs then pushing maintains separate histories`() {
         var current: NavNode = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s2", "tab1", ProfileDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s2"), NodeKey("tab1"), ProfileDestination)
                     )
                 )
             ),
@@ -438,7 +433,7 @@ class TreeMutatorTabTest {
         assertEquals(1, (current as TabNode).activeStackIndex)
 
         // Push to tab1 (active)
-        current = TreeMutator.push(current, SettingsDestination) { "key-new" }
+        current = TreeMutator.push(current, SettingsDestination) { NodeKey("key-new") }
 
         val tabs = current as TabNode
         // Tab1 should have 2 items now
@@ -450,18 +445,16 @@ class TreeMutatorTabTest {
     @Test
     fun `switching back to previous tab preserves its history`() {
         var current: NavNode = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination),
-                        ScreenNode("s2", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s3", "tab1", SettingsDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
             ),

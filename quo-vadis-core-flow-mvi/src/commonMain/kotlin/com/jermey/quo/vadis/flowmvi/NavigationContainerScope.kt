@@ -54,7 +54,7 @@ class NavigationContainerScope(
     /**
      * Unique key for this screen instance.
      */
-    val screenKey: String get() = screenNode.key
+    val screenKey: String get() = screenNode.key.value
 
     /**
      * Callback registered with the screen node to close scope on destroy.

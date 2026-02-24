@@ -121,6 +121,7 @@ internal fun PaneRenderer(
             // Use TreeMutator directly to switch active pane
             val currentState = scope.navigator.state.value
             val newState = TreeMutator.switchActivePane(currentState, node.key, role)
+            @Suppress("DEPRECATION")
             scope.navigator.updateState(newState)
         }
     )
@@ -143,7 +144,7 @@ internal fun PaneRenderer(
             // (different node objects will have different hashCodes even with same key)
             val cacheKey = node.key
             scope.cache.CachedEntry(
-                key = cacheKey,
+                key = cacheKey.value,
                 saveableStateHolder = scope.saveableStateHolder
             ) {
                 MultiPaneRenderer(
@@ -204,7 +205,7 @@ private fun MultiPaneRenderer(
     // The container receives the scope with paneContents for custom layout
     // Use scopeKey for wrapper lookup since that's what KSP generates
     scope.containerRegistry.PaneContainer(
-        paneNodeKey = node.scopeKey ?: node.key,
+        paneNodeKey = node.scopeKey?.value ?: node.key.value,
         scope = paneContainerScope
     ) {
         // Default content slot: renders each visible pane sequentially

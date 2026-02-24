@@ -1,0 +1,17 @@
+{
+	"version": 1,
+	"hooks": {
+		"SubagentStart": [
+			{
+				"type": "command",
+				"command": "osascript -e 'display notification \"Subagent started\" with title \"Quo Vadis\"'"
+			}
+		],
+		"SubagentStop": [
+			{
+				"type": "command",
+				"command": "osascript -e 'display notification \"Subagent stopped\" with title \"Quo Vadis\"'"
+			}
+		]
+	}
+}

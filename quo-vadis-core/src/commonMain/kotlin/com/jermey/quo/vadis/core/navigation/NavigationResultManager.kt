@@ -42,10 +42,12 @@ class NavigationResultManager {
      * @param screenKey The unique key of the screen that will return the result
      * @return A [CompletableDeferred] that will receive the result
      */
-    fun requestResult(screenKey: String): CompletableDeferred<Any?> {
-        val deferred = CompletableDeferred<Any?>()
-        pendingResults[screenKey] = deferred
-        return deferred
+    suspend fun requestResult(screenKey: String): CompletableDeferred<Any?> {
+        return mutex.withLock {
+            val deferred = CompletableDeferred<Any?>()
+            pendingResults[screenKey] = deferred
+            deferred
+        }
     }
 
     /**
@@ -54,11 +56,20 @@ class NavigationResultManager {
      * Delivers the result to the awaiting coroutine and removes the pending entry.
      * If no pending result exists for the screen, this operation is a no-op.
      *
+     * Uses best-effort locking via [Mutex.tryLock] since this is called from
+     * non-suspend contexts (e.g., [navigateBackWithResult]). Thread safety is
+     * guaranteed because [CompletableDeferred.complete] is itself atomic.
+     *
      * @param screenKey The unique key of the screen returning the result
      * @param result The result value to deliver (can be any type)
      */
     fun completeResultSync(screenKey: String, result: Any?) {
-        pendingResults.remove(screenKey)?.complete(result)
+        val locked = mutex.tryLock()
+        try {
+            pendingResults.remove(screenKey)?.complete(result)
+        } finally {
+            if (locked) mutex.unlock()
+        }
     }
 
     /**
@@ -70,9 +81,10 @@ class NavigationResultManager {
      * @param screenKey The unique key of the screen being destroyed
      */
     suspend fun cancelResult(screenKey: String) {
-        mutex.withLock {
-            pendingResults.remove(screenKey)?.complete(null)
+        val deferred = mutex.withLock {
+            pendingResults.remove(screenKey)
         }
+        deferred?.complete(null)
     }
 
     /**

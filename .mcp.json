@@ -1,19 +1,24 @@
 {
-  "mcpServers": {
-  "serena": {
- 	 "type": "stdio",
-  	 "command": "uv",
-  	 "args": [
-  	 "run",
-  	 "--directory",
-  	 "/Users/jermey/Projects/serena",
-  	 "serena",
-  	 "start-mcp-server",
-  	 "--log-level",
-  	 "ERROR",
-  	 "--context",
-  	 "ide-assistant"
-  	 ]
-  	}
-  }
+    "mcpServers": {
+        "serena": {
+            "type": "stdio",
+            "command": "uv",
+            "args": [
+                "run",
+                "--directory",
+                "/Users/jermey/Projects/serena",
+                "serena",
+                "start-mcp-server",
+                "--log-level",
+                "ERROR",
+                "--context",
+                "ide-assistant"
+            ],
+            "alwaysAllow": [
+                "read_memory",
+                "get_symbols_overview",
+                "find_symbol"
+            ]
+        }
+    }
 }

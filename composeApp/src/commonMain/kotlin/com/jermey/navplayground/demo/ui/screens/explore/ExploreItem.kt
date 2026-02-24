@@ -20,9 +20,20 @@ data class ExploreItem(
     val rating: Float,
     val isFeatured: Boolean = false
 ) {
+    /**
+     * Smaller image URL optimized for card thumbnails (400×300).
+     *
+     * Uses half the resolution of [imageUrl] to reduce memory usage and
+     * improve scroll performance in grid layouts.
+     */
+    val cardImageUrl: String
+        get() = cardImageUrlForId(id)
+
     companion object {
         private const val STANDARD_WIDTH = 800
         private const val STANDARD_HEIGHT = 600
+        private const val CARD_WIDTH = 400
+        private const val CARD_HEIGHT = 300
 
         /**
          * Generate deterministic picsum URL based on item ID.
@@ -32,5 +43,14 @@ data class ExploreItem(
          */
         fun imageUrlForId(id: String): String =
             "https://picsum.photos/seed/$id/$STANDARD_WIDTH/$STANDARD_HEIGHT"
+
+        /**
+         * Generate deterministic picsum URL sized for card thumbnails.
+         *
+         * Uses 400×300 resolution — half the standard size — to reduce bandwidth
+         * and memory consumption when displaying cards in a grid.
+         */
+        fun cardImageUrlForId(id: String): String =
+            "https://picsum.photos/seed/$id/$CARD_WIDTH/$CARD_HEIGHT"
     }
 }

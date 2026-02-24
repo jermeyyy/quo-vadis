@@ -70,7 +70,7 @@ inline fun <reified Container, State, Intent, Action> rememberContainer(
 
     // Use screenNode.key for Koin scope identity - key is stable across state updates
     val containerScope = remember(screenNode.key) {
-        val koinScope = koin.getOrCreateScope<NavigationContainerScope>(screenNode.key)
+        val koinScope = koin.getOrCreateScope<NavigationContainerScope>(screenNode.key.value)
 
         // Declare coroutine scope in Koin scope if not already present
         if (koinScope.getOrNull<CoroutineScope>() == null) {
@@ -160,7 +160,7 @@ inline fun <reified Container, State, Intent, Action> rememberSharedContainer(
 
     // Use containerKey for Koin scope identity - key is stable across state updates
     val sharedScope = remember(containerKey) {
-        val koinScope = koin.getOrCreateScope<SharedContainerScope>(containerKey)
+        val koinScope = koin.getOrCreateScope<SharedContainerScope>(containerKey.value)
 
         if (koinScope.getOrNull<CoroutineScope>() == null) {
             koinScope.declare(CoroutineScope(Dispatchers.Default + SupervisorJob()))

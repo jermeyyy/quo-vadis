@@ -14,6 +14,7 @@ import com.jermey.quo.vadis.core.dsl.internal.DslNavigationConfig
 import com.jermey.quo.vadis.core.dsl.internal.ScreenEntry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import kotlin.reflect.KClass
 
 /**
@@ -79,7 +80,7 @@ class NavigationConfigBuilder {
      * Scope membership definitions mapping scope keys to sets of destination classes.
      */
     @PublishedApi
-    internal val scopes: MutableMap<String, MutableSet<KClass<out NavDestination>>> = mutableMapOf()
+    internal val scopes: MutableMap<ScopeKey, MutableSet<KClass<out NavDestination>>> = mutableMapOf()
 
     /**
      * Custom transitions indexed by destination class.
@@ -166,14 +167,15 @@ class NavigationConfigBuilder {
         builder: StackBuilder.() -> Unit = {}
     ) {
         val stackBuilder = StackBuilder().apply(builder)
+        val scopeKeyValue = ScopeKey(scopeKey)
         containers[D::class] = ContainerBuilder.Stack(
             destinationClass = D::class,
-            scopeKey = scopeKey,
+            scopeKey = scopeKeyValue,
             screens = stackBuilder.build()
         )
 
         // Register scope membership for all screens in this stack
-        val scopeMembers = scopes.getOrPut(scopeKey) { mutableSetOf() }
+        val scopeMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
         stackBuilder.screens.forEach { entry ->
             entry.destinationClass?.let { scopeMembers.add(it) }
         }
@@ -204,14 +206,15 @@ class NavigationConfigBuilder {
         builder: TabsBuilder.() -> Unit = {}
     ) {
         val tabsBuilder = TabsBuilder().apply(builder)
+        val scopeKeyValue = ScopeKey(scopeKey)
         containers[D::class] = ContainerBuilder.Tabs(
             destinationClass = D::class,
-            scopeKey = scopeKey,
+            scopeKey = scopeKeyValue,
             config = tabsBuilder.build()
         )
 
         // Register scope membership for tabs
-        val scopeMembers = scopes.getOrPut(scopeKey) { mutableSetOf() }
+        val scopeMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
         tabsBuilder.tabs.forEach { entry ->
             when (entry) {
                 is TabEntry.FlatScreen -> entry.destinationClass?.let { scopeMembers.add(it) }
@@ -258,7 +261,7 @@ class NavigationConfigBuilder {
         val panesBuilder = PanesBuilder().apply(builder)
         containers[D::class] = ContainerBuilder.Panes(
             destinationClass = D::class,
-            scopeKey = scopeKey,
+            scopeKey = ScopeKey(scopeKey),
             config = panesBuilder.build()
         )
     }
@@ -287,7 +290,7 @@ class NavigationConfigBuilder {
         builder: ScopeBuilder.() -> Unit
     ) {
         val scopeBuilder = ScopeBuilder().apply(builder)
-        val members = scopes.getOrPut(scopeKey) { mutableSetOf() }
+        val members = scopes.getOrPut(ScopeKey(scopeKey)) { mutableSetOf() }
         members.addAll(scopeBuilder.members)
     }
 

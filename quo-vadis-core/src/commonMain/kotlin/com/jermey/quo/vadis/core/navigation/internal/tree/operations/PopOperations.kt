@@ -6,12 +6,15 @@ import com.jermey.quo.vadis.core.navigation.internal.tree.config.PopBehavior
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.removeNode
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.replaceNode
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.node.activeStack
 import com.jermey.quo.vadis.core.navigation.node.findByKey
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.getOrElse
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.getOrNull
 
 /**
  * Pop operations for the navigation tree.
@@ -69,7 +72,7 @@ object PopOperations {
         }
 
         val newStack = targetStack.copy(children = newChildren)
-        return replaceNode(root, targetStack.key, newStack)
+        return replaceNode(root, targetStack.key, newStack).getOrElse(root)
     }
 
     /**
@@ -83,7 +86,7 @@ object PopOperations {
      * @param predicate Function to identify the target node
      * @return New tree with nodes popped, or original tree if no match found
      */
-    fun popTo(
+    inline fun popTo(
         root: NavNode,
         inclusive: Boolean = false,
         predicate: (NavNode) -> Boolean
@@ -100,7 +103,7 @@ object PopOperations {
 
         val newChildren = targetStack.children.take(keepCount)
         val newStack = targetStack.copy(children = newChildren)
-        return replaceNode(root, targetStack.key, newStack)
+        return replaceNode(root, targetStack.key, newStack).getOrElse(root)
     }
 
     /**
@@ -115,7 +118,7 @@ object PopOperations {
      */
     fun popTo(
         root: NavNode,
-        targetKey: String,
+        targetKey: NodeKey,
         inclusive: Boolean = false
     ): NavNode {
         return popTo(root, inclusive) { node ->
@@ -173,7 +176,7 @@ object PopOperations {
             PopBehavior.PRESERVE_EMPTY -> {
                 // Just update to empty stack
                 val newStack = emptyStack.copy(children = emptyList())
-                replaceNode(root, emptyStack.key, newStack)
+                replaceNode(root, emptyStack.key, newStack).getOrElse(root)
             }
 
             PopBehavior.CASCADE -> {
@@ -189,18 +192,18 @@ object PopOperations {
                         // Cannot remove a tab's stack - that would break the tab structure
                         // Instead, just preserve the empty stack
                         val newStack = emptyStack.copy(children = emptyList())
-                        replaceNode(root, emptyStack.key, newStack)
+                        replaceNode(root, emptyStack.key, newStack).getOrElse(root)
                     }
 
                     is StackNode -> {
                         // Remove the empty stack from parent's children
-                        removeNode(root, emptyStack.key)
+                        removeNode(root, emptyStack.key)?.getOrNull()
                     }
 
                     is PaneNode -> {
                         // Cannot remove a pane's content - preserve empty
                         val newStack = emptyStack.copy(children = emptyList())
-                        replaceNode(root, emptyStack.key, newStack)
+                        replaceNode(root, emptyStack.key, newStack).getOrElse(root)
                     }
 
                     is ScreenNode -> {

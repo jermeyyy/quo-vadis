@@ -1,10 +1,15 @@
 package com.jermey.navplayground.demo.ui.components.explore
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope.OverlayClip
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -37,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -95,7 +100,7 @@ fun ExploreCard(
     modifier: Modifier = Modifier
 ) {
     var isPressed by remember { mutableStateOf(false) }
-    val hazeState = remember { HazeState() }
+    val hazeState = remember(item.id) { HazeState() }
     // Use rememberTransitionScope() to get a fresh TransitionScope that always uses
     // the current LocalAnimatedVisibilityScope - this ensures shared elements animate
     // correctly even for exit content during navigation transitions
@@ -144,10 +149,10 @@ fun ExploreCard(
         } else {
             contentModifier
         }
-        
+
         Box(modifier = finalContentModifier) {
             CardBackgroundImage(
-                imageUrl = item.imageUrl,
+                imageUrl = item.cardImageUrl,
                 contentDescription = item.title,
                 hazeState = hazeState
             )
@@ -158,7 +163,7 @@ fun ExploreCard(
             ) {
                 CardContent(item = item)
             }
-            
+
             // Category badge positioned above glass overlay (same as detail screen)
             CategoryBadge(
                 category = item.category,
@@ -194,7 +199,8 @@ private fun CardBackgroundImage(
                 .crossfade(true)
                 .build(),
             contentDescription = contentDescription,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize(),
             contentScale = ContentScale.Crop,
             onState = { imageState = it }
         )
@@ -202,25 +208,58 @@ private fun CardBackgroundImage(
         when (imageState) {
             is AsyncImagePainter.State.Loading -> LoadingPlaceholder()
             is AsyncImagePainter.State.Error -> ErrorPlaceholder()
-            else -> { /* Success or Empty - no overlay needed */ }
+            else -> { /* Success or Empty - no overlay needed */
+            }
         }
     }
 }
 
+private const val SHIMMER_DURATION_MS = 1200
+private const val SHIMMER_TRANSLATE_TARGET = 1000f
+private const val SHIMMER_TRANSLATE_OFFSET = 500f
+
+/**
+ * Shimmer loading placeholder for card images.
+ *
+ * Displays a diagonal sweep gradient animation that matches card dimensions,
+ * replacing the previous static spinner for a more polished loading experience.
+ */
 @Composable
 private fun LoadingPlaceholder() {
+    val shimmerColors = listOf(
+        MaterialTheme.colorScheme.surfaceContainerHighest,
+        MaterialTheme.colorScheme.surfaceContainerHigh,
+        MaterialTheme.colorScheme.surfaceContainerHighest
+    )
+
+    val transition = rememberInfiniteTransition(label = "shimmer")
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = SHIMMER_TRANSLATE_TARGET,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = SHIMMER_DURATION_MS,
+                easing = LinearEasing
+            ),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmerTranslate"
+    )
+
+    val brush = Brush.linearGradient(
+        colors = shimmerColors,
+        start = Offset(
+            translateAnim - SHIMMER_TRANSLATE_OFFSET,
+            translateAnim - SHIMMER_TRANSLATE_OFFSET
+        ),
+        end = Offset(translateAnim, translateAnim)
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(24.dp),
-            strokeWidth = 2.dp,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
+            .background(brush)
+    )
 }
 
 @Composable
@@ -255,7 +294,10 @@ private fun GlassOverlay(
     GlassOverlayBox(
         hazeState = hazeState,
         height = (CARD_HEIGHT * OVERLAY_HEIGHT_FRACTION).dp,
-        cornerRadius = RoundedCornerShape(bottomStart = CORNER_RADIUS.dp, bottomEnd = CORNER_RADIUS.dp),
+        cornerRadius = RoundedCornerShape(
+            bottomStart = CORNER_RADIUS.dp,
+            bottomEnd = CORNER_RADIUS.dp
+        ),
         modifier = modifier,
         content = content
     )
@@ -310,7 +352,7 @@ private fun CardContent(item: ExploreItem) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Text(
                 text = item.subtitle,
                 style = MaterialTheme.typography.bodySmall,

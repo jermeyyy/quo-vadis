@@ -541,7 +541,7 @@ class NavigationConfigGenerator(
         // Build the getPaneRole(scopeKey, destination) function
         val getByInstanceBuilder = FunSpec.builder("getPaneRole")
             .addModifiers(KModifier.OVERRIDE)
-            .addParameter("scopeKey", STRING)
+            .addParameter("scopeKey", QuoVadisClassNames.SCOPE_KEY)
             .addParameter("destination", QuoVadisClassNames.NAV_DESTINATION)
             .returns(QuoVadisClassNames.PANE_ROLE.copy(nullable = true))
             .addStatement("return getPaneRole(scopeKey, destination::class)")
@@ -549,10 +549,10 @@ class NavigationConfigGenerator(
         // Build the getPaneRole(scopeKey, destinationClass) function
         val getByClassBuilder = FunSpec.builder("getPaneRole")
             .addModifiers(KModifier.OVERRIDE)
-            .addParameter("scopeKey", STRING)
+            .addParameter("scopeKey", QuoVadisClassNames.SCOPE_KEY)
             .addParameter("destinationClass", kClassDestination)
             .returns(QuoVadisClassNames.PANE_ROLE.copy(nullable = true))
-            .beginControlFlow("return when (scopeKey)")
+            .beginControlFlow("return when (scopeKey.value)")
 
         paneRoleData.forEach { (scopeKey, rolesList) ->
             if (rolesList.isNotEmpty()) {

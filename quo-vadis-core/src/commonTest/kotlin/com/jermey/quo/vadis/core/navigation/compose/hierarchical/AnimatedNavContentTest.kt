@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import kotlin.test.Test
@@ -53,13 +54,13 @@ class AnimatedNavContentTest {
         key: String,
         parentKey: String? = null,
         destination: NavDestination = ScreenADestination
-    ): ScreenNode = ScreenNode(key, parentKey, destination)
+    ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
     private fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
-    ): StackNode = StackNode(key, parentKey, screens.toList())
+    ): StackNode = StackNode(NodeKey(key), parentKey?.let { NodeKey(it) }, screens.toList())
 
     // =========================================================================
     // ANIMATION STATE TRACKING TESTS

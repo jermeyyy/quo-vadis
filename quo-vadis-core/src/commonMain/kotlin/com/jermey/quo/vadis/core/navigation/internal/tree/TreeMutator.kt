@@ -3,6 +3,7 @@
 package com.jermey.quo.vadis.core.navigation.internal.tree
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.tree.config.PopBehavior
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.BackOperations
@@ -13,8 +14,10 @@ import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TabOperatio
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PopResult
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.TreeOperationResult
 import com.jermey.quo.vadis.core.navigation.internal.tree.util.KeyGenerator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
@@ -85,7 +88,7 @@ object TreeMutator {
     fun push(
         root: NavNode,
         destination: NavDestination,
-        generateKey: () -> String = KeyGenerator.Default::generate
+        generateKey: NavKeyGenerator = KeyGenerator.Default::generate
     ): NavNode = PushOperations.push(root, destination, generateKey)
 
     /**
@@ -95,9 +98,9 @@ object TreeMutator {
      */
     fun pushToStack(
         root: NavNode,
-        stackKey: String,
+        stackKey: NodeKey,
         destination: NavDestination,
-        generateKey: () -> String = KeyGenerator.Default::generate
+        generateKey: NavKeyGenerator = KeyGenerator.Default::generate
     ): NavNode = PushOperations.pushToStack(root, stackKey, destination, generateKey)
 
     /**
@@ -110,7 +113,7 @@ object TreeMutator {
         destination: NavDestination,
         scopeRegistry: ScopeRegistry,
         paneRoleRegistry: PaneRoleRegistry = PaneRoleRegistry.Empty,
-        generateKey: () -> String = KeyGenerator.Default::generate
+        generateKey: NavKeyGenerator = KeyGenerator.Default::generate
     ): NavNode =
         PushOperations.push(root, destination, scopeRegistry, paneRoleRegistry, generateKey)
 
@@ -122,7 +125,7 @@ object TreeMutator {
     fun pushAll(
         root: NavNode,
         destinations: List<NavDestination>,
-        generateKey: () -> String = KeyGenerator.Default::generate
+        generateKey: NavKeyGenerator = KeyGenerator.Default::generate
     ): NavNode = PushOperations.pushAll(root, destinations, generateKey)
 
     /**
@@ -133,7 +136,7 @@ object TreeMutator {
     fun clearAndPush(
         root: NavNode,
         destination: NavDestination,
-        generateKey: () -> String = KeyGenerator.Default::generate
+        generateKey: NavKeyGenerator = KeyGenerator.Default::generate
     ): NavNode = PushOperations.clearAndPush(root, destination, generateKey)
 
     /**
@@ -143,9 +146,9 @@ object TreeMutator {
      */
     fun clearStackAndPush(
         root: NavNode,
-        stackKey: String,
+        stackKey: NodeKey,
         destination: NavDestination,
-        generateKey: () -> String = KeyGenerator.Default::generate
+        generateKey: NavKeyGenerator = KeyGenerator.Default::generate
     ): NavNode = PushOperations.clearStackAndPush(root, stackKey, destination, generateKey)
 
     /**
@@ -156,7 +159,7 @@ object TreeMutator {
     fun replaceCurrent(
         root: NavNode,
         destination: NavDestination,
-        generateKey: () -> String = KeyGenerator.Default::generate
+        generateKey: NavKeyGenerator = KeyGenerator.Default::generate
     ): NavNode = PushOperations.replaceCurrent(root, destination, generateKey)
 
     // =========================================================================
@@ -178,7 +181,7 @@ object TreeMutator {
      *
      * @see PopOperations.popTo
      */
-    fun popTo(
+    inline fun popTo(
         root: NavNode,
         inclusive: Boolean = false,
         predicate: (NavNode) -> Boolean
@@ -216,7 +219,7 @@ object TreeMutator {
      */
     fun switchTab(
         root: NavNode,
-        tabNodeKey: String,
+        tabNodeKey: NodeKey,
         newIndex: Int
     ): NavNode = TabOperations.switchTab(root, tabNodeKey, newIndex)
 
@@ -239,11 +242,11 @@ object TreeMutator {
      */
     fun navigateToPane(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole,
         destination: NavDestination,
         switchFocus: Boolean = true,
-        generateKey: () -> String = KeyGenerator.Default::generate
+        generateKey: NavKeyGenerator = KeyGenerator.Default::generate
     ): NavNode =
         PaneOperations.navigateToPane(root, nodeKey, role, destination, switchFocus, generateKey)
 
@@ -254,7 +257,7 @@ object TreeMutator {
      */
     fun switchActivePane(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole
     ): NavNode = PaneOperations.switchActivePane(root, nodeKey, role)
 
@@ -265,7 +268,7 @@ object TreeMutator {
      */
     fun popPane(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole
     ): NavNode? = PaneOperations.popPane(root, nodeKey, role)
 
@@ -292,7 +295,7 @@ object TreeMutator {
      */
     fun setPaneConfiguration(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole,
         config: PaneConfiguration
     ): NavNode = PaneOperations.setPaneConfiguration(root, nodeKey, role, config)
@@ -304,7 +307,7 @@ object TreeMutator {
      */
     fun removePaneConfiguration(
         root: NavNode,
-        nodeKey: String,
+        nodeKey: NodeKey,
         role: PaneRole
     ): NavNode = PaneOperations.removePaneConfiguration(root, nodeKey, role)
 
@@ -317,7 +320,7 @@ object TreeMutator {
      *
      * @see TreeNodeOperations.replaceNode
      */
-    fun replaceNode(root: NavNode, targetKey: String, newNode: NavNode): NavNode =
+    fun replaceNode(root: NavNode, targetKey: NodeKey, newNode: NavNode): TreeOperationResult =
         TreeNodeOperations.replaceNode(root, targetKey, newNode)
 
     /**
@@ -325,7 +328,7 @@ object TreeMutator {
      *
      * @see TreeNodeOperations.removeNode
      */
-    fun removeNode(root: NavNode, targetKey: String): NavNode? =
+    fun removeNode(root: NavNode, targetKey: NodeKey): TreeOperationResult? =
         TreeNodeOperations.removeNode(root, targetKey)
 
     // =========================================================================

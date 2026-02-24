@@ -8,6 +8,7 @@ import com.jermey.quo.vadis.core.navigation.destination.DeepLink
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
@@ -151,12 +152,12 @@ class CompositeNavigationConfig(
         val secondaryReg = secondary.paneRoleRegistry
         val primaryReg = primary.paneRoleRegistry
         object : PaneRoleRegistry {
-            override fun getPaneRole(scopeKey: String, destination: NavDestination): PaneRole? =
+            override fun getPaneRole(scopeKey: ScopeKey, destination: NavDestination): PaneRole? =
                 secondaryReg.getPaneRole(scopeKey, destination)
                     ?: primaryReg.getPaneRole(scopeKey, destination)
 
             override fun getPaneRole(
-                scopeKey: String,
+                scopeKey: ScopeKey,
                 destinationClass: kotlin.reflect.KClass<out NavDestination>
             ): PaneRole? =
                 secondaryReg.getPaneRole(scopeKey, destinationClass)

@@ -14,6 +14,7 @@ import com.jermey.quo.vadis.core.navigation.node.findByKey
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.PaneOperations.popWithPaneBehavior
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.PopOperations.pop
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.removeNode
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.TreeOperationResult
 
 /**
  * Tree-aware back navigation operations.
@@ -161,8 +162,10 @@ object BackOperations {
             is StackNode -> {
                 if (tabParent.children.size > 1) {
                     // Parent stack has multiple children - can pop TabNode
-                    val newState = removeNode(root, tabNode.key)
-                    if (newState != null) BackResult.Handled(newState) else BackResult.CannotHandle
+                    when (val result = removeNode(root, tabNode.key)) {
+                        is TreeOperationResult.Success -> BackResult.Handled(result.newTree)
+                        is TreeOperationResult.NodeNotFound, null -> BackResult.CannotHandle
+                    }
                 } else if (tabParent.parentKey == null) {
                     // Parent is root stack with only TabNode - delegate to system
                     BackResult.DelegateToSystem
@@ -208,8 +211,10 @@ object BackOperations {
     ): BackResult {
         return if (parentStack.children.size > 1) {
             // Parent has multiple children - can remove the child stack
-            val newState = removeNode(root, childStack.key)
-            if (newState != null) BackResult.Handled(newState) else BackResult.CannotHandle
+            when (val result = removeNode(root, childStack.key)) {
+                is TreeOperationResult.Success -> BackResult.Handled(result.newTree)
+                is TreeOperationResult.NodeNotFound, null -> BackResult.CannotHandle
+            }
         } else if (parentStack.parentKey == null) {
             // Parent is root with only one child - delegate to system
             BackResult.DelegateToSystem
@@ -273,8 +278,10 @@ object BackOperations {
         return when (val paneParent = root.findByKey(paneParentKey)) {
             is StackNode -> {
                 if (paneParent.children.size > 1) {
-                    val newState = removeNode(root, paneNode.key)
-                    if (newState != null) BackResult.Handled(newState) else BackResult.CannotHandle
+                    when (val result = removeNode(root, paneNode.key)) {
+                        is TreeOperationResult.Success -> BackResult.Handled(result.newTree)
+                        is TreeOperationResult.NodeNotFound, null -> BackResult.CannotHandle
+                    }
                 } else if (paneParent.parentKey == null) {
                     BackResult.DelegateToSystem
                 } else {

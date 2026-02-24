@@ -2,9 +2,11 @@ package com.jermey.quo.vadis.core.navigation.internal.tree.operations
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.node.activePathToLeaf
 import com.jermey.quo.vadis.core.navigation.node.findByKey
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.getOrElse
 
 /**
  * Tab switching operations for TabNode.
@@ -31,7 +33,7 @@ object TabOperations {
      */
     fun switchTab(
         root: NavNode,
-        tabNodeKey: String,
+        tabNodeKey: NodeKey,
         newIndex: Int
     ): NavNode {
         val tabNode = root.findByKey(tabNodeKey) as? TabNode
@@ -44,7 +46,7 @@ object TabOperations {
         if (tabNode.activeStackIndex == newIndex) return root
 
         val newTabNode = tabNode.copy(activeStackIndex = newIndex)
-        return TreeNodeOperations.replaceNode(root, tabNodeKey, newTabNode)
+        return TreeNodeOperations.replaceNode(root, tabNodeKey, newTabNode).getOrElse(root)
     }
 
     /**

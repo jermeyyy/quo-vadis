@@ -170,7 +170,7 @@ internal class DslContainerRegistry(
     ): ContainerInfo.TabContainer {
         return ContainerInfo.TabContainer(
             builder = { key, parentKey, tabIndex ->
-                val node = navNodeBuilder(containerClass, key, parentKey)
+                val node = navNodeBuilder(containerClass, key.value, parentKey?.value)
                     ?: throw IllegalStateException("Failed to build TabNode for $containerClass")
 
                 if (node !is TabNode) {
@@ -199,7 +199,7 @@ internal class DslContainerRegistry(
     ): ContainerInfo.PaneContainer {
         return ContainerInfo.PaneContainer(
             builder = { key, parentKey ->
-                val node = navNodeBuilder(containerClass, key, parentKey)
+                val node = navNodeBuilder(containerClass, key.value, parentKey?.value)
                     ?: throw IllegalStateException("Failed to build PaneNode for $containerClass")
 
                 if (node !is PaneNode) {

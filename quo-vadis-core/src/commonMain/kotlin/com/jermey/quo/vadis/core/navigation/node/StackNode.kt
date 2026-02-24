@@ -33,10 +33,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("stack")
 data class StackNode(
-    override val key: String,
-    override val parentKey: String?,
+    override val key: NodeKey,
+    override val parentKey: NodeKey?,
     val children: List<NavNode> = emptyList(),
-    val scopeKey: String? = null
+    val scopeKey: ScopeKey? = null
 ) : NavNode {
 
     /**

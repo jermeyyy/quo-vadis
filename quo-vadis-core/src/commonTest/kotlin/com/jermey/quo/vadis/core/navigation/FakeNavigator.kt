@@ -17,6 +17,7 @@ import com.jermey.quo.vadis.core.navigation.transition.TransitionState
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.navigator.PaneNavigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.activeLeaf
@@ -46,7 +47,7 @@ class FakeNavigator(
 
     private val _state = MutableStateFlow<NavNode>(
         StackNode(
-            key = NavKeyGenerator.generate(),
+            key = NodeKey(NavKeyGenerator.generate()),
             parentKey = null,
             children = emptyList()
         )
@@ -110,7 +111,7 @@ class FakeNavigator(
         val activeStack = currentState.activeStack()
         if (activeStack != null) {
             val newScreen = ScreenNode(
-                key = NavKeyGenerator.generate(),
+                key = NodeKey(NavKeyGenerator.generate()),
                 parentKey = activeStack.key,
                 destination = destination
             )
@@ -120,9 +121,9 @@ class FakeNavigator(
             _state.value = replaceStackInState(currentState, activeStack.key, newStack)
         } else {
             // Create initial stack
-            val stackKey = NavKeyGenerator.generate()
+            val stackKey = NodeKey(NavKeyGenerator.generate())
             val newScreen = ScreenNode(
-                key = NavKeyGenerator.generate(),
+                key = NodeKey(NavKeyGenerator.generate()),
                 parentKey = stackKey,
                 destination = destination
             )
@@ -135,7 +136,7 @@ class FakeNavigator(
         updateDerivedState()
     }
 
-    private fun replaceStackInState(root: NavNode, targetKey: String, newStack: StackNode): NavNode {
+    private fun replaceStackInState(root: NavNode, targetKey: NodeKey, newStack: StackNode): NavNode {
         if (root.key == targetKey) return newStack
         return when (root) {
             is ScreenNode -> root
@@ -168,7 +169,7 @@ class FakeNavigator(
         val activeStack = currentState.activeStack()
         if (activeStack != null && activeStack.children.isNotEmpty()) {
             val newScreen = ScreenNode(
-                key = NavKeyGenerator.generate(),
+                key = NodeKey(NavKeyGenerator.generate()),
                 parentKey = activeStack.key,
                 destination = destination
             )
@@ -198,8 +199,8 @@ class FakeNavigator(
      */
     internal fun initializeWithDestination(destination: NavDestination) {
         navigationCalls.add(NavigationCall.SetStartDestination(destination))
-        val stackKey = NavKeyGenerator.generate()
-        val screenKey = NavKeyGenerator.generate()
+        val stackKey = NodeKey(NavKeyGenerator.generate())
+        val screenKey = NodeKey(NavKeyGenerator.generate())
         _state.value = StackNode(
             key = stackKey,
             parentKey = null,

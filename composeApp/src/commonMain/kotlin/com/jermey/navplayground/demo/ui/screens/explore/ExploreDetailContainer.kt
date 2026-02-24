@@ -8,7 +8,6 @@ import org.koin.core.annotation.Scoped
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
-import pro.respawn.flowmvi.api.PipelineContext
 import pro.respawn.flowmvi.dsl.store
 import pro.respawn.flowmvi.plugins.enableLogging
 import pro.respawn.flowmvi.plugins.recover
@@ -36,8 +35,6 @@ sealed interface ExploreDetailIntent : MVIIntent {
 sealed interface ExploreDetailAction : MVIAction {
     data class ShowError(val message: String) : ExploreDetailAction
 }
-
-private typealias DetailCtx = PipelineContext<ExploreDetailState, ExploreDetailIntent, ExploreDetailAction>
 
 /**
  * Explore detail feature container with FlowMVI store.
@@ -73,7 +70,7 @@ class ExploreDetailContainer(
 
         reduce { intent ->
             when (intent) {
-                is ExploreDetailIntent.NavigateBack -> handleNavigateBack()
+                is ExploreDetailIntent.NavigateBack -> navigator.navigateBack()
             }
         }
 
@@ -88,11 +85,4 @@ class ExploreDetailContainer(
         }
     }
 
-    private suspend fun DetailCtx.handleNavigateBack() {
-        try {
-            navigator.navigateBack()
-        } catch (e: Exception) {
-            // Already at root, ignore
-        }
-    }
 }

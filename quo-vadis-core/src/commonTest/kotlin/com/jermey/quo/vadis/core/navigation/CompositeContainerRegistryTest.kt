@@ -13,7 +13,9 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -102,23 +104,23 @@ class CompositeContainerRegistryTest {
 
     private fun createTabNodeBuilder(
         containerClass: KClass<out NavDestination>,
-        scopeKey: String,
+        scopeKey: ScopeKey,
         builderTracker: MutableList<String>? = null
-    ): (String, String?, Int) -> TabNode = { key, parentKey, initialTabIndex ->
+    ): (NodeKey, NodeKey?, Int) -> TabNode = { key, parentKey, initialTabIndex ->
         builderTracker?.add("builder-called:$key")
         TabNode(
             key = key,
             parentKey = parentKey,
             stacks = listOf(
                 StackNode(
-                    "$key-tab0",
+                    NodeKey("$key-tab0"),
                     key,
-                    listOf(ScreenNode("$key-screen0", "$key-tab0", PrimaryTabs.Tab1))
+                    listOf(ScreenNode(NodeKey("$key-screen0"), NodeKey("$key-tab0"), PrimaryTabs.Tab1))
                 ),
                 StackNode(
-                    "$key-tab1",
+                    NodeKey("$key-tab1"),
                     key,
-                    listOf(ScreenNode("$key-screen1", "$key-tab1", PrimaryTabs.Tab2))
+                    listOf(ScreenNode(NodeKey("$key-screen1"), NodeKey("$key-tab1"), PrimaryTabs.Tab2))
                 )
             ),
             activeStackIndex = initialTabIndex.coerceIn(0, 1),
@@ -128,16 +130,16 @@ class CompositeContainerRegistryTest {
 
     private fun createPaneNodeBuilder(
         containerClass: KClass<out NavDestination>,
-        scopeKey: String,
+        scopeKey: ScopeKey,
         builderTracker: MutableList<String>? = null
-    ): (String, String?) -> PaneNode = { key, parentKey ->
+    ): (NodeKey, NodeKey?) -> PaneNode = { key, parentKey ->
         builderTracker?.add("builder-called:$key")
         PaneNode(
             key = key,
             parentKey = parentKey,
             paneConfigurations = mapOf(
                 PaneRole.Primary to PaneConfiguration(
-                    ScreenNode("$key-primary", key, PrimaryPane.Pane1)
+                    ScreenNode(NodeKey("$key-primary"), key, PrimaryPane.Pane1)
                 )
             ),
             activePaneRole = PaneRole.Primary,
@@ -191,16 +193,16 @@ class CompositeContainerRegistryTest {
         val secondaryTracker = mutableListOf<String>()
 
         val primaryTabInfo = ContainerInfo.TabContainer(
-            builder = createTabNodeBuilder(PrimaryTabs::class, "PrimaryTabs", primaryTracker),
+            builder = createTabNodeBuilder(PrimaryTabs::class, ScopeKey("PrimaryTabs"), primaryTracker),
             initialTabIndex = 0,
-            scopeKey = "PrimaryTabs",
+            scopeKey = ScopeKey("PrimaryTabs"),
             containerClass = PrimaryTabs::class
         )
 
         val secondaryTabInfo = ContainerInfo.TabContainer(
-            builder = createTabNodeBuilder(SecondaryTabs::class, "SecondaryTabs", secondaryTracker),
+            builder = createTabNodeBuilder(SecondaryTabs::class, ScopeKey("SecondaryTabs"), secondaryTracker),
             initialTabIndex = 0,
-            scopeKey = "SecondaryTabs",
+            scopeKey = ScopeKey("SecondaryTabs"),
             containerClass = SecondaryTabs::class
         )
 
@@ -229,7 +231,7 @@ class CompositeContainerRegistryTest {
         val info = composite.getContainerInfo(SecondaryTabs.Tab1)
         assertNotNull(info)
         assertTrue(info is ContainerInfo.TabContainer)
-        assertEquals("SecondaryTabs", info.scopeKey)
+        assertEquals(ScopeKey("SecondaryTabs"), info.scopeKey)
     }
 
     @Test
@@ -238,9 +240,9 @@ class CompositeContainerRegistryTest {
         val secondaryTracker = mutableListOf<String>()
 
         val primaryTabInfo = ContainerInfo.TabContainer(
-            builder = createTabNodeBuilder(PrimaryTabs::class, "PrimaryTabs", primaryTracker),
+            builder = createTabNodeBuilder(PrimaryTabs::class, ScopeKey("PrimaryTabs"), primaryTracker),
             initialTabIndex = 0,
-            scopeKey = "PrimaryTabs",
+            scopeKey = ScopeKey("PrimaryTabs"),
             containerClass = PrimaryTabs::class
         )
 
@@ -269,7 +271,7 @@ class CompositeContainerRegistryTest {
         val info = composite.getContainerInfo(PrimaryTabs.Tab1)
         assertNotNull(info)
         assertTrue(info is ContainerInfo.TabContainer)
-        assertEquals("PrimaryTabs", info.scopeKey)
+        assertEquals(ScopeKey("PrimaryTabs"), info.scopeKey)
     }
 
     @Test
@@ -305,20 +307,20 @@ class CompositeContainerRegistryTest {
         val secondaryTracker = mutableListOf<String>()
 
         val primaryTabInfo = ContainerInfo.TabContainer(
-            builder = createTabNodeBuilder(SharedTabs::class, "PrimarySharedTabs", primaryTracker),
+            builder = createTabNodeBuilder(SharedTabs::class, ScopeKey("PrimarySharedTabs"), primaryTracker),
             initialTabIndex = 0,
-            scopeKey = "PrimarySharedTabs",
+            scopeKey = ScopeKey("PrimarySharedTabs"),
             containerClass = SharedTabs::class
         )
 
         val secondaryTabInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(
                 SharedTabs::class,
-                "SecondarySharedTabs",
+                ScopeKey("SecondarySharedTabs"),
                 secondaryTracker
             ),
             initialTabIndex = 1,
-            scopeKey = "SecondarySharedTabs",
+            scopeKey = ScopeKey("SecondarySharedTabs"),
             containerClass = SharedTabs::class
         )
 
@@ -348,7 +350,7 @@ class CompositeContainerRegistryTest {
         assertNotNull(info)
         assertTrue(info is ContainerInfo.TabContainer)
         // Should use secondary's scopeKey
-        assertEquals("SecondarySharedTabs", info.scopeKey)
+        assertEquals(ScopeKey("SecondarySharedTabs"), info.scopeKey)
         assertEquals(1, info.initialTabIndex)
     }
 
@@ -362,9 +364,9 @@ class CompositeContainerRegistryTest {
         val compositeBuilderTracker = mutableListOf<String>()
 
         val primaryTabInfo = ContainerInfo.TabContainer(
-            builder = createTabNodeBuilder(PrimaryTabs::class, "PrimaryTabs", primaryTracker),
+            builder = createTabNodeBuilder(PrimaryTabs::class, ScopeKey("PrimaryTabs"), primaryTracker),
             initialTabIndex = 0,
-            scopeKey = "PrimaryTabs",
+            scopeKey = ScopeKey("PrimaryTabs"),
             containerClass = PrimaryTabs::class
         )
 
@@ -390,22 +392,22 @@ class CompositeContainerRegistryTest {
             { kclass, key, parentKey ->
                 compositeBuilderTracker.add("composite-builder:$kclass:$key")
                 TabNode(
-                    key = key ?: "default-key",
-                    parentKey = parentKey,
+                    key = NodeKey(key ?: "default-key"),
+                    parentKey = parentKey?.let { NodeKey(it) },
                     stacks = listOf(
                         StackNode(
-                            "stack0",
-                            key ?: "default-key",
-                            listOf(ScreenNode("screen0", "stack0", PrimaryTabs.Tab1))
+                            NodeKey("stack0"),
+                            NodeKey(key ?: "default-key"),
+                            listOf(ScreenNode(NodeKey("screen0"), NodeKey("stack0"), PrimaryTabs.Tab1))
                         ),
                         StackNode(
-                            "stack1",
-                            key ?: "default-key",
-                            listOf(ScreenNode("screen1", "stack1", PrimaryTabs.Tab2))
+                            NodeKey("stack1"),
+                            NodeKey(key ?: "default-key"),
+                            listOf(ScreenNode(NodeKey("screen1"), NodeKey("stack1"), PrimaryTabs.Tab2))
                         )
                     ),
                     activeStackIndex = 0,
-                    scopeKey = "CompositeScope"
+                    scopeKey = ScopeKey("CompositeScope")
                 )
             }
 
@@ -416,15 +418,15 @@ class CompositeContainerRegistryTest {
         assertTrue(info is ContainerInfo.TabContainer)
 
         // Call the wrapped builder
-        val tabNode = info.builder("test-key", "parent-key", 0)
+        val tabNode = info.builder(NodeKey("test-key"), NodeKey("parent-key"), 0)
 
         // Verify composite builder was called (not the original)
         assertTrue(compositeBuilderTracker.isNotEmpty())
         assertEquals("composite-builder:${PrimaryTabs::class}:test-key", compositeBuilderTracker[0])
 
         // Verify the node was created correctly
-        assertEquals("test-key", tabNode.key)
-        assertEquals("parent-key", tabNode.parentKey)
+        assertEquals(NodeKey("test-key"), tabNode.key)
+        assertEquals(NodeKey("parent-key"), tabNode.parentKey)
     }
 
     @Test
@@ -433,9 +435,9 @@ class CompositeContainerRegistryTest {
         val compositeBuilderTracker = mutableListOf<String>()
 
         val primaryPaneInfo = ContainerInfo.PaneContainer(
-            builder = createPaneNodeBuilder(PrimaryPane::class, "PrimaryPane", primaryTracker),
+            builder = createPaneNodeBuilder(PrimaryPane::class, ScopeKey("PrimaryPane"), primaryTracker),
             initialPane = PaneRole.Primary,
-            scopeKey = "PrimaryPane",
+            scopeKey = ScopeKey("PrimaryPane"),
             containerClass = PrimaryPane::class
         )
 
@@ -461,15 +463,15 @@ class CompositeContainerRegistryTest {
             { kclass, key, parentKey ->
                 compositeBuilderTracker.add("composite-builder:$kclass:$key")
                 PaneNode(
-                    key = key ?: "default-key",
-                    parentKey = parentKey,
+                    key = NodeKey(key ?: "default-key"),
+                    parentKey = parentKey?.let { NodeKey(it) },
                     paneConfigurations = mapOf(
                         PaneRole.Primary to PaneConfiguration(
-                            ScreenNode("pane-screen", key ?: "default-key", PrimaryPane.Pane1)
+                            ScreenNode(NodeKey("pane-screen"), NodeKey(key ?: "default-key"), PrimaryPane.Pane1)
                         )
                     ),
                     activePaneRole = PaneRole.Primary,
-                    scopeKey = "CompositeScope"
+                    scopeKey = ScopeKey("CompositeScope")
                 )
             }
 
@@ -480,15 +482,15 @@ class CompositeContainerRegistryTest {
         assertTrue(info is ContainerInfo.PaneContainer)
 
         // Call the wrapped builder
-        val paneNode = info.builder("test-key", "parent-key")
+        val paneNode = info.builder(NodeKey("test-key"), NodeKey("parent-key"))
 
         // Verify composite builder was called (not the original)
         assertTrue(compositeBuilderTracker.isNotEmpty())
         assertEquals("composite-builder:${PrimaryPane::class}:test-key", compositeBuilderTracker[0])
 
         // Verify the node was created correctly
-        assertEquals("test-key", paneNode.key)
-        assertEquals("parent-key", paneNode.parentKey)
+        assertEquals(NodeKey("test-key"), paneNode.key)
+        assertEquals(NodeKey("parent-key"), paneNode.parentKey)
     }
 
     @Test
@@ -496,9 +498,9 @@ class CompositeContainerRegistryTest {
         val primaryTracker = mutableListOf<String>()
 
         val primaryTabInfo = ContainerInfo.TabContainer(
-            builder = createTabNodeBuilder(PrimaryTabs::class, "PrimaryTabs", primaryTracker),
+            builder = createTabNodeBuilder(PrimaryTabs::class, ScopeKey("PrimaryTabs"), primaryTracker),
             initialTabIndex = 0,
-            scopeKey = "PrimaryTabs",
+            scopeKey = ScopeKey("PrimaryTabs"),
             containerClass = PrimaryTabs::class
         )
 
@@ -531,16 +533,16 @@ class CompositeContainerRegistryTest {
 
         // Calling the wrapped builder should throw
         assertFailsWith<IllegalStateException> {
-            info.builder("test-key", null, 0)
+            info.builder(NodeKey("test-key"), null, 0)
         }
     }
 
     @Test
     fun `wrapped TabContainer builder applies initialTabIndex correctly`() {
         val primaryTabInfo = ContainerInfo.TabContainer(
-            builder = createTabNodeBuilder(PrimaryTabs::class, "PrimaryTabs", null),
+            builder = createTabNodeBuilder(PrimaryTabs::class, ScopeKey("PrimaryTabs"), null),
             initialTabIndex = 0,
-            scopeKey = "PrimaryTabs",
+            scopeKey = ScopeKey("PrimaryTabs"),
             containerClass = PrimaryTabs::class
         )
 
@@ -562,27 +564,27 @@ class CompositeContainerRegistryTest {
         val navNodeBuilder: (KClass<out NavDestination>, String?, String?) -> NavNode? =
             { _, key, parentKey ->
                 TabNode(
-                    key = key ?: "default",
-                    parentKey = parentKey,
+                    key = NodeKey(key ?: "default"),
+                    parentKey = parentKey?.let { NodeKey(it) },
                     stacks = listOf(
                         StackNode(
-                            "stack0",
-                            key ?: "default",
-                            listOf(ScreenNode("s0", "stack0", PrimaryTabs.Tab1))
+                            NodeKey("stack0"),
+                            NodeKey(key ?: "default"),
+                            listOf(ScreenNode(NodeKey("s0"), NodeKey("stack0"), PrimaryTabs.Tab1))
                         ),
                         StackNode(
-                            "stack1",
-                            key ?: "default",
-                            listOf(ScreenNode("s1", "stack1", PrimaryTabs.Tab2))
+                            NodeKey("stack1"),
+                            NodeKey(key ?: "default"),
+                            listOf(ScreenNode(NodeKey("s1"), NodeKey("stack1"), PrimaryTabs.Tab2))
                         ),
                         StackNode(
-                            "stack2",
-                            key ?: "default",
-                            listOf(ScreenNode("s2", "stack2", PrimaryTabs.Tab1))
+                            NodeKey("stack2"),
+                            NodeKey(key ?: "default"),
+                            listOf(ScreenNode(NodeKey("s2"), NodeKey("stack2"), PrimaryTabs.Tab1))
                         )
                     ),
                     activeStackIndex = 0,
-                    scopeKey = "Test"
+                    scopeKey = ScopeKey("Test")
                 )
             }
 
@@ -591,17 +593,17 @@ class CompositeContainerRegistryTest {
         val info = composite.getContainerInfo(PrimaryTabs.Tab1) as ContainerInfo.TabContainer
 
         // Test different initialTabIndex values (builder creates 3 stacks with indices 0, 1, 2)
-        val node0 = info.builder("key", null, 0)
+        val node0 = info.builder(NodeKey("key"), null, 0)
         assertEquals(0, node0.activeStackIndex)
 
-        val node1 = info.builder("key", null, 1)
+        val node1 = info.builder(NodeKey("key"), null, 1)
         assertEquals(1, node1.activeStackIndex)
 
-        val node2 = info.builder("key", null, 2)
+        val node2 = info.builder(NodeKey("key"), null, 2)
         assertEquals(2, node2.activeStackIndex)
 
         // Test out of bounds - should be coerced to max stack index
-        val nodeHigh = info.builder("key", null, 10)
+        val nodeHigh = info.builder(NodeKey("key"), null, 10)
         assertEquals(2, nodeHigh.activeStackIndex) // Coerced to max index (2 = stacks.size - 1)
     }
 

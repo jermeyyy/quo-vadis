@@ -14,11 +14,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.ui.screens.explore.ExploreItem
 
 private const val GRID_COLUMNS = 2
 private const val GRID_SPACING = 12
+private const val PARALLAX_FACTOR = 0.15f
+private const val MAX_PARALLAX_DP = 20
 
 /**
  * A grid layout for explore items.
@@ -34,6 +37,7 @@ private const val GRID_SPACING = 12
  * @param modifier Modifier for the grid container
  * @param contentPadding Padding for the grid content
  * @param isLoading Whether data is currently loading
+ * @param staggerState Optional stagger animation state for entry animations
  * @param emptyContent Content to show when items list is empty
  */
 @Composable
@@ -45,6 +49,7 @@ fun ExploreGrid(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     gridState: LazyGridState = rememberLazyGridState(),
     isLoading: Boolean = false,
+    staggerState: StaggerAnimationState? = null,
     emptyContent: @Composable () -> Unit = {}
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -56,7 +61,8 @@ fun ExploreGrid(
                 onItemClick = onItemClick,
                 onItemLongClick = onItemLongClick,
                 contentPadding = contentPadding,
-                gridState = gridState
+                gridState = gridState,
+                staggerState = staggerState
             )
         }
     }
@@ -78,7 +84,8 @@ private fun GridContent(
     onItemClick: (ExploreItem) -> Unit,
     onItemLongClick: (ExploreItem) -> Unit,
     contentPadding: PaddingValues,
-    gridState: LazyGridState
+    gridState: LazyGridState,
+    staggerState: StaggerAnimationState? = null
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(GRID_COLUMNS),
@@ -90,13 +97,22 @@ private fun GridContent(
     ) {
         itemsIndexed(
             items = items,
-            key = { _, item -> item.id }
-        ) { _, item ->
+            key = { _, item -> item.id },
+            contentType = { _, _ -> "explore_card" }
+        ) { index, item ->
             ExploreCard(
                 item = item,
                 onClick = { onItemClick(item) },
                 onLongClick = { onItemLongClick(item) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .let { mod ->
+                        if (staggerState != null) mod.staggeredItemAnimation(
+                            index,
+                            staggerState
+                        ) else mod
+                    }
+                    .animateItem()
             )
         }
     }

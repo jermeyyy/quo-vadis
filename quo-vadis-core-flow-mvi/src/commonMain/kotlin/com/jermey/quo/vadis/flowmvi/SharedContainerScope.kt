@@ -51,7 +51,7 @@ class SharedContainerScope(
     /**
      * Unique key for this container instance.
      */
-    val containerKey: String get() = (containerNode as NavNode).key
+    val containerKey: String get() = (containerNode as NavNode).key.value
 
     /**
      * Callback registered with the container node to close scope on destroy.

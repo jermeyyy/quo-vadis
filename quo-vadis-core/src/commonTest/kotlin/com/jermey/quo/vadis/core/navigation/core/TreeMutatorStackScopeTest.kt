@@ -5,6 +5,8 @@ import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
+import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -100,15 +102,15 @@ class TreeMutatorStackScopeTest {
             "MainFlow" to setOf(MainFlow.Home::class, MainFlow.Profile::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey] ?: return true
+        override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
+            val scopeClasses = scopes[scopeKey.value] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: NavDestination): String? {
+        override fun getScopeKey(destination: NavDestination): ScopeKey? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
-            }?.key
+            }?.key?.let { ScopeKey(it) }
         }
     }
 
@@ -118,8 +120,8 @@ class TreeMutatorStackScopeTest {
 
     private var keyCounter = 0
 
-    private fun createKeyGenerator(): () -> String {
-        return { "key-${keyCounter++}" }
+    private fun createKeyGenerator(): () -> NodeKey {
+        return { NodeKey("key-${keyCounter++}") }
     }
 
     @BeforeTest
@@ -135,20 +137,20 @@ class TreeMutatorStackScopeTest {
     fun `push in-scope destination stays in stack`() {
         // Given stack with scopeKey = "AuthFlow"
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth",
-            parentKey = "root",
+            key = NodeKey("auth"),
+            parentKey = NodeKey("root"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(authStack)
         )
@@ -164,32 +166,32 @@ class TreeMutatorStackScopeTest {
 
         val resultAuthStack = resultRoot.children[0] as StackNode
         assertEquals(2, resultAuthStack.children.size, "AuthStack should now have 2 children")
-        assertEquals("AuthFlow", resultAuthStack.scopeKey, "AuthStack scopeKey should be preserved")
+        assertEquals(ScopeKey("AuthFlow"), resultAuthStack.scopeKey, "AuthStack scopeKey should be preserved")
 
         val newScreen = resultAuthStack.children.last()
         assertIs<ScreenNode>(newScreen)
         assertEquals(AuthFlow.Register, newScreen.destination)
-        assertEquals("auth", newScreen.parentKey)
+        assertEquals(NodeKey("auth"), newScreen.parentKey)
     }
 
     @Test
     fun `push multiple in-scope destinations stays in same stack`() {
         // Given stack with scopeKey = "AuthFlow"
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth",
-            parentKey = "root",
+            key = NodeKey("auth"),
+            parentKey = NodeKey("root"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         var tree: NavNode = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(authStack)
         )
@@ -223,20 +225,20 @@ class TreeMutatorStackScopeTest {
     fun `push out-of-scope destination navigates to parent`() {
         // Given stack with scopeKey = "AuthFlow"
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth",
-            parentKey = "root",
+            key = NodeKey("auth"),
+            parentKey = NodeKey("root"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(authStack)
         )
@@ -253,39 +255,39 @@ class TreeMutatorStackScopeTest {
         // AuthStack should be preserved
         val resultAuthStack = resultRoot.children[0] as StackNode
         assertEquals(1, resultAuthStack.children.size, "AuthStack should be unchanged")
-        assertEquals("AuthFlow", resultAuthStack.scopeKey)
+        assertEquals(ScopeKey("AuthFlow"), resultAuthStack.scopeKey)
 
         // New screen should be sibling to authStack
         val newScreen = resultRoot.children[1]
         assertIs<ScreenNode>(newScreen)
         assertEquals(MainFlow.Home, newScreen.destination)
-        assertEquals("root", newScreen.parentKey)
+        assertEquals(NodeKey("root"), newScreen.parentKey)
     }
 
     @Test
     fun `push out-of-scope preserves scoped stack for predictive back`() {
         // Given AuthFlow stack with multiple screens
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Login
         )
 
         val registerScreen = ScreenNode(
-            key = "register-screen",
-            parentKey = "auth",
+            key = NodeKey("register-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Register
         )
 
         val authStack = StackNode(
-            key = "auth",
-            parentKey = "root",
+            key = NodeKey("auth"),
+            parentKey = NodeKey("root"),
             children = listOf(loginScreen, registerScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(authStack)
         )
@@ -308,20 +310,20 @@ class TreeMutatorStackScopeTest {
     fun `push multiple out-of-scope destinations stacks in parent`() {
         // Given stack with scopeKey = "AuthFlow"
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth",
-            parentKey = "root",
+            key = NodeKey("auth"),
+            parentKey = NodeKey("root"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         var tree: NavNode = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(authStack)
         )
@@ -352,27 +354,27 @@ class TreeMutatorStackScopeTest {
     fun `nested stacks respect innermost scope first`() {
         // Given: root > outerStack(scopeKey=MainFlow) > innerStack(scopeKey=AuthFlow)
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "inner",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("inner"),
             destination = AuthFlow.Login
         )
 
         val innerStack = StackNode(
-            key = "inner",
-            parentKey = "outer",
+            key = NodeKey("inner"),
+            parentKey = NodeKey("outer"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val outerStack = StackNode(
-            key = "outer",
-            parentKey = "root",
+            key = NodeKey("outer"),
+            parentKey = NodeKey("root"),
             children = listOf(innerStack),
-            scopeKey = "MainFlow"
+            scopeKey = ScopeKey("MainFlow")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(outerStack)
         )
@@ -395,7 +397,7 @@ class TreeMutatorStackScopeTest {
         val newScreen = resultOuterStack.children[1]
         assertIs<ScreenNode>(newScreen)
         assertEquals(MainFlow.Home, newScreen.destination)
-        assertEquals("outer", newScreen.parentKey)
+        assertEquals(NodeKey("outer"), newScreen.parentKey)
     }
 
     @Test
@@ -403,27 +405,27 @@ class TreeMutatorStackScopeTest {
         // Given: root > outerStack(scopeKey=AuthFlow) > innerStack(scopeKey=AuthFlow)
         // Destination not in AuthFlow should escape to root
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "inner",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("inner"),
             destination = AuthFlow.Login
         )
 
         val innerStack = StackNode(
-            key = "inner",
-            parentKey = "outer",
+            key = NodeKey("inner"),
+            parentKey = NodeKey("outer"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val outerStack = StackNode(
-            key = "outer",
-            parentKey = "root",
+            key = NodeKey("outer"),
+            parentKey = NodeKey("root"),
             children = listOf(innerStack),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(outerStack)
         )
@@ -439,8 +441,8 @@ class TreeMutatorStackScopeTest {
 
         // The exact behavior depends on how findTargetStackForPush walks the tree
         // It should find the first non-scoped parent that can accept the destination
-        assertNotNull(resultRoot.findByKey("outer"), "Outer stack should be preserved")
-        assertNotNull(resultRoot.findByKey("inner"), "Inner stack should be preserved")
+        assertNotNull(resultRoot.findByKey(NodeKey("outer")), "Outer stack should be preserved")
+        assertNotNull(resultRoot.findByKey(NodeKey("inner")), "Inner stack should be preserved")
     }
 
     // =========================================================================
@@ -451,20 +453,20 @@ class TreeMutatorStackScopeTest {
     fun `stack without scopeKey accepts all destinations`() {
         // Given stack with scopeKey = null
         val homeScreen = ScreenNode(
-            key = "home-screen",
-            parentKey = "main",
+            key = NodeKey("home-screen"),
+            parentKey = NodeKey("main"),
             destination = MainFlow.Home
         )
 
         val mainStack = StackNode(
-            key = "main",
-            parentKey = "root",
+            key = NodeKey("main"),
+            parentKey = NodeKey("root"),
             children = listOf(homeScreen),
             scopeKey = null // No scope enforcement
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(mainStack)
         )
@@ -484,34 +486,34 @@ class TreeMutatorStackScopeTest {
         val newScreen = resultMainStack.children.last()
         assertIs<ScreenNode>(newScreen)
         assertEquals(AuthFlow.Login, newScreen.destination)
-        assertEquals("main", newScreen.parentKey)
+        assertEquals(NodeKey("main"), newScreen.parentKey)
     }
 
     @Test
     fun `stack without scopeKey mixed with scoped stack`() {
         // Given: root > unscopedStack > scopedStack(AuthFlow)
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "scoped",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("scoped"),
             destination = AuthFlow.Login
         )
 
         val scopedStack = StackNode(
-            key = "scoped",
-            parentKey = "unscoped",
+            key = NodeKey("scoped"),
+            parentKey = NodeKey("unscoped"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val unscopedStack = StackNode(
-            key = "unscoped",
-            parentKey = "root",
+            key = NodeKey("unscoped"),
+            parentKey = NodeKey("root"),
             children = listOf(scopedStack),
             scopeKey = null
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(unscopedStack)
         )
@@ -534,7 +536,7 @@ class TreeMutatorStackScopeTest {
         val newScreen = resultUnscopedStack.children[1]
         assertIs<ScreenNode>(newScreen)
         assertEquals(MainFlow.Home, newScreen.destination)
-        assertEquals("unscoped", newScreen.parentKey)
+        assertEquals(NodeKey("unscoped"), newScreen.parentKey)
     }
 
     // =========================================================================
@@ -545,20 +547,20 @@ class TreeMutatorStackScopeTest {
     fun `push with Empty registry ignores stack scopeKey`() {
         // Given stack with scopeKey
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth",
-            parentKey = "root",
+            key = NodeKey("auth"),
+            parentKey = NodeKey("root"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(authStack)
         )
@@ -584,20 +586,20 @@ class TreeMutatorStackScopeTest {
     fun `push without scopeRegistry parameter uses original behavior`() {
         // Given stack with scopeKey
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth",
-            parentKey = "root",
+            key = NodeKey("auth"),
+            parentKey = NodeKey("root"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(authStack)
         )
@@ -645,15 +647,15 @@ class TreeMutatorStackScopeTest {
             "HomeTabs" to setOf(HomeTabs.Feed::class, HomeTabs.Explore::class)
         )
 
-        override fun isInScope(scopeKey: String, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey] ?: return true
+        override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
+            val scopeClasses = scopes[scopeKey.value] ?: return true
             return scopeClasses.any { it.isInstance(destination) }
         }
 
-        override fun getScopeKey(destination: NavDestination): String? {
+        override fun getScopeKey(destination: NavDestination): ScopeKey? {
             return scopes.entries.find { (_, classes) ->
                 classes.any { it.isInstance(destination) }
-            }?.key
+            }?.key?.let { ScopeKey(it) }
         }
     }
 
@@ -661,34 +663,34 @@ class TreeMutatorStackScopeTest {
     fun `scoped stack inside scoped tab - inner scope checked first`() {
         // Given: root > TabNode(HomeTabs) > StackNode(AuthFlow)
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth-stack",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth-stack"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth-stack",
-            parentKey = "tab0",
+            key = NodeKey("auth-stack"),
+            parentKey = NodeKey("tab0"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val tabStack = StackNode(
-            key = "tab0",
-            parentKey = "tabs",
+            key = NodeKey("tab0"),
+            parentKey = NodeKey("tabs"),
             children = listOf(authStack)
         )
 
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(tabStack),
             activeStackIndex = 0,
-            scopeKey = "HomeTabs"
+            scopeKey = ScopeKey("HomeTabs")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -718,34 +720,34 @@ class TreeMutatorStackScopeTest {
         // Given: root > TabNode(HomeTabs) > StackNode(tab0) > StackNode(AuthFlow)
         // Current implementation escapes one scope level at a time (innermost first)
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth-stack",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth-stack"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth-stack",
-            parentKey = "tab0",
+            key = NodeKey("auth-stack"),
+            parentKey = NodeKey("tab0"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val tabStack = StackNode(
-            key = "tab0",
-            parentKey = "tabs",
+            key = NodeKey("tab0"),
+            parentKey = NodeKey("tabs"),
             children = listOf(authStack)
         )
 
         val tabNode = TabNode(
-            key = "tabs",
-            parentKey = "root",
+            key = NodeKey("tabs"),
+            parentKey = NodeKey("root"),
             stacks = listOf(tabStack),
             activeStackIndex = 0,
-            scopeKey = "HomeTabs"
+            scopeKey = ScopeKey("HomeTabs")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(tabNode)
         )
@@ -773,7 +775,7 @@ class TreeMutatorStackScopeTest {
         val newScreen = resultTabStack.children[1]
         assertIs<ScreenNode>(newScreen)
         assertEquals(MainFlow.Home, newScreen.destination)
-        assertEquals("tab0", newScreen.parentKey)
+        assertEquals(NodeKey("tab0"), newScreen.parentKey)
     }
 
     // =========================================================================
@@ -783,20 +785,20 @@ class TreeMutatorStackScopeTest {
     @Test
     fun `scopeKey is preserved when pushing to scoped stack`() {
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth",
-            parentKey = "root",
+            key = NodeKey("auth"),
+            parentKey = NodeKey("root"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(authStack)
         )
@@ -809,31 +811,31 @@ class TreeMutatorStackScopeTest {
         val resultAuthStack = resultRoot.children[0] as StackNode
 
         assertEquals(
-            "AuthFlow",
+            ScopeKey("AuthFlow"),
             resultAuthStack.scopeKey,
             "scopeKey should be preserved after push"
         )
-        assertEquals("auth", resultAuthStack.key, "key should be preserved")
-        assertEquals("root", resultAuthStack.parentKey, "parentKey should be preserved")
+        assertEquals(NodeKey("auth"), resultAuthStack.key, "key should be preserved")
+        assertEquals(NodeKey("root"), resultAuthStack.parentKey, "parentKey should be preserved")
     }
 
     @Test
     fun `scopeKey is preserved when navigating away from scoped stack`() {
         val loginScreen = ScreenNode(
-            key = "login-screen",
-            parentKey = "auth",
+            key = NodeKey("login-screen"),
+            parentKey = NodeKey("auth"),
             destination = AuthFlow.Login
         )
 
         val authStack = StackNode(
-            key = "auth",
-            parentKey = "root",
+            key = NodeKey("auth"),
+            parentKey = NodeKey("root"),
             children = listOf(loginScreen),
-            scopeKey = "AuthFlow"
+            scopeKey = ScopeKey("AuthFlow")
         )
 
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(authStack)
         )
@@ -846,7 +848,7 @@ class TreeMutatorStackScopeTest {
         val resultAuthStack = resultRoot.children[0] as StackNode
 
         assertEquals(
-            "AuthFlow",
+            ScopeKey("AuthFlow"),
             resultAuthStack.scopeKey,
             "scopeKey should remain after out-of-scope push"
         )

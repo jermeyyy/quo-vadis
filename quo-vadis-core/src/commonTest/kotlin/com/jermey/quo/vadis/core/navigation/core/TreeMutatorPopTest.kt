@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.navigation.core
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -75,11 +76,11 @@ class TreeMutatorPopTest {
     @Test
     fun `pop removes last screen from stack`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination)
             )
         )
 
@@ -93,10 +94,10 @@ class TreeMutatorPopTest {
     @Test
     fun `pop with single item at root returns empty stack with PRESERVE_EMPTY`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
             )
         )
 
@@ -109,7 +110,7 @@ class TreeMutatorPopTest {
 
     @Test
     fun `pop returns null on empty stack`() {
-        val root = StackNode("root", null, emptyList())
+        val root = StackNode(NodeKey("root"), null, emptyList())
 
         val result = TreeMutator.pop(root)
 
@@ -119,14 +120,14 @@ class TreeMutatorPopTest {
     @Test
     fun `pop with PRESERVE_EMPTY preserves empty stack structure`() {
         val innerStack = StackNode(
-            key = "inner",
-            parentKey = "outer",
+            key = NodeKey("inner"),
+            parentKey = NodeKey("outer"),
             children = listOf(
-                ScreenNode("s1", "inner", HomeDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("inner"), HomeDestination)
             )
         )
         val outerStack = StackNode(
-            key = "outer",
+            key = NodeKey("outer"),
             parentKey = null,
             children = listOf(innerStack)
         )
@@ -143,15 +144,15 @@ class TreeMutatorPopTest {
     @Test
     fun `pop removes screen and preserves non-empty stack`() {
         val innerStack = StackNode(
-            key = "inner",
-            parentKey = "outer",
+            key = NodeKey("inner"),
+            parentKey = NodeKey("outer"),
             children = listOf(
-                ScreenNode("s1", "inner", HomeDestination),
-                ScreenNode("s2", "inner", ProfileDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("inner"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("inner"), ProfileDestination)
             )
         )
         val outerStack = StackNode(
-            key = "outer",
+            key = NodeKey("outer"),
             parentKey = null,
             children = listOf(innerStack)
         )
@@ -168,18 +169,16 @@ class TreeMutatorPopTest {
     @Test
     fun `pop from tab affects active tab only`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination),
-                        ScreenNode("s2", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(
-                    "tab1", "tabs", listOf(
-                        ScreenNode("s3", "tab1", SettingsDestination)
+                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
             ),
@@ -201,17 +200,16 @@ class TreeMutatorPopTest {
 
     @Test
     fun `pop preserves structural sharing for unchanged branches`() {
-        val tab1Screen = ScreenNode("s3", "tab1", SettingsDestination)
-        val tab1Stack = StackNode("tab1", "tabs", listOf(tab1Screen))
+        val tab1Screen = ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
+        val tab1Stack = StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(tab1Screen))
 
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination),
-                        ScreenNode("s2", "tab0", ProfileDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
                 tab1Stack
@@ -229,12 +227,11 @@ class TreeMutatorPopTest {
     @Test
     fun `pop in tabs with single item returns empty stack with PRESERVE_EMPTY`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 )
             ),
@@ -251,7 +248,7 @@ class TreeMutatorPopTest {
 
     @Test
     fun `pop returns null for ScreenNode root`() {
-        val root = ScreenNode("screen", null, HomeDestination)
+        val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         val result = TreeMutator.pop(root)
 
@@ -265,12 +262,12 @@ class TreeMutatorPopTest {
     @Test
     fun `popTo removes screens until predicate matches`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -285,12 +282,12 @@ class TreeMutatorPopTest {
     @Test
     fun `popTo with inclusive removes matching screen`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -305,10 +302,10 @@ class TreeMutatorPopTest {
     @Test
     fun `popTo returns original when predicate not matched`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
             )
         )
 
@@ -319,7 +316,7 @@ class TreeMutatorPopTest {
 
     @Test
     fun `popTo returns original when no active stack`() {
-        val root = ScreenNode("screen", null, HomeDestination)
+        val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         val result = TreeMutator.popTo(root) { true }
 
@@ -329,11 +326,11 @@ class TreeMutatorPopTest {
     @Test
     fun `popTo preserves at least one item when inclusive would empty stack`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination)
             )
         )
 
@@ -349,14 +346,13 @@ class TreeMutatorPopTest {
     @Test
     fun `popTo works in tabs targeting active stack`() {
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination),
-                        ScreenNode("s2", "tab0", ProfileDestination),
-                        ScreenNode("s3", "tab0", SettingsDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination),
+                        ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination),
+                        ScreenNode(NodeKey("s3"), NodeKey("tab0"), SettingsDestination)
                     )
                 )
             ),
@@ -379,12 +375,12 @@ class TreeMutatorPopTest {
     @Test
     fun `popToRoute finds screen by route`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -397,12 +393,12 @@ class TreeMutatorPopTest {
     @Test
     fun `popToRoute with inclusive false keeps matching screen`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -415,10 +411,10 @@ class TreeMutatorPopTest {
     @Test
     fun `popToRoute returns original when route not found`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
             )
         )
 
@@ -430,13 +426,13 @@ class TreeMutatorPopTest {
     @Test
     fun `popToRoute works with multiple screens of different routes`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", HomeDestination), // Same route as first
-                ScreenNode("s4", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), HomeDestination), // Same route as first
+                ScreenNode(NodeKey("s4"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -455,12 +451,12 @@ class TreeMutatorPopTest {
     @Test
     fun `popToDestination finds screen by destination type`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -474,12 +470,12 @@ class TreeMutatorPopTest {
     @Test
     fun `popToDestination with inclusive removes matching screen`() {
         val root = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 
@@ -498,12 +494,11 @@ class TreeMutatorPopTest {
         // In tabs, CASCADE cannot remove a stack - it would break the tab structure
         // So it preserves the empty stack structure
         val tabs = TabNode(
-            key = "tabs",
+            key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(
-                    "tab0", "tabs", listOf(
-                        ScreenNode("s1", "tab0", HomeDestination)
+                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                        ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
                     )
                 )
             ),
@@ -521,17 +516,17 @@ class TreeMutatorPopTest {
     @Test
     fun `pop with CASCADE removes nested empty stack from parent stack`() {
         val innerStack = StackNode(
-            key = "inner",
-            parentKey = "outer",
+            key = NodeKey("inner"),
+            parentKey = NodeKey("outer"),
             children = listOf(
-                ScreenNode("s1", "inner", HomeDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("inner"), HomeDestination)
             )
         )
         val outerStack = StackNode(
-            key = "outer",
+            key = NodeKey("outer"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s0", "outer", ProfileDestination),
+                ScreenNode(NodeKey("s0"), NodeKey("outer"), ProfileDestination),
                 innerStack
             )
         )
@@ -550,12 +545,12 @@ class TreeMutatorPopTest {
     @Test
     fun `pop multiple times until cannot go back`() {
         var current: NavNode = StackNode(
-            key = "root",
+            key = NodeKey("root"),
             parentKey = null,
             children = listOf(
-                ScreenNode("s1", "root", HomeDestination),
-                ScreenNode("s2", "root", ProfileDestination),
-                ScreenNode("s3", "root", SettingsDestination)
+                ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination),
+                ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination),
+                ScreenNode(NodeKey("s3"), NodeKey("root"), SettingsDestination)
             )
         )
 

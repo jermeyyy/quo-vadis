@@ -7,6 +7,7 @@ import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -55,20 +56,20 @@ class TabRendererTest {
         key: String,
         parentKey: String? = null,
         destination: NavDestination = HomeDestination
-    ): ScreenNode = ScreenNode(key, parentKey, destination)
+    ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
     private fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
-    ): StackNode = StackNode(key, parentKey, screens.toList())
+    ): StackNode = StackNode(NodeKey(key), parentKey?.let { NodeKey(it) }, screens.toList())
 
     private fun createTabs(
         key: String,
         parentKey: String? = null,
         stacks: List<StackNode>,
         activeIndex: Int = 0
-    ): TabNode = TabNode(key, parentKey, stacks, activeIndex)
+    ): TabNode = TabNode(NodeKey(key), parentKey?.let { NodeKey(it) }, stacks, activeIndex)
 
     // =========================================================================
     // TAB SWITCHING TESTS
@@ -294,9 +295,9 @@ class TabRendererTest {
         val tabs = createTabs("tabs", null, listOf(homeStack, profileStack, settingsStack))
 
         // Then - keys can be used for metadata generation
-        assertEquals("home_stack", tabs.stackAt(0).key)
-        assertEquals("profile_stack", tabs.stackAt(1).key)
-        assertEquals("settings_stack", tabs.stackAt(2).key)
+        assertEquals(NodeKey("home_stack"), tabs.stackAt(0).key)
+        assertEquals(NodeKey("profile_stack"), tabs.stackAt(1).key)
+        assertEquals(NodeKey("settings_stack"), tabs.stackAt(2).key)
     }
 
     @Test
@@ -339,9 +340,9 @@ class TabRendererTest {
         val booksNestedStack = createStack("books-stack", "tab2", settingsScreen)
 
         // Wrapper stacks (each tab's wrapper contains the nested stack)
-        val tab0Wrapper = StackNode("tab0", "tabs", listOf(musicNestedStack))
-        val tab1Wrapper = StackNode("tab1", "tabs", listOf(moviesNestedStack))
-        val tab2Wrapper = StackNode("tab2", "tabs", listOf(booksNestedStack))
+        val tab0Wrapper = StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(musicNestedStack))
+        val tab1Wrapper = StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(moviesNestedStack))
+        val tab2Wrapper = StackNode(NodeKey("tab2"), NodeKey("tabs"), listOf(booksNestedStack))
 
         val tabs = createTabs("tabs", null, listOf(tab0Wrapper, tab1Wrapper, tab2Wrapper))
 
@@ -413,7 +414,7 @@ class TabRendererTest {
         )
 
         // Then
-        assertEquals("outer-stack", innerTabs.parentKey)
+        assertEquals(NodeKey("outer-stack"), innerTabs.parentKey)
     }
 
     @Test
@@ -494,7 +495,7 @@ class TabRendererTest {
         assertTrue(tabs.activeStack.canGoBack)
 
         // Active leaf should be the last screen in active stack
-        assertEquals("home-edit", tabs.activeStack.activeChild?.key)
+        assertEquals(NodeKey("home-edit"), tabs.activeStack.activeChild?.key)
     }
 
     @Test

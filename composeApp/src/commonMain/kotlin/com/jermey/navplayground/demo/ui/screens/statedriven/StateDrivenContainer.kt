@@ -7,7 +7,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
+import com.jermey.quo.vadis.core.navigation.internal.tree.result.TreeOperationResult
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -143,7 +145,11 @@ class StateDrivenContainer(
 
             val entry = entries[index]
             val currentNavState = navigator.state.value
-            val newState = TreeMutator.removeNode(currentNavState, entry.id)
+            val result = TreeMutator.removeNode(currentNavState, NodeKey(entry.id))
+            val newState = when (result) {
+                is TreeOperationResult.Success -> result.newTree
+                is TreeOperationResult.NodeNotFound, null -> null
+            }
             if (newState != null) {
                 navigator.updateState(newState)
             }
@@ -197,7 +203,7 @@ class StateDrivenContainer(
             ?.filterIsInstance<ScreenNode>()
             ?.map { screen ->
                 BackStackEntry(
-                    id = screen.key,
+                    id = screen.key.value,
                     destination = screen.destination
                 )
             } ?: emptyList()

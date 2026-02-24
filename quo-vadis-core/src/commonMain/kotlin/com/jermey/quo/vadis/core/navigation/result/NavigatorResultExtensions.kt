@@ -52,7 +52,7 @@ suspend fun <R : Any, D> Navigator.navigateForResult(
     navigate(destination)
 
     // Get the new screen's key (the destination we just pushed)
-    val targetScreenKey = state.value.activeLeaf()?.key
+    val targetScreenKey = state.value.activeLeaf()?.key?.value
         ?: throw IllegalStateException("No active screen after navigation")
 
     // Request a result from the result manager
@@ -96,7 +96,7 @@ fun <R : Any> Navigator.navigateBackWithResult(result: R) {
         ?: throw IllegalStateException("Navigator does not support result passing. Use a Navigator that implements ResultCapable.")
     
     // Get the current screen's key (the one returning the result)
-    val currentScreenKey = state.value.activeLeaf()?.key
+    val currentScreenKey = state.value.activeLeaf()?.key?.value
         ?: throw IllegalStateException("No active screen to return result from")
 
     // Complete the result BEFORE navigating back
