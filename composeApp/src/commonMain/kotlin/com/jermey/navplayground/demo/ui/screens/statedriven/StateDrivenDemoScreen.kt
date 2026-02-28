@@ -36,8 +36,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination
-import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.StateDrivenDemoDestination
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.StateDrivenDemoDestination.DemoTab
 import com.jermey.quo.vadis.annotations.TabsContainer
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.flowmvi.rememberSharedContainer

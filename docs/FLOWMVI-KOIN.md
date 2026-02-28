@@ -73,7 +73,7 @@ The module transitively includes:
 | `koin-compose` | Koin Compose integration |
 | `koin-compose-viewmodel` | ViewModel support |
 
-> **Note:** For Koin Annotations support (alternative to DSL registration), ensure you're using Koin 4.1+ and have configured the Koin KSP processor.
+> **Note:** For Koin Annotations support (alternative to DSL registration), ensure you're using Koin 4.1+ and have configured the Koin Compiler Plugin.
 
 ---
 
@@ -575,7 +575,7 @@ fun initKoin() {
 
 ## Koin Annotations Approach (Alternative)
 
-As an alternative to the manual DSL registration, you can use **Koin Annotations** for compile-time dependency resolution. This approach requires **Koin 4.1+** and the Koin KSP annotation processor.
+As an alternative to the manual DSL registration, you can use **Koin Annotations** for compile-time dependency resolution. This approach requires **Koin 4.1+** and the Koin Compiler Plugin.
 
 ### Annotating Screen-Scoped Containers
 

@@ -23,7 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.jermey.navplayground.demo.destinations.DemoTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs
 import com.jermey.quo.vadis.annotations.TabsContainer
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination

@@ -28,7 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.StateDrivenDemoDestination.DemoTab
 import com.jermey.quo.vadis.annotations.Screen
 
 /**

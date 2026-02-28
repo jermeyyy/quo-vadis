@@ -1,4 +1,4 @@
-package com.jermey.navplayground.demo.ui.screens.profile
+package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.ui.screens.profile
 
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent

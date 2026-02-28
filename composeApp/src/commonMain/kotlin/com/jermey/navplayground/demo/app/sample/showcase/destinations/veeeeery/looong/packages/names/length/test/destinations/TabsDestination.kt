@@ -1,8 +1,8 @@
-package com.jermey.navplayground.demo.destinations
+package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations
 
-import com.jermey.navplayground.demo.destinations.DemoTabs.BooksTab
-import com.jermey.navplayground.demo.destinations.DemoTabs.MoviesTab
-import com.jermey.navplayground.demo.destinations.DemoTabs.MusicTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs.BooksTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs.MoviesTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs.MusicTab
 import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack

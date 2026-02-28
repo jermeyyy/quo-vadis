@@ -33,7 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.MessagesPane
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MessagesPane
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.navigator.asPaneNavigator

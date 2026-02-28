@@ -1,7 +1,7 @@
-package com.jermey.navplayground.demo.ui.screens.profile
+package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.ui.screens.profile
 
 import kotlinx.coroutines.delay
-import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Single
 
 
 /**
@@ -13,7 +13,7 @@ import org.koin.core.annotation.Factory
  * - Handle authentication
  * - Provide reactive data streams
  */
-@Factory
+@Single
 class ProfileRepository {
 
     companion object {

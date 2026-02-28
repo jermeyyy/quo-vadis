@@ -16,7 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.MessagesPane
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MessagesPane
 import com.jermey.quo.vadis.annotations.PaneContainer
 import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole

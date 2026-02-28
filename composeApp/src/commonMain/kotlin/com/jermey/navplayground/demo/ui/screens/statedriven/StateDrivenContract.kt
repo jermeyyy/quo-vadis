@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens.statedriven
 
-import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.StateDrivenDemoDestination.DemoTab
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState

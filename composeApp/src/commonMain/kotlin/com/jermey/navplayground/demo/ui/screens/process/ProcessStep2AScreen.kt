@@ -28,7 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.ProcessDestination
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProcessDestination
 import com.jermey.navplayground.demo.ui.components.ProcessStepIndicator
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator

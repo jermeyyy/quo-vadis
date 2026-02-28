@@ -33,7 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.destinations.MessagesPane
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MessagesPane
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.compose.util.calculateWindowSizeClass
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator

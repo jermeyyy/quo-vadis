@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.quoVadis)
+    alias(libs.plugins.koin.compiler)
 }
 
 // Quo Vadis KSP configuration (using local processor for development)
@@ -132,10 +133,6 @@ kotlin {
         }
     }
 
-    // KSP Common sourceSet
-    sourceSets.named("commonMain").configure {
-        kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
-    }
 }
 
 compose.desktop {
@@ -171,20 +168,6 @@ compose.desktop {
         }
     }
 }
-
-// KSP Tasks
-dependencies {
-    add("kspCommonMainMetadata", libs.koin.ksp.compiler)
-    add("kspAndroid", libs.koin.ksp.compiler)
-    add("kspIosArm64", libs.koin.ksp.compiler)
-    add("kspIosSimulatorArm64", libs.koin.ksp.compiler)
-}
-
-// Trigger Common Metadata Generation from Native tasks
-tasks.matching { it.name.startsWith("ksp") && it.name != "kspCommonMainKotlinMetadata" }
-    .configureEach {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
 
 // TEMPORARY WORKAROUND: Configure compose resources for new Android KMP library plugin
 afterEvaluate {
