@@ -4,7 +4,7 @@ package com.jermey.navplayground.demo.ui.screens.statedriven
 
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.jermey.navplayground.demo.destinations.StateDrivenDemoDestination.DemoTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.StateDrivenDemoDestination.DemoTab
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.TreeOperationResult
@@ -13,7 +13,6 @@ import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
-import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedNavigationContainer
 import kotlinx.coroutines.flow.launchIn

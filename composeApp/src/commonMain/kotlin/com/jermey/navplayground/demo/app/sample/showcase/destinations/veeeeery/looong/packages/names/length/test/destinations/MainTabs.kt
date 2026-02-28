@@ -1,9 +1,9 @@
-package com.jermey.navplayground.demo.destinations
+package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations
 
-import com.jermey.navplayground.demo.destinations.MainTabs.ExploreTab
-import com.jermey.navplayground.demo.destinations.MainTabs.HomeTab
-import com.jermey.navplayground.demo.destinations.MainTabs.ProfileTab
-import com.jermey.navplayground.demo.destinations.MainTabs.SettingsTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs.ExploreTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs.HomeTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs.ProfileTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs.SettingsTab
 import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
@@ -58,7 +58,7 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 /**
  * Main tabs container that aggregates all tab definitions.
  *
- * The [com.jermey.quo.vadis.annotations.Tabs] annotation with [items] array provides type-safe tab references
+ * The [Tabs] annotation with [items] array provides type-safe tab references
  * and enables KSP to generate the complete navigation structure.
  */
 @Tabs(

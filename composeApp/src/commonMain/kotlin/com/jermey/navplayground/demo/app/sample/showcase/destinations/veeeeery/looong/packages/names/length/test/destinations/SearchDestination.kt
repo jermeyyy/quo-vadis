@@ -1,4 +1,4 @@
-package com.jermey.navplayground.demo.destinations
+package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations
 
 import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
@@ -25,7 +25,7 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
  * - Parses `sortAsc` as Boolean using `.toBooleanStrictOrNull()`
  * - Falls back to default values for missing optional params
  *
- * @see com.jermey.quo.vadis.annotations.Argument
+ * @see Argument
  */
 @Stack(name = "search", startDestination = SearchDestination.Home::class)
 sealed class SearchDestination : NavDestination {
