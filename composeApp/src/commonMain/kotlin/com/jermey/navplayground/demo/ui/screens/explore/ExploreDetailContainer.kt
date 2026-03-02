@@ -53,8 +53,9 @@ class ExploreDetailContainer(
     scope: NavigationContainerScope,
     repository: ExploreRepository,
     itemId: String,
-    private val debuggable: Boolean = false
 ) : NavigationContainer<ExploreDetailState, ExploreDetailIntent, ExploreDetailAction>(scope) {
+
+    private val debuggable: Boolean = false
 
     // Initialize with item immediately (synchronous) for shared element transitions
     private val initialState: ExploreDetailState = repository.getItemById(itemId)

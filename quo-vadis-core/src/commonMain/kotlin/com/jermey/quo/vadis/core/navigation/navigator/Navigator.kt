@@ -48,8 +48,6 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * Thread-safe and designed to work with MVI architecture pattern.
  *
- * Implements [ParentNavigator] to support hierarchical navigation with child navigators.
- *
  * ## Extended Capabilities
  *
  * For specialized functionality, cast to extension interfaces:

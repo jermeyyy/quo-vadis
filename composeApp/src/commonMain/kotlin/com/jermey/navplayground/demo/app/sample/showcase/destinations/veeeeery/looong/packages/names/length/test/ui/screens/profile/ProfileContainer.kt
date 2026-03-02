@@ -35,8 +35,9 @@ private typealias Ctx = PipelineContext<ProfileState, ProfileIntent, ProfileActi
 class ProfileContainer(
     scope: NavigationContainerScope,
     private val repository: ProfileRepository,
-    private val debuggable: Boolean = false
 ) : NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
+
+    private val debuggable: Boolean = false
 
     override val store = store(initial = ProfileState.Loading) {
         configure {

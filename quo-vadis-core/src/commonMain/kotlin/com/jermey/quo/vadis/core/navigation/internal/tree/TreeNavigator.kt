@@ -493,7 +493,6 @@ class TreeNavigator(
 
     /**
      * Handle back press for this navigator's state.
-     * Implementation of ParentNavigator.handleBackInternal().
      *
      * Uses intelligent tree-based back handling:
      * 1. Check user-defined handlers first (via BackHandlerRegistry)

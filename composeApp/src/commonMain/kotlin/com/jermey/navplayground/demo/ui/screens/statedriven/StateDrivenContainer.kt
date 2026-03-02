@@ -47,15 +47,15 @@ private typealias Ctx = PipelineContext<StateDrivenState, StateDrivenIntent, Sta
  * and can be accessed from the TabsContainer wrapper.
  *
  * @param scope The shared container scope providing access to navigator.
- * @param debuggable Whether to enable debug logging for the store.
  */
 @Scoped
 @Scope(SharedContainerScope::class)
 @Qualifier(StateDrivenContainer::class)
 class StateDrivenContainer(
     scope: SharedContainerScope,
-    private val debuggable: Boolean = false
 ) : SharedNavigationContainer<StateDrivenState, StateDrivenIntent, StateDrivenAction>(scope) {
+
+    private val debuggable: Boolean = false
 
     override val store: Store<StateDrivenState, StateDrivenIntent, StateDrivenAction> =
         store(initial = StateDrivenState()) {

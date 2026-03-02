@@ -35,8 +35,9 @@ private typealias Ctx = pro.respawn.flowmvi.api.PipelineContext<ExploreState, Ex
 class ExploreContainer(
     scope: NavigationContainerScope,
     repository: ExploreRepository,
-    private val debuggable: Boolean = false
 ) : NavigationContainer<ExploreState, ExploreIntent, ExploreAction>(scope) {
+
+    private val debuggable: Boolean = false
 
     // Load data synchronously at construction time for immediate rendering
     private val initialState: ExploreState = run {

@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +37,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jermey.feature1.resultdemo.ResultDemoDestination
@@ -51,7 +54,10 @@ import com.jermey.navplayground.demo.ui.components.NavigationPatternCard
 import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
 import com.jermey.quo.vadis.annotations.Screen
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
 import kotlinx.coroutines.launch
@@ -63,7 +69,7 @@ import org.koin.compose.koinInject
 /**
  * Home Screen - Main entry point with navigation to all patterns
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
 @Screen(MainTabs.HomeTab::class)
 @Composable
 fun HomeScreen(
@@ -75,6 +81,8 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val hazeState = remember { HazeState() }
 
+    val hazeStyle = HazeMaterials.ultraThin()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -83,7 +91,16 @@ fun HomeScreen(
                     IconButton(onClick = { showBottomSheet = true }) {
                         Icon(Icons.Default.Menu, contentDescription = "Menu")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .hazeEffect(state = hazeState) {
+                        style = hazeStyle
+                    }
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
             )
         }
     ) { paddingValues ->
@@ -165,9 +182,13 @@ private fun HomeScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(paddingValues)
             .verticalScroll(scrollState)
-            .padding(16.dp),
+            .padding(
+                top = paddingValues.calculateTopPadding() + 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                start = 16.dp,
+                end = 16.dp
+            ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
