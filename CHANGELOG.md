@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.3.5] - 2026-03-02
+
+### Changed
+
+- **Dependency Upgrades**: Updated to AGP 9, Kotlin 2.3.20-RC
+- **Architecture & Kotlin Modernization**: Refactored core code with Kotlin idioms and architecture improvements
+- **Demo App**: Added haze effect to HomeScreen, cleaned up Explore screen
+
+### Fixed
+
+- **KSP Long Package Names**: Fixed handling of long package names in KSP generated classes
+- **NavNode.fold Accumulator**: Fixed correctly threading accumulator in `NavNode.fold`
+
+### Documentation
+
+- **Documentation Site Restructuring**: Refactored docs site with shared infrastructure components, deduplicated code examples
+- **Added documentation website link in README**
+
+### CI
+
+- **GitHub Pages Workflow**: Only run Deploy GitHub Pages on `docs/site` changes
+
 ## [0.3.4] - 2026-01-13
 
 ### ⚠️ Breaking Changes
