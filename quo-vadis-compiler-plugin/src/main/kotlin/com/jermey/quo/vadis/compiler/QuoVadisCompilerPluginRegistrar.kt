@@ -1,9 +1,11 @@
 package com.jermey.quo.vadis.compiler
 
 import com.google.auto.service.AutoService
+import com.jermey.quo.vadis.compiler.fir.QuoVadisFirExtensionRegistrar
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 
 @OptIn(ExperimentalCompilerApi::class)
 @AutoService(CompilerPluginRegistrar::class)
@@ -14,7 +16,8 @@ class QuoVadisCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         val modulePrefix = configuration.get(QuoVadisConfigurationKeys.MODULE_PREFIX) ?: return
 
-        // Phase 2: FIR extensions will be registered here
+        FirExtensionRegistrarAdapter.registerExtension(QuoVadisFirExtensionRegistrar(modulePrefix))
+
         // Phase 3: IR extensions will be registered here
     }
 }
