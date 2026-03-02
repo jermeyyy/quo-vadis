@@ -7,34 +7,30 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 /**
- * Gradle plugin for Quo Vadis navigation library KSP configuration.
+ * Gradle plugin for Quo Vadis navigation library.
  *
- * This plugin automatically:
- * - Adds the kspCommonMainMetadata dependency for quo-vadis-ksp
- * - Configures the KSP argument `quoVadis.modulePrefix` with a sensible default
- * - Registers the generated source directory
- * - Sets up proper task dependencies for KMP
- *
- * Note: This plugin requires both the KSP plugin and Kotlin Multiplatform plugin
- * to be applied before or alongside this plugin.
+ * Supports two modes:
+ * 1. **KSP mode** (default): Uses KSP for code generation
+ * 2. **Compiler plugin mode**: Uses K2 compiler plugin for code generation
  *
  * Usage:
  * ```kotlin
  * plugins {
  *     alias(libs.plugins.kotlinMultiplatform)
- *     alias(libs.plugins.ksp)
+ *     alias(libs.plugins.ksp)          // only needed for KSP mode
  *     alias(libs.plugins.quoVadis)
  * }
  *
- * // Optional configuration:
  * quoVadis {
  *     modulePrefix = "customPrefix"
- *     useLocalKsp = true // for development
+ *     useCompilerPlugin = true  // opt into compiler plugin mode
  * }
  * ```
  */
@@ -47,16 +43,11 @@ class QuoVadisPlugin : Plugin<Project> {
         // Set defaults
         extension.modulePrefix.convention(project.name.toCamelCase())
         extension.useLocalKsp.convention(false)
+        extension.useCompilerPlugin.convention(false)
 
-        // Configure after both KMP and KSP plugins are applied
+        // Configure after evaluation so extension values are finalized
         project.afterEvaluate {
-            // Check required plugins
-            if (!project.plugins.hasPlugin("com.google.devtools.ksp")) {
-                throw GradleException(
-                    "Quo Vadis plugin requires the KSP plugin. " +
-                        "Please apply 'com.google.devtools.ksp' plugin before 'io.github.jermeyyy.quo-vadis'."
-                )
-            }
+            // Kotlin Multiplatform is always required
             if (!project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")) {
                 throw GradleException(
                     "Quo Vadis plugin requires the Kotlin Multiplatform plugin. " +
@@ -64,8 +55,23 @@ class QuoVadisPlugin : Plugin<Project> {
                 )
             }
 
-            configureKsp(project, extension)
+            if (extension.useCompilerPlugin.get()) {
+                configureCompilerPlugin(project, extension)
+            } else {
+                // KSP mode requires KSP plugin
+                if (!project.plugins.hasPlugin("com.google.devtools.ksp")) {
+                    throw GradleException(
+                        "Quo Vadis plugin requires the KSP plugin in KSP mode. " +
+                            "Please apply 'com.google.devtools.ksp' plugin or set useCompilerPlugin = true."
+                    )
+                }
+                configureKsp(project, extension)
+            }
         }
+    }
+
+    private fun configureCompilerPlugin(project: Project, extension: QuoVadisExtension) {
+        project.plugins.apply(QuoVadisCompilerSubplugin::class.java)
     }
 
     private fun configureKsp(project: Project, extension: QuoVadisExtension) {

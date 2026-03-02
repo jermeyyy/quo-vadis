@@ -9,9 +9,12 @@ plugins {
     alias(libs.plugins.koin.compiler)
 }
 
-// Quo Vadis KSP configuration (using local processor for development)
+// Quo Vadis configuration
 quoVadis {
     useLocalKsp = true
+    useCompilerPlugin = providers.gradleProperty("quoVadis.useCompilerPlugin")
+        .map { it.toBoolean() }
+        .getOrElse(false)
 }
 
 // Configure compose resources for the new Android KMP library plugin

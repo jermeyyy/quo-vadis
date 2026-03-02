@@ -27,6 +27,7 @@ fun Provider<PluginDependency>.toDep() = map {
 dependencies {
     compileOnly(libs.plugins.ksp.toDep())
     compileOnly(libs.plugins.kotlin.multiplatform.toDep())
+    implementation(libs.kotlin.gradle.plugin.api)
 }
 
 gradlePlugin {
