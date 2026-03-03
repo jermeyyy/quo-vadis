@@ -2,6 +2,8 @@ package com.jermey.quo.vadis.compiler
 
 import com.google.auto.service.AutoService
 import com.jermey.quo.vadis.compiler.fir.QuoVadisFirExtensionRegistrar
+import com.jermey.quo.vadis.compiler.ir.QuoVadisIrGenerationExtension
+import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -18,6 +20,6 @@ class QuoVadisCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
         FirExtensionRegistrarAdapter.registerExtension(QuoVadisFirExtensionRegistrar(modulePrefix))
 
-        // Phase 3: IR extensions will be registered here
+        IrGenerationExtension.registerExtension(QuoVadisIrGenerationExtension(configuration, modulePrefix))
     }
 }
