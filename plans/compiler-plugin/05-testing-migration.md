@@ -1,7 +1,8 @@
 # Phase 5: Testing, Migration & Deprecation
 
-**Status**: Planning  
+**Status**: Complete (5A–5H all implemented)  
 **Created**: 2 March 2026  
+**Updated**: 3 March 2026  
 **Dependencies**: Phase 3 (partial — test infrastructure can start once IR backend exists), Phase 4 (multi-module tests)  
 **Estimated Sub-phases**: 5A–5H
 

@@ -17,15 +17,17 @@ class StubMaterializationTransformer(
 
     private var configClass: IrClass? = null
     private var deepLinkHandlerClass: IrClass? = null
+    private var screenRegistryClass: IrClass? = null
 
     private val expectedConfigName = Name.identifier("${modulePrefix}NavigationConfig")
     private val expectedDeepLinkName = Name.identifier("${modulePrefix}DeepLinkHandler")
+    private val expectedScreenRegistryName = Name.identifier("${modulePrefix}ScreenRegistryImpl")
 
     val synthesizedDeclarations: SynthesizedDeclarations?
         get() {
             val config = configClass ?: return null
             val deepLink = deepLinkHandlerClass ?: return null
-            return SynthesizedDeclarations(config, deepLink)
+            return SynthesizedDeclarations(config, deepLink, screenRegistryClass)
         }
 
     override fun visitClass(declaration: IrClass): IrStatement {
@@ -35,6 +37,7 @@ class StubMaterializationTransformer(
             when (declaration.name) {
                 expectedConfigName -> configClass = declaration
                 expectedDeepLinkName -> deepLinkHandlerClass = declaration
+                expectedScreenRegistryName -> screenRegistryClass = declaration
             }
         }
         return super.visitClass(declaration)

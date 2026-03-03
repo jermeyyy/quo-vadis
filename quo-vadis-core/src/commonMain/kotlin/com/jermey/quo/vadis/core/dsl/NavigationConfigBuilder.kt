@@ -10,6 +10,7 @@ import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.transition.NavTransition
 import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+import com.jermey.quo.vadis.core.dsl.internal.BuiltTabsConfig
 import com.jermey.quo.vadis.core.dsl.internal.DslNavigationConfig
 import com.jermey.quo.vadis.core.dsl.internal.ScreenEntry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
@@ -386,6 +387,86 @@ class NavigationConfigBuilder {
     ) {
         paneContainers[key] = wrapper
     }
+
+    // region Compiler Plugin Helper Methods
+
+    @InternalQuoVadisApi
+    fun registerTabsContainer(
+        containerClass: KClass<out NavDestination>,
+        scopeKey: String,
+        tabClasses: List<KClass<out NavDestination>>,
+        tabInstances: List<NavDestination?>,
+        tabIsContainerRef: List<Boolean>,
+        initialTabIndex: Int = 0
+    ) {
+        val tabEntries = tabClasses.mapIndexed { index, klass ->
+            if (tabIsContainerRef[index]) {
+                TabEntry.ContainerReference(containerClass = klass, title = null, icon = null)
+            } else {
+                val instance = tabInstances[index]
+                    ?: error("Flat tab item must have an instance: ${klass.simpleName}")
+                TabEntry.FlatScreen(destination = instance, destinationClass = klass, title = null, icon = null)
+            }
+        }
+        val scopeKeyValue = ScopeKey(scopeKey)
+        containers[containerClass] = ContainerBuilder.Tabs(
+            destinationClass = containerClass,
+            scopeKey = scopeKeyValue,
+            config = BuiltTabsConfig(tabs = tabEntries, initialTab = initialTabIndex)
+        )
+        val scopeMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
+        tabEntries.forEach { entry ->
+            when (entry) {
+                is TabEntry.FlatScreen -> entry.destinationClass?.let { scopeMembers.add(it) }
+                is TabEntry.ContainerReference -> scopeMembers.add(entry.containerClass)
+                is TabEntry.NestedStack -> entry.screens.forEach { it.destinationClass?.let { dc -> scopeMembers.add(dc) } }
+            }
+        }
+    }
+
+    @InternalQuoVadisApi
+    fun registerStackContainer(
+        containerClass: KClass<out NavDestination>,
+        scopeKey: String,
+        startDestination: KClass<out NavDestination>,
+        destinations: List<KClass<out NavDestination>>
+    ) {
+        val screenEntries = destinations.map { klass ->
+            StackScreenEntry(
+                destination = null,
+                destinationClass = klass,
+                key = klass.simpleName ?: "screen"
+            )
+        }
+        val scopeKeyValue = ScopeKey(scopeKey)
+        containers[containerClass] = ContainerBuilder.Stack(
+            destinationClass = containerClass,
+            scopeKey = scopeKeyValue,
+            screens = screenEntries
+        )
+        val scopeMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
+        destinations.forEach { scopeMembers.add(it) }
+    }
+
+    @InternalQuoVadisApi
+    fun registerScope(
+        scopeKey: String,
+        members: List<KClass<out NavDestination>>
+    ) {
+        val scopeKeyValue = ScopeKey(scopeKey)
+        val existingMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
+        existingMembers.addAll(members)
+    }
+
+    @InternalQuoVadisApi
+    fun registerTransition(
+        destinationClass: KClass<out NavDestination>,
+        transition: NavTransition
+    ) {
+        transitions[destinationClass] = transition
+    }
+
+    // endregion
 
     /**
      * Builds the final [NavigationConfig] from this builder's configuration.

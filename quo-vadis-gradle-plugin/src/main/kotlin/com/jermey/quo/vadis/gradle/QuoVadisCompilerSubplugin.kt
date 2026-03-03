@@ -31,7 +31,12 @@ class QuoVadisCompilerSubplugin : KotlinCompilerPluginSupportPlugin {
         version = BuildConfig.VERSION
     )
 
-    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
+        val project = kotlinCompilation.target.project
+        val extension = project.extensions.findByType(QuoVadisExtension::class.java)
+            ?: return false
+        return extension.useCompilerPlugin.get()
+    }
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project

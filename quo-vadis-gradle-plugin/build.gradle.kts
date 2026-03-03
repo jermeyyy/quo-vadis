@@ -6,7 +6,19 @@ plugins {
 }
 
 group = "io.github.jermeyyy"
-version = project.findProperty("VERSION_NAME") as String? ?: "0.0.1-SNAPSHOT"
+version = run {
+    val prop = project.findProperty("VERSION_NAME") as String?
+    if (prop != null) return@run prop
+    val parentPropsFile = file("../gradle.properties")
+    if (parentPropsFile.exists()) {
+        parentPropsFile.readLines()
+            .firstOrNull { it.startsWith("VERSION_NAME=") }
+            ?.substringAfter("=")?.trim()
+            ?: "0.0.1-SNAPSHOT"
+    } else {
+        "0.0.1-SNAPSHOT"
+    }
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11

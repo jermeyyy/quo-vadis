@@ -4,10 +4,12 @@ import com.jermey.quo.vadis.compiler.QuoVadisGeneratedKey
 import com.jermey.quo.vadis.compiler.common.NavigationMetadata
 import com.jermey.quo.vadis.compiler.ir.generators.DeepLinkHandlerIrGenerator
 import com.jermey.quo.vadis.compiler.ir.generators.NavigationConfigIrGenerator
+import com.jermey.quo.vadis.compiler.ir.generators.ScreenRegistryIrGenerator
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 
 class BodySynthesisTransformer(
@@ -15,15 +17,17 @@ class BodySynthesisTransformer(
     private val symbolResolver: SymbolResolver,
     private val metadata: NavigationMetadata,
     private val declarations: SynthesizedDeclarations,
+    private val moduleFragment: IrModuleFragment,
 ) : IrElementTransformerVoid() {
 
     override fun visitClass(declaration: IrClass): IrStatement {
         if (declaration.origin is IrDeclarationOrigin.GeneratedByPlugin &&
             (declaration.origin as IrDeclarationOrigin.GeneratedByPlugin).pluginKey == QuoVadisGeneratedKey
         ) {
-            when (declaration) {
-                declarations.navigationConfigClass -> synthesizeNavigationConfigBody(declaration)
-                declarations.deepLinkHandlerClass -> synthesizeDeepLinkHandlerBody(declaration)
+            when (declaration.name) {
+                declarations.navigationConfigClass.name -> synthesizeNavigationConfigBody(declaration)
+                declarations.deepLinkHandlerClass.name -> synthesizeDeepLinkHandlerBody(declaration)
+                declarations.screenRegistryClass?.name -> synthesizeScreenRegistryBody(declaration)
             }
         }
         return super.visitClass(declaration)
@@ -44,5 +48,14 @@ class BodySynthesisTransformer(
             symbolResolver = symbolResolver,
             metadata = metadata,
         ).generate(irClass)
+    }
+
+    private fun synthesizeScreenRegistryBody(irClass: IrClass) {
+        ScreenRegistryIrGenerator(
+            pluginContext = pluginContext,
+            symbolResolver = symbolResolver,
+            screens = metadata.screens,
+            moduleFragment = moduleFragment,
+        ).generateClassBodies(irClass)
     }
 }

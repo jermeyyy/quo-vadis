@@ -49,6 +49,11 @@ import com.jermey.quo.vadis.ksp.validation.ValidationEngine
  *   This is required for multi-module projects to avoid class name conflicts.
  * - `quoVadis.strictValidation` - Whether validation errors abort generation (default: true)
  */
+@Deprecated(
+    message = "KSP processor is deprecated. Migrate to the Quo Vadis K2 compiler plugin for better IDE support and faster builds. " +
+              "See https://github.com/jermeyyy/quo-vadis/blob/main/docs/MIGRATION.md",
+    level = DeprecationLevel.WARNING,
+)
 class QuoVadisSymbolProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
@@ -473,6 +478,11 @@ class QuoVadisSymbolProcessor(
 /**
  * Provider for QuoVadisSymbolProcessor.
  */
+@Deprecated(
+    message = "KSP processor is deprecated. Migrate to the Quo Vadis K2 compiler plugin for better IDE support and faster builds. " +
+              "See https://github.com/jermeyyy/quo-vadis/blob/main/docs/MIGRATION.md",
+    level = DeprecationLevel.WARNING,
+)
 class QuoVadisSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return QuoVadisSymbolProcessor(

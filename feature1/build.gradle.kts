@@ -10,9 +10,11 @@ plugins {
     alias(libs.plugins.koin.compiler)
 }
 
-// Quo Vadis KSP configuration (using local processor for development)
+// Quo Vadis configuration — compiler plugin is now default
 quoVadis {
-    useLocalKsp = true
+    useCompilerPlugin = providers.gradleProperty("quoVadis.useCompilerPlugin")
+        .map { it.toBoolean() }
+        .getOrElse(true)
 }
 
 kotlin {

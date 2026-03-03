@@ -1,7 +1,5 @@
 package com.jermey.quo.vadis.compiler.ir
 
-import com.jermey.quo.vadis.compiler.common.NavigationMetadata
-import com.jermey.quo.vadis.compiler.common.PluginMetadataStore
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -12,8 +10,10 @@ class QuoVadisIrGenerationExtension(
     private val modulePrefix: String,
 ) : IrGenerationExtension {
 
+    @Suppress("DEPRECATION", "DEPRECATION_ERROR")
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-        val metadata = PluginMetadataStore.retrieve(configuration) ?: NavigationMetadata(modulePrefix)
+        val collector = IrMetadataCollector(modulePrefix)
+        val metadata = collector.collect(moduleFragment)
 
         val symbolResolver = SymbolResolver(pluginContext)
 
@@ -34,6 +34,7 @@ class QuoVadisIrGenerationExtension(
             symbolResolver = symbolResolver,
             metadata = metadata,
             declarations = synthesizedDeclarations,
+            moduleFragment = moduleFragment,
         ).also { moduleFragment.transform(it, null) }
     }
 }

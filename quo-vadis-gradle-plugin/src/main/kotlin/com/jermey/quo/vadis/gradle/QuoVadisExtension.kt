@@ -28,12 +28,12 @@ abstract class QuoVadisExtension {
      * When false, uses Maven Central artifact.
      * Only applies when [useCompilerPlugin] is false.
      */
+    @Deprecated("Migrate to the compiler plugin. KSP support will be removed in a future version.")
     abstract val useLocalKsp: Property<Boolean>
 
     /**
      * Whether to use the K2 compiler plugin instead of KSP for code generation.
-     * When true, the compiler plugin is used and KSP is not required.
-     * When false (default), KSP mode is used.
+     * Defaults to true. Set to false to use legacy KSP mode (deprecated).
      */
     abstract val useCompilerPlugin: Property<Boolean>
 }

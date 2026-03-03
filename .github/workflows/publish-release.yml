@@ -97,6 +97,8 @@ jobs:
           echo "- \`io.github.jermeyyy:quo-vadis-core-flow-mvi:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-annotations:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-ksp:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`io.github.jermeyyy:quo-vadis-compiler-plugin:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`io.github.jermeyyy:quo-vadis-compiler-plugin-native:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-gradle-plugin:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Gradle Plugin" >> $GITHUB_STEP_SUMMARY

@@ -1,8 +1,13 @@
+@file:OptIn(UnsafeDuringIrConstructionAPI::class)
+
 package com.jermey.quo.vadis.compiler.ir
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
@@ -99,6 +104,36 @@ class SymbolResolver(private val pluginContext: IrPluginContext) {
 
     val navigationConfigDslFunctions by lazy {
         resolveFunctions("com.jermey.quo.vadis.core.dsl", "navigationConfig")
+    }
+
+    val navigationConfigBuilderConstructor by lazy {
+        navigationConfigBuilderClass.owner.declarations
+            .filterIsInstance<IrConstructor>()
+            .first { it.isPrimary }
+    }
+
+    val registerTabsContainerFun by lazy {
+        navigationConfigBuilderClass.owner.declarations
+            .filterIsInstance<IrSimpleFunction>()
+            .first { it.name.asString() == "registerTabsContainer" }
+    }
+
+    val registerStackContainerFun by lazy {
+        navigationConfigBuilderClass.owner.declarations
+            .filterIsInstance<IrSimpleFunction>()
+            .first { it.name.asString() == "registerStackContainer" }
+    }
+
+    val registerScopeFun by lazy {
+        navigationConfigBuilderClass.owner.declarations
+            .filterIsInstance<IrSimpleFunction>()
+            .first { it.name.asString() == "registerScope" }
+    }
+
+    val configBuilderBuildFun by lazy {
+        navigationConfigBuilderClass.owner.declarations
+            .filterIsInstance<IrSimpleFunction>()
+            .first { it.name.asString() == "build" }
     }
     // endregion
 

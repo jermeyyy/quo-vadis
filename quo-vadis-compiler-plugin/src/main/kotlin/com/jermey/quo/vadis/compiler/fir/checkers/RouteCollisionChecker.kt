@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirDeclarationChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
+import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.getSealedClassInheritors
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassId
@@ -29,10 +30,13 @@ object RouteCollisionChecker : FirDeclarationChecker<FirClass>(MppCheckerKind.Co
     override fun check(declaration: FirClass) {
         if (declaration !is FirRegularClass) return
 
-        // Only check @Stack-annotated classes
+        // Only check @Stack-annotated sealed classes
         declaration.annotations.firstOrNull {
             it.toAnnotationClassId(context.session) == STACK_CLASS_ID
         } ?: return
+
+        // Skip non-sealed classes — StructuralChecker already reports STACK_NOT_SEALED
+        if (declaration.status.modality != Modality.SEALED) return
 
         // Get sealed subclasses (which should have @Destination)
         val sealedInheritors = declaration.getSealedClassInheritors(context.session)

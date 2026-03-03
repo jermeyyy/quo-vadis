@@ -9,12 +9,11 @@ plugins {
     alias(libs.plugins.koin.compiler)
 }
 
-// Quo Vadis configuration
+// Quo Vadis configuration — compiler plugin is now default
 quoVadis {
-    useLocalKsp = true
     useCompilerPlugin = providers.gradleProperty("quoVadis.useCompilerPlugin")
         .map { it.toBoolean() }
-        .getOrElse(false)
+        .getOrElse(true)
 }
 
 // Configure compose resources for the new Android KMP library plugin

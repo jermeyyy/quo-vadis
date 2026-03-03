@@ -708,6 +708,7 @@ fun `navigate to details screen`() {
 
 - **Website**: [https://jermeyyy.github.io/quo-vadis/](https://jermeyyy.github.io/quo-vadis/)
 - **API Reference**: Auto-generated via Dokka
+- [Migration Guide: KSP → Compiler Plugin](docs/MIGRATION.md)
 
 ```bash
 # Generate API docs

@@ -66,9 +66,13 @@ object ArgumentParityChecker : FirDeclarationChecker<FirClass>(MppCheckerKind.Co
             }
         }
 
-        // Check for route placeholders without @Argument
+        // Check for route placeholders without @Argument or matching constructor param
+        // (backward-compatible with KSP's name-based matching)
+        val allConstructorParamNames = primaryCtor?.valueParameterSymbols
+            ?.map { it.name.asString() }?.toSet() ?: emptySet()
+
         for (placeholder in placeholders) {
-            if (placeholder !in argumentKeys) {
+            if (placeholder !in argumentKeys && placeholder !in allConstructorParamNames) {
                 reporter.reportOn(
                     destAnnotation.source,
                     QuoVadisDiagnostics.MISSING_ROUTE_ARGUMENT,

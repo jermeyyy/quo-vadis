@@ -88,7 +88,7 @@ object QuoVadisDiagnosticRenderer : BaseDiagnosticRendererFactory() {
         )
         it.put(
             QuoVadisDiagnostics.DESTINATION_NOT_IN_STACK,
-            "@Destination must be a direct subclass of a @Stack-annotated sealed class.",
+            "@Destination must be a direct subclass of a @Stack, @Tabs, or @Pane-annotated sealed class.",
         )
         it.put(
             QuoVadisDiagnostics.INCOMPATIBLE_TRANSITION,

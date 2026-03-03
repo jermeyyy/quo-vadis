@@ -59,6 +59,11 @@ class DeepLinkHandlerIrGenerator(
                     +irReturn(irCall(emptyListFn))
                 }
             }
+            "handleDeepLink" -> {
+                function.body = builder.irBlockBody {
+                    +irReturn(irNull())
+                }
+            }
         }
     }
 }

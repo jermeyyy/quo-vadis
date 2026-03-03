@@ -17,20 +17,19 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
  * Gradle plugin for Quo Vadis navigation library.
  *
  * Supports two modes:
- * 1. **KSP mode** (default): Uses KSP for code generation
- * 2. **Compiler plugin mode**: Uses K2 compiler plugin for code generation
+ * 1. **Compiler plugin mode** (default): Uses K2 compiler plugin for code generation
+ * 2. **KSP mode** (deprecated): Uses KSP for code generation
  *
  * Usage:
  * ```kotlin
  * plugins {
  *     alias(libs.plugins.kotlinMultiplatform)
- *     alias(libs.plugins.ksp)          // only needed for KSP mode
  *     alias(libs.plugins.quoVadis)
  * }
  *
  * quoVadis {
  *     modulePrefix = "customPrefix"
- *     useCompilerPlugin = true  // opt into compiler plugin mode
+ *     useCompilerPlugin = false // opt into legacy KSP mode (deprecated)
  * }
  * ```
  */
@@ -43,9 +42,14 @@ class QuoVadisPlugin : Plugin<Project> {
         // Set defaults
         extension.modulePrefix.convention(project.name.toCamelCase())
         extension.useLocalKsp.convention(false)
-        extension.useCompilerPlugin.convention(false)
+        extension.useCompilerPlugin.convention(true)
 
-        // Configure after evaluation so extension values are finalized
+        // Apply compiler subplugin eagerly — KotlinCompilerPluginSupportPlugin must be
+        // registered before Kotlin compile tasks are configured (afterEvaluate is too late).
+        // The subplugin's isApplicable() checks useCompilerPlugin to gate actual activation.
+        configureCompilerPlugin(project, extension)
+
+        // Configure KSP fallback after evaluation so extension values are finalized
         project.afterEvaluate {
             // Kotlin Multiplatform is always required
             if (!project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")) {
@@ -55,9 +59,7 @@ class QuoVadisPlugin : Plugin<Project> {
                 )
             }
 
-            if (extension.useCompilerPlugin.get()) {
-                configureCompilerPlugin(project, extension)
-            } else {
+            if (!extension.useCompilerPlugin.get()) {
                 // KSP mode requires KSP plugin
                 if (!project.plugins.hasPlugin("com.google.devtools.ksp")) {
                     throw GradleException(
@@ -75,6 +77,12 @@ class QuoVadisPlugin : Plugin<Project> {
     }
 
     private fun configureKsp(project: Project, extension: QuoVadisExtension) {
+        project.logger.warn(
+            "Quo Vadis: KSP code generation mode is deprecated. " +
+                "Migrate to the K2 compiler plugin by setting useCompilerPlugin = true (now the default). " +
+                "See https://github.com/jermeyyy/quo-vadis/blob/main/docs/MIGRATION.md"
+        )
+
         // Add KSP dependency
         val kspDependency = if (extension.useLocalKsp.get()) {
             project.dependencies.project(mapOf("path" to ":quo-vadis-ksp"))

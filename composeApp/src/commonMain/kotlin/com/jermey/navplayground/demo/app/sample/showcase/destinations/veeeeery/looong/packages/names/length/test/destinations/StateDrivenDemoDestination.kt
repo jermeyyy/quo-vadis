@@ -1,6 +1,7 @@
 package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations
 
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.StateDrivenDemoDestination.DemoTab
+import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.TabItem
@@ -95,7 +96,7 @@ sealed class StateDrivenDemoDestination : NavDestination {
          * @property userId The ID of the user to display
          */
         @Destination(route = "state-driven/profile/{userId}")
-        data class Profile(val userId: String) : DemoTab() {
+        data class Profile(@Argument val userId: String) : DemoTab() {
             override fun toString(): String = "Profile($userId)"
         }
 
@@ -113,7 +114,7 @@ sealed class StateDrivenDemoDestination : NavDestination {
          * @property itemId The ID of the item to display
          */
         @Destination(route = "state-driven/detail/{itemId}")
-        data class Detail(val itemId: String) : DemoTab() {
+        data class Detail(@Argument val itemId: String) : DemoTab() {
             override fun toString(): String = "Detail($itemId)"
         }
 

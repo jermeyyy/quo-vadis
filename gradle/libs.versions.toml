@@ -31,7 +31,7 @@ navigationevent = "1.0.1"
 haze = "1.7.2"
 coil = "3.4.0"
 ktor = "3.4.0"
-kotlinCompileTesting = "0.7.1"
+kotlinCompileTesting = "0.12.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

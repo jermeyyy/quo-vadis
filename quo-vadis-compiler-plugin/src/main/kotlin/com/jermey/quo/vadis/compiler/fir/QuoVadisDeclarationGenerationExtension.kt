@@ -3,9 +3,12 @@ package com.jermey.quo.vadis.compiler.fir
 import com.jermey.quo.vadis.compiler.QuoVadisGeneratedKey
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.fir.FirSession
+import org.jetbrains.kotlin.fir.moduleData
 import org.jetbrains.kotlin.fir.extensions.DeclarationGenerationContext
 import org.jetbrains.kotlin.fir.extensions.ExperimentalTopLevelDeclarationsGenerationApi
 import org.jetbrains.kotlin.fir.extensions.FirDeclarationGenerationExtension
+import org.jetbrains.kotlin.fir.expressions.impl.FirEmptyAnnotationArgumentMapping
+import org.jetbrains.kotlin.fir.expressions.builder.buildAnnotation
 import org.jetbrains.kotlin.fir.plugin.createConeType
 import org.jetbrains.kotlin.fir.plugin.createConstructor
 import org.jetbrains.kotlin.fir.plugin.createMemberFunction
@@ -18,6 +21,7 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.fir.types.ConeKotlinTypeProjectionOut
+import org.jetbrains.kotlin.fir.types.builder.buildResolvedTypeRef
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
@@ -52,6 +56,10 @@ class QuoVadisDeclarationGenerationExtension(
     private val deepLinkHandlerClassId = ClassId(
         GENERATED_PACKAGE,
         Name.identifier("${modulePrefix}DeepLinkHandler"),
+    )
+    private val screenRegistryClassId = ClassId(
+        GENERATED_PACKAGE,
+        Name.identifier("${modulePrefix}ScreenRegistryImpl"),
     )
 
     // endregion
@@ -94,6 +102,23 @@ class QuoVadisDeclarationGenerationExtension(
     private val paneRoleRegistryId = ClassId(
         FqName("com.jermey.quo.vadis.core.registry"),
         Name.identifier("PaneRoleRegistry"),
+    )
+
+    // endregion
+
+    // region Compose scope type class IDs
+
+    private val sharedTransitionScopeId = ClassId(
+        FqName("androidx.compose.animation"),
+        Name.identifier("SharedTransitionScope"),
+    )
+    private val animatedVisibilityScopeId = ClassId(
+        FqName("androidx.compose.animation"),
+        Name.identifier("AnimatedVisibilityScope"),
+    )
+    private val composableAnnotationId = ClassId(
+        FqName("androidx.compose.runtime"),
+        Name.identifier("Composable"),
     )
 
     // endregion
@@ -198,6 +223,13 @@ class QuoVadisDeclarationGenerationExtension(
         )
     }
 
+    private val nullableSharedTransitionScopeType: ConeKotlinType by lazy {
+        sharedTransitionScopeId.createConeType(session, emptyArray(), nullable = true)
+    }
+    private val nullableAnimatedVisibilityScopeType: ConeKotlinType by lazy {
+        animatedVisibilityScopeId.createConeType(session, emptyArray(), nullable = true)
+    }
+
     /** `List<String>` */
     private val listStringType: ConeKotlinType by lazy {
         listClassId.createConeType(session, arrayOf(stringType))
@@ -227,6 +259,12 @@ class QuoVadisDeclarationGenerationExtension(
     private val deepLinkCallableNames: Set<Name> =
         deepLinkFunctionNames + SpecialNames.INIT
 
+    private val screenRegistryCallableNames: Set<Name> = setOf(
+        Name.identifier("Content"),
+        Name.identifier("hasContent"),
+        SpecialNames.INIT,
+    )
+
     // endregion
 
     // region FirDeclarationGenerationExtension overrides
@@ -236,8 +274,18 @@ class QuoVadisDeclarationGenerationExtension(
     }
 
     @ExperimentalTopLevelDeclarationsGenerationApi
-    override fun getTopLevelClassIds(): Set<ClassId> =
-        setOf(configClassId, deepLinkHandlerClassId)
+    override fun getTopLevelClassIds(): Set<ClassId> {
+        // In KMP, each source set (commonMain, nativeMain, appleMain, iosMain, iosArm64Main)
+        // gets its own FIR session with its own extension instance. Without this guard,
+        // each session would declare the same class IDs, causing duplicate declarations
+        // when the compiler merges them for the final target compilation.
+        // Only generate in the root source set (empty dependsOnDependencies) — downstream
+        // source sets see these declarations through the dependency chain.
+        if (session.moduleData.dependsOnDependencies.isNotEmpty()) {
+            return emptySet()
+        }
+        return setOf(configClassId, deepLinkHandlerClassId, screenRegistryClassId)
+    }
 
     @ExperimentalTopLevelDeclarationsGenerationApi
     override fun generateTopLevelClassLikeDeclaration(
@@ -256,6 +304,12 @@ class QuoVadisDeclarationGenerationExtension(
                 superType(deepLinkRegistryId.createConeType(session))
             }.symbol
 
+            screenRegistryClassId -> createTopLevelClass(
+                classId, QuoVadisGeneratedKey, ClassKind.CLASS,
+            ) {
+                superType(screenRegistryId.createConeType(session))
+            }.symbol
+
             else -> null
         }
     }
@@ -267,6 +321,7 @@ class QuoVadisDeclarationGenerationExtension(
         return when (classSymbol.classId) {
             configClassId -> configCallableNames
             deepLinkHandlerClassId -> deepLinkCallableNames
+            screenRegistryClassId -> screenRegistryCallableNames
             else -> emptySet()
         }
     }
@@ -275,7 +330,7 @@ class QuoVadisDeclarationGenerationExtension(
         context: DeclarationGenerationContext.Member,
     ): List<FirConstructorSymbol> {
         val owner = context.owner
-        if (owner.classId != configClassId && owner.classId != deepLinkHandlerClassId) {
+        if (owner.classId != configClassId && owner.classId != deepLinkHandlerClassId && owner.classId != screenRegistryClassId) {
             return emptyList()
         }
         return listOf(
@@ -316,6 +371,7 @@ class QuoVadisDeclarationGenerationExtension(
         return when (callableId.classId) {
             configClassId -> generateConfigFunctions(owner, name)
             deepLinkHandlerClassId -> generateDeepLinkFunctions(owner, name)
+            screenRegistryClassId -> generateScreenRegistryFunctions(owner, name)
             else -> emptyList()
         }
     }
@@ -437,6 +493,44 @@ class QuoVadisDeclarationGenerationExtension(
                 }.symbol,
             )
 
+            else -> emptyList()
+        }
+    }
+
+    // endregion
+
+    // region ScreenRegistryImpl helpers
+
+    private fun generateScreenRegistryFunctions(
+        owner: FirClassSymbol<*>,
+        name: Name,
+    ): List<FirNamedFunctionSymbol> {
+        return when (name.asString()) {
+            "Content" -> {
+                val contentFunction = createMemberFunction(owner, QuoVadisGeneratedKey, name, unitType) {
+                    status { isOverride = true }
+                    valueParameter(Name.identifier("destination"), navDestinationType)
+                    valueParameter(Name.identifier("sharedTransitionScope"), nullableSharedTransitionScopeType)
+                    valueParameter(Name.identifier("animatedVisibilityScope"), nullableAnimatedVisibilityScopeType)
+                }
+                // Add explicit @Composable annotation so the Compose compiler processes this override
+                val composableConeType = composableAnnotationId.createConeType(session)
+                contentFunction.replaceAnnotations(
+                    contentFunction.annotations + buildAnnotation {
+                        annotationTypeRef = buildResolvedTypeRef {
+                            coneType = composableConeType
+                        }
+                        argumentMapping = FirEmptyAnnotationArgumentMapping
+                    },
+                )
+                listOf(contentFunction.symbol)
+            }
+            "hasContent" -> listOf(
+                createMemberFunction(owner, QuoVadisGeneratedKey, name, booleanType) {
+                    status { isOverride = true }
+                    valueParameter(Name.identifier("destination"), navDestinationType)
+                }.symbol,
+            )
             else -> emptyList()
         }
     }

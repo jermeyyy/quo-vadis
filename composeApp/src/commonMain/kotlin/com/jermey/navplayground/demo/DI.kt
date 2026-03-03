@@ -1,6 +1,7 @@
 package com.jermey.navplayground.demo
 
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.quo.vadis.annotations.NavigationRoot
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
@@ -10,6 +11,9 @@ import com.jermey.quo.vadis.generated.Feature2NavigationConfig
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
+
+@NavigationRoot
+object AppNavigation
 
 @Module
 class NavigationModule {
@@ -39,8 +43,6 @@ class NavigationModule {
         )
     }
 }
-
-
 
 @Module
 @ComponentScan("com.jermey.navplayground.demo.ui.screens.statedriven")

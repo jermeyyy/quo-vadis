@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Deprecated
+- **KSP code generation**: The KSP-based code generation (`quo-vadis-ksp`) is now deprecated in favor of the K2 compiler plugin.
+  - The Gradle plugin now defaults to `useCompilerPlugin = true`
+  - Setting `useCompilerPlugin = false` (KSP mode) will emit a build warning
+  - **Timeline**: KSP will produce compilation errors in 2 minor versions and be removed in 3 minor versions
+  - See [Migration Guide](docs/MIGRATION.md) for step-by-step instructions
+
 ## [0.3.5] - 2026-03-02
 
 ### Changed

@@ -13,17 +13,17 @@ import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irCallConstructor
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irGetObject
-import org.jetbrains.kotlin.ir.builders.irNull
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irVararg
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrGetFieldImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.util.companionObject
 import org.jetbrains.kotlin.ir.types.createType
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.impl.makeTypeProjection
@@ -37,30 +37,37 @@ class NavigationConfigIrGenerator(
     private val declarations: SynthesizedDeclarations,
 ) {
     fun generate(irClass: IrClass) {
-        for (declaration in irClass.declarations) {
+        // Create the _baseConfig backing field first
+        val baseConfigField = BaseConfigIrGenerator(
+            pluginContext = pluginContext,
+            symbolResolver = symbolResolver,
+            metadata = metadata,
+        ).generate(irClass)
+
+        for (declaration in irClass.declarations.toList()) {
             when (declaration) {
-                is IrProperty -> generatePropertyBody(irClass, declaration)
-                is IrSimpleFunction -> generateFunctionBody(irClass, declaration)
-                else -> { /* constructors, etc - left as-is */ }
+                is IrProperty -> generatePropertyBody(irClass, declaration, baseConfigField)
+                is IrSimpleFunction -> generateFunctionBody(irClass, declaration, baseConfigField)
+                else -> { /* constructors, fields, etc - left as-is */ }
             }
         }
     }
 
-    private fun generatePropertyBody(irClass: IrClass, property: IrProperty) {
+    private fun generatePropertyBody(irClass: IrClass, property: IrProperty, baseConfigField: IrField) {
         when (property.name.asString()) {
             "screenRegistry" -> generateScreenRegistryProperty(irClass, property)
-            "scopeRegistry" -> generateDelegatedRegistryProperty(property, "scopeRegistry")
-            "transitionRegistry" -> generateDelegatedRegistryProperty(property, "transitionRegistry")
-            "containerRegistry" -> generateContainerRegistryProperty(irClass, property)
+            "scopeRegistry" -> generateBaseConfigDelegatedProperty(property, "scopeRegistry", baseConfigField)
+            "transitionRegistry" -> generateBaseConfigDelegatedProperty(property, "transitionRegistry", baseConfigField)
+            "containerRegistry" -> generateBaseConfigDelegatedProperty(property, "containerRegistry", baseConfigField)
             "deepLinkRegistry" -> generateDeepLinkRegistryProperty(property)
             "paneRoleRegistry" -> generatePaneRoleRegistryProperty(irClass, property)
             "roots" -> generateRootsProperty(property)
         }
     }
 
-    private fun generateFunctionBody(irClass: IrClass, function: IrSimpleFunction) {
+    private fun generateFunctionBody(irClass: IrClass, function: IrSimpleFunction, baseConfigField: IrField) {
         when (function.name.asString()) {
-            "buildNavNode" -> generateBuildNavNodeBody(function)
+            "buildNavNode" -> generateBuildNavNodeBody(function, baseConfigField)
             "plus" -> generatePlusBody(function)
         }
     }
@@ -68,20 +75,54 @@ class NavigationConfigIrGenerator(
     // ---- Property generators (stubs — full implementations in Tasks 3C/3D/3F) ----
 
     private fun generateScreenRegistryProperty(irClass: IrClass, property: IrProperty) {
-        ScreenRegistryIrGenerator(
-            pluginContext = pluginContext,
-            symbolResolver = symbolResolver,
-            screens = metadata.screens,
-        ).generatePropertyBody(irClass, property)
+        val getter = property.getter ?: return
+        val screenRegistryClass = declarations.screenRegistryClass
+
+        if (screenRegistryClass != null && metadata.screens.isNotEmpty()) {
+            // Instantiate the FIR-generated ScreenRegistryImpl class
+            val constructor = screenRegistryClass.declarations
+                .filterIsInstance<IrConstructor>()
+                .first { it.isPrimary }
+            val builder = DeclarationIrBuilder(pluginContext, getter.symbol)
+            getter.body = builder.irBlockBody {
+                +irReturn(irCallConstructor(constructor.symbol, emptyList()))
+            }
+        } else {
+            // Fallback: return ScreenRegistry.Empty
+            ScreenRegistryIrGenerator(
+                pluginContext = pluginContext,
+                symbolResolver = symbolResolver,
+                screens = metadata.screens,
+            ).generatePropertyBody(irClass, property)
+        }
     }
 
-    private fun generateContainerRegistryProperty(irClass: IrClass, property: IrProperty) {
-        ContainerRegistryIrGenerator(
-            pluginContext = pluginContext,
-            symbolResolver = symbolResolver,
-            tabsContainers = metadata.tabsContainers,
-            paneContainers = metadata.paneContainers,
-        ).generatePropertyBody(irClass, property)
+    private fun generateBaseConfigDelegatedProperty(
+        property: IrProperty,
+        propertyName: String,
+        baseConfigField: IrField,
+    ) {
+        val getter = property.getter ?: return
+        val builder = DeclarationIrBuilder(pluginContext, getter.symbol)
+
+        val navConfigProp = symbolResolver.navigationConfigClass.owner.declarations
+            .filterIsInstance<IrProperty>()
+            .first { it.name.asString() == propertyName }
+        val navConfigGetter = navConfigProp.getter ?: return
+
+        getter.body = builder.irBlockBody {
+            val fieldGet = IrGetFieldImpl(
+                startOffset, endOffset,
+                baseConfigField.symbol,
+                baseConfigField.type,
+                irGet(getter.parameters[0]),
+            )
+            +irReturn(
+                irCall(navConfigGetter).apply {
+                    arguments[navConfigGetter.parameters[0]] = fieldGet
+                },
+            )
+        }
     }
 
     private fun generatePaneRoleRegistryProperty(irClass: IrClass, property: IrProperty) {
@@ -97,37 +138,6 @@ class NavigationConfigIrGenerator(
         val builder = DeclarationIrBuilder(pluginContext, getter.symbol)
         getter.body = builder.irBlockBody {
             +irReturn(irGetObject(declarations.deepLinkHandlerClass.symbol))
-        }
-    }
-
-    private fun generateDelegatedRegistryProperty(property: IrProperty, registryName: String) {
-        val getter = property.getter ?: return
-        val builder = DeclarationIrBuilder(pluginContext, getter.symbol)
-        val registryClassSymbol = when (registryName) {
-            "scopeRegistry" -> symbolResolver.scopeRegistryClass
-            "transitionRegistry" -> symbolResolver.transitionRegistryClass
-            else -> return
-        }
-        val companion = registryClassSymbol.owner.companionObject()
-        getter.body = builder.irBlockBody {
-            if (companion != null) {
-                val emptyProp = companion.declarations
-                    .filterIsInstance<IrProperty>()
-                    .firstOrNull { it.name.asString() == "Empty" }
-                val emptyGetter = emptyProp?.getter
-                if (emptyGetter != null) {
-                    +irReturn(
-                        irCall(emptyGetter).apply {
-                            dispatchReceiver = irGetObject(companion.symbol)
-                        },
-                    )
-                } else {
-                    +irReturn(irGetObject(companion.symbol))
-                }
-            } else {
-                // Fallback: shouldn't happen in practice
-                +irReturn(irGetObject(registryClassSymbol))
-            }
         }
     }
 
@@ -171,10 +181,26 @@ class NavigationConfigIrGenerator(
 
     // ---- Function generators ----
 
-    private fun generateBuildNavNodeBody(function: IrSimpleFunction) {
+    private fun generateBuildNavNodeBody(function: IrSimpleFunction, baseConfigField: IrField) {
         val builder = DeclarationIrBuilder(pluginContext, function.symbol)
+
+        val navConfigBuildNavNode = symbolResolver.navigationConfigClass.owner.declarations
+            .filterIsInstance<IrSimpleFunction>()
+            .first { it.name.asString() == "buildNavNode" }
+
         function.body = builder.irBlockBody {
-            +irReturn(irNull())
+            val fieldGet = IrGetFieldImpl(
+                startOffset, endOffset,
+                baseConfigField.symbol,
+                baseConfigField.type,
+                irGet(function.parameters[0]),
+            )
+            val call = irCall(navConfigBuildNavNode)
+            call.arguments[navConfigBuildNavNode.parameters[0]] = fieldGet
+            call.arguments[navConfigBuildNavNode.parameters[1]] = irGet(function.parameters[1]) // destinationClass
+            call.arguments[navConfigBuildNavNode.parameters[2]] = irGet(function.parameters[2]) // key
+            call.arguments[navConfigBuildNavNode.parameters[3]] = irGet(function.parameters[3]) // parentKey
+            +irReturn(call)
         }
     }
 
