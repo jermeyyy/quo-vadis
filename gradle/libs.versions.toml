@@ -31,6 +31,7 @@ navigationevent = "1.0.1"
 haze = "1.7.2"
 coil = "3.4.0"
 ktor = "3.4.0"
+kotlinCompileTesting = "0.7.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -42,6 +43,7 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
+kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version.ref = "kotlinCompileTesting" }
 androidx-testExt-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-testExt" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }

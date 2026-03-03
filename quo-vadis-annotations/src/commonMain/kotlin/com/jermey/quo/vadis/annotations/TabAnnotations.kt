@@ -111,7 +111,7 @@ import kotlin.reflect.KClass
  * @see Stack
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class Tabs(
     val name: String,
     val initialTab: KClass<*> = Unit::class,
@@ -193,5 +193,5 @@ annotation class Tabs(
  * @see Destination
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class TabItem

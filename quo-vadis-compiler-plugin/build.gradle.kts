@@ -23,6 +23,14 @@ java {
 dependencies {
     compileOnly(libs.kotlin.compiler.embeddable)
     compileOnly(libs.auto.service.annotations)
+
+    testImplementation(libs.kotlin.compiler.embeddable)
+    testImplementation(libs.kotlin.testJunit)
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlin.reflect)
+    testImplementation(libs.kotlin.compile.testing)
+    testImplementation(projects.quoVadisAnnotations)
+    testImplementation(projects.quoVadisCore)
 }
 
 mavenPublishing {

@@ -62,6 +62,10 @@ class QuoVadisDeclarationGenerationExtension(
         FqName("com.jermey.quo.vadis.core.navigation.config"),
         Name.identifier("NavigationConfig"),
     )
+    private val generatedNavigationConfigId = ClassId(
+        FqName("com.jermey.quo.vadis.core.navigation.config"),
+        Name.identifier("GeneratedNavigationConfig"),
+    )
     private val deepLinkRegistryId = ClassId(
         FqName("com.jermey.quo.vadis.core.registry"),
         Name.identifier("DeepLinkRegistry"),
@@ -243,7 +247,7 @@ class QuoVadisDeclarationGenerationExtension(
             configClassId -> createTopLevelClass(
                 classId, QuoVadisGeneratedKey, ClassKind.OBJECT,
             ) {
-                superType(navigationConfigId.createConeType(session))
+                superType(generatedNavigationConfigId.createConeType(session))
             }.symbol
 
             deepLinkHandlerClassId -> createTopLevelClass(
