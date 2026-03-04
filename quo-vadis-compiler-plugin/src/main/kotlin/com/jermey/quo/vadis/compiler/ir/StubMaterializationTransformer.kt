@@ -18,6 +18,7 @@ class StubMaterializationTransformer(
     private var configClass: IrClass? = null
     private var deepLinkHandlerClass: IrClass? = null
     private var screenRegistryClass: IrClass? = null
+    private var aggregatedConfigClass: IrClass? = null
 
     private val expectedConfigName = Name.identifier("${modulePrefix}NavigationConfig")
     private val expectedDeepLinkName = Name.identifier("${modulePrefix}DeepLinkHandler")
@@ -27,7 +28,7 @@ class StubMaterializationTransformer(
         get() {
             val config = configClass ?: return null
             val deepLink = deepLinkHandlerClass ?: return null
-            return SynthesizedDeclarations(config, deepLink, screenRegistryClass)
+            return SynthesizedDeclarations(config, deepLink, screenRegistryClass, aggregatedConfigClass)
         }
 
     override fun visitClass(declaration: IrClass): IrStatement {
@@ -38,8 +39,17 @@ class StubMaterializationTransformer(
                 expectedConfigName -> configClass = declaration
                 expectedDeepLinkName -> deepLinkHandlerClass = declaration
                 expectedScreenRegistryName -> screenRegistryClass = declaration
+                else -> {
+                    if (declaration.name.asString().endsWith(AGGREGATED_CONFIG_SUFFIX)) {
+                        aggregatedConfigClass = declaration
+                    }
+                }
             }
         }
         return super.visitClass(declaration)
+    }
+
+    private companion object {
+        const val AGGREGATED_CONFIG_SUFFIX = "__AggregatedConfig"
     }
 }

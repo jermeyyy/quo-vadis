@@ -4,11 +4,15 @@ package com.jermey.quo.vadis.compiler.ir.generators
 
 import com.jermey.quo.vadis.compiler.common.NavigationMetadata
 import com.jermey.quo.vadis.compiler.common.TabItemType
+import com.jermey.quo.vadis.compiler.common.TransitionMetadata
+import com.jermey.quo.vadis.compiler.common.TransitionType
 import com.jermey.quo.vadis.compiler.ir.SymbolResolver
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
+import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
+import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.irBlock
 import org.jetbrains.kotlin.ir.builders.irBoolean
 import org.jetbrains.kotlin.ir.builders.irCall
@@ -23,6 +27,7 @@ import org.jetbrains.kotlin.ir.builders.irVararg
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrField
+import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.createExpressionBody
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
@@ -174,6 +179,74 @@ class BaseConfigIrGenerator(
                 }
             }
 
+            // Register panes
+            for (pane in metadata.panes) {
+                val containerClassRef = classReference(pane.classId)
+                val paneClassRefs = pane.items.map { classReference(it.classId) }
+                val paneClassesList = irCall(
+                    listOfVararg,
+                    listOfVararg.owner.returnType,
+                    listOf(kClassOutNavDest),
+                ).also {
+                    it.arguments[listOfVararg.owner.parameters[0]] =
+                        irVararg(kClassOutNavDest, paneClassRefs)
+                }
+                // Build pane instances list (object items get instances, others get null)
+                val navDestType = symbolResolver.navDestinationClass.defaultType
+                val nullableNavDestType = navDestType.makeNullable()
+                val paneInstanceValues = pane.items.map { item ->
+                    val classSymbol = symbolResolver.resolveClass(item.classId)
+                    if (classSymbol.owner.kind == ClassKind.OBJECT) {
+                        irGetObject(classSymbol)
+                    } else {
+                        irNull(nullableNavDestType)
+                    }
+                }
+                val paneInstancesList = irCall(
+                    listOfVararg,
+                    listOfVararg.owner.returnType,
+                    listOf(nullableNavDestType),
+                ).also {
+                    it.arguments[listOfVararg.owner.parameters[0]] =
+                        irVararg(nullableNavDestType, paneInstanceValues)
+                }
+                // Build roles list (PaneRole ordinals)
+                val intType = pluginContext.irBuiltIns.intType
+                val roleValues = pane.items.map { irInt(it.role.ordinal) }
+                val rolesList = irCall(
+                    listOfVararg,
+                    listOfVararg.owner.returnType,
+                    listOf(intType),
+                ).also {
+                    it.arguments[listOfVararg.owner.parameters[0]] =
+                        irVararg(intType, roleValues)
+                }
+
+                val registerFun = symbolResolver.registerPaneContainerFun
+                +irCall(registerFun).apply {
+                    arguments[registerFun.parameters[0]] = irGet(builderVar)
+                    arguments[registerFun.parameters[1]] = containerClassRef
+                    arguments[registerFun.parameters[2]] = irString(pane.name)
+                    arguments[registerFun.parameters[3]] = paneClassesList
+                    arguments[registerFun.parameters[4]] = paneInstancesList
+                    arguments[registerFun.parameters[5]] = rolesList
+                    arguments[registerFun.parameters[6]] = irInt(pane.backBehavior.ordinal)
+                }
+            }
+
+            // Register transitions
+            for (transition in metadata.transitions) {
+                val transitionExpr = resolveNavTransitionExpression(transition)
+                    ?: continue
+                val destClassRef = classReference(transition.destinationClassId)
+                val registerFun = symbolResolver.registerTransitionFun
+                +irCall(registerFun).apply {
+                    arguments[registerFun.parameters[0]] = irGet(builderVar)
+                    arguments[registerFun.parameters[1]] = destClassRef
+                    arguments[registerFun.parameters[2]] = transitionExpr
+                }
+            }
+
             // Build the config (last expression = block result)
             val buildFun = symbolResolver.configBuilderBuildFun
             +irCall(buildFun).apply {
@@ -210,4 +283,45 @@ class BaseConfigIrGenerator(
                 makeTypeProjection(classType, Variance.OUT_VARIANCE),
             ),
         )
+
+    /**
+     * Resolves a [TransitionMetadata] to an IR expression referencing the
+     * corresponding [NavTransition] companion property (e.g. `NavTransition.SlideHorizontal`).
+     *
+     * For [TransitionType.CUSTOM], attempts to resolve the custom class as an object instance.
+     *
+     * @return An [IrExpression] producing a [NavTransition], or `null` if resolution fails.
+     */
+    private fun IrBuilderWithScope.resolveNavTransitionExpression(
+        transition: TransitionMetadata,
+    ): IrExpression? {
+        if (transition.type == TransitionType.CUSTOM) {
+            val customClassId = transition.customClass ?: return null
+            val customSymbol = symbolResolver.resolveClass(customClassId)
+            if (customSymbol.owner.kind != ClassKind.OBJECT) return null
+            return irGetObject(customSymbol)
+        }
+
+        val propertyName = when (transition.type) {
+            TransitionType.SLIDE_HORIZONTAL -> "SlideHorizontal"
+            TransitionType.SLIDE_VERTICAL -> "SlideVertical"
+            TransitionType.FADE -> "Fade"
+            TransitionType.NONE -> "None"
+            TransitionType.CUSTOM -> return null
+        }
+
+        val companion = symbolResolver.navTransitionClass.owner.declarations
+            .filterIsInstance<IrClass>()
+            .firstOrNull { it.isCompanion } ?: return null
+
+        val prop = companion.declarations
+            .filterIsInstance<IrProperty>()
+            .firstOrNull { it.name.asString() == propertyName } ?: return null
+
+        val getter = prop.getter ?: return null
+
+        return irCall(getter).apply {
+            dispatchReceiver = irGetObject(companion.symbol)
+        }
+    }
 }

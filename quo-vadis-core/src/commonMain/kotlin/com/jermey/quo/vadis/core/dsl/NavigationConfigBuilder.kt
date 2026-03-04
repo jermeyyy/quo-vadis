@@ -6,16 +6,21 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.transition.NavTransition
 import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+import com.jermey.quo.vadis.core.dsl.internal.BuiltPaneContent
+import com.jermey.quo.vadis.core.dsl.internal.BuiltPanesConfig
 import com.jermey.quo.vadis.core.dsl.internal.BuiltTabsConfig
 import com.jermey.quo.vadis.core.dsl.internal.DslNavigationConfig
 import com.jermey.quo.vadis.core.dsl.internal.ScreenEntry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.ScopeKey
+import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlin.reflect.KClass
 
 /**
@@ -464,6 +469,53 @@ class NavigationConfigBuilder {
         transition: NavTransition
     ) {
         transitions[destinationClass] = transition
+    }
+
+    @InternalQuoVadisApi
+    fun registerPaneContainer(
+        containerClass: KClass<out NavDestination>,
+        scopeKey: String,
+        paneItemClasses: List<KClass<out NavDestination>>,
+        paneItemInstances: List<NavDestination?>,
+        paneRoles: List<Int>,
+        backBehavior: Int = 0
+    ) {
+        val builtPanes = mutableMapOf<PaneRole, PaneEntry>()
+        paneItemClasses.forEachIndexed { index, _ ->
+            val role = when (paneRoles[index]) {
+                0 -> PaneRole.Primary
+                1 -> PaneRole.Supporting
+                2 -> PaneRole.Extra
+                else -> PaneRole.Primary
+            }
+            builtPanes[role] = PaneEntry(
+                role = role,
+                weight = 1f,
+                minWidth = 0.dp,
+                content = BuiltPaneContent(
+                    rootDestination = paneItemInstances[index],
+                    isAlwaysVisible = false
+                )
+            )
+        }
+        val coreBackBehavior = when (backBehavior) {
+            0 -> PaneBackBehavior.PopLatest
+            1 -> PaneBackBehavior.PopUntilScaffoldValueChange
+            2 -> PaneBackBehavior.PopUntilContentChange
+            else -> PaneBackBehavior.PopLatest
+        }
+        val scopeKeyValue = ScopeKey(scopeKey)
+        containers[containerClass] = ContainerBuilder.Panes(
+            destinationClass = containerClass,
+            scopeKey = scopeKeyValue,
+            config = BuiltPanesConfig(
+                panes = builtPanes,
+                initialPane = PaneRole.Primary,
+                backBehavior = coreBackBehavior
+            )
+        )
+        val scopeMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
+        paneItemClasses.forEach { scopeMembers.add(it) }
     }
 
     // endregion

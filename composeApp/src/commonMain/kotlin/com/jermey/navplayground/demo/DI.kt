@@ -2,12 +2,9 @@ package com.jermey.navplayground.demo
 
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
 import com.jermey.quo.vadis.annotations.NavigationRoot
-import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
+import com.jermey.quo.vadis.core.navigation.config.navigationConfig
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
-import com.jermey.quo.vadis.generated.ComposeAppNavigationConfig
-import com.jermey.quo.vadis.generated.Feature1NavigationConfig
-import com.jermey.quo.vadis.generated.Feature2NavigationConfig
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
@@ -19,13 +16,8 @@ object AppNavigation
 class NavigationModule {
 
     @Single
-    fun navigationConfig(): NavigationConfig =
-        ComposeAppNavigationConfig +
-                Feature1NavigationConfig +
-                Feature2NavigationConfig
-
-    @Single
-    fun navigator(navigationConfig: NavigationConfig): Navigator {
+    fun navigator(): Navigator {
+        val navigationConfig = navigationConfig<AppNavigation>()
         val rootDestination = MainTabs::class
 
         val initialState = navigationConfig.buildNavNode(
@@ -36,7 +28,6 @@ class NavigationModule {
                     "Make sure the destination is annotated with @Tabs, @Stack, or @Pane, " +
                     "or manually registered in the NavigationConfig."
         )
-        // Config is now passed directly - navigator derives registries from it
         return TreeNavigator(
             config = navigationConfig,
             initialState = initialState

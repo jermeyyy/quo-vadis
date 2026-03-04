@@ -130,6 +130,18 @@ class SymbolResolver(private val pluginContext: IrPluginContext) {
             .first { it.name.asString() == "registerScope" }
     }
 
+    val registerPaneContainerFun by lazy {
+        navigationConfigBuilderClass.owner.declarations
+            .filterIsInstance<IrSimpleFunction>()
+            .first { it.name.asString() == "registerPaneContainer" }
+    }
+
+    val registerTransitionFun by lazy {
+        navigationConfigBuilderClass.owner.declarations
+            .filterIsInstance<IrSimpleFunction>()
+            .first { it.name.asString() == "registerTransition" }
+    }
+
     val configBuilderBuildFun by lazy {
         navigationConfigBuilderClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()

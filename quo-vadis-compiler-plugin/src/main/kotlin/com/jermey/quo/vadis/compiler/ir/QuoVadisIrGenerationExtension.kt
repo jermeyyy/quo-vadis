@@ -36,5 +36,14 @@ class QuoVadisIrGenerationExtension(
             declarations = synthesizedDeclarations,
             moduleFragment = moduleFragment,
         ).also { moduleFragment.transform(it, null) }
+
+        // Pass 3: Replace navigationConfig<T>() call-sites with aggregated config references
+        val aggregatedConfig = synthesizedDeclarations.aggregatedConfigClass
+        if (aggregatedConfig != null) {
+            NavigationConfigCallTransformer(
+                pluginContext = pluginContext,
+                aggregatedConfigClass = aggregatedConfig,
+            ).also { moduleFragment.transform(it, null) }
+        }
     }
 }

@@ -5,6 +5,7 @@ import com.jermey.quo.vadis.compiler.common.NavigationMetadata
 import com.jermey.quo.vadis.compiler.ir.generators.DeepLinkHandlerIrGenerator
 import com.jermey.quo.vadis.compiler.ir.generators.NavigationConfigIrGenerator
 import com.jermey.quo.vadis.compiler.ir.generators.ScreenRegistryIrGenerator
+import com.jermey.quo.vadis.compiler.ir.generators.AggregatedConfigIrGenerator
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrClass
@@ -28,6 +29,7 @@ class BodySynthesisTransformer(
                 declarations.navigationConfigClass.name -> synthesizeNavigationConfigBody(declaration)
                 declarations.deepLinkHandlerClass.name -> synthesizeDeepLinkHandlerBody(declaration)
                 declarations.screenRegistryClass?.name -> synthesizeScreenRegistryBody(declaration)
+                declarations.aggregatedConfigClass?.name -> synthesizeAggregatedConfigBody(declaration)
             }
         }
         return super.visitClass(declaration)
@@ -57,5 +59,14 @@ class BodySynthesisTransformer(
             screens = metadata.screens,
             moduleFragment = moduleFragment,
         ).generateClassBodies(irClass)
+    }
+
+    private fun synthesizeAggregatedConfigBody(irClass: IrClass) {
+        AggregatedConfigIrGenerator(
+            pluginContext = pluginContext,
+            symbolResolver = symbolResolver,
+            discovery = MultiModuleDiscovery(pluginContext, moduleFragment),
+            moduleFragment = moduleFragment,
+        ).generate(irClass)
     }
 }

@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.diagnostics.warning0
 import org.jetbrains.kotlin.diagnostics.warning1
 import org.jetbrains.kotlin.diagnostics.warning2
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtElement
 
 object QuoVadisDiagnostics : KtDiagnosticsContainer() {
 
@@ -35,6 +36,12 @@ object QuoVadisDiagnostics : KtDiagnosticsContainer() {
         SourceElementPositioningStrategies.DEFAULT,
     )
     val DESTINATION_NOT_IN_STACK by error0<KtAnnotationEntry>(
+        SourceElementPositioningStrategies.DEFAULT,
+    )
+    val MULTIPLE_NAVIGATION_ROOTS by error0<KtAnnotationEntry>(
+        SourceElementPositioningStrategies.DEFAULT,
+    )
+    val NAVIGATION_ROOT_REQUIRED by error0<KtElement>(
         SourceElementPositioningStrategies.DEFAULT,
     )
 
@@ -89,6 +96,15 @@ object QuoVadisDiagnosticRenderer : BaseDiagnosticRendererFactory() {
         it.put(
             QuoVadisDiagnostics.DESTINATION_NOT_IN_STACK,
             "@Destination must be a direct subclass of a @Stack, @Tabs, or @Pane-annotated sealed class.",
+        )
+        it.put(
+            QuoVadisDiagnostics.MULTIPLE_NAVIGATION_ROOTS,
+            "Multiple @NavigationRoot annotations found in this module. " +
+                "Only one @NavigationRoot is allowed per compilation unit.",
+        )
+        it.put(
+            QuoVadisDiagnostics.NAVIGATION_ROOT_REQUIRED,
+            "Type argument T of navigationConfig<T>() must be annotated with @NavigationRoot.",
         )
         it.put(
             QuoVadisDiagnostics.INCOMPATIBLE_TRANSITION,

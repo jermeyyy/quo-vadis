@@ -2,11 +2,17 @@ package com.jermey.quo.vadis.compiler.fir
 
 import com.jermey.quo.vadis.compiler.QuoVadisGeneratedKey
 import org.jetbrains.kotlin.descriptors.ClassKind
+import org.jetbrains.kotlin.descriptors.EffectiveVisibility
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.fir.FirSession
+import org.jetbrains.kotlin.fir.declarations.impl.FirResolvedDeclarationStatusImpl
 import org.jetbrains.kotlin.fir.moduleData
 import org.jetbrains.kotlin.fir.extensions.DeclarationGenerationContext
 import org.jetbrains.kotlin.fir.extensions.ExperimentalTopLevelDeclarationsGenerationApi
 import org.jetbrains.kotlin.fir.extensions.FirDeclarationGenerationExtension
+import org.jetbrains.kotlin.fir.extensions.FirDeclarationPredicateRegistrar
+import org.jetbrains.kotlin.fir.extensions.predicate.LookupPredicate
 import org.jetbrains.kotlin.fir.expressions.impl.FirEmptyAnnotationArgumentMapping
 import org.jetbrains.kotlin.fir.expressions.builder.buildAnnotation
 import org.jetbrains.kotlin.fir.plugin.createConeType
@@ -60,6 +66,25 @@ class QuoVadisDeclarationGenerationExtension(
     private val screenRegistryClassId = ClassId(
         GENERATED_PACKAGE,
         Name.identifier("${modulePrefix}ScreenRegistryImpl"),
+    )
+
+    // endregion
+
+    // region Aggregated config for @NavigationRoot
+
+    private val navigationRootPredicate = LookupPredicate.create {
+        annotated(QuoVadisPredicates.NAVIGATION_ROOT_FQN)
+    }
+
+    /**
+     * Deterministic class ID for the aggregated config — does NOT depend on
+     * [predicateBasedProvider] so it is safe to use inside [getTopLevelClassIds]
+     * which may be called before the ANNOTATIONS_FOR_PLUGINS phase populates
+     * the predicate cache.
+     */
+    private val aggregatedConfigClassId = ClassId(
+        GENERATED_PACKAGE,
+        Name.identifier("${modulePrefix}__AggregatedConfig"),
     )
 
     // endregion
@@ -269,6 +294,10 @@ class QuoVadisDeclarationGenerationExtension(
 
     // region FirDeclarationGenerationExtension overrides
 
+    override fun FirDeclarationPredicateRegistrar.registerPredicates() {
+        register(navigationRootPredicate)
+    }
+
     override fun hasPackage(packageFqName: FqName): Boolean {
         return packageFqName == GENERATED_PACKAGE
     }
@@ -284,7 +313,7 @@ class QuoVadisDeclarationGenerationExtension(
         if (session.moduleData.dependsOnDependencies.isNotEmpty()) {
             return emptySet()
         }
-        return setOf(configClassId, deepLinkHandlerClassId, screenRegistryClassId)
+        return setOf(configClassId, deepLinkHandlerClassId, screenRegistryClassId, aggregatedConfigClassId)
     }
 
     @ExperimentalTopLevelDeclarationsGenerationApi
@@ -310,6 +339,22 @@ class QuoVadisDeclarationGenerationExtension(
                 superType(screenRegistryId.createConeType(session))
             }.symbol
 
+            aggregatedConfigClassId -> {
+                val clazz = createTopLevelClass(
+                    classId, QuoVadisGeneratedKey, ClassKind.OBJECT,
+                ) {
+                    superType(navigationConfigId.createConeType(session))
+                }
+                clazz.replaceStatus(
+                    FirResolvedDeclarationStatusImpl(
+                        Visibilities.Internal,
+                        Modality.FINAL,
+                        EffectiveVisibility.Internal,
+                    ),
+                )
+                clazz.symbol
+            }
+
             else -> null
         }
     }
@@ -322,6 +367,7 @@ class QuoVadisDeclarationGenerationExtension(
             configClassId -> configCallableNames
             deepLinkHandlerClassId -> deepLinkCallableNames
             screenRegistryClassId -> screenRegistryCallableNames
+            aggregatedConfigClassId -> configCallableNames
             else -> emptySet()
         }
     }
@@ -330,7 +376,7 @@ class QuoVadisDeclarationGenerationExtension(
         context: DeclarationGenerationContext.Member,
     ): List<FirConstructorSymbol> {
         val owner = context.owner
-        if (owner.classId != configClassId && owner.classId != deepLinkHandlerClassId && owner.classId != screenRegistryClassId) {
+        if (owner.classId != configClassId && owner.classId != deepLinkHandlerClassId && owner.classId != screenRegistryClassId && owner.classId != aggregatedConfigClassId) {
             return emptyList()
         }
         return listOf(
@@ -348,7 +394,7 @@ class QuoVadisDeclarationGenerationExtension(
         context: DeclarationGenerationContext.Member?,
     ): List<FirPropertySymbol> {
         val owner = context?.owner ?: return emptyList()
-        if (callableId.classId != configClassId) return emptyList()
+        if (callableId.classId != configClassId && callableId.classId != aggregatedConfigClassId) return emptyList()
 
         val name = callableId.callableName
         val (type, shouldOverride) = resolveConfigPropertyType(name) ?: return emptyList()
@@ -372,6 +418,7 @@ class QuoVadisDeclarationGenerationExtension(
             configClassId -> generateConfigFunctions(owner, name)
             deepLinkHandlerClassId -> generateDeepLinkFunctions(owner, name)
             screenRegistryClassId -> generateScreenRegistryFunctions(owner, name)
+            aggregatedConfigClassId -> generateConfigFunctions(owner, name)
             else -> emptyList()
         }
     }

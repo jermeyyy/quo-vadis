@@ -6,4 +6,5 @@ data class SynthesizedDeclarations(
     val navigationConfigClass: IrClass,
     val deepLinkHandlerClass: IrClass,
     val screenRegistryClass: IrClass? = null,
+    val aggregatedConfigClass: IrClass? = null,
 )

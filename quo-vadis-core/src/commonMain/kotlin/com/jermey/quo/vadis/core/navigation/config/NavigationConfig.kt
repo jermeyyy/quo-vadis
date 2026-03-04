@@ -189,3 +189,21 @@ interface NavigationConfig {
         val Empty: NavigationConfig = EmptyNavigationConfig
     }
 }
+
+/**
+ * Returns the auto-discovered [NavigationConfig] aggregating all
+ * [GeneratedNavigationConfig] implementations from the dependency graph.
+ *
+ * The type parameter [T] must be a class annotated with
+ * [@NavigationRoot][com.jermey.quo.vadis.annotations.NavigationRoot].
+ * The Quo Vadis compiler plugin replaces this call with a direct reference
+ * to the generated aggregated config at compile time.
+ *
+ * @throws IllegalStateException if the Quo Vadis compiler plugin is not applied
+ */
+fun <T> navigationConfig(): NavigationConfig {
+    error(
+        "navigationConfig<T>() requires the Quo Vadis compiler plugin. " +
+            "Add 'id(\"io.github.jermeyyy.quo-vadis\")' to your plugins block."
+    )
+}
