@@ -18,7 +18,6 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrField
-import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.createExpressionBody
@@ -44,7 +43,6 @@ class AggregatedConfigIrGenerator(
     private val pluginContext: IrPluginContext,
     private val symbolResolver: SymbolResolver,
     private val discovery: MultiModuleDiscovery,
-    @Suppress("unused") private val moduleFragment: IrModuleFragment,
 ) {
     fun generate(irClass: IrClass) {
         val configSymbols = discovery.discoverGeneratedConfigs()
@@ -101,9 +99,13 @@ class AggregatedConfigIrGenerator(
         } else {
             val plusFun = symbolResolver.navigationConfigClass.owner.declarations
                 .filterIsInstance<IrSimpleFunction>()
-                .first { it.name.asString() == "plus" }
+                .firstOrNull { it.name.asString() == "plus" }
+                ?: error("Expected function 'plus' in NavigationConfig. Ensure quo-vadis-core version is compatible with compiler plugin.")
 
-            var acc: IrExpression = builder.irGetObject(configSymbols.first())
+            var acc: IrExpression = builder.irGetObject(
+                configSymbols.firstOrNull()
+                    ?: error("Expected at least one NavigationConfig symbol for aggregation."),
+            )
             for (i in 1 until configSymbols.size) {
                 acc = builder.irCall(plusFun).apply {
                     arguments[plusFun.parameters[0]] = acc
@@ -142,9 +144,9 @@ class AggregatedConfigIrGenerator(
                 makeTypeProjection(symbolResolver.navDestinationClass.defaultType, Variance.OUT_VARIANCE),
             ),
         )
-        val emptySetOf = symbolResolver.setOfFunctions.first {
+        val emptySetOf = symbolResolver.setOfFunctions.firstOrNull {
             it.owner.parameters.isEmpty()
-        }
+        } ?: error("Expected 'setOf()' function with no parameters in kotlin.collections. Ensure quo-vadis-core version is compatible with compiler plugin.")
         getter.body = builder.irBlockBody {
             +irReturn(
                 irCall(emptySetOf, emptySetOf.owner.returnType, listOf(kClassOutNavDest)),
@@ -162,7 +164,8 @@ class AggregatedConfigIrGenerator(
 
         val navConfigProp = symbolResolver.navigationConfigClass.owner.declarations
             .filterIsInstance<IrProperty>()
-            .first { it.name.asString() == propertyName }
+            .firstOrNull { it.name.asString() == propertyName }
+            ?: error("Expected property '$propertyName' in NavigationConfig. Ensure quo-vadis-core version is compatible with compiler plugin.")
         val navConfigGetter = navConfigProp.getter ?: return
 
         getter.body = builder.irBlockBody {
@@ -196,7 +199,8 @@ class AggregatedConfigIrGenerator(
 
         val navConfigBuildNavNode = symbolResolver.navigationConfigClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "buildNavNode" }
+            .firstOrNull { it.name.asString() == "buildNavNode" }
+            ?: error("Expected function 'buildNavNode' in NavigationConfig. Ensure quo-vadis-core version is compatible with compiler plugin.")
 
         function.body = builder.irBlockBody {
             val fieldGet = IrGetFieldImpl(

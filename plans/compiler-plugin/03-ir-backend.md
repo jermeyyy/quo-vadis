@@ -637,6 +637,13 @@ The Compose compiler plugin transforms `@Composable` functions by adding `$compo
 
 ### Sub-phase 3D: Container Registry IR Generation
 
+**Implementation update (7 March 2026):** The initial design in this section is directionally correct but incomplete. Investigation showed that the current compiler plugin can collect tabs-container metadata while still silently falling back to generic `content()` rendering when wrapper dispatch generation fails. The implementation must therefore preserve the old KSP contract explicitly:
+
+- wrapper dispatch keys must follow the same normalized scope-key rules as the generated `TabNode`/`PaneNode`
+- `hasTabsContainer` and `TabsContainer` must derive from the same validated binding set
+- unresolved wrapper functions must fail loudly instead of degrading to generic passthrough when a wrapper annotation exists
+- container binding should be normalized before emission rather than inferred ad hoc inside the IR emitter
+
 #### Task 3D.1: Merged ContainerRegistry Anonymous Object
 
 Create the anonymous `object : ContainerRegistry { ... }` that merges DSL-based building with composable wrapper dispatch.
@@ -657,6 +664,7 @@ Generate an anonymous `IrClass` implementing `ContainerRegistry` with:
 - [ ] `tabsContainerKeys` and `paneContainerKeys` sets correctly populated
 - [ ] All five `ContainerRegistry` methods declared as overrides
 - [ ] Assigned to `containerRegistry` property of `NavigationConfig`
+- [ ] Binding data comes from a normalized container model, not raw metadata checks alone
 
 ---
 
@@ -714,10 +722,11 @@ override fun TabsContainer(tabNodeKey: String, scope: TabsContainerScope, conten
 
 **Acceptance Criteria:**
 - [ ] One `when` branch per `@TabsContainer` function
-- [ ] String equality checks on scope keys
+- [ ] String equality checks use the same normalized wrapper key used by generated nodes
 - [ ] Wrapper function called with correct `scope` and `content` parameters
 - [ ] `else` branch calls `content()` directly
 - [ ] `@Composable` annotation present
+- [ ] Declared wrappers cannot silently disappear from dispatch generation
 
 ---
 
@@ -744,10 +753,11 @@ override fun PaneContainer(paneNodeKey: String, scope: PaneContainerScope, conte
 
 **Acceptance Criteria:**
 - [ ] One `when` branch per `@PaneContainer` function
-- [ ] String equality checks on pane scope keys
+- [ ] String equality checks use the same normalized wrapper key used by generated nodes
 - [ ] Wrapper function called with correct `PaneContainerScope` and `content`
 - [ ] `else` branch calls `content()` directly
 - [ ] `@Composable` annotation present
+- [ ] Declared wrappers cannot silently disappear from dispatch generation
 
 ---
 

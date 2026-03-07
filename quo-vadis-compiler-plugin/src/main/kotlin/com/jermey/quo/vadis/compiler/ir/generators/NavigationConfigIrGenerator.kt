@@ -3,8 +3,11 @@
 package com.jermey.quo.vadis.compiler.ir.generators
 
 import com.jermey.quo.vadis.compiler.common.NavigationMetadata
+import com.jermey.quo.vadis.compiler.common.normalizedPaneContainerBindings
+import com.jermey.quo.vadis.compiler.common.normalizedTabsContainerBindings
 import com.jermey.quo.vadis.compiler.ir.SynthesizedDeclarations
 import com.jermey.quo.vadis.compiler.ir.SymbolResolver
+import com.jermey.quo.vadis.compiler.ir.validation.ContainerWrapperValidator
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
@@ -18,6 +21,7 @@ import org.jetbrains.kotlin.ir.builders.irVararg
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrField
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
@@ -35,6 +39,7 @@ class NavigationConfigIrGenerator(
     private val symbolResolver: SymbolResolver,
     private val metadata: NavigationMetadata,
     private val declarations: SynthesizedDeclarations,
+    private val moduleFragment: IrModuleFragment? = null,
 ) {
     fun generate(irClass: IrClass) {
         // Create the _baseConfig backing field first
@@ -58,7 +63,7 @@ class NavigationConfigIrGenerator(
             "screenRegistry" -> generateScreenRegistryProperty(irClass, property)
             "scopeRegistry" -> generateBaseConfigDelegatedProperty(property, "scopeRegistry", baseConfigField)
             "transitionRegistry" -> generateBaseConfigDelegatedProperty(property, "transitionRegistry", baseConfigField)
-            "containerRegistry" -> generateBaseConfigDelegatedProperty(property, "containerRegistry", baseConfigField)
+            "containerRegistry" -> generateContainerRegistryProperty(irClass, property, baseConfigField)
             "deepLinkRegistry" -> generateDeepLinkRegistryProperty(property)
             "paneRoleRegistry" -> generatePaneRoleRegistryProperty(irClass, property)
             "roots" -> generateRootsProperty(property)
@@ -82,7 +87,8 @@ class NavigationConfigIrGenerator(
             // Instantiate the FIR-generated ScreenRegistryImpl class
             val constructor = screenRegistryClass.declarations
                 .filterIsInstance<IrConstructor>()
-                .first { it.isPrimary }
+                .firstOrNull { it.isPrimary }
+                ?: error("Expected primary constructor in ScreenRegistryImpl. Ensure quo-vadis-core version is compatible with compiler plugin.")
             val builder = DeclarationIrBuilder(pluginContext, getter.symbol)
             getter.body = builder.irBlockBody {
                 +irReturn(irCallConstructor(constructor.symbol, emptyList()))
@@ -97,6 +103,31 @@ class NavigationConfigIrGenerator(
         }
     }
 
+    private fun generateContainerRegistryProperty(irClass: IrClass, property: IrProperty, baseConfigField: IrField) {
+        val normalizedTabsBindings = metadata.normalizedTabsContainerBindings()
+        val normalizedPaneBindings = metadata.normalizedPaneContainerBindings()
+        val validatedBindings = ContainerWrapperValidator(
+            symbolResolver = symbolResolver,
+            moduleFragment = moduleFragment,
+        ).validate(
+            tabsBindings = normalizedTabsBindings,
+            paneBindings = normalizedPaneBindings,
+        )
+        val hasContainers = validatedBindings.tabsBindings.isNotEmpty() || validatedBindings.paneBindings.isNotEmpty()
+
+        if (hasContainers) {
+            ContainerRegistryIrGenerator(
+                pluginContext = pluginContext,
+                symbolResolver = symbolResolver,
+                tabsBindings = validatedBindings.tabsBindings,
+                paneBindings = validatedBindings.paneBindings,
+            ).generatePropertyBody(irClass, property, baseConfigField)
+        } else {
+            // No containers — delegate to _baseConfig.containerRegistry
+            generateBaseConfigDelegatedProperty(property, "containerRegistry", baseConfigField)
+        }
+    }
+
     private fun generateBaseConfigDelegatedProperty(
         property: IrProperty,
         propertyName: String,
@@ -107,7 +138,8 @@ class NavigationConfigIrGenerator(
 
         val navConfigProp = symbolResolver.navigationConfigClass.owner.declarations
             .filterIsInstance<IrProperty>()
-            .first { it.name.asString() == propertyName }
+            .firstOrNull { it.name.asString() == propertyName }
+            ?: error("Expected property '$propertyName' in NavigationConfig. Ensure quo-vadis-core version is compatible with compiler plugin.")
         val navConfigGetter = navConfigProp.getter ?: return
 
         getter.body = builder.irBlockBody {
@@ -150,9 +182,9 @@ class NavigationConfigIrGenerator(
         getter.body = builder.irBlockBody {
             if (rootClassIds.isEmpty()) {
                 // emptySet<KClass<out NavDestination>>()
-                val emptySetOf = symbolResolver.setOfFunctions.first {
+                val emptySetOf = symbolResolver.setOfFunctions.firstOrNull {
                     it.owner.parameters.isEmpty()
-                }
+                } ?: error("Expected 'setOf()' function with no parameters in kotlin.collections. Ensure quo-vadis-core version is compatible with compiler plugin.")
                 +irReturn(
                     irCall(emptySetOf, emptySetOf.owner.returnType, listOf(kClassOutNavDest)),
                 )
@@ -168,10 +200,10 @@ class NavigationConfigIrGenerator(
                     )
                 }
                 // setOf(vararg elements: T)
-                val setOfVararg = symbolResolver.setOfFunctions.first {
+                val setOfVararg = symbolResolver.setOfFunctions.firstOrNull {
                     it.owner.parameters.size == 1 &&
                         it.owner.parameters[0].varargElementType != null
-                }
+                } ?: error("Expected 'setOf(vararg)' function in kotlin.collections. Ensure quo-vadis-core version is compatible with compiler plugin.")
                 val call = irCall(setOfVararg, setOfVararg.owner.returnType, listOf(kClassOutNavDest))
                 call.arguments[setOfVararg.owner.parameters[0]] = irVararg(kClassOutNavDest, kClassArgs)
                 +irReturn(call)
@@ -186,7 +218,8 @@ class NavigationConfigIrGenerator(
 
         val navConfigBuildNavNode = symbolResolver.navigationConfigClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "buildNavNode" }
+            .firstOrNull { it.name.asString() == "buildNavNode" }
+            ?: error("Expected function 'buildNavNode' in NavigationConfig. Ensure quo-vadis-core version is compatible with compiler plugin.")
 
         function.body = builder.irBlockBody {
             val fieldGet = IrGetFieldImpl(

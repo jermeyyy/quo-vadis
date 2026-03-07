@@ -92,9 +92,9 @@ class BaseConfigIrGenerator(
         val kClassOutNavDest = kClassOutNavDestinationType()
 
         // Find the vararg overload of listOf
-        val listOfVararg = symbolResolver.listOfFunctions.first {
+        val listOfVararg = symbolResolver.listOfFunctions.firstOrNull {
             it.owner.parameters.size == 1 && it.owner.parameters[0].varargElementType != null
-        }
+        } ?: error("Expected 'listOf(vararg)' function in kotlin.collections. Ensure quo-vadis-core version is compatible with compiler plugin.")
 
         return builder.irBlock(resultType = configType) {
             // val configBuilder = NavigationConfigBuilder()
@@ -103,14 +103,38 @@ class BaseConfigIrGenerator(
                 nameHint = "configBuilder",
             )
 
-            // Register tabs
+            // Register stacks
+            for (stack in metadata.stacks) {
+                val destRefs = stack.destinations.map { classReference(it.classId) }
+                val destList = irCall(listOfVararg, listOfVararg.owner.returnType, listOf(kClassOutNavDest)).also {
+                    it.arguments[listOfVararg.owner.parameters[0]] = irVararg(kClassOutNavDest, destRefs)
+                }
+                val navDestType = symbolResolver.navDestinationClass.defaultType
+                val nullableNavDestType = navDestType.makeNullable()
+                val startDestinationSymbol = symbolResolver.resolveClass(stack.startDestination)
+                val startDestinationInstance = if (startDestinationSymbol.owner.kind == ClassKind.OBJECT) {
+                    irGetObject(startDestinationSymbol)
+                } else {
+                    irNull(nullableNavDestType)
+                }
+                val registerFun = symbolResolver.registerStackContainerFun
+                +irCall(registerFun).apply {
+                    arguments[registerFun.parameters[0]] = irGet(builderVar)
+                    arguments[registerFun.parameters[1]] = classReference(stack.sealedClassId)
+                    arguments[registerFun.parameters[2]] = irString(stack.name)
+                    arguments[registerFun.parameters[3]] = classReference(stack.startDestination)
+                    arguments[registerFun.parameters[4]] = startDestinationInstance
+                    arguments[registerFun.parameters[5]] = destList
+                }
+            }
+
+            // Register tabs after stacks so nested stack scopes remain the primary getScopeKey mapping.
             for (tab in metadata.tabs) {
                 val containerClassRef = classReference(tab.classId)
                 val tabClassRefs = tab.items.map { classReference(it.classId) }
                 val tabClassesList = irCall(listOfVararg, listOfVararg.owner.returnType, listOf(kClassOutNavDest)).also {
                     it.arguments[listOfVararg.owner.parameters[0]] = irVararg(kClassOutNavDest, tabClassRefs)
                 }
-                // Build tabInstances list: irGetObject for flat tabs, irNull for container refs
                 val navDestType = symbolResolver.navDestinationClass.defaultType
                 val nullableNavDestType = navDestType.makeNullable()
                 val tabInstanceValues = tab.items.map { item ->
@@ -135,7 +159,7 @@ class BaseConfigIrGenerator(
 
                 val registerFun = symbolResolver.registerTabsContainerFun
                 +irCall(registerFun).apply {
-                    arguments[registerFun.parameters[0]] = irGet(builderVar) // dispatch receiver
+                    arguments[registerFun.parameters[0]] = irGet(builderVar)
                     arguments[registerFun.parameters[1]] = containerClassRef
                     arguments[registerFun.parameters[2]] = irString(tab.name)
                     arguments[registerFun.parameters[3]] = tabClassesList
@@ -143,39 +167,25 @@ class BaseConfigIrGenerator(
                     arguments[registerFun.parameters[5]] = tabIsContainerRefList
                     arguments[registerFun.parameters[6]] = irInt(initialTabIndex)
                 }
-            }
 
-            // Determine which stacks are tab items
-            val tabItemClassIds = metadata.tabs.flatMap { it.items }.map { it.classId }.toSet()
+                if (tab.allDestinationClassIds.isEmpty()) {
+                    continue
+                }
 
-            // Register stacks
-            for (stack in metadata.stacks) {
-                if (stack.sealedClassId !in tabItemClassIds) {
-                    // Non-tab stack: register as full container
-                    val destRefs = stack.destinations.map { classReference(it.classId) }
-                    val destList = irCall(listOfVararg, listOfVararg.owner.returnType, listOf(kClassOutNavDest)).also {
-                        it.arguments[listOfVararg.owner.parameters[0]] = irVararg(kClassOutNavDest, destRefs)
-                    }
-                    val registerFun = symbolResolver.registerStackContainerFun
-                    +irCall(registerFun).apply {
-                        arguments[registerFun.parameters[0]] = irGet(builderVar)
-                        arguments[registerFun.parameters[1]] = classReference(stack.sealedClassId)
-                        arguments[registerFun.parameters[2]] = irString(stack.name)
-                        arguments[registerFun.parameters[3]] = classReference(stack.startDestination)
-                        arguments[registerFun.parameters[4]] = destList
-                    }
-                } else if (stack.destinations.isNotEmpty()) {
-                    // Tab-item stack: register scope for its destinations
-                    val memberRefs = stack.destinations.map { classReference(it.classId) }
-                    val membersList = irCall(listOfVararg, listOfVararg.owner.returnType, listOf(kClassOutNavDest)).also {
-                        it.arguments[listOfVararg.owner.parameters[0]] = irVararg(kClassOutNavDest, memberRefs)
-                    }
-                    val registerFun = symbolResolver.registerScopeFun
-                    +irCall(registerFun).apply {
-                        arguments[registerFun.parameters[0]] = irGet(builderVar)
-                        arguments[registerFun.parameters[1]] = irString(stack.name)
-                        arguments[registerFun.parameters[2]] = membersList
-                    }
+                val allDestRefs = tab.allDestinationClassIds.map { classReference(it) }
+                val allDestList = irCall(
+                    listOfVararg,
+                    listOfVararg.owner.returnType,
+                    listOf(kClassOutNavDest),
+                ).also {
+                    it.arguments[listOfVararg.owner.parameters[0]] = irVararg(kClassOutNavDest, allDestRefs)
+                }
+
+                val registerScopeFun = symbolResolver.registerScopeFun
+                +irCall(registerScopeFun).apply {
+                    arguments[registerScopeFun.parameters[0]] = irGet(builderVar)
+                    arguments[registerScopeFun.parameters[1]] = irString(tab.name)
+                    arguments[registerScopeFun.parameters[2]] = allDestList
                 }
             }
 
@@ -231,6 +241,25 @@ class BaseConfigIrGenerator(
                     arguments[registerFun.parameters[4]] = paneInstancesList
                     arguments[registerFun.parameters[5]] = rolesList
                     arguments[registerFun.parameters[6]] = irInt(pane.backBehavior.ordinal)
+                }
+
+                // Register scope for ALL sealed subclass destinations (not just @PaneItem roots)
+                if (pane.allDestinationClassIds.isNotEmpty()) {
+                    val allDestRefs = pane.allDestinationClassIds.map { classReference(it) }
+                    val allDestList = irCall(
+                        listOfVararg,
+                        listOfVararg.owner.returnType,
+                        listOf(kClassOutNavDest),
+                    ).also {
+                        it.arguments[listOfVararg.owner.parameters[0]] =
+                            irVararg(kClassOutNavDest, allDestRefs)
+                    }
+                    val registerScopeFun = symbolResolver.registerScopeFun
+                    +irCall(registerScopeFun).apply {
+                        arguments[registerScopeFun.parameters[0]] = irGet(builderVar)
+                        arguments[registerScopeFun.parameters[1]] = irString(pane.name)
+                        arguments[registerScopeFun.parameters[2]] = allDestList
+                    }
                 }
             }
 

@@ -1,0 +1,4 @@
+- Compiler-plugin container wrapper flow now follows normalize -> validate -> emit.
+- Validation resolves @TabsContainer/@PaneContainer wrapper functions before ContainerRegistry IR emission.
+- Valid wrappers must resolve, be @Composable (or already Compose-transformed), declare the expected scope parameter, and declare content; extra required params are rejected unless they have defaults.
+- ContainerRegistryIrGenerator consumes validated wrapper functions directly and no longer performs best-effort lookup during branch emission.

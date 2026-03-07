@@ -7,6 +7,7 @@ import com.jermey.quo.vadis.compiler.ir.generators.NavigationConfigIrGenerator
 import com.jermey.quo.vadis.compiler.ir.generators.ScreenRegistryIrGenerator
 import com.jermey.quo.vadis.compiler.ir.generators.AggregatedConfigIrGenerator
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
@@ -18,6 +19,7 @@ class BodySynthesisTransformer(
     private val symbolResolver: SymbolResolver,
     private val metadata: NavigationMetadata,
     private val declarations: SynthesizedDeclarations,
+    private val configuration: CompilerConfiguration,
     private val moduleFragment: IrModuleFragment,
 ) : IrElementTransformerVoid() {
 
@@ -41,6 +43,7 @@ class BodySynthesisTransformer(
             symbolResolver = symbolResolver,
             metadata = metadata,
             declarations = declarations,
+            moduleFragment = moduleFragment,
         ).generate(irClass)
     }
 
@@ -65,8 +68,7 @@ class BodySynthesisTransformer(
         AggregatedConfigIrGenerator(
             pluginContext = pluginContext,
             symbolResolver = symbolResolver,
-            discovery = MultiModuleDiscovery(pluginContext, moduleFragment),
-            moduleFragment = moduleFragment,
+            discovery = MultiModuleDiscovery(pluginContext, moduleFragment, configuration),
         ).generate(irClass)
     }
 }

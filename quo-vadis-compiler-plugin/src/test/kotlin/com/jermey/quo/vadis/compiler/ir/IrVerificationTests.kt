@@ -26,7 +26,10 @@ class IrVerificationTests {
 
     @Test
     fun `tabs source passes IR verification`() {
-        IrDumpHelper.compileWithIrDump(TestSources.tabsWithItems)
+        IrDumpHelper.compileWithIrDump(
+            TestSources.tabsWithItems,
+            TestSources.tabsContainerWrapper,
+        )
     }
 
     @Test
@@ -64,7 +67,10 @@ class IrVerificationTests {
 
     @Test
     fun `tabs IR output matches golden file`() {
-        val result = IrDumpHelper.compileWithIrDump(TestSources.tabsWithItems)
+        val result = IrDumpHelper.compileWithIrDump(
+            TestSources.tabsWithItems,
+            TestSources.tabsContainerWrapper,
+        )
         GoldenFileComparator.assertMatchesGolden("tabs-with-items", result.irOutput)
     }
 

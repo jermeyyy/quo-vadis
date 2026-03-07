@@ -52,6 +52,7 @@ data class TabsMetadata(
     val classId: ClassId,
     val initialTab: ClassId? = null,
     val items: List<TabItemMetadata> = emptyList(),
+    val allDestinationClassIds: List<ClassId> = emptyList(),
 )
 
 data class TabItemMetadata(
@@ -66,8 +67,9 @@ enum class TabItemType {
 data class PaneMetadata(
     val name: String,
     val classId: ClassId,
-    val backBehavior: PaneBackBehavior = PaneBackBehavior.POP_CURRENT,
+    val backBehavior: PaneBackBehavior = PaneBackBehavior.POP_UNTIL_SCAFFOLD_VALUE_CHANGE,
     val items: List<PaneItemMetadata> = emptyList(),
+    val allDestinationClassIds: List<ClassId> = emptyList(),
 )
 
 data class PaneItemMetadata(
@@ -77,7 +79,7 @@ data class PaneItemMetadata(
 )
 
 enum class PaneBackBehavior {
-    POP_CURRENT, POP_UNTIL_ROOT, POP_ALL,
+    POP_UNTIL_SCAFFOLD_VALUE_CHANGE, POP_UNTIL_CONTENT_CHANGE, POP_LATEST,
 }
 
 enum class PaneRole {

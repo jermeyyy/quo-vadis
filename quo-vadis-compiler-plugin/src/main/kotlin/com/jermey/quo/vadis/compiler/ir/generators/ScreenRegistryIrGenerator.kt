@@ -339,7 +339,8 @@ class ScreenRegistryIrGenerator(
         }
         val anyConstructor = pluginContext.irBuiltIns.anyClass.owner.declarations
             .filterIsInstance<IrConstructor>()
-            .first()
+            .firstOrNull()
+            ?: error("Expected constructor in Any class. Ensure Kotlin stdlib is available.")
         constructor.body = DeclarationIrBuilder(pluginContext, constructor.symbol).irBlockBody {
             +irDelegatingConstructorCall(anyConstructor)
             +IrInstanceInitializerCallImpl(
@@ -380,7 +381,8 @@ class ScreenRegistryIrGenerator(
     private fun addHasContentOverride(anonymousClass: IrClass) {
         val originalFun = symbolResolver.screenRegistryClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "hasContent" }
+            .firstOrNull { it.name.asString() == "hasContent" }
+            ?: error("Expected function 'hasContent' in ScreenRegistry. Ensure quo-vadis-core version is compatible with compiler plugin.")
 
         val overrideFun = anonymousClass.addFunction {
             name = Name.identifier("hasContent")
@@ -461,7 +463,8 @@ class ScreenRegistryIrGenerator(
     private fun addContentOverride(anonymousClass: IrClass) {
         val originalFun = symbolResolver.screenRegistryClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "Content" }
+            .firstOrNull { it.name.asString() == "Content" }
+            ?: error("Expected function 'Content' in ScreenRegistry. Ensure quo-vadis-core version is compatible with compiler plugin.")
 
         val overrideFun = anonymousClass.addFunction {
             name = Name.identifier("Content")
@@ -476,7 +479,8 @@ class ScreenRegistryIrGenerator(
         if (composableClass != null) {
             val composableConstructor = composableClass.owner.declarations
                 .filterIsInstance<IrConstructor>()
-                .first()
+                .firstOrNull()
+                ?: error("Expected constructor in @Composable annotation class. Ensure Compose runtime is available.")
             val annotationBuilder = DeclarationIrBuilder(pluginContext, overrideFun.symbol)
             overrideFun.annotations = overrideFun.annotations +
                 annotationBuilder.irCallConstructor(composableConstructor.symbol, emptyList())

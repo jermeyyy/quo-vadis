@@ -80,11 +80,14 @@ object TestSources {
         """
         package test
 
+        import androidx.compose.runtime.Composable
         import com.jermey.quo.vadis.annotations.Argument
         import com.jermey.quo.vadis.annotations.Destination
         import com.jermey.quo.vadis.annotations.Stack
         import com.jermey.quo.vadis.annotations.TabItem
         import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
         import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
         @TabItem
@@ -112,6 +115,57 @@ object TestSources {
             items = [HomeTab::class, ExploreTab::class]
         )
         object MainTabs
+        """.trimIndent()
+    )
+
+    /**
+     * Mixed tabs container with one flat destination tab and one stack-backed tab.
+     */
+    val mixedTabsWithStackBackedItem: SourceFile = SourceFile.kotlin(
+        "MixedTabsDestination.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.Argument
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Stack
+        import com.jermey.quo.vadis.annotations.TabItem
+        import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @TabItem
+        @Destination(route = "overview")
+        data object OverviewTab : NavDestination
+
+        @TabItem
+        @Stack(name = "settingsTab", startDestination = SettingsTab.Root::class)
+        sealed class SettingsTab : NavDestination {
+
+            @Destination(route = "settings/root")
+            data object Root : SettingsTab()
+
+            @Destination(route = "settings/detail/{section}")
+            data class Detail(@Argument val section: String) : SettingsTab()
+        }
+
+        @Tabs(
+            name = "mixedTabs",
+            initialTab = OverviewTab::class,
+            items = [OverviewTab::class, SettingsTab::class]
+        )
+        object MixedTabs
+
+        @TabsContainer(MixedTabs::class)
+        @Composable
+        fun MixedTabsWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit,
+        ) {
+            content()
+        }
         """.trimIndent()
     )
 
@@ -187,7 +241,9 @@ object TestSources {
         """
         package test
 
+        import androidx.compose.runtime.Composable
         import com.jermey.quo.vadis.annotations.*
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
         import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
         // -- Tabs --
@@ -225,6 +281,15 @@ object TestSources {
             items = [HomeDestinations::class, SettingsDestinations::class]
         )
         object AppTabs
+
+        @TabsContainer(AppTabs::class)
+        @Composable
+        fun AppTabsWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit,
+        ) {
+            content()
+        }
 
         // -- Pane --
 
@@ -538,11 +603,14 @@ object TestSources {
         """
         package test
 
+        import androidx.compose.runtime.Composable
         import com.jermey.quo.vadis.annotations.Argument
         import com.jermey.quo.vadis.annotations.Destination
         import com.jermey.quo.vadis.annotations.Stack
         import com.jermey.quo.vadis.annotations.TabItem
         import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
         import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
         @TabItem
@@ -573,6 +641,15 @@ object TestSources {
             items = [ProfileTab::class, NotificationsTab::class]
         )
         object ScopedTabs
+
+        @TabsContainer(ScopedTabs::class)
+        @Composable
+        fun ScopedTabsWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit,
+        ) {
+            content()
+        }
         """.trimIndent()
     )
 
@@ -604,6 +681,89 @@ object TestSources {
 
     // endregion
 
+    // region 18b. Multi-Module Screen Sources
+
+    val crossModuleFeatureOneSources: Array<SourceFile> = arrayOf(
+        SourceFile.kotlin(
+            "FeatureOneDestination.kt",
+            """
+            package test.feature1
+
+            import androidx.compose.runtime.Composable
+            import com.jermey.quo.vadis.annotations.Destination
+            import com.jermey.quo.vadis.annotations.Screen
+            import com.jermey.quo.vadis.annotations.Stack
+            import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+            @Stack(name = "featureOne", startDestination = FeatureOneDestination.Home::class)
+            sealed class FeatureOneDestination : NavDestination {
+
+                @Destination(route = "feature1/home")
+                data object Home : FeatureOneDestination()
+            }
+
+            @Screen(FeatureOneDestination.Home::class)
+            @Composable
+            fun FeatureOneHomeScreen() {
+            }
+            """.trimIndent()
+        ),
+    )
+
+    val crossModuleFeatureTwoSources: Array<SourceFile> = arrayOf(
+        SourceFile.kotlin(
+            "FeatureTwoDestination.kt",
+            """
+            package test.feature2
+
+            import androidx.compose.runtime.Composable
+            import com.jermey.quo.vadis.annotations.Destination
+            import com.jermey.quo.vadis.annotations.Screen
+            import com.jermey.quo.vadis.annotations.Stack
+            import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+            @Stack(name = "featureTwo", startDestination = FeatureTwoDestination.Login::class)
+            sealed class FeatureTwoDestination : NavDestination {
+
+                @Destination(route = "feature2/login")
+                data object Login : FeatureTwoDestination()
+            }
+
+            @Screen(FeatureTwoDestination.Login::class)
+            @Composable
+            fun FeatureTwoLoginScreen() {
+            }
+            """.trimIndent()
+        ),
+    )
+
+    val crossModuleAggregationAppSources: Array<SourceFile> = arrayOf(
+        SourceFile.kotlin(
+            "AppRoot.kt",
+            """
+            package test.app
+
+            import com.jermey.quo.vadis.annotations.NavigationRoot
+
+            @NavigationRoot
+            object AppRoot
+            """.trimIndent()
+        ),
+        SourceFile.kotlin(
+            "ConfigResolver.kt",
+            """
+            package test.app
+
+            import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
+            import com.jermey.quo.vadis.core.navigation.config.navigationConfig
+
+            fun resolveConfig(): NavigationConfig = navigationConfig<AppRoot>()
+            """.trimIndent()
+        ),
+    )
+
+    // endregion
+
     // region 19. Navigation Root
 
     val navigationRootSource: SourceFile = SourceFile.kotlin(
@@ -615,6 +775,138 @@ object TestSources {
 
         @NavigationRoot
         object AppRoot
+        """.trimIndent()
+    )
+
+    // endregion
+
+    // region 19b. Single-Module Config Resolution
+
+    /**
+     * A single-module source that calls navigationConfig<T>() to verify that
+     * the compiler plugin rewrites the call-site even when no aggregated
+     * config is present (single-module fallback).
+     */
+    val singleModuleConfigResolution: Array<SourceFile> = arrayOf(
+        SourceFile.kotlin(
+            "AppRoot.kt",
+            """
+            package test.app
+
+            import com.jermey.quo.vadis.annotations.NavigationRoot
+
+            @NavigationRoot
+            object AppRoot
+            """.trimIndent()
+        ),
+        SourceFile.kotlin(
+            "SingleModuleDest.kt",
+            """
+            package test.app
+
+            import com.jermey.quo.vadis.annotations.Destination
+            import com.jermey.quo.vadis.annotations.Stack
+            import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+            @Stack(name = "single", startDestination = SingleDest.Home::class)
+            sealed class SingleDest : NavDestination {
+
+                @Destination(route = "single/home")
+                data object Home : SingleDest()
+            }
+            """.trimIndent()
+        ),
+        SourceFile.kotlin(
+            "ConfigCaller.kt",
+            """
+            package test.app
+
+            import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
+            import com.jermey.quo.vadis.core.navigation.config.navigationConfig
+
+            fun resolveConfig(): NavigationConfig = navigationConfig<AppRoot>()
+            """.trimIndent()
+        ),
+    )
+
+    // endregion
+
+    // region 19c. Pane Back Behavior Variants
+
+    /**
+     * Three pane sealed classes with different PaneBackBehavior values
+     * to verify ordinal mapping in the generated config.
+     */
+    val paneBackBehaviorVariants: SourceFile = SourceFile.kotlin(
+        "PaneBackBehaviorVariants.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.Pane
+        import com.jermey.quo.vadis.annotations.PaneBackBehavior
+        import com.jermey.quo.vadis.annotations.PaneItem
+        import com.jermey.quo.vadis.annotations.PaneRole
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Pane(name = "defaultPane")
+        sealed class DefaultPane : NavDestination {
+            @PaneItem(role = PaneRole.PRIMARY)
+            data object List : DefaultPane()
+            @PaneItem(role = PaneRole.SECONDARY)
+            data object Detail : DefaultPane()
+        }
+
+        @Pane(name = "popLatestPane", backBehavior = PaneBackBehavior.PopLatest)
+        sealed class PopLatestPane : NavDestination {
+            @PaneItem(role = PaneRole.PRIMARY)
+            data object List : PopLatestPane()
+            @PaneItem(role = PaneRole.SECONDARY)
+            data object Detail : PopLatestPane()
+        }
+
+        @Pane(name = "contentChangePane", backBehavior = PaneBackBehavior.PopUntilContentChange)
+        sealed class ContentChangePane : NavDestination {
+            @PaneItem(role = PaneRole.PRIMARY)
+            data object List : ContentChangePane()
+            @PaneItem(role = PaneRole.SECONDARY)
+            data object Detail : ContentChangePane()
+        }
+        """.trimIndent()
+    )
+
+    // endregion
+
+    // region 19d. Multiple Pane Scopes
+
+    /**
+     * Two pane sealed classes with different scopes and overlapping destination types
+     * to verify PaneRoleRegistry scope filtering.
+     */
+    val multiplePaneScopes: SourceFile = SourceFile.kotlin(
+        "MultiplePaneScopes.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.Pane
+        import com.jermey.quo.vadis.annotations.PaneItem
+        import com.jermey.quo.vadis.annotations.PaneRole
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Pane(name = "catalogPane")
+        sealed class CatalogPane2 : NavDestination {
+            @PaneItem(role = PaneRole.PRIMARY)
+            data object Products : CatalogPane2()
+            @PaneItem(role = PaneRole.SECONDARY)
+            data object ProductInfo : CatalogPane2()
+        }
+
+        @Pane(name = "ordersPane")
+        sealed class OrdersPane : NavDestination {
+            @PaneItem(role = PaneRole.PRIMARY)
+            data object OrderList : OrdersPane()
+            @PaneItem(role = PaneRole.SECONDARY)
+            data object OrderDetail : OrdersPane()
+        }
         """.trimIndent()
     )
 
@@ -646,6 +938,422 @@ object TestSources {
                 @Argument val userId: String,
                 @Argument val postId: String,
             ) : DeepLinkDestination()
+        }
+        """.trimIndent()
+    )
+
+    // endregion
+
+    // region Tabs with @TabsContainer wrapper
+
+    /**
+     * Tabs source with a @TabsContainer wrapper function, plus another source file
+     * defining the wrapper composable. Used for wrapper registration and dispatch tests.
+     */
+    val tabsContainerWrapper: SourceFile = SourceFile.kotlin(
+        "TabsContainerWrapper.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+
+        @TabsContainer(MainTabs::class)
+        @Composable
+        fun MainTabsWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * Tabs source mirroring the composeApp state-driven demo shape where the wrapper
+     * is targeted at the tabs root companion and normalizes back to the tabs scope key.
+     */
+    val companionTargetedTabsContainerSource: SourceFile = SourceFile.kotlin(
+        "CompanionTargetedTabsContainer.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.Argument
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Stack
+        import com.jermey.quo.vadis.annotations.TabItem
+        import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Tabs(
+            name = "stateDrivenDemo",
+            initialTab = StateDrivenDemoTab::class,
+            items = [StateDrivenDemoTab::class]
+        )
+        sealed class StateDrivenDemoDestination : NavDestination {
+
+            companion object : NavDestination
+        }
+
+        @TabItem
+        @Stack(name = "stateDrivenStack", startDestination = StateDrivenDemoTab.Home::class)
+        sealed class StateDrivenDemoTab : StateDrivenDemoDestination() {
+
+            @Destination(route = "state-driven/home")
+            data object Home : StateDrivenDemoTab()
+
+            @Destination(route = "state-driven/profile/{userId}")
+            data class Profile(@Argument val userId: String) : StateDrivenDemoTab()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * Companion-targeted tabs wrapper matching the normalized wrapper key shape used by composeApp.
+     */
+    val companionTargetedTabsContainerWrapper: SourceFile = SourceFile.kotlin(
+        "CompanionTargetedTabsContainerWrapper.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+
+        @TabsContainer(StateDrivenDemoDestination.Companion::class)
+        @Composable
+        fun StateDrivenDemoContainer(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * Tabs wrapper with Compose-style synthetic parameters to exercise transformed-signature validation.
+     */
+    val composeSyntheticTabsContainerWrapper: SourceFile = SourceFile.kotlin(
+        "ComposeSyntheticTabsContainerWrapper.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import androidx.compose.runtime.Composer
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+
+        @TabsContainer(MainTabs::class)
+        @Composable
+        fun MainTabsComposeTransformedWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit,
+            `${'$'}composer`: Composer?,
+            `${'$'}changed`: Int,
+            `${'$'}default`: Int,
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * Pane source with a @PaneContainer wrapper function for dispatch coverage.
+     */
+    val paneContainerWrapper: SourceFile = SourceFile.kotlin(
+        "PaneContainerWrapper.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.PaneContainer
+        import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
+
+        @PaneContainer(CatalogPane::class)
+        @Composable
+        fun CatalogPaneWrapper(
+            scope: PaneContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * Pane source closer to the composeApp messages pane path, including companion target shape
+     * and pane back behavior metadata.
+     */
+    val messagesPaneContainerSource: SourceFile = SourceFile.kotlin(
+        "MessagesPaneDestination.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.Argument
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Pane
+        import com.jermey.quo.vadis.annotations.PaneBackBehavior
+        import com.jermey.quo.vadis.annotations.PaneItem
+        import com.jermey.quo.vadis.annotations.PaneRole
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Pane(name = "messagesPane", backBehavior = PaneBackBehavior.PopUntilContentChange)
+        sealed class MessagesPane : NavDestination {
+
+            companion object : NavDestination
+
+            @PaneItem(role = PaneRole.PRIMARY)
+            @Destination(route = "messages/conversations")
+            data object ConversationList : MessagesPane()
+
+            @PaneItem(role = PaneRole.SECONDARY)
+            @Destination(route = "messages/conversation/{conversationId}")
+            data class ConversationDetail(@Argument val conversationId: String) : MessagesPane()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * Pane wrapper aligned with the messages pane demo target.
+     */
+    val messagesPaneContainerWrapper: SourceFile = SourceFile.kotlin(
+        "MessagesPaneContainerWrapper.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.PaneContainer
+        import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
+
+        @PaneContainer(MessagesPane::class)
+        @Composable
+        fun MessagesPaneContainer(
+            scope: PaneContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * @TabsContainer wrapper pointing at a class without a matching @Tabs declaration.
+     */
+    val missingTabsContainerTarget: SourceFile = SourceFile.kotlin(
+        "MissingTabsContainerTarget.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+
+        class MissingTabsHost
+
+        @TabsContainer(MissingTabsHost::class)
+        @Composable
+        fun MissingTabsWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * @PaneContainer wrapper pointing at a class without a matching @Pane declaration.
+     */
+    val missingPaneContainerTarget: SourceFile = SourceFile.kotlin(
+        "MissingPaneContainerTarget.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.PaneContainer
+        import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
+
+        class MissingCatalogPane
+
+        @PaneContainer(MissingCatalogPane::class)
+        @Composable
+        fun MissingPaneWrapper(
+            scope: PaneContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * @TabsContainer wrapper missing @Composable.
+     */
+    val nonComposableTabsContainerWrapper: SourceFile = SourceFile.kotlin(
+        "NonComposableTabsContainerWrapper.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+
+        @TabsContainer(MainTabs::class)
+        fun InvalidTabsWrapper(
+            scope: TabsContainerScope,
+            content: @androidx.compose.runtime.Composable () -> Unit
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * @TabsContainer wrapper with an extra required user-defined parameter.
+     */
+    val invalidTabsContainerRequiredUserParameterWrapper: SourceFile = SourceFile.kotlin(
+        "InvalidTabsContainerRequiredUserParameterWrapper.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+
+        @TabsContainer(MainTabs::class)
+        @Composable
+        fun InvalidMainTabsWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit,
+            title: String,
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * @PaneContainer wrapper with an invalid scope parameter type.
+     */
+    val invalidPaneContainerScopeWrapper: SourceFile = SourceFile.kotlin(
+        "InvalidPaneContainerScopeWrapper.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.PaneContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+
+        @PaneContainer(CatalogPane::class)
+        @Composable
+        fun InvalidCatalogPaneWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * Two @TabsContainer wrappers that normalize to the same wrapper key via Companion targeting.
+     */
+    val duplicateNormalizedTabsContainerWrappers: SourceFile = SourceFile.kotlin(
+        "DuplicateNormalizedTabsContainerWrappers.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Stack
+        import com.jermey.quo.vadis.annotations.TabItem
+        import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @TabItem
+        @Stack(name = "homeTab", startDestination = HomeTab.Feed::class)
+        sealed class HomeTab : NavDestination {
+
+            @Destination(route = "home/feed")
+            data object Feed : HomeTab()
+        }
+
+        @Tabs(
+            name = "mainTabs",
+            initialTab = HomeTab::class,
+            items = [HomeTab::class]
+        )
+        class MainTabs {
+            companion object
+        }
+
+        @TabsContainer(MainTabs::class)
+        @Composable
+        fun MainTabsWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+
+        @TabsContainer(MainTabs.Companion::class)
+        @Composable
+        fun MainTabsCompanionWrapper(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * Two @PaneContainer wrappers that normalize to the same wrapper key via Companion targeting.
+     */
+    val duplicateNormalizedPaneContainerWrappers: SourceFile = SourceFile.kotlin(
+        "DuplicateNormalizedPaneContainerWrappers.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.Pane
+        import com.jermey.quo.vadis.annotations.PaneContainer
+        import com.jermey.quo.vadis.annotations.PaneItem
+        import com.jermey.quo.vadis.annotations.PaneRole
+        import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Pane(name = "catalog")
+        sealed class CatalogPane : NavDestination {
+
+            @PaneItem(role = PaneRole.PRIMARY)
+            data object ProductList : CatalogPane()
+
+            @PaneItem(role = PaneRole.SECONDARY)
+            data object ProductDetail : CatalogPane()
+
+            companion object
+        }
+
+        @PaneContainer(CatalogPane::class)
+        @Composable
+        fun CatalogPaneWrapper(
+            scope: PaneContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
+        }
+
+        @PaneContainer(CatalogPane.Companion::class)
+        @Composable
+        fun CatalogPaneCompanionWrapper(
+            scope: PaneContainerScope,
+            content: @Composable () -> Unit
+        ) {
+            content()
         }
         """.trimIndent()
     )

@@ -10,6 +10,18 @@
 
 Migrate the Quo-Vadis navigation library's metaprogramming pipeline from Kotlin Symbol Processing (KSP) to a native K2 compiler plugin. This eliminates physical file generation, provides instant IDE feedback via FIR synthetic declarations, and drastically reduces build configuration overhead for consumers.
 
+## Current Focus Update
+
+The migration plan remains valid at a high level, but the immediate priority has shifted to restoring KSP parity for container wrapper generation before broader expansion.
+
+New analysis artifacts:
+
+- [Koin pattern analysis](06-koin-pattern-analysis.md)
+- [Current-state comparison](07-current-state-comparison.md)
+- [Container registry refactor implementation plan](08-implementation-plan.md)
+
+The key conclusion from the March 2026 investigation is that the current compiler plugin is collecting tabs-container metadata, but it is not reliably preserving the working KSP wrapper-dispatch contract in generated IR. The first implementation priority is therefore deterministic container-registry generation, not runtime redesign.
+
 ### Current State (KSP)
 
 - `quo-vadis-ksp` module processes 11 annotations via KSP
@@ -170,6 +182,8 @@ Implements `DeepLinkRegistry`:
 ### Phase 3 Complete
 - [ ] Single-module `@Stack` + `@Destination` + `@Screen` navigation works end-to-end
 - [ ] `@Tabs` and `@Pane` containers build and render correctly
+- [ ] `@TabsContainer` and `@PaneContainer` wrappers resolve with KSP-parity key semantics
+- [ ] Shared container providers in wrapper composables execute correctly for tab and pane content
 - [ ] Deep links resolve with type-safe argument extraction
 - [ ] All transitions apply correctly
 - [ ] Demo app (`composeApp`) runs on all platforms using compiler plugin

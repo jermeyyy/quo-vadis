@@ -2,7 +2,6 @@
 
 package com.jermey.quo.vadis.compiler.ir
 
-import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -21,7 +20,6 @@ import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
  * already has its bodies populated.
  */
 class NavigationConfigCallTransformer(
-    @Suppress("unused") private val pluginContext: IrPluginContext,
     private val aggregatedConfigClass: IrClass,
 ) : IrElementTransformerVoid() {
 

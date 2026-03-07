@@ -11,6 +11,7 @@ version = project.findProperty("VERSION_NAME") as String? ?: "0.0.1-SNAPSHOT"
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 

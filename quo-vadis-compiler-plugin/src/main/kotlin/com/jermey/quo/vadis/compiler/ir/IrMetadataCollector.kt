@@ -63,11 +63,16 @@ class IrMetadataCollector(private val modulePrefix: String) {
         val paneContainers = mutableListOf<PaneContainerMetadata>()
         val transitions = mutableListOf<TransitionMetadata>()
         val stackClassIds = mutableSetOf<ClassId>()
+        val stackDestinationClassIdsByStack = mutableMapOf<ClassId, List<ClassId>>()
 
         // Pass 1: Collect all @Stack class IDs so we can determine TabItemType
         for (file in moduleFragment.files) {
             for (declaration in file.declarations) {
-                collectStackClassIds(declaration as? IrClass ?: continue, stackClassIds)
+                collectStackClassIds(
+                    declaration as? IrClass ?: continue,
+                    stackClassIds,
+                    stackDestinationClassIdsByStack,
+                )
             }
         }
 
@@ -76,7 +81,13 @@ class IrMetadataCollector(private val modulePrefix: String) {
             for (declaration in file.declarations) {
                 when (declaration) {
                     is IrClass -> processClass(
-                        declaration, stacks, tabs, panes, transitions, stackClassIds,
+                        declaration,
+                        stacks,
+                        tabs,
+                        panes,
+                        transitions,
+                        stackClassIds,
+                        stackDestinationClassIdsByStack,
                     )
                     is IrSimpleFunction -> processFunction(
                         declaration, screens, tabsContainers, paneContainers,
@@ -100,12 +111,23 @@ class IrMetadataCollector(private val modulePrefix: String) {
 
     // ── Pass 1 helper ────────────────────────────────────────────────────────
 
-    private fun collectStackClassIds(irClass: IrClass, stackClassIds: MutableSet<ClassId>) {
+    private fun collectStackClassIds(
+        irClass: IrClass,
+        stackClassIds: MutableSet<ClassId>,
+        stackDestinationClassIdsByStack: MutableMap<ClassId, List<ClassId>>,
+    ) {
         if (irClass.hasAnnotation(STACK_FQN)) {
-            irClass.classId?.let { stackClassIds.add(it) }
+            irClass.classId?.let { classId ->
+                stackClassIds.add(classId)
+                stackDestinationClassIdsByStack[classId] = irClass.sealedSubclasses.mapNotNull { subclassSymbol ->
+                    subclassSymbol.owner.classId
+                }
+            }
         }
         for (inner in irClass.declarations) {
-            if (inner is IrClass) collectStackClassIds(inner, stackClassIds)
+            if (inner is IrClass) {
+                collectStackClassIds(inner, stackClassIds, stackDestinationClassIdsByStack)
+            }
         }
     }
 
@@ -118,15 +140,24 @@ class IrMetadataCollector(private val modulePrefix: String) {
         panes: MutableList<PaneMetadata>,
         transitions: MutableList<TransitionMetadata>,
         stackClassIds: Set<ClassId>,
+        stackDestinationClassIdsByStack: Map<ClassId, List<ClassId>>,
     ) {
         processStack(irClass, stacks, transitions)
-        processTabs(irClass, tabs, stackClassIds)
+        processTabs(irClass, tabs, stackClassIds, stackDestinationClassIdsByStack)
         processPane(irClass, panes, transitions)
 
         // Recurse into nested classes
         for (inner in irClass.declarations) {
             if (inner is IrClass) {
-                processClass(inner, stacks, tabs, panes, transitions, stackClassIds)
+                processClass(
+                    inner,
+                    stacks,
+                    tabs,
+                    panes,
+                    transitions,
+                    stackClassIds,
+                    stackDestinationClassIdsByStack,
+                )
             }
         }
     }
@@ -180,6 +211,7 @@ class IrMetadataCollector(private val modulePrefix: String) {
         irClass: IrClass,
         tabs: MutableList<TabsMetadata>,
         stackClassIds: Set<ClassId>,
+        stackDestinationClassIdsByStack: Map<ClassId, List<ClassId>>,
     ) {
         val tabsAnn = irClass.getAnnotation(TABS_FQN) ?: return
         val classId = irClass.classId ?: return
@@ -193,6 +225,13 @@ class IrMetadataCollector(private val modulePrefix: String) {
                 type = if (itemClassId in stackClassIds) TabItemType.NESTED_STACK else TabItemType.FLAT_SCREEN,
             )
         }
+        val allDestinationClassIds = items.flatMap { item ->
+            when (item.type) {
+                TabItemType.FLAT_SCREEN -> listOf(item.classId)
+                TabItemType.NESTED_STACK -> stackDestinationClassIdsByStack[item.classId].orEmpty()
+                    .ifEmpty { listOf(item.classId) }
+            }
+        }.distinct()
 
         tabs.add(
             TabsMetadata(
@@ -200,6 +239,7 @@ class IrMetadataCollector(private val modulePrefix: String) {
                 classId = classId,
                 initialTab = initialTab,
                 items = items,
+                allDestinationClassIds = allDestinationClassIds,
             ),
         )
     }
@@ -213,7 +253,12 @@ class IrMetadataCollector(private val modulePrefix: String) {
         val classId = irClass.classId ?: return
         val name = paneAnn.getStringArgument(0) ?: return
         val backBehavior = paneAnn.getEnumArgument(1)?.toPaneBackBehavior()
-            ?: PaneBackBehavior.POP_CURRENT
+            ?: PaneBackBehavior.POP_UNTIL_SCAFFOLD_VALUE_CHANGE
+
+        // Collect ALL sealed subclass ClassIds for scope registration
+        val allDestinationClassIds = irClass.sealedSubclasses.mapNotNull { subclassSymbol ->
+            subclassSymbol.owner.classId
+        }
 
         val items = irClass.sealedSubclasses.mapNotNull { subclassSymbol ->
             val subclass = subclassSymbol.owner
@@ -240,6 +285,7 @@ class IrMetadataCollector(private val modulePrefix: String) {
                 classId = classId,
                 backBehavior = backBehavior,
                 items = items,
+                allDestinationClassIds = allDestinationClassIds,
             ),
         )
     }
@@ -323,8 +369,12 @@ class IrMetadataCollector(private val modulePrefix: String) {
         val primaryConstructor = irClass.primaryConstructor ?: return emptyList()
         return primaryConstructor.parameters
             .filter { param -> param.annotations.any { it.isAnnotation(ARGUMENT_FQN) } }
-            .map { param ->
-                val argAnn = param.annotations.first { it.isAnnotation(ARGUMENT_FQN) }
+            .mapNotNull { param ->
+                val argAnn = param.annotations.firstOrNull { it.isAnnotation(ARGUMENT_FQN) }
+                if (argAnn == null) {
+                    // @Argument annotation expected but not found — skip this parameter
+                    return@mapNotNull null
+                }
                 val key = argAnn.getStringArgument(0)?.takeIf { it.isNotEmpty() }
                     ?: param.name.asString()
                 val optional = argAnn.getBooleanArgument(1) ?: false
@@ -407,9 +457,9 @@ class IrMetadataCollector(private val modulePrefix: String) {
     }
 
     private fun String.toPaneBackBehavior(): PaneBackBehavior? = when (this) {
-        "PopUntilScaffoldValueChange" -> PaneBackBehavior.POP_CURRENT
-        "PopUntilContentChange" -> PaneBackBehavior.POP_UNTIL_ROOT
-        "PopLatest" -> PaneBackBehavior.POP_ALL
+        "PopUntilScaffoldValueChange" -> PaneBackBehavior.POP_UNTIL_SCAFFOLD_VALUE_CHANGE
+        "PopUntilContentChange" -> PaneBackBehavior.POP_UNTIL_CONTENT_CHANGE
+        "PopLatest" -> PaneBackBehavior.POP_LATEST
         else -> null
     }
 

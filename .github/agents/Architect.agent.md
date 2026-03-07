@@ -1,7 +1,7 @@
 ---
 name: Architect
 description: Senior software architect agent for solving architectural problems and creating implementation plans. Expert in system design, code organization, and project planning with human-in-the-loop decision making. Specialized in Kotlin Multiplatform development.
-tools: [read, agent, serena/activate_project, serena/find_file, serena/find_referencing_symbols, serena/find_symbol, serena/get_symbols_overview, serena/list_dir, serena/list_memories, serena/read_memory, serena/search_for_pattern, serena/think_about_collected_information, serena/think_about_task_adherence, serena/think_about_whether_you_are_done, serena/write_memory, 'duck/*', edit/createDirectory, edit/createFile, edit/editFiles, search, web, todo]
+tools: [execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/createAndRunTask, execute/runInTerminal, read/readFile, read/terminalSelection, read/terminalLastCommand, agent, edit/createDirectory, edit/createFile, edit/editFiles, edit/rename, search, web, serena/activate_project, serena/delete_memory, serena/find_file, serena/find_referencing_symbols, serena/find_symbol, serena/get_symbols_overview, serena/list_dir, serena/list_memories, serena/read_memory, serena/search_for_pattern, serena/think_about_collected_information, serena/think_about_task_adherence, serena/think_about_whether_you_are_done, serena/write_memory, 'duck/*', todo]
 agents: ['Simple-Developer', 'Simple-Architect']
 ---
 

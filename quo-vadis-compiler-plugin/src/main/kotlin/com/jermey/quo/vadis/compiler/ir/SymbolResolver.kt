@@ -83,6 +83,10 @@ class SymbolResolver(private val pluginContext: IrPluginContext) {
     val paneRoleRegistryClass by lazy {
         resolveClass("com.jermey.quo.vadis.core.registry", "PaneRoleRegistry")
     }
+
+    val scopeKeyClass by lazy {
+        resolveClass("com.jermey.quo.vadis.core.navigation.node", "ScopeKey")
+    }
     // endregion
 
     // region DSL Types
@@ -109,43 +113,50 @@ class SymbolResolver(private val pluginContext: IrPluginContext) {
     val navigationConfigBuilderConstructor by lazy {
         navigationConfigBuilderClass.owner.declarations
             .filterIsInstance<IrConstructor>()
-            .first { it.isPrimary }
+            .firstOrNull { it.isPrimary }
+            ?: error("Expected primary constructor in NavigationConfigBuilder. Ensure quo-vadis-core version is compatible with compiler plugin.")
     }
 
     val registerTabsContainerFun by lazy {
         navigationConfigBuilderClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "registerTabsContainer" }
+            .firstOrNull { it.name.asString() == "registerTabsContainer" }
+            ?: error("Expected function 'registerTabsContainer' in NavigationConfigBuilder. Ensure quo-vadis-core version is compatible with compiler plugin.")
     }
 
     val registerStackContainerFun by lazy {
         navigationConfigBuilderClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "registerStackContainer" }
+            .firstOrNull { it.name.asString() == "registerStackContainer" }
+            ?: error("Expected function 'registerStackContainer' in NavigationConfigBuilder. Ensure quo-vadis-core version is compatible with compiler plugin.")
     }
 
     val registerScopeFun by lazy {
         navigationConfigBuilderClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "registerScope" }
+            .firstOrNull { it.name.asString() == "registerScope" }
+            ?: error("Expected function 'registerScope' in NavigationConfigBuilder. Ensure quo-vadis-core version is compatible with compiler plugin.")
     }
 
     val registerPaneContainerFun by lazy {
         navigationConfigBuilderClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "registerPaneContainer" }
+            .firstOrNull { it.name.asString() == "registerPaneContainer" }
+            ?: error("Expected function 'registerPaneContainer' in NavigationConfigBuilder. Ensure quo-vadis-core version is compatible with compiler plugin.")
     }
 
     val registerTransitionFun by lazy {
         navigationConfigBuilderClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "registerTransition" }
+            .firstOrNull { it.name.asString() == "registerTransition" }
+            ?: error("Expected function 'registerTransition' in NavigationConfigBuilder. Ensure quo-vadis-core version is compatible with compiler plugin.")
     }
 
     val configBuilderBuildFun by lazy {
         navigationConfigBuilderClass.owner.declarations
             .filterIsInstance<IrSimpleFunction>()
-            .first { it.name.asString() == "build" }
+            .firstOrNull { it.name.asString() == "build" }
+            ?: error("Expected function 'build' in NavigationConfigBuilder. Ensure quo-vadis-core version is compatible with compiler plugin.")
     }
     // endregion
 
@@ -168,6 +179,14 @@ class SymbolResolver(private val pluginContext: IrPluginContext) {
         } catch (_: IllegalStateException) {
             null
         }
+    }
+
+    val tabsContainerScopeClass by lazy {
+        resolveClass("com.jermey.quo.vadis.core.compose.scope", "TabsContainerScope")
+    }
+
+    val paneContainerScopeClass by lazy {
+        resolveClass("com.jermey.quo.vadis.core.compose.scope", "PaneContainerScope")
     }
     // endregion
 

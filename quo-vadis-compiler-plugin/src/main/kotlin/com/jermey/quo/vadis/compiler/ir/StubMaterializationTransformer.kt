@@ -1,8 +1,6 @@
 package com.jermey.quo.vadis.compiler.ir
 
 import com.jermey.quo.vadis.compiler.QuoVadisGeneratedKey
-import com.jermey.quo.vadis.compiler.common.NavigationMetadata
-import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
@@ -10,9 +8,7 @@ import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 import org.jetbrains.kotlin.name.Name
 
 class StubMaterializationTransformer(
-    private val pluginContext: IrPluginContext,
     private val modulePrefix: String,
-    private val metadata: NavigationMetadata,
 ) : IrElementTransformerVoid() {
 
     private var configClass: IrClass? = null

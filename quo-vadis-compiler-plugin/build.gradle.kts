@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.jvm.tasks.Jar
 
 plugins {
     kotlin("jvm")
@@ -18,6 +19,11 @@ kotlin {
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+}
+
+tasks.named<Jar>("jar") {
+    dependsOn(tasks.named("classes"))
+    from(layout.buildDirectory.dir("classes/kotlin/main"))
 }
 
 dependencies {

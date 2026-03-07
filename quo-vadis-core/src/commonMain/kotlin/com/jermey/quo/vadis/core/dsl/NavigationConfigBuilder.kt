@@ -434,14 +434,28 @@ class NavigationConfigBuilder {
         containerClass: KClass<out NavDestination>,
         scopeKey: String,
         startDestination: KClass<out NavDestination>,
+        startDestinationInstance: NavDestination?,
         destinations: List<KClass<out NavDestination>>
     ) {
-        val screenEntries = destinations.map { klass ->
-            StackScreenEntry(
-                destination = null,
-                destinationClass = klass,
-                key = klass.simpleName ?: "screen"
+        val screenEntries = buildList {
+            add(
+                StackScreenEntry(
+                    destination = startDestinationInstance,
+                    destinationClass = startDestination,
+                    key = startDestination.simpleName ?: "screen"
+                )
             )
+            destinations
+                .filterNot { it == startDestination }
+                .forEach { klass ->
+                    add(
+                        StackScreenEntry(
+                            destination = null,
+                            destinationClass = klass,
+                            key = klass.simpleName ?: "screen"
+                        )
+                    )
+                }
         }
         val scopeKeyValue = ScopeKey(scopeKey)
         containers[containerClass] = ContainerBuilder.Stack(
@@ -499,10 +513,10 @@ class NavigationConfigBuilder {
             )
         }
         val coreBackBehavior = when (backBehavior) {
-            0 -> PaneBackBehavior.PopLatest
-            1 -> PaneBackBehavior.PopUntilScaffoldValueChange
-            2 -> PaneBackBehavior.PopUntilContentChange
-            else -> PaneBackBehavior.PopLatest
+            0 -> PaneBackBehavior.PopUntilScaffoldValueChange
+            1 -> PaneBackBehavior.PopUntilContentChange
+            2 -> PaneBackBehavior.PopLatest
+            else -> PaneBackBehavior.PopUntilScaffoldValueChange
         }
         val scopeKeyValue = ScopeKey(scopeKey)
         containers[containerClass] = ContainerBuilder.Panes(

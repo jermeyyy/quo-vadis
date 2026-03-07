@@ -184,8 +184,9 @@ object PaneOperations {
         // Stack would become empty or is at root - apply PaneBackBehavior
         return when (paneNode.backBehavior) {
             PaneBackBehavior.PopLatest -> {
-                // Simple pop - if we can't, we can't
-                pop(root)?.let { PopResult.Popped(it) } ?: PopResult.CannotPop
+                // Stack has only root item - popping would leave empty stack
+                // Return PaneEmpty so handlePaneBack can remove the entire PaneNode
+                PopResult.PaneEmpty(paneNode.activePaneRole)
             }
 
             PaneBackBehavior.PopUntilScaffoldValueChange -> {

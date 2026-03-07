@@ -19,9 +19,7 @@ class QuoVadisIrGenerationExtension(
 
         // Pass 1: Locate and validate FIR-generated synthetic declarations
         val synthesizedDeclarations = StubMaterializationTransformer(
-            pluginContext = pluginContext,
             modulePrefix = modulePrefix,
-            metadata = metadata,
         ).also { moduleFragment.transform(it, null) }
             .synthesizedDeclarations
 
@@ -34,16 +32,18 @@ class QuoVadisIrGenerationExtension(
             symbolResolver = symbolResolver,
             metadata = metadata,
             declarations = synthesizedDeclarations,
+            configuration = configuration,
             moduleFragment = moduleFragment,
         ).also { moduleFragment.transform(it, null) }
 
-        // Pass 3: Replace navigationConfig<T>() call-sites with aggregated config references
-        val aggregatedConfig = synthesizedDeclarations.aggregatedConfigClass
-        if (aggregatedConfig != null) {
-            NavigationConfigCallTransformer(
-                pluginContext = pluginContext,
-                aggregatedConfigClass = aggregatedConfig,
-            ).also { moduleFragment.transform(it, null) }
-        }
+        // Pass 3: Replace navigationConfig<T>() call-sites with config references.
+        // Prefer the aggregated config (multi-module) but fall back to the
+        // single-module navigationConfigClass so that single-module projects
+        // also get call-site rewriting.
+        val configForCallSites = synthesizedDeclarations.aggregatedConfigClass
+            ?: synthesizedDeclarations.navigationConfigClass
+        NavigationConfigCallTransformer(
+            aggregatedConfigClass = configForCallSites,
+        ).also { moduleFragment.transform(it, null) }
     }
 }

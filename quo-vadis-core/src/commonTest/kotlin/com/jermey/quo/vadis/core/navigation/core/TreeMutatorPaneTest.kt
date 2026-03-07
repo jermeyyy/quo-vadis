@@ -495,7 +495,7 @@ class TreeMutatorPaneTest {
     }
 
     @Test
-    fun `popWithPaneBehavior with PopLatest returns Popped with empty stack when single item`() {
+    fun `popWithPaneBehavior with PopLatest returns PaneEmpty when single item`() {
         val panes = PaneNode(
             key = NodeKey("panes"),
             parentKey = null,
@@ -513,11 +513,10 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.popWithPaneBehavior(panes)
 
-        // PopLatest still pops, leaving an empty stack
-        assertTrue(result is PopResult.Popped)
-        val newPanes = (result as PopResult.Popped).newState as PaneNode
-        val primaryStack = newPanes.paneContent(PaneRole.Primary) as StackNode
-        assertTrue(primaryStack.isEmpty)
+        // PopLatest returns PaneEmpty when stack has only root item,
+        // so handlePaneBack can cascade to popEntirePaneNode
+        assertTrue(result is PopResult.PaneEmpty)
+        assertEquals(PaneRole.Primary, (result as PopResult.PaneEmpty).paneRole)
     }
 
     @Test

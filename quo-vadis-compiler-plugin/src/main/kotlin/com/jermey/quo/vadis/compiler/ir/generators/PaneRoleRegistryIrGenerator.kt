@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.ir.builders.irEquals
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irGetObject
 import org.jetbrains.kotlin.ir.builders.irReturn
+import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTrue
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
@@ -50,6 +51,7 @@ import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
 import org.jetbrains.kotlin.ir.types.impl.makeTypeProjection
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.util.companionObject
+import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.types.Variance
@@ -82,14 +84,25 @@ class PaneRoleRegistryIrGenerator(
     private data class PaneItemEntry(
         val destinationClassId: ClassId,
         val role: MetadataPaneRole,
+        val scopeKey: String,
     )
 
     private val allPaneItems: List<PaneItemEntry> by lazy {
         metadata.panes.flatMap { pane ->
             pane.items.map { item ->
-                PaneItemEntry(item.classId, item.role)
+                PaneItemEntry(item.classId, item.role, pane.name)
             }
         }
+    }
+
+    /** Getter for ScopeKey.value property, used to extract the String from a ScopeKey instance. */
+    private val scopeKeyValueGetter: IrSimpleFunction by lazy {
+        val scopeKeyIrClass = symbolResolver.scopeKeyClass.owner
+        val prop = scopeKeyIrClass.declarations
+            .filterIsInstance<IrProperty>()
+            .firstOrNull { it.name.asString() == "value" }
+            ?: error("Expected property 'value' in ScopeKey. Ensure quo-vadis-core version is compatible with compiler plugin.")
+        prop.getter!!
     }
 
     /**
@@ -172,7 +185,8 @@ class PaneRoleRegistryIrGenerator(
         }
         val anyConstructor = pluginContext.irBuiltIns.anyClass.owner.declarations
             .filterIsInstance<IrConstructor>()
-            .first()
+            .firstOrNull()
+            ?: error("Expected constructor in Any class. Ensure Kotlin stdlib is available.")
         constructor.body = DeclarationIrBuilder(pluginContext, constructor.symbol).irBlockBody {
             +irDelegatingConstructorCall(anyConstructor)
             +IrInstanceInitializerCallImpl(
@@ -182,9 +196,10 @@ class PaneRoleRegistryIrGenerator(
             )
         }
 
-        // Add both getPaneRole overrides
+        // Override BOTH getPaneRole overloads explicitly to prevent the JVM backend
+        // from generating delegate/bridge methods for default interface methods that
+        // collide with our override after value-class name mangling (ScopeKey → String).
         addGetPaneRoleByDestination(anonymousClass)
-        addGetPaneRoleByKClass(anonymousClass)
 
         // Return: object : PaneRoleRegistry { ... }
         getter.body = builder.irBlockBody {
@@ -199,14 +214,17 @@ class PaneRoleRegistryIrGenerator(
 
     /**
      * Adds the `getPaneRole(scopeKey, destination: NavDestination): PaneRole?` override
-     * using `is` type checks in a when expression.
+     * using `is` type checks in a when expression, filtered by scope key.
      *
      * Generated IR equivalent:
      * ```
      * override fun getPaneRole(scopeKey: ScopeKey, destination: NavDestination): PaneRole? {
-     *     return when {
-     *         destination is ListDetailPanes.ListScreen -> PaneRole.Primary
-     *         destination is ListDetailPanes.DetailScreen -> PaneRole.Supporting
+     *     return when (scopeKey.value) {
+     *         "MasterDetail" -> when {
+     *             destination is ListScreen -> PaneRole.Primary
+     *             destination is DetailScreen -> PaneRole.Supporting
+     *             else -> null
+     *         }
      *         else -> null
      *     }
      * }
@@ -218,61 +236,96 @@ class PaneRoleRegistryIrGenerator(
         val paneRoleType = paneRoleEnumClass.defaultType
         val paneRoleNullableType = paneRoleType.makeNullable()
 
-        val overrideFun = anonymousClass.addFunction {
-            name = Name.identifier("getPaneRole")
-            returnType = paneRoleNullableType
+        // Deep-copy the interface method to produce an override with identical IR
+        // structure (parameter types, mangling metadata, etc.). This ensures the JVM
+        // inline-class lowering treats it the same as a hand-written override,
+        // avoiding the duplicate static method bug that occurs when using addFunction
+        // for local anonymous classes with value-class parameters.
+        val overrideFun = originalFun.deepCopyWithSymbols(anonymousClass).apply {
+            isFakeOverride = false
             modality = Modality.OPEN
-            visibility = DescriptorVisibilities.PUBLIC
+            origin = IrDeclarationOrigin.DEFINED
+            overriddenSymbols = listOf(originalFun.symbol)
+            // Remap dispatch receiver type from the interface to our anonymous class
+            parameters.firstOrNull { it.kind == IrParameterKind.DispatchReceiver }?.let {
+                it.type = anonymousClass.thisReceiver!!.type
+            }
         }
-        overrideFun.overriddenSymbols = listOf(originalFun.symbol)
+        anonymousClass.declarations += overrideFun
 
-        // Dispatch receiver
-        overrideFun.addValueParameter {
-            name = Name.special("<this>")
-            type = anonymousClass.thisReceiver!!.type
-            origin = IrDeclarationOrigin.INSTANCE_RECEIVER
-            kind = IrParameterKind.DispatchReceiver
+        val scopeKeyParam = overrideFun.parameters.first {
+            it.kind == IrParameterKind.Regular && it.name.asString() == "scopeKey"
         }
-
-        // Value parameters matching interface: scopeKey, destination
-        val originalRegularParams = originalFun.parameters.filter { it.kind == IrParameterKind.Regular }
-        overrideFun.addValueParameter("scopeKey", originalRegularParams[0].type)
-        val destParam = overrideFun.addValueParameter(
-            "destination",
-            symbolResolver.navDestinationClass.defaultType,
-        )
+        val destParam = overrideFun.parameters.first {
+            it.kind == IrParameterKind.Regular && it.name.asString() == "destination"
+        }
 
         val bodyBuilder = DeclarationIrBuilder(pluginContext, overrideFun.symbol)
         overrideFun.body = bodyBuilder.irBlockBody {
-            val whenExpr = IrWhenImpl(
+            // Group pane items by scope key
+            val itemsByScopeKey = allPaneItems.groupBy { it.scopeKey }
+
+            // Outer when(scopeKey.value)
+            val outerWhen = IrWhenImpl(
                 UNDEFINED_OFFSET, UNDEFINED_OFFSET,
                 paneRoleNullableType,
                 IrStatementOrigin.WHEN,
             )
 
-            for (item in allPaneItems) {
-                val destType = symbolResolver.resolveClass(item.destinationClassId).defaultType
-                val enumEntry = resolveCorePaneRoleEntry(item.role)
-
-                whenExpr.branches += IrBranchImpl(
+            for ((scopeKey, items) in itemsByScopeKey) {
+                // Inner when { destination is Type -> PaneRole.Xxx; else -> null }
+                val innerWhen = IrWhenImpl(
                     UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                    condition = IrTypeOperatorCallImpl(
+                    paneRoleNullableType,
+                    IrStatementOrigin.WHEN,
+                )
+
+                for (item in items) {
+                    val destType = symbolResolver.resolveClass(item.destinationClassId).defaultType
+                    val enumEntry = resolveCorePaneRoleEntry(item.role)
+
+                    innerWhen.branches += IrBranchImpl(
                         UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                        pluginContext.irBuiltIns.booleanType,
-                        IrTypeOperator.INSTANCEOF,
-                        destType,
-                        irGet(destParam),
-                    ),
-                    result = IrGetEnumValueImpl(
+                        condition = IrTypeOperatorCallImpl(
+                            UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                            pluginContext.irBuiltIns.booleanType,
+                            IrTypeOperator.INSTANCEOF,
+                            destType,
+                            irGet(destParam),
+                        ),
+                        result = IrGetEnumValueImpl(
+                            UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                            paneRoleType,
+                            enumEntry.symbol,
+                        ),
+                    )
+                }
+
+                // inner else -> null
+                innerWhen.branches += IrElseBranchImpl(
+                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                    condition = irTrue(),
+                    result = IrConstImpl.constNull(
                         UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                        paneRoleType,
-                        enumEntry.symbol,
+                        pluginContext.irBuiltIns.nothingNType,
                     ),
+                )
+
+                // Fresh scopeKeyValueExpr per branch to avoid duplicate IR node errors
+                val scopeKeyValueExpr = irCall(scopeKeyValueGetter).apply {
+                    arguments[scopeKeyValueGetter.parameters[0]] = irGet(scopeKeyParam)
+                }
+
+                // outer branch: scopeKey.value == "key" -> innerWhen
+                outerWhen.branches += IrBranchImpl(
+                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                    condition = irEquals(scopeKeyValueExpr, irString(scopeKey)),
+                    result = innerWhen,
                 )
             }
 
-            // else -> null
-            whenExpr.branches += IrElseBranchImpl(
+            // outer else -> null
+            outerWhen.branches += IrElseBranchImpl(
                 UNDEFINED_OFFSET, UNDEFINED_OFFSET,
                 condition = irTrue(),
                 result = IrConstImpl.constNull(
@@ -281,20 +334,23 @@ class PaneRoleRegistryIrGenerator(
                 ),
             )
 
-            +irReturn(whenExpr)
+            +irReturn(outerWhen)
         }
     }
 
     /**
      * Adds the `getPaneRole(scopeKey, destinationClass: KClass<out NavDestination>): PaneRole?` override
-     * using class reference equality checks in a when expression.
+     * using class reference equality checks in a when expression, filtered by scope key.
      *
      * Generated IR equivalent:
      * ```
      * override fun getPaneRole(scopeKey: ScopeKey, destinationClass: KClass<out NavDestination>): PaneRole? {
-     *     return when {
-     *         destinationClass == ListDetailPanes.ListScreen::class -> PaneRole.Primary
-     *         destinationClass == ListDetailPanes.DetailScreen::class -> PaneRole.Supporting
+     *     return when (scopeKey.value) {
+     *         "MasterDetail" -> when {
+     *             destinationClass == ListScreen::class -> PaneRole.Primary
+     *             destinationClass == DetailScreen::class -> PaneRole.Supporting
+     *             else -> null
+     *         }
      *         else -> null
      *     }
      * }
@@ -323,53 +379,100 @@ class PaneRoleRegistryIrGenerator(
         }
 
         // Value parameters matching interface: scopeKey, destinationClass
+        // Use explicit KClass<out NavDestination> type to ensure correct JVM signature
         val originalRegularParams = originalFun.parameters.filter { it.kind == IrParameterKind.Regular }
-        overrideFun.addValueParameter("scopeKey", originalRegularParams[0].type)
+        val scopeKeyParam = overrideFun.addValueParameter("scopeKey", originalRegularParams[0].type)
+        val kClassOutNavDest = IrSimpleTypeImpl(
+            classifier = symbolResolver.kClassClass,
+            nullability = SimpleTypeNullability.DEFINITELY_NOT_NULL,
+            arguments = listOf(
+                makeTypeProjection(
+                    symbolResolver.navDestinationClass.defaultType,
+                    org.jetbrains.kotlin.types.Variance.OUT_VARIANCE,
+                ),
+            ),
+            annotations = emptyList(),
+        )
         val destClassParam = overrideFun.addValueParameter(
             "destinationClass",
-            originalRegularParams[1].type,
+            kClassOutNavDest,
         )
 
         val bodyBuilder = DeclarationIrBuilder(pluginContext, overrideFun.symbol)
         overrideFun.body = bodyBuilder.irBlockBody {
-            val whenExpr = IrWhenImpl(
+            // Group pane items by scope key
+            val itemsByScopeKey = allPaneItems.groupBy { it.scopeKey }
+
+            // Outer when(scopeKey.value)
+            val outerWhen = IrWhenImpl(
                 UNDEFINED_OFFSET, UNDEFINED_OFFSET,
                 paneRoleNullableType,
                 IrStatementOrigin.WHEN,
             )
 
-            for (item in allPaneItems) {
-                val destClassSymbol = symbolResolver.resolveClass(item.destinationClassId)
-                val destType = destClassSymbol.defaultType
-                val enumEntry = resolveCorePaneRoleEntry(item.role)
-
-                // Build KClass reference: SomeDestination::class
-                val kClassType = IrSimpleTypeImpl(
-                    classifier = symbolResolver.kClassClass,
-                    nullability = SimpleTypeNullability.DEFINITELY_NOT_NULL,
-                    arguments = listOf(makeTypeProjection(destType, Variance.INVARIANT)),
-                    annotations = emptyList(),
-                )
-                val classRef = IrClassReferenceImpl(
+            for ((scopeKey, items) in itemsByScopeKey) {
+                // Inner when { destinationClass == Type::class -> PaneRole.Xxx; else -> null }
+                val innerWhen = IrWhenImpl(
                     UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                    kClassType,
-                    destClassSymbol,
-                    destType,
+                    paneRoleNullableType,
+                    IrStatementOrigin.WHEN,
                 )
 
-                whenExpr.branches += IrBranchImpl(
-                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                    condition = irEquals(irGet(destClassParam), classRef),
-                    result = IrGetEnumValueImpl(
+                for (item in items) {
+                    val destClassSymbol = symbolResolver.resolveClass(item.destinationClassId)
+                    val destType = destClassSymbol.defaultType
+                    val enumEntry = resolveCorePaneRoleEntry(item.role)
+
+                    // Build KClass reference: SomeDestination::class
+                    val kClassType = IrSimpleTypeImpl(
+                        classifier = symbolResolver.kClassClass,
+                        nullability = SimpleTypeNullability.DEFINITELY_NOT_NULL,
+                        arguments = listOf(makeTypeProjection(destType, Variance.INVARIANT)),
+                        annotations = emptyList(),
+                    )
+                    val classRef = IrClassReferenceImpl(
                         UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                        paneRoleType,
-                        enumEntry.symbol,
+                        kClassType,
+                        destClassSymbol,
+                        destType,
+                    )
+
+                    innerWhen.branches += IrBranchImpl(
+                        UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                        condition = irEquals(irGet(destClassParam), classRef),
+                        result = IrGetEnumValueImpl(
+                            UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                            paneRoleType,
+                            enumEntry.symbol,
+                        ),
+                    )
+                }
+
+                // inner else -> null
+                innerWhen.branches += IrElseBranchImpl(
+                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                    condition = irTrue(),
+                    result = IrConstImpl.constNull(
+                        UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                        pluginContext.irBuiltIns.nothingNType,
                     ),
+                )
+
+                // Fresh scopeKeyValueExpr per branch to avoid duplicate IR node errors
+                val scopeKeyValueExpr = irCall(scopeKeyValueGetter).apply {
+                    arguments[scopeKeyValueGetter.parameters[0]] = irGet(scopeKeyParam)
+                }
+
+                // outer branch: scopeKey.value == "key" -> innerWhen
+                outerWhen.branches += IrBranchImpl(
+                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                    condition = irEquals(scopeKeyValueExpr, irString(scopeKey)),
+                    result = innerWhen,
                 )
             }
 
-            // else -> null
-            whenExpr.branches += IrElseBranchImpl(
+            // outer else -> null
+            outerWhen.branches += IrElseBranchImpl(
                 UNDEFINED_OFFSET, UNDEFINED_OFFSET,
                 condition = irTrue(),
                 result = IrConstImpl.constNull(
@@ -378,7 +481,7 @@ class PaneRoleRegistryIrGenerator(
                 ),
             )
 
-            +irReturn(whenExpr)
+            +irReturn(outerWhen)
         }
     }
 
@@ -393,13 +496,13 @@ class PaneRoleRegistryIrGenerator(
             .filter { it.name.asString() == "getPaneRole" }
 
         return if (byDestination) {
-            functions.first { fn ->
+            functions.firstOrNull { fn ->
                 fn.parameters.any { it.name.asString() == "destination" }
-            }
+            } ?: error("Expected 'getPaneRole(destination)' overload in PaneRoleRegistry. Ensure quo-vadis-core version is compatible with compiler plugin.")
         } else {
-            functions.first { fn ->
+            functions.firstOrNull { fn ->
                 fn.parameters.any { it.name.asString() == "destinationClass" }
-            }
+            } ?: error("Expected 'getPaneRole(destinationClass)' overload in PaneRoleRegistry. Ensure quo-vadis-core version is compatible with compiler plugin.")
         }
     }
 
@@ -412,6 +515,7 @@ class PaneRoleRegistryIrGenerator(
             MetadataPaneRole.SECONDARY -> "Supporting"
             MetadataPaneRole.EXTRA -> "Extra"
         }
-        return paneRoleEntries.first { it.name.asString() == entryName }
+        return paneRoleEntries.firstOrNull { it.name.asString() == entryName }
+            ?: error("Expected PaneRole entry '$entryName' in PaneRole enum. Ensure quo-vadis-core version is compatible with compiler plugin.")
     }
 }

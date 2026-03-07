@@ -3,7 +3,10 @@
 
 package com.jermey.quo.vadis.compiler.ir
 
+import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.jvm.config.JvmClasspathRoot
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
@@ -13,6 +16,8 @@ import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import java.io.File
+import java.util.jar.JarFile
 
 /**
  * Discovers [GeneratedNavigationConfig] implementations across all dependency
@@ -27,6 +32,7 @@ import org.jetbrains.kotlin.name.Name
 class MultiModuleDiscovery(
     private val pluginContext: IrPluginContext,
     private val moduleFragment: IrModuleFragment,
+    private val configuration: CompilerConfiguration,
 ) {
     fun discoverGeneratedConfigs(): List<IrClassSymbol> {
         val markerClass = pluginContext.referenceClass(GENERATED_NAV_CONFIG_CLASS_ID)
@@ -36,6 +42,9 @@ class MultiModuleDiscovery(
 
         // Scan dependency modules via descriptor-based package enumeration
         discoverFromDependencies(markerClass, configs)
+
+        // Scan classpath roots because package views may miss sibling project outputs
+        discoverFromClasspath(markerClass, configs)
 
         // Scan current module's IR files as supplement
         discoverFromCurrentModule(markerClass, configs)
@@ -63,6 +72,81 @@ class MultiModuleDiscovery(
             val fqn = classSymbol.owner.fqNameWhenAvailable?.asString() ?: continue
             configs[fqn] = classSymbol
         }
+    }
+
+    private fun discoverFromClasspath(
+        markerClass: IrClassSymbol,
+        configs: MutableMap<String, IrClassSymbol>,
+    ) {
+        val contentRoots = configuration.getList(CLIConfigurationKeys.CONTENT_ROOTS)
+
+        contentRoots
+            .filterIsInstance<JvmClasspathRoot>()
+            .mapNotNull(::extractRootFile)
+            .distinct()
+            .forEach { root ->
+                when {
+                    root.isDirectory -> discoverFromDirectory(root, markerClass, configs)
+                    root.isFile && root.extension == "jar" -> discoverFromJar(root, markerClass, configs)
+                }
+            }
+    }
+
+    private fun extractRootFile(root: JvmClasspathRoot): File? {
+        val getter = root.javaClass.methods.firstOrNull {
+            it.name == "getFile" && it.parameterCount == 0
+        } ?: return null
+        return getter.invoke(root) as? File
+    }
+
+    private fun discoverFromDirectory(
+        root: File,
+        markerClass: IrClassSymbol,
+        configs: MutableMap<String, IrClassSymbol>,
+    ) {
+        val generatedDir = root.resolve(GENERATED_PACKAGE_PATH)
+        if (!generatedDir.isDirectory) return
+
+        generatedDir.listFiles()
+            ?.asSequence()
+            ?.filter { it.isFile && it.extension == "class" }
+            ?.map { it.name.removeSuffix(".class") }
+            ?.forEach { discoverCandidate(it, markerClass, configs) }
+    }
+
+    private fun discoverFromJar(
+        jarFile: File,
+        markerClass: IrClassSymbol,
+        configs: MutableMap<String, IrClassSymbol>,
+    ) {
+        JarFile(jarFile).use { jar ->
+            jar.entries().asSequence()
+                .map { it.name }
+                .filter { entry ->
+                    entry.startsWith("$GENERATED_PACKAGE_PATH/") &&
+                        entry.endsWith(".class") &&
+                        !entry.substringAfterLast('/').contains('$')
+                }
+                .map { entry -> entry.substringAfterLast('/').removeSuffix(".class") }
+                .forEach { discoverCandidate(it, markerClass, configs) }
+        }
+    }
+
+    private fun discoverCandidate(
+        simpleName: String,
+        markerClass: IrClassSymbol,
+        configs: MutableMap<String, IrClassSymbol>,
+    ) {
+        if (!simpleName.endsWith("NavigationConfig")) return
+
+        val name = Name.identifier(simpleName)
+        if (isExcludedByName(name)) return
+
+        val classSymbol = pluginContext.referenceClass(ClassId(GENERATED_PACKAGE, name)) ?: return
+        if (!implementsMarker(classSymbol, markerClass)) return
+
+        val fqn = classSymbol.owner.fqNameWhenAvailable?.asString() ?: return
+        configs[fqn] = classSymbol
     }
 
     /**
@@ -100,6 +184,7 @@ class MultiModuleDiscovery(
 
     private companion object {
         val GENERATED_PACKAGE = FqName("com.jermey.quo.vadis.generated")
+        const val GENERATED_PACKAGE_PATH = "com/jermey/quo/vadis/generated"
         val GENERATED_NAV_CONFIG_CLASS_ID = ClassId(
             FqName("com.jermey.quo.vadis.core.navigation.config"),
             Name.identifier("GeneratedNavigationConfig"),
