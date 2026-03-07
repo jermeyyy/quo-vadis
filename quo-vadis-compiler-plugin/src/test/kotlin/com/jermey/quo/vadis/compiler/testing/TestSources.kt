@@ -942,6 +942,81 @@ object TestSources {
         """.trimIndent()
     )
 
+    val standaloneDeepLinkDestinations: SourceFile = SourceFile.kotlin(
+        "StandaloneDeepLinkDest.kt",
+        """
+        package test
+
+        import androidx.compose.runtime.Composable
+        import com.jermey.quo.vadis.annotations.Argument
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Stack
+        import com.jermey.quo.vadis.annotations.TabItem
+        import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.annotations.TabsContainer
+        import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Tabs(
+            name = "standaloneTabs",
+            initialTab = StandaloneHomeTab::class,
+            items = [StandaloneHomeTab::class]
+        )
+        sealed class StandaloneTabs : NavDestination {
+
+            companion object : NavDestination
+
+            @Destination(route = "standalone/landing")
+            data object Landing : StandaloneTabs()
+
+            @Destination(route = "standalone/profile/{userId}")
+            data class Profile(@Argument val userId: String) : StandaloneTabs()
+        }
+
+        @TabItem
+        @Stack(name = "standaloneHome", startDestination = StandaloneHomeTab.Home::class)
+        sealed class StandaloneHomeTab : StandaloneTabs() {
+
+            @Destination(route = "standalone/home")
+            data object Home : StandaloneHomeTab()
+        }
+
+        @TabsContainer(StandaloneTabs::class)
+        @Composable
+        fun StandaloneTabsContainer(
+            scope: TabsContainerScope,
+            content: @Composable () -> Unit,
+        ) {
+            content()
+        }
+        """.trimIndent()
+    )
+
+    val queryBackedDeepLinkDestinations: SourceFile = SourceFile.kotlin(
+        "QueryBackedDeepLinkDest.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.Argument
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Stack
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Stack(name = "queryBacked", startDestination = QueryBackedDestination.Home::class)
+        sealed class QueryBackedDestination : NavDestination {
+
+            @Destination(route = "query/home")
+            data object Home : QueryBackedDestination()
+
+            @Destination(route = "query/detail/{id}?id={id}&ref={ref}")
+            data class Detail(
+                @Argument val id: String,
+                @Argument val ref: String,
+            ) : QueryBackedDestination()
+        }
+        """.trimIndent()
+    )
+
     // endregion
 
     // region Tabs with @TabsContainer wrapper

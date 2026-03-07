@@ -8,13 +8,14 @@ data class NavigationMetadata(
     val stacks: List<StackMetadata> = emptyList(),
     val tabs: List<TabsMetadata> = emptyList(),
     val panes: List<PaneMetadata> = emptyList(),
+    val routableDestinations: List<DestinationMetadata> = emptyList(),
     val screens: List<ScreenMetadata> = emptyList(),
     val tabsContainers: List<TabsContainerMetadata> = emptyList(),
     val paneContainers: List<PaneContainerMetadata> = emptyList(),
     val transitions: List<TransitionMetadata> = emptyList(),
 ) {
     val isEmpty: Boolean get() = stacks.isEmpty() && tabs.isEmpty() && panes.isEmpty() &&
-        screens.isEmpty() && tabsContainers.isEmpty() && paneContainers.isEmpty() &&
+        routableDestinations.isEmpty() && screens.isEmpty() && tabsContainers.isEmpty() && paneContainers.isEmpty() &&
         transitions.isEmpty()
 }
 
@@ -29,7 +30,9 @@ data class DestinationMetadata(
     val classId: ClassId,
     val route: String? = null,
     val arguments: List<ArgumentMetadata> = emptyList(),
+    val constructorParameters: List<ConstructorParameterMetadata> = emptyList(),
     val transitionType: TransitionType? = null,
+    val isSealedClass: Boolean = false,
 )
 
 data class ArgumentMetadata(
@@ -37,6 +40,16 @@ data class ArgumentMetadata(
     val key: String,
     val type: ArgumentType,
     val optional: Boolean = false,
+)
+
+data class ConstructorParameterMetadata(
+    val name: String,
+    val key: String,
+    val type: ArgumentType,
+    val hasDefault: Boolean = false,
+    val isArgument: Boolean = false,
+    val optional: Boolean = false,
+    val nullable: Boolean = false,
 )
 
 enum class ArgumentType {

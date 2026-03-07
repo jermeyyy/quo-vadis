@@ -1,3 +1,0 @@
-- Compiler plugin must preserve KSP parity for container wrapper dispatch: wrapperKey should align with normalized scopeKey for tabs/panes.
-- Current failure mode: tabs-container metadata is collected but IR generation can silently fall back to generic content rendering, skipping wrapper providers such as DemoTabsWrapper.
-- Prefer collect -> normalize -> validate -> emit pipeline; do not use metadata-only hasContainer checks disconnected from generated dispatch branches.

@@ -77,6 +77,30 @@ class IrCodegenTests {
         return jvmResult.classLoader.loadClass(fqName).kotlin as KClass<out NavDestination>
     }
 
+    private fun loadObjectDestination(
+        result: CompilationResult,
+        fqName: String,
+    ): NavDestination {
+        val jvmResult = result as JvmCompilationResult
+        val instance = jvmResult.classLoader.loadClass(fqName).kotlin.objectInstance
+        assertNotNull(instance, "$fqName object should exist")
+        assertIs<NavDestination>(instance)
+        return instance
+    }
+
+    private fun instantiateDestination(
+        result: CompilationResult,
+        fqName: String,
+        vararg args: Any?,
+    ): NavDestination {
+        val jvmResult = result as JvmCompilationResult
+        val destinationClass = jvmResult.classLoader.loadClass(fqName)
+        val constructor = destinationClass.constructors.single { it.parameterCount == args.size }
+        val instance = constructor.newInstance(*args)
+        assertIs<NavDestination>(instance)
+        return instance
+    }
+
     private fun disassembleClass(targetClass: Class<*>): String {
         val javap = ToolProvider.findFirst("javap").orElseThrow {
             AssertionError("javap tool is required for compiler-plugin dispatch regression tests")
@@ -288,16 +312,24 @@ class IrCodegenTests {
         val result = CompilerTestHelper.compile(TestSources.deepLinkDestinations)
         val config = loadConfig(result)
         assertIs<GeneratedNavigationConfig>(config)
+        val registry = config.deepLinkRegistry
 
         // Verify destination classes are loadable
         assertNotNull(loadDestinationClass(result, "test.DeepLinkDestination"))
 
-        // TODO: When baseConfig is implemented, verify:
-        // - deepLinkRegistry.resolve("deep/home") returns DeepLinkDestination.Home
-        // - deepLinkRegistry.resolve("deep/detail/123") returns Detail(id="123")
-        // - deepLinkRegistry.resolve("deep/user/u1/post/p2") returns UserPost(userId="u1", postId="p2")
-        // - deepLinkRegistry.resolve("nonexistent") returns null
-        // - deepLinkRegistry.createUri(Detail("456")) returns "deep/detail/456"
+        val home = loadObjectDestination(result, "test.DeepLinkDestination\$Home")
+        val detail = instantiateDestination(result, "test.DeepLinkDestination\$Detail", "123")
+        val userPost = instantiateDestination(result, "test.DeepLinkDestination\$UserPost", "u1", "p2")
+        val uriDetail = instantiateDestination(result, "test.DeepLinkDestination\$Detail", "456")
+        val uriUserPost = instantiateDestination(result, "test.DeepLinkDestination\$UserPost", "u2", "p9")
+
+        assertEquals(home, registry.resolve("app://deep/home"))
+        assertEquals(detail, registry.resolve("app://deep/detail/123"))
+        assertEquals(userPost, registry.resolve("app://deep/user/u1/post/p2"))
+        assertNull(registry.resolve("app://nonexistent"))
+        assertEquals("app://deep/home", registry.createUri(home))
+        assertEquals("app://deep/detail/456", registry.createUri(uriDetail))
+        assertEquals("app://deep/user/u2/post/p9", registry.createUri(uriUserPost))
     }
 
     @Test
@@ -311,6 +343,76 @@ class IrCodegenTests {
         // Verify the constructor has the expected parameter names
         val constructor = userPostClass.constructors.first()
         assertTrue(constructor.parameterCount >= 2, "UserPost should have at least 2 parameters")
+    }
+
+    @Test
+    fun `deep link registry resolves flat tab items and creates URIs`() {
+        val result = CompilerTestHelper.compile(TestSources.mixedTabsWithStackBackedItem)
+        val config = loadConfig(result)
+        val registry = config.deepLinkRegistry
+
+        val overviewTab = loadObjectDestination(result, "test.OverviewTab")
+        val settingsRoot = loadObjectDestination(result, "test.SettingsTab\$Root")
+        val settingsDetail = instantiateDestination(result, "test.SettingsTab\$Detail", "privacy")
+
+        assertEquals(overviewTab, registry.resolve("app://overview"))
+        assertEquals(settingsRoot, registry.resolve("app://settings/root"))
+        assertEquals(settingsDetail, registry.resolve("app://settings/detail/privacy"))
+        assertEquals("app://overview", registry.createUri(overviewTab))
+        assertEquals("app://settings/detail/privacy", registry.createUri(settingsDetail))
+    }
+
+    @Test
+    fun `deep link registry resolves pane items and creates URIs`() {
+        val result = CompilerTestHelper.compile(TestSources.messagesPaneContainerSource)
+        val config = loadConfig(result)
+        val registry = config.deepLinkRegistry
+
+        val conversationList = loadObjectDestination(result, "test.MessagesPane\$ConversationList")
+        val conversationDetail = instantiateDestination(
+            result,
+            "test.MessagesPane\$ConversationDetail",
+            "thread-42",
+        )
+
+        assertEquals(conversationList, registry.resolve("app://messages/conversations"))
+        assertEquals(conversationDetail, registry.resolve("app://messages/conversation/thread-42"))
+        assertEquals("app://messages/conversations", registry.createUri(conversationList))
+        assertEquals("app://messages/conversation/thread-42", registry.createUri(conversationDetail))
+    }
+
+    @Test
+    fun `deep link registry resolves standalone destinations and creates URIs`() {
+        val result = CompilerTestHelper.compile(TestSources.standaloneDeepLinkDestinations)
+        val config = loadConfig(result)
+        val registry = config.deepLinkRegistry
+
+        val standaloneLanding = loadObjectDestination(result, "test.StandaloneTabs\$Landing")
+        val standaloneProfile = instantiateDestination(result, "test.StandaloneTabs\$Profile", "user-7")
+
+        assertEquals(standaloneLanding, registry.resolve("app://standalone/landing"))
+        assertEquals(standaloneProfile, registry.resolve("app://standalone/profile/user-7"))
+        assertEquals("app://standalone/landing", registry.createUri(standaloneLanding))
+        assertEquals("app://standalone/profile/user-7", registry.createUri(standaloneProfile))
+    }
+
+    @Test
+    fun `deep link registry resolves query-backed arguments with path precedence`() {
+        val result = CompilerTestHelper.compile(TestSources.queryBackedDeepLinkDestinations)
+        val config = loadConfig(result)
+        val registry = config.deepLinkRegistry
+
+        val expected = instantiateDestination(
+            result,
+            "test.QueryBackedDestination\$Detail",
+            "path-123",
+            "email",
+        )
+
+        assertEquals(
+            expected,
+            registry.resolve("app://query/detail/path-123?ref=email&id=query-999"),
+        )
     }
 
     // ── 5C.7: Scope Registry via Tabs ──────────────────────────────

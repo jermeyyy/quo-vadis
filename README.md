@@ -29,7 +29,7 @@ Quo Vadis provides a powerful navigation solution with:
 ## ✨ Key Features
 
 - ✅ **NavNode Tree Architecture** - Hierarchical navigation state as a tree of nodes
-- ✅ **Annotation-based API** - KSP code generation for zero-boilerplate navigation
+- ✅ **Annotation-based API** - KSP and compiler-plugin code generation for zero-boilerplate navigation
 - ✅ **Type-Safe Navigation** - Compile-time safety with no string-based routing
 - ✅ **Multiple Container Types** - `@Stack`, `@Tabs`, and `@Pane` for different navigation patterns
 - ✅ **Type-Safe Arguments** - `@Argument` annotation with automatic deep link serialization
@@ -39,7 +39,7 @@ Quo Vadis provides a powerful navigation solution with:
 - ✅ **Tabbed Navigation** - Independent backstacks per tab with `@Tabs` + `@TabItem`
 - ✅ **Adaptive Layouts** - Multi-pane layouts with `@Pane` + `@PaneItem`
 - ✅ **Custom Transitions** - `@Transition` annotation with preset and custom animations
-- ✅ **Deep Link Support** - URI-based navigation with automatic parameter extraction
+- ✅ **Deep Link Support** - URI-based navigation with verified KSP/compiler-plugin parity for route resolution and argument extraction
 - ✅ **Hierarchical Rendering** - True parent-child composition with coordinated animations
 - ✅ **Navigation Results** - Type-safe result passing between screens
 - ✅ **DI Framework Support** - Easy integration with Koin, Kodein, etc.

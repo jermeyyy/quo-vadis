@@ -163,6 +163,8 @@ The compiler plugin generates functionally identical output to KSP. All navigati
 - Scope-aware navigation
 - MVI container lifecycle management
 
+Deep-link parity is covered by compiler-plugin regression tests for stack destinations, flat tab items, pane items, standalone destinations, and query-plus-path argument resolution.
+
 ### Differences
 
 | Aspect | KSP | Compiler Plugin |
@@ -197,7 +199,7 @@ If the IDE doesn't autocomplete generated navigation configs:
 No. All annotations (`@Stack`, `@Destination`, `@Screen`, etc.) are identical. Only the code generation backend changed.
 
 ### Will my deep links still work?
-Yes. Route patterns, argument extraction, and URI creation work identically.
+Yes. Route patterns, argument extraction, and URI creation work identically, including flat tab items, pane items, standalone destinations, and query-backed `@Argument` values. When query and path parameters share a key, the path value wins.
 
 ### What Kotlin version is required?
 Kotlin 2.1.0 or later. The compiler plugin uses K2 FIR and IR APIs.

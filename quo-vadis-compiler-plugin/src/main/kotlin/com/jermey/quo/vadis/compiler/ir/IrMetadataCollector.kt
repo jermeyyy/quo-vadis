@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.compiler.ir
 import com.jermey.quo.vadis.compiler.common.AdaptStrategy
 import com.jermey.quo.vadis.compiler.common.ArgumentMetadata
 import com.jermey.quo.vadis.compiler.common.ArgumentType
+import com.jermey.quo.vadis.compiler.common.ConstructorParameterMetadata
 import com.jermey.quo.vadis.compiler.common.DestinationMetadata
 import com.jermey.quo.vadis.compiler.common.NavigationMetadata
 import com.jermey.quo.vadis.compiler.common.PaneBackBehavior
@@ -29,6 +30,7 @@ import com.jermey.quo.vadis.compiler.fir.QuoVadisPredicates.TABS_CONTAINER_FQN
 import com.jermey.quo.vadis.compiler.fir.QuoVadisPredicates.TABS_FQN
 import com.jermey.quo.vadis.compiler.fir.QuoVadisPredicates.TAB_ITEM_FQN
 import com.jermey.quo.vadis.compiler.fir.QuoVadisPredicates.TRANSITION_FQN
+import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
@@ -41,6 +43,7 @@ import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.isNullable
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.ir.util.primaryConstructor
@@ -58,43 +61,62 @@ class IrMetadataCollector(private val modulePrefix: String) {
         val stacks = mutableListOf<StackMetadata>()
         val tabs = mutableListOf<TabsMetadata>()
         val panes = mutableListOf<PaneMetadata>()
+        val routableDestinations = linkedMapOf<ClassId, DestinationMetadata>()
         val screens = mutableListOf<ScreenMetadata>()
         val tabsContainers = mutableListOf<TabsContainerMetadata>()
         val paneContainers = mutableListOf<PaneContainerMetadata>()
-        val transitions = mutableListOf<TransitionMetadata>()
+        val transitions = linkedMapOf<ClassId, TransitionMetadata>()
+        val classIndex = mutableMapOf<ClassId, IrClass>()
+        val containerClassIds = mutableSetOf<ClassId>()
         val stackClassIds = mutableSetOf<ClassId>()
         val stackDestinationClassIdsByStack = mutableMapOf<ClassId, List<ClassId>>()
 
-        // Pass 1: Collect all @Stack class IDs so we can determine TabItemType
+        // Pass 1: Index classes and collect container metadata needed for later phases.
+        visitClasses(moduleFragment) { irClass ->
+            collectClassIndexAndContainerData(
+                irClass,
+                classIndex,
+                containerClassIds,
+                stackClassIds,
+                stackDestinationClassIdsByStack,
+            )
+        }
+
+        // Pass 2: Collect stacks and their destinations.
+        visitClasses(moduleFragment) { irClass ->
+            processStack(irClass, stacks, transitions, routableDestinations)
+        }
+
+        // Pass 3: Collect tabs and add flat tab-item destinations.
+        visitClasses(moduleFragment) { irClass ->
+            processTabs(
+                irClass,
+                tabs,
+                stackClassIds,
+                stackDestinationClassIdsByStack,
+                classIndex,
+                transitions,
+                routableDestinations,
+            )
+        }
+
+        // Pass 4: Collect panes and pane-item destinations.
+        visitClasses(moduleFragment) { irClass ->
+            processPane(irClass, panes, transitions, routableDestinations)
+        }
+
+        // Pass 5: Collect screens and container composables.
         for (file in moduleFragment.files) {
             for (declaration in file.declarations) {
-                collectStackClassIds(
-                    declaration as? IrClass ?: continue,
-                    stackClassIds,
-                    stackDestinationClassIdsByStack,
-                )
+                if (declaration is IrSimpleFunction) {
+                    processFunction(declaration, screens, tabsContainers, paneContainers)
+                }
             }
         }
 
-        // Pass 2: Build full metadata
-        for (file in moduleFragment.files) {
-            for (declaration in file.declarations) {
-                when (declaration) {
-                    is IrClass -> processClass(
-                        declaration,
-                        stacks,
-                        tabs,
-                        panes,
-                        transitions,
-                        stackClassIds,
-                        stackDestinationClassIdsByStack,
-                    )
-                    is IrSimpleFunction -> processFunction(
-                        declaration, screens, tabsContainers, paneContainers,
-                    )
-                    else -> Unit
-                }
-            }
+        // Pass 6: Collect standalone @Destination declarations that participate in config generation.
+        visitClasses(moduleFragment) { irClass ->
+            processStandaloneDestination(irClass, transitions, routableDestinations)
         }
 
         return NavigationMetadata(
@@ -102,62 +124,35 @@ class IrMetadataCollector(private val modulePrefix: String) {
             stacks = stacks,
             tabs = tabs,
             panes = panes,
+            routableDestinations = routableDestinations.values.toList(),
             screens = screens,
             tabsContainers = tabsContainers,
             paneContainers = paneContainers,
-            transitions = transitions,
+            transitions = transitions.values.toList(),
         )
     }
 
     // ── Pass 1 helper ────────────────────────────────────────────────────────
 
-    private fun collectStackClassIds(
+    private fun collectClassIndexAndContainerData(
         irClass: IrClass,
+        classIndex: MutableMap<ClassId, IrClass>,
+        containerClassIds: MutableSet<ClassId>,
         stackClassIds: MutableSet<ClassId>,
         stackDestinationClassIdsByStack: MutableMap<ClassId, List<ClassId>>,
     ) {
-        if (irClass.hasAnnotation(STACK_FQN)) {
-            irClass.classId?.let { classId ->
+        irClass.classId?.let { classId ->
+            classIndex[classId] = irClass
+
+            if (irClass.hasAnnotation(STACK_FQN) || irClass.hasAnnotation(TABS_FQN) || irClass.hasAnnotation(PANE_FQN)) {
+                containerClassIds.add(classId)
+            }
+
+            if (irClass.hasAnnotation(STACK_FQN)) {
                 stackClassIds.add(classId)
                 stackDestinationClassIdsByStack[classId] = irClass.sealedSubclasses.mapNotNull { subclassSymbol ->
                     subclassSymbol.owner.classId
                 }
-            }
-        }
-        for (inner in irClass.declarations) {
-            if (inner is IrClass) {
-                collectStackClassIds(inner, stackClassIds, stackDestinationClassIdsByStack)
-            }
-        }
-    }
-
-    // ── Pass 2: class processing ────────────────────────────────────────────
-
-    private fun processClass(
-        irClass: IrClass,
-        stacks: MutableList<StackMetadata>,
-        tabs: MutableList<TabsMetadata>,
-        panes: MutableList<PaneMetadata>,
-        transitions: MutableList<TransitionMetadata>,
-        stackClassIds: Set<ClassId>,
-        stackDestinationClassIdsByStack: Map<ClassId, List<ClassId>>,
-    ) {
-        processStack(irClass, stacks, transitions)
-        processTabs(irClass, tabs, stackClassIds, stackDestinationClassIdsByStack)
-        processPane(irClass, panes, transitions)
-
-        // Recurse into nested classes
-        for (inner in irClass.declarations) {
-            if (inner is IrClass) {
-                processClass(
-                    inner,
-                    stacks,
-                    tabs,
-                    panes,
-                    transitions,
-                    stackClassIds,
-                    stackDestinationClassIdsByStack,
-                )
             }
         }
     }
@@ -165,7 +160,8 @@ class IrMetadataCollector(private val modulePrefix: String) {
     private fun processStack(
         irClass: IrClass,
         stacks: MutableList<StackMetadata>,
-        transitions: MutableList<TransitionMetadata>,
+        transitions: MutableMap<ClassId, TransitionMetadata>,
+        routableDestinations: MutableMap<ClassId, DestinationMetadata>,
     ) {
         val stackAnn = irClass.getAnnotation(STACK_FQN) ?: return
         val classId = irClass.classId ?: return
@@ -174,19 +170,13 @@ class IrMetadataCollector(private val modulePrefix: String) {
 
         val destinations = irClass.sealedSubclasses.mapNotNull { subclassSymbol ->
             val subclass = subclassSymbol.owner
-            val subclassId = subclass.classId ?: return@mapNotNull null
-            val destAnn = subclass.getAnnotation(DESTINATION_FQN)
-            val route = destAnn?.getStringArgument(0)
-
             // Collect @Transition on destinations
             collectTransition(subclass, transitions)
+            buildDestinationMetadata(subclass)
+        }
 
-            DestinationMetadata(
-                classId = subclassId,
-                route = route,
-                arguments = extractArguments(subclass),
-                transitionType = extractTransitionType(subclass),
-            )
+        destinations.forEach { destination ->
+            routableDestinations.putIfAbsent(destination.classId, destination)
         }
 
         val startDestination = if (startDestArg == null ||
@@ -212,6 +202,9 @@ class IrMetadataCollector(private val modulePrefix: String) {
         tabs: MutableList<TabsMetadata>,
         stackClassIds: Set<ClassId>,
         stackDestinationClassIdsByStack: Map<ClassId, List<ClassId>>,
+        classIndex: Map<ClassId, IrClass>,
+        transitions: MutableMap<ClassId, TransitionMetadata>,
+        routableDestinations: MutableMap<ClassId, DestinationMetadata>,
     ) {
         val tabsAnn = irClass.getAnnotation(TABS_FQN) ?: return
         val classId = irClass.classId ?: return
@@ -233,6 +226,16 @@ class IrMetadataCollector(private val modulePrefix: String) {
             }
         }.distinct()
 
+        items.asSequence()
+            .filter { it.type == TabItemType.FLAT_SCREEN }
+            .mapNotNull { item -> classIndex[item.classId] }
+            .forEach { itemClass ->
+                collectTransition(itemClass, transitions)
+                buildDestinationMetadata(itemClass)?.let { destination ->
+                    routableDestinations.putIfAbsent(destination.classId, destination)
+                }
+            }
+
         tabs.add(
             TabsMetadata(
                 name = name,
@@ -247,7 +250,8 @@ class IrMetadataCollector(private val modulePrefix: String) {
     private fun processPane(
         irClass: IrClass,
         panes: MutableList<PaneMetadata>,
-        transitions: MutableList<TransitionMetadata>,
+        transitions: MutableMap<ClassId, TransitionMetadata>,
+        routableDestinations: MutableMap<ClassId, DestinationMetadata>,
     ) {
         val paneAnn = irClass.getAnnotation(PANE_FQN) ?: return
         val classId = irClass.classId ?: return
@@ -267,6 +271,10 @@ class IrMetadataCollector(private val modulePrefix: String) {
 
             // Collect @Transition on pane destinations too
             collectTransition(subclass, transitions)
+
+            buildDestinationMetadata(subclass)?.let { destination ->
+                routableDestinations.putIfAbsent(destination.classId, destination)
+            }
 
             val role = paneItemAnn.getEnumArgument(0)?.toPaneRole() ?: return@mapNotNull null
             val adaptStrategy = paneItemAnn.getEnumArgument(1)?.toAdaptStrategy()
@@ -288,6 +296,27 @@ class IrMetadataCollector(private val modulePrefix: String) {
                 allDestinationClassIds = allDestinationClassIds,
             ),
         )
+    }
+
+    private fun processStandaloneDestination(
+        irClass: IrClass,
+        transitions: MutableMap<ClassId, TransitionMetadata>,
+        routableDestinations: MutableMap<ClassId, DestinationMetadata>,
+    ) {
+        if (irClass.getAnnotation(DESTINATION_FQN) == null) return
+
+        val isStackOrPaneChild = irClass.superTypes.any { superType ->
+            val superClass = superType.classOrNull?.owner ?: return@any false
+            superClass.hasAnnotation(STACK_FQN) || superClass.hasAnnotation(PANE_FQN)
+        }
+        if (isStackOrPaneChild) {
+            return
+        }
+
+        collectTransition(irClass, transitions)
+        buildDestinationMetadata(irClass)?.let { destination ->
+            routableDestinations.putIfAbsent(destination.classId, destination)
+        }
     }
 
     // ── Pass 2: function processing ─────────────────────────────────────────
@@ -349,13 +378,16 @@ class IrMetadataCollector(private val modulePrefix: String) {
 
     private fun collectTransition(
         irClass: IrClass,
-        transitions: MutableList<TransitionMetadata>,
+        transitions: MutableMap<ClassId, TransitionMetadata>,
     ) {
         val transAnn = irClass.getAnnotation(TRANSITION_FQN) ?: return
         val classId = irClass.classId ?: return
         val type = transAnn.getEnumArgument(0)?.toTransitionType() ?: return
         val customClass = transAnn.getClassArgument(1)?.takeUnlessUnit()
-        transitions.add(TransitionMetadata(destinationClassId = classId, type = type, customClass = customClass))
+        transitions.putIfAbsent(
+            classId,
+            TransitionMetadata(destinationClassId = classId, type = type, customClass = customClass),
+        )
     }
 
     private fun extractTransitionType(irClass: IrClass): TransitionType? {
@@ -365,26 +397,76 @@ class IrMetadataCollector(private val modulePrefix: String) {
 
     // ── Argument extraction ─────────────────────────────────────────────────
 
-    private fun extractArguments(irClass: IrClass): List<ArgumentMetadata> {
+    private fun buildDestinationMetadata(irClass: IrClass): DestinationMetadata? {
+        val classId = irClass.classId ?: return null
+        val constructorParameters = extractConstructorParameters(irClass)
+
+        return DestinationMetadata(
+            classId = classId,
+            route = irClass.getAnnotation(DESTINATION_FQN)?.getStringArgument(0)?.takeIf { it.isNotBlank() },
+            arguments = constructorParameters
+                .filter { it.isArgument }
+                .map { param ->
+                    ArgumentMetadata(
+                        name = param.name,
+                        key = param.key,
+                        type = param.type,
+                        optional = param.optional,
+                    )
+                },
+            constructorParameters = constructorParameters,
+            transitionType = extractTransitionType(irClass),
+            isSealedClass = irClass.modality == Modality.SEALED,
+        )
+    }
+
+    private fun extractConstructorParameters(irClass: IrClass): List<ConstructorParameterMetadata> {
         val primaryConstructor = irClass.primaryConstructor ?: return emptyList()
-        return primaryConstructor.parameters
-            .filter { param -> param.annotations.any { it.isAnnotation(ARGUMENT_FQN) } }
-            .mapNotNull { param ->
-                val argAnn = param.annotations.firstOrNull { it.isAnnotation(ARGUMENT_FQN) }
-                if (argAnn == null) {
-                    // @Argument annotation expected but not found — skip this parameter
-                    return@mapNotNull null
-                }
-                val key = argAnn.getStringArgument(0)?.takeIf { it.isNotEmpty() }
-                    ?: param.name.asString()
-                val optional = argAnn.getBooleanArgument(1) ?: false
+        return primaryConstructor.parameters.map { param ->
+            val argAnn = param.annotations.firstOrNull { it.isAnnotation(ARGUMENT_FQN) }
+            val paramName = param.name.asString()
+            val key = argAnn?.getStringArgument(0)?.takeIf { it.isNotEmpty() } ?: paramName
+
+            ConstructorParameterMetadata(
+                name = paramName,
+                key = key,
+                type = param.type.classFqName.toArgumentType(),
+                hasDefault = param.defaultValue != null,
+                isArgument = argAnn != null,
+                optional = argAnn?.getBooleanArgument(1) ?: false,
+                nullable = param.type.isNullable(),
+            )
+        }
+    }
+
+    private fun extractArguments(irClass: IrClass): List<ArgumentMetadata> {
+        return extractConstructorParameters(irClass)
+            .filter { it.isArgument }
+            .map { param ->
                 ArgumentMetadata(
-                    name = param.name.asString(),
-                    key = key,
-                    type = param.type.classFqName.toArgumentType(),
-                    optional = optional,
+                    name = param.name,
+                    key = param.key,
+                    type = param.type,
+                    optional = param.optional,
                 )
             }
+    }
+
+    private fun visitClasses(moduleFragment: IrModuleFragment, block: (IrClass) -> Unit) {
+        for (file in moduleFragment.files) {
+            for (declaration in file.declarations) {
+                val irClass = declaration as? IrClass ?: continue
+                visitClassRecursively(irClass, block)
+            }
+        }
+    }
+
+    private fun visitClassRecursively(irClass: IrClass, block: (IrClass) -> Unit) {
+        block(irClass)
+        for (declaration in irClass.declarations) {
+            val innerClass = declaration as? IrClass ?: continue
+            visitClassRecursively(innerClass, block)
+        }
     }
 
     // ── IR annotation helpers ───────────────────────────────────────────────
