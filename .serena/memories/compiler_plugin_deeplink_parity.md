@@ -1,3 +1,0 @@
-- Compiler-plugin deep-link parity uses NavigationMetadata.routableDestinations as a deduped union in KSP order: stack destinations, flat @TabItem destinations, @PaneItem destinations, then standalone @Destination declarations.
-- DeepLinkHandlerIrGenerator matches only the path portion of route templates; query templates remain literal for createUri and do not participate in path regex matching.
-- Standalone @Destination classes under @Tabs are included via the standalone phase; subclasses of @Stack and @Pane are excluded because those are collected earlier through their container-specific passes.
