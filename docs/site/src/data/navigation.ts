@@ -22,6 +22,7 @@ export const navigationData: NavItem[] = [
       { label: 'Core Concepts', path: '/features/core-concepts' },
       { label: 'Annotation-Based API', path: '/features/annotation-api' },
       { label: 'DSL Configuration', path: '/features/dsl-config' },
+      { label: 'Compiler Plugin (Experimental)', path: '/features/compiler-plugin' },
       { label: 'Type-Safe Navigation', path: '/features/type-safe' },
       { label: 'Multiplatform Support', path: '/features/multiplatform' },
       { label: 'Deep Links', path: '/features/deep-links' },

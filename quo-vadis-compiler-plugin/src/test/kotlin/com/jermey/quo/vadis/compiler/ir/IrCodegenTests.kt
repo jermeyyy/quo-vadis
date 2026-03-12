@@ -12,6 +12,7 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
 import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
 import com.tschuchort.compiletesting.CompilationResult
 import com.tschuchort.compiletesting.JvmCompilationResult
@@ -559,6 +560,37 @@ class IrCodegenTests {
         // Verify feature destination class is loadable
         val destClass = loadDestinationClass(result, "test.feature.FeatureDestination")
         assertNotNull(destClass, "FeatureDestination should be loadable")
+    }
+
+    @Test
+    fun `module artifacts follow generated config and deep link handler contract`() {
+        val result = CompilerTestHelper.compile(
+            TestSources.deepLinkDestinations,
+            modulePrefix = "Contract",
+        )
+        val config = loadConfig(result, modulePrefix = "Contract")
+        val jvmResult = result as JvmCompilationResult
+
+        assertEquals(
+            "$GENERATED_PKG.ContractNavigationConfig",
+            config::class.java.name,
+            "Generated config should use the module-prefixed contract name in the generated package",
+        )
+        assertIs<GeneratedNavigationConfig>(config)
+
+        val handlerClass = jvmResult.classLoader.loadClass("$GENERATED_PKG.ContractDeepLinkHandler")
+        val handlerInstance = handlerClass.kotlin.objectInstance
+        assertNotNull(handlerInstance, "Generated deep link handler object should exist")
+        assertIs<DeepLinkRegistry>(handlerInstance)
+        assertEquals(
+            "$GENERATED_PKG.ContractDeepLinkHandler",
+            config.deepLinkRegistry::class.java.name,
+            "NavigationConfig.deepLinkRegistry should expose the module-prefixed generated deep link handler",
+        )
+        assertTrue(
+            config.deepLinkRegistry === handlerInstance,
+            "Generated config should delegate deepLinkRegistry to the generated handler singleton",
+        )
     }
 
     @Test

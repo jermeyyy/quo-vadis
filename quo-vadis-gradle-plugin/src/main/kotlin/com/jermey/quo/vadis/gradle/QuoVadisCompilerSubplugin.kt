@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
  * This plugin injects the Quo Vadis K2 compiler plugin into the Kotlin compilation
  * and passes configuration options (modulePrefix) to it.
  *
- * Applied conditionally by [QuoVadisPlugin] when `useCompilerPlugin = true`.
+ * Applied conditionally by [QuoVadisPlugin] when the resolved backend is compiler mode.
  */
 class QuoVadisCompilerSubplugin : KotlinCompilerPluginSupportPlugin {
 
@@ -35,7 +35,7 @@ class QuoVadisCompilerSubplugin : KotlinCompilerPluginSupportPlugin {
         val project = kotlinCompilation.target.project
         val extension = project.extensions.findByType(QuoVadisExtension::class.java)
             ?: return false
-        return extension.useCompilerPlugin.get()
+        return extension.resolveBackend(project) == QuoVadisBackend.COMPILER
     }
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {

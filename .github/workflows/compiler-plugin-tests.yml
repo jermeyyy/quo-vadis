@@ -70,9 +70,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: wrapper
+
+      - name: E2E Desktop Build (KSP Default)
+        run: ./gradlew :composeApp:desktopJar
+
+      - name: Publish Compiler Plugin Locally
+        run: ./gradlew :quo-vadis-compiler-plugin:publishToMavenLocal :quo-vadis-compiler-plugin-native:publishToMavenLocal
       
       - name: E2E Desktop Build (Compiler Plugin)
-        run: ./gradlew :composeApp:jvmJar -PquoVadis.useCompilerPlugin=true
+        run: ./gradlew :composeApp:desktopJar -PquoVadis.backend=compiler
 
   publish-check:
     name: Publish Dry Run

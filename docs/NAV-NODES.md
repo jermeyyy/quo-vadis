@@ -651,10 +651,13 @@ fun MyScreen() {
 @Composable
 fun App() {
     val navigator: Navigator = koinInject()
+    val config = ComposeAppNavigationConfig +
+        Feature1NavigationConfig +
+        Feature2NavigationConfig
     
     NavigationHost(
         navigator = navigator,
-        config = GeneratedNavigationConfig
+        config = config
     )
 }
 

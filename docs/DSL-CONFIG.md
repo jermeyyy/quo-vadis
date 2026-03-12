@@ -8,8 +8,8 @@ Quo Vadis supports two configuration approaches:
 
 | Approach | Best For | Characteristics |
 |----------|----------|-----------------|
-| **Annotations** | Most projects | Declarative, compile-time safety, KSP generates config |
-| **DSL** | Dynamic setups | Runtime flexibility, manual control, no code generation |
+| **Annotations** | Most projects | Declarative, compile-time safety, generated via KSP or the compiler plugin |
+| **DSL** | Dynamic setups | Runtime flexibility, manual control, backend-independent |
 
 ### When to Choose DSL Configuration
 
@@ -18,8 +18,8 @@ Use the DSL approach when you need:
 - **Dynamic navigation graphs** that change based on user state or feature flags
 - **Multi-module composition** where modules provide their own navigation config
 - **Testing flexibility** with customizable navigation setups
-- **Full control** over registration without annotation processing
-- **Hybrid setups** combining generated and manual configurations
+- **Full control** over registration without depending on an annotation backend
+- **Hybrid setups** combining backend-generated and manual configurations
 
 ### Key Components
 
@@ -504,7 +504,7 @@ object RouteRegistry {
 
 ### Usage
 
-Routes are typically registered automatically via annotations, but can be registered manually:
+Routes are typically registered automatically via annotation-based configuration, but can be registered manually:
 
 ```kotlin
 // Manual route registration
@@ -694,20 +694,22 @@ fun App() {
 | Feature | DSL | Annotations |
 |---------|-----|-------------|
 | Runtime flexibility | ✅ Full control | ❌ Compile-time only |
-| Code generation | ❌ None needed | ✅ KSP generates config |
+| Code generation | ❌ None needed | ✅ Generated via KSP or compiler plugin |
 | Type safety | ✅ Compile-time | ✅ Compile-time |
 | Boilerplate | Medium | Low |
 | Dynamic graphs | ✅ Supported | ❌ Not supported |
-| Multi-module | ✅ Manual composition | ✅ Auto-merged |
+| Multi-module | ✅ Manual composition | ✅ Supported, with backend-specific assembly |
 | Learning curve | Medium | Low |
 
 ### Hybrid Approach
 
-You can combine generated config with manual DSL additions:
+You can combine module-level generated configs with manual DSL additions. Explicit `+` composition is the backend-neutral default, while the DSL remains the manual escape hatch.
 
 ```kotlin
-// KSP-generated config
-val generatedConfig = GeneratedNavigationConfig
+// Backend-generated module configs
+val generatedConfig = ComposeAppNavigationConfig +
+    Feature1NavigationConfig +
+    Feature2NavigationConfig
 
 // Manual additions
 val dynamicConfig = navigationConfig {
@@ -724,6 +726,8 @@ val finalConfig = generatedConfig + dynamicConfig
 
 val navigator = rememberQuoVadisNavigator(MainTabs::class, finalConfig)
 ```
+
+For multi-module apps, prefer explicit `+` composition as the default contract. The compiler plugin can additionally aggregate configs via `@NavigationRoot`, but that remains a compiler-specific enhancement. See [COMPILER-PLUGIN.md](COMPILER-PLUGIN.md) for the backend-specific tradeoffs.
 
 ---
 

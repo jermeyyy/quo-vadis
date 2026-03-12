@@ -1,24 +1,19 @@
 package com.jermey.quo.vadis.gradle
 
-import com.google.devtools.ksp.gradle.KspExtension
 import com.jermey.quo.vadis.gradle.internal.toCamelCase
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.configure
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.getByType
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 /**
  * Gradle plugin for Quo Vadis navigation library.
  *
  * Supports two modes:
- * 1. **Compiler plugin mode** (default): Uses K2 compiler plugin for code generation
- * 2. **KSP mode** (deprecated): Uses KSP for code generation
+ * 1. **KSP mode** (default): Uses KSP for code generation
+ * 2. **Compiler plugin mode** (experimental): Uses K2 compiler plugin for code generation
  *
  * Usage:
  * ```kotlin
@@ -29,7 +24,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
  *
  * quoVadis {
  *     modulePrefix = "customPrefix"
- *     useCompilerPlugin = false // opt into legacy KSP mode (deprecated)
+ *     backend = QuoVadisBackend.COMPILER
  * }
  * ```
  */
@@ -42,16 +37,14 @@ class QuoVadisPlugin : Plugin<Project> {
         // Set defaults
         extension.modulePrefix.convention(project.name.toCamelCase())
         extension.useLocalKsp.convention(false)
-        extension.useCompilerPlugin.convention(true)
 
         // Apply compiler subplugin eagerly — KotlinCompilerPluginSupportPlugin must be
         // registered before Kotlin compile tasks are configured (afterEvaluate is too late).
-        // The subplugin's isApplicable() checks useCompilerPlugin to gate actual activation.
-        configureCompilerPlugin(project, extension)
+        // The subplugin's isApplicable() checks the resolved backend to gate activation.
+        configureCompilerPlugin(project)
 
-        // Configure KSP fallback after evaluation so extension values are finalized
+        // Configure the selected backend after evaluation so extension values are finalized.
         project.afterEvaluate {
-            // Kotlin Multiplatform is always required
             if (!project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")) {
                 throw GradleException(
                     "Quo Vadis plugin requires the Kotlin Multiplatform plugin. " +
@@ -59,30 +52,79 @@ class QuoVadisPlugin : Plugin<Project> {
                 )
             }
 
-            if (!extension.useCompilerPlugin.get()) {
-                // KSP mode requires KSP plugin
-                if (!project.plugins.hasPlugin("com.google.devtools.ksp")) {
-                    throw GradleException(
-                        "Quo Vadis plugin requires the KSP plugin in KSP mode. " +
-                            "Please apply 'com.google.devtools.ksp' plugin or set useCompilerPlugin = true."
+            val backend = extension.resolveBackend(project)
+            warnAboutDeprecatedConfiguration(project, extension)
+            validateBackendConfiguration(project, extension, backend)
+
+            when (backend) {
+                QuoVadisBackend.COMPILER -> {
+                    project.logger.lifecycle(
+                        "Quo Vadis: using experimental compiler backend. " +
+                            "Module-level generated configs remain the supported interchangeability contract."
                     )
                 }
-                configureKsp(project, extension)
+
+                QuoVadisBackend.KSP -> configureKsp(project, extension)
             }
         }
     }
 
-    private fun configureCompilerPlugin(project: Project, extension: QuoVadisExtension) {
+    private fun configureCompilerPlugin(project: Project) {
         project.plugins.apply(QuoVadisCompilerSubplugin::class.java)
     }
 
-    private fun configureKsp(project: Project, extension: QuoVadisExtension) {
-        project.logger.warn(
-            "Quo Vadis: KSP code generation mode is deprecated. " +
-                "Migrate to the K2 compiler plugin by setting useCompilerPlugin = true (now the default). " +
-                "See https://github.com/jermeyyy/quo-vadis/blob/main/docs/MIGRATION.md"
-        )
+    private fun warnAboutDeprecatedConfiguration(project: Project, extension: QuoVadisExtension) {
+        if (extension.hasConfiguredBackend(project) && extension.hasDeprecatedCompilerAlias(project)) {
+            project.logger.warn(
+                "Quo Vadis: Both 'backend' and deprecated 'useCompilerPlugin' are configured. " +
+                    "The backend setting takes precedence."
+            )
+            return
+        }
 
+        if (extension.hasDeprecatedCompilerAlias(project)) {
+            project.logger.warn(
+                "Quo Vadis: 'useCompilerPlugin' is deprecated. " +
+                    "Use 'backend = QuoVadisBackend.COMPILER' or set quoVadis.backend=compiler instead."
+            )
+        }
+    }
+
+    private fun validateBackendConfiguration(
+        project: Project,
+        extension: QuoVadisExtension,
+        backend: QuoVadisBackend
+    ) {
+        when (backend) {
+            QuoVadisBackend.COMPILER -> {
+                if (extension.useLocalKsp.get()) {
+                    throw GradleException(
+                        "Quo Vadis compiler backend does not support useLocalKsp=true. " +
+                            "Remove the KSP-only setting or switch backend = QuoVadisBackend.KSP."
+                    )
+                }
+
+                if (hasQuoVadisKspDependency(project)) {
+                    throw GradleException(
+                        "Quo Vadis compiler backend cannot run with Quo Vadis KSP processor dependencies present. " +
+                            "Remove any io.github.jermeyyy:quo-vadis-ksp or :quo-vadis-ksp dependency from ksp configurations, " +
+                            "then run a clean build before switching backends."
+                    )
+                }
+            }
+
+            QuoVadisBackend.KSP -> {
+                if (!project.plugins.hasPlugin("com.google.devtools.ksp")) {
+                    throw GradleException(
+                        "Quo Vadis KSP backend requires the KSP plugin. " +
+                            "Please apply 'com.google.devtools.ksp' or set backend = QuoVadisBackend.COMPILER."
+                    )
+                }
+            }
+        }
+    }
+
+    private fun configureKsp(project: Project, extension: QuoVadisExtension) {
         // Add KSP dependency
         val kspDependency = if (extension.useLocalKsp.get()) {
             project.dependencies.project(mapOf("path" to ":quo-vadis-ksp"))
@@ -91,23 +133,83 @@ class QuoVadisPlugin : Plugin<Project> {
         }
         project.dependencies.add("kspCommonMainMetadata", kspDependency)
 
-        // Configure KSP arguments
-        project.extensions.configure<KspExtension> {
-            arg("quoVadis.modulePrefix", extension.modulePrefix.get())
-        }
+        configureKspArguments(project, extension)
 
-        // Configure generated source directory for commonMain
-        project.extensions.configure<KotlinMultiplatformExtension> {
-            sourceSets.getByName("commonMain") {
-                kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+        configureGeneratedKspSources(project)
+        configureKspTaskDependencies(project)
+    }
+
+    private fun hasQuoVadisKspDependency(project: Project): Boolean {
+        return project.configurations
+            .matching { it.name.startsWith("ksp", ignoreCase = true) }
+            .any { configuration ->
+                configuration.dependencies.any { dependency -> dependency.isQuoVadisKspDependency() }
             }
-        }
+    }
 
-        // Fix task dependencies - ensure KSP runs before compilation
-        project.tasks.withType<KotlinCompilationTask<*>>().configureEach {
-            if (!name.startsWith("ksp") && !name.contains("Test", ignoreCase = true)) {
+    private fun configureKspArguments(project: Project, extension: QuoVadisExtension) {
+        val kspExtension = project.extensions.findByName("ksp")
+            ?: throw GradleException(
+                "Quo Vadis KSP backend requires the KSP extension to be available. " +
+                    "Please apply 'com.google.devtools.ksp' before configuring backend = QuoVadisBackend.KSP."
+            )
+
+        val argMethod = kspExtension.javaClass.methods.firstOrNull { method ->
+            method.name == "arg" && method.parameterCount == 2
+        } ?: throw GradleException(
+            "Quo Vadis could not configure the KSP extension. " +
+                "The loaded KSP plugin does not expose the expected arg(String, String) API."
+        )
+
+        argMethod.invoke(kspExtension, "quoVadis.modulePrefix", extension.modulePrefix.get())
+    }
+
+    private fun configureGeneratedKspSources(project: Project) {
+        val kotlinExtension = project.extensions.findByName("kotlin")
+            ?: throw GradleException(
+                "Quo Vadis KSP backend requires the Kotlin Multiplatform extension to be available."
+            )
+
+        val sourceSets = kotlinExtension.invokeNoArg("getSourceSets")
+        val commonMain = sourceSets.invokeMethod("getByName", "commonMain")
+        val kotlinSources = commonMain.invokeNoArg("getKotlin")
+        kotlinSources.invokeMethod("srcDir", "build/generated/ksp/metadata/commonMain/kotlin")
+    }
+
+    private fun configureKspTaskDependencies(project: Project) {
+        project.tasks.configureEach {
+            if (
+                name.startsWith("compile") &&
+                name.contains("Kotlin") &&
+                !name.startsWith("ksp") &&
+                !name.contains("Test", ignoreCase = true)
+            ) {
                 dependsOn("kspCommonMainKotlinMetadata")
             }
         }
+    }
+
+    private fun Any.invokeNoArg(methodName: String): Any {
+        return javaClass.methods.firstOrNull { method ->
+            method.name == methodName && method.parameterCount == 0
+        }?.invoke(this) ?: throw GradleException(
+            "Quo Vadis could not call $methodName() on ${javaClass.name}."
+        )
+    }
+
+    private fun Any.invokeMethod(methodName: String, vararg args: Any): Any {
+        return javaClass.methods.firstOrNull { method ->
+            method.name == methodName && method.parameterCount == args.size
+        }?.invoke(this, *args) ?: throw GradleException(
+            "Quo Vadis could not call $methodName(${args.size} args) on ${javaClass.name}."
+        )
+    }
+
+    private fun Dependency.isQuoVadisKspDependency(): Boolean {
+        if (group == "io.github.jermeyyy" && name == "quo-vadis-ksp") {
+            return true
+        }
+
+        return this is ProjectDependency && name == "quo-vadis-ksp"
     }
 }

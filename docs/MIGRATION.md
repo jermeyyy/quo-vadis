@@ -1,64 +1,77 @@
-# Migration Guide: KSP → Compiler Plugin
+# Migration Companion: KSP ↔ Compiler Backend
 
-This guide covers migrating from the KSP-based code generation to the K2 compiler plugin for Quo Vadis navigation.
+This guide is the focused cutover companion for existing KSP users who want to switch Quo Vadis to its experimental compiler backend.
+The supported interchangeability boundary today is the module-level generated contract: module-prefixed
+`NavigationConfig` objects, deep-link handlers, and manual `+` composition.
 
-## Why Migrate?
+If you are still deciding which backend to adopt, start with [COMPILER-PLUGIN.md](COMPILER-PLUGIN.md) for backend selection guidance, installation options, limitations, and rollback context.
+
+## Why Switch Backends?
 
 - **Faster builds**: No separate KSP processing pass — code generation happens during normal compilation
 - **Better IDE support**: FIR synthetic declarations provide instant autocomplete without requiring a build
-- **Multi-module auto-discovery**: `@NavigationRoot` automatically aggregates all feature module configs
-- **Unified toolchain**: Single compiler plugin replaces KSP processor + generated source management
-- **Future-proof**: KSP module is deprecated and will be removed in a future version
+- **Shared generated contract**: Both backends generate module-level config objects that can be composed explicitly
+- **Experimental aggregation**: `@NavigationRoot` and `navigationConfig<T>()` remain compiler-backend-only enhancements
+
+> **Current rollout posture**: KSP remains the default backend. Opt into the compiler backend with
+> `quoVadis.backend=compiler` while the interoperability matrix and workflow guardrails mature.
+
+> **Warning**: Treat the compiler backend as experimental, and do not wire Quo Vadis KSP processing and compiler-backend processing for the same module at the same time.
 
 ## Prerequisites
 
 - Kotlin 2.1.0 or later (K2 compiler required)
 - Quo Vadis 0.x.x or later (version with compiler plugin support)
 
-## Step 1: Update Build Configuration
+## Step 1: Choose a Backend
 
 ### Single Module
 
-**Before (KSP):**
+**Default (KSP):**
 ```kotlin
 // build.gradle.kts
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.ksp)           // ← Remove this
+    alias(libs.plugins.ksp)
     alias(libs.plugins.quoVadis)
 }
 
 quoVadis {
     modulePrefix = "MyApp"
-    useCompilerPlugin = false          // ← Was KSP mode
-    useLocalKsp = true                 // ← Remove this
 }
 ```
 
-**After (Compiler Plugin):**
+**Compiler backend (experimental):**
+```kotlin
+// gradle.properties
+quoVadis.backend=compiler
+```
+
 ```kotlin
 // build.gradle.kts
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    // No KSP plugin needed
+    alias(libs.plugins.ksp) // optional during the experiment to preserve a property-only switch
     alias(libs.plugins.quoVadis)
 }
 
 quoVadis {
     modulePrefix = "MyApp"
-    // useCompilerPlugin defaults to true — no configuration needed
 }
 ```
+
+The deprecated `useCompilerPlugin` Boolean alias still works for one transition window, but `backend`
+or the root `quoVadis.backend` property is the primary API now.
 
 ### Multi-Module Project
 
-**Before (KSP) — App module manually combines configs:**
+**Shared contract in both backends — app module manually combines configs:**
 ```kotlin
 val appConfig = Feature1NavigationConfig + Feature2NavigationConfig + AppNavigationConfig
 val navigator = rememberQuoVadisNavigator(MainTabs::class, appConfig)
 ```
 
-**After (Compiler Plugin) — Auto-discovery with @NavigationRoot:**
+**Compiler-only enhancement — auto-discovery with `@NavigationRoot`:**
 ```kotlin
 // In your app module, add @NavigationRoot to any class:
 @NavigationRoot
@@ -68,9 +81,10 @@ object MyApp
 val navigator = rememberQuoVadisNavigator(MainTabs::class, MyAppNavigationConfig)
 ```
 
-The compiler plugin automatically scans the classpath for all `GeneratedNavigationConfig` implementations and merges them.
+The compiler backend automatically scans the classpath for generated module configs and merges them.
 
-> **Note**: Manual `+` operator composition still works as a fallback.
+> **Note**: For backend switching, prefer explicit `+` composition. `@NavigationRoot` and `navigationConfig<T>()`
+> are compiler-only during the experimental phase.
 
 ### Feature Modules
 
@@ -88,13 +102,13 @@ quoVadis {
 }
 ```
 
-## Step 2: Remove KSP Configuration
+## Step 2: Remove KSP-Specific Wiring Only When You Standardize on Compiler Mode
 
-1. Remove `alias(libs.plugins.ksp)` from all module `plugins {}` blocks
-2. Remove any `ksp(...)` dependency declarations
-3. Remove `quoVadis { useLocalKsp = true }` if present
-4. Remove KSP-generated source directory configurations (e.g., `kotlin.srcDir("build/generated/ksp/...")`)
-5. Clean build: `./gradlew clean`
+1. Remove any manual `ksp(...)` dependency declarations that point at `quo-vadis-ksp`
+2. Remove `quoVadis { useLocalKsp = true }` if present
+3. Remove manual KSP-generated source directory configurations (for example `kotlin.srcDir("build/generated/ksp/...")`)
+4. Optionally remove `alias(libs.plugins.ksp)` once you no longer need property-only backend flips
+5. Clean build after every backend flip: `./gradlew clean`
 
 ## Step 3: Verify Build
 
@@ -204,11 +218,17 @@ Yes. Route patterns, argument extraction, and URI creation work identically, inc
 ### What Kotlin version is required?
 Kotlin 2.1.0 or later. The compiler plugin uses K2 FIR and IR APIs.
 
-### Can I use KSP and compiler plugin in the same module?
-No. Choose one per module. The Gradle plugin will error if both are active.
+### Can I leave the KSP Gradle plugin applied in compiler mode?
+Yes. During the experiment, the bare KSP Gradle plugin can stay applied to preserve a property-only backend switch.
+What is not allowed in compiler mode is Quo Vadis-specific KSP wiring such as `quo-vadis-ksp` dependencies or
+`useLocalKsp = true`.
 
 ### Can different modules use different backends?
-Technically possible but not recommended. All modules should migrate together to avoid version conflicts.
+That is currently unsupported for the rollout. Set the backend once at the root build level and keep all Quo Vadis
+modules on the same backend.
+
+### Should I migrate every project right now?
+No. KSP remains the stable/default recommendation. Switch when you specifically want to evaluate the experimental compiler backend or its compiler-only aggregation features.
 
 ### My IDE doesn't show generated classes — how do I fix it?
 Ensure K2 mode is enabled in IDE settings. Invalidate caches if needed. The compiler plugin uses FIR synthetic declarations which require K2 support.
@@ -217,25 +237,20 @@ Ensure K2 mode is enabled in IDE settings. Invalidate caches if needed. The comp
 Use `-PquoVadis.dumpIr=true` Gradle property to dump IR output. For detailed logging, use `./gradlew build --info`.
 
 ### I'm getting a "duplicate class" error — what happened?
-You likely have both KSP and compiler plugin active. Remove the KSP plugin from your `plugins {}` block.
-
-### What's the deprecation timeline for KSP?
-
-| Version | KSP Status |
-|---------|------------|
-| Current | Deprecated with WARNING — both backends supported |
-| Current + 2 minor | Deprecated with ERROR — KSP fails to compile |
-| Current + 3 minor | KSP module removed |
+You likely flipped to compiler mode while still wiring the Quo Vadis KSP processor. Remove any
+`quo-vadis-ksp` KSP dependencies, clear `useLocalKsp`, and run a clean build.
 
 ### Is the compiler plugin stable?
-The compiler plugin uses Kotlin's `ExperimentalCompilerApi`. While the plugin itself is thoroughly tested, Kotlin compiler API changes may require plugin updates when upgrading Kotlin versions.
+The compiler plugin is still experimental. It uses Kotlin's `ExperimentalCompilerApi`, and Kotlin compiler API changes
+may require plugin updates when upgrading Kotlin versions.
 
 ## Rollback
 
 If you encounter issues and need to revert to KSP:
 
-1. Re-add `alias(libs.plugins.ksp)` to your `plugins {}` block
-2. Set `quoVadis { useCompilerPlugin = false }` in each module
+1. Set `quoVadis.backend=ksp` at the root build level
+2. Re-add manual Quo Vadis KSP wiring only if you had removed it entirely
 3. Clean and rebuild: `./gradlew clean build`
 
-The KSP processor is still functional (just deprecated) and produces identical navigation output.
+The KSP backend remains the stable default and produces the same module-level generated contract used for explicit
+config composition.

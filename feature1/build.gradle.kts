@@ -10,13 +10,6 @@ plugins {
     alias(libs.plugins.koin.compiler)
 }
 
-// Quo Vadis configuration — compiler plugin is now default
-quoVadis {
-    useCompilerPlugin = providers.gradleProperty("quoVadis.useCompilerPlugin")
-        .map { it.toBoolean() }
-        .getOrElse(true)
-}
-
 kotlin {
 
     // Target declarations - add or remove as needed below. These define

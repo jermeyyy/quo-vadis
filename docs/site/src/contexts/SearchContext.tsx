@@ -45,6 +45,12 @@ export function SearchProvider({ children }: { children: ReactNode }) {
       content: 'Explore the annotation-based API and type-safe navigation features'
     },
     {
+      id: 'compiler-plugin',
+      title: 'Compiler Plugin (Experimental)',
+      route: '/features/compiler-plugin',
+      content: 'Learn when to use the experimental compiler plugin backend, how it compares to KSP, and how compiler-only @NavigationRoot can augment explicit multi-module composition'
+    },
+    {
       id: 'demo',
       title: 'Demo',
       route: '/demo',

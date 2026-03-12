@@ -40,6 +40,11 @@ dependencies {
     compileOnly(libs.plugins.ksp.toDep())
     compileOnly(libs.plugins.kotlin.multiplatform.toDep())
     implementation(libs.kotlin.gradle.plugin.api)
+
+    testImplementation(gradleTestKit())
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlin.testJunit)
+    testImplementation(libs.junit)
 }
 
 gradlePlugin {
@@ -48,7 +53,7 @@ gradlePlugin {
             id = "io.github.jermeyyy.quo-vadis"
             implementationClass = "com.jermey.quo.vadis.gradle.QuoVadisPlugin"
             displayName = "Quo Vadis Navigation Plugin"
-            description = "Gradle plugin for Quo Vadis navigation library KSP configuration"
+            description = "Gradle plugin for Quo Vadis navigation backend selection and code generation"
         }
     }
 }
@@ -96,7 +101,7 @@ mavenPublishing {
     
     pom {
         name.set("Quo Vadis Gradle Plugin")
-        description.set("Gradle plugin for Quo Vadis navigation library KSP configuration")
+        description.set("Gradle plugin for Quo Vadis navigation backend selection and code generation")
         inceptionYear.set("2025")
         url.set("https://github.com/jermeyyy/quo-vadis")
         

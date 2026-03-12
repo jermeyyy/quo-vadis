@@ -26,18 +26,26 @@ export default function GettingStarted() {
         <h2 id="installation">Installation</h2>
 
         <p>
-          Choose one of the following installation methods. The Gradle plugin approach is recommended
-          as it handles KSP configuration automatically.
+          Choose your annotation backend before wiring Quo Vadis into the build. KSP remains the
+          stable recommendation for production use today, while the compiler plugin is available as
+          an experimental alternative.
         </p>
 
-        <h3 id="gradle-plugin">Option 1: Using Gradle Plugin (Recommended)</h3>
+        <h3 id="gradle-plugin">Option 1: Using Gradle Plugin with KSP (Recommended)</h3>
         <p>
-          The Gradle plugin automatically configures KSP and registers generated sources, making setup
-          simpler and more reliable.
+          The Gradle plugin automatically configures KSP and registers generated sources, making the
+          stable setup simpler and more reliable.
         </p>
         <CodeBlock code={gradlePluginInstallation} language="kotlin" title="build.gradle.kts" />
 
-        <h3 id="manual-config">Option 2: Manual Configuration</h3>
+        <div className={styles.note}>
+          <p>
+            Want to evaluate the newer backend instead? See <Link to="/features/compiler-plugin">Compiler Plugin (Experimental)</Link>
+            {' '}for the current trade-offs, setup direction, and rollback guidance.
+          </p>
+        </div>
+
+        <h3 id="manual-config">Option 2: Manual KSP Configuration</h3>
         <p>
           If you need more control over the build configuration, you can set up KSP manually.
         </p>
@@ -70,8 +78,10 @@ export default function GettingStarted() {
       <section>
         <h2 id="setup-navigation-host">Setup NavigationHost</h2>
         <p>
-          Finally, set up the <code>NavigationHost</code> in your app's entry point. The generated
-          configuration combines all registries from your annotated destinations.
+          Finally, set up the <code>NavigationHost</code> in your app's entry point. Start with the
+          module-level generated config for your app module, such as <code>MyAppNavigationConfig</code>.
+          If your app spans multiple modules, combine those module configs explicitly with the
+          <code>+</code> operator in one place.
         </p>
         <CodeBlock code={navigationHostWithImports} language="kotlin" title="App.kt" />
       </section>
@@ -79,8 +89,15 @@ export default function GettingStarted() {
       <section>
         <h2 id="generated-code">What Gets Generated</h2>
         <p>
-          KSP generates several classes based on your annotations. The prefix is configurable
-          via <code>modulePrefix</code> in your Gradle configuration.
+          Annotation-based configuration produces several classes from your annotations. In KSP mode
+          you can inspect generated sources directly; the compiler plugin exposes the same core APIs
+          through compiler synthesis instead. The prefix is configurable via <code>modulePrefix</code>
+          in your Gradle configuration.
+        </p>
+        <p>
+          For example, setting <code>modulePrefix = "MyApp"</code> produces
+          <code> MyAppNavigationConfig</code>. In multi-module apps, keep each module's generated config
+          separate and compose them explicitly where you create your navigator.
         </p>
 
         <table>
@@ -137,6 +154,10 @@ export default function GettingStarted() {
           <li>
             <a href="/features/annotation-api">Annotation API</a> — Full reference for all annotations
             including <code>@Tabs</code>, <code>@Pane</code>, and more
+          </li>
+          <li>
+            <a href="/features/compiler-plugin">Compiler Plugin (Experimental)</a> — Evaluate the newer
+            annotation backend and understand when it differs from KSP
           </li>
           <li>
             <a href="/features/tabbed-navigation">Tabbed Navigation</a> — Set up tab-based navigation

@@ -145,7 +145,7 @@ fun ArticleScreen(
  */
 export const navigationHostBasic = `@Composable
 fun App() {
-    val config = GeneratedNavigationConfig
+    val config = MyAppNavigationConfig
     
     val initialState = remember {
         config.buildNavNode(
@@ -177,8 +177,8 @@ import com.jermey.quo.vadis.core.navigation.navigator.TreeNavigator
 
 @Composable
 fun App() {
-    // Generated config combines all registries
-    val config = GeneratedNavigationConfig
+    // Module-level config combines this module's registries
+    val config = MyAppNavigationConfig
     
     // Build initial navigation state
     val initialState = remember {
@@ -366,9 +366,13 @@ fun MessagesPaneContainer(
  * Generated NavigationConfig usage - type-safe navigation
  */
 export const generatedConfigUsage = `// Generated NavigationConfig usage
+val config = ComposeAppNavigationConfig +
+    Feature1NavigationConfig +
+    Feature2NavigationConfig
+
 val navigator = TreeNavigator(
-    config = GeneratedNavigationConfig,
-    initialState = GeneratedNavigationConfig.buildNavNode(
+    config = config,
+    initialState = config.buildNavNode(
         HomeDestination::class, 
         null
     )!!

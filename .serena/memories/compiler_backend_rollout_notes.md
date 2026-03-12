@@ -1,0 +1,5 @@
+- Backend selection now uses root property quoVadis.backend with ksp default and compiler experimental opt-in.
+- Deprecated alias quoVadis.useCompilerPlugin still maps to backend selection but should not be primary.
+- Compiler backend local verification requires publishing :quo-vadis-compiler-plugin and :quo-vadis-compiler-plugin-native to Maven Local first.
+- Backend flips must be followed by clean to avoid stale KSP generated sources causing duplicate/conflicting declarations.
+- Verified build tasks: :composeApp:desktopJar and :feature1:allMetadataJar :feature2:allMetadataJar in both default KSP and compiler mode after clean.
