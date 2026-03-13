@@ -126,6 +126,10 @@ class ValidationEngine(
         validateTabItemAnnotations(tabs)
         validateNestedStackTabs(tabs)
         validateFlatScreenTabs(tabs)
+        validateTabItemsHaveAnnotation(tabs)
+        validateContainerReferences(tabs)
+        validateCircularTabNesting(tabs)
+        validateTabNestingDepth(tabs)
 
         return !hasErrors
     }
@@ -515,10 +519,11 @@ class ValidationEngine(
      * Validates that each @TabItem has valid annotation combinations.
      *
      * A @TabItem must have exactly one of:
-     * - @Stack (for nested navigation with NESTED_STACK type)
+     * - @Stack (for nested navigation with NESTED_STACK or CONTAINER_REFERENCE type)
      * - @Destination (for flat screen with FLAT_SCREEN type)
+     * - @Tabs (for nested tab containers with CONTAINER_REFERENCE type)
      *
-     * Having both or neither is an error.
+     * Having incompatible combinations is an error.
      */
     private fun validateTabItemAnnotations(tabs: List<TabInfo>) {
         tabs.forEach { tab ->
@@ -527,6 +532,9 @@ class ValidationEngine(
                     tabItem.classDeclaration.annotations.any { it.shortName.asString() == "Stack" }
                 val hasDestination = tabItem.destinationInfo != null ||
                     tabItem.classDeclaration.annotations.any { it.shortName.asString() == "Destination" }
+                val hasTabs = tabItem.classDeclaration.annotations.any {
+                    it.shortName.asString() == "Tabs"
+                }
 
                 when {
                     hasStack && hasDestination -> {
@@ -537,12 +545,29 @@ class ValidationEngine(
                             "Use @Stack for nested navigation OR @Destination for flat screen, not both"
                         )
                     }
-                    !hasStack && !hasDestination -> {
+                    hasTabs && hasDestination -> {
                         reportError(
                             tabItem.classDeclaration,
                             "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
-                                "has neither @Stack nor @Destination",
-                            "Add @Stack for nested navigation or @Destination for flat screen"
+                                "has both @Tabs and @Destination",
+                            "Use @Tabs for nested tabs OR @Destination for flat screen, not both"
+                        )
+                    }
+                    hasTabs && hasStack -> {
+                        reportError(
+                            tabItem.classDeclaration,
+                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
+                                "has both @Tabs and @Stack",
+                            "Use @Tabs for nested tabs OR @Stack for nested navigation, not both"
+                        )
+                    }
+                    !hasStack && !hasDestination && !hasTabs -> {
+                        reportError(
+                            tabItem.classDeclaration,
+                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
+                                "has neither @Stack, @Tabs, nor @Destination",
+                            "Add @Stack for nested navigation, @Tabs for nested tabs, " +
+                                "or @Destination for flat screen"
                         )
                     }
                 }
@@ -621,6 +646,164 @@ class ValidationEngine(
                         "Add a route parameter for deep linking support"
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * Validates that every class listed in @Tabs(items=[...]) has @TabItem annotation.
+     */
+    private fun validateTabItemsHaveAnnotation(tabs: List<TabInfo>) {
+        tabs.filter { it.isNewPattern }.forEach { tab ->
+            tab.tabs.forEach { tabItem ->
+                val hasTabItem = tabItem.classDeclaration.annotations.any {
+                    it.shortName.asString() == "TabItem"
+                }
+                if (!hasTabItem) {
+                    reportError(
+                        tabItem.classDeclaration,
+                        "Class '${tabItem.classDeclaration.simpleName.asString()}' is listed " +
+                            "in @Tabs(items = [...]) but is missing @TabItem annotation",
+                        "All tab items require @TabItem"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates that CONTAINER_REFERENCE tab items have @Stack or @Tabs annotation.
+     */
+    private fun validateContainerReferences(tabs: List<TabInfo>) {
+        tabs.forEach { tab ->
+            tab.tabs.filter { it.tabType == TabItemType.CONTAINER_REFERENCE }.forEach { tabItem ->
+                val hasStack = tabItem.classDeclaration.annotations.any {
+                    it.shortName.asString() == "Stack"
+                }
+                val hasTabs = tabItem.classDeclaration.annotations.any {
+                    it.shortName.asString() == "Tabs"
+                }
+                if (!hasStack && !hasTabs) {
+                    reportError(
+                        tabItem.classDeclaration,
+                        "Container reference '${tabItem.classDeclaration.simpleName.asString()}' " +
+                            "must be annotated with either @Stack or @Tabs",
+                        "Add @Stack or @Tabs annotation to this container reference"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Detects circular nesting in tab containers.
+     *
+     * Builds a directed graph from @Tabs(items=[...]) entries where items are
+     * CONTAINER_REFERENCE pointing to other @Tabs containers, then checks for cycles
+     * using DFS traversal.
+     */
+    private fun validateCircularTabNesting(tabs: List<TabInfo>) {
+        // Build adjacency: tabQualifiedName -> list of referenced @Tabs qualified names
+        val tabsByQualifiedName = tabs.associateBy {
+            it.classDeclaration.qualifiedName?.asString() ?: it.className
+        }
+        val adjacency = mutableMapOf<String, List<String>>()
+
+        tabs.forEach { tab ->
+            val tabName = tab.classDeclaration.qualifiedName?.asString() ?: tab.className
+            val referencedTabs = tab.tabs
+                .filter { it.tabType == TabItemType.CONTAINER_REFERENCE }
+                .mapNotNull { tabItem ->
+                    val itemName = tabItem.classDeclaration.qualifiedName?.asString()
+                    if (itemName != null && tabsByQualifiedName.containsKey(itemName)) itemName else null
+                }
+            adjacency[tabName] = referencedTabs
+        }
+
+        // DFS cycle detection
+        val visited = mutableSetOf<String>()
+        val inStack = mutableSetOf<String>()
+        val path = mutableListOf<String>()
+
+        fun dfs(node: String): Boolean {
+            if (node in inStack) {
+                val cycleStart = path.indexOf(node)
+                val cyclePath = path.subList(cycleStart, path.size) + node
+                val cycleStr = cyclePath.joinToString(" -> ") { it.substringAfterLast('.') }
+                val tabInfo = tabsByQualifiedName[node]
+                if (tabInfo != null) {
+                    reportError(
+                        tabInfo.classDeclaration,
+                        "Circular tab nesting detected: $cycleStr",
+                        "Tab containers cannot reference each other cyclically"
+                    )
+                }
+                return true
+            }
+            if (node in visited) return false
+
+            visited.add(node)
+            inStack.add(node)
+            path.add(node)
+
+            adjacency[node]?.forEach { neighbor ->
+                if (dfs(neighbor)) return true
+            }
+
+            inStack.remove(node)
+            path.removeAt(path.lastIndex)
+            return false
+        }
+
+        adjacency.keys.forEach { node ->
+            if (node !in visited) {
+                dfs(node)
+            }
+        }
+    }
+
+    /**
+     * Warns when tab nesting depth exceeds 3 levels.
+     *
+     * Computes the maximum nesting depth for each @Tabs container by traversing
+     * CONTAINER_REFERENCE items that point to other @Tabs containers.
+     */
+    private fun validateTabNestingDepth(tabs: List<TabInfo>) {
+        val tabsByQualifiedName = tabs.associateBy {
+            it.classDeclaration.qualifiedName?.asString() ?: it.className
+        }
+        val depthCache = mutableMapOf<String, Int>()
+
+        fun computeDepth(tabName: String, visiting: Set<String>): Int {
+            depthCache[tabName]?.let { return it }
+            if (tabName in visiting) return 1 // Cycle — handled by circular detection
+            val tab = tabsByQualifiedName[tabName] ?: return 1
+
+            val maxChildDepth = tab.tabs
+                .filter { it.tabType == TabItemType.CONTAINER_REFERENCE }
+                .maxOfOrNull { tabItem ->
+                    val itemName = tabItem.classDeclaration.qualifiedName?.asString()
+                    if (itemName != null && tabsByQualifiedName.containsKey(itemName)) {
+                        computeDepth(itemName, visiting + tabName)
+                    } else {
+                        0
+                    }
+                } ?: 0
+
+            val depth = 1 + maxChildDepth
+            depthCache[tabName] = depth
+            return depth
+        }
+
+        tabsByQualifiedName.forEach { (name, tab) ->
+            val depth = computeDepth(name, emptySet())
+            @Suppress("MagicNumber")
+            if (depth > 3) {
+                reportWarning(
+                    tab.classDeclaration,
+                    "Tab nesting depth exceeds 3 levels at '${tab.className}'",
+                    "Deep nesting may cause usability issues"
+                )
             }
         }
     }

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.jermey.feature1.resultdemo.ResultDemoDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
 import com.jermey.navplayground.demo.ui.components.glassmorphism.LocalHazeState
 import com.jermey.quo.vadis.annotations.TabsContainer
@@ -136,6 +138,7 @@ private fun GlassBottomNavigationBar(
                 is MainTabs.ExploreTab -> "Explore" to Icons.Default.Explore
                 is MainTabs.ProfileTab -> "Profile" to Icons.Default.Person
                 is MainTabs.SettingsTab -> "Settings" to Icons.Default.Settings
+                is ResultDemoDestination -> "Results" to Icons.Default.Star
                 else -> "Tab" to Icons.Default.Circle
             }
             NavigationBarItem(
@@ -179,6 +182,7 @@ private fun MainBottomNavigationBar(
                 is MainTabs.ExploreTab -> "Explore" to Icons.Default.Explore
                 is MainTabs.ProfileTab -> "Profile" to Icons.Default.Person
                 is MainTabs.SettingsTab -> "Settings" to Icons.Default.Settings
+                is ResultDemoDestination -> "Results" to Icons.Default.Star
                 else -> "Tab" to Icons.Default.Circle
             }
             NavigationBarItem(

@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.config
 
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
@@ -143,6 +144,20 @@ interface NavigationConfig {
         key: String? = null,
         parentKey: String? = null
     ): NavNode?
+
+    /**
+     * Sets a fallback node resolver for cross-config destination resolution.
+     *
+     * Used internally by [CompositeNavigationConfig] to enable container references
+     * that span multiple combined configs.
+     *
+     * @param resolver Function to resolve destinations not found in this config,
+     *   or null to clear the resolver
+     */
+    @InternalQuoVadisApi
+    fun setNodeResolver(resolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)?) {
+        // Default no-op for implementations that don't need cross-config resolution
+    }
 
     /**
      * Combines this config with another, returning a composite config.

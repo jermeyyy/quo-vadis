@@ -157,9 +157,9 @@ duck/request_manual_test:
 
 ### How Delegation Works
 
-- Main agent can call `runSubagent` multiple times, subagents will run in parallel
+- Main agent can call `#agent/runSubagent` multiple times, subagents will run in parallel
 - It is desired to run multiple subagents in parallel to complete multiple tasks which are independent
-- **Subagents cannot spawn subagents** - only main agent has `runSubagent` tool
+- **Subagents cannot spawn subagents** - only main agent has `#agent/runSubagent` tool
 - Subagents return a single message with their results
 
 **Context window is your most precious resource.** Delegate to preserve it for orchestration.

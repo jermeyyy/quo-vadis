@@ -185,10 +185,11 @@ class TabExtractor(
      * Extract tabs from explicit items array (new pattern).
      *
      * Each class in the array must have @TabItem annotation.
-     * The class is typically also annotated with @Stack (making it its own root graph).
+     * The class is typically also annotated with @Stack (making it its own root graph),
+     * @Tabs (for nested tab containers), or @Destination (for flat screens).
      *
      * @param items List of KSType from items array
-     * @param tabContainer The @Tab container class (for error reporting)
+     * @param tabContainer The @Tab container class (for type detection and error reporting)
      * @return List of TabItemInfo
      */
     private fun extractFromItemsArray(
@@ -202,35 +203,49 @@ class TabExtractor(
                 return@mapNotNull null
             }
 
-            extractTabItemNewPattern(classDecl)
+            extractTabItemNewPattern(classDecl, tabContainer)
         }
     }
 
     /**
-     * Detects whether a @TabItem is a flat screen or nested stack based on annotations.
+     * Detects the tab item type based on annotations and relationship to the tab container.
      *
      * Detection rules:
-     * - @TabItem + @Stack + (sealed class) → NESTED_STACK
-     * - @TabItem + @Destination + (data object) → FLAT_SCREEN
+     * - @TabItem + @Destination → FLAT_SCREEN
+     * - @TabItem + @Tabs → CONTAINER_REFERENCE (nested tabs are always container refs)
+     * - @TabItem + @Stack + parentDeclaration == tabContainerClass → NESTED_STACK
+     * - @TabItem + @Stack + parentDeclaration != tabContainerClass → CONTAINER_REFERENCE
      *
      * @param classDeclaration The class to analyze
-     * @return [TabItemType.NESTED_STACK] or [TabItemType.FLAT_SCREEN]
+     * @param tabContainerClass The parent @Tabs container class
+     * @return [TabItemType.FLAT_SCREEN], [TabItemType.NESTED_STACK], or [TabItemType.CONTAINER_REFERENCE]
      */
-    private fun detectTabItemType(classDeclaration: KSClassDeclaration): TabItemType {
-        val hasStack = classDeclaration.annotations.any {
-            it.shortName.asString() == "Stack"
-        }
+    private fun detectTabItemType(
+        classDeclaration: KSClassDeclaration,
+        tabContainerClass: KSClassDeclaration
+    ): TabItemType {
         val hasDestination = classDeclaration.annotations.any {
             it.shortName.asString() == "Destination"
         }
+        val hasTabs = classDeclaration.annotations.any {
+            it.shortName.asString() == "Tabs"
+        }
+        val hasStack = classDeclaration.annotations.any {
+            it.shortName.asString() == "Stack"
+        }
 
         return when {
-            hasStack -> TabItemType.NESTED_STACK
             hasDestination -> TabItemType.FLAT_SCREEN
+            hasTabs -> TabItemType.CONTAINER_REFERENCE
+            hasStack -> {
+                val isLocalMember = classDeclaration.parentDeclaration == tabContainerClass
+                if (isLocalMember) TabItemType.NESTED_STACK else TabItemType.CONTAINER_REFERENCE
+            }
             else -> {
                 // Default to FLAT_SCREEN if neither (will be validated later)
                 logger.warn(
-                    "TabItem '${classDeclaration.simpleName.asString()}' has neither @Stack nor @Destination",
+                    "TabItem '${classDeclaration.simpleName.asString()}' " +
+                        "has neither @Stack, @Tabs, nor @Destination",
                     classDeclaration
                 )
                 TabItemType.FLAT_SCREEN
@@ -243,17 +258,24 @@ class TabExtractor(
      *
      * In the new pattern:
      * - The class has @TabItem
-     * - The class may have @Stack (NESTED_STACK) or @Destination (FLAT_SCREEN)
-     * - The class IS the stack or destination itself
+     * - The class may have @Stack (NESTED_STACK or CONTAINER_REFERENCE),
+     *   @Tabs (CONTAINER_REFERENCE), or @Destination (FLAT_SCREEN)
+     * - The class IS the stack, tabs container, or destination itself
      *
      * Tab type detection:
-     * - @TabItem + @Stack → [TabItemType.NESTED_STACK]
      * - @TabItem + @Destination → [TabItemType.FLAT_SCREEN]
+     * - @TabItem + @Tabs → [TabItemType.CONTAINER_REFERENCE]
+     * - @TabItem + @Stack (local member) → [TabItemType.NESTED_STACK]
+     * - @TabItem + @Stack (cross-module/standalone) → [TabItemType.CONTAINER_REFERENCE]
      *
      * @param classDeclaration The @TabItem class
+     * @param tabContainerClass The parent @Tabs container class
      * @return TabItemInfo or null if not valid
      */
-    private fun extractTabItemNewPattern(classDeclaration: KSClassDeclaration): TabItemInfo? {
+    private fun extractTabItemNewPattern(
+        classDeclaration: KSClassDeclaration,
+        tabContainerClass: KSClassDeclaration
+    ): TabItemInfo? {
         val tabItemAnnotation = classDeclaration.annotations.find {
             it.shortName.asString() == "TabItem"
         }
@@ -267,7 +289,22 @@ class TabExtractor(
         }
 
         // Detect tab type and extract type-specific info
-        val tabType = detectTabItemType(classDeclaration)
+        val tabType = detectTabItemType(classDeclaration, tabContainerClass)
+
+        // Container references are opaque — skip internal extraction
+        if (tabType == TabItemType.CONTAINER_REFERENCE) {
+            logger.info(
+                "Extracted @TabItem '${classDeclaration.simpleName.asString()}' " +
+                    "(tabType=CONTAINER_REFERENCE)"
+            )
+            return TabItemInfo(
+                classDeclaration = classDeclaration,
+                tabType = TabItemType.CONTAINER_REFERENCE,
+                destinationInfo = null,
+                stackInfo = null
+            )
+        }
+
         val (destinationInfo, stackInfo) = extractTypeSpecificInfo(classDeclaration, tabType)
 
         logger.info(
@@ -317,6 +354,10 @@ class TabExtractor(
                 )
             }
             null to stackInfo
+        }
+        TabItemType.CONTAINER_REFERENCE -> {
+            // Container references are opaque — no internal extraction
+            null to null
         }
     }
 

@@ -12,6 +12,7 @@ import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.annotations.Transition
 import com.jermey.quo.vadis.annotations.TransitionType
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.feature1.resultdemo.ResultDemoDestination
 
 /**
  * Home tab - Main entry point and navigation patterns showcase.
@@ -64,7 +65,7 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 @Tabs(
     name = "mainTabs",
     initialTab = HomeTab::class,
-    items = [HomeTab::class, ExploreTab::class, ProfileTab::class, SettingsTab::class]
+    items = [HomeTab::class, ExploreTab::class, ProfileTab::class, SettingsTab::class, ResultDemoDestination::class]
 )
 sealed class MainTabs : NavDestination {
 

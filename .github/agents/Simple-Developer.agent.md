@@ -1,8 +1,9 @@
 ---
 name: Simple-Developer
 description: Focused Kotlin Multiplatform developer agent for implementing well-defined tasks. Specializes in Compose Multiplatform and MVI architecture. Executes delegated tasks without spawning subagents.
-tools: [execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/runInTerminal, read/terminalSelection, read/terminalLastCommand, read/problems, read/readFile, 'gradle-mcp/*', serena/activate_project, serena/delete_memory, serena/find_file, serena/find_referencing_symbols, serena/find_symbol, serena/get_current_config, serena/get_symbols_overview, serena/list_dir, serena/list_memories, serena/read_memory, serena/search_for_pattern, serena/switch_modes, serena/think_about_collected_information, serena/think_about_task_adherence, serena/think_about_whether_you_are_done, serena/write_memory, 'duck/*', edit/createDirectory, edit/createFile, edit/editFiles, edit/rename, search, web, todo]
+tools: [execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/runInTerminal, read/terminalSelection, read/terminalLastCommand, read/problems, read/readFile, agent, 'gradle-mcp/*', serena/activate_project, serena/delete_memory, serena/find_file, serena/find_referencing_symbols, serena/find_symbol, serena/get_current_config, serena/get_symbols_overview, serena/list_dir, serena/list_memories, serena/read_memory, serena/search_for_pattern, serena/switch_modes, serena/think_about_collected_information, serena/think_about_task_adherence, serena/think_about_whether_you_are_done, serena/write_memory, 'duck/*', edit/createDirectory, edit/createFile, edit/editFiles, edit/rename, search, web, todo]
 user-invocable: false
+agents: ["Simple-Developer","Simple-Architect"]
 ---
 
 # Simple-Developer Agent
@@ -123,6 +124,19 @@ duck/request_manual_test:
 ### After User Guidance
 1. Implement chosen approach
 2. Add code comment: `// Decision: [choice] per user guidance`
+
+---
+
+## Delegating to Subagents
+
+### How Delegation Works
+
+- Main agent can call `#agent/runSubagent` multiple times, subagents will run in parallel
+- It is desired to run multiple subagents in parallel to complete multiple tasks which are independent
+- **Subagents cannot spawn subagents** - only main agent has `#agent/runSubagent` tool
+- Subagents return a single message with their results
+
+**Context window is your most precious resource.** Delegate to preserve it for orchestration.
 
 ---
 

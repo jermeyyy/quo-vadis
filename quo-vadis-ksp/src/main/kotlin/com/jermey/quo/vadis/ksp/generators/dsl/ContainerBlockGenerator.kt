@@ -171,6 +171,10 @@ class ContainerBlockGenerator(
                 // Tab with nested stack - use containerTab<Type>() since the stack is defined separately
                 CodeBlock.of("containerTab<%T>()\n", tabClassName)
             }
+            TabItemType.CONTAINER_REFERENCE -> {
+                // Cross-module or nested tabs reference - use containerTab<Type>()
+                CodeBlock.of("containerTab<%T>()\n", tabClassName)
+            }
             TabItemType.FLAT_SCREEN -> {
                 // Simple flat screen tab
                 if (isObject) {

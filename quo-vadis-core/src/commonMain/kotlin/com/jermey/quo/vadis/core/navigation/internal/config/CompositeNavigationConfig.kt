@@ -55,6 +55,13 @@ class CompositeNavigationConfig(
     private val secondary: NavigationConfig
 ) : NavigationConfig {
 
+    init {
+        @OptIn(InternalQuoVadisApi::class)
+        primary.setNodeResolver(::buildNavNode)
+        @OptIn(InternalQuoVadisApi::class)
+        secondary.setNodeResolver(::buildNavNode)
+    }
+
     /**
      * Composite screen registry that checks secondary first, then primary.
      */
@@ -163,6 +170,16 @@ class CompositeNavigationConfig(
                 secondaryReg.getPaneRole(scopeKey, destinationClass)
                     ?: primaryReg.getPaneRole(scopeKey, destinationClass)
         }
+    }
+
+    @InternalQuoVadisApi
+    override fun setNodeResolver(
+        resolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)?
+    ) {
+        @OptIn(InternalQuoVadisApi::class)
+        primary.setNodeResolver(resolver)
+        @OptIn(InternalQuoVadisApi::class)
+        secondary.setNodeResolver(resolver)
     }
 
     /**

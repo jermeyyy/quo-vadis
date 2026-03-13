@@ -77,6 +77,19 @@ internal class DslNavigationConfig(
 ) : NavigationConfig {
 
     /**
+     * Fallback resolver for cross-config container reference resolution.
+     * Set by [CompositeNavigationConfig] to enable cross-module tab container references.
+     */
+    private var nodeResolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)? = null
+
+    @InternalQuoVadisApi
+    override fun setNodeResolver(
+        resolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)?
+    ) {
+        nodeResolver = resolver
+    }
+
+    /**
      * Registry for rendering screen content based on destination type.
      */
     override val screenRegistry: ScreenRegistry by lazy {
@@ -347,12 +360,24 @@ internal class DslNavigationConfig(
             }
 
             is TabEntry.ContainerReference -> {
-                // For container references, we need to build the referenced container
+                // For container references, build the referenced container.
+                // Try local lookup first, then fall back to cross-config resolver
+                // (set by CompositeNavigationConfig) for cross-module references.
                 val containerNode = buildNavNode(
                     tabEntry.containerClass,
                     stackKey,
                     tabNodeKey
+                ) ?: nodeResolver?.invoke(
+                    tabEntry.containerClass,
+                    stackKey,
+                    tabNodeKey
                 )
+                // If the resolved node is already a StackNode, use it directly
+                // as the tab's stack — it already has the correct key and parentKey.
+                // Wrapping it would create duplicate keys in the tree.
+                if (containerNode is StackNode) {
+                    return containerNode
+                }
                 if (containerNode != null) {
                     listOf(containerNode)
                 } else {

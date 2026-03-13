@@ -3,11 +3,12 @@ package com.jermey.quo.vadis.ksp.models
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
 /**
- * Distinguishes between flat screen tabs and nested stack tabs.
+ * Distinguishes between flat screen tabs, nested stack tabs, and container references.
  *
  * Used to determine how a @TabItem should be processed and rendered:
  * - [FLAT_SCREEN]: Tab is a single screen destination (data object with @Destination)
- * - [NESTED_STACK]: Tab has its own navigation stack (sealed class with @Stack)
+ * - [NESTED_STACK]: Tab has its own navigation stack (local sealed class with @Stack)
+ * - [CONTAINER_REFERENCE]: Tab references a @Stack or @Tabs container defined elsewhere
  */
 enum class TabItemType {
     /**
@@ -23,9 +24,9 @@ enum class TabItemType {
     FLAT_SCREEN,
 
     /**
-     * Tab has its own navigation stack.
+     * Tab has its own navigation stack defined as a local sealed member.
      *
-     * Pattern: `@TabItem` + `@Stack` on sealed class
+     * Pattern: `@TabItem` + `@Stack` on sealed class that is a direct member of the @Tabs container
      * ```kotlin
      * @TabItem(label = "Home", icon = "home")
      * @Stack(name = "homeStack", startDestination = HomeDestination.Feed::class)
@@ -35,7 +36,28 @@ enum class TabItemType {
      * }
      * ```
      */
-    NESTED_STACK
+    NESTED_STACK,
+
+    /**
+     * Tab references a @Stack or @Tabs container defined in another module or as a standalone class.
+     *
+     * The referenced container is opaque — its internals are not extracted by the tab extractor.
+     * It generates its own container block independently.
+     *
+     * Pattern: `@TabItem` + `@Stack` (cross-module) or `@TabItem` + `@Tabs` (nested tabs)
+     * ```kotlin
+     * // Cross-module stack reference
+     * @TabItem(label = "Feature", icon = "feature")
+     * @Stack(name = "feature", startDestination = ...)
+     * sealed class FeatureDestination : MainTabs, NavDestination { ... }
+     *
+     * // Nested tabs reference
+     * @TabItem(label = "Sub", icon = "sub")
+     * @Tabs(items = [...])
+     * sealed interface SubTabs : MainTabs
+     * ```
+     */
+    CONTAINER_REFERENCE
 }
 
 /**
@@ -87,7 +109,7 @@ data class TabInfo(
 /**
  * Extracted metadata from a @TabItem annotation.
  *
- * Supports two tab type patterns:
+ * Supports three tab type patterns:
  *
  * ## FLAT_SCREEN Pattern
  * Tab is a single screen destination (data object with @Destination):
@@ -101,7 +123,7 @@ data class TabInfo(
  * - [stackInfo] = null
  *
  * ## NESTED_STACK Pattern
- * Tab has its own navigation stack (sealed class with @Stack):
+ * Tab has its own navigation stack (local sealed class with @Stack):
  * ```kotlin
  * @TabItem
  * @Stack(name = "homeStack", startDestination = HomeDestination.Feed::class)
@@ -114,10 +136,22 @@ data class TabInfo(
  * - [destinationInfo] = null
  * - [stackInfo] = StackInfo for this tab's stack
  *
+ * ## CONTAINER_REFERENCE Pattern
+ * Tab references a @Stack or @Tabs container defined elsewhere (cross-module or standalone):
+ * ```kotlin
+ * @TabItem
+ * @Stack(name = "feature", startDestination = ...)
+ * sealed class FeatureDestination : MainTabs, NavDestination { ... }
+ * ```
+ * - [tabType] = [TabItemType.CONTAINER_REFERENCE]
+ * - [destinationInfo] = null (opaque reference)
+ * - [stackInfo] = null (opaque reference)
+ *
  * @property classDeclaration The KSP class declaration for this tab item
- * @property tabType Type of tab: [TabItemType.FLAT_SCREEN] or [TabItemType.NESTED_STACK]
- * @property destinationInfo Destination info for FLAT_SCREEN tabs. Null for NESTED_STACK.
- * @property stackInfo Stack info for NESTED_STACK tabs. Null for FLAT_SCREEN.
+ * @property tabType Type of tab: [TabItemType.FLAT_SCREEN], [TabItemType.NESTED_STACK],
+ *           or [TabItemType.CONTAINER_REFERENCE]
+ * @property destinationInfo Destination info for FLAT_SCREEN tabs. Null for others.
+ * @property stackInfo Stack info for NESTED_STACK tabs. Null for others.
  */
 data class TabItemInfo(
     val classDeclaration: KSClassDeclaration,

@@ -397,6 +397,140 @@ data class BooksDetail(@Argument val itemId: String) : NavDestination
 
 ---
 
+## Cross-Module Tab References
+
+### Concept
+
+`@TabItem` can reference `@Stack` or `@Tabs` containers defined in **other modules**, enabling cross-module tab composition. This is called a **container reference** — the tab item points to an existing navigation container rather than declaring a local tab.
+
+This pattern enables:
+
+- **Feature module isolation** — Each module owns its navigation graph
+- **Flexible composition** — Assemble top-level tabs from independent feature modules
+- **Nested tabs** — Embed an entire tab container as a tab within another container
+
+### @TabItem Requirement
+
+All items listed in `@Tabs(items = [...])` must be annotated with `@TabItem`. This applies to both local sealed class members **and** cross-module references.
+
+### Pattern 1: Cross-Module Stack Tab
+
+Reference a `@Stack` from another module as a tab:
+
+```kotlin
+// feature-settings module
+@TabItem
+@Stack(name = "settingsStack", startDestination = SettingsDestination.Main::class)
+sealed class SettingsDestination : NavDestination {
+    @Destination(route = "settings/main")
+    data object Main : SettingsDestination()
+
+    @Destination(route = "settings/detail")
+    data object Detail : SettingsDestination()
+}
+
+// app module
+@Tabs(
+    name = "mainTabs",
+    initialTab = HomeTab::class,
+    items = [HomeTab::class, SettingsDestination::class]
+)
+object MainTabs : NavDestination
+```
+
+**Resulting Nav Tree:**
+
+```
+TabNode (mainTabs)
+├── ScreenNode (HomeTab)            ← local flat screen
+└── StackNode (settingsStack)       ← container reference from feature module
+    ├── ScreenNode (Settings.Main)
+    └── ScreenNode (Settings.Detail)
+```
+
+### Pattern 2: Nested Tabs (Tabs within Tabs)
+
+Reference a `@Tabs` container from another module as a tab:
+
+```kotlin
+// feature-media module
+@TabItem
+@Tabs(
+    name = "mediaTabs",
+    initialTab = MusicTab::class,
+    items = [MusicTab::class, VideosTab::class]
+)
+object MediaTabs : NavDestination
+
+// app module
+@Tabs(
+    name = "mainTabs",
+    initialTab = HomeTab::class,
+    items = [HomeTab::class, MediaTabs::class, ProfileTab::class]
+)
+object MainTabs : NavDestination
+```
+
+**Resulting Nav Tree:**
+
+```
+TabNode (mainTabs)
+├── ScreenNode (HomeTab)
+├── TabNode (mediaTabs)             ← nested tabs from feature module
+│   ├── ScreenNode (MusicTab)
+│   └── ScreenNode (VideosTab)
+└── ScreenNode (ProfileTab)
+```
+
+### Config Composition
+
+When using cross-module references, each module generates its own `NavigationConfig`. Compose them using the `+` operator:
+
+```kotlin
+// Each module generates its own config
+val config = AppNavigationConfig + FeatureMediaConfig + FeatureSettingsConfig
+
+// Use the composed config for the navigator
+val navigator = rememberTreeNavigator(
+    config = config,
+    initialState = config.buildNavNode(MainTabs::class, null)!!
+)
+```
+
+### Tab Item Types
+
+| Annotations | Sealed Member? | Tab Type |
+|------------|----------------|----------|
+| `@TabItem` + `@Destination` | Any | Flat Screen |
+| `@TabItem` + `@Stack` | Yes (local) | Nested Stack |
+| `@TabItem` + `@Stack` | No (cross-module) | Container Reference |
+| `@TabItem` + `@Tabs` | Any | Container Reference |
+
+### Validation Rules
+
+- `@TabItem` is **required** for all items in the `items` array
+- Circular nesting is detected and rejected at compile time
+- Nesting depth > 3 levels produces a warning
+
+### FlowMVI with Nested Containers
+
+Each nested `@Tabs` gets its own independent `SharedContainerScope`. Shared containers at different nesting levels do not interfere with each other:
+
+```kotlin
+// Each tab container has its own shared scope
+class MainTabsContainer(scope: SharedContainerScope) :
+    SharedNavigationContainer<MainTabsState, MainTabsIntent, MainTabsAction>(scope) {
+    override val store = store(MainTabsState()) { /* ... */ }
+}
+
+class MediaTabsContainer(scope: SharedContainerScope) :
+    SharedNavigationContainer<MediaTabsState, MediaTabsIntent, MediaTabsAction>(scope) {
+    override val store = store(MediaTabsState()) { /* ... */ }
+}
+```
+
+---
+
 ## @Pane and @PaneItem Annotations
 
 ### Purpose
@@ -975,6 +1109,9 @@ Quo Vadis validates annotation usage at compile time. When validation fails, the
 | FLAT_SCREEN must be data object | Error | `FLAT_SCREEN tab 'HomeTab' must be a data object in file 'Tabs.kt' (line 10). Fix: Change to 'data object HomeTab'` |
 | FLAT_SCREEN requires @Destination | Error | `FLAT_SCREEN tab 'HomeTab' is missing @Destination in file 'Tabs.kt' (line 10). Fix: Add @Destination annotation with a route` |
 | FLAT_SCREEN should have route | Warning | `@Destination on FLAT_SCREEN tab 'HomeTab' has no route in file 'Tabs.kt' (line 10). Fix: Add a route parameter for deep linking support` |
+| CONTAINER_REFERENCE must have @Stack or @Tabs | Error | `CONTAINER_REFERENCE tab 'SettingsDestination' requires @Stack or @Tabs annotation in file 'MainTabs.kt' (line 12). Fix: Add @Stack or @Tabs to the referenced class` |
+| CONTAINER_REFERENCE circular nesting | Error | `Circular tab nesting detected: MainTabs → MediaTabs → MainTabs in file 'MainTabs.kt' (line 5). Fix: Remove the circular reference` |
+| Deep nesting warning | Warning | `Tab nesting depth of 4 exceeds recommended maximum of 3: MainTabs → MediaTabs → SubTabs → DeepTabs in file 'MainTabs.kt' (line 5). Fix: Consider flattening the tab hierarchy` |
 
 ### @Pane Validation
 

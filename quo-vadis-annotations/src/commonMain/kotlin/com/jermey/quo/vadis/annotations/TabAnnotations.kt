@@ -193,5 +193,5 @@ annotation class Tabs(
  * @see Destination
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class TabItem
