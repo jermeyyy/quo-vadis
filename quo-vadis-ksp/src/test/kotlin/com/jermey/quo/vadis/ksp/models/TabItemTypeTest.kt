@@ -12,25 +12,25 @@ class TabItemTypeTest {
     }
 
     @Test
-    fun `TabItemType values are FLAT_SCREEN, NESTED_STACK, CONTAINER_REFERENCE`() {
+    fun `TabItemType values are DESTINATION, STACK, TABS`() {
         val names = TabItemType.entries.map { it.name }
-        assertTrue("FLAT_SCREEN" in names)
-        assertTrue("NESTED_STACK" in names)
-        assertTrue("CONTAINER_REFERENCE" in names)
+        assertTrue("DESTINATION" in names)
+        assertTrue("STACK" in names)
+        assertTrue("TABS" in names)
     }
 
     @Test
-    fun `FLAT_SCREEN is the first enum value`() {
-        assertEquals(TabItemType.FLAT_SCREEN, TabItemType.entries[0])
+    fun `DESTINATION is the first enum value`() {
+        assertEquals(TabItemType.DESTINATION, TabItemType.entries[0])
     }
 
     @Test
-    fun `NESTED_STACK is the second enum value`() {
-        assertEquals(TabItemType.NESTED_STACK, TabItemType.entries[1])
+    fun `STACK is the second enum value`() {
+        assertEquals(TabItemType.STACK, TabItemType.entries[1])
     }
 
     @Test
-    fun `CONTAINER_REFERENCE is the third enum value`() {
-        assertEquals(TabItemType.CONTAINER_REFERENCE, TabItemType.entries[2])
+    fun `TABS is the third enum value`() {
+        assertEquals(TabItemType.TABS, TabItemType.entries[2])
     }
 }

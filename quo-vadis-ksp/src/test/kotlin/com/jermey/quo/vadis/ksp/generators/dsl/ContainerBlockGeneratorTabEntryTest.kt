@@ -48,23 +48,22 @@ class ContainerBlockGeneratorTabEntryTest {
             name = name,
             className = name,
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = true,
             tabs = items,
         )
     }
 
-    // -- FLAT_SCREEN tests --
+    // -- DESTINATION tests --
 
     @Test
-    fun `FLAT_SCREEN data object generates tab() call`() {
+    fun `DESTINATION data object generates tab() call`() {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "SettingsTab",
                 classKind = ClassKind.OBJECT,
                 modifiers = setOf(Modifier.DATA),
             ),
-            tabType = TabItemType.FLAT_SCREEN,
+            tabType = TabItemType.DESTINATION,
+            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -77,18 +76,19 @@ class ContainerBlockGeneratorTabEntryTest {
 
         assertTrue(
             output.contains("tab(com.example.SettingsTab)"),
-            "Expected tab(SettingsTab) call for FLAT_SCREEN data object, got:\n$output"
+            "Expected tab(SettingsTab) call for DESTINATION data object, got:\n$output"
         )
     }
 
     @Test
-    fun `FLAT_SCREEN class generates containerTab call`() {
+    fun `DESTINATION class generates containerTab call`() {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "SettingsTab",
                 classKind = ClassKind.CLASS,
             ),
-            tabType = TabItemType.FLAT_SCREEN,
+            tabType = TabItemType.DESTINATION,
+            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -101,20 +101,21 @@ class ContainerBlockGeneratorTabEntryTest {
 
         assertTrue(
             output.contains("containerTab<com.example.SettingsTab>()"),
-            "Expected containerTab<SettingsTab>() call for FLAT_SCREEN class, got:\n$output"
+            "Expected containerTab<SettingsTab>() call for DESTINATION class, got:\n$output"
         )
     }
 
-    // -- NESTED_STACK tests --
+    // -- STACK tests --
 
     @Test
-    fun `NESTED_STACK generates containerTab call`() {
+    fun `STACK generates containerTab call`() {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "HomeTab",
                 annotations = listOf("Stack"),
             ),
-            tabType = TabItemType.NESTED_STACK,
+            tabType = TabItemType.STACK,
+            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -127,20 +128,21 @@ class ContainerBlockGeneratorTabEntryTest {
 
         assertTrue(
             output.contains("containerTab<com.example.HomeTab>()"),
-            "Expected containerTab<HomeTab>() for NESTED_STACK, got:\n$output"
+            "Expected containerTab<HomeTab>() for STACK, got:\n$output"
         )
     }
 
-    // -- CONTAINER_REFERENCE tests --
+    // -- TABS tests --
 
     @Test
-    fun `CONTAINER_REFERENCE generates containerTab call`() {
+    fun `TABS with Stack generates containerTab call`() {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "FeatureDestination",
                 annotations = listOf("Stack"),
             ),
-            tabType = TabItemType.CONTAINER_REFERENCE,
+            tabType = TabItemType.STACK,
+            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -153,18 +155,19 @@ class ContainerBlockGeneratorTabEntryTest {
 
         assertTrue(
             output.contains("containerTab<com.example.FeatureDestination>()"),
-            "Expected containerTab<FeatureDestination>() for CONTAINER_REFERENCE, got:\n$output"
+            "Expected containerTab<FeatureDestination>() for STACK, got:\n$output"
         )
     }
 
     @Test
-    fun `CONTAINER_REFERENCE with Tabs generates containerTab call`() {
+    fun `TABS with Tabs annotation generates containerTab call`() {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "SubTabs",
                 annotations = listOf("Tabs"),
             ),
-            tabType = TabItemType.CONTAINER_REFERENCE,
+            tabType = TabItemType.TABS,
+            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -177,7 +180,7 @@ class ContainerBlockGeneratorTabEntryTest {
 
         assertTrue(
             output.contains("containerTab<com.example.SubTabs>()"),
-            "Expected containerTab<SubTabs>() for CONTAINER_REFERENCE @Tabs, got:\n$output"
+            "Expected containerTab<SubTabs>() for TABS @Tabs, got:\n$output"
         )
     }
 
@@ -191,21 +194,24 @@ class ContainerBlockGeneratorTabEntryTest {
                 classKind = ClassKind.OBJECT,
                 modifiers = setOf(Modifier.DATA),
             ),
-            tabType = TabItemType.FLAT_SCREEN,
+            tabType = TabItemType.DESTINATION,
+            ordinal = 0,
         )
         val nestedItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "HomeTab",
                 annotations = listOf("Stack"),
             ),
-            tabType = TabItemType.NESTED_STACK,
+            tabType = TabItemType.STACK,
+            ordinal = 1,
         )
         val refItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "FeatureDestination",
                 annotations = listOf("Stack"),
             ),
-            tabType = TabItemType.CONTAINER_REFERENCE,
+            tabType = TabItemType.STACK,
+            ordinal = 2,
         )
 
         val output = generator.generate(
@@ -216,7 +222,7 @@ class ContainerBlockGeneratorTabEntryTest {
 
         assertTrue(output.contains("tab(com.example.SettingsTab)"), "Missing flat tab call")
         assertTrue(output.contains("containerTab<com.example.HomeTab>()"), "Missing nested stack call")
-        assertTrue(output.contains("containerTab<com.example.FeatureDestination>()"), "Missing container ref call")
+        assertTrue(output.contains("containerTab<com.example.FeatureDestination>()"), "Missing stack tab call")
     }
 
     // -- Container generation structure --
@@ -229,7 +235,8 @@ class ContainerBlockGeneratorTabEntryTest {
                 classKind = ClassKind.OBJECT,
                 modifiers = setOf(Modifier.DATA),
             ),
-            tabType = TabItemType.FLAT_SCREEN,
+            tabType = TabItemType.DESTINATION,
+            ordinal = 0,
         )
 
         val output = generator.generate(

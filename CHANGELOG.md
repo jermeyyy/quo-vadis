@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`@TabItem` child-to-parent pattern**: Tab items now declare their parent via `@TabItem(parent = MainTabs::class, ordinal = N)` instead of being listed in `@Tabs`. Enables cross-module tab registration.
+- **`navigation-api` module**: Shared module for cross-module navigation definitions (e.g. `MainTabs`)
+- **Cross-module tab merging in `CompositeNavigationConfig`**: When multiple modules contribute `@TabItem`s to the same `@Tabs`, their `TabNode`s are merged at runtime with proper key re-indexing to avoid key collisions.
+- **`@TabItem` ordinal validation**: KSP validates ordinals start at 0 and are contiguous.
+
+### Changed
+
+- **`@Tabs` annotation**: Removed `items` and `initialTab` parameters. Tab structure is now built from child `@TabItem` declarations.
+- **`@TabItem` annotation**: Now requires `parent` (the `@Tabs` class) and `ordinal` (display position; 0 = initial tab).
+- **`TabInfo` / `TabItemInfo` models**: Restructured to support the child-to-parent pattern and cross-module resolution.
+
 ## [0.3.5] - 2026-03-02
 
 ### Changed

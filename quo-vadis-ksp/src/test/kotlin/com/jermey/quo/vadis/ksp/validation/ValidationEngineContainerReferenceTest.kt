@@ -16,7 +16,6 @@ import kotlin.test.assertTrue
  * Tests for [ValidationEngine] container reference validation (Phases 1-4 of Issue #41).
  *
  * Covers:
- * - validateContainerReferences: CONTAINER_REFERENCE items must have @Stack or @Tabs
  * - validateCircularTabNesting: cycle detection in tab nesting graph
  * - validateTabNestingDepth: warning when nesting exceeds 3 levels
  * - validateTabItemAnnotations: annotation combination checks for tab items
@@ -61,12 +60,10 @@ class ValidationEngineContainerReferenceTest {
 
     /**
      * Creates a [TabInfo] for the sealed container with the given items.
-     * Sets isNewPattern = false to avoid validateTabItemsHaveAnnotation requiring @TabItem.
      */
     private fun tabInfo(
         name: String = "TestTabs",
         items: List<TabItemInfo>,
-        isNewPattern: Boolean = false,
     ): TabInfo {
         val containerDecl = sealedClassDecl(name, annotations = listOf("Tabs"))
         return TabInfo(
@@ -74,8 +71,6 @@ class ValidationEngineContainerReferenceTest {
             name = name,
             className = name,
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = isNewPattern,
             tabs = items,
         )
     }
@@ -101,7 +96,8 @@ class ValidationEngineContainerReferenceTest {
     fun `TabItem without Stack or Tabs or Destination produces error`() {
         val item = TabItemInfo(
             classDeclaration = tabItemDecl("Orphan"),
-            tabType = TabItemType.CONTAINER_REFERENCE,
+            tabType = TabItemType.TABS,
+            ordinal = 0,
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
@@ -116,7 +112,8 @@ class ValidationEngineContainerReferenceTest {
     fun `TabItem with Tabs annotation is accepted as valid`() {
         val item = TabItemInfo(
             classDeclaration = tabItemDecl("SubTabs", annotations = listOf("Tabs", "TabItem")),
-            tabType = TabItemType.CONTAINER_REFERENCE,
+            tabType = TabItemType.TABS,
+            ordinal = 0,
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
@@ -124,69 +121,15 @@ class ValidationEngineContainerReferenceTest {
     }
 
     @Test
-    fun `TabItem with Stack annotation is accepted as CONTAINER_REFERENCE`() {
+    fun `TabItem with Stack annotation is accepted as STACK`() {
         val item = TabItemInfo(
             classDeclaration = tabItemDecl("FeatureStack", annotations = listOf("Stack", "TabItem")),
-            tabType = TabItemType.CONTAINER_REFERENCE,
+            tabType = TabItemType.STACK,
+            ordinal = 0,
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
         assertTrue(result, "Validation should pass for @TabItem + @Stack, errors: ${logger.errors}")
-    }
-
-    // =========================================================================
-    // validateContainerReferences — CONTAINER_REFERENCE must have @Stack or @Tabs
-    // =========================================================================
-
-    @Test
-    fun `CONTAINER_REFERENCE without Stack or Tabs annotation produces error`() {
-        // TabItem has @TabItem + @Destination to pass validateTabItemAnnotations,
-        // but is typed as CONTAINER_REFERENCE → validateContainerReferences should report error
-        val item = TabItemInfo(
-            classDeclaration = tabItemDecl("BadRef", annotations = listOf("Destination")),
-            tabType = TabItemType.CONTAINER_REFERENCE,
-        )
-        val result = validate(listOf(tabInfo(items = listOf(item))))
-
-        assertFalse(result, "Validation should fail for CONTAINER_REFERENCE without @Stack/@Tabs")
-        assertTrue(
-            logger.errors.any { it.contains("must be annotated with either @Stack or @Tabs") },
-            "Expected container reference error, got: ${logger.errors}"
-        )
-    }
-
-    @Test
-    fun `CONTAINER_REFERENCE with Stack annotation passes container reference validation`() {
-        val item = TabItemInfo(
-            classDeclaration = tabItemDecl("FeatureStack", annotations = listOf("Stack")),
-            tabType = TabItemType.CONTAINER_REFERENCE,
-        )
-        val result = validate(listOf(tabInfo(items = listOf(item))))
-
-        val containerRefErrors = logger.errors.filter {
-            it.contains("must be annotated with either @Stack or @Tabs")
-        }
-        assertTrue(
-            containerRefErrors.isEmpty(),
-            "Should not have container reference errors, got: $containerRefErrors"
-        )
-    }
-
-    @Test
-    fun `CONTAINER_REFERENCE with Tabs annotation passes container reference validation`() {
-        val item = TabItemInfo(
-            classDeclaration = tabItemDecl("SubTabs", annotations = listOf("Tabs")),
-            tabType = TabItemType.CONTAINER_REFERENCE,
-        )
-        val result = validate(listOf(tabInfo(items = listOf(item))))
-
-        val containerRefErrors = logger.errors.filter {
-            it.contains("must be annotated with either @Stack or @Tabs")
-        }
-        assertTrue(
-            containerRefErrors.isEmpty(),
-            "Should not have container reference errors, got: $containerRefErrors"
-        )
     }
 
     // =========================================================================
@@ -204,12 +147,11 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsA",
             className = "TabsA",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
                 TabItemInfo(
                     classDeclaration = declB,
-                    tabType = TabItemType.CONTAINER_REFERENCE,
+                    tabType = TabItemType.TABS,
+                    ordinal = 0,
                 )
             ),
         )
@@ -218,12 +160,11 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsB",
             className = "TabsB",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
                 TabItemInfo(
                     classDeclaration = declA,
-                    tabType = TabItemType.CONTAINER_REFERENCE,
+                    tabType = TabItemType.TABS,
+                    ordinal = 0,
                 )
             ),
         )
@@ -248,10 +189,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsA",
             className = "TabsA",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declB, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
         val tabB = TabInfo(
@@ -259,10 +198,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsB",
             className = "TabsB",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declC, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
         val tabC = TabInfo(
@@ -270,10 +207,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsC",
             className = "TabsC",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declA, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declA, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
 
@@ -292,7 +227,7 @@ class ValidationEngineContainerReferenceTest {
         val declB = sealedClassDecl("TabsB", annotations = listOf("Tabs"))
         val declC = sealedClassDecl("TabsC", annotations = listOf("Tabs"))
 
-        // A→B, B→C, C has a flat screen (no CONTAINER_REFERENCE)
+        // A→B, B→C, C has a destination (no TABS nesting)
         val flatItem = TabItemInfo(
             classDeclaration = tabItemDecl(
                 "LeafTab",
@@ -300,7 +235,8 @@ class ValidationEngineContainerReferenceTest {
                 modifiers = setOf(Modifier.DATA),
                 annotations = listOf("Destination"),
             ),
-            tabType = TabItemType.FLAT_SCREEN,
+            tabType = TabItemType.DESTINATION,
+            ordinal = 0,
             destinationInfo = null,
         )
 
@@ -309,10 +245,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsA",
             className = "TabsA",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declB, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
         val tabB = TabInfo(
@@ -320,10 +254,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsB",
             className = "TabsB",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declC, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
         val tabC = TabInfo(
@@ -331,8 +263,6 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsC",
             className = "TabsC",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(flatItem),
         )
 
@@ -363,7 +293,8 @@ class ValidationEngineContainerReferenceTest {
                 modifiers = setOf(Modifier.DATA),
                 annotations = listOf("Destination"),
             ),
-            tabType = TabItemType.FLAT_SCREEN,
+            tabType = TabItemType.DESTINATION,
+            ordinal = 0,
         )
 
         val tabA = TabInfo(
@@ -371,10 +302,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsA",
             className = "TabsA",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declB, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
         val tabB = TabInfo(
@@ -382,10 +311,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsB",
             className = "TabsB",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declC, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
         val tabC = TabInfo(
@@ -393,8 +320,6 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsC",
             className = "TabsC",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(flatItem),
         )
 
@@ -422,7 +347,8 @@ class ValidationEngineContainerReferenceTest {
                 modifiers = setOf(Modifier.DATA),
                 annotations = listOf("Destination"),
             ),
-            tabType = TabItemType.FLAT_SCREEN,
+            tabType = TabItemType.DESTINATION,
+            ordinal = 0,
         )
 
         val tabA = TabInfo(
@@ -430,10 +356,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsA",
             className = "TabsA",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declB, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
         val tabB = TabInfo(
@@ -441,10 +365,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsB",
             className = "TabsB",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declC, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
         val tabC = TabInfo(
@@ -452,10 +374,8 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsC",
             className = "TabsC",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(
-                TabItemInfo(classDeclaration = declD, tabType = TabItemType.CONTAINER_REFERENCE)
+                TabItemInfo(classDeclaration = declD, tabType = TabItemType.TABS, ordinal = 0)
             ),
         )
         val tabD = TabInfo(
@@ -463,8 +383,6 @@ class ValidationEngineContainerReferenceTest {
             name = "TabsD",
             className = "TabsD",
             packageName = "com.example",
-            initialTabClass = null,
-            isNewPattern = false,
             tabs = listOf(flatItem),
         )
 
@@ -486,7 +404,8 @@ class ValidationEngineContainerReferenceTest {
                 modifiers = setOf(Modifier.DATA),
                 annotations = listOf("Destination"),
             ),
-            tabType = TabItemType.FLAT_SCREEN,
+            tabType = TabItemType.DESTINATION,
+            ordinal = 0,
         )
 
         validate(listOf(tabInfo(items = listOf(flatItem))))

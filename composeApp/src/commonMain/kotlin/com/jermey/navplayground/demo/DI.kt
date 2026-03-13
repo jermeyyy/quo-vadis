@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo
 
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.navigation.MainTabs
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator

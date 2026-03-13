@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens.explore
 
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import org.koin.core.annotation.Qualifier
@@ -167,7 +167,7 @@ class ExploreContainer(
      */
     private suspend fun Ctx.handleNavigateToDetail(item: ExploreItem) {
         try {
-            navigator.navigate(MainTabs.ExploreTab.Detail(itemId = item.id))
+            navigator.navigate(ExploreTab.Detail(itemId = item.id))
         } catch (e: Exception) {
             action(ExploreAction.ShowError("Navigation failed"))
         }

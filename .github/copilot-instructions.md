@@ -75,10 +75,15 @@ fun ArticleScreen(destination: HomeDestination.Article, navigator: Navigator) { 
 
 ### Tabs and Panes
 
-- **`@Tabs`** + **`@TabItem`** - Tab containers with independent backstacks
+- **`@Tabs(name)`** - Declares a tab container (no `items` array or `initialTab`)
+- **`@TabItem(parent, ordinal)`** - Child-to-parent pattern: each tab item declares which `@Tabs` it belongs to and its display position. `ordinal = 0` is the initial tab.
 - **`@TabsContainer`** - Custom tab bar UI
 - **`@Pane`** + **`@PaneItem`** - Adaptive multi-pane layouts
 - **`@PaneContainer`** - Custom pane wrapper
+
+**Tab Item Types:** `DESTINATION` (flat screen), `STACK` (nested navigation), `TABS` (nested tab container)
+
+**Cross-module tabs:** Feature modules use `@TabItem(MainTabs::class, ordinal = N)` to register as tabs — the parent `@Tabs` doesn't need to list its children.
 
 ## Build Commands
 

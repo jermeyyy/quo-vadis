@@ -28,7 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.jermey.feature1.resultdemo.ResultDemoDestination
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.HomeTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProfileTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.SettingsTab
+import com.jermey.navplayground.navigation.MainTabs
 import com.jermey.navplayground.demo.ui.components.glassmorphism.LocalHazeState
 import com.jermey.quo.vadis.annotations.TabsContainer
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
@@ -134,10 +138,10 @@ private fun GlassBottomNavigationBar(
     ) {
         tabs.forEachIndexed { index, tab ->
             val (label, icon) = when (tab) {
-                is MainTabs.HomeTab -> "Home" to Icons.Default.Home
-                is MainTabs.ExploreTab -> "Explore" to Icons.Default.Explore
-                is MainTabs.ProfileTab -> "Profile" to Icons.Default.Person
-                is MainTabs.SettingsTab -> "Settings" to Icons.Default.Settings
+                is HomeTab -> "Home" to Icons.Default.Home
+                is ExploreTab -> "Explore" to Icons.Default.Explore
+                is ProfileTab -> "Profile" to Icons.Default.Person
+                is SettingsTab -> "Settings" to Icons.Default.Settings
                 is ResultDemoDestination -> "Results" to Icons.Default.Star
                 else -> "Tab" to Icons.Default.Circle
             }
@@ -178,10 +182,10 @@ private fun MainBottomNavigationBar(
     NavigationBar(modifier = modifier) {
         tabs.forEachIndexed { index, tab ->
             val (label, icon) = when (tab) {
-                is MainTabs.HomeTab -> "Home" to Icons.Default.Home
-                is MainTabs.ExploreTab -> "Explore" to Icons.Default.Explore
-                is MainTabs.ProfileTab -> "Profile" to Icons.Default.Person
-                is MainTabs.SettingsTab -> "Settings" to Icons.Default.Settings
+                is HomeTab -> "Home" to Icons.Default.Home
+                is ExploreTab -> "Explore" to Icons.Default.Explore
+                is ProfileTab -> "Profile" to Icons.Default.Person
+                is SettingsTab -> "Settings" to Icons.Default.Settings
                 is ResultDemoDestination -> "Results" to Icons.Default.Star
                 else -> "Tab" to Icons.Default.Circle
             }

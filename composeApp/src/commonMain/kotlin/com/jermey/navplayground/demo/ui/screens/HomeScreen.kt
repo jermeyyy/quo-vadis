@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.jermey.feature1.resultdemo.ResultDemoDestination
 import com.jermey.feature2.AuthFlowDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.HomeTab
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MessagesPane
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProcessDestination
@@ -70,7 +70,7 @@ import org.koin.compose.koinInject
  * Home Screen - Main entry point with navigation to all patterns
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
-@Screen(MainTabs.HomeTab::class)
+@Screen(HomeTab::class)
 @Composable
 fun HomeScreen(
     navigator: Navigator = koinInject(),

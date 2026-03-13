@@ -67,6 +67,7 @@ class ResultDemoContainer(
         data object PickItem : Intent()
         data object ClearSelection : Intent()
         data object StartTimer : Intent()
+        data object ResetTimer : Intent()
     }
 
     data object Action : MVIAction
@@ -84,6 +85,7 @@ class ResultDemoContainer(
                 Intent.ClearSelection -> clearSelection()
                 Intent.PickItem -> pickItem()
                 Intent.StartTimer -> startTimer()
+                Intent.ResetTimer -> updateState { copy(timerValue = 0) }
             }
         }
     }

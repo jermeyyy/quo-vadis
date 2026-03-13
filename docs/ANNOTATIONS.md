@@ -304,44 +304,85 @@ fun SearchResultsScreen(
 
 Define tabbed navigation containers with independent back stacks per tab, state preservation across switches, and configurable initial tab selection.
 
+Tabs use a **child-to-parent** dependency model: each `@TabItem` declares which `@Tabs` container it belongs to via a `parent` reference and its display position via `ordinal`. This enables cross-module tab composition without the parent needing to know about all its children at declaration time.
+
 ### @Tabs Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `name` | `String` | — | Unique identifier for the tab container |
-| `initialTab` | `KClass<*>` | `Unit::class` | Initially selected tab. `Unit::class` = first tab. |
-| `items` | `Array<KClass<*>>` | `[]` | Tab classes in display order |
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `String` | Unique identifier for the tab container |
 
-### @TabItem Usage
+`@Tabs` does **not** declare its children or initial tab. Children register themselves via `@TabItem(parent, ordinal)`. The tab with `ordinal = 0` is the initial tab by convention.
 
-`@TabItem` is a **marker annotation** with no properties. Tab customization (labels, icons) is handled in the `@TabsContainer` wrapper using type-safe pattern matching on `scope.tabs`.
+`@Tabs` can be placed on any class or object — it does **not** require a sealed class.
 
-### Pattern: Nested Sealed Classes
+### @TabItem Properties
 
-For tabs with a single destination each:
+| Property | Type | Description |
+|----------|------|-------------|
+| `parent` | `KClass<*>` | The `@Tabs`-annotated class this item belongs to |
+| `ordinal` | `Int` | Display position (0-based). `ordinal = 0` = initial tab. |
+
+Tab customization (labels, icons) is handled in the `@TabsContainer` wrapper using type-safe pattern matching on `scope.tabs`.
+
+### TabItemType
+
+The KSP processor resolves each `@TabItem` into one of three types based on co-annotations:
+
+| Annotations | TabItemType | Description |
+|------------|-------------|-------------|
+| `@TabItem` + `@Destination` | `DESTINATION` | Flat screen tab (data object with route) |
+| `@TabItem` + `@Stack` | `STACK` | Tab with its own navigation stack |
+| `@TabItem` + `@Tabs` | `TABS` | Nested tab container |
+
+### Pattern: Simple Tabs (Same Module)
+
+For tabs defined alongside their parent using a data object:
 
 ```kotlin
-@Tabs(
-    name = "mainTabs",
-    initialTab = MainTabs.HomeTab::class,
-    items = [MainTabs.HomeTab::class, MainTabs.ExploreTab::class, 
-             MainTabs.ProfileTab::class, MainTabs.SettingsTab::class]
-)
+@Tabs(name = "mainTabs")
+data object MainTabs : NavDestination
+
+@TabItem(MainTabs::class, ordinal = 0)
+@Destination(route = "main/home")
+@Transition(type = TransitionType.Fade)
+data object HomeTab : NavDestination
+
+@TabItem(MainTabs::class, ordinal = 1)
+@Destination(route = "main/explore")
+@Transition(type = TransitionType.Fade)
+data object ExploreTab : NavDestination
+
+@TabItem(MainTabs::class, ordinal = 2)
+@Destination(route = "main/profile")
+@Transition(type = TransitionType.Fade)
+data object ProfileTab : NavDestination
+```
+
+### Pattern: Sealed Class Grouping
+
+`@Tabs` can still be placed on a sealed class to group tab items for organizational purposes. Tab items inside the sealed class still use `@TabItem(parent, ordinal)`:
+
+```kotlin
+@Tabs(name = "mainTabs")
 sealed class MainTabs : NavDestination {
 
     companion object : NavDestination  // Wrapper key for @TabsContainer
 
-    @TabItem
+    @TabItem(MainTabs::class, ordinal = 0)
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
-    @TabItem
-    @Destination(route = "main/explore")
+    @TabItem(MainTabs::class, ordinal = 1)
+    @Stack(name = "exploreStack", startDestination = ExploreTab.Feed::class)
     @Transition(type = TransitionType.Fade)
-    data object ExploreTab : MainTabs()
+    sealed class ExploreTab : MainTabs() {
+        @Destination(route = "explore/feed")
+        data object Feed : ExploreTab()
+    }
 
-    @TabItem
+    @TabItem(MainTabs::class, ordinal = 2)
     @Destination(route = "main/profile")
     @Transition(type = TransitionType.Fade)
     data object ProfileTab : MainTabs()
@@ -353,35 +394,28 @@ sealed class MainTabs : NavDestination {
 For tabs containing multiple destinations:
 
 ```kotlin
-@Tabs(
-    name = "demoTabs",
-    initialTab = DemoTabs.MusicTab::class,
-    items = [DemoTabs.MusicTab::class, DemoTabs.MoviesTab::class, DemoTabs.BooksTab::class]
-)
-sealed class DemoTabs : NavDestination {
+@Tabs(name = "demoTabs")
+data object DemoTabs : NavDestination
 
-    companion object : NavDestination  // Wrapper key for @TabsContainer
+@TabItem(DemoTabs::class, ordinal = 0)
+@Stack(name = "musicStack", startDestination = MusicTab.List::class)
+sealed class MusicTab : NavDestination {
+    @Destination(route = "demo/tabs/music/list")
+    data object List : MusicTab()
+}
 
-    @TabItem
-    @Stack(name = "musicStack", startDestination = MusicTab.List::class)
-    sealed class MusicTab : DemoTabs() {
-        @Destination(route = "demo/tabs/music/list")
-        data object List : MusicTab()
-    }
+@TabItem(DemoTabs::class, ordinal = 1)
+@Stack(name = "moviesStack", startDestination = MoviesTab.List::class)
+sealed class MoviesTab : NavDestination {
+    @Destination(route = "demo/tabs/movies/list")
+    data object List : MoviesTab()
+}
 
-    @TabItem
-    @Stack(name = "moviesStack", startDestination = MoviesTab.List::class)
-    sealed class MoviesTab : DemoTabs() {
-        @Destination(route = "demo/tabs/movies/list")
-        data object List : MoviesTab()
-    }
-
-    @TabItem
-    @Stack(name = "booksStack", startDestination = BooksTab.List::class)
-    sealed class BooksTab : DemoTabs() {
-        @Destination(route = "demo/tabs/books/list")
-        data object List : BooksTab()
-    }
+@TabItem(DemoTabs::class, ordinal = 2)
+@Stack(name = "booksStack", startDestination = BooksTab.List::class)
+sealed class BooksTab : NavDestination {
+    @Destination(route = "demo/tabs/books/list")
+    data object List : BooksTab()
 }
 
 // Detail destinations (separate from tab stacks)
@@ -401,7 +435,7 @@ data class BooksDetail(@Argument val itemId: String) : NavDestination
 
 ### Concept
 
-`@TabItem` can reference `@Stack` or `@Tabs` containers defined in **other modules**, enabling cross-module tab composition. This is called a **container reference** — the tab item points to an existing navigation container rather than declaring a local tab.
+Because `@TabItem` uses a **child-to-parent** pattern, cross-module tab composition works naturally — a feature module's `@TabItem` simply references the parent `@Tabs` class by `KClass`. The parent module does not need to know about its children at declaration time.
 
 This pattern enables:
 
@@ -409,17 +443,21 @@ This pattern enables:
 - **Flexible composition** — Assemble top-level tabs from independent feature modules
 - **Nested tabs** — Embed an entire tab container as a tab within another container
 
-### @TabItem Requirement
-
-All items listed in `@Tabs(items = [...])` must be annotated with `@TabItem`. This applies to both local sealed class members **and** cross-module references.
-
 ### Pattern 1: Cross-Module Stack Tab
 
-Reference a `@Stack` from another module as a tab:
+A feature module declares itself as a tab of a parent defined elsewhere:
 
 ```kotlin
-// feature-settings module
-@TabItem
+// app module — declares the tab container
+@Tabs(name = "mainTabs")
+data object MainTabs : NavDestination
+
+@TabItem(MainTabs::class, ordinal = 0)
+@Destination(route = "main/home")
+data object HomeTab : NavDestination
+
+// feature-settings module — registers as a tab in MainTabs
+@TabItem(MainTabs::class, ordinal = 1)
 @Stack(name = "settingsStack", startDestination = SettingsDestination.Main::class)
 sealed class SettingsDestination : NavDestination {
     @Destination(route = "settings/main")
@@ -428,58 +466,58 @@ sealed class SettingsDestination : NavDestination {
     @Destination(route = "settings/detail")
     data object Detail : SettingsDestination()
 }
-
-// app module
-@Tabs(
-    name = "mainTabs",
-    initialTab = HomeTab::class,
-    items = [HomeTab::class, SettingsDestination::class]
-)
-object MainTabs : NavDestination
 ```
 
 **Resulting Nav Tree:**
 
 ```
 TabNode (mainTabs)
-├── ScreenNode (HomeTab)            ← local flat screen
-└── StackNode (settingsStack)       ← container reference from feature module
+├── ScreenNode (HomeTab)            ← ordinal 0, local flat screen
+└── StackNode (settingsStack)       ← ordinal 1, cross-module stack
     ├── ScreenNode (Settings.Main)
     └── ScreenNode (Settings.Detail)
 ```
 
 ### Pattern 2: Nested Tabs (Tabs within Tabs)
 
-Reference a `@Tabs` container from another module as a tab:
+A `@TabItem` can also be annotated with `@Tabs` to create nested tab containers:
 
 ```kotlin
-// feature-media module
-@TabItem
-@Tabs(
-    name = "mediaTabs",
-    initialTab = MusicTab::class,
-    items = [MusicTab::class, VideosTab::class]
-)
-object MediaTabs : NavDestination
-
 // app module
-@Tabs(
-    name = "mainTabs",
-    initialTab = HomeTab::class,
-    items = [HomeTab::class, MediaTabs::class, ProfileTab::class]
-)
-object MainTabs : NavDestination
+@Tabs(name = "mainTabs")
+data object MainTabs : NavDestination
+
+@TabItem(MainTabs::class, ordinal = 0)
+@Destination(route = "main/home")
+data object HomeTab : NavDestination
+
+// feature-media module — registers as nested tabs within MainTabs
+@TabItem(MainTabs::class, ordinal = 1)
+@Tabs(name = "mediaTabs")
+data object MediaTabs : NavDestination
+
+@TabItem(MediaTabs::class, ordinal = 0)
+@Destination(route = "media/music")
+data object MusicTab : NavDestination
+
+@TabItem(MediaTabs::class, ordinal = 1)
+@Destination(route = "media/videos")
+data object VideosTab : NavDestination
+
+@TabItem(MainTabs::class, ordinal = 2)
+@Destination(route = "main/profile")
+data object ProfileTab : NavDestination
 ```
 
 **Resulting Nav Tree:**
 
 ```
 TabNode (mainTabs)
-├── ScreenNode (HomeTab)
-├── TabNode (mediaTabs)             ← nested tabs from feature module
+├── ScreenNode (HomeTab)            ← ordinal 0
+├── TabNode (mediaTabs)             ← ordinal 1, nested tabs from feature module
 │   ├── ScreenNode (MusicTab)
 │   └── ScreenNode (VideosTab)
-└── ScreenNode (ProfileTab)
+└── ScreenNode (ProfileTab)         ← ordinal 2
 ```
 
 ### Config Composition
@@ -499,18 +537,21 @@ val navigator = rememberTreeNavigator(
 
 ### Tab Item Types
 
-| Annotations | Sealed Member? | Tab Type |
-|------------|----------------|----------|
-| `@TabItem` + `@Destination` | Any | Flat Screen |
-| `@TabItem` + `@Stack` | Yes (local) | Nested Stack |
-| `@TabItem` + `@Stack` | No (cross-module) | Container Reference |
-| `@TabItem` + `@Tabs` | Any | Container Reference |
+| Annotations | TabItemType | Description |
+|------------|-------------|-------------|
+| `@TabItem` + `@Destination` | `DESTINATION` | Flat screen tab |
+| `@TabItem` + `@Stack` | `STACK` | Tab with its own navigation stack |
+| `@TabItem` + `@Tabs` | `TABS` | Nested tab container |
 
-### Validation Rules
+### Ordinal Validation Rules
 
-- `@TabItem` is **required** for all items in the `items` array
-- Circular nesting is detected and rejected at compile time
-- Nesting depth > 3 levels produces a warning
+| Rule | Severity |
+|------|----------|
+| `ordinal = 0` must exist for each `@Tabs` parent (defines initial tab) | Error |
+| Ordinals must be unique within a `@Tabs` parent | Error |
+| Ordinals must be consecutive starting from 0 (no gaps) | Error |
+| Circular nesting is detected and rejected at compile time | Error |
+| Nesting depth > 3 levels produces a warning | Warning |
 
 ### FlowMVI with Nested Containers
 
@@ -613,7 +654,7 @@ Define wrapper composables that provide UI chrome (tab bars, navigation rails, s
 **Function Signature:**
 
 ```kotlin
-@TabsContainer(DemoTabs.Companion::class)
+@TabsContainer(DemoTabs::class)
 @Composable
 fun DemoTabsWrapper(
     scope: TabsContainerScope,
@@ -636,7 +677,7 @@ fun DemoTabsWrapper(
 **Example: Tab Strip Wrapper with Pattern Matching**
 
 ```kotlin
-@TabsContainer(DemoTabs.Companion::class)
+@TabsContainer(DemoTabs::class)
 @Composable
 fun DemoTabsWrapper(
     scope: TabsContainerScope,
@@ -661,9 +702,9 @@ fun DemoTabsWrapper(
             TabRow(selectedTabIndex = scope.activeTabIndex) {
                 scope.tabs.forEachIndexed { index, tab ->
                     val (label, icon) = when (tab) {
-                        is DemoTabs.MusicTab -> "Music" to Icons.Default.MusicNote
-                        is DemoTabs.MoviesTab -> "Movies" to Icons.Default.Movie
-                        is DemoTabs.BooksTab -> "Books" to Icons.Default.Book
+                        is MusicTab -> "Music" to Icons.Default.MusicNote
+                        is MoviesTab -> "Movies" to Icons.Default.Movie
+                        is BooksTab -> "Books" to Icons.Default.Book
                         else -> "Tab" to Icons.Default.Circle
                     }
                     Tab(
@@ -893,32 +934,27 @@ sealed class MasterDetailDestination : NavDestination {
 ### 2. Tab Navigation
 
 ```kotlin
-@Tabs(
-    name = "mainTabs",
-    initialTab = MainTabs.HomeTab::class,
-    items = [MainTabs.HomeTab::class, MainTabs.ExploreTab::class, 
-             MainTabs.ProfileTab::class, MainTabs.SettingsTab::class]
-)
+@Tabs(name = "mainTabs")
 sealed class MainTabs : NavDestination {
 
     companion object : NavDestination
 
-    @TabItem
+    @TabItem(MainTabs::class, ordinal = 0)
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
-    @TabItem
+    @TabItem(MainTabs::class, ordinal = 1)
     @Destination(route = "main/explore")
     @Transition(type = TransitionType.Fade)
     data object ExploreTab : MainTabs()
 
-    @TabItem
+    @TabItem(MainTabs::class, ordinal = 2)
     @Destination(route = "main/profile")
     @Transition(type = TransitionType.Fade)
     data object ProfileTab : MainTabs()
 
-    @TabItem
+    @TabItem(MainTabs::class, ordinal = 3)
     @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
     @Transition(type = TransitionType.Fade)
     sealed class SettingsTab : MainTabs() {
@@ -1092,25 +1128,23 @@ Quo Vadis validates annotation usage at compile time. When validation fails, the
 
 | Rule | Severity | Example Message |
 |------|----------|-----------------|
-| Must be sealed class | Error | `@Tabs 'MainTabs' must be a sealed class in file 'MainTabs.kt' (line 5). Fix: Change 'class MainTabs' to 'sealed class MainTabs'` |
-| Invalid initial tab | Error | `Invalid initialTab 'InvalidTab' for @Tabs 'mainTabs' in file 'MainTabs.kt' (line 5). Fix: Use one of the available tabs: [HomeTab, ProfileTab, SettingsTab]` |
-| Empty tabs | Error | `@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one @TabItem annotated class to the items array` |
+| No `@TabItem` children found | Error | `@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one class annotated with @TabItem(EmptyTabs::class, ordinal = N)` |
+| Missing ordinal 0 | Error | `@Tabs 'mainTabs' has no tab with ordinal 0 in file 'MainTabs.kt' (line 5). Fix: Ensure one @TabItem has ordinal = 0 (this defines the initial tab)` |
+| Duplicate ordinals | Error | `@Tabs 'mainTabs' has duplicate ordinal 1: [ExploreTab, ProfileTab] in file 'MainTabs.kt' (line 5). Fix: Each @TabItem must have a unique ordinal within its parent` |
+| Ordinal gap | Error | `@Tabs 'mainTabs' has non-consecutive ordinals [0, 1, 3] in file 'MainTabs.kt' (line 5). Fix: Ordinals must be consecutive starting from 0 (missing: 2)` |
 
 ### @TabItem Validation
 
-`@TabItem` is a marker annotation — it has no properties to validate. The validation focuses on structural requirements:
-
 | Rule | Severity | Example Message |
 |------|----------|-----------------|
-| Must have @Stack or @Destination | Error | `@TabItem 'HomeTab' has neither @Stack nor @Destination in file 'Tabs.kt' (line 15). Fix: Add @Stack for nested navigation or @Destination for flat screen` |
+| `parent` must reference @Tabs class | Error | `@TabItem parent 'InvalidParent' is not annotated with @Tabs in file 'Tabs.kt' (line 15). Fix: Ensure the parent class has a @Tabs annotation` |
+| Must have @Stack, @Destination, or @Tabs | Error | `@TabItem 'HomeTab' has none of @Stack, @Destination, or @Tabs in file 'Tabs.kt' (line 15). Fix: Add @Stack for nested navigation, @Destination for flat screen, or @Tabs for nested tabs` |
 | Cannot have both @Stack and @Destination | Error | `@TabItem 'InvalidTab' has both @Stack and @Destination in file 'Tabs.kt' (line 20). Fix: Use @Stack for nested navigation OR @Destination for flat screen, not both` |
-| NESTED_STACK requires @Stack | Error | `NESTED_STACK tab 'SettingsTab' is missing @Stack annotation in file 'Tabs.kt' (line 25). Fix: Add @Stack annotation to this tab class` |
-| NESTED_STACK @Stack must have destinations | Error | `@Stack 'settingsStack' on NESTED_STACK tab 'SettingsTab' has no destinations in file 'Tabs.kt' (line 25). Fix: Add at least one @Destination subclass to this Stack` |
-| FLAT_SCREEN must be data object | Error | `FLAT_SCREEN tab 'HomeTab' must be a data object in file 'Tabs.kt' (line 10). Fix: Change to 'data object HomeTab'` |
-| FLAT_SCREEN requires @Destination | Error | `FLAT_SCREEN tab 'HomeTab' is missing @Destination in file 'Tabs.kt' (line 10). Fix: Add @Destination annotation with a route` |
-| FLAT_SCREEN should have route | Warning | `@Destination on FLAT_SCREEN tab 'HomeTab' has no route in file 'Tabs.kt' (line 10). Fix: Add a route parameter for deep linking support` |
-| CONTAINER_REFERENCE must have @Stack or @Tabs | Error | `CONTAINER_REFERENCE tab 'SettingsDestination' requires @Stack or @Tabs annotation in file 'MainTabs.kt' (line 12). Fix: Add @Stack or @Tabs to the referenced class` |
-| CONTAINER_REFERENCE circular nesting | Error | `Circular tab nesting detected: MainTabs → MediaTabs → MainTabs in file 'MainTabs.kt' (line 5). Fix: Remove the circular reference` |
+| STACK type @Stack must have destinations | Error | `@Stack 'settingsStack' on STACK tab 'SettingsTab' has no destinations in file 'Tabs.kt' (line 25). Fix: Add at least one @Destination subclass to this Stack` |
+| DESTINATION must be data object | Error | `DESTINATION tab 'HomeTab' must be a data object in file 'Tabs.kt' (line 10). Fix: Change to 'data object HomeTab'` |
+| DESTINATION requires @Destination | Error | `DESTINATION tab 'HomeTab' is missing @Destination in file 'Tabs.kt' (line 10). Fix: Add @Destination annotation with a route` |
+| DESTINATION should have route | Warning | `@Destination on DESTINATION tab 'HomeTab' has no route in file 'Tabs.kt' (line 10). Fix: Add a route parameter for deep linking support` |
+| Circular nesting | Error | `Circular tab nesting detected: MainTabs → MediaTabs → MainTabs in file 'MainTabs.kt' (line 5). Fix: Remove the circular reference` |
 | Deep nesting warning | Warning | `Tab nesting depth of 4 exceeds recommended maximum of 3: MainTabs → MediaTabs → SubTabs → DeepTabs in file 'MainTabs.kt' (line 5). Fix: Consider flattening the tab hierarchy` |
 
 ### @Pane Validation
