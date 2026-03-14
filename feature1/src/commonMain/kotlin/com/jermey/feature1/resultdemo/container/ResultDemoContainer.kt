@@ -9,6 +9,7 @@ import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Qualifier
@@ -18,9 +19,11 @@ import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
 import pro.respawn.flowmvi.api.PipelineContext
+import pro.respawn.flowmvi.dsl.intent
 import pro.respawn.flowmvi.dsl.store
 import pro.respawn.flowmvi.plugins.init
 import pro.respawn.flowmvi.plugins.reduce
+import pro.respawn.flowmvi.plugins.whileSubscribed
 import kotlin.time.Duration.Companion.seconds
 
 private typealias Ctx = PipelineContext<ResultDemoState, Intent, Action>
@@ -68,6 +71,8 @@ class ResultDemoContainer(
         data object PickItem : Intent()
         data object ClearSelection : Intent()
         data object StartTimer : Intent()
+        data object ResumeTimer : Intent()
+        data object PauseTimer : Intent()
         data object ResetTimer : Intent()
     }
 
@@ -80,8 +85,16 @@ class ResultDemoContainer(
     }
 
     override val store = store(ResultDemoState()) {
-        init {
+        whileSubscribed {
             intent(Intent.StartTimer)
+            scope.navigator.currentDestination
+                .collect {
+                    if (it is ResultDemoDestination) {
+                        intent(Intent.ResumeTimer)
+                    } else {
+                        intent(Intent.PauseTimer)
+                    }
+                }
         }
         reduce { intent ->
             when (intent) {
@@ -93,6 +106,13 @@ class ResultDemoContainer(
                     timerJob = null
                     updateState { copy(timerValue = 0) }
                 }
+
+                Intent.PauseTimer -> {
+                    timerJob?.cancel()
+                    timerJob = null
+                }
+
+                Intent.ResumeTimer -> startTimer()
             }
         }
     }
