@@ -61,9 +61,7 @@ class CompositeNavigationConfig(
 ) : NavigationConfig {
 
     init {
-        @OptIn(InternalQuoVadisApi::class)
         primary.setNodeResolver(::buildNavNode)
-        @OptIn(InternalQuoVadisApi::class)
         secondary.setNodeResolver(::buildNavNode)
     }
 
@@ -181,9 +179,7 @@ class CompositeNavigationConfig(
     override fun setNodeResolver(
         resolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)?
     ) {
-        @OptIn(InternalQuoVadisApi::class)
         primary.setNodeResolver(resolver)
-        @OptIn(InternalQuoVadisApi::class)
         secondary.setNodeResolver(resolver)
     }
 
@@ -233,8 +229,7 @@ class CompositeNavigationConfig(
         val additionalMetadata = newIndices.map { secondary.tabMetadata[it] }
 
         val mergedStacks = primary.stacks + additionalStacks
-        val preferredIndex = primary.activeStackIndex.takeIf { it > 0 }
-            ?: secondary.activeStackIndex
+        val preferredIndex = primary.activeStackIndex
 
         return TabNode(
             key = primary.key,
@@ -272,10 +267,20 @@ class CompositeNavigationConfig(
      */
     private fun rekeySubtree(node: NavNode, oldPrefix: String, newPrefix: String): NavNode {
         fun rekey(key: NodeKey): NodeKey =
-            NodeKey(key.value.replaceFirst(oldPrefix, newPrefix))
+            if (key.value.startsWith(oldPrefix)) {
+                NodeKey(newPrefix + key.value.removePrefix(oldPrefix))
+            } else {
+                key
+            }
 
         fun rekeyParent(key: NodeKey?): NodeKey? =
-            key?.let { NodeKey(it.value.replaceFirst(oldPrefix, newPrefix)) }
+            key?.let {
+                if (it.value.startsWith(oldPrefix)) {
+                    NodeKey(newPrefix + it.value.removePrefix(oldPrefix))
+                } else {
+                    it
+                }
+            }
 
         return when (node) {
             is ScreenNode -> node.copy(
@@ -301,7 +306,9 @@ class CompositeNavigationConfig(
             is PaneNode -> PaneNode(
                 key = rekey(node.key),
                 parentKey = rekeyParent(node.parentKey),
-                paneConfigurations = node.paneConfigurations,
+                paneConfigurations = node.paneConfigurations.mapValues { (_, config) ->
+                    config.copy(content = rekeySubtree(config.content, oldPrefix, newPrefix))
+                },
                 activePaneRole = node.activePaneRole,
                 backBehavior = node.backBehavior,
                 scopeKey = node.scopeKey

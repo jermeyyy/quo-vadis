@@ -199,12 +199,15 @@ class ValidationEngine(
      */
     private fun validateOrdinalContinuity(tabs: List<TabInfo>) {
         tabs.filter { !it.isCrossModule }.forEach { tab ->
-            val ordinals = tab.tabs.map { it.ordinal }.sorted()
-            val expected = (0 until ordinals.size).toList()
-            if (ordinals != expected) {
+            val ordinals = tab.tabs.map { it.ordinal }
+            // Skip continuity check when duplicates exist (already reported by validateOrdinalCollisions)
+            if (ordinals.size != ordinals.toSet().size) return@forEach
+            val sorted = ordinals.sorted()
+            val expected = (0 until sorted.size).toList()
+            if (sorted != expected) {
                 reportError(
                     tab.classDeclaration,
-                    "@Tabs '${tab.className}' has ordinal gaps: found $ordinals, expected $expected",
+                    "@Tabs '${tab.className}' has ordinal gaps: found $sorted, expected $expected",
                     "Ordinals must be consecutive starting from 0"
                 )
             }
@@ -227,10 +230,18 @@ class ValidationEngine(
         }
 
         tabs.filter { it.tabs.isEmpty() }.forEach { tab ->
+            val isPubliclyVisible = !tab.classDeclaration.modifiers.any {
+                it == Modifier.INTERNAL || it == Modifier.PRIVATE
+            }
+            val message = if (isPubliclyVisible) {
+                "@Tabs container '${tab.className}' has no @TabItem entries" +
+                    " (this is expected if @TabItem children are in downstream modules)"
+            } else {
+                "@Tabs container '${tab.className}' has no @TabItem entries"
+            }
             reportWarning(
                 tab.classDeclaration,
-                "@Tabs container '${tab.className}' has no @TabItem entries" +
-                    " (this is expected if @TabItem children are in downstream modules)",
+                message,
                 "Add at least one class annotated with @TabItem(parent = ${tab.className}::class)"
             )
         }
@@ -538,13 +549,9 @@ class ValidationEngine(
     private fun validateTabItemAnnotations(tabs: List<TabInfo>) {
         tabs.forEach { tab ->
             tab.tabs.forEach { tabItem ->
-                val hasStack = tabItem.stackInfo != null ||
-                    tabItem.classDeclaration.annotations.any { it.shortName.asString() == "Stack" }
-                val hasDestination = tabItem.destinationInfo != null ||
-                    tabItem.classDeclaration.annotations.any { it.shortName.asString() == "Destination" }
-                val hasTabs = tabItem.classDeclaration.annotations.any {
-                    it.shortName.asString() == "Tabs"
-                }
+                val hasStack = tabItem.tabType == TabItemType.STACK
+                val hasDestination = tabItem.tabType == TabItemType.DESTINATION
+                val hasTabs = tabItem.tabType == TabItemType.TABS
 
                 when {
                     hasStack && hasDestination -> {
@@ -680,17 +687,10 @@ class ValidationEngine(
             inStack.add(node)
             path.add(node)
 
-            adjacency[node]?.forEach { neighbor ->
-                if (dfs(neighbor)) {
-                    inStack.remove(node)
-                    path.removeAt(path.lastIndex)
-                    return true
-                }
-            }
-
+            val hasCycle = adjacency[node]?.any { neighbor -> dfs(neighbor) } == true
             inStack.remove(node)
             path.removeAt(path.lastIndex)
-            return false
+            return hasCycle
         }
 
         adjacency.keys.forEach { node ->

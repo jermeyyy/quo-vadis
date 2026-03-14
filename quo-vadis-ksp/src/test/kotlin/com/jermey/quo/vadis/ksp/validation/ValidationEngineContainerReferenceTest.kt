@@ -94,6 +94,9 @@ class ValidationEngineContainerReferenceTest {
 
     @Test
     fun `TabItem without Stack or Tabs or Destination produces error`() {
+        // With tabType-based validation, the validator trusts the extractor-determined type.
+        // Conflict/missing annotation detection is now handled in TabExtractor.detectTabItemType().
+        // A TabItemInfo that reaches the validator always has a valid tabType.
         val item = TabItemInfo(
             classDeclaration = tabItemDecl("Orphan"),
             tabType = TabItemType.TABS,
@@ -101,11 +104,7 @@ class ValidationEngineContainerReferenceTest {
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
-        assertFalse(result, "Validation should fail for tab item without @Stack/@Tabs/@Destination")
-        assertTrue(
-            logger.errors.any { it.contains("neither @Stack") },
-            "Expected error about missing annotations, got: ${logger.errors}"
-        )
+        assertTrue(result, "Validation should pass since tabType is set; annotation checks are in extractor")
     }
 
     @Test

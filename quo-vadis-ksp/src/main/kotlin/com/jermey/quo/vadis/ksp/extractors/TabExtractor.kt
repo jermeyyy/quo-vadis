@@ -249,6 +249,22 @@ class TabExtractor(
             it.shortName.asString() == "Stack"
         }
 
+        val present = buildList {
+            if (hasStack) add("@Stack")
+            if (hasDestination) add("@Destination")
+            if (hasTabs) add("@Tabs")
+        }
+
+        if (present.size > 1) {
+            logger.error(
+                "@TabItem '${classDeclaration.simpleName.asString()}' " +
+                    "has conflicting annotations: ${present.joinToString(" and ")}. " +
+                    "Use exactly one of @Stack, @Destination, or @Tabs",
+                classDeclaration
+            )
+            return null
+        }
+
         return when {
             hasDestination -> TabItemType.DESTINATION
             hasTabs -> TabItemType.TABS
