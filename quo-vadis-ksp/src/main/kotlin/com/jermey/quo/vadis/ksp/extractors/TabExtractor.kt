@@ -81,9 +81,23 @@ class TabExtractor(
                 .value as? KSType
             val parentQualifiedName = parentType?.declaration?.qualifiedName?.asString()
 
-            val ordinal = annotation.arguments
-                .first { it.name?.asString() == "ordinal" }
-                .value as? Int ?: 0
+            val ordinalArg = annotation.arguments
+                .firstOrNull { it.name?.asString() == "ordinal" }
+            if (ordinalArg == null) {
+                logger.error(
+                    "@TabItem '${classDecl.simpleName.asString()}' is missing required 'ordinal' argument",
+                    classDecl
+                )
+                return@mapNotNull null
+            }
+            val ordinal = ordinalArg.value as? Int
+            if (ordinal == null) {
+                logger.error(
+                    "@TabItem '${classDecl.simpleName.asString()}' has non-Int 'ordinal' value: ${ordinalArg.value}",
+                    classDecl
+                )
+                return@mapNotNull null
+            }
 
             if (parentQualifiedName == null) {
                 logger.error(
