@@ -391,6 +391,8 @@ fun switchActiveTab(
 val newTree = TreeMutator.switchActiveTab(currentTree, newIndex = 0)
 ```
 
+> **Nested TabNodes:** `switchActiveTab` operates on the first `TabNode` found in the active path from the root. For nested tab structures, use `switchTab` with a specific `nodeKey` to target a particular `TabNode`.
+
 ---
 
 ## Pane Operations

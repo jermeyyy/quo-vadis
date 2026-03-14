@@ -1,6 +1,6 @@
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import { ScopePropertiesTable } from '@components/ScopePropertiesTable/ScopePropertiesTable'
-import { tabsAnnotationWithNestedStack } from '@data/codeExamples'
+import { tabsAnnotationWithNestedStack, crossModuleTabsExample } from '@data/codeExamples'
 import styles from '../Features.module.css'
 
 // Status icon for required/no default values in tables
@@ -48,37 +48,53 @@ fun MainTabsWrapper(
     }
 }`
 
-const nestedStacksCode = `@Tabs(
-    name = "appTabs",
-    initialTab = AppTabs.HomeTab::class,
-    items = [AppTabs.HomeTab::class, AppTabs.SearchTab::class]
-)
-sealed class AppTabs : NavDestination {
-
-    // Tab with its own nested navigation stack
-    @TabItem(label = "Home", icon = "home")
-    @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
-    sealed class HomeTab : AppTabs() {
-        @Destination(route = "home/feed")
-        data object Feed : HomeTab()
-        
-        @Destination(route = "home/article/{id}")
-        data class Article(@Argument val id: String) : HomeTab()
-        
-        @Destination(route = "home/comments/{articleId}")
-        data class Comments(@Argument val articleId: String) : HomeTab()
+const tabUiCustomizationCode = `@TabsContainer(AppTabs::class)
+@Composable
+fun AppTabsWrapper(
+    scope: TabsContainerScope,
+    content: @Composable () -> Unit
+) {
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                scope.tabMetadata.forEachIndexed { index, metadata ->
+                    NavigationBarItem(
+                        selected = index == scope.activeTabIndex,
+                        onClick = { scope.switchTab(index) },
+                        icon = { /* Use metadata.destination for type matching */ },
+                        label = { /* Tab label */ }
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        Box(Modifier.padding(padding)) { content() }
     }
+}`
 
-    // Another tab with its own stack
-    @TabItem(label = "Search", icon = "search")
-    @Stack(name = "searchStack", startDestination = SearchTab.Main::class)
-    sealed class SearchTab : AppTabs() {
-        @Destination(route = "search/main")
-        data object Main : SearchTab()
-        
-        @Destination(route = "search/results/{query}")
-        data class Results(@Argument val query: String) : SearchTab()
-    }
+const nestedStacksCode = `@Tabs(name = "appTabs")
+class AppTabs : NavDestination {
+    companion object : NavDestination
+}
+
+@TabItem(parent = AppTabs::class, ordinal = 0)
+@Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
+sealed class HomeTab : NavDestination {
+    @Destination(route = "home/feed")
+    data object Feed : HomeTab()
+
+    @Destination(route = "home/article/{articleId}")
+    data class Article(@Argument val articleId: String) : HomeTab()
+}
+
+@TabItem(parent = AppTabs::class, ordinal = 1)
+@Stack(name = "searchStack", startDestination = SearchTab.Search::class)
+sealed class SearchTab : NavDestination {
+    @Destination(route = "search")
+    data object Search : SearchTab()
+
+    @Destination(route = "search/results/{query}")
+    data class Results(@Argument val query: String) : SearchTab()
 }`
 
 const sharedStateCode = `class DemoTabsContainer(scope: SharedContainerScope) :
@@ -133,7 +149,7 @@ export default function TabbedNavigation() {
           <li><strong>Nested Stacks</strong> - Tabs can contain their own deep navigation</li>
           <li><strong>Custom UI</strong> - Full control over tab bar appearance</li>
           <li><strong>Shared State</strong> - Share data across tabs with MVI containers</li>
-          <li><strong>Platform Icons</strong> - Native icon support per platform</li>
+          <li><strong>Cross-Module Tabs</strong> - Feature modules register as tabs independently</li>
         </ul>
       </section>
 
@@ -168,20 +184,11 @@ export default function TabbedNavigation() {
               <td><IconNa /></td>
               <td>Unique identifier for the tab container</td>
             </tr>
-            <tr>
-              <td><code>initialTab</code></td>
-              <td><code>KClass&lt;*&gt;</code></td>
-              <td><code>Unit::class</code></td>
-              <td>Initially selected tab (Unit = first tab)</td>
-            </tr>
-            <tr>
-              <td><code>items</code></td>
-              <td><code>Array&lt;KClass&lt;*&gt;&gt;</code></td>
-              <td><code>[]</code></td>
-              <td>Tab classes in display order</td>
-            </tr>
           </tbody>
         </table>
+        <p>
+          The initial tab and ordering are determined by <code>@TabItem</code> ordinals.
+        </p>
       </section>
 
       <section>
@@ -197,19 +204,27 @@ export default function TabbedNavigation() {
           </thead>
           <tbody>
             <tr>
-              <td><code>label</code></td>
-              <td><code>String</code></td>
+              <td><code>parent</code></td>
+              <td><code>KClass&lt;*&gt;</code></td>
               <td><IconNa /></td>
-              <td>Display label for the tab</td>
+              <td>The <code>@Tabs</code>-annotated class this tab belongs to</td>
             </tr>
             <tr>
-              <td><code>icon</code></td>
-              <td><code>String</code></td>
-              <td><code>""</code></td>
-              <td>Icon identifier (platform-specific)</td>
+              <td><code>ordinal</code></td>
+              <td><code>Int</code></td>
+              <td><IconNa /></td>
+              <td>Display position (0-based). <code>ordinal = 0</code> is the initial tab.</td>
             </tr>
           </tbody>
         </table>
+        <h3>Ordinal Validation Rules</h3>
+        <ul>
+          <li>Ordinals must be contiguous integers starting at 0 (e.g., 0, 1, 2, …, N-1)</li>
+          <li>No gaps allowed (e.g., 0, 1, 3 is invalid because 2 is missing)</li>
+          <li>No duplicate ordinals</li>
+          <li>KSP validates these rules at compile time</li>
+          <li>Cross-module ordinal validation is relaxed (only partial tab items visible to the processor)</li>
+        </ul>
       </section>
 
       <section>
@@ -287,36 +302,29 @@ export default function TabbedNavigation() {
       </section>
 
       <section>
-        <h2 id="icon-support">Icon Platform Support</h2>
+        <h2 id="tab-ui-customization">Tab UI Customization</h2>
         <p>
-          The <code>icon</code> property in <code>@TabItem</code> is interpreted differently per platform:
+          Icons, labels, and all tab bar UI are handled in your <code>@TabsContainer</code> wrapper
+          composable. Use <code>scope.tabMetadata</code> and destination type matching to dynamically
+          assign icons and labels, giving you full control over tab bar appearance per platform.
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Platform</th>
-              <th>Interpretation</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Android</td>
-              <td>Material icon name or drawable resource</td>
-            </tr>
-            <tr>
-              <td>iOS</td>
-              <td>SF Symbol name</td>
-            </tr>
-            <tr>
-              <td>Desktop/Web</td>
-              <td>Icon library identifier</td>
-            </tr>
-          </tbody>
-        </table>
+        <CodeBlock code={tabUiCustomizationCode} language="kotlin" />
         <p>
-          Your <code>@TabsContainer</code> implementation is responsible for mapping these 
-          identifiers to actual icons using platform-appropriate APIs.
+          This approach decouples visual presentation from navigation structure, letting you
+          customize tab appearance freely without modifying annotations.
         </p>
+      </section>
+
+      <section>
+        <h2 id="cross-module-tabs">Cross-Module Tabs</h2>
+        <p>
+          Feature modules can register as tabs independently using{' '}
+          <code>@TabItem(parent = SharedTabs::class, ordinal = N)</code>. The shared{' '}
+          <code>@Tabs</code> class lives in a common API module, and each feature module
+          declares itself as a tab item pointing back to it. Ordinal validation is relaxed
+          for cross-module scenarios where only partial tab items are visible to the processor.
+        </p>
+        <CodeBlock code={crossModuleTabsExample} language="kotlin" />
       </section>
 
       <section>

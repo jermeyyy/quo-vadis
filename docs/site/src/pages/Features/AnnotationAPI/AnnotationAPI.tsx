@@ -9,6 +9,7 @@ import {
   paneAnnotationBasic,
   paneContainerWrapper,
   generatedConfigUsage,
+  crossModuleTabsExample,
 } from '@data/codeExamples'
 import styles from '../Features.module.css'
 
@@ -275,8 +276,9 @@ export default function AnnotationAPI() {
       <section>
         <h2 id="tabs-annotations">@Tabs and @TabItem Annotations</h2>
         <p>
-          For tabbed navigation where each tab maintains its own backstack. 
-          Use <code>@Tabs</code> on the sealed class and <code>@TabItem</code> on each tab destination.
+          For tabbed navigation where each tab maintains its own backstack.
+          Use <code>@Tabs</code> to declare a tab container and <code>@TabItem</code> on each tab destination
+          to register it with a parent container (child-to-parent pattern).
           Tab UI customization (labels, icons) is done in the <code>@TabsContainer</code> wrapper using type-safe pattern matching.
         </p>
 
@@ -285,16 +287,64 @@ export default function AnnotationAPI() {
         <h3>@Tabs Properties</h3>
         <ul>
           <li><code>name: String</code> — Unique identifier for the tab container</li>
-          <li><code>initialTab: KClass&lt;*&gt;</code> — The initially selected tab</li>
-          <li><code>items: Array&lt;KClass&lt;*&gt;&gt;</code> — Tab classes in display order</li>
+        </ul>
+        <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
+          Tab ordering and the initial tab are determined by <code>@TabItem</code> ordinals (child-to-parent pattern),
+          not by <code>@Tabs</code> properties. The <code>@Tabs</code> annotation only provides a name for the tab container.
+        </p>
+
+        <h3>@TabItem Properties</h3>
+        <ul>
+          <li><code>parent: KClass&lt;*&gt;</code> — The <code>@Tabs</code>-annotated class this tab belongs to</li>
+          <li><code>ordinal: Int</code> — Display position (0-based). <code>ordinal = 0</code> is the initial tab.</li>
         </ul>
 
-        <h3>@TabItem</h3>
+        <h3>Ordinal Rules</h3>
+        <ul>
+          <li>Ordinals must be contiguous integers starting at 0 (i.e., 0, 1, 2, …, N-1 with no gaps)</li>
+          <li>No gaps allowed (e.g., 0, 1, 3 is invalid because 2 is missing)</li>
+          <li>No duplicate ordinals</li>
+          <li>KSP validates ordinal rules at compile time</li>
+          <li>Cross-module ordinal validation is relaxed — only ordinals visible to the processor are checked</li>
+        </ul>
+
+        <h3>Tab Item Types</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Combination</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>@TabItem</code> + <code>@Destination</code></td>
+              <td>DESTINATION</td>
+              <td>Flat single-screen tab (no back stack)</td>
+            </tr>
+            <tr>
+              <td><code>@TabItem</code> + <code>@Stack</code></td>
+              <td>STACK</td>
+              <td>Tab with its own navigation stack</td>
+            </tr>
+            <tr>
+              <td><code>@TabItem</code> + <code>@Tabs</code></td>
+              <td>TABS</td>
+              <td>Nested tab container</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Cross-Module Tabs</h3>
         <p>
-          <code>@TabItem</code> is a marker annotation with no parameters. 
-          Labels, icons, and other UI customization are handled in the <code>@TabsContainer</code> wrapper 
-          via pattern matching on the destination types.
+          Feature modules can register tabs without modifying the parent <code>@Tabs</code> declaration.
+          Define the <code>@Tabs</code> class in a shared API module, then each feature module
+          uses <code>@TabItem(parent = SharedTabs::class, ordinal = N)</code> to register as a tab.
+          Ordinal validation is relaxed for cross-module tabs since only partial tab items are visible to the processor.
         </p>
+
+        <CodeBlock code={crossModuleTabsExample} language="kotlin" />
       </section>
 
       <section>
@@ -309,7 +359,7 @@ export default function AnnotationAPI() {
 
         <h3>TabsContainerScope</h3>
         <ul>
-          <li><code>tabs: List&lt;NavDestination&gt;</code> — Tab destinations for custom labels, icons, and behavior</li>
+          <li><code>tabMetadata: List&lt;GeneratedTabMetadata&gt;</code> — Tab metadata for custom labels, icons, and behavior via destination type matching</li>
           <li><code>activeTabIndex: Int</code> — Currently selected tab index</li>
           <li><code>switchTab(index: Int)</code> — Function to switch to a different tab</li>
           <li><code>isTransitioning: Boolean</code> — Whether tab switching animation is in progress</li>
@@ -560,14 +610,24 @@ export default function AnnotationAPI() {
               <td><code>@Tabs 'MainTabs' must be a sealed class in file 'MainTabs.kt' (line 5). Fix: Change 'class MainTabs' to 'sealed class MainTabs'</code></td>
             </tr>
             <tr>
-              <td>Invalid initial tab</td>
-              <td>Error</td>
-              <td><code>Invalid initialTab 'InvalidTab' for @Tabs 'mainTabs' in file 'MainTabs.kt' (line 5). Fix: Use one of the available tabs: [HomeTab, ProfileTab, SettingsTab]</code></td>
-            </tr>
-            <tr>
               <td>Empty tabs</td>
               <td>Error</td>
-              <td><code>@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one @TabItem annotated class to the items array</code></td>
+              <td><code>@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one class annotated with @TabItem(parent = EmptyTabs::class, ordinal = 0)</code></td>
+            </tr>
+            <tr>
+              <td>Missing ordinal 0</td>
+              <td>Error</td>
+              <td><code>@Tabs 'MainTabs' has no @TabItem with ordinal 0 in file 'MainTabs.kt' (line 5). Fix: Add ordinal = 0 to one @TabItem to define the initial tab</code></td>
+            </tr>
+            <tr>
+              <td>Duplicate ordinals</td>
+              <td>Error</td>
+              <td><code>Duplicate ordinal 1 in @Tabs 'MainTabs': [ExploreTab, ProfileTab] in file 'MainTabs.kt' (line 5). Fix: Assign unique ordinal values to each @TabItem</code></td>
+            </tr>
+            <tr>
+              <td>Ordinal gap</td>
+              <td>Error</td>
+              <td><code>Ordinal gap in @Tabs 'MainTabs': missing ordinal 2 (found [0, 1, 3]) in file 'MainTabs.kt' (line 5). Fix: Use contiguous ordinals starting at 0</code></td>
             </tr>
           </tbody>
         </table>

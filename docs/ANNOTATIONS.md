@@ -553,6 +553,8 @@ val navigator = rememberTreeNavigator(
 | Circular nesting is detected and rejected at compile time | Error |
 | Nesting depth > 3 levels produces a warning | Warning |
 
+> **Note:** Ordinal continuity validation is skipped for cross-module `@Tabs` where only partial tab items are visible to the KSP processor. Each module only validates the ordinals it can see.
+
 ### FlowMVI with Nested Containers
 
 Each nested `@Tabs` gets its own independent `SharedContainerScope`. Shared containers at different nesting levels do not interfere with each other:

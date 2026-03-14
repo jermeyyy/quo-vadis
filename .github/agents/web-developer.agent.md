@@ -1,7 +1,7 @@
 ---
 name: web-developer
 description: Focused React/TypeScript developer for implementing documentation website pages. Specializes in the docs/site tech stack (React 19, Vite, React Router, CSS Modules). Executes delegated tasks without spawning subagents.
-tools: ['execute/getTerminalOutput', 'execute/runInTerminal', 'read/problems', 'read/readFile', 'read/terminalSelection', 'read/terminalLastCommand', 'edit/createDirectory', 'edit/createFile', 'edit/editFiles', 'search', 'serena/activate_project', 'serena/find_file', 'serena/find_symbol', 'serena/get_symbols_overview', 'serena/list_dir', 'serena/search_for_pattern', 'serena/think_about_task_adherence', 'serena/think_about_whether_you_are_done', 'duck/*', 'todo']
+tools: [execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/runInTerminal, read/problems, read/readFile, read/viewImage, read/terminalSelection, read/terminalLastCommand, agent, edit/createDirectory, edit/createFile, edit/editFiles, edit/rename, search, web, browser, serena/activate_project, serena/find_file, serena/find_symbol, serena/get_symbols_overview, serena/list_dir, serena/search_for_pattern, serena/think_about_task_adherence, serena/think_about_whether_you_are_done, 'duck/*', todo]
 ---
 
 # Web Developer Agent

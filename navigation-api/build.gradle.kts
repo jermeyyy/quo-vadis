@@ -7,7 +7,7 @@ plugins {
 
 // Quo Vadis KSP configuration (using local processor for development)
 quoVadis {
-    useLocalKsp = (project.findProperty("useLocalKsp") as? String)?.toBoolean() ?: false
+    useLocalKsp = true
 }
 
 kotlin {
