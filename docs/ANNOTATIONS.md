@@ -1,6 +1,6 @@
 # Annotation-Based Navigation Configuration
 
-This guide covers Quo Vadis's annotation-based approach to navigation configuration. The annotations are the frontend API, while KSP and the experimental compiler plugin are the supported backends that turn them into type-safe navigation infrastructure.
+This guide covers Quo Vadis's annotation-based approach to navigation configuration. The annotations are the frontend API, while KSP and the compiler plugin are the supported backends that turn them into type-safe navigation infrastructure.
 
 ## Overview
 
@@ -28,7 +28,7 @@ The selected annotation backend generates:
 
 Annotation-based configuration requires exactly one backend per module.
 
-Use KSP for the stable/default setup, or see [COMPILER-PLUGIN.md](COMPILER-PLUGIN.md) if you are evaluating the experimental compiler plugin.
+Use KSP for the default setup, or see [COMPILER-PLUGIN.md](COMPILER-PLUGIN.md) if you want to use the compiler plugin.
 
 Stable KSP example:
 

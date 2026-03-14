@@ -1,19 +1,19 @@
-# Compiler Plugin Guide (Experimental)
+# Compiler Plugin Guide
 
-This guide explains how to evaluate Quo Vadis's experimental compiler plugin as an alternative to KSP for annotation-based navigation.
+This guide explains how to use Quo Vadis's compiler plugin as an alternative to KSP for annotation-based navigation.
 
 > [!WARNING]
-> The compiler plugin is experimental.
-> Prefer KSP for the stable/default setup today.
+> The compiler plugin uses Kotlin’s `ExperimentalCompilerApi`.
+> Prefer KSP for the default setup today.
 > Do not enable KSP and the compiler plugin in the same module.
-> If evaluation goes poorly, you can switch the module back to KSP without changing your navigation annotations.
+> If you encounter issues, you can switch the module back to KSP without changing your navigation annotations.
 
 ## Overview
 
 Quo Vadis supports two ways to generate annotation-based navigation infrastructure:
 
-- **KSP** is the stable and recommended backend for production use.
-- **Compiler plugin** is an experimental backend for early adopters who want to validate the K2-based path.
+- **KSP** is the stable and recommended default backend.
+- **Compiler plugin** is an alternative backend with faster builds and better IDE support, built on K2.
 
 The annotations themselves are the frontend API. You still write `@Stack`, `@Destination`, `@Screen`, `@Tabs`, and `@Pane` the same way regardless of backend.
 
@@ -21,17 +21,17 @@ If you do not want a generated annotation pipeline at all, [DSL-Based Configurat
 
 ## When To Use It
 
-Evaluate the compiler plugin if you want to:
+Choose the compiler plugin if you want:
 
-- trial the experimental backend on the `compiler-plugin` branch,
-- validate multi-module aggregation with `@NavigationRoot`, or
-- compare K2 compiler-plugin behavior against your current KSP setup.
+- faster builds (code generation during normal compilation, no separate KSP pass),
+- better IDE support (instant autocomplete via FIR synthetic declarations), or
+- to validate the K2 compiler-plugin path for your project.
 
 Stay on KSP if you want:
 
-- the stable/default Quo Vadis setup,
-- the lowest backend risk while Kotlin compiler APIs are still moving, or
-- a predictable rollback target while testing the compiler plugin.
+- the default Quo Vadis setup,
+- the lowest risk while Kotlin compiler APIs are still moving, or
+- visible generated source files you can inspect.
 
 ## Backend Model
 
@@ -104,7 +104,7 @@ quoVadis {
 
 The deprecated `useCompilerPlugin` alias may still exist in older scripts, but `quoVadis.backend` is the primary rollout API now.
 
-Use KSP as the baseline when adopting Quo Vadis for the first time unless you are explicitly evaluating the experimental backend.
+Use KSP as the default when adopting Quo Vadis for the first time unless you specifically prefer the compiler backend’s trade-offs.
 
 ## Switching Backends
 
@@ -128,14 +128,20 @@ If you are migrating an existing KSP project, use [MIGRATION.md](MIGRATION.md) f
 
 The main behavioral difference is how module-level configs are assembled.
 
-With KSP, you typically combine generated configs manually:
+With KSP, you can combine generated configs manually or use `@NavigationRoot`:
 
 ```kotlin
+// Manual composition
 val appConfig = Feature1NavigationConfig + Feature2NavigationConfig + AppNavigationConfig
 val navigator = rememberQuoVadisNavigator(MainTabs::class, appConfig)
+
+// Or use @NavigationRoot for automatic aggregation
+@NavigationRoot
+object MyApp
+val navigator = rememberQuoVadisNavigator(MainTabs::class, MyAppNavigationConfig)
 ```
 
-With the compiler plugin, you can use `@NavigationRoot` to aggregate module configs:
+With the compiler plugin, you have the same options:
 
 ```kotlin
 @NavigationRoot
@@ -163,8 +169,8 @@ Practical implications:
 
 - The compiler plugin uses Kotlin's `ExperimentalCompilerApi`.
 - Kotlin and toolchain upgrades may affect compiler-plugin behavior sooner than the KSP path.
-- The compiler plugin is documented for evaluation, not yet the stable recommendation.
 - Do not enable both backends in the same module.
+- Switching backends requires only a Gradle property change + clean build — no source code changes.
 
 Local development note:
 

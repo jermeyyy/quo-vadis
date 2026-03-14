@@ -33,6 +33,7 @@ object CompilerTestHelper {
             )
             inheritClassPath = true
             messageOutputStream = System.out
+            jvmTarget = "11"
             kotlincArguments = listOf("-Xverify-ir=error")
         }.compile().also { result ->
             if (expectSuccess) {

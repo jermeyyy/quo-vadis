@@ -95,9 +95,9 @@ class QuoVadisDeclarationGenerationExtension(
         FqName("com.jermey.quo.vadis.core.navigation.config"),
         Name.identifier("NavigationConfig"),
     )
-    private val generatedNavigationConfigId = ClassId(
+    private val generatedConfigAnnotationId = ClassId(
         FqName("com.jermey.quo.vadis.core.navigation.config"),
-        Name.identifier("GeneratedNavigationConfig"),
+        Name.identifier("GeneratedConfig"),
     )
     private val deepLinkRegistryId = ClassId(
         FqName("com.jermey.quo.vadis.core.registry"),
@@ -321,11 +321,24 @@ class QuoVadisDeclarationGenerationExtension(
         classId: ClassId,
     ): FirClassLikeSymbol<*>? {
         return when (classId) {
-            configClassId -> createTopLevelClass(
-                classId, QuoVadisGeneratedKey, ClassKind.OBJECT,
-            ) {
-                superType(generatedNavigationConfigId.createConeType(session))
-            }.symbol
+            configClassId -> {
+                val clazz = createTopLevelClass(
+                    classId, QuoVadisGeneratedKey, ClassKind.OBJECT,
+                ) {
+                    superType(navigationConfigId.createConeType(session))
+                }
+                clazz.replaceAnnotations(
+                    listOf(
+                        buildAnnotation {
+                            annotationTypeRef = buildResolvedTypeRef {
+                                coneType = generatedConfigAnnotationId.createConeType(session)
+                            }
+                            argumentMapping = FirEmptyAnnotationArgumentMapping
+                        },
+                    ),
+                )
+                clazz.symbol
+            }
 
             deepLinkHandlerClassId -> createTopLevelClass(
                 classId, QuoVadisGeneratedKey, ClassKind.OBJECT,

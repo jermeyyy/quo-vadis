@@ -142,6 +142,10 @@ class GeneratedArtifactsContractTest {
             "Generated navigation config should use the module-prefixed contract name and implement NavigationConfig",
         )
         assertTrue(
+            navigationConfigText.contains("@GeneratedConfig"),
+            "Generated navigation config should have @GeneratedConfig annotation",
+        )
+        assertTrue(
             deepLinkHandlerText.contains("package com.jermey.quo.vadis.generated"),
             "Generated deep link handler should use the shared generated package",
         )

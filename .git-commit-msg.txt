@@ -1,0 +1,33 @@
+feat: KSP/compiler plugin interchangeability
+
+Implement full API parity between KSP and compiler plugin backends,
+enabling zero-code-change backend switching via Gradle property.
+
+Phase 1 - Core infrastructure:
+- Add @GeneratedConfig annotation (replaces GeneratedNavigationConfig interface)
+- Add NavigationConfigRegistry for runtime config lookup
+- Update navigationConfig<T>() to inline reified with registry fallback
+
+Phase 2 - Compiler plugin migration:
+- Switch FIR generation from interface to @GeneratedConfig annotation
+- Update MultiModuleDiscovery to annotation-based classpath scanning
+- Update all compiler plugin tests (87/87 passing)
+
+Phase 3 - KSP full API parity:
+- Add @GeneratedConfig to KSP-generated configs
+- Add @NavigationRoot processing with single-root validation
+- Add ClasspathConfigDiscovery for multi-module config discovery
+- Add AggregatedConfigGenerator with registry init block
+- Remove @Deprecated from KSP processor
+
+Phase 4 - Contract tests:
+- NavigationConfigRegistryTest (register/get, null, overwrite)
+- NavigationConfigResolutionTest (registry lookup, error on missing)
+- KSP GeneratedArtifactsContractTest @GeneratedConfig assertion
+
+Phase 5 - Documentation cleanup:
+- Remove compiler-plugin-only language from docs
+- Update migration, annotations, and README docs
+
+BREAKING CHANGE: GeneratedNavigationConfig interface removed.
+Use @GeneratedConfig annotation and NavigationConfigRegistry instead.

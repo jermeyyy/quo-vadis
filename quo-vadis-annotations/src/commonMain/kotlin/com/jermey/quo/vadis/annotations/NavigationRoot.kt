@@ -5,7 +5,7 @@ package com.jermey.quo.vadis.annotations
  * compiler-plugin-generated [NavigationConfig] instances from dependency modules.
  *
  * When the Quo Vadis compiler plugin encounters this annotation, it:
- * 1. Scans the classpath for all [GeneratedNavigationConfig] implementors
+ * 1. Scans the classpath for all `@GeneratedConfig`-annotated configs
  * 2. Aggregates them into a single `{Prefix}NavigationConfig` object
  * 3. Orders feature configs by fully-qualified name for deterministic output
  *

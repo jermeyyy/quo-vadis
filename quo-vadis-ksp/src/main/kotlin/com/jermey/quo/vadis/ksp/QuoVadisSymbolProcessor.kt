@@ -20,6 +20,9 @@ import com.jermey.quo.vadis.ksp.extractors.StackExtractor
 import com.jermey.quo.vadis.ksp.extractors.TabExtractor
 import com.jermey.quo.vadis.ksp.extractors.TransitionExtractor
 import com.jermey.quo.vadis.ksp.extractors.ContainerExtractor
+import com.jermey.quo.vadis.annotations.NavigationRoot
+import com.jermey.quo.vadis.ksp.discovery.ClasspathConfigDiscovery
+import com.jermey.quo.vadis.ksp.generators.AggregatedConfigGenerator
 import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
 import com.jermey.quo.vadis.ksp.generators.dsl.NavigationConfigGenerator
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
@@ -49,11 +52,6 @@ import com.jermey.quo.vadis.ksp.validation.ValidationEngine
  *   This is required for multi-module projects to avoid class name conflicts.
  * - `quoVadis.strictValidation` - Whether validation errors abort generation (default: true)
  */
-@Deprecated(
-    message = "KSP processor is deprecated. Migrate to the Quo Vadis K2 compiler plugin for better IDE support and faster builds. " +
-              "See https://github.com/jermeyyy/quo-vadis/blob/main/docs/MIGRATION.md",
-    level = DeprecationLevel.WARNING,
-)
 class QuoVadisSymbolProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
@@ -128,11 +126,34 @@ class QuoVadisSymbolProcessor(
     // Track if generation has already happened (to handle multi-round processing)
     private var hasGenerated = false
 
+    // @NavigationRoot annotated class (if present)
+    private var navigationRootClass: KSClassDeclaration? = null
+
+    // Cached resolver for use during generation
+    private var resolver: Resolver? = null
+
+    // Lazy-initialized generators for aggregated config
+    private val aggregatedConfigGenerator by lazy {
+        AggregatedConfigGenerator(
+            codeGenerator = codeGenerator,
+            logger = logger,
+            packageName = targetPackage,
+            modulePrefix = modulePrefix
+        )
+    }
+
+    private val classpathConfigDiscovery by lazy {
+        ClasspathConfigDiscovery(logger)
+    }
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         // Skip if we've already generated code in a previous round
         if (hasGenerated) {
             return emptyList()
         }
+
+        // Cache resolver for use during generation
+        this.resolver = resolver
 
         // Phase 1: Collection - Extract all annotated symbols
         collectAllSymbols(resolver)
@@ -205,6 +226,9 @@ class QuoVadisSymbolProcessor(
 
         // Step 7: Extract transitions
         collectTransitions(resolver)
+
+        // Step 8: Extract @NavigationRoot (for aggregated config generation)
+        collectNavigationRoot(resolver)
 
         logger.info(
             "QuoVadis: Collected ${collectedStacks.size} stacks, ${collectedTabs.size} tabs, " +
@@ -285,6 +309,32 @@ class QuoVadisSymbolProcessor(
         // Track originating files from transitions
         transitions.forEach { transition ->
             originatingFiles.add(transition.containingFile)
+        }
+    }
+
+    /**
+     * Collects @NavigationRoot annotated classes.
+     *
+     * Validates single-root constraint: only one @NavigationRoot is allowed
+     * per compilation unit. When present, triggers aggregated config generation.
+     */
+    private fun collectNavigationRoot(resolver: Resolver) {
+        val roots = resolver.getSymbolsWithAnnotation(NavigationRoot::class.qualifiedName!!)
+            .filterIsInstance<KSClassDeclaration>()
+            .toList()
+
+        if (roots.size > 1) {
+            logger.error(
+                "Multiple @NavigationRoot annotations found. Only one is allowed per compilation unit.",
+                roots[1]
+            )
+            return
+        }
+
+        if (roots.isNotEmpty()) {
+            navigationRootClass = roots.first()
+            roots.first().containingFile?.let { originatingFiles.add(it) }
+            logger.info("QuoVadis: Found @NavigationRoot on ${roots.first().qualifiedName?.asString()}")
         }
     }
 
@@ -423,6 +473,34 @@ class QuoVadisSymbolProcessor(
 
         // Always generate deep link handler and navigator extensions
         generateDeepLinkHandler()
+
+        // If @NavigationRoot is present, generate aggregated config
+        navigationRootClass?.let { rootClass ->
+            generateAggregatedConfig(rootClass, originatingFilesList)
+        }
+    }
+
+    /**
+     * Generates the aggregated config that composes all discovered module configs
+     * and registers into NavigationConfigRegistry.
+     */
+    private fun generateAggregatedConfig(
+        rootClass: KSClassDeclaration,
+        originatingFiles: List<KSFile>
+    ) {
+        val currentModuleConfigName = "${modulePrefix}NavigationConfig"
+
+        // Discover dependency configs from classpath
+        val dependencyConfigs = resolver?.let {
+            classpathConfigDiscovery.discoverConfigs(it, currentModuleConfigName)
+        } ?: emptyList()
+
+        aggregatedConfigGenerator.generate(
+            rootClass = rootClass,
+            currentModuleConfigName = currentModuleConfigName,
+            dependencyConfigFqns = dependencyConfigs,
+            originatingFiles = originatingFiles
+        )
     }
 
     /**
@@ -478,11 +556,6 @@ class QuoVadisSymbolProcessor(
 /**
  * Provider for QuoVadisSymbolProcessor.
  */
-@Deprecated(
-    message = "KSP processor is deprecated. Migrate to the Quo Vadis K2 compiler plugin for better IDE support and faster builds. " +
-              "See https://github.com/jermeyyy/quo-vadis/blob/main/docs/MIGRATION.md",
-    level = DeprecationLevel.WARNING,
-)
 class QuoVadisSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return QuoVadisSymbolProcessor(

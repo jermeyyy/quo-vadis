@@ -35,7 +35,7 @@ import org.jetbrains.kotlin.types.Variance
 /**
  * Generates IR bodies for the `{Prefix}__AggregatedConfig` object class.
  *
- * The aggregated config composes all discovered [GeneratedNavigationConfig]
+ * The aggregated config composes all discovered `@GeneratedConfig`-annotated
  * implementations from the classpath and current module using the `plus` operator,
  * then delegates every [NavigationConfig] member to the composite.
  */

@@ -1,8 +1,7 @@
 # Migration Companion: KSP ↔ Compiler Backend
 
-This guide is the focused cutover companion for existing KSP users who want to switch Quo Vadis to its experimental compiler backend.
-The supported interchangeability boundary today is the module-level generated contract: module-prefixed
-`NavigationConfig` objects, deep-link handlers, and manual `+` composition.
+This guide is the focused cutover companion for existing KSP users who want to switch Quo Vadis to the compiler backend, or vice versa.
+Both backends support the full consumer API: module-prefixed `NavigationConfig` objects, `@NavigationRoot` aggregation, `navigationConfig<T>()` lookup, deep-link handlers, and `+` composition.
 
 If you are still deciding which backend to adopt, start with [COMPILER-PLUGIN.md](COMPILER-PLUGIN.md) for backend selection guidance, installation options, limitations, and rollback context.
 
@@ -11,12 +10,12 @@ If you are still deciding which backend to adopt, start with [COMPILER-PLUGIN.md
 - **Faster builds**: No separate KSP processing pass — code generation happens during normal compilation
 - **Better IDE support**: FIR synthetic declarations provide instant autocomplete without requiring a build
 - **Shared generated contract**: Both backends generate module-level config objects that can be composed explicitly
-- **Experimental aggregation**: `@NavigationRoot` and `navigationConfig<T>()` remain compiler-backend-only enhancements
+- **Full feature parity**: `@NavigationRoot`, `navigationConfig<T>()`, and aggregated configs work with both backends
 
-> **Current rollout posture**: KSP remains the default backend. Opt into the compiler backend with
-> `quoVadis.backend=compiler` while the interoperability matrix and workflow guardrails mature.
+> **Current rollout posture**: KSP is the default backend. Opt into the compiler backend with
+> `quoVadis.backend=compiler`. Switching requires only a Gradle property change + clean build — no source code changes.
 
-> **Warning**: Treat the compiler backend as experimental, and do not wire Quo Vadis KSP processing and compiler-backend processing for the same module at the same time.
+> **Warning**: Do not wire Quo Vadis KSP processing and compiler-backend processing for the same module at the same time.
 
 ## Prerequisites
 
@@ -41,7 +40,7 @@ quoVadis {
 }
 ```
 
-**Compiler backend (experimental):**
+**Compiler backend:**
 ```kotlin
 // gradle.properties
 quoVadis.backend=compiler
@@ -71,7 +70,7 @@ val appConfig = Feature1NavigationConfig + Feature2NavigationConfig + AppNavigat
 val navigator = rememberQuoVadisNavigator(MainTabs::class, appConfig)
 ```
 
-**Compiler-only enhancement — auto-discovery with `@NavigationRoot`:**
+**Auto-discovery with `@NavigationRoot` (both backends):**
 ```kotlin
 // In your app module, add @NavigationRoot to any class:
 @NavigationRoot
@@ -81,10 +80,7 @@ object MyApp
 val navigator = rememberQuoVadisNavigator(MainTabs::class, MyAppNavigationConfig)
 ```
 
-The compiler backend automatically scans the classpath for generated module configs and merges them.
-
-> **Note**: For backend switching, prefer explicit `+` composition. `@NavigationRoot` and `navigationConfig<T>()`
-> are compiler-only during the experimental phase.
+Both backends automatically discover generated module configs and merge them when `@NavigationRoot` is present.
 
 ### Feature Modules
 
@@ -187,7 +183,7 @@ Deep-link parity is covered by compiler-plugin regression tests for stack destin
 | IDE autocomplete | Requires build to see generated classes | Instant via FIR synthetic declarations |
 | Build speed | Separate KSP pass | Integrated into compilation |
 | Debugging generated code | Inspect generated `.kt` files | Use `-PquoVadis.dumpIr=true` for IR dump |
-| Multi-module | Manual `+` operator | Automatic via `@NavigationRoot` |
+| Multi-module | Manual `+` or `@NavigationRoot` | Manual `+` or `@NavigationRoot` |
 
 ## Debugging
 
@@ -228,7 +224,7 @@ That is currently unsupported for the rollout. Set the backend once at the root 
 modules on the same backend.
 
 ### Should I migrate every project right now?
-No. KSP remains the stable/default recommendation. Switch when you specifically want to evaluate the experimental compiler backend or its compiler-only aggregation features.
+No. KSP remains the default backend. Both backends support the same consumer API, so switch when the compiler backend's trade-offs (faster builds, better IDE support) suit your project.
 
 ### My IDE doesn't show generated classes — how do I fix it?
 Ensure K2 mode is enabled in IDE settings. Invalidate caches if needed. The compiler plugin uses FIR synthetic declarations which require K2 support.
@@ -241,7 +237,7 @@ You likely flipped to compiler mode while still wiring the Quo Vadis KSP process
 `quo-vadis-ksp` KSP dependencies, clear `useLocalKsp`, and run a clean build.
 
 ### Is the compiler plugin stable?
-The compiler plugin is still experimental. It uses Kotlin's `ExperimentalCompilerApi`, and Kotlin compiler API changes
+The compiler plugin uses Kotlin's `ExperimentalCompilerApi`, and Kotlin compiler API changes
 may require plugin updates when upgrading Kotlin versions.
 
 ## Rollback

@@ -22,7 +22,7 @@ Quo Vadis provides a powerful navigation solution with:
 1. **`quo-vadis-core`** - The navigation library (reusable, no external dependencies)
 2. **`quo-vadis-annotations`** - Annotation frontend API (`@Stack`, `@Destination`, `@Screen`, `@Tabs`, `@Pane`)
 3. **`quo-vadis-ksp`** - Stable annotation backend for zero-boilerplate navigation
-4. **`quo-vadis-compiler-plugin`** - Experimental annotation backend built on the Kotlin compiler
+4. **`quo-vadis-compiler-plugin`** - Alternative annotation backend built on the Kotlin compiler
 5. **`quo-vadis-gradle-plugin`** - Gradle plugin for backend selection and simplified setup
 6. **`quo-vadis-core-flow-mvi`** - Optional FlowMVI integration
 7. **`composeApp`** - Demo application showcasing all navigation patterns
@@ -61,7 +61,7 @@ NavPlayground/
 │   └── src/commonMain/          # @Stack, @Destination, @Screen, @Tabs, @Pane, etc.
 ├── quo-vadis-ksp/               # Stable KSP backend
 │   └── src/main/                # Processor implementation
-├── quo-vadis-compiler-plugin/   # Experimental compiler-plugin backend
+├── quo-vadis-compiler-plugin/   # Compiler-plugin backend
 │   └── src/main/                # Compiler plugin implementation
 ├── quo-vadis-gradle-plugin/     # Gradle plugin for backend selection
 │   └── src/main/                # Plugin implementation
@@ -87,7 +87,7 @@ Add the library to your Kotlin Multiplatform project:
 Choose an annotation backend before wiring the project:
 
 - **KSP** is the stable/default recommendation for new projects.
-- **Compiler plugin** is available as an experimental alternative. Start with [docs/COMPILER-PLUGIN.md](docs/COMPILER-PLUGIN.md) before enabling it.
+- **Compiler plugin** is an alternative backend with faster builds and better IDE support. Start with [docs/COMPILER-PLUGIN.md](docs/COMPILER-PLUGIN.md) before enabling it.
 - **DSL configuration** remains the manual, backend-independent option for projects that do not want annotation generation.
 
 If you already use KSP and want to trial the compiler plugin, use [docs/MIGRATION.md](docs/MIGRATION.md) for the cutover steps.
@@ -131,13 +131,13 @@ quoVadis {
 
 The plugin automatically:
 - Uses the KSP backend by default
-- Supports opting into the experimental compiler backend with `quoVadis.backend=compiler`
+- Supports opting into the compiler backend with `quoVadis.backend=compiler`
 - Configures KSP with the correct processor dependency
 - Sets up the module prefix for generated class names
 - Registers generated source directories
 - Configures proper task dependencies for KMP
 
-If you want to evaluate the experimental compiler plugin instead, follow [docs/COMPILER-PLUGIN.md](docs/COMPILER-PLUGIN.md). Do not enable both backends in the same module.
+If you want to use the compiler plugin instead, follow [docs/COMPILER-PLUGIN.md](docs/COMPILER-PLUGIN.md). Do not enable both backends in the same module.
 
 #### Option 2: Manual KSP Configuration
 
@@ -609,7 +609,7 @@ The `quo-vadis-gradle-plugin` simplifies annotation-backend setup for Kotlin Mul
 
 | Feature | Description |
 |---------|-------------|
-| **Backend Selection** | Lets a module stay on KSP or opt into the experimental compiler backend |
+| **Backend Selection** | Lets a module stay on KSP or opt into the compiler backend |
 | **Auto KSP Setup** | Configures `kspCommonMainMetadata` dependency automatically in KSP mode |
 | **Module Prefix** | Generates class names like `MyAppNavigationConfig` |
 | **Source Registration** | Registers generated source directories for KMP in KSP mode |
@@ -739,8 +739,8 @@ val config = ComposeAppNavigationConfig +
 
 - **Website**: [https://jermeyyy.github.io/quo-vadis/](https://jermeyyy.github.io/quo-vadis/)
 - **API Reference**: Auto-generated via Dokka
-- [Compiler Plugin Guide (Experimental)](docs/COMPILER-PLUGIN.md)
-- [Migration Companion: KSP → Compiler Plugin](docs/MIGRATION.md)
+- [Compiler Plugin Guide](docs/COMPILER-PLUGIN.md)
+- [Migration Companion: KSP ↔ Compiler Plugin](docs/MIGRATION.md)
 
 ```bash
 # Generate API docs

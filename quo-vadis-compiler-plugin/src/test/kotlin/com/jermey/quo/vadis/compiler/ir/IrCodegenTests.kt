@@ -2,7 +2,7 @@ package com.jermey.quo.vadis.compiler.ir
 
 import com.jermey.quo.vadis.compiler.testing.CompilerTestHelper
 import com.jermey.quo.vadis.compiler.testing.TestSources
-import com.jermey.quo.vadis.core.navigation.config.GeneratedNavigationConfig
+import com.jermey.quo.vadis.core.navigation.config.GeneratedConfig
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
@@ -67,6 +67,13 @@ class IrCodegenTests {
         assertNotNull(instance, "${modulePrefix}NavigationConfig object should exist")
         assertIs<NavigationConfig>(instance)
         return instance
+    }
+
+    private fun assertHasGeneratedConfigAnnotation(config: NavigationConfig) {
+        assertTrue(
+            config::class.annotations.any { it is GeneratedConfig },
+            "${config::class.qualifiedName} should have @GeneratedConfig annotation",
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -147,7 +154,7 @@ class IrCodegenTests {
         val instance = configClass.kotlin.objectInstance
         assertNotNull(instance, "TestNavigationConfig object should exist")
         assertIs<NavigationConfig>(instance)
-        assertIs<GeneratedNavigationConfig>(instance)
+        assertHasGeneratedConfigAnnotation(instance as NavigationConfig)
     }
 
     // ── 5C.2: roots property is accessible ──────────────────────────
@@ -187,7 +194,7 @@ class IrCodegenTests {
             TestSources.tabsContainerWrapper,
         )
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         // Verify tab destination classes are loadable from compilation output
         val homeTab = loadDestinationClass(result, "test.HomeTab")
@@ -229,7 +236,7 @@ class IrCodegenTests {
     fun `pane source generates config with accessible registries`() {
         val result = CompilerTestHelper.compile(TestSources.paneWithRoles)
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         // Verify pane destination class is loadable
         val paneClass = loadDestinationClass(result, "test.CatalogPane")
@@ -242,7 +249,7 @@ class IrCodegenTests {
     fun `multiple argument types compile and generate valid config`() {
         val result = CompilerTestHelper.compile(TestSources.stackWithMultipleArgs)
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         // Verify destination class is loadable from compilation output
         val destClass = loadDestinationClass(result, "test.MultiArgDestination")
@@ -255,7 +262,7 @@ class IrCodegenTests {
     fun `transition annotations compile and generate valid config`() {
         val result = CompilerTestHelper.compile(TestSources.destinationWithTransition)
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         val destClass = loadDestinationClass(result, "test.AnimatedDestination")
         assertNotNull(destClass, "AnimatedDestination should be loadable")
@@ -267,7 +274,7 @@ class IrCodegenTests {
     fun `full navigation graph generates config with all registries`() {
         val result = CompilerTestHelper.compile(TestSources.fullNavigationGraph)
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         // Verify all destination classes from full graph are loadable
         assertNotNull(loadDestinationClass(result, "test.HomeDestinations"))
@@ -287,7 +294,7 @@ class IrCodegenTests {
     fun `screen binding generates config with screenRegistry`() {
         val result = CompilerTestHelper.compile(TestSources.validScreenBinding)
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         // Verify screen destination class is loadable
         val destClass = loadDestinationClass(result, "test.ScreenDestination")
@@ -303,7 +310,7 @@ class IrCodegenTests {
             modulePrefix = "Feature1",
         )
         val config = loadConfig(result, modulePrefix = "Feature1")
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
     }
 
     // ── 5C.3: Deep Link Sources Compile and Config is Valid ────────
@@ -312,7 +319,7 @@ class IrCodegenTests {
     fun `deep link destinations compile and generate valid config`() {
         val result = CompilerTestHelper.compile(TestSources.deepLinkDestinations)
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
         val registry = config.deepLinkRegistry
 
         // Verify destination classes are loadable
@@ -423,7 +430,7 @@ class IrCodegenTests {
         val result = CompilerTestHelper.compile(TestSources.scopedDestinations)
         val jvmResult = result as JvmCompilationResult
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         // Verify all scoped destination classes are loadable
         assertNotNull(loadDestinationClass(result, "test.ProfileTab"))
@@ -464,7 +471,7 @@ class IrCodegenTests {
     fun `all seven argument types compile and generate valid config`() {
         val result = CompilerTestHelper.compile(TestSources.deepLinkArgumentTypes)
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         // Verify destination class is loadable
         val destClass = loadDestinationClass(result, "test.ArgTypeDestination")
@@ -530,10 +537,16 @@ class IrCodegenTests {
     }
 
     @Test
-    fun `complex graph config implements GeneratedNavigationConfig marker`() {
+    fun `complex graph config has GeneratedConfig annotation`() {
         val result = CompilerTestHelper.compile(TestSources.fullNavigationGraph)
         val config = loadConfig(result)
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
+
+        // Verify annotation is discoverable via Java reflection as well
+        assertTrue(
+            config::class.java.isAnnotationPresent(GeneratedConfig::class.java),
+            "Generated config should have @GeneratedConfig annotation visible via Java reflection",
+        )
 
         // Verify the plus() method exists with correct signature via reflection
         val jvmResult = result as JvmCompilationResult
@@ -555,7 +568,7 @@ class IrCodegenTests {
             modulePrefix = "Feature1",
         )
         val config = loadConfig(result, modulePrefix = "Feature1")
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         // Verify feature destination class is loadable
         val destClass = loadDestinationClass(result, "test.feature.FeatureDestination")
@@ -576,7 +589,7 @@ class IrCodegenTests {
             config::class.java.name,
             "Generated config should use the module-prefixed contract name in the generated package",
         )
-        assertIs<GeneratedNavigationConfig>(config)
+        assertHasGeneratedConfigAnnotation(config)
 
         val handlerClass = jvmResult.classLoader.loadClass("$GENERATED_PKG.ContractDeepLinkHandler")
         val handlerInstance = handlerClass.kotlin.objectInstance
@@ -601,7 +614,7 @@ class IrCodegenTests {
             modulePrefix = "Module1",
         )
         val config1 = loadConfig(result1, modulePrefix = "Module1")
-        assertIs<GeneratedNavigationConfig>(config1)
+        assertHasGeneratedConfigAnnotation(config1)
 
         // Compile "module 2" with a different prefix
         val result2 = CompilerTestHelper.compile(
@@ -609,7 +622,7 @@ class IrCodegenTests {
             modulePrefix = "Module2",
         )
         val config2 = loadConfig(result2, modulePrefix = "Module2")
-        assertIs<GeneratedNavigationConfig>(config2)
+        assertHasGeneratedConfigAnnotation(config2)
 
         // Both configs exist independently and implement the same interface
         assertIs<NavigationConfig>(config1)
