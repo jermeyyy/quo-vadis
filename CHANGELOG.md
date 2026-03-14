@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Backend selection**: The Gradle plugin now uses `quoVadis.backend` as the primary backend switch, with `ksp` as the default and `compiler` as an experimental opt-in.
+- **Deprecated alias**: `useCompilerPlugin` is now a compatibility alias for one transition window and no longer defines the primary rollout story.
+- **Demo integration**: `composeApp` now uses explicit module-level generated config composition so the sample remains backend-neutral.
+
+### Fixed
+- **Backend guardrails**: Compiler mode now fails fast when Quo Vadis KSP processor wiring is still present, reducing duplicate-generation and stale-flip failures.
+
 ## [0.3.5] - 2026-03-02
 
 ### Changed

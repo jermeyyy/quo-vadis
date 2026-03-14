@@ -102,10 +102,12 @@ fun SettingsScreen(navigator: Navigator) {
 // Initialize navigation
 @Composable
 fun App() {
+  val config = MyAppNavigationConfig
+
     val navigator = remember {
         TreeNavigator(
-            config = GeneratedNavigationConfig,
-            initialState = GeneratedNavigationConfig.buildNavNode(
+      config = config,
+      initialState = config.buildNavNode(
                 AppDestination::class, 
                 null
             )!!
@@ -126,7 +128,8 @@ export default function AnnotationAPI() {
       <h1>Annotation-Based API</h1>
       <p className={styles.intro}>
         Quo Vadis uses a powerful annotation system to define your navigation structure with minimal boilerplate. 
-        The KSP processor generates all the necessary code for type-safe navigation, deep linking, and screen binding.
+        The annotation model stays the same across backends: KSP is the stable generator today, and the
+        compiler plugin is the experimental alternative for teams evaluating the newer path.
       </p>
 
       <div className={styles.highlights}>
@@ -136,6 +139,13 @@ export default function AnnotationAPI() {
           <li><strong>Deep Link Ready:</strong> Route patterns with path parameters are generated automatically</li>
           <li><strong>Compile-Time Safety:</strong> Catch navigation errors before runtime</li>
         </ul>
+      </div>
+
+      <div className={styles.note}>
+        <p>
+          The annotations on this page are backend-neutral. If you want to compare KSP with the experimental compiler-plugin backend,
+          see <Link to="/features/compiler-plugin">Compiler Plugin (Experimental)</Link>.
+        </p>
       </div>
 
       <section>
@@ -376,7 +386,8 @@ export default function AnnotationAPI() {
       <section>
         <h2 id="what-gets-generated">What Gets Generated</h2>
         <p>
-          The KSP processor generates several components from your annotated classes:
+          Annotation-based configuration produces several components from your annotated classes. In KSP mode
+          these appear as generated sources; in compiler-plugin mode the equivalent APIs are synthesized during compilation.
         </p>
 
         <ul>

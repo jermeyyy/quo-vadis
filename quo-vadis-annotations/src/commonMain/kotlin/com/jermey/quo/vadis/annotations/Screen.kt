@@ -80,7 +80,7 @@ import kotlin.reflect.KClass
  * @see Pane
  */
 @Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class Screen(
     /**
      * The destination class this composable renders.

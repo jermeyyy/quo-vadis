@@ -106,8 +106,12 @@ fun HomeScreen(navigator: Navigator = koinInject()) {
 **Manual Creation:**
 
 ```kotlin
+val config = ComposeAppNavigationConfig +
+    Feature1NavigationConfig +
+    Feature2NavigationConfig
+
 val navigator = TreeNavigator(
-    config = GeneratedNavigationConfig,
+    config = config,
     initialState = buildInitialState()
 )
 ```

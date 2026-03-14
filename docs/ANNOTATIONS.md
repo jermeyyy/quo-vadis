@@ -1,6 +1,6 @@
 # Annotation-Based Navigation Configuration
 
-This guide covers Quo Vadis's annotation-based approach to navigation configuration. The KSP (Kotlin Symbol Processing) code generator processes these annotations to produce type-safe navigation code.
+This guide covers Quo Vadis's annotation-based approach to navigation configuration. The annotations are the frontend API, while KSP and the compiler plugin are the supported backends that turn them into type-safe navigation infrastructure.
 
 ## Overview
 
@@ -9,13 +9,13 @@ This guide covers Quo Vadis's annotation-based approach to navigation configurat
 Quo Vadis uses annotations to define navigation structure declaratively. This approach provides:
 
 - **Type safety** — Compile-time validation of navigation destinations and arguments
-- **Code generation** — KSP generates boilerplate navigation code automatically
+- **Code generation** — KSP or the compiler plugin generates boilerplate navigation code automatically
 - **Deep linking** — Route patterns enable automatic deep link handling
 - **IDE support** — Full autocomplete and refactoring support
 
 ### What Gets Generated
 
-The KSP processor generates:
+The selected annotation backend generates:
 
 | Generated Artifact | Purpose |
 |-------------------|---------|
@@ -26,7 +26,11 @@ The KSP processor generates:
 
 ### Setup Requirements
 
-Add the KSP processor to your module's `build.gradle.kts`:
+Annotation-based configuration requires exactly one backend per module.
+
+Use KSP for the default setup, or see [COMPILER-PLUGIN.md](COMPILER-PLUGIN.md) if you want to use the compiler plugin.
+
+Stable KSP example:
 
 ```kotlin
 plugins {
@@ -693,7 +697,7 @@ data class Detail(@Argument val itemId: String) : MasterDetailDestination()
 
 ### What Gets Generated
 
-For each annotated navigation structure, KSP generates:
+For each annotated navigation structure, the selected backend generates:
 
 1. **Builder functions** — `buildXxxNavNode()` functions that construct the navigation tree
 2. **Screen registry entries** — Mappings from destination classes to composables
@@ -707,7 +711,7 @@ For each annotated navigation structure, KSP generates:
 ```kotlin
 @Composable
 fun App() {
-    val navTree = remember { buildMainTabsNavNode() }  // KSP-generated
+    val navTree = remember { buildMainTabsNavNode() }  // Backend-generated
     val navigator = rememberTreeNavigator(initialState = navTree)
     
     NavigationHost(
@@ -717,6 +721,8 @@ fun App() {
     )
 }
 ```
+
+When using the compiler plugin, you get the same generated API shape without KSP-emitted `.kt` source files. See [COMPILER-PLUGIN.md](COMPILER-PLUGIN.md) for the backend-specific differences.
 
 **Accessing generated registries:**
 

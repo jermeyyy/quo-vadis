@@ -79,6 +79,10 @@ internal object QuoVadisClassNames {
         "Argument"
     )
     
+    // Generated config annotation and registry
+    val GENERATED_CONFIG: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.config", "GeneratedConfig")
+    val NAVIGATION_CONFIG_REGISTRY: ClassName = ClassName("com.jermey.quo.vadis.core.navigation.config", "NavigationConfigRegistry")
+    
     /**
      * Convert KClass to KotlinPoet ClassName.
      */

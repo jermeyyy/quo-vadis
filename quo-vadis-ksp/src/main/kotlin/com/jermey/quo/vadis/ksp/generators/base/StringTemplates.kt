@@ -35,7 +35,7 @@ object StringTemplates {
     """
 
     /**
-     * KDoc for GeneratedNavigationConfig object.
+     * KDoc for the generated NavigationConfig object.
      */
     val NAVIGATION_CONFIG_KDOC: String = """
         |Auto-generated navigation configuration.
@@ -47,18 +47,18 @@ object StringTemplates {
         |
         |### One-liner
         |```kotlin
-        |QuoVadisNavigation(MainTabs::class, GeneratedNavigationConfig)
+        |QuoVadisNavigation(MainTabs::class, AppNavigationConfig)
         |```
         |
         |### Standard
         |```kotlin
-        |val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
+        |val navigator = rememberQuoVadisNavigator(MainTabs::class, AppNavigationConfig)
         |NavigationHost(navigator)  // Config is read from navigator
         |```
         |
         |### Multi-Module
         |```kotlin
-        |val combinedConfig = GeneratedNavigationConfig + FeatureModuleConfig
+        |val combinedConfig = AppNavigationConfig + FeatureModuleConfig
         |val navigator = rememberQuoVadisNavigator(MainTabs::class, combinedConfig)
         |NavigationHost(navigator)
         |```

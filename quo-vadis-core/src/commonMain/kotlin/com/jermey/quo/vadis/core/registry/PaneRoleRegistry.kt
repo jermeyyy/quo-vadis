@@ -68,11 +68,15 @@ interface PaneRoleRegistry {
     /**
      * Gets the pane role for a destination class, if registered.
      *
+     * Default implementation returns null. The compiler plugin generates
+     * the instance-based [getPaneRole] overload; this KClass overload
+     * is provided for convenience and can be overridden if needed.
+     *
      * @param scopeKey The pane container's scope key (e.g., "messagesPane")
      * @param destinationClass The destination class to look up
      * @return The [PaneRole] if registered, null otherwise
      */
-    fun getPaneRole(scopeKey: ScopeKey, destinationClass: KClass<out NavDestination>): PaneRole?
+    fun getPaneRole(scopeKey: ScopeKey, destinationClass: KClass<out NavDestination>): PaneRole? = null
 
     /**
      * Checks if a destination has a registered pane role.

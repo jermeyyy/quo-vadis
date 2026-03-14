@@ -102,7 +102,7 @@ package com.jermey.quo.vadis.annotations
  * @see Screen
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class Destination(
     val route: String = "",
 )

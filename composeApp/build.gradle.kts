@@ -9,11 +9,6 @@ plugins {
     alias(libs.plugins.koin.compiler)
 }
 
-// Quo Vadis KSP configuration (using local processor for development)
-quoVadis {
-    useLocalKsp = true
-}
-
 // Configure compose resources for the new Android KMP library plugin
 compose.resources {
     packageOfResClass = "navplayground.composeapp.generated.resources"

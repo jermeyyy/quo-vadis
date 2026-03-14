@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * ```kotlin
  * val navigator = TreeNavigator(
- *     config = GeneratedNavigationConfig,
+ *     config = AppNavigationConfig,
  *     initialState = buildInitialState()
  * )
  *

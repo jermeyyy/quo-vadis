@@ -6,15 +6,21 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.transition.NavTransition
 import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
+import com.jermey.quo.vadis.core.dsl.internal.BuiltPaneContent
+import com.jermey.quo.vadis.core.dsl.internal.BuiltPanesConfig
+import com.jermey.quo.vadis.core.dsl.internal.BuiltTabsConfig
 import com.jermey.quo.vadis.core.dsl.internal.DslNavigationConfig
 import com.jermey.quo.vadis.core.dsl.internal.ScreenEntry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.ScopeKey
+import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
+import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import kotlin.reflect.KClass
 
 /**
@@ -386,6 +392,147 @@ class NavigationConfigBuilder {
     ) {
         paneContainers[key] = wrapper
     }
+
+    // region Compiler Plugin Helper Methods
+
+    @InternalQuoVadisApi
+    fun registerTabsContainer(
+        containerClass: KClass<out NavDestination>,
+        scopeKey: String,
+        tabClasses: List<KClass<out NavDestination>>,
+        tabInstances: List<NavDestination?>,
+        tabIsContainerRef: List<Boolean>,
+        initialTabIndex: Int = 0
+    ) {
+        val tabEntries = tabClasses.mapIndexed { index, klass ->
+            if (tabIsContainerRef[index]) {
+                TabEntry.ContainerReference(containerClass = klass, title = null, icon = null)
+            } else {
+                val instance = tabInstances[index]
+                    ?: error("Flat tab item must have an instance: ${klass.simpleName}")
+                TabEntry.FlatScreen(destination = instance, destinationClass = klass, title = null, icon = null)
+            }
+        }
+        val scopeKeyValue = ScopeKey(scopeKey)
+        containers[containerClass] = ContainerBuilder.Tabs(
+            destinationClass = containerClass,
+            scopeKey = scopeKeyValue,
+            config = BuiltTabsConfig(tabs = tabEntries, initialTab = initialTabIndex)
+        )
+        val scopeMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
+        tabEntries.forEach { entry ->
+            when (entry) {
+                is TabEntry.FlatScreen -> entry.destinationClass?.let { scopeMembers.add(it) }
+                is TabEntry.ContainerReference -> scopeMembers.add(entry.containerClass)
+                is TabEntry.NestedStack -> entry.screens.forEach { it.destinationClass?.let { dc -> scopeMembers.add(dc) } }
+            }
+        }
+    }
+
+    @InternalQuoVadisApi
+    fun registerStackContainer(
+        containerClass: KClass<out NavDestination>,
+        scopeKey: String,
+        startDestination: KClass<out NavDestination>,
+        startDestinationInstance: NavDestination?,
+        destinations: List<KClass<out NavDestination>>
+    ) {
+        val screenEntries = buildList {
+            add(
+                StackScreenEntry(
+                    destination = startDestinationInstance,
+                    destinationClass = startDestination,
+                    key = startDestination.simpleName ?: "screen"
+                )
+            )
+            destinations
+                .filterNot { it == startDestination }
+                .forEach { klass ->
+                    add(
+                        StackScreenEntry(
+                            destination = null,
+                            destinationClass = klass,
+                            key = klass.simpleName ?: "screen"
+                        )
+                    )
+                }
+        }
+        val scopeKeyValue = ScopeKey(scopeKey)
+        containers[containerClass] = ContainerBuilder.Stack(
+            destinationClass = containerClass,
+            scopeKey = scopeKeyValue,
+            screens = screenEntries
+        )
+        val scopeMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
+        destinations.forEach { scopeMembers.add(it) }
+    }
+
+    @InternalQuoVadisApi
+    fun registerScope(
+        scopeKey: String,
+        members: List<KClass<out NavDestination>>
+    ) {
+        val scopeKeyValue = ScopeKey(scopeKey)
+        val existingMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
+        existingMembers.addAll(members)
+    }
+
+    @InternalQuoVadisApi
+    fun registerTransition(
+        destinationClass: KClass<out NavDestination>,
+        transition: NavTransition
+    ) {
+        transitions[destinationClass] = transition
+    }
+
+    @InternalQuoVadisApi
+    fun registerPaneContainer(
+        containerClass: KClass<out NavDestination>,
+        scopeKey: String,
+        paneItemClasses: List<KClass<out NavDestination>>,
+        paneItemInstances: List<NavDestination?>,
+        paneRoles: List<Int>,
+        backBehavior: Int = 0
+    ) {
+        val builtPanes = mutableMapOf<PaneRole, PaneEntry>()
+        paneItemClasses.forEachIndexed { index, _ ->
+            val role = when (paneRoles[index]) {
+                0 -> PaneRole.Primary
+                1 -> PaneRole.Supporting
+                2 -> PaneRole.Extra
+                else -> PaneRole.Primary
+            }
+            builtPanes[role] = PaneEntry(
+                role = role,
+                weight = 1f,
+                minWidth = 0.dp,
+                content = BuiltPaneContent(
+                    rootDestination = paneItemInstances[index],
+                    isAlwaysVisible = false
+                )
+            )
+        }
+        val coreBackBehavior = when (backBehavior) {
+            0 -> PaneBackBehavior.PopUntilScaffoldValueChange
+            1 -> PaneBackBehavior.PopUntilContentChange
+            2 -> PaneBackBehavior.PopLatest
+            else -> PaneBackBehavior.PopUntilScaffoldValueChange
+        }
+        val scopeKeyValue = ScopeKey(scopeKey)
+        containers[containerClass] = ContainerBuilder.Panes(
+            destinationClass = containerClass,
+            scopeKey = scopeKeyValue,
+            config = BuiltPanesConfig(
+                panes = builtPanes,
+                initialPane = PaneRole.Primary,
+                backBehavior = coreBackBehavior
+            )
+        )
+        val scopeMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
+        paneItemClasses.forEach { scopeMembers.add(it) }
+    }
+
+    // endregion
 
     /**
      * Builds the final [NavigationConfig] from this builder's configuration.

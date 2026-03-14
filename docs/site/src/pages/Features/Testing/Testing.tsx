@@ -1,8 +1,12 @@
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
-const treeNavigatorCode = `val navigator = TreeNavigator(
-    config = GeneratedNavigationConfig,
+const treeNavigatorCode = `val config = ComposeAppNavigationConfig +
+  Feature1NavigationConfig +
+  Feature2NavigationConfig
+
+val navigator = TreeNavigator(
+  config = config,
     initialState = config.buildNavNode(HomeDestination::class, null)!!
 )
 

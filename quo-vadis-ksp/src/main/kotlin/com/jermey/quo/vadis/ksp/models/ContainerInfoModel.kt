@@ -28,7 +28,7 @@ enum class ContainerType {
  *
  * ## Generated Code Usage
  *
- * The KSP generator uses this info to create entries in `GeneratedNavigationConfig.containerRegistry`:
+ * The KSP generator uses this info to create entries in the generated NavigationConfig.containerRegistry:
  *
  * ```kotlin
  * @Composable

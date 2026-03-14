@@ -17,7 +17,10 @@ import org.koin.compose.koinInject
  * eliminating the need to pass config twice.
  *
  * ```kotlin
- * val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
+ * val navigator = rememberQuoVadisNavigator(
+ *     MainTabs::class,
+ *     ComposeAppNavigationConfig + Feature1NavigationConfig + Feature2NavigationConfig
+ * )
  * // Config is now implicit - read from navigator
  * NavigationHost(navigator)
  * ```
@@ -32,7 +35,7 @@ import org.koin.compose.koinInject
  * └── Settings (StackNode) → SettingsTab.Tab
  * ```
  *
- * @see GeneratedNavigationConfig KSP-generated unified config object
+ * @see com.jermey.quo.vadis.core.navigation.config.NavigationConfig Combined generated module configs
  * @see com.jermey.quo.vadis.core.compose.NavigationHost Display navigation content
  */
 @Composable

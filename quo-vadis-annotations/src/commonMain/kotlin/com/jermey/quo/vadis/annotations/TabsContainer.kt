@@ -105,7 +105,7 @@ import kotlin.reflect.KClass
  *
  * ## KSP Processing
  *
- * KSP generates entries in `GeneratedNavigationConfig.containerRegistry` mapping each tab class
+ * KSP generates entries in the generated NavigationConfig.containerRegistry mapping each tab class
  * to its wrapper function. The registry is used by the hierarchical renderer
  * to resolve which wrapper to use for each `TabNode`.
  *

@@ -75,9 +75,9 @@ class PanesBuilder {
      * Back navigation behavior for this pane container.
      *
      * Controls how back gestures are handled when multiple panes are visible.
-     * Defaults to [PaneBackBehavior.PopLatest].
+     * Defaults to [PaneBackBehavior.PopUntilScaffoldValueChange].
      */
-    var backBehavior: PaneBackBehavior = PaneBackBehavior.PopLatest
+    var backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange
 
     /**
      * Configures the primary pane.

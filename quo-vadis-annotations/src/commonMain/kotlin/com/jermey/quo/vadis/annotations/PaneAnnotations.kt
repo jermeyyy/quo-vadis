@@ -295,7 +295,7 @@ enum class AdaptStrategy {
  * @see Stack
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class Pane(
     /**
      * Unique name for this pane container.
@@ -413,7 +413,7 @@ annotation class Pane(
  * @see Destination
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class PaneItem(
     /**
      * Role of this pane in the layout.

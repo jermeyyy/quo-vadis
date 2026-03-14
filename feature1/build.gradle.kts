@@ -10,11 +10,6 @@ plugins {
     alias(libs.plugins.koin.compiler)
 }
 
-// Quo Vadis KSP configuration (using local processor for development)
-quoVadis {
-    useLocalKsp = true
-}
-
 kotlin {
 
     // Target declarations - add or remove as needed below. These define

@@ -100,7 +100,7 @@ import kotlin.reflect.KClass
  * @see Pane
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 annotation class Stack(
     val name: String,
     val startDestination: KClass<*>,
