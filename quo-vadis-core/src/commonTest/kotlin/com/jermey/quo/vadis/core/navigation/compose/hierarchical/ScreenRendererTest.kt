@@ -14,6 +14,7 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -39,12 +40,12 @@ class ScreenRendererTest {
     }
 
     private object ProfileDestination : NavDestination {
-        override val data: Any? = "profile-data"
+        override val data: Any = "profile-data"
         override val transition: NavigationTransition? = null
     }
 
     private object SettingsDestination : NavDestination {
-        override val data: Any? = mapOf("theme" to "dark")
+        override val data: Any = mapOf("theme" to "dark")
         override val transition: NavigationTransition? = null
     }
 
@@ -90,7 +91,7 @@ class ScreenRendererTest {
         // Then
         val data = screenNode.destination.data
         assertTrue(data is Map<*, *>)
-        assertEquals("dark", (data as Map<*, *>)["theme"])
+        assertEquals("dark", data["theme"])
     }
 
     @Test
@@ -119,7 +120,7 @@ class ScreenRendererTest {
     fun `cache can be created for screen entry`() {
         // Given
         val cache = ComposableCache()
-        val screenNode = createScreen("screen-1")
+        createScreen("screen-1")
 
         // Then
         assertNotNull(cache, "Cache should be created")
@@ -202,7 +203,7 @@ class ScreenRendererTest {
         val screen2 = ScreenNode(NodeKey("key2"), NodeKey("parent"), HomeDestination)
 
         // Then
-        assertFalse(screen1 == screen2)
+        assertNotEquals(screen1, screen2)
     }
 
     @Test
@@ -212,7 +213,7 @@ class ScreenRendererTest {
         val screen2 = ScreenNode(NodeKey("key"), NodeKey("parent2"), HomeDestination)
 
         // Then
-        assertFalse(screen1 == screen2)
+        assertNotEquals(screen1, screen2)
     }
 
     @Test
@@ -222,7 +223,7 @@ class ScreenRendererTest {
         val screen2 = ScreenNode(NodeKey("key"), NodeKey("parent"), ProfileDestination)
 
         // Then
-        assertFalse(screen1 == screen2)
+        assertNotEquals(screen1, screen2)
     }
 
     // =========================================================================
@@ -261,7 +262,7 @@ class ScreenRendererTest {
         // Given
         val transitionDestination = object : NavDestination {
             override val data: Any? = null
-            override val transition: NavigationTransition? = NavigationTransitions.SlideHorizontal
+            override val transition: NavigationTransition = NavigationTransitions.SlideHorizontal
         }
         val screen = createScreen("animated-screen", destination = transitionDestination)
 

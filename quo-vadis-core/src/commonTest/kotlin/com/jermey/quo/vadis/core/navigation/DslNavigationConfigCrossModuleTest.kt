@@ -3,7 +3,6 @@
 package com.jermey.quo.vadis.core.navigation
 
 import com.jermey.quo.vadis.core.dsl.navigationConfig
-import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -75,7 +74,7 @@ class DslNavigationConfigCrossModuleTest {
         // Assert
         assertNotNull(node)
         assertTrue(node is TabNode, "Expected TabNode but was ${node::class.simpleName}")
-        val tabNode = node as TabNode
+        val tabNode = node
         assertEquals(2, tabNode.stacks.size)
     }
 
@@ -126,7 +125,7 @@ class DslNavigationConfigCrossModuleTest {
         // Assert
         assertNotNull(node)
         assertTrue(node is TabNode)
-        val tabNode = node as TabNode
+        val tabNode = node
         assertEquals(2, tabNode.stacks.size)
 
         // Tab 0: flat screen tab
@@ -204,12 +203,11 @@ class DslNavigationConfigCrossModuleTest {
         // Assert
         assertNotNull(node)
         assertTrue(node is TabNode)
-        val tabNode = node as TabNode
-        assertEquals(2, tabNode.stacks.size)
+        assertEquals(2, node.stacks.size)
 
         // Tab 1: ContainerReference should resolve to FeatureStack from configB
         // The resolved StackNode is used directly as the tab's stack (no double wrapping)
-        val tab1Stack = tabNode.stacks[1]
+        val tab1Stack = node.stacks[1]
         assertEquals(1, tab1Stack.children.size)
         assertTrue(
             tab1Stack.children[0] is ScreenNode,

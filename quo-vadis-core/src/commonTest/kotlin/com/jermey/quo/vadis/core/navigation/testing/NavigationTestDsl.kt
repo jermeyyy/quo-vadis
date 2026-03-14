@@ -137,7 +137,7 @@ class NavigationTestScope(val navigator: TreeNavigator) {
                 "but was ${current?.let { it::class.simpleName } ?: "null"}"
         )
         @Suppress("UNCHECKED_CAST")
-        return current as D
+        return current
     }
 
     /**

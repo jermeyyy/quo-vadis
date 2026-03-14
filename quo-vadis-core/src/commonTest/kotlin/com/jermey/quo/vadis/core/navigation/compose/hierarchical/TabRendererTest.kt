@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.compose.internal.AnimationCoordinator
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
@@ -326,7 +327,7 @@ class TabRendererTest {
     }
 
     @Test
-    fun `tab destination extraction from nested stacks (@TabItem @Stack pattern)`() {
+    fun `tab destination extraction from nested stacks - TabItem Stack pattern`() {
         // Given - simulating @TabItem @Stack structure where each tab's wrapper stack
         // contains a nested StackNode, which contains the actual ScreenNode
         // Structure: TabNode > StackNode (wrapper) > StackNode (nested) > ScreenNode
@@ -362,7 +363,7 @@ class TabRendererTest {
      * Recursively finds the first ScreenNode's destination in a node tree.
      * This mirrors the implementation in TabRenderer.
      */
-    private fun findFirstScreenDestination(node: com.jermey.quo.vadis.core.navigation.node.NavNode): NavDestination? {
+    private fun findFirstScreenDestination(node: NavNode): NavDestination? {
         return when (node) {
             is ScreenNode -> node.destination
             is StackNode -> node.children.firstOrNull()?.let { findFirstScreenDestination(it) }
