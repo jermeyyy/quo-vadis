@@ -84,7 +84,6 @@ class ValidationEngineContainerReferenceTest {
             panes = emptyList(),
             screens = emptyList(),
             allDestinations = emptyList(),
-            resolver = resolver,
         )
     }
 

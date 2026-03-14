@@ -85,7 +85,6 @@ class ValidationEngineOrdinalTest {
             panes = emptyList(),
             screens = emptyList(),
             allDestinations = emptyList(),
-            resolver = resolver,
         )
     }
 

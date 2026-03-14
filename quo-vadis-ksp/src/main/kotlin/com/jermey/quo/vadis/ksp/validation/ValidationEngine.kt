@@ -1,7 +1,6 @@
 package com.jermey.quo.vadis.ksp.validation
 
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -88,7 +87,6 @@ class ValidationEngine(
      * @param panes List of all extracted @Pane annotations with their metadata
      * @param screens List of all extracted @Screen annotations with their metadata
      * @param allDestinations List of all @Destination classes found in the codebase
-     * @param resolver KSP resolver for additional symbol lookups
      * @return `true` if validation passed with no errors, `false` if any errors were found.
      *         Note that warnings do not cause validation to fail.
      */
@@ -97,8 +95,7 @@ class ValidationEngine(
         tabs: List<TabInfo>,
         panes: List<PaneInfo>,
         screens: List<ScreenInfo>,
-        allDestinations: List<DestinationInfo>,
-        resolver: Resolver
+        allDestinations: List<DestinationInfo>
     ): Boolean {
         hasErrors = false
 

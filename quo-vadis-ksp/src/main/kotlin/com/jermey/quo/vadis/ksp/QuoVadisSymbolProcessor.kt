@@ -137,8 +137,7 @@ class QuoVadisSymbolProcessor(
             tabs = collectedTabs,
             panes = collectedPanes,
             screens = collectedScreens,
-            allDestinations = collectedDestinations,
-            resolver = resolver
+            allDestinations = collectedDestinations
         )
 
         if (!isValid) {
