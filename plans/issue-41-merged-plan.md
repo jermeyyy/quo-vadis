@@ -2,7 +2,7 @@
 
 > **GitHub Issue**: #41 — "Nesting TabContainer in TabContainer of different module"  
 > **Created**: 2026-03-12  
-> **Status**: Planning  
+> **Status**: ⚠️ **Superseded** — The annotation model described here (`@Tabs(items=...)`, `TabItemType.FLAT_SCREEN/NESTED_STACK/CONTAINER_REFERENCE`) was replaced by the child-to-parent pattern: `@Tabs(name)` + `@TabItem(parent, ordinal)` with `TabItemType.DESTINATION/STACK/TABS`. See `plans/tab-child-to-parent-reversal.md` for the implemented design.  
 > **Supersedes**: `plans/cross-module-tab-nesting.md` (Plan A), `plans/issue-41-cross-module-tabs-container-reference.md` (Plan B)
 
 ---

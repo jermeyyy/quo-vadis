@@ -265,7 +265,7 @@ class ValidationEngineContainerReferenceTest {
             tabs = listOf(flatItem),
         )
 
-        validate(listOf(tabA, tabB, tabC))
+        val result = validate(listOf(tabA, tabB, tabC))
 
         val circularErrors = logger.errors.filter { it.contains("Circular tab nesting") }
         assertTrue(
@@ -322,7 +322,7 @@ class ValidationEngineContainerReferenceTest {
             tabs = listOf(flatItem),
         )
 
-        validate(listOf(tabA, tabB, tabC))
+        val result = validate(listOf(tabA, tabB, tabC))
 
         val depthWarnings = logger.warnings.filter { it.contains("nesting depth exceeds") }
         assertTrue(
@@ -385,7 +385,7 @@ class ValidationEngineContainerReferenceTest {
             tabs = listOf(flatItem),
         )
 
-        validate(listOf(tabA, tabB, tabC, tabD))
+        val result = validate(listOf(tabA, tabB, tabC, tabD))
 
         val depthWarnings = logger.warnings.filter { it.contains("nesting depth exceeds") }
         assertTrue(
@@ -407,7 +407,7 @@ class ValidationEngineContainerReferenceTest {
             ordinal = 0,
         )
 
-        validate(listOf(tabInfo(items = listOf(flatItem))))
+        val result = validate(listOf(tabInfo(items = listOf(flatItem))))
 
         val depthWarnings = logger.warnings.filter { it.contains("nesting depth exceeds") }
         assertTrue(

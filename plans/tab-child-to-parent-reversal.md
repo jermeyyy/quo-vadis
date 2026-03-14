@@ -98,7 +98,7 @@ annotation class Tabs(
 **Acceptance criteria:**
 - `@Tabs` has only `name: String` parameter
 - KDoc describes the new child-to-parent pattern
-- Retention remains `SOURCE`
+- Retention remains `BINARY`
 
 ### Task 1.2: Modify `@TabItem` annotation
 
@@ -860,7 +860,7 @@ grep -rl "@Tabs\|@TabItem" composeApp/ feature1/ feature2/
 
 ## Dependency Graph
 
-```
+```text
 Phase 1 (Annotations) ──────────────────────────── stands alone
     │
     ├─── Phase 2 (Models) ──────────────────────── depends on Phase 1

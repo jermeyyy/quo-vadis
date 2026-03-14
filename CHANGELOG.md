@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ⚠️ Breaking Changes
+
+- **`@Tabs` annotation**: Removed `items` and `initialTab` parameters. `@Tabs` is now a pure declaration with only `name`. Tab structure is built from child `@TabItem` declarations.
+- **`@TabItem` annotation**: Now requires `parent` (the `@Tabs` class) and `ordinal` (display position; `ordinal = 0` denotes the initial tab). Previous no-arg `@TabItem` is no longer valid.
+- **`TabInfo` / `TabItemInfo` models**: Restructured to support the child-to-parent pattern and cross-module resolution. Code that directly constructs or inspects these types will need updating.
+
 ### Added
 
 - **`@TabItem` child-to-parent pattern**: Tab items now declare their parent via `@TabItem(parent = MainTabs::class, ordinal = N)` instead of being listed in `@Tabs`. Enables cross-module tab registration.
@@ -16,9 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **`@Tabs` annotation**: Removed `items` and `initialTab` parameters. Tab structure is now built from child `@TabItem` declarations.
-- **`@TabItem` annotation**: Now requires `parent` (the `@Tabs` class) and `ordinal` (display position; 0 = initial tab).
-- **`TabInfo` / `TabItemInfo` models**: Restructured to support the child-to-parent pattern and cross-module resolution.
+- **`@Tabs` annotation**: See breaking changes above.
+- **`@TabItem` annotation**: See breaking changes above.
+- **`TabInfo` / `TabItemInfo` models**: See breaking changes above.
 
 ## [0.3.5] - 2026-03-02
 

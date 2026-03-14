@@ -62,7 +62,7 @@ sealed class ExploreTab : NavDestination {
 }
 
 /**
- * Profile tab - User profile and settings.
+ * Profile tab - User profile.
  *
  * Icon: "person" (material icon name)
  */

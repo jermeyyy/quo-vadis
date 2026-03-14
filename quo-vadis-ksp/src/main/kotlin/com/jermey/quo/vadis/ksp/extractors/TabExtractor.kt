@@ -141,7 +141,7 @@ class TabExtractor(
                 } else {
                     val orphans = tabItemsByParent[parentName] ?: return@forEach
                     orphans.forEach { (classDecl, _) ->
-                        logger.warn(
+                        logger.error(
                             "@TabItem '${classDecl.simpleName.asString()}' references parent " +
                                 "'$parentName' which has no @Tabs annotation",
                             classDecl
@@ -151,7 +151,7 @@ class TabExtractor(
             } else {
                 val orphans = tabItemsByParent[parentName] ?: return@forEach
                 orphans.forEach { (classDecl, _) ->
-                    logger.warn(
+                    logger.error(
                         "@TabItem '${classDecl.simpleName.asString()}' references parent " +
                             "'$parentName' which could not be resolved",
                         classDecl

@@ -31,6 +31,7 @@ class FakeKSName(private val name: String) : KSName {
     override fun asString(): String = name
     override fun getShortName(): String = name.substringAfterLast('.')
     override fun getQualifier(): String = name.substringBeforeLast('.', "")
+    override fun toString(): String = name
 }
 
 /**
@@ -94,7 +95,7 @@ class FakeKSClassDeclaration(
     override fun asStarProjectedType(): KSType = notImplemented("asStarProjectedType")
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R = notImplemented("accept")
 
-    override fun toString(): String = "FakeKSClassDeclaration($qualifiedName)"
+    override fun toString(): String = "FakeKSClassDeclaration(${qualifiedName.asString()})"
 }
 
 /**

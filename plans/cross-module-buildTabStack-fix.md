@@ -6,7 +6,7 @@ When `DslNavigationConfig.buildTabStack()` encounters a `TabEntry.ContainerRefer
 
 ### Failing flow (initial tree construction)
 
-```
+```text
 CompositeNavigationConfig.buildNavNode(MainTabs::class)
   → delegates to ConfigA.buildNavNode(MainTabs::class)
     → buildTabNode() → buildTabStack() for each tab entry
@@ -42,7 +42,7 @@ A composite tree can mix both variants (e.g., `publicDslConfig + kspGeneratedCon
 
 Naively putting the fallback in `buildNavNode()` causes infinite recursion:
 
-```
+```text
 configA.buildNavNode(X) → containers[X] null → nodeResolver(X)
   → composite.buildNavNode(X) → configB.buildNavNode(X) → containers[X] null → nodeResolver(X)
     → composite.buildNavNode(X) → configA.buildNavNode(X) → ...  ← INFINITE LOOP

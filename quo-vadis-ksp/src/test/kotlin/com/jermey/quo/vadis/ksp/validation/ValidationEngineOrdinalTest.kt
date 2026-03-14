@@ -116,7 +116,7 @@ class ValidationEngineOrdinalTest {
             destinationTabItem("TabB", ordinal = 1),
         ))
 
-        validate(listOf(tab))
+        val result = validate(listOf(tab))
 
         val ordinalZeroErrors = logger.errors.filter { it.contains("no @TabItem with ordinal = 0") }
         assertTrue(
@@ -153,7 +153,7 @@ class ValidationEngineOrdinalTest {
             destinationTabItem("TabC", ordinal = 2),
         ))
 
-        validate(listOf(tab))
+        val result = validate(listOf(tab))
 
         val duplicateErrors = logger.errors.filter { it.contains("Duplicate ordinal") }
         assertTrue(
@@ -190,7 +190,7 @@ class ValidationEngineOrdinalTest {
             destinationTabItem("TabC", ordinal = 2),
         ))
 
-        validate(listOf(tab))
+        val result = validate(listOf(tab))
 
         val gapErrors = logger.errors.filter { it.contains("ordinal gaps") }
         assertTrue(
@@ -205,7 +205,7 @@ class ValidationEngineOrdinalTest {
             destinationTabItem("TabA", ordinal = 0),
         ))
 
-        validate(listOf(tab))
+        val result = validate(listOf(tab))
 
         val ordinalErrors = logger.errors.filter {
             it.contains("ordinal") && !it.contains("container")

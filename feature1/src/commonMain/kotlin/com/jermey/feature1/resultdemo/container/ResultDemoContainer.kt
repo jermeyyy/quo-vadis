@@ -7,6 +7,7 @@ import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Intent
 import com.jermey.quo.vadis.core.navigation.result.navigateForResult
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Factory
@@ -72,6 +73,8 @@ class ResultDemoContainer(
 
     data object Action : MVIAction
 
+    private var timerJob: Job? = null
+
     init {
         println("ResultDemoContainer created with screenKey: $screenKey")
     }
@@ -85,7 +88,11 @@ class ResultDemoContainer(
                 Intent.ClearSelection -> clearSelection()
                 Intent.PickItem -> pickItem()
                 Intent.StartTimer -> startTimer()
-                Intent.ResetTimer -> updateState { copy(timerValue = 0) }
+                Intent.ResetTimer -> {
+                    timerJob?.cancel()
+                    timerJob = null
+                    updateState { copy(timerValue = 0) }
+                }
             }
         }
     }
@@ -130,7 +137,8 @@ class ResultDemoContainer(
      * Updates the message every second.
      */
     private fun Ctx.startTimer() {
-        coroutineScope.launch {
+        timerJob?.cancel()
+        timerJob = coroutineScope.launch {
             while (true) {
                 updateState {
                     val newTimer = timerValue + 1

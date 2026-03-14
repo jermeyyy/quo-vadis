@@ -116,8 +116,8 @@ class ContainerBlockGenerator(
         val builder = CodeBlock.builder()
             .beginControlFlow("tabs<%T>(scopeKey = %S)", containerClass, scopeKey)
 
-        // Generate tab entries (list is already ordinal-sorted, index 0 is initial tab)
-        tab.tabs.forEach { tabItem ->
+        // Generate tab entries sorted by ordinal; index 0 is initial tab
+        tab.tabs.sortedBy { it.ordinal }.forEach { tabItem ->
             builder.add(generateTabEntry(tabItem))
         }
 
@@ -143,10 +143,7 @@ class ContainerBlockGenerator(
         val isObject = tabItem.classDeclaration.classKind == ClassKind.OBJECT
 
         return when (tabItem.tabType) {
-            TabItemType.STACK -> {
-                CodeBlock.of("containerTab<%T>()\n", tabClassName)
-            }
-            TabItemType.TABS -> {
+            TabItemType.STACK, TabItemType.TABS -> {
                 CodeBlock.of("containerTab<%T>()\n", tabClassName)
             }
             TabItemType.DESTINATION -> {
