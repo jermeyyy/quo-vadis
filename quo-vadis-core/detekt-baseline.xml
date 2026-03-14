@@ -2,38 +2,35 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:BackOperations.kt:BackOperations$fun canHandleBackNavigation(root: NavNode): Boolean</ID>
-    <ID>CyclomaticComplexMethod:BackOperations.kt:BackOperations$private fun popEntirePaneNode(root: NavNode, paneNode: PaneNode): BackResult</ID>
-    <ID>CyclomaticComplexMethod:DslContainerRegistry.kt:DslContainerRegistry$private fun addReferencedContainerMembers( referencedClass: KClass&lt;out NavDestination>, tabContainerClass: KClass&lt;out NavDestination>, result: MutableMap&lt;KClass&lt;out NavDestination>, KClass&lt;out NavDestination>> )</ID>
-    <ID>CyclomaticComplexMethod:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior(root: NavNode): PopResult</ID>
-    <ID>CyclomaticComplexMethod:PushOperations.kt:PushOperations$private fun determinePushStrategy( root: NavNode, destination: NavDestination, scopeRegistry: ScopeRegistry, paneRoleRegistry: PaneRoleRegistry = PaneRoleRegistry.Empty ): PushStrategy</ID>
-    <ID>CyclomaticComplexMethod:TreeNodeOperations.kt:TreeNodeOperations$fun removeNode(root: NavNode, targetKey: String): NavNode?</ID>
-    <ID>CyclomaticComplexMethod:TreeNodeOperations.kt:TreeNodeOperations$fun replaceNode(root: NavNode, targetKey: String, newNode: NavNode): NavNode</ID>
+    <ID>CyclomaticComplexMethod:BackOperations.kt:BackOperations$fun canHandleBackNavigation: Boolean</ID>
+    <ID>CyclomaticComplexMethod:BackOperations.kt:BackOperations$private fun popEntirePaneNode: BackResult</ID>
+    <ID>CyclomaticComplexMethod:DslContainerRegistry.kt:DslContainerRegistry$private fun addReferencedContainerMembers</ID>
+    <ID>CyclomaticComplexMethod:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior: PopResult</ID>
+    <ID>CyclomaticComplexMethod:PushOperations.kt:PushOperations$private fun determinePushStrategy: PushStrategy</ID>
+    <ID>CyclomaticComplexMethod:TreeNodeOperations.kt:TreeNodeOperations$private fun tryReplaceNode: NavNode?</ID>
     <ID>EmptyKotlinFile:platformDefaultPredictiveBack.kt:com.jermey.quo.vadis.core.compose.platformDefaultPredictiveBack.kt</ID>
+    <ID>ForbiddenComment:ComposableCache.kt:ComposableCache$// TODO: Replace with AtomicLong when kotlinx-atomicfu is added as a dependency</ID>
     <ID>LargeClass:NavNodeTest.kt:NavNodeTest</ID>
+    <ID>LargeClass:TreeMutatorBackHandlingTest.kt:TreeMutatorBackHandlingTest</ID>
     <ID>LargeClass:TreeMutatorEdgeCasesTest.kt:TreeMutatorEdgeCasesTest</ID>
     <ID>LargeClass:TreeMutatorPaneTest.kt:TreeMutatorPaneTest</ID>
-    <ID>LargeClass:TreeNavigator.kt:TreeNavigator : PaneNavigatorTransitionControllerResultCapable</ID>
     <ID>LargeClass:TreeNavigatorTest.kt:TreeNavigatorTest</ID>
-    <ID>LongMethod:CascadeBackState.kt:private fun calculateCascadeFromContainer( root: NavNode, container: NavNode, sourceNode: NavNode, currentDepth: Int ): CascadeBackState</ID>
-    <ID>LongMethod:CascadeBackState.kt:private fun calculateCascadeFromStack( root: NavNode, stack: StackNode, sourceNode: NavNode, currentDepth: Int = 0, isCompact: Boolean = true ): CascadeBackState</ID>
-    <ID>LongMethod:NavigationHost.kt:@Composable fun NavigationHost( navigator: Navigator, modifier: Modifier = Modifier, screenRegistry: ScreenRegistry = EmptyScreenRegistry, containerRegistry: ContainerRegistry = ContainerRegistry.Empty, transitionRegistry: TransitionRegistry = TransitionRegistry.Empty, scopeRegistry: ScopeRegistry = ScopeRegistry.Empty, enablePredictiveBack: Boolean = true, windowSizeClass: WindowSizeClass? = null )</ID>
-    <ID>LongMethod:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior(root: NavNode): PopResult</ID>
-    <ID>LongMethod:TabRenderer.kt:@Composable internal fun TabRenderer( node: TabNode, previousNode: TabNode?, scope: NavRenderScope, @Suppress("UNUSED_PARAMETER") animatedVisibilityScope: AnimatedVisibilityScope? = null, )</ID>
-    <ID>LongMethod:TreeMutatorEdgeCasesTest.kt:TreeMutatorEdgeCasesTest$@Test fun `operations work on deeply nested structure`()</ID>
-    <ID>LongMethod:TreeNodeOperations.kt:TreeNodeOperations$fun removeNode(root: NavNode, targetKey: String): NavNode?</ID>
+    <ID>LongMethod:CascadeBackState.kt:private fun calculateCascadeFromContainer: CascadeBackState</ID>
+    <ID>LongMethod:CascadeBackState.kt:private fun calculateCascadeFromStack: CascadeBackState</ID>
+    <ID>LongMethod:NavigationHost.kt:@Composable fun NavigationHost</ID>
+    <ID>LongMethod:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior: PopResult</ID>
+    <ID>LongMethod:TabRenderer.kt:@Composable internal fun TabRenderer</ID>
     <ID>LoopWithTooManyJumpStatements:PushOperations.kt:PushOperations$for</ID>
     <ID>MagicNumber:ContainerRegistry.kt:ContainerRegistry.Companion.&lt;no name provided>$0.25f</ID>
     <ID>MagicNumber:ContainerRegistry.kt:ContainerRegistry.Companion.&lt;no name provided>$0.4f</ID>
     <ID>MagicNumber:ContainerRegistry.kt:ContainerRegistry.Companion.&lt;no name provided>$0.6f</ID>
     <ID>MagicNumber:DeepLink.kt:DeepLink.Companion$3</ID>
-    <ID>MagicNumber:PaneOperations.kt:PaneOperations$8</ID>
-    <ID>MagicNumber:PushOperations.kt:PushOperations$8</ID>
-    <ID>MagicNumber:TreeNavigator.kt:TreeNavigator$5000</ID>
-    <ID>MagicNumber:TreeNavigator.kt:TreeNavigator$8</ID>
+    <ID>MagicNumber:PaneOperations.kt:PaneOperations$36</ID>
+    <ID>MagicNumber:PushOperations.kt:PushOperations$36</ID>
+    <ID>MagicNumber:TransitionManager.kt:TransitionManager$5000</ID>
+    <ID>MagicNumber:TreeNavigator.kt:TreeNavigator$36</ID>
     <ID>MaxLineLength:BackHandlerRegistry.kt:*</ID>
-    <ID>MaxLineLength:DeepLinkRegistry.kt:DeepLinkRegistry.Companion.&lt;no name provided>$override fun register(pattern: String, factory: (params: Map&lt;String, String>) -> NavDestination)</ID>
-    <ID>MaxLineLength:DeepLinkRegistry.kt:DeepLinkRegistry.Companion.&lt;no name provided>$override fun registerAction(pattern: String, action: (navigator: Navigator, params: Map&lt;String, String>) -> Unit)</ID>
+    <ID>MaxLineLength:NavigationErrorHandler.kt:NavigationErrorHandler.Companion$println("Navigation error [$context]: ${error.message} (destination: ${destination?.let { it::class.simpleName }})")</ID>
     <ID>MaxLineLength:NavigationHost.kt:*</ID>
     <ID>MaxLineLength:Navigator.kt:Navigator$*</ID>
     <ID>MaxLineLength:NavigatorResultExtensions.kt:?:</ID>
@@ -44,8 +41,8 @@
     <ID>MaxLineLength:TreeMutatorStackScopeTest.kt:TreeMutatorStackScopeTest$*</ID>
     <ID>MaxLineLength:TreeNavigator.kt:TreeNavigator$*</ID>
     <ID>MaxLineLength:WindowSizeClass.kt:WindowWidthSizeClass$*</ID>
-    <ID>NestedBlockDepth:DslContainerRegistry.kt:DslContainerRegistry$private fun addReferencedContainerMembers( referencedClass: KClass&lt;out NavDestination>, tabContainerClass: KClass&lt;out NavDestination>, result: MutableMap&lt;KClass&lt;out NavDestination>, KClass&lt;out NavDestination>> )</ID>
-    <ID>NestedBlockDepth:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior(root: NavNode): PopResult</ID>
+    <ID>NestedBlockDepth:DslContainerRegistry.kt:DslContainerRegistry$private fun addReferencedContainerMembers</ID>
+    <ID>NestedBlockDepth:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior: PopResult</ID>
     <ID>NewLineAtEndOfFile:AdaptStrategy.kt:com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy.kt</ID>
     <ID>NewLineAtEndOfFile:CompositeContainerRegistry.kt:com.jermey.quo.vadis.core.registry.internal.CompositeContainerRegistry.kt</ID>
     <ID>NewLineAtEndOfFile:CompositeDeepLinkRegistry.kt:com.jermey.quo.vadis.core.registry.internal.CompositeDeepLinkRegistry.kt</ID>
@@ -55,34 +52,31 @@
     <ID>NewLineAtEndOfFile:Navigator.kt:com.jermey.quo.vadis.core.navigation.navigator.Navigator.kt</ID>
     <ID>NewLineAtEndOfFile:PlatformBackInput.android.kt:com.jermey.quo.vadis.core.compose.internal.navback.PlatformBackInput.android.kt</ID>
     <ID>NewLineAtEndOfFile:RuntimeDeepLinkRegistry.kt:com.jermey.quo.vadis.core.registry.internal.RuntimeDeepLinkRegistry.kt</ID>
-    <ID>ReturnCount:BackOperations.kt:BackOperations$fun canHandleBackNavigation(root: NavNode): Boolean</ID>
-    <ID>ReturnCount:BackOperations.kt:BackOperations$fun popWithTabBehavior(root: NavNode, isCompact: Boolean = true): BackResult</ID>
-    <ID>ReturnCount:CascadeBackState.kt:fun calculateCascadeBackState(root: NavNode, isCompact: Boolean = true): CascadeBackState</ID>
-    <ID>ReturnCount:CompositeDeepLinkRegistry.kt:CompositeDeepLinkRegistry$override fun handle(uri: String, navigator: Navigator): Boolean</ID>
-    <ID>ReturnCount:NavRenderScope.kt:NavRenderScope$fun shouldEnablePredictiveBack(node: NavNode): Boolean</ID>
-    <ID>ReturnCount:PaneOperations.kt:PaneOperations$fun popPane( root: NavNode, nodeKey: String, role: PaneRole ): NavNode?</ID>
-    <ID>ReturnCount:PaneOperations.kt:PaneOperations$fun popPaneAdaptive(root: NavNode, isCompact: Boolean): PopResult</ID>
-    <ID>ReturnCount:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior(root: NavNode): PopResult</ID>
-    <ID>ReturnCount:PaneOperations.kt:PaneOperations$private fun clearPaneStack(root: NavNode, paneNodeKey: String, role: PaneRole): NavNode</ID>
-    <ID>ReturnCount:PaneOperations.kt:PaneOperations$private fun popFromActivePane(root: NavNode, paneNode: PaneNode): PopResult</ID>
-    <ID>ReturnCount:PopOperations.kt:PopOperations$fun pop( root: NavNode, behavior: PopBehavior = PopBehavior.PRESERVE_EMPTY ): NavNode?</ID>
-    <ID>ReturnCount:PopOperations.kt:PopOperations$fun popTo( root: NavNode, inclusive: Boolean = false, predicate: (NavNode) -> Boolean ): NavNode</ID>
-    <ID>ReturnCount:PopOperations.kt:PopOperations$private fun handleEmptyStackPop( root: NavNode, emptyStack: StackNode, behavior: PopBehavior ): NavNode?</ID>
-    <ID>ReturnCount:PushOperations.kt:PushOperations$@OptIn(ExperimentalUuidApi::class) private fun pushToPaneStack( root: NavNode, paneNode: PaneNode, role: PaneRole, destination: NavDestination, generateKey: () -> String ): NavNode</ID>
-    <ID>ReturnCount:PushOperations.kt:PushOperations$private fun determinePushStrategy( root: NavNode, destination: NavDestination, scopeRegistry: ScopeRegistry, paneRoleRegistry: PaneRoleRegistry = PaneRoleRegistry.Empty ): PushStrategy</ID>
-    <ID>ReturnCount:RuntimeDeepLinkRegistry.kt:RuntimeDeepLinkRegistry$override fun handle(uri: String, navigator: Navigator): Boolean</ID>
-    <ID>ReturnCount:TreeNavigator.kt:TreeNavigator$override fun navigateBackInPane(role: PaneRole): Boolean</ID>
-    <ID>ReturnCount:TreeNavigator.kt:TreeNavigator$private fun computePreviousDestination(state: NavNode): NavDestination?</ID>
-    <ID>ReturnCount:TreeNodeOperations.kt:TreeNodeOperations$fun removeNode(root: NavNode, targetKey: String): NavNode?</ID>
-    <ID>ThrowsCount:CompositeContainerRegistry.kt:CompositeContainerRegistry$private fun wrapContainerInfo(info: ContainerInfo): ContainerInfo</ID>
-    <ID>ThrowsCount:PaneOperations.kt:PaneOperations$@OptIn(ExperimentalUuidApi::class) fun navigateToPane( root: NavNode, nodeKey: String, role: PaneRole, destination: NavDestination, switchFocus: Boolean = true, generateKey: () -> String = { Uuid.random().toString().take(8) } ): NavNode</ID>
-    <ID>ThrowsCount:TreeNodeOperations.kt:TreeNodeOperations$fun removeNode(root: NavNode, targetKey: String): NavNode?</ID>
-    <ID>ThrowsCount:TreeNodeOperations.kt:TreeNodeOperations$fun replaceNode(root: NavNode, targetKey: String, newNode: NavNode): NavNode</ID>
+    <ID>ReturnCount:BackOperations.kt:BackOperations$fun canHandleBackNavigation: Boolean</ID>
+    <ID>ReturnCount:BackOperations.kt:BackOperations$fun popWithTabBehavior: BackResult</ID>
+    <ID>ReturnCount:CascadeBackState.kt:fun calculateCascadeBackState: CascadeBackState</ID>
+    <ID>ReturnCount:CompositeDeepLinkRegistry.kt:CompositeDeepLinkRegistry$override fun handle: Boolean</ID>
+    <ID>ReturnCount:NavRenderScope.kt:NavRenderScope$fun shouldEnablePredictiveBack: Boolean</ID>
+    <ID>ReturnCount:PaneOperations.kt:PaneOperations$fun popPane: NavNode?</ID>
+    <ID>ReturnCount:PaneOperations.kt:PaneOperations$fun popPaneAdaptive: PopResult</ID>
+    <ID>ReturnCount:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior: PopResult</ID>
+    <ID>ReturnCount:PaneOperations.kt:PaneOperations$private fun clearPaneStack: NavNode</ID>
+    <ID>ReturnCount:PaneOperations.kt:PaneOperations$private fun popFromActivePane: PopResult</ID>
+    <ID>ReturnCount:PopOperations.kt:PopOperations$fun pop: NavNode?</ID>
+    <ID>ReturnCount:PopOperations.kt:PopOperations$inline fun popTo: NavNode</ID>
+    <ID>ReturnCount:PopOperations.kt:PopOperations$private fun handleEmptyStackPop: NavNode?</ID>
+    <ID>ReturnCount:PushOperations.kt:PushOperations$private fun determinePushStrategy: PushStrategy</ID>
+    <ID>ReturnCount:PushOperations.kt:PushOperations$private fun pushToPaneStack: NavNode</ID>
+    <ID>ReturnCount:RuntimeDeepLinkRegistry.kt:RuntimeDeepLinkRegistry$override fun handle: Boolean</ID>
+    <ID>ReturnCount:TreeNavigator.kt:TreeNavigator$fun clearPane</ID>
+    <ID>ReturnCount:TreeNavigator.kt:TreeNavigator$override fun navigateBackInPane: Boolean</ID>
+    <ID>ReturnCount:TreeNavigator.kt:TreeNavigator$private fun computePreviousDestination: NavDestination?</ID>
+    <ID>ThrowsCount:CompositeContainerRegistry.kt:CompositeContainerRegistry$private fun wrapContainerInfo: ContainerInfo</ID>
+    <ID>ThrowsCount:PaneOperations.kt:PaneOperations$fun navigateToPane: NavNode</ID>
     <ID>TooManyFunctions:DslContainerRegistry.kt:DslContainerRegistry : ContainerRegistry</ID>
+    <ID>TooManyFunctions:DslNavigationConfig.kt:DslNavigationConfig : NavigationConfig</ID>
     <ID>TooManyFunctions:NavNode.kt:com.jermey.quo.vadis.core.navigation.node.NavNode.kt</ID>
-    <ID>TooManyFunctions:PaneNode.kt:PaneNode : NavNodeLifecycleAwareNode</ID>
     <ID>TooManyFunctions:PushOperations.kt:PushOperations</ID>
-    <ID>TooManyFunctions:TabNode.kt:TabNode : NavNodeLifecycleAwareNode</ID>
     <ID>TooManyFunctions:TreeMutator.kt:TreeMutator</ID>
     <ID>TooManyFunctions:TreeNavigator.kt:TreeNavigator : PaneNavigatorTransitionControllerResultCapable</ID>
     <ID>UnusedParameter:AnimationCoordinator.kt:AnimationCoordinator$fromRole: PaneRole?</ID>

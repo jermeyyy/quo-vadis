@@ -22,7 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.HomeTab
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProcessDestination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
@@ -78,7 +78,7 @@ fun ProcessCompleteScreen(navigator: Navigator = koinInject()) {
                 onClick = {
                     // Navigate back to exit the process flow
                     // This will pop back through the entire wizard stack
-                    navigator.navigate(MainTabs.HomeTab)
+                    navigator.navigate(HomeTab)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

@@ -4,7 +4,12 @@ package com.jermey.quo.vadis.core.navigation.config
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.NodeKey
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScopeKey
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.registry.internal.CompositeContainerRegistry
 import com.jermey.quo.vadis.core.registry.internal.CompositeScopeRegistry
@@ -54,6 +59,13 @@ class CompositeNavigationConfig(
     private val primary: NavigationConfig,
     private val secondary: NavigationConfig
 ) : NavigationConfig {
+
+    init {
+        @OptIn(InternalQuoVadisApi::class)
+        primary.setNodeResolver(::buildNavNode)
+        @OptIn(InternalQuoVadisApi::class)
+        secondary.setNodeResolver(::buildNavNode)
+    }
 
     /**
      * Composite screen registry that checks secondary first, then primary.
@@ -165,6 +177,16 @@ class CompositeNavigationConfig(
         }
     }
 
+    @InternalQuoVadisApi
+    override fun setNodeResolver(
+        resolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)?
+    ) {
+        @OptIn(InternalQuoVadisApi::class)
+        primary.setNodeResolver(resolver)
+        @OptIn(InternalQuoVadisApi::class)
+        secondary.setNodeResolver(resolver)
+    }
+
     /**
      * Builds a NavNode, checking secondary first, then primary.
      *
@@ -178,8 +200,109 @@ class CompositeNavigationConfig(
         key: String?,
         parentKey: String?
     ): NavNode? {
-        return secondary.buildNavNode(destinationClass, key, parentKey)
-            ?: primary.buildNavNode(destinationClass, key, parentKey)
+        val secondaryNode = secondary.buildNavNode(destinationClass, key, parentKey)
+        val primaryNode = primary.buildNavNode(destinationClass, key, parentKey)
+
+        // Merge TabNodes from different modules (cross-module tab support)
+        if (primaryNode is TabNode && secondaryNode is TabNode) {
+            return mergeTabNodes(primaryNode, secondaryNode)
+        }
+
+        return secondaryNode ?: primaryNode
+    }
+
+    /**
+     * Merges two TabNodes from different modules by appending non-duplicate
+     * stacks from [secondary] after [primary]'s stacks, re-keying them to
+     * avoid key collisions (both modules generate 0-based tab indices).
+     */
+    private fun mergeTabNodes(primary: TabNode, secondary: TabNode): TabNode {
+        val primaryRoutes = primary.tabMetadata.map { it.route }.toSet()
+
+        // Find secondary tabs that aren't already in primary (by route)
+        val newIndices = secondary.tabMetadata.indices
+            .filter { i -> secondary.tabMetadata[i].route !in primaryRoutes }
+
+        // Re-key secondary stacks with indices continuing after primary
+        val tabNodeKey = primary.key.value
+        val additionalStacks = newIndices.mapIndexed { offset, secondaryIndex ->
+            val newTabIndex = primary.stacks.size + offset
+            val newStackKey = "$tabNodeKey/tab$newTabIndex"
+            rekeyStack(secondary.stacks[secondaryIndex], newStackKey, tabNodeKey)
+        }
+        val additionalMetadata = newIndices.map { secondary.tabMetadata[it] }
+
+        return TabNode(
+            key = primary.key,
+            parentKey = primary.parentKey,
+            stacks = primary.stacks + additionalStacks,
+            activeStackIndex = 0,
+            wrapperKey = primary.wrapperKey ?: secondary.wrapperKey,
+            tabMetadata = primary.tabMetadata + additionalMetadata,
+            scopeKey = primary.scopeKey ?: secondary.scopeKey
+        )
+    }
+
+    /**
+     * Creates a copy of [stack] with a new key and parentKey,
+     * recursively replacing the old key prefix with the new one
+     * throughout the entire subtree.
+     */
+    private fun rekeyStack(
+        stack: StackNode,
+        newKey: String,
+        newParentKey: String
+    ): StackNode {
+        val oldPrefix = stack.key.value
+        val nodeKey = NodeKey(newKey)
+        return stack.copy(
+            key = nodeKey,
+            parentKey = NodeKey(newParentKey),
+            children = stack.children.map { child -> rekeySubtree(child, oldPrefix, newKey) }
+        )
+    }
+
+    /**
+     * Recursively replaces [oldPrefix] with [newPrefix] in all keys
+     * and parentKeys throughout the node subtree.
+     */
+    private fun rekeySubtree(node: NavNode, oldPrefix: String, newPrefix: String): NavNode {
+        fun rekey(key: NodeKey): NodeKey =
+            NodeKey(key.value.replaceFirst(oldPrefix, newPrefix))
+
+        fun rekeyParent(key: NodeKey?): NodeKey? =
+            key?.let { NodeKey(it.value.replaceFirst(oldPrefix, newPrefix)) }
+
+        return when (node) {
+            is ScreenNode -> node.copy(
+                key = rekey(node.key),
+                parentKey = rekeyParent(node.parentKey)
+            )
+            is StackNode -> node.copy(
+                key = rekey(node.key),
+                parentKey = rekeyParent(node.parentKey),
+                children = node.children.map { rekeySubtree(it, oldPrefix, newPrefix) }
+            )
+            is TabNode -> TabNode(
+                key = rekey(node.key),
+                parentKey = rekeyParent(node.parentKey),
+                stacks = node.stacks.map {
+                    rekeySubtree(it, oldPrefix, newPrefix) as StackNode
+                },
+                activeStackIndex = node.activeStackIndex,
+                wrapperKey = node.wrapperKey,
+                tabMetadata = node.tabMetadata,
+                scopeKey = node.scopeKey
+            )
+            is PaneNode -> PaneNode(
+                key = rekey(node.key),
+                parentKey = rekeyParent(node.parentKey),
+                paneConfigurations = node.paneConfigurations,
+                activePaneRole = node.activePaneRole,
+                backBehavior = node.backBehavior,
+                scopeKey = node.scopeKey
+            )
+        }
     }
 
     /**

@@ -75,10 +75,15 @@ fun ArticleScreen(destination: HomeDestination.Article, navigator: Navigator) { 
 
 ### Tabs and Panes
 
-- **`@Tabs`** + **`@TabItem`** - Tab containers with independent backstacks
+- **`@Tabs(name)`** - Declares a tab container (no `items` array or `initialTab`). The initial tab and ordering are determined entirely by `@TabItem` `ordinal` values.
+- **`@TabItem(parent, ordinal)`** - Child-to-parent pattern: each tab item declares which `@Tabs` it belongs to and its display position. `ordinal` values **must be contiguous integers starting at 0** (i.e., `0, 1, 2, …, N-1` with no gaps). `ordinal = 0` denotes the initial tab. For example, ordinals `0, 1, 3` are **invalid** because `2` is missing. The KSP code generator validates this at compile time and will emit errors for missing `ordinal = 0`, duplicate ordinals, or gaps in the ordinal sequence.
 - **`@TabsContainer`** - Custom tab bar UI
 - **`@Pane`** + **`@PaneItem`** - Adaptive multi-pane layouts
 - **`@PaneContainer`** - Custom pane wrapper
+
+**Tab Item Types:** `DESTINATION` (flat screen), `STACK` (nested navigation), `TABS` (nested tab container)
+
+**Cross-module tabs:** Feature modules use `@TabItem(MainTabs::class, ordinal = N)` to register as tabs — the parent `@Tabs` doesn't need to list its children. Note: `ordinal` continuity validation is skipped for cross-module `@Tabs` where only partial tab items are visible to the processor.
 
 ## Build Commands
 

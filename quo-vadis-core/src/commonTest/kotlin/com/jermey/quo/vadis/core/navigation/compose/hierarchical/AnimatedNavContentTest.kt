@@ -350,7 +350,7 @@ class AnimatedNavContentTest {
         listOf(screenB, screenC, screenA).forEach { target ->
             previous = current
             current = target
-            history.add("${previous?.key} -> ${current.key}")
+            history.add("${previous.key} -> ${current.key}")
         }
 
         // Then

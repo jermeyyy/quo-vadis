@@ -23,7 +23,6 @@ import com.squareup.kotlinpoet.ksp.toClassName
  * ### Tabs
  * ```kotlin
  * tabs<MainTabs>(scopeKey = "MainTabs") {
- *     initialTab = 0
  *     tab(MainTabs.HomeTab)
  *     containerTab<MainTabs.ExploreTab>()
  * }
@@ -117,15 +116,9 @@ class ContainerBlockGenerator(
         val builder = CodeBlock.builder()
             .beginControlFlow("tabs<%T>(scopeKey = %S)", containerClass, scopeKey)
 
-        // Add initialTab if specified
-        val initialTabIndex = findInitialTabIndex(tab)
-        if (initialTabIndex != 0) {
-            builder.addStatement("initialTab = %L", initialTabIndex)
-        }
-
-        // Generate tab entries
-        tab.tabs.forEachIndexed { index, tabItem ->
-            builder.add(generateTabEntry(tabItem, index))
+        // Generate tab entries sorted by ordinal; index 0 is initial tab
+        tab.tabs.sortedBy { it.ordinal }.forEach { tabItem ->
+            builder.add(generateTabEntry(tabItem))
         }
 
         builder.endControlFlow()
@@ -133,20 +126,7 @@ class ContainerBlockGenerator(
         return builder.build()
     }
 
-    /**
-     * Finds the initial tab index from TabInfo.
-     *
-     * @param tab The tab info
-     * @return Index of the initial tab, or 0 if not specified
-     */
-    private fun findInitialTabIndex(tab: TabInfo): Int {
-        if (tab.initialTabClass == null) return 0
 
-        return tab.tabs.indexOfFirst { tabItem ->
-            tabItem.classDeclaration.qualifiedName?.asString() ==
-                tab.initialTabClass.qualifiedName?.asString()
-        }.coerceAtLeast(0)
-    }
 
     /**
      * Generates a single tab entry.
@@ -156,28 +136,20 @@ class ContainerBlockGenerator(
      * uses `containerTab<Type>()` syntax to reference the separately defined stack.
      *
      * @param tabItem The tab item info
-     * @param index Index of this tab
      * @return CodeBlock for the tab entry
      */
-    private fun generateTabEntry(
-        tabItem: TabItemInfo,
-        @Suppress("UNUSED_PARAMETER") index: Int
-    ): CodeBlock {
+    private fun generateTabEntry(tabItem: TabItemInfo): CodeBlock {
         val tabClassName = tabItem.classDeclaration.toClassName()
         val isObject = tabItem.classDeclaration.classKind == ClassKind.OBJECT
 
         return when (tabItem.tabType) {
-            TabItemType.NESTED_STACK -> {
-                // Tab with nested stack - use containerTab<Type>() since the stack is defined separately
+            TabItemType.STACK, TabItemType.TABS -> {
                 CodeBlock.of("containerTab<%T>()\n", tabClassName)
             }
-            TabItemType.FLAT_SCREEN -> {
-                // Simple flat screen tab
+            TabItemType.DESTINATION -> {
                 if (isObject) {
-                    // For data objects, use the object reference directly
                     CodeBlock.of("tab(%T)\n", tabClassName)
                 } else {
-                    // For classes, use containerTab (shouldn't happen for FLAT_SCREEN, but handle gracefully)
                     CodeBlock.of("containerTab<%T>()\n", tabClassName)
                 }
             }

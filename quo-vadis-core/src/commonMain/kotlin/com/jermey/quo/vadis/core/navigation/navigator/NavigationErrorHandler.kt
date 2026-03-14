@@ -28,9 +28,10 @@ fun interface NavigationErrorHandler {
         /**
          * Default handler that logs errors and silently recovers.
          */
-        val LogAndRecover: NavigationErrorHandler = NavigationErrorHandler { error, destination, context ->
-            println("Navigation error [$context]: ${error.message} (destination: ${destination?.let { it::class.simpleName }})")
-        }
+        val LogAndRecover: NavigationErrorHandler =
+            NavigationErrorHandler { error, destination, context ->
+                println("Navigation error [$context]: ${error.message} (destination: ${destination?.let { it::class.simpleName }})")
+            }
 
         /**
          * Handler that rethrows all navigation errors. Useful for testing.

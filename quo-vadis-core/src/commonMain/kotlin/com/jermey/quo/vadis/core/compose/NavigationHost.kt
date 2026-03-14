@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.internal.AnimationCoordinator
-import com.jermey.quo.vadis.core.compose.internal.BackAnimationController
 import com.jermey.quo.vadis.core.compose.internal.ComposableCache
 import com.jermey.quo.vadis.core.compose.internal.LocalBackAnimationController
 import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
@@ -199,7 +198,7 @@ fun NavigationHost(
     // Use derivedStateOf to compute previousState synchronously during composition
     // This ensures the correct previous state is available for transition direction detection
     var lastProcessedState by remember { mutableStateOf<NavNode?>(null) }
-    
+
     // Compute previousState synchronously: it's whatever lastProcessedState was before navState changed
     // We track state transitions: lastProcessedState -> navState
     val previousState = remember(navState) {
@@ -207,7 +206,7 @@ fun NavigationHost(
         // Don't update lastProcessedState here - it's done in SideEffect below
         previous
     }
-    
+
     // Update lastProcessedState after the current composition succeeds
     // Using SideEffect ensures this runs synchronously at the end of composition
     SideEffect {
@@ -237,7 +236,7 @@ fun NavigationHost(
     val canGoBack by remember(navState) {
         derivedStateOf { TreeMutator.canHandleBackNavigation(navState) }
     }
-    
+
     // Determine if in compact mode for pane handling
     val isCompact = windowSizeClass?.isCompactWidth ?: true
 

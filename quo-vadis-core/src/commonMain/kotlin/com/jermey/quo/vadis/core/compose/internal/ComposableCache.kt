@@ -5,11 +5,11 @@ package com.jermey.quo.vadis.core.compose.internal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
-import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.SaveableStateHolder
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 
 /**
  * Cache for composables associated with NavNode keys.
@@ -39,6 +39,7 @@ class ComposableCache(
     private val accessTimeMap = mutableStateMapOf<String, Long>()
     private val lockedEntries = mutableStateSetOf<String>()
     private val priorityEntries = mutableStateSetOf<String>()
+
     // TODO: Replace with AtomicLong when kotlinx-atomicfu is added as a dependency
     private var counter = 0L
 

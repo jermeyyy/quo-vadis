@@ -20,7 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
@@ -31,11 +31,11 @@ import org.koin.compose.koinInject
  * Demonstrates navigation to a destination with a path parameter
  * within a nested tab stack.
  */
-@Screen(MainTabs.ExploreTab.CategoryView::class)
+@Screen(ExploreTab.CategoryView::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryViewScreen(
-    destination: MainTabs.ExploreTab.CategoryView,
+    destination: ExploreTab.CategoryView,
     navigator: Navigator = koinInject()
 ) {
     Scaffold(

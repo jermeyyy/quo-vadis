@@ -33,7 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.SettingsTab
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
 import com.jermey.navplayground.demo.ui.components.SettingItem
@@ -53,7 +53,7 @@ import org.koin.compose.koinInject
  * Settings Screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Screen(MainTabs.SettingsTab.Main::class)
+@Screen(SettingsTab.Main::class)
 @Composable
 fun SettingsScreen(
     navigator: Navigator = koinInject(),
@@ -127,17 +127,17 @@ private fun SettingsScreenContent(
                 SettingItem(
                     title = "Profile",
                     icon = Icons.Default.Person,
-                    onClick = { navigator.navigate(MainTabs.SettingsTab.Profile) }
+                    onClick = { navigator.navigate(SettingsTab.Profile) }
                 )
                 SettingItem(
                     title = "Notifications",
                     icon = Icons.Default.Notifications,
-                    onClick = { navigator.navigate(MainTabs.SettingsTab.Notifications) }
+                    onClick = { navigator.navigate(SettingsTab.Notifications) }
                 )
                 SettingItem(
                     title = "About",
                     icon = Icons.Default.Info,
-                    onClick = { navigator.navigate(MainTabs.SettingsTab.About) }
+                    onClick = { navigator.navigate(SettingsTab.About) }
                 )
             }
         }

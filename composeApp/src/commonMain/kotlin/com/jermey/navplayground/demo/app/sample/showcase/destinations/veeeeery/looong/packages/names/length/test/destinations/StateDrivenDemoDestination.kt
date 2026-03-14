@@ -1,6 +1,5 @@
 package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations
 
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.StateDrivenDemoDestination.DemoTab
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
 import com.jermey.quo.vadis.annotations.TabItem
@@ -65,11 +64,7 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
  * allowing the demo to manipulate the inner stack while rendering custom chrome
  * (the backstack editor panel).
  */
-@Tabs(
-    name = "stateDrivenDemo",
-    initialTab = DemoTab::class,
-    items = [DemoTab::class]
-)
+@Tabs(name = "stateDrivenDemo")
 sealed class StateDrivenDemoDestination : NavDestination {
 
     companion object : NavDestination
@@ -78,7 +73,7 @@ sealed class StateDrivenDemoDestination : NavDestination {
      * The single tab containing the state-driven navigation stack.
      * Destinations are nested inside.
      */
-    @TabItem
+    @TabItem(parent = StateDrivenDemoDestination::class, ordinal = 0)
     @Stack(name = "stateDrivenStack", startDestination = DemoTab.Home::class)
     sealed class DemoTab : StateDrivenDemoDestination() {
         /**

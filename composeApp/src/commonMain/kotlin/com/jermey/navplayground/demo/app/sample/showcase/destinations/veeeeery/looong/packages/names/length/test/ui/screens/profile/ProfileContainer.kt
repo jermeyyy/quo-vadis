@@ -1,6 +1,6 @@
 package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.ui.screens.profile
 
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.SettingsTab
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import org.koin.core.annotation.Qualifier
@@ -242,7 +242,7 @@ class ProfileContainer(
      */
     private suspend fun Ctx.handleNavigateToSettings() {
         try {
-            navigator.navigate(MainTabs.SettingsTab.Main)
+            navigator.navigate(SettingsTab.Main)
         } catch (e: Exception) {
             action(ProfileAction.ShowError("Navigation failed"))
         }

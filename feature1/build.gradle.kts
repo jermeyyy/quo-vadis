@@ -44,6 +44,7 @@ kotlin {
     // https://developer.android.com/kotlin/multiplatform/migrate
     val xcfName = "feature1Kit"
 
+    @Suppress("DEPRECATION")
     iosX64 {
         binaries.framework {
             baseName = xcfName
@@ -108,6 +109,7 @@ kotlin {
 
                 implementation(projects.quoVadisCore)
                 implementation(projects.quoVadisCoreFlowMvi)
+                implementation(projects.navigationApi)
 
                 // Koin
                 implementation(libs.koin.core)

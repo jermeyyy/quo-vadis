@@ -433,7 +433,7 @@ class NavTreeRendererTest {
         val activePaneContent = panes.activePaneContent
         assertTrue(activePaneContent is StackNode)
         assertEquals(detailStack, activePaneContent)
-        assertEquals(detailScreen2, (activePaneContent as StackNode).activeChild)
+        assertEquals(detailScreen2, activePaneContent.activeChild)
     }
 
     // =========================================================================
