@@ -232,11 +232,15 @@ class CompositeNavigationConfig(
         }
         val additionalMetadata = newIndices.map { secondary.tabMetadata[it] }
 
+        val mergedStacks = primary.stacks + additionalStacks
+        val preferredIndex = primary.activeStackIndex.takeIf { it > 0 }
+            ?: secondary.activeStackIndex
+
         return TabNode(
             key = primary.key,
             parentKey = primary.parentKey,
-            stacks = primary.stacks + additionalStacks,
-            activeStackIndex = 0,
+            stacks = mergedStacks,
+            activeStackIndex = preferredIndex.coerceIn(0, mergedStacks.lastIndex),
             wrapperKey = primary.wrapperKey ?: secondary.wrapperKey,
             tabMetadata = primary.tabMetadata + additionalMetadata,
             scopeKey = primary.scopeKey ?: secondary.scopeKey

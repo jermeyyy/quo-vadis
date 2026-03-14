@@ -681,7 +681,11 @@ class ValidationEngine(
             path.add(node)
 
             adjacency[node]?.forEach { neighbor ->
-                if (dfs(neighbor)) return true
+                if (dfs(neighbor)) {
+                    inStack.remove(node)
+                    path.removeAt(path.lastIndex)
+                    return true
+                }
             }
 
             inStack.remove(node)
