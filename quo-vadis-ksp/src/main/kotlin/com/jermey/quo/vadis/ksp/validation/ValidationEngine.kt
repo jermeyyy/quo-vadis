@@ -548,44 +548,31 @@ class ValidationEngine(
     private fun validateTabItemAnnotations(tabs: List<TabInfo>) {
         tabs.forEach { tab ->
             tab.tabs.forEach { tabItem ->
-                val hasStack = tabItem.tabType == TabItemType.STACK
-                val hasDestination = tabItem.tabType == TabItemType.DESTINATION
-                val hasTabs = tabItem.tabType == TabItemType.TABS
+                val classDecl = tabItem.classDeclaration
+                val hasStack = classDecl.annotations.any { it.shortName.asString() == "Stack" }
+                val hasDestination = classDecl.annotations.any { it.shortName.asString() == "Destination" }
+                val hasTabs = classDecl.annotations.any { it.shortName.asString() == "Tabs" }
+                val annotationCount = listOf(hasStack, hasDestination, hasTabs).count { it }
 
-                when {
-                    hasStack && hasDestination -> {
+                when (annotationCount) {
+                    0 -> reportError(
+                        classDecl,
+                        "@TabItem '${classDecl.simpleName.asString()}' has neither @Stack, @Tabs, nor @Destination",
+                        "Add @Stack for nested navigation, @Tabs for nested tabs, or @Destination for flat screen"
+                    )
+                    2, 3 -> {
+                        val present = buildList {
+                            if (hasStack) add("@Stack")
+                            if (hasTabs) add("@Tabs")
+                            if (hasDestination) add("@Destination")
+                        }.joinToString(" and ")
                         reportError(
-                            tabItem.classDeclaration,
-                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
-                                "has both @Stack and @Destination",
-                            "Use @Stack for nested navigation OR @Destination for flat screen, not both"
+                            classDecl,
+                            "@TabItem '${classDecl.simpleName.asString()}' has multiple tab type annotations: $present",
+                            "Use only one of @Stack, @Tabs, or @Destination"
                         )
                     }
-                    hasTabs && hasDestination -> {
-                        reportError(
-                            tabItem.classDeclaration,
-                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
-                                "has both @Tabs and @Destination",
-                            "Use @Tabs for nested tabs OR @Destination for flat screen, not both"
-                        )
-                    }
-                    hasTabs && hasStack -> {
-                        reportError(
-                            tabItem.classDeclaration,
-                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
-                                "has both @Tabs and @Stack",
-                            "Use @Tabs for nested tabs OR @Stack for nested navigation, not both"
-                        )
-                    }
-                    !hasStack && !hasDestination && !hasTabs -> {
-                        reportError(
-                            tabItem.classDeclaration,
-                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
-                                "has neither @Stack, @Tabs, nor @Destination",
-                            "Add @Stack for nested navigation, @Tabs for nested tabs, " +
-                                "or @Destination for flat screen"
-                        )
-                    }
+                    // 1 is valid
                 }
             }
         }

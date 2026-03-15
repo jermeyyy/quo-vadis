@@ -28,6 +28,7 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.dsl.internal.BuiltPanesConfig
 import com.jermey.quo.vadis.core.dsl.internal.BuiltTabsConfig
 import com.jermey.quo.vadis.core.dsl.internal.ScreenEntry
+import kotlin.concurrent.Volatile
 import kotlin.reflect.KClass
 
 /**
@@ -80,6 +81,7 @@ internal class DslNavigationConfig(
      * Fallback resolver for cross-config container reference resolution.
      * Set by [CompositeNavigationConfig] to enable cross-module tab container references.
      */
+    @Volatile
     private var nodeResolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)? = null
 
     @InternalQuoVadisApi
