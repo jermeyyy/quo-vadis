@@ -125,8 +125,10 @@ class ValidationEngine(
         // Mixed tab type validations
         validateTabItemAnnotations(tabs)
         validateDestinationTabs(tabs)
-        validateCircularTabNesting(tabs)
-        validateTabNestingDepth(tabs)
+        val hasCycles = validateCircularTabNesting(tabs)
+        if (!hasCycles) {
+            validateTabNestingDepth(tabs)
+        }
 
         return !hasErrors
     }
@@ -639,8 +641,10 @@ class ValidationEngine(
      *
      * Builds a directed graph from @TabItem entries with type TABS pointing to other
      * @Tabs containers, then checks for cycles using DFS traversal.
+     *
+     * @return `true` if any cycles were detected, `false` otherwise.
      */
-    private fun validateCircularTabNesting(tabs: List<TabInfo>) {
+    private fun validateCircularTabNesting(tabs: List<TabInfo>): Boolean {
         // Build adjacency: tabQualifiedName -> list of referenced @Tabs qualified names
         val tabsByQualifiedName = tabs.associateBy {
             it.classDeclaration.qualifiedName?.asString() ?: it.className
@@ -662,6 +666,7 @@ class ValidationEngine(
         val visited = mutableSetOf<String>()
         val inStack = mutableSetOf<String>()
         val path = mutableListOf<String>()
+        var foundCycle = false
 
         fun dfs(node: String): Boolean {
             if (node in inStack) {
@@ -685,6 +690,7 @@ class ValidationEngine(
             path.add(node)
 
             val hasCycle = adjacency[node]?.any { neighbor -> dfs(neighbor) } == true
+            if (hasCycle) foundCycle = true
             inStack.remove(node)
             path.removeAt(path.lastIndex)
             return hasCycle
@@ -695,6 +701,8 @@ class ValidationEngine(
                 dfs(node)
             }
         }
+
+        return foundCycle
     }
 
     /**
@@ -702,6 +710,9 @@ class ValidationEngine(
      *
      * Computes the maximum nesting depth for each @Tabs container by traversing
      * TABS-type items that point to other @Tabs containers.
+     *
+     * Must only be called after [validateCircularTabNesting] confirms no cycles exist,
+     * so the recursive depth computation is guaranteed to terminate and produce correct results.
      */
     private fun validateTabNestingDepth(tabs: List<TabInfo>) {
         val tabsByQualifiedName = tabs.associateBy {
@@ -709,9 +720,8 @@ class ValidationEngine(
         }
         val depthCache = mutableMapOf<String, Int>()
 
-        fun computeDepth(tabName: String, visiting: Set<String>): Int {
+        fun computeDepth(tabName: String): Int {
             depthCache[tabName]?.let { return it }
-            if (tabName in visiting) return 1 // Cycle — handled by circular detection
             val tab = tabsByQualifiedName[tabName] ?: return 1
 
             val maxChildDepth = tab.tabs
@@ -719,7 +729,7 @@ class ValidationEngine(
                 .maxOfOrNull { tabItem ->
                     val itemName = tabItem.classDeclaration.qualifiedName?.asString()
                     if (itemName != null && tabsByQualifiedName.containsKey(itemName)) {
-                        computeDepth(itemName, visiting + tabName)
+                        computeDepth(itemName)
                     } else {
                         0
                     }
@@ -731,7 +741,7 @@ class ValidationEngine(
         }
 
         tabsByQualifiedName.forEach { (name, tab) ->
-            val depth = computeDepth(name, emptySet())
+            val depth = computeDepth(name)
             @Suppress("MagicNumber")
             if (depth > 3) {
                 reportWarning(

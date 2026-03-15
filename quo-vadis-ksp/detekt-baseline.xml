@@ -28,6 +28,6 @@
     <ID>TooManyFunctions:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor : SymbolProcessor</ID>
     <ID>TooManyFunctions:ValidationEngine.kt:ValidationEngine</ID>
     <ID>UnusedParameter:DeepLinkHandlerGenerator.kt:DeepLinkHandlerGenerator$isNullableType: Boolean</ID>
-    <ID>UnusedParameter:ValidationEngine.kt:ValidationEngine$resolver: Resolver</ID>
+    <ID>UnusedParameter:ValidationEngine.kt:ValidationEngine$tabs: List&lt;TabInfo></ID>
   </CurrentIssues>
 </SmellBaseline>
