@@ -54,6 +54,8 @@ StackNode (root)
         └── ScreenNode (Profile)
 ```
 
+> Nested tab structures are also supported. See [TabNode > Nested Tabs](#nested-tabs) for details.
+
 ---
 
 ## NavNode Types
@@ -222,52 +224,108 @@ sealed class AuthFlow : NavDestination {
 
 #### Declaration Example
 
-From the demo app [MainTabs.kt](composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/destinations/MainTabs.kt):
-
 ```kotlin
-@Tabs(
-    name = "mainTabs",
-    initialTab = HomeTab::class,
-    items = [HomeTab::class, ExploreTab::class, ProfileTab::class, SettingsTab::class]
-)
-sealed class MainTabs : NavDestination {
-
+// Shared API module (navigation-api)
+@Tabs(name = "mainTabs")
+class MainTabs : NavDestination {
     companion object : NavDestination  // Wrapper key for @TabsContainer
+}
 
-    @TabItem
-    @Destination(route = "main/home")
-    @Transition(type = TransitionType.Fade)
-    data object HomeTab : MainTabs()
+// App module (composeApp) — tab items declare their parent
+@TabItem(parent = MainTabs::class, ordinal = 0)
+@Destination(route = "main/home")
+@Transition(type = TransitionType.Fade)
+data object HomeTab : NavDestination
 
-    @TabItem
-    @Destination(route = "main/explore")
-    @Transition(type = TransitionType.Fade)
-    data object ExploreTab : MainTabs()
+@TabItem(parent = MainTabs::class, ordinal = 1)
+@Stack(name = "exploreStack", startDestination = ExploreTab.Feed::class)
+@Transition(type = TransitionType.Fade)
+sealed class ExploreTab : NavDestination {
+    @Destination(route = "explore/feed")
+    data object Feed : ExploreTab()
 
-    @TabItem
-    @Destination(route = "main/profile")
-    @Transition(type = TransitionType.Fade)
-    data object ProfileTab : MainTabs()
+    @Destination(route = "explore/detail/{id}")
+    data class Detail(@Argument val id: String) : ExploreTab()
+}
 
-    @TabItem
-    @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
-    sealed class SettingsTab : MainTabs() {
-        @Destination(route = "settings/main")
-        data object Main : SettingsTab()
+@TabItem(parent = MainTabs::class, ordinal = 2)
+@Destination(route = "main/profile")
+@Transition(type = TransitionType.Fade)
+data object ProfileTab : NavDestination
 
-        @Destination(route = "settings/profile")
-        data object Profile : SettingsTab()
-    }
+@TabItem(parent = MainTabs::class, ordinal = 3)
+@Stack(name = "settingsStack", startDestination = SettingsTab.Main::class)
+@Transition(type = TransitionType.Fade)
+sealed class SettingsTab : NavDestination {
+    @Destination(route = "settings/main")
+    data object Main : SettingsTab()
+
+    @Destination(route = "settings/profile")
+    data object Profile : SettingsTab()
+}
+
+// Feature module (feature1) — cross-module tab registration
+@TabItem(parent = MainTabs::class, ordinal = 4)
+@Stack(name = "result_demo", startDestination = ResultDemoDestination.Demo::class)
+sealed class ResultDemoDestination : NavDestination {
+    @Destination(route = "result/demo")
+    data object Demo : ResultDemoDestination()
 }
 ```
 
-> **Note:** `@TabItem` is a marker annotation with no properties. Tab customization (labels, icons) is done in the `@TabsContainer` wrapper using type-safe pattern matching.
+> **Child-to-Parent Pattern:** Each `@TabItem` declares its `parent` (the `@Tabs`-annotated class) and `ordinal` (display position). `ordinal = 0` denotes the initial tab. Ordinals must be contiguous integers starting at 0 (i.e., 0, 1, 2, …, N-1 with no gaps). The KSP processor validates ordinal correctness at compile time. Tab customization (labels, icons) is done in the `@TabsContainer` wrapper using type-safe pattern matching.
+>
+> **Cross-module tabs:** Feature modules can register as tabs by referencing a shared `@Tabs` class (e.g., `@TabItem(parent = MainTabs::class, ordinal = 4)`). Ordinal continuity validation is skipped for cross-module `@Tabs` where only partial tab items are visible to the processor.
 
 #### When to Use
 
 - Bottom navigation with independent back stacks
 - Tab-based navigation patterns
 - Any UI with parallel navigation sections
+
+#### Nested Tabs
+
+TabNodes can contain other TabNodes for nested tab structures:
+
+```kotlin
+@Tabs(name = "demoTabs")
+sealed class DemoTabs : NavDestination {
+    companion object : NavDestination
+
+    @TabItem(parent = DemoTabs::class, ordinal = 0)
+    @Stack(name = "musicStack", startDestination = MusicTab.List::class)
+    sealed class MusicTab : DemoTabs() {
+        @Destination(route = "music/list")
+        data object List : MusicTab()
+
+        @Destination(route = "music/detail/{id}")
+        data class Detail(@Argument val id: String) : MusicTab()
+    }
+
+    @TabItem(parent = DemoTabs::class, ordinal = 1)
+    @Stack(name = "moviesStack", startDestination = MoviesTab.List::class)
+    sealed class MoviesTab : DemoTabs() {
+        @Destination(route = "movies/list")
+        data object List : MoviesTab()
+    }
+}
+```
+
+The tree structure for nested tabs:
+```
+StackNode (root)
+└── TabNode (MainTabs)
+    ├── StackNode (HomeTab)
+    │   └── ScreenNode (Home)
+    └── StackNode (ExploreTab)
+        └── TabNode (DemoTabs)    ← Nested tabs
+            ├── StackNode (MusicTab)
+            │   └── ScreenNode (MusicList)
+            └── StackNode (MoviesTab)
+                └── ScreenNode (MoviesList)
+```
+
+> **Note:** The KSP processor detects circular tab nesting (DFS validation) and emits warnings for nesting depth exceeding 3 levels.
 
 ---
 
@@ -738,6 +796,7 @@ val canHandleBack: Boolean = rootNode.canHandleBackInternally()
 | List-detail on tablets | `PaneNode` |
 | Auth flow with scope boundary | `StackNode` with `scopeKey` |
 | Wizard / multi-step process | `StackNode` |
+| Nested tab groups | `TabNode` (nested within `TabNode`) |
 
 ### Tree Structure Patterns
 
@@ -759,6 +818,20 @@ StackNode (root)
     │   └── ScreenNode (Search)
     └── StackNode (ProfileTab)
         └── ScreenNode (Profile)
+```
+
+**Nested Tabs:**
+```
+StackNode (root)
+└── TabNode (MainTabs)
+    ├── StackNode (HomeTab)
+    │   └── ScreenNode (Home)
+    └── StackNode (MediaTab)
+        └── TabNode (MediaTabs)
+            ├── StackNode (MusicTab)
+            │   └── ScreenNode (MusicList)
+            └── StackNode (MoviesTab)
+                └── ScreenNode (MoviesList)
 ```
 
 **Adaptive Master-Detail:**

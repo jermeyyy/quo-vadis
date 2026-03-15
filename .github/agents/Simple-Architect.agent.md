@@ -3,6 +3,7 @@ name: Simple-Architect
 description: Focused software architect agent for analyzing architectural problems and providing recommendations. Expert in Kotlin Multiplatform system design and code organization. Executes delegated analysis tasks without spawning subagents.
 tools: [read, serena/activate_project, serena/find_file, serena/find_referencing_symbols, serena/find_symbol, serena/get_symbols_overview, serena/list_dir, serena/list_memories, serena/read_memory, serena/search_for_pattern, serena/think_about_task_adherence, serena/think_about_whether_you_are_done, serena/write_memory, 'duck/*', edit/createDirectory, edit/createFile, edit/editFiles, edit/rename, search, web, todo]
 user-invocable: false
+agents: []
 ---
 
 # Simple-Architect Agent
@@ -157,6 +158,19 @@ duck/select_option:
 3. **Offer options when possible** - Guides the conversation
 4. **Minimize interruptions** - Batch related questions if appropriate
 5. **Respect delegation boundaries** - Major decisions go to orchestrator
+
+---
+
+## Delegating to Subagents
+
+### How Delegation Works
+
+- Main agent can call `#agent/runSubagent` multiple times, subagents will run in parallel
+- It is desired to run multiple subagents in parallel to complete multiple tasks which are independent
+- **Subagents cannot spawn subagents** - only main agent has `#agent/runSubagent` tool
+- Subagents return a single message with their results
+
+**Context window is your most precious resource.** Delegate to preserve it for orchestration.
 
 ---
 

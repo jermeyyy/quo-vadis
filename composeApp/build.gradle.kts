@@ -84,6 +84,7 @@ kotlin {
 
             implementation(projects.quoVadisCore)
             implementation(projects.quoVadisCoreFlowMvi)
+            implementation(projects.navigationApi)
 
             // Koin
             implementation(libs.koin.core)

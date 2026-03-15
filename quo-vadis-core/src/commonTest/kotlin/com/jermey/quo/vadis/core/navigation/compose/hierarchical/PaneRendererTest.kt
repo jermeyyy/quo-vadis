@@ -505,7 +505,7 @@ class PaneRendererTest {
         // Then
         val primaryContent = panes.paneContent(PaneRole.Primary)
         assertTrue(primaryContent is StackNode)
-        assertEquals(2, (primaryContent as StackNode).children.size)
+        assertEquals(2, primaryContent.children.size)
     }
 
     @Test

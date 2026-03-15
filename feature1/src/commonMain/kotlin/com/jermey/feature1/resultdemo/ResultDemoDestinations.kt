@@ -2,7 +2,9 @@ package com.jermey.feature1.resultdemo
 
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
+import com.jermey.quo.vadis.annotations.TabItem
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.navplayground.navigation.MainTabs
 import com.jermey.quo.vadis.core.navigation.result.ReturnsResult
 
 /**
@@ -40,6 +42,7 @@ data class SelectedItem(
  * ResultDemo (receives result)
  * ```
  */
+@TabItem(parent = MainTabs::class, ordinal = 4)
 @Stack(name = "result_demo", startDestination = ResultDemoDestination.Demo::class)
 sealed class ResultDemoDestination : NavDestination {
 

@@ -210,63 +210,66 @@ fun App() {
 /**
  * Basic tabs annotation
  */
-export const tabsAnnotationBasic = `@Tabs(
-    name = "mainTabs",
-    initialTab = MainTabs.HomeTab::class,
-    items = [MainTabs.HomeTab::class, MainTabs.ExploreTab::class, MainTabs.ProfileTab::class]
-)
-sealed class MainTabs : NavDestination {
+export const tabsAnnotationBasic = `// Tab container declaration
+@Tabs(name = "mainTabs")
+class MainTabs : NavDestination {
+    companion object : NavDestination  // Wrapper key for @TabsContainer
+}
 
-    @TabItem
-    @Destination(route = "main/home")
-    data object HomeTab : MainTabs()
+// Tab items declare their parent and ordinal
+@TabItem(parent = MainTabs::class, ordinal = 0)
+@Destination(route = "main/home")
+@Transition(type = TransitionType.Fade)
+data object HomeTab : NavDestination
 
-    @TabItem
-    @Destination(route = "main/explore")
-    data object ExploreTab : MainTabs()
+@TabItem(parent = MainTabs::class, ordinal = 1)
+@Destination(route = "main/explore")
+@Transition(type = TransitionType.Fade)
+data object ExploreTab : NavDestination
 
-    @TabItem
-    @Destination(route = "main/profile")
-    data object ProfileTab : MainTabs()
-}`;
+@TabItem(parent = MainTabs::class, ordinal = 2)
+@Destination(route = "main/profile")
+@Transition(type = TransitionType.Fade)
+data object ProfileTab : NavDestination`;
 
 /**
  * Extended tabs with nested stack and transitions
  */
-export const tabsAnnotationWithNestedStack = `@Tabs(
-    name = "mainTabs",
-    initialTab = MainTabs.HomeTab::class,
-    items = [MainTabs.HomeTab::class, MainTabs.ExploreTab::class, 
-             MainTabs.ProfileTab::class, MainTabs.SettingsTab::class]
-)
-sealed class MainTabs : NavDestination {
+export const tabsAnnotationWithNestedStack = `@Tabs(name = "mainTabs")
+class MainTabs : NavDestination {
+    companion object : NavDestination
+}
 
-    @TabItem
-    @Destination(route = "main/home")
-    @Transition(type = TransitionType.Fade)
-    data object HomeTab : MainTabs()
+// Flat tab (single screen, no back stack)
+@TabItem(parent = MainTabs::class, ordinal = 0)
+@Destination(route = "main/home")
+@Transition(type = TransitionType.Fade)
+data object HomeTab : NavDestination
 
-    @TabItem
-    @Destination(route = "main/explore")
-    @Transition(type = TransitionType.Fade)
-    data object ExploreTab : MainTabs()
+// Stack tab (nested navigation with back stack)
+@TabItem(parent = MainTabs::class, ordinal = 1)
+@Stack(name = "exploreStack", startDestination = ExploreTab.Feed::class)
+@Transition(type = TransitionType.Fade)
+sealed class ExploreTab : NavDestination {
+    @Destination(route = "explore/feed")
+    data object Feed : ExploreTab()
 
-    @TabItem
-    @Destination(route = "main/profile")
-    @Transition(type = TransitionType.Fade)
-    data object ProfileTab : MainTabs()
+    @Destination(route = "explore/detail/{id}")
+    data class Detail(@Argument val id: String) : ExploreTab()
+}
 
-    @TabItem
-    @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
-    @Transition(type = TransitionType.Fade)
-    sealed class SettingsTab : MainTabs() {
-        @Destination(route = "settings/main")
-        data object Main : SettingsTab()
+@TabItem(parent = MainTabs::class, ordinal = 2)
+@Destination(route = "main/profile")
+@Transition(type = TransitionType.Fade)
+data object ProfileTab : NavDestination
 
-        @Destination(route = "settings/profile")
-        @Transition(type = TransitionType.SlideHorizontal)
-        data object Profile : SettingsTab()
-    }
+// Stack tab in a feature module (cross-module registration)
+// In feature1 module:
+@TabItem(parent = MainTabs::class, ordinal = 3)
+@Stack(name = "settingsStack", startDestination = SettingsTab.Main::class)
+sealed class SettingsTab : NavDestination {
+    @Destination(route = "settings/main")
+    data object Main : SettingsTab()
 }`;
 
 /**
@@ -281,19 +284,18 @@ fun MainTabsWrapper(
     Scaffold(
         bottomBar = {
             NavigationBar {
-                scope.tabs.forEachIndexed { index, destination ->
-                    val (label, icon) = when (destination) {
-                        is MainTabs.HomeTab -> "Home" to "home"
-                        is MainTabs.ExploreTab -> "Explore" to "explore"
-                        is MainTabs.ProfileTab -> "Profile" to "person"
-                        is MainTabs.SettingsTab.Main,
-                        is MainTabs.SettingsTab.Profile -> "Settings" to "settings"
-                        else -> "Tab" to "circle"
+                // Icons and labels come from the container, not annotations
+                scope.tabMetadata.forEachIndexed { index, metadata ->
+                    val (label, icon) = when (metadata.destination) {
+                        is HomeTab -> "Home" to Icons.Default.Home
+                        is ExploreTab -> "Explore" to Icons.Default.Explore
+                        is ProfileTab -> "Profile" to Icons.Default.Person
+                        else -> "Tab" to Icons.Default.Circle
                     }
                     NavigationBarItem(
                         selected = index == scope.activeTabIndex,
                         onClick = { scope.switchTab(index) },
-                        icon = { Icon(getTabIcon(icon), label) },
+                        icon = { Icon(icon, label) },
                         label = { Text(label) },
                         enabled = !scope.isTransitioning
                     )
@@ -305,6 +307,28 @@ fun MainTabsWrapper(
             content()
         }
     }
+}`;
+
+/**
+ * Cross-module tabs example - feature modules register as tabs
+ */
+export const crossModuleTabsExample = `// Shared API module (navigation-api)
+@Tabs(name = "mainTabs")
+class MainTabs : NavDestination {
+    companion object : NavDestination
+}
+
+// App module
+@TabItem(parent = MainTabs::class, ordinal = 0)
+@Destination(route = "main/home")
+data object HomeTab : NavDestination
+
+// Feature module (feature1)
+@TabItem(parent = MainTabs::class, ordinal = 1)
+@Stack(name = "featureStack", startDestination = FeatureDestination.Main::class)
+sealed class FeatureDestination : NavDestination {
+    @Destination(route = "feature/main")
+    data object Main : FeatureDestination()
 }`;
 
 // ============================================================================
@@ -770,6 +794,7 @@ export type CodeExampleKey =
   | 'tabsAnnotationBasic'
   | 'tabsAnnotationWithNestedStack'
   | 'tabsContainerWrapper'
+  | 'crossModuleTabsExample'
   | 'paneAnnotationBasic'
   | 'paneContainerWrapper'
   | 'generatedConfigUsage'

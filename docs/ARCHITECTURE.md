@@ -127,6 +127,8 @@ This separation ensures:
 │        └── StackNode (ProfileTab)                                            │
 │            └── ScreenNode (Profile)                                          │
 │                                                                               │
+│    (Nested TabNodes are also supported)                                      │
+│                                                                               │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -201,21 +203,17 @@ fun completeTransition()
 
 ```kotlin
 class TreeNavigator(
-    private val deepLinkHandler: DeepLinkHandler = DefaultDeepLinkHandler(),
-    private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+    config: NavigationConfig,
     initialState: NavNode? = null,
-    private val scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
-    private val containerRegistry: ContainerRegistry = ContainerRegistry.Empty
+    coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
 ) : Navigator
 ```
 
 | Parameter | Description |
 |-----------|-------------|
-| `deepLinkHandler` | Handler for deep link navigation |
-| `coroutineScope` | Scope for derived state computations |
+| `config` | Unified navigation configuration (screens, containers, scopes, transitions, deep links) |
 | `initialState` | Optional initial navigation state |
-| `scopeRegistry` | Registry for scope-aware navigation |
-| `containerRegistry` | Registry for container-aware navigation |
+| `coroutineScope` | Scope for derived state computations |
 
 #### Key Features
 
@@ -243,6 +241,10 @@ class TreeNavigator(
    - Dispatches `onScreenExited` and `onScreenDestroyed` events
    - Cancels pending results for destroyed screens
    - Uses coroutine for async dispatch
+
+6. **Multi-Module Config Composition**
+   - `NavigationConfig` instances from different modules combine with `+` operator
+   - Enables feature modules to register their own screens, containers, and scopes
 
 ---
 

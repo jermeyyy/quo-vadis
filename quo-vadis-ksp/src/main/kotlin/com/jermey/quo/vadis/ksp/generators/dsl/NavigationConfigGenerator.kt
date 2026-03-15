@@ -254,6 +254,7 @@ class NavigationConfigGenerator(
         addImport("com.jermey.quo.vadis.core.navigation.internal.config", "CompositeNavigationConfig")
         addImport("com.jermey.quo.vadis.core.dsl", "navigationConfig")
         addImport("com.jermey.quo.vadis.core.compose.transition", "NavTransition")
+        addImport("com.jermey.quo.vadis.core", "InternalQuoVadisApi")
         addImport("kotlin.reflect", "KClass")
 
         // Pane container imports (for PaneBackBehavior in generated DSL)
@@ -304,6 +305,7 @@ class NavigationConfigGenerator(
             .addProperties(buildDelegationProperties())
             .addProperty(buildDeepLinkRegistryProperty(hasRoutes))
             .addProperty(buildPaneRoleRegistryProperty(paneRoleData))
+            .addFunction(buildSetNodeResolverFunction())
             .addFunction(buildBuildNavNodeFunction())
             .addFunction(buildPlusFunction())
             .addProperty(buildRootsProperty(data))
@@ -600,6 +602,43 @@ class NavigationConfigGenerator(
         return PropertySpec.builder(name, propertyType)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("baseConfig.$name")
+            .build()
+    }
+
+    /**
+     * Builds the `setNodeResolver` function override.
+     *
+     * The generated config objects wrap a lazy `baseConfig` (DslNavigationConfig).
+     * Without this override, `setNodeResolver` hits the default no-op in NavigationConfig,
+     * and cross-module container references cannot resolve via CompositeNavigationConfig.
+     */
+    private fun buildSetNodeResolverFunction(): FunSpec {
+        val internalApiAnnotation = ClassName(
+            "com.jermey.quo.vadis.core",
+            "InternalQuoVadisApi"
+        )
+        val kClassDestination = QuoVadisClassNames.KCLASS.parameterizedBy(
+            WildcardTypeName.producerOf(QuoVadisClassNames.NAV_DESTINATION)
+        )
+        val resolverType = LambdaTypeName.get(
+            parameters = listOf(
+                ParameterSpec.unnamed(kClassDestination),
+                ParameterSpec.unnamed(STRING.copy(nullable = true)),
+                ParameterSpec.unnamed(STRING.copy(nullable = true))
+            ),
+            returnType = QuoVadisClassNames.NAV_NODE.copy(nullable = true)
+        ).copy(nullable = true)
+
+        return FunSpec.builder("setNodeResolver")
+            .addModifiers(KModifier.OVERRIDE)
+            .addAnnotation(internalApiAnnotation)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                    .addMember("%T::class", internalApiAnnotation)
+                    .build()
+            )
+            .addParameter("resolver", resolverType)
+            .addStatement("baseConfig.setNodeResolver(resolver)")
             .build()
     }
 

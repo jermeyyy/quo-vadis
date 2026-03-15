@@ -115,19 +115,16 @@ private fun calculateCascadeFromStack(
     currentDepth: Int = 0,
     isCompact: Boolean = true
 ): CascadeBackState {
-    val parentKey = stack.parentKey
+    val parentKey = stack.parentKey ?: return CascadeBackState(
+        sourceNode = sourceNode,
+        exitingNode = stack.activeChild ?: stack,
+        targetNode = null,
+        animatingStackKey = null,
+        cascadeDepth = currentDepth,
+        delegatesToSystem = true
+    )
 
     // Root stack with 1 child - delegate to system
-    if (parentKey == null) {
-        return CascadeBackState(
-            sourceNode = sourceNode,
-            exitingNode = stack.activeChild ?: stack,
-            targetNode = null,
-            animatingStackKey = null,
-            cascadeDepth = currentDepth,
-            delegatesToSystem = true
-        )
-    }
 
     val parent = root.findByKey(parentKey)
     val newDepth = currentDepth + 1
@@ -164,11 +161,13 @@ private fun calculateCascadeFromStack(
                 calculateCascadeFromStack(root, parent, sourceNode, newDepth, isCompact)
             }
         }
+
         is TabNode -> {
             // TabNode with active stack having 1 child - pop entire TabNode
             // No tab switching - always cascade to pop TabNode
             calculateCascadeFromContainer(root, parent, sourceNode, newDepth)
         }
+
         is PaneNode -> {
             if (isCompact) {
                 // Compact mode: Check if we can switch to PRIMARY pane
@@ -178,7 +177,7 @@ private fun calculateCascadeFromStack(
                     // Enable predictive back: show PRIMARY pane's StackNode behind SECONDARY
                     // Use the StackNode directly (not leaf screen) to match what SinglePaneRenderer passes
                     val primaryPaneContent = parent.paneContent(PaneRole.Primary)
-                    
+
                     CascadeBackState(
                         sourceNode = sourceNode,
                         exitingNode = sourceNode,
@@ -198,6 +197,7 @@ private fun calculateCascadeFromStack(
                 calculateCascadeFromContainer(root, parent, sourceNode, newDepth)
             }
         }
+
         else -> {
             // Unknown parent type - delegate to system
             CascadeBackState(
@@ -270,10 +270,12 @@ private fun calculateCascadeFromContainer(
                 calculateCascadeFromStack(root, containerParent, sourceNode, newDepth)
             }
         }
+
         is TabNode -> {
             // TabNode - always cascade to pop the entire TabNode (no tab switching)
             calculateCascadeFromContainer(root, containerParent, sourceNode, newDepth)
         }
+
         else -> {
             CascadeBackState(
                 sourceNode = sourceNode,

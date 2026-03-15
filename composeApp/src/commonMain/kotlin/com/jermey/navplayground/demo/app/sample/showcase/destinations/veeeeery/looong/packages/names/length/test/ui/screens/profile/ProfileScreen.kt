@@ -53,7 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProfileTab
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
 import com.jermey.quo.vadis.annotations.Screen
@@ -79,7 +79,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
  * - Koin dependency injection
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Screen(MainTabs.ProfileTab::class)
+@Screen(ProfileTab::class)
 @Composable
 fun ProfileScreen(
     destination: MainTabs.ProfileTab,

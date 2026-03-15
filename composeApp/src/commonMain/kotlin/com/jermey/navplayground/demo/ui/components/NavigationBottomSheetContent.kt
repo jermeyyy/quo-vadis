@@ -22,7 +22,10 @@ import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.l
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProcessDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.HomeTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProfileTab
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.SettingsTab
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 @Composable
@@ -49,7 +52,7 @@ fun NavigationBottomSheetContent(
             label = "Home",
             description = "Main dashboard",
             selected = currentRoute == "home",
-            onClick = { onNavigate(MainTabs.HomeTab) }
+            onClick = { onNavigate(HomeTab) }
         )
 
         BottomSheetNavigationItem(
@@ -57,7 +60,7 @@ fun NavigationBottomSheetContent(
             label = "Explore",
             description = "Discover new content",
             selected = currentRoute == "explore",
-            onClick = { onNavigate(MainTabs.ExploreTab.Feed) }
+            onClick = { onNavigate(ExploreTab.Feed) }
         )
 
         BottomSheetNavigationItem(
@@ -65,7 +68,7 @@ fun NavigationBottomSheetContent(
             label = "Profile",
             description = "User profile",
             selected = currentRoute == "profile",
-            onClick = { onNavigate(MainTabs.ProfileTab) }
+            onClick = { onNavigate(ProfileTab) }
         )
 
         BottomSheetNavigationItem(
@@ -105,7 +108,7 @@ fun NavigationBottomSheetContent(
             label = "Settings",
             description = "App settings",
             selected = currentRoute == "settings",
-            onClick = { onNavigate(MainTabs.SettingsTab.Main) }
+            onClick = { onNavigate(SettingsTab.Main) }
         )
     }
 }

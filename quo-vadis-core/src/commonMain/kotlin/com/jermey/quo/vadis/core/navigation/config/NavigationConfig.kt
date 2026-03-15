@@ -146,6 +146,20 @@ interface NavigationConfig {
     ): NavNode?
 
     /**
+     * Sets a fallback node resolver for cross-config destination resolution.
+     *
+     * Used internally by [CompositeNavigationConfig] to enable container references
+     * that span multiple combined configs.
+     *
+     * @param resolver Function to resolve destinations not found in this config,
+     *   or null to clear the resolver
+     */
+    @InternalQuoVadisApi
+    fun setNodeResolver(resolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)?) {
+        // Default no-op for implementations that don't need cross-config resolution
+    }
+
+    /**
      * Combines this config with another, returning a composite config.
      *
      * The composite config merges all registries from both configs, with the

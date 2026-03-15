@@ -3,10 +3,8 @@ package com.jermey.quo.vadis.core.navigation.internal.tree
 import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.util.WindowSizeClass
-import com.jermey.quo.vadis.core.navigation.destination.DeepLink
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
-import com.jermey.quo.vadis.core.navigation.transition.TransitionState
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
+import com.jermey.quo.vadis.core.navigation.destination.DeepLink
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavigationResultManager
 import com.jermey.quo.vadis.core.navigation.internal.ResultCapable
@@ -28,6 +26,8 @@ import com.jermey.quo.vadis.core.navigation.node.activeLeaf
 import com.jermey.quo.vadis.core.navigation.node.activeStack
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.transition.TransitionState
 import com.jermey.quo.vadis.core.registry.BackHandlerRegistry
 import com.jermey.quo.vadis.core.registry.ContainerInfo
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
@@ -35,7 +35,6 @@ import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
 import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.registry.internal.CompositeDeepLinkRegistry
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,8 +46,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlin.reflect.KClass
+import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
+import kotlin.reflect.KClass
 
 /**
  * Tree-based implementation of Navigator using StateFlow<NavNode>.
@@ -172,7 +172,11 @@ class TreeNavigator(
      */
     override val canNavigateBack: StateFlow<Boolean> = _state
         .map { TreeMutator.canHandleBackNavigation(it) }
-        .stateIn(navigatorScope, SharingStarted.Eagerly, TreeMutator.canHandleBackNavigation(_state.value))
+        .stateIn(
+            navigatorScope,
+            SharingStarted.Eagerly,
+            TreeMutator.canHandleBackNavigation(_state.value)
+        )
 
     /**
      * Manager for navigation result passing between screens.
@@ -298,7 +302,11 @@ class TreeNavigator(
             updateDerivedState(newState)
 
             if (effectiveTransition != null) {
-                transitionManager.startNavigationTransition(effectiveTransition, fromKey?.value, toKey?.value)
+                transitionManager.startNavigationTransition(
+                    effectiveTransition,
+                    fromKey?.value,
+                    toKey?.value
+                )
             }
         } catch (e: IllegalStateException) {
             errorHandler.onNavigationError(e, null, "navigateWithContainer")
@@ -358,7 +366,11 @@ class TreeNavigator(
 
             // Update transition state
             if (effectiveTransition != null) {
-                transitionManager.startNavigationTransition(effectiveTransition, fromKey?.value, toKey?.value)
+                transitionManager.startNavigationTransition(
+                    effectiveTransition,
+                    fromKey?.value,
+                    toKey?.value
+                )
             }
         } catch (e: IllegalStateException) {
             errorHandler.onNavigationError(e, destination, "navigateDefault")
@@ -376,7 +388,11 @@ class TreeNavigator(
             updateDerivedState(newState)
 
             if (effectiveTransition != null) {
-                transitionManager.startNavigationTransition(effectiveTransition, fromKey?.value, screenKey.value)
+                transitionManager.startNavigationTransition(
+                    effectiveTransition,
+                    fromKey?.value,
+                    screenKey.value
+                )
             }
         }
     }
@@ -709,6 +725,7 @@ class TreeNavigator(
                 _state.update { result.newTree }
                 updateDerivedState(result.newTree)
             }
+
             is TreeOperationResult.NodeNotFound -> {
                 errorHandler.onNavigationError(
                     IllegalArgumentException("Node with key '${result.key}' not found"),
@@ -763,6 +780,7 @@ class TreeNavigator(
             when (val result = TreeMutator.replaceNode(currentState, targetStack.key, newStack)) {
                 is TreeOperationResult.Success ->
                     TreeMutator.switchActivePane(result.newTree, paneNode.key, role)
+
                 is TreeOperationResult.NodeNotFound -> {
                     errorHandler.onNavigationError(
                         IllegalArgumentException("Node with key '${result.key}' not found"),
@@ -816,7 +834,7 @@ class TreeNavigator(
     @Suppress("DEPRECATION")
     @Deprecated(
         message = "Use navigate(), navigateBack(), or navigateAndClearTo() instead. " +
-            "Direct state manipulation bypasses validation and lifecycle management.",
+                "Direct state manipulation bypasses validation and lifecycle management.",
         level = DeprecationLevel.WARNING,
     )
     override fun updateState(newState: NavNode, transition: NavigationTransition?) {

@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom'
 import SearchBar from '../Search/SearchBar'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
 import styles from './Navbar.module.css'
-
-const CURRENT_VERSION = '0.3.4'
+import { LIBRARY_VERSION } from '@data/constants'
 
 interface NavbarProps {
   onMenuToggle: () => void
@@ -40,7 +39,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
             title="View on Maven Central"
           >
             <span className={styles.versionLabel}>v</span>
-            <span className={styles.versionNumber}>{CURRENT_VERSION}</span>
+            <span className={styles.versionNumber}>{LIBRARY_VERSION}</span>
           </a>
         </div>
 

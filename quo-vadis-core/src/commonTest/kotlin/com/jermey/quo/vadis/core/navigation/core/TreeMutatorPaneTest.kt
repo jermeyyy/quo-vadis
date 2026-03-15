@@ -61,12 +61,6 @@ class TreeMutatorPaneTest {
         override fun toString(): String = "settings"
     }
 
-    private object ExtraDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-        override fun toString(): String = "extra"
-    }
-
     // =========================================================================
     // TEST SETUP
     // =========================================================================
@@ -489,7 +483,7 @@ class TreeMutatorPaneTest {
         val result = TreeMutator.popWithPaneBehavior(panes)
 
         assertTrue(result is PopResult.Popped)
-        val newPanes = (result as PopResult.Popped).newState as PaneNode
+        val newPanes = result.newState as PaneNode
         val primaryStack = newPanes.paneContent(PaneRole.Primary) as StackNode
         assertEquals(1, primaryStack.children.size)
     }
@@ -513,10 +507,11 @@ class TreeMutatorPaneTest {
 
         val result = TreeMutator.popWithPaneBehavior(panes)
 
-        // PopLatest returns PaneEmpty when stack has only root item,
-        // so handlePaneBack can cascade to popEntirePaneNode
-        assertTrue(result is PopResult.PaneEmpty)
-        assertEquals(PaneRole.Primary, (result as PopResult.PaneEmpty).paneRole)
+        // PopLatest still pops, leaving an empty stack
+        assertTrue(result is PopResult.Popped)
+        val newPanes = result.newState as PaneNode
+        val primaryStack = newPanes.paneContent(PaneRole.Primary) as StackNode
+        assertTrue(primaryStack.isEmpty)
     }
 
     @Test
@@ -545,7 +540,7 @@ class TreeMutatorPaneTest {
         val result = TreeMutator.popWithPaneBehavior(panes)
 
         assertTrue(result is PopResult.Popped)
-        val newPanes = (result as PopResult.Popped).newState as PaneNode
+        val newPanes = result.newState as PaneNode
         assertEquals(PaneRole.Primary, newPanes.activePaneRole)
     }
 
@@ -585,7 +580,7 @@ class TreeMutatorPaneTest {
         val result = TreeMutator.popWithPaneBehavior(stack)
 
         assertTrue(result is PopResult.Popped)
-        val newStack = (result as PopResult.Popped).newState as StackNode
+        val newStack = result.newState as StackNode
         assertEquals(1, newStack.children.size)
     }
 
@@ -603,7 +598,7 @@ class TreeMutatorPaneTest {
 
         // Pops to empty stack with PRESERVE_EMPTY behavior
         assertTrue(result is PopResult.Popped)
-        val newStack = (result as PopResult.Popped).newState as StackNode
+        val newStack = result.newState as StackNode
         assertTrue(newStack.isEmpty)
     }
 

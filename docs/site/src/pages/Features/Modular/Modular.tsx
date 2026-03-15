@@ -96,6 +96,20 @@ navigator.navigate(Feature2Destination.SomeScreen)
 
 // Works because configs are combined in app module`
 
+const crossModuleTabsCode = `// shared-api module — just the @Tabs declaration
+@Tabs(name = "main")
+object MainTabs
+
+// feature1 module — registers itself as a tab
+@TabItem(parent = MainTabs::class, ordinal = 0)
+@Stack(name = "feature1", startDestination = Feature1List::class)
+sealed class Feature1Destination : NavDestination { /* ... */ }
+
+// feature2 module — registers itself as another tab
+@TabItem(parent = MainTabs::class, ordinal = 1)
+@Stack(name = "feature2", startDestination = Feature2Home::class)
+sealed class Feature2Destination : NavDestination { /* ... */ }`
+
 const featureDependenciesCode = `// feature1/build.gradle.kts
 plugins {
     kotlin("multiplatform")
@@ -215,6 +229,25 @@ export default function Modular() {
           because all configs are combined in the app module:
         </p>
         <CodeBlock code={crossModuleCode} language="kotlin" />
+      </section>
+
+      <section>
+        <h2 id="cross-module-tabs">Cross-Module Tab Registration</h2>
+        <p>
+          Feature modules can register themselves as tabs in a shared tab container
+          using the <code>@TabItem</code> annotation. The parent <code>@Tabs</code> declaration
+          lives in a shared API module, while each feature module independently declares
+          its tab membership and position via <code>ordinal</code>:
+        </p>
+        <CodeBlock code={crossModuleTabsCode} language="kotlin" />
+        <p>
+          Each <code>@TabItem</code> specifies its <code>parent</code> (the <code>@Tabs</code>-annotated class)
+          and an <code>ordinal</code> (0-based display position, where <code>ordinal = 0</code> is the initial tab).
+          Since tab items are spread across modules, ordinal continuity validation is
+          skipped at compile time for cross-module tabs.
+          See <a href="/features/tabbed-navigation">Tabbed Navigation</a> for full details
+          on the <code>@Tabs</code> / <code>@TabItem</code> API.
+        </p>
       </section>
 
       <section>

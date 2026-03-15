@@ -63,7 +63,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.explore.AnimatedSearchBar
 import com.jermey.navplayground.demo.ui.components.explore.CategoryChipsRow
@@ -105,7 +105,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
  * - Navigation to detail screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Screen(MainTabs.ExploreTab.Feed::class)
+@Screen(ExploreTab.Feed::class)
 @Composable
 fun ExploreScreen(
     navigator: Navigator = koinInject(),
@@ -127,7 +127,7 @@ fun ExploreScreen(
                 }
 
                 is ExploreAction.NavigateToDetail -> {
-                    navigator.navigate(MainTabs.ExploreTab.Detail(action.itemId))
+                    navigator.navigate(ExploreTab.Detail(action.itemId))
                 }
 
                 is ExploreAction.ScrollToTop -> {
@@ -501,7 +501,7 @@ private fun ExploreGridContent(
         } else {
             ExploreGrid(
                 items = state.filteredItems,
-                onItemClick = { item -> navigator.navigate(MainTabs.ExploreTab.Detail(item.id)) },
+                onItemClick = { item -> navigator.navigate(ExploreTab.Detail(item.id)) },
                 onItemLongClick = { item -> store.intent(ExploreIntent.ShowPreview(item)) },
                 contentPadding = contentPadding,
                 gridState = gridState,
@@ -530,7 +530,7 @@ private fun ExploreBottomSheets(
         onDismiss = { store.intent(ExploreIntent.DismissPreview) },
         onViewDetails = { item ->
             store.intent(ExploreIntent.DismissPreview)
-            navigator.navigate(MainTabs.ExploreTab.Detail(item.id))
+            navigator.navigate(ExploreTab.Detail(item.id))
         },
         hazeState = hazeState
     )

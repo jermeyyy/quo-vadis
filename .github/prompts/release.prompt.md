@@ -32,6 +32,12 @@ Update the version constant in `docs/site/src/data/constants.ts`:
 export const LIBRARY_VERSION = '<old>' → export const LIBRARY_VERSION = '$input'
 ```
 
+This is the **single source of truth** for the version displayed across the documentation site (including the Navbar version badge). No other files in `docs/site/` should contain hardcoded version strings — verify by searching for the old version string:
+```bash
+grep -r '<old>' docs/site/src/ --include='*.ts' --include='*.tsx'
+```
+If any matches are found, update them to import from `constants.ts` instead.
+
 ## Step 3: Update README.md
 
 Find and replace all hardcoded version strings in `README.md` code examples with `$input`.

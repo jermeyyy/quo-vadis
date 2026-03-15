@@ -28,6 +28,7 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.dsl.internal.BuiltPanesConfig
 import com.jermey.quo.vadis.core.dsl.internal.BuiltTabsConfig
 import com.jermey.quo.vadis.core.dsl.internal.ScreenEntry
+import kotlin.concurrent.Volatile
 import kotlin.reflect.KClass
 
 /**
@@ -75,6 +76,20 @@ internal class DslNavigationConfig(
     private val tabsContainers: Map<String, @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit>,
     private val paneContainers: Map<String, @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit>
 ) : NavigationConfig {
+
+    /**
+     * Fallback resolver for cross-config container reference resolution.
+     * Set by [CompositeNavigationConfig] to enable cross-module tab container references.
+     */
+    @Volatile
+    private var nodeResolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)? = null
+
+    @InternalQuoVadisApi
+    override fun setNodeResolver(
+        resolver: ((KClass<out NavDestination>, String?, String?) -> NavNode?)?
+    ) {
+        nodeResolver = resolver
+    }
 
     /**
      * Registry for rendering screen content based on destination type.
@@ -347,12 +362,24 @@ internal class DslNavigationConfig(
             }
 
             is TabEntry.ContainerReference -> {
-                // For container references, we need to build the referenced container
+                // For container references, build the referenced container.
+                // Try local lookup first, then fall back to cross-config resolver
+                // (set by CompositeNavigationConfig) for cross-module references.
                 val containerNode = buildNavNode(
                     tabEntry.containerClass,
                     stackKey,
                     tabNodeKey
+                ) ?: nodeResolver?.invoke(
+                    tabEntry.containerClass,
+                    stackKey,
+                    tabNodeKey
                 )
+                // If the resolved node is already a StackNode, use it directly
+                // as the tab's stack — it already has the correct key and parentKey.
+                // Wrapping it would create duplicate keys in the tree.
+                if (containerNode is StackNode) {
+                    return containerNode
+                }
                 if (containerNode != null) {
                     listOf(containerNode)
                 } else {
