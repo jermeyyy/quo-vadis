@@ -212,6 +212,7 @@ class ValidationEngine(
             }
         }
     }
+
     /**
      * Validates that @Stack, @Tabs, and @Pane containers have at least one destination.
      */
@@ -234,7 +235,7 @@ class ValidationEngine(
             }
             val message = if (isPubliclyVisible) {
                 "@Tabs container '${tab.className}' has no @TabItem entries" +
-                    " (this is expected if @TabItem children are in downstream modules)"
+                        " (this is expected if @TabItem children are in downstream modules)"
             } else {
                 "@Tabs container '${tab.className}' has no @TabItem entries"
             }
@@ -278,7 +279,7 @@ class ValidationEngine(
                         reportError(
                             destination.classDeclaration,
                             "Route param '{$routeParam}' in @Destination on ${destination.className} " +
-                                "has no matching constructor parameter",
+                                    "has no matching constructor parameter",
                             "Add a constructor parameter named '$routeParam' or remove '{$routeParam}' from the route"
                         )
                     }
@@ -293,7 +294,7 @@ class ValidationEngine(
                             reportError(
                                 destination.classDeclaration,
                                 "@Argument param '$missingParam' in ${destination.className} " +
-                                    "is not in route pattern '${destination.route}'",
+                                        "is not in route pattern '${destination.route}'",
                                 "Add '{$missingParam}' to the route pattern or remove @Argument annotation"
                             )
                         }
@@ -361,7 +362,7 @@ class ValidationEngine(
                     reportError(
                         destination.classDeclaration,
                         "@Argument(optional = true) on '${param.name}' in ${destination.className} " +
-                            "requires a default value",
+                                "requires a default value",
                         "Add a default value: ${param.name}: ${param.type} = defaultValue"
                     )
                 }
@@ -382,7 +383,7 @@ class ValidationEngine(
                         reportError(
                             destination.classDeclaration,
                             "@Argument key '$key' on '${param.name}' in ${destination.className} " +
-                                "is not found in route pattern '${destination.route}'",
+                                    "is not found in route pattern '${destination.route}'",
                             "Add '{$key}' to the route pattern, or change the argument key to match: $routeParams"
                         )
                     }
@@ -428,9 +429,9 @@ class ValidationEngine(
                 reportError(
                     screen.functionDeclaration,
                     "@Screen(${screen.destinationClass.simpleName.asString()}::class) " +
-                        "references a class without @Destination",
+                            "references a class without @Destination",
                     "Add @Destination annotation to ${screen.destinationClass.simpleName.asString()} " +
-                        "or reference a valid destination"
+                            "or reference a valid destination"
                 )
             }
 
@@ -525,7 +526,7 @@ class ValidationEngine(
                     destination.classDeclaration,
                     "@Destination '${destination.className}' must be a data object or data class",
                     "Use 'data object ${destination.className}' for destinations without parameters, " +
-                        "or 'data class ${destination.className}(...)' for destinations with parameters"
+                            "or 'data class ${destination.className}(...)' for destinations with parameters"
                 )
             }
         }
@@ -550,7 +551,8 @@ class ValidationEngine(
             tab.tabs.forEach { tabItem ->
                 val classDecl = tabItem.classDeclaration
                 val hasStack = classDecl.annotations.any { it.shortName.asString() == "Stack" }
-                val hasDestination = classDecl.annotations.any { it.shortName.asString() == "Destination" }
+                val hasDestination =
+                    classDecl.annotations.any { it.shortName.asString() == "Destination" }
                 val hasTabs = classDecl.annotations.any { it.shortName.asString() == "Tabs" }
                 val annotationCount = listOf(hasStack, hasDestination, hasTabs).count { it }
 
@@ -560,6 +562,7 @@ class ValidationEngine(
                         "@TabItem '${classDecl.simpleName.asString()}' has neither @Stack, @Tabs, nor @Destination",
                         "Add @Stack for nested navigation, @Tabs for nested tabs, or @Destination for flat screen"
                     )
+
                     2, 3 -> {
                         val present = buildList {
                             if (hasStack) add("@Stack")
@@ -593,7 +596,7 @@ class ValidationEngine(
 
                 // Must be data object
                 val isDataObject = classDecl.classKind == ClassKind.OBJECT &&
-                    classDecl.modifiers.contains(Modifier.DATA)
+                        classDecl.modifiers.contains(Modifier.DATA)
 
                 if (!isDataObject) {
                     reportError(

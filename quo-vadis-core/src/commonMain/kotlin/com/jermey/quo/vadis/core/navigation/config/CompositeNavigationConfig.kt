@@ -268,10 +268,20 @@ class CompositeNavigationConfig(
      */
     private fun rekeySubtree(node: NavNode, oldPrefix: String, newPrefix: String): NavNode {
         fun rekey(key: NodeKey): NodeKey =
-            NodeKey(key.value.replaceFirst(oldPrefix, newPrefix))
+            if (key.value.startsWith(oldPrefix)) {
+                NodeKey(newPrefix + key.value.removePrefix(oldPrefix))
+            } else {
+                key
+            }
 
         fun rekeyParent(key: NodeKey?): NodeKey? =
-            key?.let { NodeKey(it.value.replaceFirst(oldPrefix, newPrefix)) }
+            key?.let {
+                if (it.value.startsWith(oldPrefix)) {
+                    NodeKey(newPrefix + it.value.removePrefix(oldPrefix))
+                } else {
+                    it
+                }
+            }
 
         return when (node) {
             is ScreenNode -> node.copy(
@@ -297,7 +307,9 @@ class CompositeNavigationConfig(
             is PaneNode -> PaneNode(
                 key = rekey(node.key),
                 parentKey = rekeyParent(node.parentKey),
-                paneConfigurations = node.paneConfigurations,
+                paneConfigurations = node.paneConfigurations.mapValues { (_, config) ->
+                    config.copy(content = rekeySubtree(config.content, oldPrefix, newPrefix))
+                },
                 activePaneRole = node.activePaneRole,
                 backBehavior = node.backBehavior,
                 scopeKey = node.scopeKey
