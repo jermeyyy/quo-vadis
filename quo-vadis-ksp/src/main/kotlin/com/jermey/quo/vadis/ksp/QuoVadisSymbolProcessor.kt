@@ -12,7 +12,6 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Pane
 import com.jermey.quo.vadis.annotations.Stack
-import com.jermey.quo.vadis.annotations.Tabs
 import com.jermey.quo.vadis.ksp.extractors.DestinationExtractor
 import com.jermey.quo.vadis.ksp.extractors.PaneExtractor
 import com.jermey.quo.vadis.ksp.extractors.ScreenExtractor
@@ -138,8 +137,7 @@ class QuoVadisSymbolProcessor(
             tabs = collectedTabs,
             panes = collectedPanes,
             screens = collectedScreens,
-            allDestinations = collectedDestinations,
-            resolver = resolver
+            allDestinations = collectedDestinations
         )
 
         if (!isValid) {
@@ -177,9 +175,8 @@ class QuoVadisSymbolProcessor(
         // Step 1: Extract stack info (no dependencies)
         collectStacks(resolver)
 
-        // Step 2: Populate @TabItem cache and extract tab info
-        // This must happen before extracting tabs due to KSP sealed subclass limitations in KMP
-        tabExtractor.populateTabItemCache(resolver)
+        // Step 2: Extract tab info
+        // TabExtractor.extractAll handles @TabItem discovery and @Tabs assembly internally
         collectTabs(resolver)
 
         // Step 3: Extract pane info
@@ -226,16 +223,15 @@ class QuoVadisSymbolProcessor(
 
     /**
      * Collects @Tabs annotated classes.
+     * TabExtractor.extractAll now handles everything internally:
+     * discovering @TabItem classes, matching them to @Tabs parents, and assembling TabInfo.
      */
     private fun collectTabs(resolver: Resolver) {
-        val tabsSymbols = resolver.getSymbolsWithAnnotation(Tabs::class.qualifiedName!!)
-        tabsSymbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
-            try {
-                extractTabInfo(classDeclaration)
-            } catch (e: IllegalStateException) {
-                val className = classDeclaration.qualifiedName?.asString()
-                logger.error("Error extracting @Tab $className: ${e.message}", classDeclaration)
-            }
+        val tabs = tabExtractor.extractAll(resolver)
+        collectedTabs.addAll(tabs)
+        // Track originating files for incremental processing
+        tabs.forEach { tabInfo ->
+            tabInfo.classDeclaration.containingFile?.let { originatingFiles.add(it) }
         }
     }
 
@@ -364,23 +360,6 @@ class QuoVadisSymbolProcessor(
 
         // Collect for validation and navigator extensions
         collectedStacks.add(stackInfo)
-
-        // Track originating file for incremental processing
-        classDeclaration.containingFile?.let { originatingFiles.add(it) }
-    }
-
-    /**
-     * Extract tab info without generating code.
-     */
-    private fun extractTabInfo(classDeclaration: KSClassDeclaration) {
-        val tabInfo = tabExtractor.extract(classDeclaration)
-        if (tabInfo == null) {
-            logger.warn("Could not extract TabInfo from ${classDeclaration.qualifiedName?.asString()}")
-            return
-        }
-
-        // Collect for validation and navigator extensions
-        collectedTabs.add(tabInfo)
 
         // Track originating file for incremental processing
         classDeclaration.containingFile?.let { originatingFiles.add(it) }

@@ -103,8 +103,18 @@ interface DeepLinkRegistry {
         val Empty: DeepLinkRegistry = object : DeepLinkRegistry {
             override fun resolve(uri: String): NavDestination? = null
             override fun resolve(deepLink: DeepLink): NavDestination? = null
-            override fun register(pattern: String, factory: (params: Map<String, String>) -> NavDestination) { /* no-op */ }
-            override fun registerAction(pattern: String, action: (navigator: Navigator, params: Map<String, String>) -> Unit) { /* no-op */ }
+            override fun register(
+                pattern: String,
+                factory: (params: Map<String, String>) -> NavDestination
+            ) { /* no-op */
+            }
+
+            override fun registerAction(
+                pattern: String,
+                action: (navigator: Navigator, params: Map<String, String>) -> Unit
+            ) { /* no-op */
+            }
+
             override fun handle(uri: String, navigator: Navigator): Boolean = false
             override fun createUri(destination: NavDestination, scheme: String): String? = null
             override fun canHandle(uri: String): Boolean = false

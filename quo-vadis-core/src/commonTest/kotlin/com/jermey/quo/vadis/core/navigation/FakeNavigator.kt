@@ -84,7 +84,7 @@ class FakeNavigator(
     private fun updateDerivedState() {
         val currentState = _state.value
         val activeLeaf = currentState.activeLeaf()
-        _currentDestination.value = (activeLeaf as? ScreenNode)?.destination
+        _currentDestination.value = activeLeaf?.destination
 
         // Update canNavigateBack based on stack depth
         val activeStack = currentState.activeStack()

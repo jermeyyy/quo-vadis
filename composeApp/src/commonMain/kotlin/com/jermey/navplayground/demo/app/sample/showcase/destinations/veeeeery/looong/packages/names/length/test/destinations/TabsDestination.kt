@@ -1,8 +1,5 @@
 package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations
 
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs.BooksTab
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs.MoviesTab
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs.MusicTab
 import com.jermey.quo.vadis.annotations.Argument
 import com.jermey.quo.vadis.annotations.Destination
 import com.jermey.quo.vadis.annotations.Stack
@@ -21,11 +18,7 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
  * Navigation to `DemoTabs.MusicTab.List` (or any tab's root) will show the
  * tabs demo with the DemoTabsWrapper providing the tab strip UI.
  */
-@Tabs(
-    name = "demoTabs",
-    initialTab = MusicTab::class,
-    items = [MusicTab::class, MoviesTab::class, BooksTab::class]
-)
+@Tabs(name = "demoTabs")
 sealed class DemoTabs : NavDestination {
 
     /**
@@ -37,7 +30,7 @@ sealed class DemoTabs : NavDestination {
     /**
      * Music tab - shows a list of music items
      */
-    @TabItem
+    @TabItem(parent = DemoTabs::class, ordinal = 0)
     @Stack(name = "musicStack", startDestination = MusicTab.List::class)
     sealed class MusicTab : DemoTabs() {
 
@@ -48,7 +41,7 @@ sealed class DemoTabs : NavDestination {
     /**
      * Movies tab - shows a list of movie items
      */
-    @TabItem
+    @TabItem(parent = DemoTabs::class, ordinal = 1)
     @Stack(name = "moviesStack", startDestination = MoviesTab.List::class)
     sealed class MoviesTab : DemoTabs() {
 
@@ -59,7 +52,7 @@ sealed class DemoTabs : NavDestination {
     /**
      * Books tab - shows a list of book items
      */
-    @TabItem
+    @TabItem(parent = DemoTabs::class, ordinal = 2)
     @Stack(name = "booksStack", startDestination = BooksTab.List::class)
     sealed class BooksTab : DemoTabs() {
 

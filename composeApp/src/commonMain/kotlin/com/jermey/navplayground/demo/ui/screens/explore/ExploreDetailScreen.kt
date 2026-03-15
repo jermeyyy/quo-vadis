@@ -55,7 +55,7 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MainTabs
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
 import com.jermey.navplayground.demo.ui.components.explore.GlassOverlayBox
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.compose.transition.rememberTransitionScope
@@ -90,10 +90,10 @@ private val GOLD_COLOR = Color(0xFFFFD700)
  * @param modifier Modifier for the screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Screen(MainTabs.ExploreTab.Detail::class)
+@Screen(ExploreTab.Detail::class)
 @Composable
 fun ExploreDetailScreen(
-    destination: MainTabs.ExploreTab.Detail,
+    destination: ExploreTab.Detail,
     modifier: Modifier = Modifier,
     container: Store<ExploreDetailState, ExploreDetailIntent, ExploreDetailAction> = rememberContainer(
         qualifier = qualifier<ExploreDetailContainer>(),

@@ -1,11 +1,9 @@
 package com.jermey.quo.vadis.ksp.validation
 
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Modifier
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
@@ -89,7 +87,6 @@ class ValidationEngine(
      * @param panes List of all extracted @Pane annotations with their metadata
      * @param screens List of all extracted @Screen annotations with their metadata
      * @param allDestinations List of all @Destination classes found in the codebase
-     * @param resolver KSP resolver for additional symbol lookups
      * @return `true` if validation passed with no errors, `false` if any errors were found.
      *         Note that warnings do not cause validation to fail.
      */
@@ -98,14 +95,12 @@ class ValidationEngine(
         tabs: List<TabInfo>,
         panes: List<PaneInfo>,
         screens: List<ScreenInfo>,
-        allDestinations: List<DestinationInfo>,
-        resolver: Resolver
+        allDestinations: List<DestinationInfo>
     ): Boolean {
         hasErrors = false
 
         // Structural validations
         validateContainerStartDestinations(stacks)
-        validateTabInitialTabs(tabs)
         validateEmptyContainers(stacks, tabs, panes)
 
         // Route validations
@@ -122,10 +117,18 @@ class ValidationEngine(
         validateContainerTypes(stacks, tabs, panes)
         validateDestinationTypes(allDestinations)
 
+        // Tab ordinal validations
+        validateOrdinalZeroExists(tabs)
+        validateOrdinalCollisions(tabs)
+        validateOrdinalContinuity(tabs)
+
         // Mixed tab type validations
         validateTabItemAnnotations(tabs)
-        validateNestedStackTabs(tabs)
-        validateFlatScreenTabs(tabs)
+        validateDestinationTabs(tabs)
+        val hasCycles = validateCircularTabNesting(tabs)
+        if (!hasCycles) {
+            validateTabNestingDepth(tabs)
+        }
 
         return !hasErrors
     }
@@ -149,26 +152,63 @@ class ValidationEngine(
             }
         }
     }
+    // =========================================================================
+    // Tab Ordinal Validations
+    // =========================================================================
 
     /**
-     * Validates that @Tabs(initialTab) references an existing tab item.
+     * Validates that each @Tabs container has at least one @TabItem with ordinal = 0 (initial tab).
+     * Skips cross-module @Tabs where only partial tab items are visible.
      */
-    private fun validateTabInitialTabs(tabs: List<TabInfo>) {
-        tabs.forEach { tab ->
-            // New pattern uses type-safe initialTabClass; null means use first tab
-            if (tab.initialTabClass != null) {
-                val initialQualifiedName = tab.initialTabClass.qualifiedName?.asString()
-                val initialTabExists = tab.tabs.any { 
-                    it.classDeclaration.qualifiedName?.asString() == initialQualifiedName 
-                }
-                if (!initialTabExists) {
-                    val availableTabs = tab.tabs.map { it.classDeclaration.simpleName.asString() }
+    private fun validateOrdinalZeroExists(tabs: List<TabInfo>) {
+        tabs.filter { !it.isCrossModule }.forEach { tab ->
+            val hasZero = tab.tabs.any { it.ordinal == 0 }
+            if (!hasZero) {
+                reportError(
+                    tab.classDeclaration,
+                    "@Tabs '${tab.className}' has no @TabItem with ordinal = 0 (initial tab)",
+                    "Add ordinal = 0 to one of the @TabItem annotations targeting this @Tabs"
+                )
+            }
+        }
+    }
+
+    /**
+     * Validates that no two @TabItem entries targeting the same @Tabs share the same ordinal.
+     * Skips cross-module @Tabs where only partial tab items are visible.
+     */
+    private fun validateOrdinalCollisions(tabs: List<TabInfo>) {
+        tabs.filter { !it.isCrossModule }.forEach { tab ->
+            val ordinals = tab.tabs.groupBy { it.ordinal }
+            ordinals.filter { it.value.size > 1 }.forEach { (ordinal, items) ->
+                items.forEach { item ->
                     reportError(
-                        tab.classDeclaration,
-                        "Invalid initialTab '${tab.initialTabClass.simpleName.asString()}' for @Tabs '${tab.name}'",
-                        "Use one of the available tabs: $availableTabs"
+                        item.classDeclaration,
+                        "Duplicate ordinal $ordinal for @Tabs '${tab.className}'",
+                        "Each @TabItem targeting '${tab.className}' must have a unique ordinal"
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * Validates that ordinals are consecutive starting from 0 (no gaps).
+     * Skips cross-module @Tabs where only partial tab items are visible.
+     */
+    private fun validateOrdinalContinuity(tabs: List<TabInfo>) {
+        tabs.filter { !it.isCrossModule }.forEach { tab ->
+            val ordinals = tab.tabs.map { it.ordinal }
+            // Skip continuity check when duplicates exist (already reported by validateOrdinalCollisions)
+            if (ordinals.size != ordinals.toSet().size) return@forEach
+            val sorted = ordinals.sorted()
+            val expected = (0 until sorted.size).toList()
+            if (sorted != expected) {
+                reportError(
+                    tab.classDeclaration,
+                    "@Tabs '${tab.className}' has ordinal gaps: found $sorted, expected $expected",
+                    "Ordinals must be consecutive starting from 0"
+                )
             }
         }
     }
@@ -190,10 +230,19 @@ class ValidationEngine(
         }
 
         tabs.filter { it.tabs.isEmpty() }.forEach { tab ->
-            reportError(
+            val isPubliclyVisible = !tab.classDeclaration.modifiers.any {
+                it == Modifier.INTERNAL || it == Modifier.PRIVATE
+            }
+            val message = if (isPubliclyVisible) {
+                "@Tabs container '${tab.className}' has no @TabItem entries" +
+                        " (this is expected if @TabItem children are in downstream modules)"
+            } else {
+                "@Tabs container '${tab.className}' has no @TabItem entries"
+            }
+            reportWarning(
                 tab.classDeclaration,
-                "@Tabs container '${tab.className}' has no @TabItem entries",
-                "Add at least one @TabItem annotated class to the items array"
+                message,
+                "Add at least one class annotated with @TabItem(parent = ${tab.className}::class)"
             )
         }
 
@@ -201,7 +250,7 @@ class ValidationEngine(
             reportError(
                 pane.classDeclaration,
                 "@Pane container '${pane.className}' has no @PaneItem entries",
-                "Add at least one @PaneItem annotated class to the items array"
+                "Add at least one class annotated with @PaneItem targeting this @Pane"
             )
         }
     }
@@ -230,7 +279,7 @@ class ValidationEngine(
                         reportError(
                             destination.classDeclaration,
                             "Route param '{$routeParam}' in @Destination on ${destination.className} " +
-                                "has no matching constructor parameter",
+                                    "has no matching constructor parameter",
                             "Add a constructor parameter named '$routeParam' or remove '{$routeParam}' from the route"
                         )
                     }
@@ -245,7 +294,7 @@ class ValidationEngine(
                             reportError(
                                 destination.classDeclaration,
                                 "@Argument param '$missingParam' in ${destination.className} " +
-                                    "is not in route pattern '${destination.route}'",
+                                        "is not in route pattern '${destination.route}'",
                                 "Add '{$missingParam}' to the route pattern or remove @Argument annotation"
                             )
                         }
@@ -313,7 +362,7 @@ class ValidationEngine(
                     reportError(
                         destination.classDeclaration,
                         "@Argument(optional = true) on '${param.name}' in ${destination.className} " +
-                            "requires a default value",
+                                "requires a default value",
                         "Add a default value: ${param.name}: ${param.type} = defaultValue"
                     )
                 }
@@ -334,7 +383,7 @@ class ValidationEngine(
                         reportError(
                             destination.classDeclaration,
                             "@Argument key '$key' on '${param.name}' in ${destination.className} " +
-                                "is not found in route pattern '${destination.route}'",
+                                    "is not found in route pattern '${destination.route}'",
                             "Add '{$key}' to the route pattern, or change the argument key to match: $routeParams"
                         )
                     }
@@ -360,26 +409,6 @@ class ValidationEngine(
     }
 
     /**
-     * Validates that a rootGraph class has the @Stack annotation.
-     */
-    private fun validateRootGraphClass(
-        rootGraphClass: KSClassDeclaration,
-        usageSite: KSClassDeclaration
-    ) {
-        val hasStackAnnotation = rootGraphClass.annotations.any {
-            it.shortName.asString() == "Stack"
-        }
-
-        if (!hasStackAnnotation) {
-            reportError(
-                usageSite,
-                "rootGraph '${rootGraphClass.simpleName.asString()}' is not annotated with @Stack",
-                "Add @Stack annotation to ${rootGraphClass.simpleName.asString()}"
-            )
-        }
-    }
-
-    /**
      * Validates screen bindings:
      * - @Screen must reference a valid @Destination class
      * - Each destination should have at most one @Screen (error if duplicates)
@@ -400,9 +429,9 @@ class ValidationEngine(
                 reportError(
                     screen.functionDeclaration,
                     "@Screen(${screen.destinationClass.simpleName.asString()}::class) " +
-                        "references a class without @Destination",
+                            "references a class without @Destination",
                     "Add @Destination annotation to ${screen.destinationClass.simpleName.asString()} " +
-                        "or reference a valid destination"
+                            "or reference a valid destination"
                 )
             }
 
@@ -416,7 +445,7 @@ class ValidationEngine(
                 reportError(
                     screen.functionDeclaration,
                     "Multiple @Screen bindings for ${screen.destinationClass.simpleName.asString()}: " +
-                        "${screenNames.joinToString(", ")}",
+                            screenNames.joinToString(", "),
                     "Keep only one @Screen function for this destination"
                 )
             }
@@ -440,7 +469,11 @@ class ValidationEngine(
     // =========================================================================
 
     /**
-     * Validates that @Stack, @Tabs, and @Pane are applied to sealed classes.
+     * Validates container class types.
+     *
+     * - @Stack must be a sealed class
+     * - @Tabs can be any class type (object, class, sealed class, interface) implementing NavDestination
+     * - @Pane must be a sealed class
      */
     private fun validateContainerTypes(
         stacks: List<StackInfo>,
@@ -457,15 +490,7 @@ class ValidationEngine(
             }
         }
 
-        tabs.forEach { tab ->
-            if (!tab.classDeclaration.isSealed()) {
-                reportError(
-                    tab.classDeclaration,
-                    "@Tabs '${tab.className}' must be a sealed class",
-                    "Change 'class ${tab.className}' to 'sealed class ${tab.className}'"
-                )
-            }
-        }
+        // @Tabs does not require sealed class — any class type is valid
 
         panes.forEach { pane ->
             if (!pane.classDeclaration.isSealed()) {
@@ -501,7 +526,7 @@ class ValidationEngine(
                     destination.classDeclaration,
                     "@Destination '${destination.className}' must be a data object or data class",
                     "Use 'data object ${destination.className}' for destinations without parameters, " +
-                        "or 'data class ${destination.className}(...)' for destinations with parameters"
+                            "or 'data class ${destination.className}(...)' for destinations with parameters"
                 )
             }
         }
@@ -515,92 +540,68 @@ class ValidationEngine(
      * Validates that each @TabItem has valid annotation combinations.
      *
      * A @TabItem must have exactly one of:
-     * - @Stack (for nested navigation with NESTED_STACK type)
-     * - @Destination (for flat screen with FLAT_SCREEN type)
+     * - @Stack (for nested navigation with STACK type)
+     * - @Destination (for single screen with DESTINATION type)
+     * - @Tabs (for nested tab containers with TABS type)
      *
-     * Having both or neither is an error.
+     * Having incompatible combinations is an error.
      */
     private fun validateTabItemAnnotations(tabs: List<TabInfo>) {
         tabs.forEach { tab ->
             tab.tabs.forEach { tabItem ->
-                val hasStack = tabItem.stackInfo != null ||
-                    tabItem.classDeclaration.annotations.any { it.shortName.asString() == "Stack" }
-                val hasDestination = tabItem.destinationInfo != null ||
-                    tabItem.classDeclaration.annotations.any { it.shortName.asString() == "Destination" }
+                val classDecl = tabItem.classDeclaration
+                val hasStack = classDecl.annotations.any { it.shortName.asString() == "Stack" }
+                val hasDestination =
+                    classDecl.annotations.any { it.shortName.asString() == "Destination" }
+                val hasTabs = classDecl.annotations.any { it.shortName.asString() == "Tabs" }
+                val annotationCount = listOf(hasStack, hasDestination, hasTabs).count { it }
 
-                when {
-                    hasStack && hasDestination -> {
+                when (annotationCount) {
+                    0 -> reportError(
+                        classDecl,
+                        "@TabItem '${classDecl.simpleName.asString()}' has neither @Stack, @Tabs, nor @Destination",
+                        "Add @Stack for nested navigation, @Tabs for nested tabs, or @Destination for flat screen"
+                    )
+
+                    2, 3 -> {
+                        val present = buildList {
+                            if (hasStack) add("@Stack")
+                            if (hasTabs) add("@Tabs")
+                            if (hasDestination) add("@Destination")
+                        }.joinToString(" and ")
                         reportError(
-                            tabItem.classDeclaration,
-                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
-                                "has both @Stack and @Destination",
-                            "Use @Stack for nested navigation OR @Destination for flat screen, not both"
+                            classDecl,
+                            "@TabItem '${classDecl.simpleName.asString()}' has multiple tab type annotations: $present",
+                            "Use only one of @Stack, @Tabs, or @Destination"
                         )
                     }
-                    !hasStack && !hasDestination -> {
-                        reportError(
-                            tabItem.classDeclaration,
-                            "@TabItem '${tabItem.classDeclaration.simpleName.asString()}' " +
-                                "has neither @Stack nor @Destination",
-                            "Add @Stack for nested navigation or @Destination for flat screen"
-                        )
-                    }
+                    // 1 is valid
                 }
             }
         }
     }
 
     /**
-     * Validates that NESTED_STACK tabs have a valid @Stack with destinations.
+     * Validates that DESTINATION tabs are data objects with valid destinations.
      *
-     * For tabs with [TabItemType.NESTED_STACK], the tab class must:
-     * - Be annotated with @Stack
-     * - Have at least one @Destination subclass
-     */
-    private fun validateNestedStackTabs(tabs: List<TabInfo>) {
-        tabs.forEach { tab ->
-            tab.tabs.filter { it.tabType == TabItemType.NESTED_STACK }.forEach { tabItem ->
-                val stackInfo = tabItem.stackInfo
-                if (stackInfo == null) {
-                    reportError(
-                        tabItem.classDeclaration,
-                        "NESTED_STACK tab '${tabItem.classDeclaration.simpleName.asString()}' " +
-                            "is missing @Stack annotation",
-                        "Add @Stack annotation to this tab class"
-                    )
-                } else if (stackInfo.destinations.isEmpty()) {
-                    reportError(
-                        tabItem.classDeclaration,
-                        "@Stack '${stackInfo.name}' on NESTED_STACK tab " +
-                            "'${tabItem.classDeclaration.simpleName.asString()}' has no destinations",
-                        "Add at least one @Destination subclass to this Stack"
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * Validates that FLAT_SCREEN tabs are data objects with valid destinations.
-     *
-     * For tabs with [TabItemType.FLAT_SCREEN], the tab class must:
+     * For tabs with [TabItemType.DESTINATION], the tab class must:
      * - Be a data object
      * - Be annotated with @Destination
      * - Have a route (warning if missing, for deep linking support)
      */
-    private fun validateFlatScreenTabs(tabs: List<TabInfo>) {
+    private fun validateDestinationTabs(tabs: List<TabInfo>) {
         tabs.forEach { tab ->
-            tab.tabs.filter { it.tabType == TabItemType.FLAT_SCREEN }.forEach { tabItem ->
+            tab.tabs.filter { it.tabType == TabItemType.DESTINATION }.forEach { tabItem ->
                 val classDecl = tabItem.classDeclaration
 
                 // Must be data object
                 val isDataObject = classDecl.classKind == ClassKind.OBJECT &&
-                    classDecl.modifiers.contains(Modifier.DATA)
+                        classDecl.modifiers.contains(Modifier.DATA)
 
                 if (!isDataObject) {
                     reportError(
                         classDecl,
-                        "FLAT_SCREEN tab '${classDecl.simpleName.asString()}' must be a data object",
+                        "DESTINATION tab '${classDecl.simpleName.asString()}' must be a data object",
                         "Change to 'data object ${classDecl.simpleName.asString()}'"
                     )
                 }
@@ -610,17 +611,134 @@ class ValidationEngine(
                 if (destInfo == null) {
                     reportError(
                         classDecl,
-                        "FLAT_SCREEN tab '${classDecl.simpleName.asString()}' is missing @Destination",
+                        "DESTINATION tab '${classDecl.simpleName.asString()}' is missing @Destination",
                         "Add @Destination annotation with a route"
                     )
                 } else if (destInfo.route.isNullOrEmpty()) {
                     // Keep as warning since it still works without route
                     reportWarning(
                         classDecl,
-                        "@Destination on FLAT_SCREEN tab '${classDecl.simpleName.asString()}' has no route",
+                        "@Destination on DESTINATION tab '${classDecl.simpleName.asString()}' has no route",
                         "Add a route parameter for deep linking support"
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * Detects circular nesting in tab containers.
+     *
+     * Builds a directed graph from @TabItem entries with type TABS pointing to other
+     * @Tabs containers, then checks for cycles using DFS traversal.
+     *
+     * @return `true` if any cycles were detected, `false` otherwise.
+     */
+    private fun validateCircularTabNesting(tabs: List<TabInfo>): Boolean {
+        // Build adjacency: tabQualifiedName -> list of referenced @Tabs qualified names
+        val tabsByQualifiedName = tabs.associateBy {
+            it.classDeclaration.qualifiedName?.asString() ?: it.className
+        }
+        val adjacency = mutableMapOf<String, List<String>>()
+
+        tabs.forEach { tab ->
+            val tabName = tab.classDeclaration.qualifiedName?.asString() ?: tab.className
+            val referencedTabs = tab.tabs
+                .filter { it.tabType == TabItemType.TABS }
+                .mapNotNull { tabItem ->
+                    val itemName = tabItem.classDeclaration.qualifiedName?.asString()
+                    if (itemName != null && tabsByQualifiedName.containsKey(itemName)) itemName else null
+                }
+            adjacency[tabName] = referencedTabs
+        }
+
+        // DFS cycle detection
+        val visited = mutableSetOf<String>()
+        val inStack = mutableSetOf<String>()
+        val path = mutableListOf<String>()
+        var foundCycle = false
+
+        fun dfs(node: String): Boolean {
+            if (node in inStack) {
+                val cycleStart = path.indexOf(node)
+                val cyclePath = path.subList(cycleStart, path.size) + node
+                val cycleStr = cyclePath.joinToString(" -> ") { it.substringAfterLast('.') }
+                val tabInfo = tabsByQualifiedName[node]
+                if (tabInfo != null) {
+                    reportError(
+                        tabInfo.classDeclaration,
+                        "Circular tab nesting detected: $cycleStr",
+                        "Tab containers cannot reference each other cyclically"
+                    )
+                }
+                return true
+            }
+            if (node in visited) return false
+
+            visited.add(node)
+            inStack.add(node)
+            path.add(node)
+
+            val hasCycle = adjacency[node]?.any { neighbor -> dfs(neighbor) } == true
+            if (hasCycle) foundCycle = true
+            inStack.remove(node)
+            path.removeAt(path.lastIndex)
+            return hasCycle
+        }
+
+        adjacency.keys.forEach { node ->
+            if (node !in visited) {
+                dfs(node)
+            }
+        }
+
+        return foundCycle
+    }
+
+    /**
+     * Warns when tab nesting depth exceeds 3 levels.
+     *
+     * Computes the maximum nesting depth for each @Tabs container by traversing
+     * TABS-type items that point to other @Tabs containers.
+     *
+     * Must only be called after [validateCircularTabNesting] confirms no cycles exist,
+     * so the recursive depth computation is guaranteed to terminate and produce correct results.
+     */
+    private fun validateTabNestingDepth(tabs: List<TabInfo>) {
+        val tabsByQualifiedName = tabs.associateBy {
+            it.classDeclaration.qualifiedName?.asString() ?: it.className
+        }
+        val depthCache = mutableMapOf<String, Int>()
+
+        fun computeDepth(tabName: String): Int {
+            depthCache[tabName]?.let { return it }
+            val tab = tabsByQualifiedName[tabName] ?: return 1
+
+            val maxChildDepth = tab.tabs
+                .filter { it.tabType == TabItemType.TABS }
+                .maxOfOrNull { tabItem ->
+                    val itemName = tabItem.classDeclaration.qualifiedName?.asString()
+                    if (itemName != null && tabsByQualifiedName.containsKey(itemName)) {
+                        computeDepth(itemName)
+                    } else {
+                        0
+                    }
+                } ?: 0
+
+            val depth = 1 + maxChildDepth
+            depthCache[tabName] = depth
+            return depth
+        }
+
+        tabsByQualifiedName.forEach { (name, tab) ->
+            val depth = computeDepth(name)
+            @Suppress("MagicNumber")
+            if (depth > 3) {
+                reportWarning(
+                    tab.classDeclaration,
+                    "Tab nesting depth exceeds 3 levels at '${tab.className}'",
+                    "Deep nesting may cause usability issues"
+                )
             }
         }
     }

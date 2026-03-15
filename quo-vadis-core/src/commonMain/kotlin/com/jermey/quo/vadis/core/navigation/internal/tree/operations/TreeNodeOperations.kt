@@ -57,7 +57,9 @@ object TreeNodeOperations {
                 val newChildren = root.children.map { child ->
                     if (!found) {
                         val result = tryReplaceNode(child, targetKey, newNode)
-                        if (result != null) { found = true; result } else child
+                        if (result != null) {
+                            found = true; result
+                        } else child
                     } else {
                         child
                     }
@@ -70,7 +72,9 @@ object TreeNodeOperations {
                 val newStacks = root.stacks.map { stack ->
                     if (!found) {
                         val result = tryReplaceNode(stack, targetKey, newNode)
-                        if (result != null) { found = true; result as StackNode } else stack
+                        if (result != null) {
+                            found = true; result as StackNode
+                        } else stack
                     } else {
                         stack
                     }
@@ -83,7 +87,9 @@ object TreeNodeOperations {
                 val newConfigurations = root.paneConfigurations.mapValues { (_, config) ->
                     if (!found) {
                         val result = tryReplaceNode(config.content, targetKey, newNode)
-                        if (result != null) { found = true; config.copy(content = result) } else config
+                        if (result != null) {
+                            found = true; config.copy(content = result)
+                        } else config
                     } else {
                         config
                     }

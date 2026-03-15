@@ -1,5 +1,6 @@
 package com.jermey.feature1.resultdemo
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -108,7 +109,9 @@ fun ResultDemoScreen(
 
             // Selected Item Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().clickable {
+                    container.intent(Intent.ResetTimer)
+                },
                 colors = CardDefaults.cardColors(
                     containerColor = if (state.selectedItem != null) {
                         MaterialTheme.colorScheme.primaryContainer
@@ -213,8 +216,6 @@ fun ResultDemoScreen(
                     }
                 }
             }
-
-            Spacer(Modifier.weight(1f))
 
             // Info Card
             Card(

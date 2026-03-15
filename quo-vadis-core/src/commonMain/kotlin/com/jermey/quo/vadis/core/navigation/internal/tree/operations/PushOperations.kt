@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.core.navigation.internal.tree.operations
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.internal.tree.operations.PushOperations.push
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TabOperations.switchTab
 import com.jermey.quo.vadis.core.navigation.internal.tree.operations.TreeNodeOperations.replaceNode
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.PushStrategy
@@ -35,7 +36,8 @@ import kotlin.random.Random
 @InternalQuoVadisApi
 object PushOperations {
 
-    private val keyGenerator: NavKeyGenerator = { NodeKey(Random.nextLong().toULong().toString(36)) }
+    private val keyGenerator: NavKeyGenerator =
+        { NodeKey(Random.nextLong().toULong().toString(36)) }
 
     /**
      * Push a destination onto the deepest active stack.

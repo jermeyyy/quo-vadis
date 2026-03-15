@@ -146,8 +146,16 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
-                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
+                StackNode(
+                    NodeKey("tab0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))
+                ),
+                StackNode(
+                    NodeKey("tab1"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination))
+                )
             ),
             activeStackIndex = 1 // Currently on tab 1
         )
@@ -169,8 +177,16 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
-                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
+                StackNode(
+                    NodeKey("tab0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))
+                ),
+                StackNode(
+                    NodeKey("tab1"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination))
+                )
             ),
             activeStackIndex = 0 // On initial tab
         )
@@ -191,12 +207,17 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                StackNode(
+                    NodeKey("tab0"), NodeKey("tabs"), listOf(
                         ScreenNode(NodeKey("s0a"), NodeKey("tab0"), HomeDestination),
                         ScreenNode(NodeKey("s0b"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), SettingsDestination)))
+                StackNode(
+                    NodeKey("tab1"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), SettingsDestination))
+                )
             ),
             activeStackIndex = 0 // Tab 0 with 2 items
         )
@@ -222,8 +243,16 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
-                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
+                StackNode(
+                    NodeKey("tab0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))
+                ),
+                StackNode(
+                    NodeKey("tab1"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination))
+                )
             ),
             activeStackIndex = 1 // On tab 1
         )
@@ -249,7 +278,11 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination)))
+                StackNode(
+                    NodeKey("tab0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))
+                )
             ),
             activeStackIndex = 0
         )
@@ -320,8 +353,16 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
-                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
+                StackNode(
+                    NodeKey("tab0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))
+                ),
+                StackNode(
+                    NodeKey("tab1"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination))
+                )
             ),
             activeStackIndex = 1 // Not on initial tab
         )
@@ -341,8 +382,16 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))),
-                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination)))
+                StackNode(
+                    NodeKey("tab0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("tab0"), HomeDestination))
+                ),
+                StackNode(
+                    NodeKey("tab1"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s1"), NodeKey("tab1"), ProfileDestination))
+                )
             ),
             activeStackIndex = 0 // On initial tab
         )
@@ -361,7 +410,8 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                StackNode(
+                    NodeKey("tab0"), NodeKey("tabs"), listOf(
                         ScreenNode(NodeKey("s0a"), NodeKey("tab0"), HomeDestination),
                         ScreenNode(NodeKey("s0b"), NodeKey("tab0"), ProfileDestination)
                     )
@@ -384,7 +434,11 @@ class TreeMutatorBackHandlingTest {
 
     @Test
     fun `BackResult Handled contains new state`() {
-        val newState = StackNode(NodeKey("root"), null, listOf(ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)))
+        val newState = StackNode(
+            NodeKey("root"),
+            null,
+            listOf(ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination))
+        )
         val result = BackResult.Handled(newState)
 
         assertIs<BackResult.Handled>(result)
@@ -418,12 +472,14 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                StackNode(
+                    NodeKey("tab0"), NodeKey("tabs"), listOf(
                         ScreenNode(NodeKey("a"), NodeKey("tab0"), HomeDestination),
                         ScreenNode(NodeKey("b"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                StackNode(
+                    NodeKey("tab1"), NodeKey("tabs"), listOf(
                         ScreenNode(NodeKey("c"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
@@ -435,7 +491,11 @@ class TreeMutatorBackHandlingTest {
             parentKey = null,
             children = listOf(
                 tabNode,
-                ScreenNode(NodeKey("d"), NodeKey("root"), HomeDestination) // Screen pushed over tabs
+                ScreenNode(
+                    NodeKey("d"),
+                    NodeKey("root"),
+                    HomeDestination
+                ) // Screen pushed over tabs
             )
         )
 
@@ -465,12 +525,14 @@ class TreeMutatorBackHandlingTest {
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
             stacks = listOf(
-                StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
+                StackNode(
+                    NodeKey("tab0"), NodeKey("tabs"), listOf(
                         ScreenNode(NodeKey("a"), NodeKey("tab0"), HomeDestination),
                         ScreenNode(NodeKey("b"), NodeKey("tab0"), ProfileDestination)
                     )
                 ),
-                StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(
+                StackNode(
+                    NodeKey("tab1"), NodeKey("tabs"), listOf(
                         ScreenNode(NodeKey("c"), NodeKey("tab1"), SettingsDestination)
                     )
                 )
