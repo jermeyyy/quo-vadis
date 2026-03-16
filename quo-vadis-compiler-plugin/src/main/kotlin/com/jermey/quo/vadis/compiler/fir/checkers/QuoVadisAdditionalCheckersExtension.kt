@@ -25,6 +25,7 @@ class QuoVadisAdditionalCheckersExtension(session: FirSession) : FirAdditionalCh
             TransitionCompatibilityChecker,
             StructuralChecker,
             NavigationRootUniquenessChecker,
+            TabItemChecker,
         )
         override val simpleFunctionCheckers: Set<FirDeclarationChecker<FirNamedFunction>> = setOf(
             ScreenValidationChecker,

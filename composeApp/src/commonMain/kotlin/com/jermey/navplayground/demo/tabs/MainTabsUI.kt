@@ -59,10 +59,10 @@ internal data class MainTabPresentation(
 
 internal fun resolveMainTabKind(tab: NavDestination): MainTabKind {
     return when {
-        tab == MainTabs.HomeTab || tab is MainTabs.HomeTab -> MainTabKind.Home
-        tab == MainTabs.ExploreTab.Feed || tab is MainTabs.ExploreTab -> MainTabKind.Explore
-        tab == MainTabs.ProfileTab || tab is MainTabs.ProfileTab -> MainTabKind.Profile
-        tab == MainTabs.SettingsTab.Main || tab is MainTabs.SettingsTab -> MainTabKind.Settings
+        tab == HomeTab || tab is HomeTab -> MainTabKind.Home
+        tab == ExploreTab.Feed || tab is ExploreTab -> MainTabKind.Explore
+        tab == ProfileTab || tab is ProfileTab -> MainTabKind.Profile
+        tab == SettingsTab.Main || tab is SettingsTab -> MainTabKind.Settings
         else -> MainTabKind.Unknown
     }
 }

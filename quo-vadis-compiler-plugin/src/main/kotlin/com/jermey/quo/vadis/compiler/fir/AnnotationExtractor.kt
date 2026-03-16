@@ -32,6 +32,20 @@ object AnnotationExtractor {
     }
 
     /**
+     * Extract an Int argument by name.
+     */
+    fun FirAnnotation.intArgument(name: String): Int? {
+        val argument = findArgument(name) ?: return null
+        val value = (argument as? FirLiteralExpression)?.value ?: return null
+        return when (value) {
+            is Int -> value
+            is Long -> value.toInt()
+            is Number -> value.toInt()
+            else -> null
+        }
+    }
+
+    /**
      * Extract a KClass argument resolved to ClassId.
      */
     fun FirAnnotation.classArgument(name: String): ClassId? {

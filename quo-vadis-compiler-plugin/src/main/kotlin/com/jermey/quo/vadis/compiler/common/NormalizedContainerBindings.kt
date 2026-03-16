@@ -22,13 +22,16 @@ fun NavigationMetadata.normalizedTabsContainerBindings(): List<NormalizedTabsCon
     val bindings = tabsContainers.map { container ->
         val normalizedTabClassId = container.tabClassId.normalizedContainerOwner()
         val tabsMetadata = tabsByClassId[normalizedTabClassId]
-            ?: error(
-                "Quo Vadis compiler plugin: @TabsContainer wrapper ${container.functionFqn.asString()} " +
-                    "targets ${container.tabClassId.asSingleFqName().asString()}, but no matching @Tabs container was collected.",
-            )
-        val scopeKey = tabsMetadata.name.ifEmpty { tabsMetadata.classId.shortClassName.asString() }
+        // When @TabsContainer references a @Tabs class from a dependency module,
+        // the @Tabs metadata won't be locally collected. Derive scope key from class name.
+        val scopeKey = if (tabsMetadata != null) {
+            tabsMetadata.name.ifEmpty { tabsMetadata.classId.shortClassName.asString() }
+        } else {
+            normalizedTabClassId.shortClassName.asString()
+                .replaceFirstChar { it.lowercase() }
+        }
         NormalizedTabsContainerBinding(
-            tabClassId = tabsMetadata.classId,
+            tabClassId = tabsMetadata?.classId ?: container.tabClassId,
             scopeKey = scopeKey,
             wrapperKey = scopeKey,
             wrapperFunctionFqn = container.functionFqn,
@@ -42,20 +45,9 @@ fun NavigationMetadata.normalizedTabsContainerBindings(): List<NormalizedTabsCon
         annotationName = "@TabsContainer",
     )
 
-    val wrappedTabClassIds = bindings.map { it.tabClassId.normalizedContainerOwner() }.toSet()
-    val missingWrappers = tabsByClassId.values.filter { tabsMetadata ->
-        tabsMetadata.classId.normalizedContainerOwner() !in wrappedTabClassIds
-    }
-    if (missingWrappers.isNotEmpty()) {
-        val missingTabs = missingWrappers.joinToString { tabsMetadata ->
-            val scopeKey = tabsMetadata.name.ifEmpty { tabsMetadata.classId.shortClassName.asString() }
-            "${tabsMetadata.classId.asSingleFqName().asString()} (scope key '$scopeKey')"
-        }
-        error(
-            "Quo Vadis compiler plugin: missing @TabsContainer wrapper for @Tabs container(s): " +
-                "$missingTabs. Every collected @Tabs container must declare a matching @TabsContainer wrapper after normalization.",
-        )
-    }
+    // @Tabs without a @TabsContainer in this module are silently skipped.
+    // Cross-module tabs (e.g. navigation-api defining @Tabs, composeApp providing @TabsContainer)
+    // will generate the binding in the module that has the wrapper.
 
     return bindings
 }

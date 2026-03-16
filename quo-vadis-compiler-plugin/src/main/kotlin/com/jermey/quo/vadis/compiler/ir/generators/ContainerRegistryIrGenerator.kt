@@ -42,12 +42,14 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrElseBranchImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetFieldImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrThrowImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetValueImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrSetFieldImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrWhenImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.SimpleTypeNullability
+import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
 import org.jetbrains.kotlin.ir.types.typeWith
@@ -627,21 +629,30 @@ internal class ContainerRegistryIrGenerator(
             val elseResult = if (fallbackToContent) {
                 generateContentInvoke(contentParam, overrideFun)
             } else {
-                val errorFunction = symbolResolver.resolveFunctions("kotlin", "error")
-                    .singleOrNull()
-                    ?: error("Expected kotlin.error(String) to be available for tabs container dispatch")
-                IrCallImpl(
-                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                    pluginContext.irBuiltIns.nothingType,
-                    errorFunction,
-                    typeArgumentsCount = 0,
-                    origin = null,
-                ).apply {
+                // Use throw IllegalStateException(msg) instead of kotlin.error(msg)
+                // because top-level function resolution for kotlin.error fails on WasmJS.
+                val iseClass = symbolResolver.resolveClass("kotlin", "IllegalStateException")
+                val iseConstructor = iseClass.owner.declarations
+                    .filterIsInstance<IrConstructor>()
+                    .first { ctor ->
+                        val valueParams = ctor.parameters.filter {
+                            it.kind == IrParameterKind.Regular
+                        }
+                        valueParams.size == 1 &&
+                            valueParams[0].type.classOrNull ==
+                            pluginContext.irBuiltIns.stringType.classOrNull
+                    }
+                val ctorCall = irCallConstructor(iseConstructor.symbol, emptyList()).apply {
                     arguments[0] = irString(
                         "Quo Vadis compiler plugin: no generated @TabsContainer wrapper dispatch " +
                             "matched the requested tab key. Ensure every @Tabs container has a matching wrapper.",
                     )
                 }
+                IrThrowImpl(
+                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                    pluginContext.irBuiltIns.nothingType,
+                    ctorCall,
+                )
             }
             whenExpr.branches += IrElseBranchImpl(
                 UNDEFINED_OFFSET, UNDEFINED_OFFSET,

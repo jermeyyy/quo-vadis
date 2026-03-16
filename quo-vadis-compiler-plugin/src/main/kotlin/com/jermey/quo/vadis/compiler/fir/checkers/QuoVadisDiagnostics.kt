@@ -44,6 +44,18 @@ object QuoVadisDiagnostics : KtDiagnosticsContainer() {
     val NAVIGATION_ROOT_REQUIRED by error0<KtElement>(
         SourceElementPositioningStrategies.DEFAULT,
     )
+    val TABITEM_DUPLICATE_ORDINAL by error1<KtAnnotationEntry, String>(
+        SourceElementPositioningStrategies.DEFAULT,
+    )
+    val TABITEM_MISSING_ORDINAL_ZERO by error0<KtAnnotationEntry>(
+        SourceElementPositioningStrategies.DEFAULT,
+    )
+    val TABITEM_ORDINAL_GAP by error1<KtAnnotationEntry, String>(
+        SourceElementPositioningStrategies.DEFAULT,
+    )
+    val TABITEM_INVALID_PARENT by error0<KtAnnotationEntry>(
+        SourceElementPositioningStrategies.DEFAULT,
+    )
 
     // Warnings
     val INCOMPATIBLE_TRANSITION by warning2<KtAnnotationEntry, String, String>(
@@ -105,6 +117,25 @@ object QuoVadisDiagnosticRenderer : BaseDiagnosticRendererFactory() {
         it.put(
             QuoVadisDiagnostics.NAVIGATION_ROOT_REQUIRED,
             "Type argument T of navigationConfig<T>() must be annotated with @NavigationRoot.",
+        )
+        it.put(
+            QuoVadisDiagnostics.TABITEM_DUPLICATE_ORDINAL,
+            "@TabItem has duplicate ordinal {0}. Each @TabItem under the same @Tabs must have a unique ordinal.",
+            CommonRenderers.STRING,
+        )
+        it.put(
+            QuoVadisDiagnostics.TABITEM_MISSING_ORDINAL_ZERO,
+            "@Tabs container has no @TabItem with ordinal = 0. " +
+                "Ordinals must be contiguous starting at 0.",
+        )
+        it.put(
+            QuoVadisDiagnostics.TABITEM_ORDINAL_GAP,
+            "@Tabs container has non-contiguous ordinals. Missing ordinal(s): {0}.",
+            CommonRenderers.STRING,
+        )
+        it.put(
+            QuoVadisDiagnostics.TABITEM_INVALID_PARENT,
+            "@TabItem parent must reference a class annotated with @Tabs.",
         )
         it.put(
             QuoVadisDiagnostics.INCOMPATIBLE_TRANSITION,

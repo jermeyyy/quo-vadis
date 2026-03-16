@@ -62,6 +62,7 @@ class QuoVadisPlugin : Plugin<Project> {
                         "Quo Vadis: using experimental compiler backend. " +
                             "Module-level generated configs remain the supported interchangeability contract."
                     )
+                    disableJsIncrementalCompilation(project)
                 }
 
                 QuoVadisBackend.KSP -> configureKsp(project, extension)
@@ -137,6 +138,25 @@ class QuoVadisPlugin : Plugin<Project> {
 
         configureGeneratedKspSources(project)
         configureKspTaskDependencies(project)
+    }
+
+    /**
+     * Workaround for KT-82395: FIR-generated top-level declarations cause
+     * `IllegalStateException: No file found for source null` on JS/WasmJS
+     * targets when incremental compilation is enabled.
+     *
+     * Sets Gradle properties that the Kotlin Gradle Plugin reads to disable
+     * incremental compilation for JS and WasmJS targets. This is the only
+     * reliable approach since setting the `incremental` task property directly
+     * gets overridden by the KGP's own configuration.
+     *
+     * @see <a href="https://youtrack.jetbrains.com/issue/KT-82395">KT-82395</a>
+     */
+    private fun disableJsIncrementalCompilation(project: Project) {
+        // Set Gradle properties that the Kotlin Gradle Plugin reads to decide
+        // whether JS/WasmJS compilation should run incrementally.
+        project.extensions.extraProperties.set("kotlin.incremental.js", "false")
+        project.extensions.extraProperties.set("kotlin.incremental.js.klib", "false")
     }
 
     private fun hasQuoVadisKspDependency(project: Project): Boolean {

@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.navigation.config.GeneratedConfig
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
@@ -225,9 +226,10 @@ class IrCodegenTests {
         val nestedTabStack = mixedTabsNode.stacks[1]
         assertFalse(nestedTabStack.children.isEmpty(), "Stack-backed tabs should not be dropped from TabNode stacks")
 
-        val nestedContainerNode = nestedTabStack.children.single()
-        assertIs<StackNode>(nestedContainerNode)
-        assertFalse(nestedContainerNode.children.isEmpty(), "Nested stack-backed tabs should resolve to a reachable screen")
+        // ContainerReference resolved to a StackNode is returned directly as the tab stack
+        // (no double-wrapping), so its children are the stack's screen nodes.
+        val rootScreen = nestedTabStack.children.single()
+        assertIs<ScreenNode>(rootScreen, "Stack-backed tab's root child should be a ScreenNode (start destination)")
     }
 
     // ── 5C.5: Pane source compiles with valid config structure ──────

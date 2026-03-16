@@ -138,7 +138,7 @@ class BaseConfigIrGenerator(
                 val navDestType = symbolResolver.navDestinationClass.defaultType
                 val nullableNavDestType = navDestType.makeNullable()
                 val tabInstanceValues = tab.items.map { item ->
-                    if (item.type == TabItemType.NESTED_STACK) {
+                    if (item.type == TabItemType.STACK || item.type == TabItemType.TABS) {
                         irNull(nullableNavDestType)
                     } else {
                         val classSymbol = symbolResolver.resolveClass(item.classId)
@@ -148,14 +148,13 @@ class BaseConfigIrGenerator(
                 val tabInstancesList = irCall(listOfVararg, listOfVararg.owner.returnType, listOf(nullableNavDestType)).also {
                     it.arguments[listOfVararg.owner.parameters[0]] = irVararg(nullableNavDestType, tabInstanceValues)
                 }
-                val boolValues = tab.items.map { irBoolean(it.type == TabItemType.NESTED_STACK) }
+                val boolValues = tab.items.map { irBoolean(it.type == TabItemType.STACK || it.type == TabItemType.TABS) }
                 val boolType = pluginContext.irBuiltIns.booleanType
                 val tabIsContainerRefList = irCall(listOfVararg, listOfVararg.owner.returnType, listOf(boolType)).also {
                     it.arguments[listOfVararg.owner.parameters[0]] = irVararg(boolType, boolValues)
                 }
-                val initialTabIndex = tab.initialTab?.let { initialTabClassId ->
-                    tab.items.indexOfFirst { it.classId == initialTabClassId }.takeIf { it >= 0 } ?: 0
-                } ?: 0
+                // Initial tab is always index 0 (ordinal=0 is sorted first)
+                val initialTabIndex = 0
 
                 val registerFun = symbolResolver.registerTabsContainerFun
                 +irCall(registerFun).apply {

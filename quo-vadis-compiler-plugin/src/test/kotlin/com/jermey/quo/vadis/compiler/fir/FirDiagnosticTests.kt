@@ -78,15 +78,11 @@ class FirDiagnosticTests {
     }
 
     @Test
-    fun `tabs without wrapper produce actionable error`() {
-        val result = CompilerTestHelper.compile(
-            TestSources.tabsWithItems,
-            expectSuccess = false,
-        )
-
-        result.assertHasError("missing @TabsContainer wrapper for @Tabs container")
-        result.assertHasError("test.MainTabs")
-        result.assertHasError("mainTabs")
+    fun `tabs without wrapper compile successfully for cross-module support`() {
+        // Cross-module tabs may define @Tabs in one module and @TabsContainer in another.
+        // The compiler plugin no longer errors on missing wrappers within a single module.
+        val result = CompilerTestHelper.compile(TestSources.tabsWithItems)
+        result.assertNoDiagnostics()
     }
 
     @Test
@@ -99,16 +95,14 @@ class FirDiagnosticTests {
     }
 
     @Test
-    fun `tabs container with missing target produces actionable error`() {
+    fun `tabs container with missing target compiles for cross-module support`() {
+        // Cross-module tabs may define @Tabs in a dependency module and @TabsContainer locally.
+        // The compiler plugin no longer errors on missing @Tabs within a single module.
         val result = CompilerTestHelper.compile(
             TestSources.basicStack,
             TestSources.missingTabsContainerTarget,
-            expectSuccess = false,
         )
-
-        result.assertHasError("@TabsContainer wrapper test.MissingTabsWrapper")
-        result.assertHasError("targets test.MissingTabsHost")
-        result.assertHasError("no matching @Tabs container was collected")
+        result.assertNoDiagnostics()
     }
 
     @Test
@@ -242,5 +236,43 @@ class FirDiagnosticTests {
     fun `full navigation graph compiles cleanly`() {
         val result = CompilerTestHelper.compile(TestSources.fullNavigationGraph)
         result.assertNoDiagnostics()
+    }
+
+    // ── 5B.7: TabItem Ordinal Validation Tests ──────────────────────────
+
+    @Test
+    fun `duplicate ordinal produces error`() {
+        val result = CompilerTestHelper.compile(
+            TestSources.tabItemDuplicateOrdinal,
+            expectSuccess = false,
+        )
+        result.assertHasError("duplicate ordinal")
+    }
+
+    @Test
+    fun `missing ordinal zero produces error`() {
+        val result = CompilerTestHelper.compile(
+            TestSources.tabItemMissingOrdinalZero,
+            expectSuccess = false,
+        )
+        result.assertHasError("no @TabItem with ordinal = 0")
+    }
+
+    @Test
+    fun `ordinal gap produces error`() {
+        val result = CompilerTestHelper.compile(
+            TestSources.tabItemOrdinalGap,
+            expectSuccess = false,
+        )
+        result.assertHasError("non-contiguous ordinals")
+    }
+
+    @Test
+    fun `invalid TabItem parent produces error`() {
+        val result = CompilerTestHelper.compile(
+            TestSources.tabItemInvalidParent,
+            expectSuccess = false,
+        )
+        result.assertHasError("parent must reference a class annotated with @Tabs")
     }
 }

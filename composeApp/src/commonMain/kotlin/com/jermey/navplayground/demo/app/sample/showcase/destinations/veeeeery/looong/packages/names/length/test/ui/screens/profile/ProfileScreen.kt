@@ -82,7 +82,7 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 @Screen(ProfileTab::class)
 @Composable
 fun ProfileScreen(
-    destination: MainTabs.ProfileTab,
+    destination: ProfileTab,
     navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier,
     store: Store<ProfileState, ProfileIntent, ProfileAction> = rememberContainer(qualifier<ProfileContainer>())
@@ -183,7 +183,7 @@ fun ProfileScreen(
             sheetState = sheetState
         ) {
             NavigationBottomSheetContent(
-                currentRoute = if (destination == MainTabs.ProfileTab) "profile" else null,
+                currentRoute = if (destination == ProfileTab) "profile" else null,
                 onNavigate = { destination ->
                     navigator.navigate(destination)
                     scope.launch {

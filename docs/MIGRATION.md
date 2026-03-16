@@ -120,7 +120,50 @@ quoVadis {
 
 ### No Code Changes Required
 
-All navigation annotations (`@Stack`, `@Destination`, `@Screen`, `@Tabs`, `@TabItem`, `@Pane`, `@PaneItem`, `@Transition`, `@Argument`) remain exactly the same. No source code changes are needed.
+All navigation annotations (`@Stack`, `@Destination`, `@Screen`, `@Tabs`, `@TabItem`, `@Pane`, `@PaneItem`, `@Transition`, `@Argument`) remain exactly the same. No source code changes are needed when switching backends.
+
+### Tab Annotation Pattern Change
+
+> **Note:** This is independent of the KSP↔compiler backend migration. If you were previously using the old `@Tabs(name, initialTab, items=[...])` + marker `@TabItem` pattern, you need to migrate to the new child-to-parent pattern regardless of backend choice.
+
+**Before:**
+```kotlin
+@Tabs(name = "mainTabs", initialTab = HomeTab::class, items = [HomeTab::class, ProfileTab::class])
+sealed class MainTabs : NavDestination {
+    @TabItem
+    @Destination(route = "main/home")
+    data object HomeTab : MainTabs()
+
+    @TabItem
+    @Destination(route = "main/profile")
+    data object ProfileTab : MainTabs()
+}
+```
+
+**After:**
+```kotlin
+@Tabs(name = "mainTabs")
+class MainTabs : NavDestination {
+    companion object : NavDestination
+}
+
+@TabItem(parent = MainTabs::class, ordinal = 0)
+@Destination(route = "main/home")
+data object HomeTab : NavDestination
+
+@TabItem(parent = MainTabs::class, ordinal = 1)
+@Destination(route = "main/profile")
+data object ProfileTab : NavDestination
+```
+
+Key changes:
+- `@Tabs` only takes `name` — no `initialTab` or `items` parameters
+- `@TabItem` takes `parent` (KClass reference) and `ordinal` (Int position, 0-based)
+- `ordinal = 0` defines the initial tab
+- Ordinals must be contiguous starting from 0 (validated at compile time)
+- Tab items no longer need to be nested inside the `@Tabs` sealed class — cross-module tabs are supported naturally
+
+See [ANNOTATIONS.md](ANNOTATIONS.md#tabs-and-tabitem-annotations) for full details.
 
 ### Retention Level Changes
 

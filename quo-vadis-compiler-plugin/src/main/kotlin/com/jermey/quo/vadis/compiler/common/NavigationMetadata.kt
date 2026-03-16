@@ -63,7 +63,6 @@ enum class TransitionType {
 data class TabsMetadata(
     val name: String,
     val classId: ClassId,
-    val initialTab: ClassId? = null,
     val items: List<TabItemMetadata> = emptyList(),
     val allDestinationClassIds: List<ClassId> = emptyList(),
 )
@@ -71,10 +70,11 @@ data class TabsMetadata(
 data class TabItemMetadata(
     val classId: ClassId,
     val type: TabItemType,
+    val ordinal: Int,
 )
 
 enum class TabItemType {
-    NESTED_STACK, FLAT_SCREEN,
+    STACK, DESTINATION, TABS,
 }
 
 data class PaneMetadata(

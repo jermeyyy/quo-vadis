@@ -70,8 +70,9 @@ class IrMetadataCollector(private val modulePrefix: String) {
         val containerClassIds = mutableSetOf<ClassId>()
         val stackClassIds = mutableSetOf<ClassId>()
         val stackDestinationClassIdsByStack = mutableMapOf<ClassId, List<ClassId>>()
+        val tabItemsByParent = mutableMapOf<ClassId, MutableList<TabItemMetadata>>()
 
-        // Pass 1: Index classes and collect container metadata needed for later phases.
+        // Pass 1: Index classes, collect container metadata, and collect @TabItem annotations.
         visitClasses(moduleFragment) { irClass ->
             collectClassIndexAndContainerData(
                 irClass,
@@ -80,6 +81,7 @@ class IrMetadataCollector(private val modulePrefix: String) {
                 stackClassIds,
                 stackDestinationClassIdsByStack,
             )
+            collectTabItem(irClass, tabItemsByParent, stackClassIds)
         }
 
         // Pass 2: Collect stacks and their destinations.
@@ -87,12 +89,12 @@ class IrMetadataCollector(private val modulePrefix: String) {
             processStack(irClass, stacks, transitions, routableDestinations)
         }
 
-        // Pass 3: Collect tabs and add flat tab-item destinations.
+        // Pass 3: Collect tabs using child-to-parent @TabItem discovery.
         visitClasses(moduleFragment) { irClass ->
             processTabs(
                 irClass,
                 tabs,
-                stackClassIds,
+                tabItemsByParent,
                 stackDestinationClassIdsByStack,
                 classIndex,
                 transitions,
@@ -197,10 +199,35 @@ class IrMetadataCollector(private val modulePrefix: String) {
         )
     }
 
+    private fun collectTabItem(
+        irClass: IrClass,
+        tabItemsByParent: MutableMap<ClassId, MutableList<TabItemMetadata>>,
+        stackClassIds: Set<ClassId>,
+    ) {
+        val tabItemAnn = irClass.getAnnotation(TAB_ITEM_FQN) ?: return
+        val classId = irClass.classId ?: return
+        val parentClassId = tabItemAnn.getClassArgument(0) ?: return
+        val ordinal = tabItemAnn.getIntArgument(1) ?: return
+
+        val type = when {
+            irClass.hasAnnotation(TABS_FQN) -> TabItemType.TABS
+            irClass.hasAnnotation(STACK_FQN) || classId in stackClassIds -> TabItemType.STACK
+            else -> TabItemType.DESTINATION
+        }
+
+        tabItemsByParent.getOrPut(parentClassId) { mutableListOf() }.add(
+            TabItemMetadata(
+                classId = classId,
+                type = type,
+                ordinal = ordinal,
+            ),
+        )
+    }
+
     private fun processTabs(
         irClass: IrClass,
         tabs: MutableList<TabsMetadata>,
-        stackClassIds: Set<ClassId>,
+        tabItemsByParent: Map<ClassId, List<TabItemMetadata>>,
         stackDestinationClassIdsByStack: Map<ClassId, List<ClassId>>,
         classIndex: Map<ClassId, IrClass>,
         transitions: MutableMap<ClassId, TransitionMetadata>,
@@ -209,25 +236,20 @@ class IrMetadataCollector(private val modulePrefix: String) {
         val tabsAnn = irClass.getAnnotation(TABS_FQN) ?: return
         val classId = irClass.classId ?: return
         val name = tabsAnn.getStringArgument(0) ?: return
-        val initialTab = tabsAnn.getClassArgument(1)?.takeUnlessUnit()
-        val itemClasses = tabsAnn.getClassArrayArgument(2)
 
-        val items = itemClasses.map { itemClassId ->
-            TabItemMetadata(
-                classId = itemClassId,
-                type = if (itemClassId in stackClassIds) TabItemType.NESTED_STACK else TabItemType.FLAT_SCREEN,
-            )
-        }
+        val items = (tabItemsByParent[classId] ?: emptyList()).sortedBy { it.ordinal }
+
         val allDestinationClassIds = items.flatMap { item ->
             when (item.type) {
-                TabItemType.FLAT_SCREEN -> listOf(item.classId)
-                TabItemType.NESTED_STACK -> stackDestinationClassIdsByStack[item.classId].orEmpty()
+                TabItemType.DESTINATION -> listOf(item.classId)
+                TabItemType.STACK -> stackDestinationClassIdsByStack[item.classId].orEmpty()
                     .ifEmpty { listOf(item.classId) }
+                TabItemType.TABS -> emptyList()
             }
         }.distinct()
 
         items.asSequence()
-            .filter { it.type == TabItemType.FLAT_SCREEN }
+            .filter { it.type == TabItemType.DESTINATION }
             .mapNotNull { item -> classIndex[item.classId] }
             .forEach { itemClass ->
                 collectTransition(itemClass, transitions)
@@ -240,7 +262,6 @@ class IrMetadataCollector(private val modulePrefix: String) {
             TabsMetadata(
                 name = name,
                 classId = classId,
-                initialTab = initialTab,
                 items = items,
                 allDestinationClassIds = allDestinationClassIds,
             ),
@@ -498,6 +519,11 @@ class IrMetadataCollector(private val modulePrefix: String) {
     private fun IrConstructorCall.getBooleanArgument(index: Int): Boolean? {
         val arg = argumentAt(index) ?: return null
         return (arg as? IrConst)?.value as? Boolean
+    }
+
+    private fun IrConstructorCall.getIntArgument(index: Int): Int? {
+        val arg = argumentAt(index) ?: return null
+        return (arg as? IrConst)?.value as? Int
     }
 
     private fun IrConstructorCall.getClassArgument(index: Int): ClassId? {

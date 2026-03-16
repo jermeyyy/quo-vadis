@@ -90,7 +90,7 @@ object TestSources {
         import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
         import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
-        @TabItem
+        @TabItem(parent = MainTabs::class, ordinal = 0)
         @Stack(name = "homeTab", startDestination = HomeTab.Feed::class)
         sealed class HomeTab : NavDestination {
 
@@ -101,7 +101,7 @@ object TestSources {
             data class Article(@Argument val articleId: String) : HomeTab()
         }
 
-        @TabItem
+        @TabItem(parent = MainTabs::class, ordinal = 1)
         @Stack(name = "exploreTab", startDestination = ExploreTab.Discover::class)
         sealed class ExploreTab : NavDestination {
 
@@ -111,8 +111,6 @@ object TestSources {
 
         @Tabs(
             name = "mainTabs",
-            initialTab = HomeTab::class,
-            items = [HomeTab::class, ExploreTab::class]
         )
         object MainTabs
         """.trimIndent()
@@ -136,11 +134,11 @@ object TestSources {
         import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
         import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
-        @TabItem
+        @TabItem(parent = MixedTabs::class, ordinal = 0)
         @Destination(route = "overview")
         data object OverviewTab : NavDestination
 
-        @TabItem
+        @TabItem(parent = MixedTabs::class, ordinal = 1)
         @Stack(name = "settingsTab", startDestination = SettingsTab.Root::class)
         sealed class SettingsTab : NavDestination {
 
@@ -153,8 +151,6 @@ object TestSources {
 
         @Tabs(
             name = "mixedTabs",
-            initialTab = OverviewTab::class,
-            items = [OverviewTab::class, SettingsTab::class]
         )
         object MixedTabs
 
@@ -248,7 +244,7 @@ object TestSources {
 
         // -- Tabs --
 
-        @TabItem
+        @TabItem(parent = AppTabs::class, ordinal = 0)
         @Stack(name = "homeStack", startDestination = HomeDestinations.Feed::class)
         sealed class HomeDestinations : NavDestination {
 
@@ -260,7 +256,7 @@ object TestSources {
             data class Article(@Argument val articleId: String) : HomeDestinations()
         }
 
-        @TabItem
+        @TabItem(parent = AppTabs::class, ordinal = 1)
         @Stack(name = "settingsStack", startDestination = SettingsDestinations.Root::class)
         sealed class SettingsDestinations : NavDestination {
 
@@ -277,8 +273,6 @@ object TestSources {
 
         @Tabs(
             name = "appTabs",
-            initialTab = HomeDestinations::class,
-            items = [HomeDestinations::class, SettingsDestinations::class]
         )
         object AppTabs
 
@@ -502,7 +496,7 @@ object TestSources {
 
         import com.jermey.quo.vadis.annotations.Tabs
 
-        @Tabs(name = "emptyTabs", items = [])
+        @Tabs(name = "emptyTabs")
         object EmptyTabs
         """.trimIndent()
     )
@@ -613,7 +607,7 @@ object TestSources {
         import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
         import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
-        @TabItem
+        @TabItem(parent = ScopedTabs::class, ordinal = 0)
         @Stack(name = "profileTab", startDestination = ProfileTab.Overview::class)
         sealed class ProfileTab : NavDestination {
 
@@ -624,7 +618,7 @@ object TestSources {
             data class Edit(@Argument val field: String) : ProfileTab()
         }
 
-        @TabItem
+        @TabItem(parent = ScopedTabs::class, ordinal = 1)
         @Stack(name = "notificationsTab", startDestination = NotificationsTab.List::class)
         sealed class NotificationsTab : NavDestination {
 
@@ -637,8 +631,6 @@ object TestSources {
 
         @Tabs(
             name = "scopedTabs",
-            initialTab = ProfileTab::class,
-            items = [ProfileTab::class, NotificationsTab::class]
         )
         object ScopedTabs
 
@@ -959,8 +951,6 @@ object TestSources {
 
         @Tabs(
             name = "standaloneTabs",
-            initialTab = StandaloneHomeTab::class,
-            items = [StandaloneHomeTab::class]
         )
         sealed class StandaloneTabs : NavDestination {
 
@@ -973,7 +963,7 @@ object TestSources {
             data class Profile(@Argument val userId: String) : StandaloneTabs()
         }
 
-        @TabItem
+        @TabItem(parent = StandaloneTabs::class, ordinal = 0)
         @Stack(name = "standaloneHome", startDestination = StandaloneHomeTab.Home::class)
         sealed class StandaloneHomeTab : StandaloneTabs() {
 
@@ -1063,15 +1053,13 @@ object TestSources {
 
         @Tabs(
             name = "stateDrivenDemo",
-            initialTab = StateDrivenDemoTab::class,
-            items = [StateDrivenDemoTab::class]
         )
         sealed class StateDrivenDemoDestination : NavDestination {
 
             companion object : NavDestination
         }
 
-        @TabItem
+        @TabItem(parent = StateDrivenDemoDestination::class, ordinal = 0)
         @Stack(name = "stateDrivenStack", startDestination = StateDrivenDemoTab.Home::class)
         sealed class StateDrivenDemoTab : StateDrivenDemoDestination() {
 
@@ -1348,7 +1336,7 @@ object TestSources {
         import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
         import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
-        @TabItem
+        @TabItem(parent = MainTabs::class, ordinal = 0)
         @Stack(name = "homeTab", startDestination = HomeTab.Feed::class)
         sealed class HomeTab : NavDestination {
 
@@ -1358,8 +1346,6 @@ object TestSources {
 
         @Tabs(
             name = "mainTabs",
-            initialTab = HomeTab::class,
-            items = [HomeTab::class]
         )
         class MainTabs {
             companion object
@@ -1429,6 +1415,156 @@ object TestSources {
             content: @Composable () -> Unit
         ) {
             content()
+        }
+        """.trimIndent()
+    )
+
+    // endregion
+
+    // region TabItem Diagnostic Error Cases
+
+    /**
+     * Two @TabItem subclasses with the same ordinal = 0 under the same @Tabs parent.
+     * Should trigger TABITEM_DUPLICATE_ORDINAL.
+     */
+    val tabItemDuplicateOrdinal: SourceFile = SourceFile.kotlin(
+        "TabItemDuplicateOrdinal.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Stack
+        import com.jermey.quo.vadis.annotations.TabItem
+        import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Tabs(name = "dupOrdTabs")
+        sealed class DupOrdTabs : NavDestination {
+            companion object : NavDestination
+        }
+
+        @TabItem(parent = DupOrdTabs::class, ordinal = 0)
+        @Stack(name = "dupOrdTab1", startDestination = DupOrdTab1.Screen1::class)
+        sealed class DupOrdTab1 : DupOrdTabs() {
+            @Destination(route = "dup-ord/screen1")
+            data object Screen1 : DupOrdTab1()
+        }
+
+        @TabItem(parent = DupOrdTabs::class, ordinal = 0)
+        @Stack(name = "dupOrdTab2", startDestination = DupOrdTab2.Screen2::class)
+        sealed class DupOrdTab2 : DupOrdTabs() {
+            @Destination(route = "dup-ord/screen2")
+            data object Screen2 : DupOrdTab2()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * @TabItem ordinals start at 1 instead of 0.
+     * Should trigger TABITEM_MISSING_ORDINAL_ZERO.
+     */
+    val tabItemMissingOrdinalZero: SourceFile = SourceFile.kotlin(
+        "TabItemMissingOrdinalZero.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Stack
+        import com.jermey.quo.vadis.annotations.TabItem
+        import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Tabs(name = "noZeroTabs")
+        sealed class NoZeroTabs : NavDestination {
+            companion object : NavDestination
+        }
+
+        @TabItem(parent = NoZeroTabs::class, ordinal = 1)
+        @Stack(name = "noZeroTab1", startDestination = NoZeroTab1.Screen1::class)
+        sealed class NoZeroTab1 : NoZeroTabs() {
+            @Destination(route = "no-zero/screen1")
+            data object Screen1 : NoZeroTab1()
+        }
+
+        @TabItem(parent = NoZeroTabs::class, ordinal = 2)
+        @Stack(name = "noZeroTab2", startDestination = NoZeroTab2.Screen2::class)
+        sealed class NoZeroTab2 : NoZeroTabs() {
+            @Destination(route = "no-zero/screen2")
+            data object Screen2 : NoZeroTab2()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * @TabItem ordinals 0, 1, 3 — missing ordinal 2.
+     * Should trigger TABITEM_ORDINAL_GAP.
+     */
+    val tabItemOrdinalGap: SourceFile = SourceFile.kotlin(
+        "TabItemOrdinalGap.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Stack
+        import com.jermey.quo.vadis.annotations.TabItem
+        import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        @Tabs(name = "gapTabs")
+        sealed class GapTabs : NavDestination {
+            companion object : NavDestination
+        }
+
+        @TabItem(parent = GapTabs::class, ordinal = 0)
+        @Stack(name = "gapTab0", startDestination = GapTab0.Screen0::class)
+        sealed class GapTab0 : GapTabs() {
+            @Destination(route = "gap/screen0")
+            data object Screen0 : GapTab0()
+        }
+
+        @TabItem(parent = GapTabs::class, ordinal = 1)
+        @Stack(name = "gapTab1", startDestination = GapTab1.Screen1::class)
+        sealed class GapTab1 : GapTabs() {
+            @Destination(route = "gap/screen1")
+            data object Screen1 : GapTab1()
+        }
+
+        @TabItem(parent = GapTabs::class, ordinal = 3)
+        @Stack(name = "gapTab3", startDestination = GapTab3.Screen3::class)
+        sealed class GapTab3 : GapTabs() {
+            @Destination(route = "gap/screen3")
+            data object Screen3 : GapTab3()
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * @TabItem parent references a class not annotated with @Tabs.
+     * Should trigger TABITEM_INVALID_PARENT.
+     */
+    val tabItemInvalidParent: SourceFile = SourceFile.kotlin(
+        "TabItemInvalidParent.kt",
+        """
+        package test
+
+        import com.jermey.quo.vadis.annotations.Destination
+        import com.jermey.quo.vadis.annotations.Stack
+        import com.jermey.quo.vadis.annotations.TabItem
+        import com.jermey.quo.vadis.annotations.Tabs
+        import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+
+        class NotATabs
+
+        @Tabs(name = "parentRefTabs")
+        sealed class ParentRefTabs : NavDestination {
+            companion object : NavDestination
+        }
+
+        @TabItem(parent = NotATabs::class, ordinal = 0)
+        @Stack(name = "invalidParentTab", startDestination = InvalidParentTab.Screen1::class)
+        sealed class InvalidParentTab : ParentRefTabs() {
+            @Destination(route = "invalid-parent/screen1")
+            data object Screen1 : InvalidParentTab()
         }
         """.trimIndent()
     )
