@@ -12,7 +12,7 @@ class QuoVadisIrGenerationExtension(
 
     @Suppress("DEPRECATION", "DEPRECATION_ERROR")
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-        val collector = IrMetadataCollector(modulePrefix)
+        val collector = IrMetadataCollector(modulePrefix, pluginContext)
         val metadata = collector.collect(moduleFragment)
 
         val symbolResolver = SymbolResolver(pluginContext)

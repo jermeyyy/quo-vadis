@@ -31,6 +31,7 @@ import com.jermey.quo.vadis.compiler.fir.QuoVadisPredicates.TABS_FQN
 import com.jermey.quo.vadis.compiler.fir.QuoVadisPredicates.TAB_ITEM_FQN
 import com.jermey.quo.vadis.compiler.fir.QuoVadisPredicates.TRANSITION_FQN
 import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
@@ -55,7 +56,10 @@ import org.jetbrains.kotlin.name.FqName
  * and builds [NavigationMetadata] from annotated elements.
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
-class IrMetadataCollector(private val modulePrefix: String) {
+class IrMetadataCollector(
+    private val modulePrefix: String,
+    private val pluginContext: IrPluginContext? = null,
+) {
 
     fun collect(moduleFragment: IrModuleFragment): NavigationMetadata {
         val stacks = mutableListOf<StackMetadata>()
@@ -99,6 +103,46 @@ class IrMetadataCollector(private val modulePrefix: String) {
                 classIndex,
                 transitions,
                 routableDestinations,
+            )
+        }
+
+        // Pass 3b: Synthesize TabsMetadata for cross-module parent @Tabs classes.
+        // When @TabItem entries reference a parent @Tabs in a dependency, processTabs
+        // won't find it locally. Resolve the parent class from dependencies and create metadata.
+        val collectedTabParents = tabs.map { it.classId }.toSet()
+        for ((parentClassId, items) in tabItemsByParent) {
+            if (parentClassId in collectedTabParents) continue
+            val sortedItems = items.sortedBy { it.ordinal }
+            val parentClass = pluginContext?.referenceClass(parentClassId)?.owner ?: continue
+            val tabsAnn = parentClass.getAnnotation(TABS_FQN) ?: continue
+            val name = tabsAnn.getStringArgument(0) ?: continue
+
+            val allDestinationClassIds = sortedItems.flatMap { item ->
+                when (item.type) {
+                    TabItemType.DESTINATION -> listOf(item.classId)
+                    TabItemType.STACK -> stackDestinationClassIdsByStack[item.classId].orEmpty()
+                        .ifEmpty { listOf(item.classId) }
+                    TabItemType.TABS -> emptyList()
+                }
+            }.distinct()
+
+            sortedItems.asSequence()
+                .filter { it.type == TabItemType.DESTINATION }
+                .mapNotNull { item -> classIndex[item.classId] }
+                .forEach { itemClass ->
+                    collectTransition(itemClass, transitions)
+                    buildDestinationMetadata(itemClass)?.let { destination ->
+                        routableDestinations.putIfAbsent(destination.classId, destination)
+                    }
+                }
+
+            tabs.add(
+                TabsMetadata(
+                    name = name,
+                    classId = parentClassId,
+                    items = sortedItems,
+                    allDestinationClassIds = allDestinationClassIds,
+                ),
             )
         }
 

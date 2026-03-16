@@ -32,11 +32,6 @@ class NavigationModule {
 
     @Single
     fun navigationConfig(): NavigationConfig {
-        // use generated classes when using KSP codegen
-        // return ComposeAppNavigationConfig +
-        // Feature1NavigationConfig +
-        // Feature2NavigationConfig
-
         // use navigationConfig DSL function when using compiler plugin
         return navigationConfig<AppNavigation>()
     }
