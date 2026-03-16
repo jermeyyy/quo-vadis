@@ -38,7 +38,7 @@ import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.ksp.toClassName
 
 /**
- * Main generator for the unified navigation config file.
+ * Main generator for the unified `GeneratedNavigationConfig.kt` file.
  *
  * This generator orchestrates multiple sub-generators to produce a single
  * file that implements [com.jermey.quo.vadis.core.navigation.config.NavigationConfig] using the DSL-based approach.
@@ -53,7 +53,7 @@ import com.squareup.kotlinpoet.ksp.toClassName
  * ## Example Generated Output
  *
  * ```kotlin
- * object AppNavigationConfig : NavigationConfig {
+ * object GeneratedNavigationConfig : NavigationConfig {
  *
  *     private val config = navigationConfig {
  *         // SCREENS
@@ -157,7 +157,7 @@ class NavigationConfigGenerator(
     }
 
     /**
-     * Generates the unified navigation config file.
+     * Generates the unified GeneratedNavigationConfig.kt file.
      *
      * @param data All collected navigation data from extractors
      * @param originatingFiles Source files that triggered generation
@@ -184,7 +184,7 @@ class NavigationConfigGenerator(
     }
 
     /**
-     * Builds the complete FileSpec for the navigation config file.
+     * Builds the complete FileSpec for GeneratedNavigationConfig.kt.
      */
     private fun buildFileSpec(data: NavigationData): FileSpec {
         // Collect imports from sub-generators
@@ -283,7 +283,7 @@ class NavigationConfigGenerator(
     }
 
     /**
-     * Builds the main navigation config object.
+     * Builds the main GeneratedNavigationConfig object.
      *
      * Uses a hybrid approach:
      * - DSL for containers, scopes, transitions (no composable lambdas)
@@ -297,7 +297,6 @@ class NavigationConfigGenerator(
         
         return TypeSpec.objectBuilder(generatedObjectName)
             .addKdoc(StringTemplates.NAVIGATION_CONFIG_KDOC)
-            .addAnnotation(QuoVadisClassNames.GENERATED_CONFIG)
             .addSuperinterface(QuoVadisClassNames.NAVIGATION_CONFIG)
             .addProperty(buildBaseConfigProperty(data))
             .addProperty(buildScreenRegistryProperty(data.screens))

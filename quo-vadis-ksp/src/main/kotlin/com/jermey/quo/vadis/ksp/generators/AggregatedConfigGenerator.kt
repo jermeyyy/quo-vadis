@@ -11,7 +11,6 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
@@ -79,7 +78,6 @@ class AggregatedConfigGenerator(
                     .build()
             )
             .addType(buildAggregatedObject(rootClass, allConfigNames))
-            .addFunction(buildInitFunction())
             .build()
 
         fileSpec.writeTo(codeGenerator, aggregating = true, originatingFiles)
@@ -125,29 +123,6 @@ class AggregatedConfigGenerator(
             }
         }
         return builder.build()
-    }
-
-    /**
-     * Generates a top-level `initQuoVadisNavigation()` function that forces
-     * initialization of the aggregated config object, triggering its `init {}`
-     * block which registers into [NavigationConfigRegistry].
-     *
-     * This is required for the KSP backend because Kotlin objects are lazily
-     * initialized — the `init` block only runs when the object is first
-     * referenced. The compiler plugin backend doesn't need this because it
-     * rewrites `navigationConfig<T>()` call sites to reference the generated
-     * object directly.
-     */
-    private fun buildInitFunction(): FunSpec {
-        return FunSpec.builder("initQuoVadisNavigation")
-            .addKdoc(
-                "Initializes the Quo Vadis navigation configuration.\n\n" +
-                    "Must be called once before `navigationConfig<T>()` when using the KSP backend.\n" +
-                    "When using the compiler plugin backend, this call is a harmless no-op.\n" +
-                    "Safe to call multiple times; idempotent via object initialization semantics."
-            )
-            .addStatement("%L", aggregatedObjectName)
-            .build()
     }
 
     private fun fqnToClassName(fqn: String): ClassName {

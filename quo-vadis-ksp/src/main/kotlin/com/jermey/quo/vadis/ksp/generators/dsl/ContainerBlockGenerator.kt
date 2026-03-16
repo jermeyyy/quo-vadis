@@ -229,8 +229,10 @@ class ContainerBlockGenerator(
         val builder = CodeBlock.builder()
             .beginControlFlow("panes<%T>(scopeKey = %S)", containerClass, scopeKey)
 
-        // Always emit back behavior explicitly
-        builder.addStatement("backBehavior = PaneBackBehavior.%L", pane.backBehavior.name)
+        // Add back behavior if not default
+        if (pane.backBehavior != com.jermey.quo.vadis.ksp.models.PaneBackBehavior.PopUntilScaffoldValueChange) {
+            builder.addStatement("backBehavior = PaneBackBehavior.%L", pane.backBehavior.name)
+        }
 
         // Add initial pane if we have panes
         val primaryPane = pane.panes.find { it.role == PaneRole.PRIMARY }
