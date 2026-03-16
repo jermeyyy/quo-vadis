@@ -98,7 +98,7 @@ class QuoVadisPlugin : Plugin<Project> {
     ) {
         when (backend) {
             QuoVadisBackend.COMPILER -> {
-                if (extension.useLocalKsp.get()) {
+                if (extension.resolveUseLocalKsp(project)) {
                     throw GradleException(
                         "Quo Vadis compiler backend does not support useLocalKsp=true. " +
                             "Remove the KSP-only setting or switch backend = QuoVadisBackend.KSP."
@@ -127,7 +127,7 @@ class QuoVadisPlugin : Plugin<Project> {
 
     private fun configureKsp(project: Project, extension: QuoVadisExtension) {
         // Add KSP dependency
-        val kspDependency = if (extension.useLocalKsp.get()) {
+        val kspDependency = if (extension.resolveUseLocalKsp(project)) {
             project.dependencies.project(mapOf("path" to ":quo-vadis-ksp"))
         } else {
             "io.github.jermeyyy:quo-vadis-ksp:${BuildConfig.VERSION}"

@@ -63,6 +63,7 @@ enum class QuoVadisBackend {
 
 private const val BACKEND_PROPERTY = "quoVadis.backend"
 private const val DEPRECATED_COMPILER_ALIAS_PROPERTY = "quoVadis.useCompilerPlugin"
+private const val USE_LOCAL_KSP_PROPERTY = "quoVadis.useLocalKsp"
 
 internal fun QuoVadisExtension.resolveBackend(project: Project): QuoVadisBackend {
     val configuredBackend = backend.orNull
@@ -93,4 +94,14 @@ private fun parseCompilerPluginAlias(value: String): QuoVadisBackend = when (val
     else -> throw GradleException(
         "Invalid value '$value' for quoVadis.useCompilerPlugin. Expected true or false."
     )
+}
+
+internal fun QuoVadisExtension.resolveUseLocalKsp(project: Project): Boolean {
+    // Extension property takes precedence when explicitly set to true
+    if (useLocalKsp.orNull == true) return true
+
+    // Fall back to gradle property (ignoring convention default of false)
+    return project.providers.gradleProperty(USE_LOCAL_KSP_PROPERTY).orNull
+        ?.trim()?.lowercase()?.toBooleanStrictOrNull()
+        ?: false
 }
