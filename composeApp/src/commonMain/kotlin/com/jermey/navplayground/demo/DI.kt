@@ -7,6 +7,7 @@ import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.config.navigationConfig
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
+import com.jermey.quo.vadis.generated.initQuoVadisNavigation
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.KoinApplication
 import org.koin.core.annotation.Module
@@ -32,7 +33,10 @@ class NavigationModule {
 
     @Single
     fun navigationConfig(): NavigationConfig {
-        // use navigationConfig DSL function when using compiler plugin
+        // Required for KSP backend: forces the generated config object to initialize,
+        // registering itself into NavigationConfigRegistry. When using the compiler plugin
+        // backend this is a harmless no-op.
+        initQuoVadisNavigation()
         return navigationConfig<AppNavigation>()
     }
 
