@@ -263,6 +263,7 @@ class NavigationConfigIrGenerator(
     private fun collectRootClassIds(): Set<ClassId> {
         val rootClassIds = mutableSetOf<ClassId>()
         for (tab in metadata.tabs) {
+            if (tab.items.isEmpty()) continue // Cross-module tabs handled by consuming module
             rootClassIds.add(tab.classId)
         }
         for (pane in metadata.panes) {

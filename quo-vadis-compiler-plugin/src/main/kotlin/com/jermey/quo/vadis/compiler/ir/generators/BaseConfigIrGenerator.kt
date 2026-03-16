@@ -129,7 +129,9 @@ class BaseConfigIrGenerator(
             }
 
             // Register tabs after stacks so nested stack scopes remain the primary getScopeKey mapping.
+            // Skip @Tabs with zero items — cross-module tabs are handled by the consuming module.
             for (tab in metadata.tabs) {
+                if (tab.items.isEmpty()) continue
                 val containerClassRef = classReference(tab.classId)
                 val tabClassRefs = tab.items.map { classReference(it.classId) }
                 val tabClassesList = irCall(listOfVararg, listOfVararg.owner.returnType, listOf(kClassOutNavDest)).also {
