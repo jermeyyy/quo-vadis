@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-03-17
+
 ### ⚠️ Breaking Changes
 
 - **`@Tabs` annotation**: Removed `items` and `initialTab` parameters. `@Tabs` is now a pure declaration with only `name`. Tab structure is built from child `@TabItem` declarations.
