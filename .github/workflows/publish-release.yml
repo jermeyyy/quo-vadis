@@ -71,6 +71,7 @@ jobs:
           ./gradlew \
             publishAndReleaseToMavenCentral \
             --no-configuration-cache \
+            --no-parallel \
             --stacktrace
       
       - name: Publish Gradle Plugin to Maven Central
@@ -85,6 +86,7 @@ jobs:
           ../gradlew \
             publishAndReleaseToMavenCentral \
             --no-configuration-cache \
+            --no-parallel \
             --stacktrace
       
       - name: Create release summary
