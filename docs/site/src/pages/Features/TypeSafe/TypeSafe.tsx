@@ -85,8 +85,12 @@ fun NavigationAwareContent(navigator: Navigator) {
     }
 }`
 
-const treeNavigatorSetupCode = `val navigator = TreeNavigator(
-    config = GeneratedNavigationConfig,  // Combined config
+const treeNavigatorSetupCode = `val config = ComposeAppNavigationConfig +
+  Feature1NavigationConfig +
+  Feature2NavigationConfig
+
+val navigator = TreeNavigator(
+  config = config,
     initialState = config.buildNavNode(MainTabs::class, null)!!
 )`
 
@@ -251,7 +255,8 @@ export default function TypeSafe() {
       <section>
         <h2 id="multi-module-config">Multi-Module Configuration</h2>
         <p>
-          In multi-module projects, combine navigation configs from different features using the <code>+</code> operator:
+          In multi-module projects, combine navigation configs from different features using the <code>+</code> operator.
+          This explicit composition is the backend-neutral default:
         </p>
         <CodeBlock code={multiModuleConfigCode} language="kotlin" />
       </section>

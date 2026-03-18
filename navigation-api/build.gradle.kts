@@ -8,9 +8,9 @@ plugins {
     alias(libs.plugins.quoVadis)
 }
 
-// Quo Vadis KSP configuration (using local processor for development)
+// Quo Vadis configuration
 quoVadis {
-    useLocalKsp = true
+    modulePrefix = "NavigationApi"
 }
 
 kotlin {

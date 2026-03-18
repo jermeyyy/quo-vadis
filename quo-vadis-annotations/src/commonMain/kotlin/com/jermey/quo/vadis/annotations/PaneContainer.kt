@@ -118,7 +118,7 @@ import kotlin.reflect.KClass
  *
  * ## KSP Processing
  *
- * KSP generates entries in `GeneratedNavigationConfig.containerRegistry` mapping each pane class
+ * KSP generates entries in the generated NavigationConfig.containerRegistry mapping each pane class
  * to its container function. The registry is used by the hierarchical renderer
  * to resolve which container to use for each `PaneNode`.
  *

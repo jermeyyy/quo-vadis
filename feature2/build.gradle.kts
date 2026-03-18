@@ -9,11 +9,6 @@ plugins {
     alias(libs.plugins.quoVadis)
 }
 
-// Quo Vadis KSP configuration (using local processor for development)
-quoVadis {
-    useLocalKsp = true
-}
-
 kotlin {
 
     androidLibrary {

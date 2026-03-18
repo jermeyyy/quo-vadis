@@ -158,9 +158,11 @@ internal fun TabRenderer(
             // No additional animation needed here - parent handles cascade animation
             // Invoke the registered tabs container wrapper (KSP-generated or default)
             // The wrapper receives the scope and a content slot
-            // Use wrapperKey for registry lookup (class simple name), fallback to node.key
+            // Use the normalized scopeKey first to preserve KSP wrapper lookup semantics.
+            // wrapperKey remains as a compatibility fallback for nodes created before
+            // tabs wrapper normalization was aligned across generators.
             scope.containerRegistry.TabsContainer(
-                tabNodeKey = node.wrapperKey ?: node.key.value,
+                tabNodeKey = resolveTabContainerKey(node),
                 scope = updatedTabsContainerScope
             ) {
                 // Content slot: animate between tabs (within the wrapper)
@@ -186,6 +188,10 @@ internal fun TabRenderer(
             }
         }
     }
+}
+
+internal fun resolveTabContainerKey(node: TabNode): String {
+    return node.scopeKey?.value ?: node.wrapperKey ?: node.key.value
 }
 
 /**

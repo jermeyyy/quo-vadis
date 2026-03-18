@@ -23,6 +23,7 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
+        mavenLocal()
         google {
             mavenContent {
                 includeGroupAndSubgroups("androidx")
@@ -44,3 +45,6 @@ include(":quo-vadis-ksp")
 
 include(":feature1")
 include(":feature2")
+
+include(":quo-vadis-compiler-plugin")
+include(":quo-vadis-compiler-plugin-native")

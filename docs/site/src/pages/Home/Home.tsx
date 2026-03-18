@@ -90,7 +90,7 @@ export default function Home() {
 
           <div className={styles.featureCard}>
             <h4>Zero Boilerplate</h4>
-            <p>Use <code>@Stack</code>, <code>@Destination</code>, and <code>@Screen</code> annotations. KSP generates all navigation infrastructure automatically.</p>
+            <p>Use <code>@Stack</code>, <code>@Destination</code>, and <code>@Screen</code> annotations. KSP or the experimental compiler plugin can generate the navigation infrastructure automatically.</p>
           </div>
 
           <div className={styles.featureCard}>
@@ -140,14 +140,15 @@ export default function Home() {
         <h2>Get Started in 10 Minutes</h2>
         <p>
           Add Quo Vadis to your project with just a few lines of code. Copy the configuration below
-          and you'll have type-safe navigation running in minutes.
+          and you'll have type-safe navigation running in minutes. KSP is the stable recommendation
+          today, while the compiler plugin is available as an experimental alternative.
         </p>
         <CodeBlock code={versionCatalogConfig} language="bash" title="libs.versions.toml" />
         
         <div className={styles.callout}>
           <div>
             <strong>Pro Tip:</strong> Use the annotation-based API to write 70% less boilerplate code!
-            The KSP processor generates all navigation infrastructure automatically.
+            Start with KSP for the most stable setup, or see the <Link to="/features/compiler-plugin">Compiler Plugin (Experimental)</Link> page if you want to evaluate the newer backend.
           </div>
         </div>
       </section>
@@ -165,7 +166,7 @@ export default function Home() {
             <p>Use annotations to declare your navigation stack and destinations:</p>
             <CodeBlock code={stackDestinationBasic} language="kotlin" title="HomeDestination.kt" />
             <div className={styles.stepNote}>
-              <strong>What's Generated:</strong> KSP creates <code>NavigationConfig</code>, <code>ScreenRegistry</code>, and <code>DeepLinkHandler</code>
+              <strong>What's Generated:</strong> In annotation mode, KSP and the experimental compiler plugin both provide <code>NavigationConfig</code>, <code>ScreenRegistry</code>, and deep-link support.
             </div>
           </div>
 
@@ -190,8 +191,8 @@ export default function Home() {
         
         <div className={styles.calloutSuccess}>
           <div>
-            <strong>That's it!</strong> KSP generates all route registration, graph builders, and typed navigation extensions automatically. 
-            No manual wiring required.
+            <strong>That's it!</strong> Annotation-based setup handles route registration, graph builders, and typed navigation extensions automatically.
+            KSP is the stable default today, and the compiler plugin path remains experimental.
           </div>
         </div>
       </section>

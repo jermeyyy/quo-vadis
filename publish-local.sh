@@ -22,6 +22,17 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Publish Compiler Plugin to Maven Local
+echo "📤 Publishing Compiler Plugin to Maven Local..."
+./gradlew :quo-vadis-compiler-plugin:publishToMavenLocal :quo-vadis-compiler-plugin-native:publishToMavenLocal
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ FAILED! Publishing Compiler Plugin encountered an error"
+    echo "Check the logs above for details"
+    exit 1
+fi
+
 # Publish Gradle Plugin to Maven Local
 echo "📤 Publishing Gradle Plugin to Maven Local..."
 cd quo-vadis-gradle-plugin

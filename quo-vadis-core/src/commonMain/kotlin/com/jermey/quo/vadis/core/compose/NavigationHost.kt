@@ -417,7 +417,7 @@ fun NavigationHost(
  * ```kotlin
  * @Composable
  * fun App() {
- *     val navigator = rememberQuoVadisNavigator(MainTabs::class, GeneratedNavigationConfig)
+ *     val navigator = rememberQuoVadisNavigator(MainTabs::class, AppNavigationConfig)
  *
  *     // Config is now implicit - read from navigator
  *     NavigationHost(navigator)

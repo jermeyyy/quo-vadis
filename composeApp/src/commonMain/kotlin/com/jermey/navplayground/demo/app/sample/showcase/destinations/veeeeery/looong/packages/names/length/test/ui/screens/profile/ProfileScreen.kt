@@ -82,8 +82,10 @@ import pro.respawn.flowmvi.compose.dsl.subscribe
 @Screen(ProfileTab::class)
 @Composable
 fun ProfileScreen(
+    destination: ProfileTab,
     navigator: Navigator = koinInject(),
-    container: Store<ProfileState, ProfileIntent, ProfileAction> = rememberContainer(qualifier<ProfileContainer>())
+    modifier: Modifier = Modifier,
+    store: Store<ProfileState, ProfileIntent, ProfileAction> = rememberContainer(qualifier<ProfileContainer>())
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -91,7 +93,7 @@ fun ProfileScreen(
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
 
-    val state by container.subscribe { action ->
+    val state by store.subscribe { action ->
         scope.launch {
             when (action) {
                 is ProfileAction.ShowToast -> {
@@ -144,7 +146,7 @@ fun ProfileScreen(
                 },
                 actions = {
                     if ((state as? ProfileState.Content)?.isEditing ?: false) {
-                        IconButton(onClick = { container.intent(ProfileIntent.NavigateToSettings) }) {
+                        IconButton(onClick = { store.intent(ProfileIntent.NavigateToSettings) }) {
                             Icon(Icons.Default.Settings, "Settings")
                         }
                     }
@@ -154,7 +156,7 @@ fun ProfileScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .hazeSource(state = hazeState)
@@ -163,12 +165,12 @@ fun ProfileScreen(
                 is ProfileState.Loading -> LoadingContent()
                 is ProfileState.Content -> ProfileContent(
                     state = state as ProfileState.Content,
-                    onIntent = container::intent
+                    onIntent = store::intent
                 )
 
                 is ProfileState.Error -> ErrorContent(
                     message = (state as ProfileState.Error).message,
-                    onRetry = { container.intent(ProfileIntent.LoadProfile) }
+                    onRetry = { store.intent(ProfileIntent.LoadProfile) }
                 )
             }
         }
@@ -181,7 +183,7 @@ fun ProfileScreen(
             sheetState = sheetState
         ) {
             NavigationBottomSheetContent(
-                currentRoute = "profile",
+                currentRoute = if (destination == ProfileTab) "profile" else null,
                 onNavigate = { destination ->
                     navigator.navigate(destination)
                     scope.launch {

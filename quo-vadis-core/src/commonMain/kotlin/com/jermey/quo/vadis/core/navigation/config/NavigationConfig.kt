@@ -204,3 +204,28 @@ interface NavigationConfig {
         val Empty: NavigationConfig = EmptyNavigationConfig
     }
 }
+
+/**
+ * Returns the auto-discovered [NavigationConfig] aggregating all generated
+ * configurations from the dependency graph.
+ *
+ * The type parameter [T] must be a class annotated with
+ * [@NavigationRoot][com.jermey.quo.vadis.annotations.NavigationRoot].
+ *
+ * **Compiler plugin backend:** The call site is rewritten at compile time to
+ * reference the generated aggregated config object directly.
+ *
+ * **KSP backend:** The generated aggregated config registers itself into
+ * [NavigationConfigRegistry] during class loading; this function performs
+ * a runtime lookup.
+ *
+ * @throws IllegalStateException if no config is registered for [T]
+ */
+@OptIn(InternalQuoVadisApi::class)
+inline fun <reified T> navigationConfig(): NavigationConfig {
+    return NavigationConfigRegistry.get(T::class)
+        ?: error(
+            "navigationConfig<${T::class.simpleName}>() could not resolve a NavigationConfig. " +
+                "Ensure the Quo Vadis Gradle plugin is applied and either the compiler plugin or KSP backend is active."
+        )
+}

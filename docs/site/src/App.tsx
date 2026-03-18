@@ -17,6 +17,7 @@ import Transitions from '@pages/Features/Transitions/Transitions'
 import Testing from '@pages/Features/Testing/Testing'
 import Modular from '@pages/Features/Modular/Modular'
 import DSLConfig from '@pages/Features/DSLConfig/DSLConfig'
+import CompilerPlugin from '@pages/Features/CompilerPlugin/CompilerPlugin'
 import DIIntegration from '@pages/Features/DIIntegration/DIIntegration'
 import DIIntegrationCoreConcepts from '@pages/Features/DIIntegration/CoreConcepts/CoreConcepts'
 import DIIntegrationUsage from '@pages/Features/DIIntegration/Usage/Usage'
@@ -46,6 +47,7 @@ function App() {
               <Route path="/features/testing" element={<Testing />} />
               <Route path="/features/modular" element={<Modular />} />
               <Route path="/features/dsl-config" element={<DSLConfig />} />
+              <Route path="/features/compiler-plugin" element={<CompilerPlugin />} />
               <Route path="/features/di-integration" element={<DIIntegration />} />
               <Route path="/features/di-integration/core-concepts" element={<DIIntegrationCoreConcepts />} />
               <Route path="/features/di-integration/usage" element={<DIIntegrationUsage />} />

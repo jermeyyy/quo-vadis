@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.kotlinpoet.ksp)
     
     // Testing
+    testImplementation(gradleTestKit())
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlin.testJunit)
     testImplementation(libs.junit)

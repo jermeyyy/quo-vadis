@@ -71,7 +71,7 @@ import kotlin.reflect.KClass
  *
  * ```kotlin
  * val navigator = TreeNavigator(
- *     config = GeneratedNavigationConfig,
+ *     config = AppNavigationConfig,
  *     initialState = buildInitialState()
  * )
  *

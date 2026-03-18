@@ -154,8 +154,9 @@ val store = rememberSharedContainer<MainTabsContainer, ...>()
 Use `FakeNavigator` from `quo-vadis-core` for unit tests:
 
 ```kotlin
+val config = MyAppNavigationConfig // or navigationConfig<MyApp>()
 val navigator = TreeNavigator(
-    config = GeneratedNavigationConfig,
+    config = config,
     initialState = config.buildNavNode(HomeDestination::class, null)!!
 )
 navigator.navigate(HomeDestination.Article("123"))

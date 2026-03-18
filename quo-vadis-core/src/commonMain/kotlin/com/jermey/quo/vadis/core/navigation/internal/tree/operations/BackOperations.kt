@@ -259,12 +259,10 @@ object BackOperations {
         // In compact mode, use pane behavior (switch panes, pop within panes)
         return when (val result = popWithPaneBehavior(root)) {
             is PopResult.Popped -> BackResult.Handled(result.newState)
-            is PopResult.CannotPop, is PopResult.PaneEmpty -> {
+            is PopResult.CannotPop, is PopResult.PaneEmpty, is PopResult.RequiresScaffoldChange -> {
                 // Pane handling exhausted - pop entire PaneNode
                 popEntirePaneNode(root, paneNode)
             }
-
-            is PopResult.RequiresScaffoldChange -> BackResult.CannotHandle
         }
     }
 

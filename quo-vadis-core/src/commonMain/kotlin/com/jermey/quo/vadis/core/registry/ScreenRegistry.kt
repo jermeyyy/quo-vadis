@@ -37,4 +37,25 @@ interface ScreenRegistry {
      * @return true if a screen is registered for this destination
      */
     fun hasContent(destination: NavDestination): Boolean
+
+    companion object {
+        /**
+         * Empty registry that has no screen content registered.
+         *
+         * All lookups return false and [Content] is a no-op.
+         * This is the identity element when no screens are registered.
+         */
+        val Empty: ScreenRegistry = object : ScreenRegistry {
+            @Composable
+            override fun Content(
+                destination: NavDestination,
+                sharedTransitionScope: SharedTransitionScope?,
+                animatedVisibilityScope: AnimatedVisibilityScope?
+            ) {
+                // No screens registered — nothing to render
+            }
+
+            override fun hasContent(destination: NavDestination): Boolean = false
+        }
+    }
 }

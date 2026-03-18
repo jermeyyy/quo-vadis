@@ -709,39 +709,39 @@ AnimatedNavContent(
 
 ### Per-Destination Transitions
 
-From [MainTabs.kt](../composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/destinations/MainTabs.kt):
+From [MainTabs.kt](../composeApp/src/commonMain/kotlin/com/jermey/navplayground/demo/app/sample/showcase/destinations/veeeeery/looong/packages/names/length/test/destinations/MainTabs.kt):
 
 ```kotlin
-@Tabs(name = "mainTabs", initialTab = HomeTab::class, items = [...])
-sealed class MainTabs : NavDestination {
-
+// Tab container declared in navigation-api module
+@Tabs(name = "mainTabs")
+class MainTabs : NavDestination {
     companion object : NavDestination  // Wrapper key for @TabsContainer
+}
 
-    // Tab roots use Fade for instant switching
-    @TabItem
-    @Destination(route = "main/home")
+// Tab roots use Fade for instant switching
+@TabItem(parent = MainTabs::class, ordinal = 0)
+@Destination(route = "main/home")
+@Transition(type = TransitionType.Fade)
+data object HomeTab : NavDestination
+
+// Nested stack with different transitions
+@TabItem(parent = MainTabs::class, ordinal = 3)
+@Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
+@Transition(type = TransitionType.Fade)
+sealed class SettingsTab : NavDestination {
+
+    @Destination(route = "settings/main")
     @Transition(type = TransitionType.Fade)
-    data object HomeTab : MainTabs()
+    data object Main : SettingsTab()
 
-    // Nested stack with different transitions
-    @TabItem
-    @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
-    @Transition(type = TransitionType.Fade)
-    sealed class SettingsTab : MainTabs() {
-    
-        @Destination(route = "settings/main")
-        @Transition(type = TransitionType.Fade)
-        data object Main : SettingsTab()
-
-        // Detail screens use horizontal slide
-        @Destination(route = "settings/profile")
-        @Transition(type = TransitionType.SlideHorizontal)
-        data object Profile : SettingsTab()
-    }
+    // Detail screens use horizontal slide
+    @Destination(route = "settings/profile")
+    @Transition(type = TransitionType.SlideHorizontal)
+    data object Profile : SettingsTab()
 }
 ```
 
-> **Note:** `@TabItem` is a marker annotation with no properties. Tab customization (labels, icons) is done in the `@TabsContainer` wrapper using type-safe pattern matching.
+> **Note:** Each `@TabItem` declares its parent `@Tabs` container via `parent` and display position via `ordinal`. Tab customization (labels, icons) is done in the `@TabsContainer` wrapper using type-safe pattern matching.
 
 ### Shared Element Example
 

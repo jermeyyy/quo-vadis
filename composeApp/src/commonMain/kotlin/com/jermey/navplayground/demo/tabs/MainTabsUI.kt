@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.feature1.resultdemo.ResultDemoDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.HomeTab
@@ -42,6 +43,39 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+
+internal enum class MainTabKind {
+    Home,
+    Explore,
+    Profile,
+    Settings,
+    Unknown,
+}
+
+internal data class MainTabPresentation(
+    val label: String,
+    val icon: ImageVector,
+)
+
+internal fun resolveMainTabKind(tab: NavDestination): MainTabKind {
+    return when {
+        tab == HomeTab || tab is HomeTab -> MainTabKind.Home
+        tab == ExploreTab.Feed || tab is ExploreTab -> MainTabKind.Explore
+        tab == ProfileTab || tab is ProfileTab -> MainTabKind.Profile
+        tab == SettingsTab.Main || tab is SettingsTab -> MainTabKind.Settings
+        else -> MainTabKind.Unknown
+    }
+}
+
+private fun MainTabKind.toPresentation(): MainTabPresentation {
+    return when (this) {
+        MainTabKind.Home -> MainTabPresentation("Home", Icons.Default.Home)
+        MainTabKind.Explore -> MainTabPresentation("Explore", Icons.Default.Explore)
+        MainTabKind.Profile -> MainTabPresentation("Profile", Icons.Default.Person)
+        MainTabKind.Settings -> MainTabPresentation("Settings", Icons.Default.Settings)
+        MainTabKind.Unknown -> MainTabPresentation("Tab", Icons.Default.Circle)
+    }
+}
 
 /**
  * Tabs container wrapper for the main tabs with bottom navigation.
@@ -137,22 +171,15 @@ private fun GlassBottomNavigationBar(
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         tabs.forEachIndexed { index, tab ->
-            val (label, icon) = when (tab) {
-                is HomeTab -> "Home" to Icons.Default.Home
-                is ExploreTab -> "Explore" to Icons.Default.Explore
-                is ProfileTab -> "Profile" to Icons.Default.Person
-                is SettingsTab -> "Settings" to Icons.Default.Settings
-                is ResultDemoDestination -> "Results" to Icons.Default.Star
-                else -> "Tab" to Icons.Default.Circle
-            }
+            val presentation = resolveMainTabKind(tab).toPresentation()
             NavigationBarItem(
                 icon = {
                     Icon(
-                        imageVector = icon,
-                        contentDescription = label
+                        imageVector = presentation.icon,
+                        contentDescription = presentation.label
                     )
                 },
-                label = { Text(label) },
+                label = { Text(presentation.label) },
                 selected = activeTabIndex == index,
                 onClick = { onTabSelected(index) },
                 enabled = !isTransitioning // Disable during animations
@@ -181,22 +208,15 @@ private fun MainBottomNavigationBar(
 ) {
     NavigationBar(modifier = modifier) {
         tabs.forEachIndexed { index, tab ->
-            val (label, icon) = when (tab) {
-                is HomeTab -> "Home" to Icons.Default.Home
-                is ExploreTab -> "Explore" to Icons.Default.Explore
-                is ProfileTab -> "Profile" to Icons.Default.Person
-                is SettingsTab -> "Settings" to Icons.Default.Settings
-                is ResultDemoDestination -> "Results" to Icons.Default.Star
-                else -> "Tab" to Icons.Default.Circle
-            }
+            val presentation = resolveMainTabKind(tab).toPresentation()
             NavigationBarItem(
                 icon = {
                     Icon(
-                        imageVector = icon,
-                        contentDescription = label
+                        imageVector = presentation.icon,
+                        contentDescription = presentation.label
                     )
                 },
-                label = { Text(label) },
+                label = { Text(presentation.label) },
                 selected = activeTabIndex == index,
                 onClick = { onTabSelected(index) },
                 enabled = !isTransitioning // Disable during animations

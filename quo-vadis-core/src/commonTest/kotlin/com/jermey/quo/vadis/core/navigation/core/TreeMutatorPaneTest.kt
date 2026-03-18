@@ -489,7 +489,7 @@ class TreeMutatorPaneTest {
     }
 
     @Test
-    fun `popWithPaneBehavior with PopLatest returns Popped with empty stack when single item`() {
+    fun `popWithPaneBehavior with PopLatest returns PaneEmpty when single item`() {
         val panes = PaneNode(
             key = NodeKey("panes"),
             parentKey = null,

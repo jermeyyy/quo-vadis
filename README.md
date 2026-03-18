@@ -20,16 +20,17 @@
 Quo Vadis provides a powerful navigation solution with:
 
 1. **`quo-vadis-core`** - The navigation library (reusable, no external dependencies)
-2. **`quo-vadis-annotations`** - KSP annotations (`@Stack`, `@Destination`, `@Screen`, `@Tabs`, `@Pane`)
-3. **`quo-vadis-ksp`** - Code generator for zero-boilerplate navigation
-4. **`quo-vadis-gradle-plugin`** - Gradle plugin for simplified KSP configuration
-5. **`quo-vadis-core-flow-mvi`** - Optional FlowMVI integration
-6. **`composeApp`** - Demo application showcasing all navigation patterns
+2. **`quo-vadis-annotations`** - Annotation frontend API (`@Stack`, `@Destination`, `@Screen`, `@Tabs`, `@Pane`)
+3. **`quo-vadis-ksp`** - Stable annotation backend for zero-boilerplate navigation
+4. **`quo-vadis-compiler-plugin`** - Alternative annotation backend built on the Kotlin compiler
+5. **`quo-vadis-gradle-plugin`** - Gradle plugin for backend selection and simplified setup
+6. **`quo-vadis-core-flow-mvi`** - Optional FlowMVI integration
+7. **`composeApp`** - Demo application showcasing all navigation patterns
 
 ## ✨ Key Features
 
 - ✅ **NavNode Tree Architecture** - Hierarchical navigation state as a tree of nodes
-- ✅ **Annotation-based API** - KSP code generation for zero-boilerplate navigation
+- ✅ **Annotation-based API** - KSP and compiler-plugin code generation for zero-boilerplate navigation
 - ✅ **Type-Safe Navigation** - Compile-time safety with no string-based routing
 - ✅ **Multiple Container Types** - `@Stack`, `@Tabs`, and `@Pane` for different navigation patterns
 - ✅ **Type-Safe Arguments** - `@Argument` annotation with automatic deep link serialization
@@ -39,7 +40,7 @@ Quo Vadis provides a powerful navigation solution with:
 - ✅ **Tabbed Navigation** - Independent backstacks per tab with `@Tabs` + `@TabItem`
 - ✅ **Adaptive Layouts** - Multi-pane layouts with `@Pane` + `@PaneItem`
 - ✅ **Custom Transitions** - `@Transition` annotation with preset and custom animations
-- ✅ **Deep Link Support** - URI-based navigation with automatic parameter extraction
+- ✅ **Deep Link Support** - URI-based navigation with verified KSP/compiler-plugin parity for route resolution and argument extraction
 - ✅ **Hierarchical Rendering** - True parent-child composition with coordinated animations
 - ✅ **Navigation Results** - Type-safe result passing between screens
 - ✅ **DI Framework Support** - Easy integration with Koin, Kodein, etc.
@@ -58,9 +59,11 @@ NavPlayground/
 │       └── iosMain/             # iOS-specific features (swipe back)
 ├── quo-vadis-annotations/       # Annotation definitions
 │   └── src/commonMain/          # @Stack, @Destination, @Screen, @Tabs, @Pane, etc.
-├── quo-vadis-ksp/               # KSP code generator
+├── quo-vadis-ksp/               # Stable KSP backend
 │   └── src/main/                # Processor implementation
-├── quo-vadis-gradle-plugin/     # Gradle plugin for KSP configuration
+├── quo-vadis-compiler-plugin/   # Compiler-plugin backend
+│   └── src/main/                # Compiler plugin implementation
+├── quo-vadis-gradle-plugin/     # Gradle plugin for backend selection
 │   └── src/main/                # Plugin implementation
 ├── quo-vadis-core-flow-mvi/     # FlowMVI integration (optional)
 │   └── src/commonMain/          # NavigationContainer, SharedNavigationContainer
@@ -81,9 +84,17 @@ NavPlayground/
 
 Add the library to your Kotlin Multiplatform project:
 
-#### Option 1: Using Gradle Plugin (Recommended)
+Choose an annotation backend before wiring the project:
 
-The simplest way to set up Quo Vadis with KSP:
+- **KSP** is the stable/default recommendation for new projects.
+- **Compiler plugin** is an alternative backend with faster builds and better IDE support. Start with [docs/COMPILER-PLUGIN.md](docs/COMPILER-PLUGIN.md) before enabling it.
+- **DSL configuration** remains the manual, backend-independent option for projects that do not want annotation generation.
+
+If you already use KSP and want to trial the compiler plugin, use [docs/MIGRATION.md](docs/MIGRATION.md) for the cutover steps.
+
+#### Option 1: Using Gradle Plugin With KSP (Recommended)
+
+The simplest stable setup for annotation-based configuration uses the Gradle plugin with KSP:
 
 ```kotlin
 // settings.gradle.kts
@@ -119,12 +130,16 @@ quoVadis {
 ```
 
 The plugin automatically:
+- Uses the KSP backend by default
+- Supports opting into the compiler backend with `quoVadis.backend=compiler`
 - Configures KSP with the correct processor dependency
 - Sets up the module prefix for generated class names
 - Registers generated source directories
 - Configures proper task dependencies for KMP
 
-#### Option 2: Manual Configuration
+If you want to use the compiler plugin instead, follow [docs/COMPILER-PLUGIN.md](docs/COMPILER-PLUGIN.md). Do not enable both backends in the same module.
+
+#### Option 2: Manual KSP Configuration
 
 For more control, configure KSP manually:
 
@@ -238,7 +253,7 @@ fun ArticleScreen(destination: HomeDestination.Article, navigator: Navigator) {
 ```kotlin
 @Composable
 fun App() {
-    val config = GeneratedNavigationConfig
+    val config = MyAppNavigationConfig
     
     // Build the initial NavNode tree from your root destination
     val initialState = remember {
@@ -588,16 +603,17 @@ val mviModule = module {
 
 ## 🔌 Gradle Plugin
 
-The `quo-vadis-gradle-plugin` simplifies KSP configuration for Kotlin Multiplatform projects.
+The `quo-vadis-gradle-plugin` simplifies annotation-backend setup for Kotlin Multiplatform projects.
 
 ### Plugin Features
 
 | Feature | Description |
 |---------|-------------|
-| **Auto KSP Setup** | Configures `kspCommonMainMetadata` dependency automatically |
+| **Backend Selection** | Lets a module stay on KSP or opt into the compiler backend |
+| **Auto KSP Setup** | Configures `kspCommonMainMetadata` dependency automatically in KSP mode |
 | **Module Prefix** | Generates class names like `MyAppNavigationConfig` |
-| **Source Registration** | Registers generated source directories for KMP |
-| **Task Dependencies** | Ensures KSP runs before compilation |
+| **Source Registration** | Registers generated source directories for KMP in KSP mode |
+| **Task Dependencies** | Ensures KSP runs before compilation when KSP is active |
 
 ### Configuration Options
 
@@ -614,9 +630,16 @@ quoVadis {
 }
 ```
 
+Set the backend at the root build level:
+
+```properties
+# gradle.properties
+quoVadis.backend=ksp
+```
+
 ### Generated Classes
 
-The KSP processor generates these classes based on your module prefix:
+The selected annotation backend generates these classes based on your module prefix:
 
 | Generated Class | Purpose |
 |----------------|---------|
@@ -690,7 +713,7 @@ open iosApp/iosApp.xcodeproj
 ```kotlin
 @Test
 fun `navigate to details screen`() {
-    val config = GeneratedNavigationConfig
+    val config = MyAppNavigationConfig
     val initialState = config.buildNavNode(HomeDestination::class, null)!!
     // For testing, config can be passed or use defaults (NavigationConfig.Empty)
     val navigator = TreeNavigator(config = config, initialState = initialState)
@@ -704,10 +727,20 @@ fun `navigate to details screen`() {
 }
 ```
 
+For multi-module apps, compose module-level generated configs explicitly:
+
+```kotlin
+val config = ComposeAppNavigationConfig +
+    Feature1NavigationConfig +
+    Feature2NavigationConfig
+```
+
 ## 📚 Documentation
 
 - **Website**: [https://jermeyyy.github.io/quo-vadis/](https://jermeyyy.github.io/quo-vadis/)
 - **API Reference**: Auto-generated via Dokka
+- [Compiler Plugin Guide](docs/COMPILER-PLUGIN.md)
+- [Migration Companion: KSP ↔ Compiler Plugin](docs/MIGRATION.md)
 
 ```bash
 # Generate API docs
