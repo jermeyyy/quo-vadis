@@ -434,7 +434,9 @@ class NavigationConfigBuilder {
      * @param name The unique key identifying the container
      */
     fun modalContainer(name: String) {
-        modalContainers.add(name)
+        val trimmed = name.trim()
+        require(trimmed.isNotEmpty()) { "Modal container name must not be blank" }
+        modalContainers.add(trimmed)
     }
 
     /**

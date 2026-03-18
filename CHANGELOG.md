@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`@Modal` annotation**: Marker annotation for destinations and containers that should render as modal overlays. When the active child of a `StackNode` is marked modal, the library renders both the screen below and the modal on top in a `Box`.
-- **`ModalRegistry`**: Registry interface with `isModalDestination()` and `isModalContainer()` lookups, plus `Empty` companion, `DslModalRegistry`, and `CompositeModalRegistry` implementations.
+- **`ModalRegistry`**: Public registry interface with `isModalDestination()` and `isModalContainer()` lookups, plus `Empty` companion. Internal implementation details `DslModalRegistry` and `CompositeModalRegistry` are not part of the public API.
 - **DSL support**: `modal<D>()` and `modalContainer("name")` builder functions in `NavigationConfigBuilder`.
 - **`ModalContent` composable**: Internal dual-layer renderer for modal stack entries.
 - **`StackRenderer` modal awareness**: Detects modal children, walks back through the stack to find the non-modal base, and renders all layers.
