@@ -28,13 +28,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.background
@@ -48,10 +43,9 @@ import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.l
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MasterDetailDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MessagesPane
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProcessDestination
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.NavigationMenuDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.StateDrivenDemoDestination
-import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
 import com.jermey.navplayground.demo.ui.components.NavigationPatternCard
-import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
 import com.jermey.quo.vadis.annotations.Screen
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -60,7 +54,6 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
-import kotlinx.coroutines.launch
 import navplayground.composeapp.generated.resources.Res
 import navplayground.composeapp.generated.resources.logo
 import org.jetbrains.compose.resources.imageResource
@@ -76,9 +69,6 @@ fun HomeScreen(
     navigator: Navigator = koinInject(),
     modifier: Modifier = Modifier
 ) {
-    val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
     val hazeState = remember { HazeState() }
 
     val hazeStyle = HazeMaterials.ultraThin()
@@ -88,7 +78,7 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("Home") },
                 navigationIcon = {
-                    IconButton(onClick = { showBottomSheet = true }) {
+                    IconButton(onClick = { navigator.navigate(NavigationMenuDestination) }) {
                         Icon(Icons.Default.Menu, contentDescription = "Menu")
                     }
                 },
@@ -144,25 +134,6 @@ fun HomeScreen(
                 )
             }
         )
-    }
-
-    if (showBottomSheet) {
-        GlassBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            hazeState = hazeState,
-            sheetState = sheetState
-        ) {
-            NavigationBottomSheetContent(
-                currentRoute = "home",
-                onNavigate = { destination ->
-                    navigator.navigate(destination)
-                    scope.launch {
-                        sheetState.hide()
-                        showBottomSheet = false
-                    }
-                }
-            )
-        }
     }
 }
 

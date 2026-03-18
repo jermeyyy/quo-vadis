@@ -45,6 +45,15 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
  * directly to NavNodeRenderer, ensuring both entering and exiting screens
  * use the same scope for shared element transitions.
  *
+ * ## Modal Support
+ *
+ * When the active child is a modal destination (as determined by
+ * [com.jermey.quo.vadis.core.registry.ModalRegistry]), the renderer walks backwards
+ * through the stack to find the topmost non-modal child and renders all layers
+ * via [ModalContent] — the non-modal base as background with modal nodes stacked
+ * on top. If the modal is the only child in the stack, it renders normally
+ * without a background layer.
+ *
  * ## Example
  *
  * ```kotlin
@@ -81,6 +90,27 @@ internal fun StackRenderer(
     val activeChild = node.activeChild ?: return
     val previousActiveChild = previousNode?.activeChild
 
+    // Check if the active child should be presented modally
+    val modalRegistry = scope.modalRegistry
+    val isActiveModal = isNodeModal(activeChild, modalRegistry)
+
+    // Modal rendering: when active child is modal and there are children below,
+    // render with background layer visible beneath the modal
+    if (isActiveModal && node.children.size > 1) {
+        val baseIndex = findNonModalBaseIndex(node.children, modalRegistry)
+        val backgroundNode = node.children[baseIndex]
+        val previousBackgroundNode = previousNode?.children?.getOrNull(baseIndex)
+        val modalNodes = node.children.subList(baseIndex + 1, node.children.size)
+
+        ModalContent(
+            backgroundNode = backgroundNode,
+            previousBackgroundNode = previousBackgroundNode,
+            modalNodes = modalNodes,
+            scope = scope,
+        )
+        return
+    }
+
     // Detect navigation direction by comparing stack sizes
     // Back navigation occurs when the stack shrinks (pop operation)
     val isBackNavigation = detectBackNavigation(current = node, previous = previousNode)
@@ -103,6 +133,7 @@ internal fun StackRenderer(
         isBackNavigation = isBackNavigation,
         scope = scope,
         predictiveBackEnabled = predictiveBackEnabled,
+        isTargetModal = isActiveModal,
     ) { child ->
         // Recurse to render the active child
         NavNodeRenderer(

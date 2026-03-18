@@ -20,6 +20,7 @@ import com.jermey.quo.vadis.core.registry.RouteRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 import com.squareup.kotlinpoet.ClassName
 import kotlin.reflect.KClass
 
@@ -43,6 +44,7 @@ internal object QuoVadisClassNames {
     val SCOPE_KEY: ClassName = ScopeKey::class.toClassName()
     val SCOPE_REGISTRY: ClassName = ScopeRegistry::class.toClassName()
     val TRANSITION_REGISTRY: ClassName = TransitionRegistry::class.toClassName()
+    val MODAL_REGISTRY: ClassName = ModalRegistry::class.toClassName()
     val PANE_ROLE_REGISTRY: ClassName = PaneRoleRegistry::class.toClassName()
     
     // Deep linking classes

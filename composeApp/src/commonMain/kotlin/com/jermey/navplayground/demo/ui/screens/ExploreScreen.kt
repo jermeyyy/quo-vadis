@@ -64,7 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
-import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.NavigationMenuDestination
 import com.jermey.navplayground.demo.ui.components.explore.AnimatedSearchBar
 import com.jermey.navplayground.demo.ui.components.explore.CategoryChipsRow
 import com.jermey.navplayground.demo.ui.components.explore.ExploreEmptyState
@@ -72,7 +72,6 @@ import com.jermey.navplayground.demo.ui.components.explore.ExploreGrid
 import com.jermey.navplayground.demo.ui.components.explore.FilterSheet
 import com.jermey.navplayground.demo.ui.components.explore.QuickPreviewSheet
 import com.jermey.navplayground.demo.ui.components.explore.rememberStaggerAnimationState
-import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
 import com.jermey.navplayground.demo.ui.screens.explore.ExploreAction
 import com.jermey.navplayground.demo.ui.screens.explore.ExploreContainer
 import com.jermey.navplayground.demo.ui.screens.explore.ExploreIntent
@@ -137,9 +136,6 @@ fun ExploreScreen(
         }
     }
 
-    // Navigation bottom sheet
-    var showNavSheet by remember { mutableStateOf(false) }
-
     AnimatedContent(
         targetState = state,
         transitionSpec = {
@@ -196,8 +192,6 @@ fun ExploreScreen(
                     store = store,
                     navigator = navigator,
                     snackbarHostState = snackbarHostState,
-                    showNavSheet = showNavSheet,
-                    onShowNavSheet = { showNavSheet = it },
                     modifier = modifier
                 )
             }
@@ -308,8 +302,6 @@ private fun ExploreContent(
     store: Store<ExploreState, ExploreIntent, ExploreAction>,
     navigator: Navigator,
     snackbarHostState: SnackbarHostState,
-    showNavSheet: Boolean,
-    onShowNavSheet: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Separate haze state for top bar blur (grid content as source)
@@ -321,7 +313,6 @@ private fun ExploreContent(
         navigator = navigator,
         snackbarHostState = snackbarHostState,
         topBarHazeState = topBarHazeState,
-        onShowNavSheet = onShowNavSheet,
         modifier = modifier
     )
 
@@ -329,9 +320,7 @@ private fun ExploreContent(
         state = state,
         store = store,
         navigator = navigator,
-        hazeState = topBarHazeState,
-        showNavSheet = showNavSheet,
-        onShowNavSheet = onShowNavSheet
+        hazeState = topBarHazeState
     )
 }
 
@@ -346,7 +335,6 @@ private fun ExploreScaffold(
     navigator: Navigator,
     snackbarHostState: SnackbarHostState,
     topBarHazeState: HazeState,
-    onShowNavSheet: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val gridState = rememberLazyGridState()
@@ -364,7 +352,7 @@ private fun ExploreScaffold(
                 store = store,
                 hazeState = topBarHazeState,
                 scrollBehavior = scrollBehavior,
-                onShowNavSheet = onShowNavSheet
+                navigator = navigator
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -404,7 +392,7 @@ private fun ExploreTopBar(
     store: Store<ExploreState, ExploreIntent, ExploreAction>,
     hazeState: HazeState,
     scrollBehavior: TopAppBarScrollBehavior,
-    onShowNavSheet: (Boolean) -> Unit,
+    navigator: Navigator,
     modifier: Modifier = Modifier
 ) {
     val hazeStyle = HazeMaterials.ultraThin()
@@ -419,7 +407,7 @@ private fun ExploreTopBar(
         TopAppBar(
             title = { Text("Explore") },
             navigationIcon = {
-                IconButton(onClick = { onShowNavSheet(true) }) {
+                IconButton(onClick = { navigator.navigate(NavigationMenuDestination) }) {
                     Icon(Icons.Default.Menu, contentDescription = "Menu")
                 }
             },
@@ -521,9 +509,7 @@ private fun ExploreBottomSheets(
     state: ExploreState.Content,
     store: Store<ExploreState, ExploreIntent, ExploreAction>,
     navigator: Navigator,
-    hazeState: HazeState,
-    showNavSheet: Boolean,
-    onShowNavSheet: (Boolean) -> Unit
+    hazeState: HazeState
 ) {
     QuickPreviewSheet(
         item = state.previewItem,
@@ -550,20 +536,5 @@ private fun ExploreBottomSheets(
             onDismiss = { store.intent(ExploreIntent.ToggleFilterSheet) },
             hazeState = hazeState
         )
-    }
-
-    if (showNavSheet) {
-        GlassBottomSheet(
-            onDismissRequest = { onShowNavSheet(false) },
-            hazeState = hazeState
-        ) {
-            NavigationBottomSheetContent(
-                currentRoute = "explore",
-                onNavigate = { destination ->
-                    navigator.navigate(destination)
-                    onShowNavSheet(false)
-                }
-            )
-        }
     }
 }

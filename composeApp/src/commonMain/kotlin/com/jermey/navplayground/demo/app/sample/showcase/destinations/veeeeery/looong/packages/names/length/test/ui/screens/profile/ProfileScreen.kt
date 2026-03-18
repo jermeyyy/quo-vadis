@@ -41,21 +41,17 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.NavigationMenuDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProfileTab
-import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
-import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.flowmvi.rememberContainer
@@ -88,8 +84,6 @@ fun ProfileScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val hazeState = remember { HazeState() }
-    val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet by remember { mutableStateOf(false) }
 
     val state by container.subscribe { action ->
         scope.launch {
@@ -138,7 +132,7 @@ fun ProfileScreen(
             TopAppBar(
                 title = { Text("Profile") },
                 navigationIcon = {
-                    IconButton(onClick = { showBottomSheet = true }) {
+                    IconButton(onClick = { navigator.navigate(NavigationMenuDestination) }) {
                         Icon(Icons.Default.Menu, contentDescription = "Menu")
                     }
                 },
@@ -174,24 +168,6 @@ fun ProfileScreen(
         }
     }
 
-    if (showBottomSheet) {
-        GlassBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            hazeState = hazeState,
-            sheetState = sheetState
-        ) {
-            NavigationBottomSheetContent(
-                currentRoute = "profile",
-                onNavigate = { destination ->
-                    navigator.navigate(destination)
-                    scope.launch {
-                        sheetState.hide()
-                        showBottomSheet = false
-                    }
-                }
-            )
-        }
-    }
 }
 
 @Composable

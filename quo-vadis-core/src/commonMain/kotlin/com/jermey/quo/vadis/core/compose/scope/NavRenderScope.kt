@@ -17,6 +17,7 @@ import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
 
 /**
@@ -188,6 +189,18 @@ interface NavRenderScope {
      * @see ContainerRegistry
      */
     val containerRegistry: ContainerRegistry
+
+    /**
+     * Registry for determining modal presentation semantics.
+     *
+     * The modal registry indicates which destinations or containers should
+     * be presented modally (e.g., bottom sheets, dialogs, full-screen overlays).
+     * When a destination is modal, the rendering system keeps the background
+     * content visible beneath the modal layer.
+     *
+     * @see ModalRegistry
+     */
+    val modalRegistry: ModalRegistry
 
     /**
      * Shared transition scope for coordinating shared element animations.

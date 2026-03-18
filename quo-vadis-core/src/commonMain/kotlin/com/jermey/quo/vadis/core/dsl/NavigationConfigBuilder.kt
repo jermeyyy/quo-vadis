@@ -89,6 +89,17 @@ class NavigationConfigBuilder {
     internal val transitions: MutableMap<KClass<out NavDestination>, NavTransition> = mutableMapOf()
 
     /**
+     * Destination classes marked as modal.
+     */
+    @PublishedApi
+    internal val modalDestinations: MutableSet<KClass<out NavDestination>> = mutableSetOf()
+
+    /**
+     * Container keys marked as modal.
+     */
+    internal val modalContainers: MutableSet<String> = mutableSetOf()
+
+    /**
      * Custom tabs container wrapper composables indexed by wrapper key.
      */
     internal val tabsContainers: MutableMap<
@@ -388,6 +399,45 @@ class NavigationConfigBuilder {
     }
 
     /**
+     * Marks a destination type as modal.
+     *
+     * Modal destinations are presented with modal presentation semantics
+     * (e.g., bottom sheet, dialog, or full-screen overlay) rather than
+     * standard push navigation.
+     *
+     * ## Example
+     *
+     * ```kotlin
+     * modal<ConfirmDialog>()
+     * modal<PhotoPicker>()
+     * ```
+     *
+     * @param D The destination type to mark as modal
+     */
+    inline fun <reified D : NavDestination> modal() {
+        modalDestinations.add(D::class)
+    }
+
+    /**
+     * Marks a container as modal by its key.
+     *
+     * Modal containers present their content with modal presentation
+     * semantics.
+     *
+     * ## Example
+     *
+     * ```kotlin
+     * modalContainer("bottom-sheet")
+     * modalContainer("dialog-container")
+     * ```
+     *
+     * @param name The unique key identifying the container
+     */
+    fun modalContainer(name: String) {
+        modalContainers.add(name)
+    }
+
+    /**
      * Builds the final [NavigationConfig] from this builder's configuration.
      *
      * Creates a [DslNavigationConfig] that converts all collected builder data
@@ -402,7 +452,9 @@ class NavigationConfigBuilder {
             scopes = scopes.mapValues { it.value.toSet() },
             transitions = transitions.toMap(),
             tabsContainers = tabsContainers.toMap(),
-            paneContainers = paneContainers.toMap()
+            paneContainers = paneContainers.toMap(),
+            modalDestinations = modalDestinations.toSet(),
+            modalContainers = modalContainers.toSet()
         )
     }
 }

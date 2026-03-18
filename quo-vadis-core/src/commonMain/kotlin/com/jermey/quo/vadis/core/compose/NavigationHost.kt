@@ -52,6 +52,7 @@ import com.jermey.quo.vadis.core.navigation.node.activeLeaf
 import com.jermey.quo.vadis.core.registry.BackHandlerRegistry
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.registry.LocalBackHandlerRegistry
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.registry.TransitionRegistry
@@ -188,6 +189,7 @@ fun NavigationHost(
     containerRegistry: ContainerRegistry = ContainerRegistry.Empty,
     transitionRegistry: TransitionRegistry = TransitionRegistry.Empty,
     scopeRegistry: ScopeRegistry = ScopeRegistry.Empty,
+    modalRegistry: ModalRegistry = ModalRegistry.Empty,
     enablePredictiveBack: Boolean = true,
     windowSizeClass: WindowSizeClass? = null
 ) {
@@ -370,6 +372,7 @@ fun NavigationHost(
                 predictiveBackController,
                 screenRegistry,
                 containerRegistry,
+                modalRegistry,
             ) {
                 NavRenderScopeImpl(
                     navigator = navigator,
@@ -379,6 +382,7 @@ fun NavigationHost(
                     predictiveBackController = predictiveBackController,
                     screenRegistry = screenRegistry,
                     containerRegistry = containerRegistry,
+                    modalRegistry = modalRegistry,
                     sharedTransitionScope = this,
                 )
             }
@@ -466,6 +470,7 @@ fun NavigationHost(
         containerRegistry = config.containerRegistry,
         transitionRegistry = config.transitionRegistry,
         scopeRegistry = config.scopeRegistry,
+        modalRegistry = config.modalRegistry,
         enablePredictiveBack = enablePredictiveBack,
         windowSizeClass = windowSizeClass
     )
@@ -485,6 +490,7 @@ fun NavigationHost(
  * - Animation coordination via [animationCoordinator]
  * - Predictive back handling via [predictiveBackController]
  * - Content resolution via [screenRegistry] and [containerRegistry]
+ * - Modal presentation via [modalRegistry]
  * - Shared element support via [sharedTransitionScope]
  *
  * @property navigator Navigator instance for navigation operations
@@ -494,6 +500,7 @@ fun NavigationHost(
  * @property predictiveBackController Controller for predictive back gestures
  * @property screenRegistry Registry for screen content lookup
  * @property containerRegistry Registry for container and wrapper lookup
+ * @property modalRegistry Registry for modal presentation lookup
  * @property sharedTransitionScope Scope for shared element transitions
  * @property predictiveBackMode Mode for predictive back gesture handling
  */
@@ -506,6 +513,7 @@ private class NavRenderScopeImpl(
     override val predictiveBackController: PredictiveBackController,
     override val screenRegistry: ScreenRegistry,
     override val containerRegistry: ContainerRegistry,
+    override val modalRegistry: ModalRegistry,
     override val sharedTransitionScope: SharedTransitionScope?,
 ) : NavRenderScope {
 
