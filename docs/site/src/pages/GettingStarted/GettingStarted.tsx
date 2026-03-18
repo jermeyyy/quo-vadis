@@ -135,19 +135,19 @@ export default function GettingStarted() {
         </p>
         <ul>
           <li>
-            <a href="/features/annotation-api">Annotation API</a> — Full reference for all annotations
+            <Link to="/features/annotation-api">Annotation API</Link> — Full reference for all annotations
             including <code>@Tabs</code>, <code>@Pane</code>, and more
           </li>
           <li>
-            <a href="/features/tabbed-navigation">Tabbed Navigation</a> — Set up tab-based navigation
+            <Link to="/features/tabbed-navigation">Tabbed Navigation</Link> — Set up tab-based navigation
             with independent backstacks
           </li>
           <li>
-            <a href="/features/transitions">Transitions</a> — Add custom animations and shared element
+            <Link to="/features/transitions">Transitions</Link> — Add custom animations and shared element
             transitions
           </li>
           <li>
-            <a href="/features/di-integration">FlowMVI & Koin Integration</a> — Integrate MVI state
+            <Link to="/features/di-integration">FlowMVI & Koin Integration</Link> — Integrate MVI state
             management with navigation-scoped containers
           </li>
         </ul>

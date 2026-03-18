@@ -638,7 +638,7 @@ export const treeStructureExample = `StackNode (root)
 │   │   └── ScreenNode (Detail)
 │   └── StackNode (ProfileTab)
 │       └── ScreenNode (Profile)
-├── ScreenNode (Menu @Modal)        ← draw-behind rendering
+├── ScreenNode (Menu @Modal)
 └── PaneNode (adaptive layout)
     ├── StackNode (primary)
     └── StackNode (detail)`;
@@ -840,7 +840,7 @@ export const modalDSLConfig = `val config = navigationConfig {
     modalContainer("overlayTabs")
 
     // Transitions
-    transition<NavigationMenuDestination>(NavigationTransition.SlideVertical)
+    transition<NavigationMenuDestination>(NavTransition.SlideVertical)
 }`;
 
 /**

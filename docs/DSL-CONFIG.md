@@ -594,8 +594,8 @@ val config = navigationConfig {
     modalContainer("overlayTabs")
 
     // Transitions
-    transition<HomeDestination.Feed>(NavigationTransition.SlideHorizontal)
-    transition<NavigationMenuDestination>(NavigationTransition.SlideVertical)
+    transition<HomeDestination.Feed>(NavTransition.SlideHorizontal)
+    transition<NavigationMenuDestination>(NavTransition.SlideVertical)
 }
 ```
 

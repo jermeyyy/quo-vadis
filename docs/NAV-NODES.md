@@ -61,7 +61,7 @@ StackNode (root)
 > not by the node type.
 
 Example with modal:
-```
+```text
 StackNode (root)
 ├── TabNode (MainTabs)
 │   └── StackNode (HomeTab)
@@ -200,7 +200,7 @@ modalRegistry.isModalContainer(node.key)
 
 When a modal child is detected, `ModalContent` renders layers in a `Box`:
 
-```
+```kotlin
 Box {
     // Layer 1: Background — the node below the modal in the stack
     NavNodeRenderer(backgroundNode)
@@ -220,7 +220,7 @@ When multiple consecutive modal nodes are on the stack, `StackRenderer` walks ba
 through `node.children` to find the first non-modal node (`findNonModalBaseIndex`), 
 then renders all layers from that base to the top:
 
-```
+```text
 // Stack: [Home, ModalA, ModalB]
 // findNonModalBaseIndex → 0 (Home)
 // Renders: Home (base) → ModalA (layer) → ModalB (layer)

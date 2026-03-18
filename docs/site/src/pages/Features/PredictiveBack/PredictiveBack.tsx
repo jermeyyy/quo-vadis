@@ -272,9 +272,9 @@ export default function PredictiveBack() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/transitions">Transitions & Animations</a> - Transition types and customization</li>
-          <li><a href="/features/stack-management">Stack Management</a> - NavNode tree operations</li>
-          <li><a href="/demo">See the demo</a> with predictive back in action</li>
+          <li><Link to="/features/transitions">Transitions & Animations</Link> - Transition types and customization</li>
+          <li><Link to="/features/stack-management">Stack Management</Link> - NavNode tree operations</li>
+          <li><Link to="/demo">See the demo</Link> with predictive back in action</li>
         </ul>
       </section>
     </article>

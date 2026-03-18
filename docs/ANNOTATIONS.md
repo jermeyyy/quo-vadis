@@ -957,7 +957,7 @@ Multiple modal destinations can be stacked. The library walks backwards through
 the stack to find the first non-modal node, then renders all layers from that base 
 to the top:
 
-```
+```text
 StackNode
 ├── ScreenNode (Home)          ← background (rendered)
 ├── ScreenNode (ModalA @Modal) ← middle layer (rendered)

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import {
   modalAnnotationBasic,
@@ -309,9 +310,9 @@ export default function ModalNavigation() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/annotation-api#modal-annotation">@Modal Annotation Reference</a></li>
-          <li><a href="/features/dsl-config#modal-registry">Modal DSL Configuration</a></li>
-          <li><a href="/features/transitions#modal-transitions">Modal Transitions</a></li>
+          <li><Link to="/features/annotation-api#modal-annotation">@Modal Annotation Reference</Link></li>
+          <li><Link to="/features/dsl-config#modal-registry">Modal DSL Configuration</Link></li>
+          <li><Link to="/features/transitions#modal-transitions">Modal Transitions</Link></li>
         </ul>
       </section>
     </article>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
@@ -219,7 +220,7 @@ export default function Modular() {
           and an <code>ordinal</code> (0-based display position, where <code>ordinal = 0</code> is the initial tab).
           Since tab items are spread across modules, ordinal continuity validation is
           skipped at compile time for cross-module tabs.
-          See <a href="/features/tabbed-navigation">Tabbed Navigation</a> for full details
+          See <Link to="/features/tabbed-navigation">Tabbed Navigation</Link> for full details
           on the <code>@Tabs</code> / <code>@TabItem</code> API.
         </p>
       </section>
@@ -285,9 +286,9 @@ export default function Modular() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/di-integration">DI Integration</a> - Set up dependency injection with navigation</li>
-          <li><a href="/features/deep-linking">Deep Linking</a> - Add URL-based navigation</li>
-          <li><a href="/demo">See the demo</a> with modular structure</li>
+          <li><Link to="/features/di-integration">DI Integration</Link> - Set up dependency injection with navigation</li>
+          <li><Link to="/features/deep-linking">Deep Linking</Link> - Add URL-based navigation</li>
+          <li><Link to="/demo">See the demo</Link> with modular structure</li>
         </ul>
       </section>
     </article>
