@@ -23,6 +23,7 @@ The KSP processor generates:
 | `DeepLinkHandler` | Route pattern matching and destination instantiation |
 | `ScreenRegistry` | Mapping of destination classes to composable renderers |
 | `ContainerRegistry` | Mapping of tab/pane containers to wrapper composables |
+| `ModalRegistry` | Mappings from destinations/containers to modal rendering behavior |
 
 ### Setup Requirements
 
@@ -866,6 +867,122 @@ data class Detail(@Argument val itemId: String) : MasterDetailDestination()
 
 ---
 
+## @Modal Annotation
+
+### Purpose
+
+Marks a destination or container for draw-behind rendering. When a modal-flagged node is the 
+active child of a `StackNode`, the library renders both the screen below AND the modal on top 
+in a `Box` layout. The user composable controls all visual treatment (scrim, bottom sheet, 
+dialog, glass effect, etc.) — the library provides no chrome or dismiss behavior.
+
+### Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| *(none)* | — | — | Marker annotation — no parameters |
+
+### Target
+
+`@Modal` must appear alongside one of:
+- `@Destination` — makes a single destination render modally
+- `@Tabs` — makes a tab container render modally when pushed on a stack
+- `@Stack` — makes a nested stack render modally
+- `@Pane` — makes a pane container render modally
+
+### Examples
+
+**Example 1: Modal Destination**
+```kotlin
+@Modal
+@Destination(route = "navigation_menu")
+data object NavigationMenuDestination : NavDestination
+
+@Screen(NavigationMenuDestination::class)
+@Composable
+fun NavigationMenuScreen(navigator: Navigator = koinInject()) {
+    GlassBottomSheet(
+        onDismissRequest = { navigator.navigateBack() },
+    ) {
+        // Menu content — user controls all presentation
+    }
+}
+```
+
+**Example 2: Modal Container (Tabs pushed on stack)**
+```kotlin
+@Modal
+@Tabs(name = "overlayTabs")
+sealed class OverlayTabs : NavDestination {
+    companion object : NavDestination
+
+    @TabItem(OverlayTabs::class, ordinal = 0)
+    @Destination(route = "overlay/info")
+    data object InfoTab : OverlayTabs()
+
+    @TabItem(OverlayTabs::class, ordinal = 1)
+    @Destination(route = "overlay/actions")
+    data object ActionsTab : OverlayTabs()
+}
+```
+
+**Example 3: Combining @Modal with @Transition**
+```kotlin
+@Modal
+@Transition(type = TransitionType.SlideVertical)
+@Destination(route = "settings_sheet")
+data object SettingsSheet : HomeDestination()
+```
+
+### How It Works
+
+- `@Modal` causes the KSP code generator to emit `modal<DestinationType>()` or `modalContainer("name")` 
+  in the generated `NavigationConfig`
+- At runtime, `StackRenderer` checks `ModalRegistry.isModalDestination()` / `isModalContainer()` 
+  for the active child node
+- If modal: renders background node + modal node in a `Box` via `ModalContent` composable
+- If not modal: standard `AnimatedNavContent` behavior with transitions
+
+### Dismissal
+
+Modal destinations are regular stack entries. Dismiss by calling:
+```kotlin
+navigator.navigateBack()
+```
+Predictive back gestures (Android 13+ swipe, iOS swipe-back) work normally.
+
+### Nested Modals
+
+Multiple modal destinations can be stacked. The library walks backwards through 
+the stack to find the first non-modal node, then renders all layers from that base 
+to the top:
+
+```
+StackNode
+├── ScreenNode (Home)          ← background (rendered)
+├── ScreenNode (ModalA @Modal) ← middle layer (rendered)
+└── ScreenNode (ModalB @Modal) ← top layer (rendered)
+```
+
+### Cross-Module Usage
+
+Feature modules can use `@Modal` on their destinations independently. The generated 
+`ModalRegistry` from each module is composed via `CompositeModalRegistry` when configs 
+are combined with `+`.
+
+### Validation Rules
+
+| Rule | Severity | Example Message |
+|------|----------|------------------|
+| Must co-exist with qualifying annotation | Error | `@Modal on 'InvalidModal' requires @Destination, @Tabs, @Stack, or @Pane in file 'Invalid.kt' (line 5). Fix: Add one of @Destination, @Tabs, @Stack, or @Pane` |
+
+### MVI Integration
+
+Modal screens work identically with `NavigationContainer` and `rememberContainer()`. 
+No special MVI support is needed — the container lifecycle follows normal stack behavior.
+
+---
+
 ## Generated Code
 
 ### What Gets Generated
@@ -876,6 +993,7 @@ For each annotated navigation structure, KSP generates:
 2. **Screen registry entries** — Mappings from destination classes to composables
 3. **Container registry entries** — Mappings from containers to wrappers
 4. **Deep link handlers** — Route pattern matchers and destination factories
+5. **Modal registry entries** — `modal<T>()` and `modalContainer("name")` calls for `ModalRegistry`
 
 ### Using Generated Code
 

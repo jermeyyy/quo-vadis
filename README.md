@@ -39,6 +39,7 @@ Quo Vadis provides a powerful navigation solution with:
 - ✅ **Tabbed Navigation** - Independent backstacks per tab with `@Tabs` + `@TabItem`
 - ✅ **Adaptive Layouts** - Multi-pane layouts with `@Pane` + `@PaneItem`
 - ✅ **Custom Transitions** - `@Transition` annotation with preset and custom animations
+- ✅ **Modal Navigation** - Draw-behind rendering for bottom sheets, dialogs, and overlays via `@Modal`
 - ✅ **Deep Link Support** - URI-based navigation with automatic parameter extraction
 - ✅ **Hierarchical Rendering** - True parent-child composition with coordinated animations
 - ✅ **Navigation Results** - Type-safe result passing between screens
@@ -387,7 +388,8 @@ NavNode (root)
 ├── StackNode (main stack)
 │   ├── ScreenNode (Home)
 │   ├── ScreenNode (List)
-│   └── ScreenNode (Detail)
+│   ├── ScreenNode (Detail)
+│   └── ScreenNode (Menu @Modal)    ← draw-behind rendering
 ├── TabNode (bottom tabs)
 │   ├── StackNode (Tab 1 stack)
 │   │   └── ScreenNode
@@ -406,6 +408,8 @@ NavNode (root)
 | `StackNode` | Stack of screens (push/pop) | `@Stack` |
 | `TabNode` | Tab container with independent stacks | `@Tabs` |
 | `PaneNode` | Adaptive multi-pane layout | `@Pane` |
+
+> **Note:** Modal nodes use the same node types above. `@Modal` is a rendering flag, not a new node type.
 
 ### Navigator Interface
 

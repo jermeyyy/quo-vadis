@@ -7,7 +7,7 @@ Kotlin Multiplatform navigation library with Compose Multiplatform UI using a **
 | Module | Purpose | Package |
 |--------|---------|---------|
 | `quo-vadis-core` | Core navigation library (Navigator, NavNodes, TreeMutator) | `com.jermey.quo.vadis.core` |
-| `quo-vadis-annotations` | KSP annotations (`@Stack`, `@Destination`, `@Screen`, `@Tabs`, `@Pane`) | `com.jermey.quo.vadis.annotations` |
+| `quo-vadis-annotations` | KSP annotations (`@Stack`, `@Destination`, `@Screen`, `@Tabs`, `@Pane`, `@Modal`) | `com.jermey.quo.vadis.annotations` |
 | `quo-vadis-ksp` | Code generator for zero-boilerplate navigation | - |
 | `quo-vadis-gradle-plugin` | Gradle plugin for KSP configuration | - |
 | `quo-vadis-core-flow-mvi` | FlowMVI integration for MVI architecture | `com.jermey.quo.vadis.flowmvi` |
@@ -85,6 +85,19 @@ fun ArticleScreen(destination: HomeDestination.Article, navigator: Navigator) { 
 
 **Cross-module tabs:** Feature modules use `@TabItem(MainTabs::class, ordinal = N)` to register as tabs — the parent `@Tabs` doesn't need to list its children. Note: `ordinal` continuity validation is skipped for cross-module `@Tabs` where only partial tab items are visible to the processor.
 
+### Modal Destinations
+
+```kotlin
+@Modal
+@Destination(route = "navigation_menu")
+data object NavigationMenuDestination : NavDestination
+```
+
+- `@Modal` (marker, no params) — marks destination for draw-behind rendering
+- Must co-exist with `@Destination`, `@Tabs`, `@Stack`, or `@Pane`
+- Library renders background + modal in `Box` — user controls all visual treatment
+- Dismiss via `navigator.navigateBack()` (standard stack pop)
+
 ## Build Commands
 
 ```bash
@@ -114,6 +127,7 @@ fun ArticleScreen(destination: HomeDestination.Article, navigator: Navigator) { 
 - **Arguments**: Use `@Argument` on data class properties (auto-serialized for deep links)
 - **Naming**: `*Destination` for sealed classes, `*Screen` for composables, `*Container` for MVI
 - **Immutability**: All tree mutations via `TreeMutator` - never modify `NavNode` directly
+- **Modal destinations**: `@Modal` marker annotation on `@Destination`/`@Tabs`/`@Stack`/`@Pane` classes
 
 ## MVI Integration (quo-vadis-core-flow-mvi)
 
@@ -148,6 +162,7 @@ val store = rememberSharedContainer<MainTabsContainer, ...>()
 3. **Scope-aware navigation**: Destinations can specify scope for automatic parent-stack routing
 4. **Container-aware navigation**: `ContainerRegistry` builds Tab/Pane structures automatically
 5. **Predictive back**: Android 13+ and iOS swipe-back gestures supported
+6. **Modal rendering**: `@Modal` destinations render with draw-behind layering in `StackRenderer`
 
 ## Testing
 

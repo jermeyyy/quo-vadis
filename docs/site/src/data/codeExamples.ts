@@ -632,12 +632,16 @@ export const treeMutatorCode = `object TreeMutator {
  * Tree structure example - ASCII representation of NavNode hierarchy
  */
 export const treeStructureExample = `StackNode (root)
-└── TabNode (MainTabs)
-    ├── StackNode (HomeTab)
-    │   ├── ScreenNode (Home)
-    │   └── ScreenNode (Detail)
-    └── StackNode (ProfileTab)
-        └── ScreenNode (Profile)`;
+├── TabNode (MainTabs)
+│   ├── StackNode (HomeTab)
+│   │   ├── ScreenNode (Home)
+│   │   └── ScreenNode (Detail)
+│   └── StackNode (ProfileTab)
+│       └── ScreenNode (Profile)
+├── ScreenNode (Menu @Modal)        ← draw-behind rendering
+└── PaneNode (adaptive layout)
+    ├── StackNode (primary)
+    └── StackNode (detail)`;
 
 /**
  * Tree traversal extensions - querying and navigating the tree
@@ -776,6 +780,139 @@ val canGoBack = navigator.canNavigateBack.value
 val canHandle = TreeMutator.canHandleBackNavigation(navigator.state.value)`;
 
 // ============================================================================
+// MODAL NAVIGATION EXAMPLES
+// ============================================================================
+
+/**
+ * Basic modal destination with @Modal annotation
+ */
+export const modalAnnotationBasic = `@Modal
+@Destination(route = "navigation_menu")
+data object NavigationMenuDestination : NavDestination
+
+@Screen(NavigationMenuDestination::class)
+@Composable
+fun NavigationMenuScreen(navigator: Navigator = koinInject()) {
+    GlassBottomSheet(
+        onDismissRequest = { navigator.navigateBack() },
+    ) {
+        // Menu content — user controls all visual treatment
+        Column {
+            Text("Navigation Menu")
+            Button(onClick = { navigator.navigate(HomeDestination.Feed) }) {
+                Text("Go to Feed")
+            }
+        }
+    }
+}`;
+
+/**
+ * Modal container (tabs pushed on stack)
+ */
+export const modalAnnotationContainer = `@Modal
+@Tabs(name = "overlayTabs")
+sealed class OverlayTabs : NavDestination {
+    companion object : NavDestination
+
+    @TabItem(OverlayTabs::class, ordinal = 0)
+    @Destination(route = "overlay/info")
+    data object InfoTab : OverlayTabs()
+
+    @TabItem(OverlayTabs::class, ordinal = 1)
+    @Destination(route = "overlay/actions")
+    data object ActionsTab : OverlayTabs()
+}`;
+
+/**
+ * DSL-based modal configuration
+ */
+export const modalDSLConfig = `val config = navigationConfig {
+    // Screen registry
+    screen<HomeDestination.Feed> { dest, nav -> FeedScreen(nav) }
+    screen<NavigationMenuDestination> { dest, nav -> NavigationMenuScreen(nav) }
+
+    // Container registry
+    stack("home", HomeDestination.Feed::class) { /* ... */ }
+
+    // Modal registry — flag destinations for draw-behind rendering
+    modal<NavigationMenuDestination>()
+    modal<SettingsSheetDestination>()
+    modalContainer("overlayTabs")
+
+    // Transitions
+    transition<NavigationMenuDestination>(NavigationTransition.SlideVertical)
+}`;
+
+/**
+ * Modal screen composable with custom presentation
+ */
+export const modalScreenExample = `@Screen(NavigationMenuDestination::class)
+@Composable
+fun NavigationMenuScreen(navigator: Navigator = koinInject()) {
+    // User controls ALL visual treatment:
+    // - Scrim/backdrop
+    // - Dismiss behavior (tap outside, swipe down)
+    // - Animation (slide up, fade in)
+    // - Shape, elevation, padding
+    GlassBottomSheet(
+        onDismissRequest = { navigator.navigateBack() },
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Navigation Menu", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(16.dp))
+            
+            NavigationMenuItem("Home") { 
+                navigator.navigate(HomeDestination.Feed) 
+            }
+            NavigationMenuItem("Profile") { 
+                navigator.navigate(HomeDestination.Profile) 
+            }
+            NavigationMenuItem("Settings") { 
+                navigator.navigate(HomeDestination.Settings) 
+            }
+        }
+    }
+}`;
+
+/**
+ * Nested modals example
+ */
+export const modalNestedExample = `// First modal — navigation menu
+@Modal
+@Transition(type = TransitionType.SlideVertical)
+@Destination(route = "navigation_menu")
+data object NavigationMenu : HomeDestination()
+
+// Second modal — can be pushed on top of first
+@Modal
+@Transition(type = TransitionType.Fade)
+@Destination(route = "confirmation_dialog")
+data object ConfirmationDialog : HomeDestination()
+
+// Navigating:
+// navigator.navigate(NavigationMenu)    → Home (bg) + Menu (fg)
+// navigator.navigate(ConfirmationDialog) → Home (bg) + Menu (mid) + Dialog (fg)
+// navigator.navigateBack()              → Home (bg) + Menu (fg)
+// navigator.navigateBack()              → Home (full screen)`;
+
+/**
+ * Cross-module modal example
+ */
+export const modalCrossModuleExample = `// In feature1 module:
+@Modal
+@Destination(route = "feature1/overlay")
+data object Feature1Overlay : Feature1Destination()
+
+// In feature2 module:
+@Modal
+@Destination(route = "feature2/sheet")
+data object Feature2Sheet : Feature2Destination()
+
+// Generated configs are combined:
+val appConfig = mainConfig + feature1Config + feature2Config
+// CompositeModalRegistry merges all modal registrations`;
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -811,4 +948,10 @@ export type CodeExampleKey =
   | 'paneOperationsCode'
   | 'backWithTabsCode'
   | 'backResultCode'
-  | 'checkBackCode';
+  | 'checkBackCode'
+  | 'modalAnnotationBasic'
+  | 'modalAnnotationContainer'
+  | 'modalDSLConfig'
+  | 'modalScreenExample'
+  | 'modalNestedExample'
+  | 'modalCrossModuleExample';

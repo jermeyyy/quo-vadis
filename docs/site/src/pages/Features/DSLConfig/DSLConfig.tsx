@@ -6,6 +6,7 @@ import {
   navigationConfigInterface,
   tabsAnnotationDSL,
   panesAnnotationDSL,
+  modalDSLConfig,
 } from '@data/codeExamples'
 import styles from '../Features.module.css'
 
@@ -414,6 +415,10 @@ export default function DSLConfig() {
               <td><code>RouteRegistry</code></td>
               <td>Maps routes to destination classes</td>
             </tr>
+            <tr>
+              <td><code>ModalRegistry</code></td>
+              <td>Tracks which destinations use draw-behind (modal) rendering</td>
+            </tr>
           </tbody>
         </table>
       </section>
@@ -579,6 +584,37 @@ export default function DSLConfig() {
       </section>
 
       <section>
+        <h2 id="modal-registry">Modal Registry</h2>
+        <p>
+          The <code>ModalRegistry</code> tells the rendering system which destinations and containers
+          should use draw-behind (modal) rendering.
+        </p>
+
+        <h3>Builder Functions</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Function</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>modal&lt;D&gt;()</code></td>
+              <td>Register a destination class as modal</td>
+            </tr>
+            <tr>
+              <td><code>modalContainer("name")</code></td>
+              <td>Register a named container as modal</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Example</h3>
+        <CodeBlock code={modalDSLConfig} language="kotlin" />
+      </section>
+
+      <section>
         <h2 id="complete-example">Complete Example</h2>
         <p>
           Here's a full DSL configuration demonstrating all features:
@@ -629,6 +665,11 @@ export default function DSLConfig() {
               <td>Multi-module</td>
               <td><StatusFull>Manual</StatusFull></td>
               <td><StatusFull>Auto-merged</StatusFull></td>
+            </tr>
+            <tr>
+              <td>Modal destinations</td>
+              <td><code>modal&lt;D&gt;()</code>, <code>modalContainer("name")</code></td>
+              <td><code>@Modal</code></td>
             </tr>
             <tr>
               <td>Learning curve</td>

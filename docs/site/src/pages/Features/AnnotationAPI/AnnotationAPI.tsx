@@ -10,6 +10,7 @@ import {
   paneContainerWrapper,
   generatedConfigUsage,
   crossModuleTabsExample,
+  modalAnnotationBasic,
 } from '@data/codeExamples'
 import styles from '../Features.module.css'
 
@@ -180,6 +181,10 @@ export default function AnnotationAPI() {
           <a href="#validation" className={styles.annotationCard}>
             <h4>Validation</h4>
             <p>Compile-time validation rules and error messages for all annotations.</p>
+          </a>
+          <a href="#modal-annotation" className={styles.annotationCard}>
+            <h4>@Modal</h4>
+            <p>Marks destinations for draw-behind modal rendering with user-controlled presentation.</p>
           </a>
         </div>
       </section>
@@ -420,6 +425,39 @@ export default function AnnotationAPI() {
         />
         <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
           For detailed animation customization, see <Link to="/features/transitions">Transitions</Link>.
+        </p>
+      </section>
+
+      <section>
+        <h2 id="modal-annotation">@Modal Annotation</h2>
+        <p>
+          The <code>@Modal</code> annotation marks a destination or container for draw-behind 
+          rendering. When pushed onto a stack, the library renders both the screen below and 
+          the modal on top — the user composable controls all visual treatment.
+        </p>
+
+        <h3>Properties</h3>
+        <p>
+          <code>@Modal</code> is a marker annotation with no parameters. It must appear 
+          alongside <code>@Destination</code>, <code>@Tabs</code>, <code>@Stack</code>, 
+          or <code>@Pane</code>.
+        </p>
+
+        <h3>Example: Modal Destination</h3>
+        <CodeBlock code={modalAnnotationBasic} language="kotlin" />
+
+        <h3>Key Behaviors</h3>
+        <ul>
+          <li>Library renders background + modal in a <code>Box</code> — no scrim, no chrome</li>
+          <li>User composable controls all presentation (bottom sheet, dialog, glass effect)</li>
+          <li>Dismissal via <code>navigator.navigateBack()</code> (standard stack pop)</li>
+          <li>Nested modals supported (multiple layers stack)</li>
+          <li>Predictive back gestures work normally</li>
+        </ul>
+        
+        <p>
+          See the <Link to="/features/modal-navigation">Modal Navigation</Link> guide 
+          for complete documentation.
         </p>
       </section>
 

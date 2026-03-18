@@ -56,6 +56,21 @@ StackNode (root)
 
 > Nested tab structures are also supported. See [TabNode > Nested Tabs](#nested-tabs) for details.
 
+> **Modal nodes** are regular nodes in the tree. A `ScreenNode` marked `@Modal` appears 
+> as a normal stack child — the modal behavior is determined at render time via `ModalRegistry`, 
+> not by the node type.
+
+Example with modal:
+```
+StackNode (root)
+├── TabNode (MainTabs)
+│   └── StackNode (HomeTab)
+│       ├── ScreenNode (Home)
+│       └── ScreenNode (Detail)
+├── ScreenNode (NavigationMenu @Modal)  ← draw-behind rendering
+└── ScreenNode (SettingsSheet @Modal)   ← nested modal layer
+```
+
 ---
 
 ## NavNode Types
@@ -165,6 +180,68 @@ sealed class AuthFlow : NavDestination {
 }
 // Navigating to a non-AuthFlow destination will exit this stack
 ```
+
+#### Modal Rendering
+
+When the active child of a `StackNode` is registered as modal in the `ModalRegistry`, 
+the `StackRenderer` uses a draw-behind pattern instead of standard animated transitions.
+
+##### How StackRenderer Detects Modals
+
+```kotlin
+// For ScreenNode children:
+modalRegistry.isModalDestination(screenNode.destination::class)
+
+// For container children (TabNode, StackNode, PaneNode):
+modalRegistry.isModalContainer(node.key)
+```
+
+##### ModalContent Box Layout
+
+When a modal child is detected, `ModalContent` renders layers in a `Box`:
+
+```
+Box {
+    // Layer 1: Background — the node below the modal in the stack
+    NavNodeRenderer(backgroundNode)
+    
+    // Layer 2: Foreground — the modal node
+    NavNodeRenderer(modalNode)
+}
+```
+
+- Both layers use `StaticAnimatedVisibilityScope` (no animated enter/exit)
+- Content goes through `NavNodeRenderer` → `ComposableCache` for state preservation
+- No scrim, no chrome, no dismiss behavior — user composable controls everything
+
+##### Nested Modal Support
+
+When multiple consecutive modal nodes are on the stack, `StackRenderer` walks backwards 
+through `node.children` to find the first non-modal node (`findNonModalBaseIndex`), 
+then renders all layers from that base to the top:
+
+```
+// Stack: [Home, ModalA, ModalB]
+// findNonModalBaseIndex → 0 (Home)
+// Renders: Home (base) → ModalA (layer) → ModalB (layer)
+```
+
+##### Animation Bypass
+
+Modal targets set `isTargetModal = true`, which bypasses `AnimatedContent` to prevent 
+exit animations from removing the background. This is similar to how predictive back 
+bypasses standard animation.
+
+##### Edge Case: Modal as Only Child
+
+If a modal destination is the only child in the stack (no screen below), it renders 
+normally without a background layer.
+
+##### Important
+
+Modals do NOT create new node types. A modal destination is a regular `ScreenNode` 
+(or `TabNode`/`StackNode`/`PaneNode`) — the modal flag is a runtime registry lookup, 
+not a tree structure difference.
 
 #### When to Use
 
