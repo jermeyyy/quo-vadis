@@ -10,32 +10,34 @@ on:
         required: true
 
 jobs:
-  publish:
+  publish-libraries:
     name: Publish Libraries
     runs-on: macos-latest
-    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.release.tag_name || inputs.release_tag }}
-      
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
-      
+
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v3
-      
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: wrapper
           cache-read-only: false
-      
+
       - name: Extract version from tag
         id: version
         run: |
@@ -43,23 +45,17 @@ jobs:
           VERSION="${TAG#v}"  # Remove 'v' prefix
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Publishing version: $VERSION"
-      
+
       - name: Update VERSION_NAME in gradle.properties
         run: |
           sed -i '' "s/VERSION_NAME=.*/VERSION_NAME=${{ steps.version.outputs.version }}/" gradle.properties
           cat gradle.properties | grep VERSION_NAME
-      
-      - name: Update VERSION_NAME in gradle plugin gradle.properties
-        run: |
-          # Create gradle.properties for the plugin if it doesn't exist
-          echo "VERSION_NAME=${{ steps.version.outputs.version }}" > quo-vadis-gradle-plugin/gradle.properties
-          cat quo-vadis-gradle-plugin/gradle.properties
-      
+
       - name: Import GPG key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
-      
+
       - name: Publish to Maven Central
         env:
           CI: true
@@ -73,7 +69,51 @@ jobs:
             --no-configuration-cache \
             --no-parallel \
             --stacktrace
-      
+
+  publish-gradle-plugin:
+    name: Publish Gradle Plugin
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.release_tag }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+          cache-read-only: false
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.release_tag }}"
+          VERSION="${TAG#v}"  # Remove 'v' prefix
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+
+      - name: Update VERSION_NAME in gradle plugin gradle.properties
+        run: |
+          echo "VERSION_NAME=${{ steps.version.outputs.version }}" > quo-vadis-gradle-plugin/gradle.properties
+          cat quo-vadis-gradle-plugin/gradle.properties
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+
       - name: Publish Gradle Plugin to Maven Central
         env:
           CI: true
@@ -88,11 +128,28 @@ jobs:
             --no-configuration-cache \
             --no-parallel \
             --stacktrace
-      
-      - name: Create release summary
-        if: success()
+
+  release-summary:
+    name: Release Summary
+    runs-on: ubuntu-latest
+    needs: [publish-libraries, publish-gradle-plugin]
+    if: always()
+
+    steps:
+      - name: Extract version from tag
+        id: version
         run: |
-          echo "## 🎉 Published to Maven Central" >> $GITHUB_STEP_SUMMARY
+          TAG="${{ github.event.release.tag_name || inputs.release_tag }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create release summary
+        run: |
+          echo "## Published to Maven Central" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Libraries: ${{ needs.publish-libraries.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Gradle Plugin: ${{ needs.publish-gradle-plugin.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- \`io.github.jermeyyy:quo-vadis-core:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
@@ -107,4 +164,4 @@ jobs:
           echo "### Maven Central" >> $GITHUB_STEP_SUMMARY
           echo "Search: https://central.sonatype.com/search?q=io.github.jermeyyy" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ **Note:** It may take 30-60 minutes for artifacts to appear on Maven Central." >> $GITHUB_STEP_SUMMARY
+          echo "Note: It may take 30-60 minutes for artifacts to appear on Maven Central." >> $GITHUB_STEP_SUMMARY
