@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.4.2] - 2026-03-19
+
+### Fixed
+
+- **KSP cross-module validation**: Skip validation for cross-module destinations to prevent false errors when destinations are defined in separate modules.
+
 ## [0.4.1] - 2026-03-19
 
 ### Added

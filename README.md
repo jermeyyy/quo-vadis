@@ -100,14 +100,14 @@ plugins {
     kotlin("multiplatform")
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.devtools.ksp") version "2.3.0"
-    id("io.github.jermeyyy.quo-vadis") version "0.4.1"
+    id("io.github.jermeyyy.quo-vadis") version "0.4.2"
 }
 
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.jermeyyy:quo-vadis-core:0.4.1")
-            implementation("io.github.jermeyyy:quo-vadis-annotations:0.4.1")
+            implementation("io.github.jermeyyy:quo-vadis-core:0.4.2")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.4.2")
         }
     }
 }
@@ -145,8 +145,8 @@ repositories {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.jermeyyy:quo-vadis-core:0.4.1")
-            implementation("io.github.jermeyyy:quo-vadis-annotations:0.4.1")
+            implementation("io.github.jermeyyy:quo-vadis-core:0.4.2")
+            implementation("io.github.jermeyyy:quo-vadis-annotations:0.4.2")
         }
     }
     
@@ -158,7 +158,7 @@ kotlin {
 
 dependencies {
     // KSP code generator (all targets)
-    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.4.1")
+    add("kspCommonMainMetadata", "io.github.jermeyyy:quo-vadis-ksp:0.4.2")
 }
 
 // Required for KMP: Register generated sources
@@ -473,7 +473,7 @@ fun ArticleScreen(
 Quo Vadis integrates with FlowMVI for state management. Add the optional module:
 
 ```kotlin
-implementation("io.github.jermeyyy:quo-vadis-core-flow-mvi:0.4.1")
+implementation("io.github.jermeyyy:quo-vadis-core-flow-mvi:0.4.2")
 ```
 
 ### Screen-Scoped Containers
