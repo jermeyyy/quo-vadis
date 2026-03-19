@@ -110,4 +110,9 @@ object StringTemplates {
      */
     val DEEP_LINKS_SECTION: String = sectionHeader("DEEP LINKS")
 
+    /**
+     * Section header for modals registration.
+     */
+    val MODALS_SECTION: String = sectionHeader("MODALS")
+
 }

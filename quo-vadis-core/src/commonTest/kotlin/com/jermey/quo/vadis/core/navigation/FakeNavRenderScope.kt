@@ -15,6 +15,7 @@ import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
 import com.jermey.quo.vadis.core.compose.scope.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
@@ -124,6 +125,7 @@ import com.jermey.quo.vadis.core.navigation.EmptyScreenRegistry.hasContent
  * @property predictiveBackController Controller for predictive back gestures. Created fresh by default.
  * @property screenRegistry Registry for screen composables. Defaults to [EmptyScreenRegistry].
  * @property containerRegistry Registry for container and wrapper composables. Defaults to [ContainerRegistry.Empty].
+ * @property modalRegistry Registry for modal presentation. Defaults to [ModalRegistry.Empty].
  * @property sharedTransitionScope Scope for shared element transitions. Defaults to `null`.
  *
  * @see NavRenderScope
@@ -140,6 +142,7 @@ class FakeNavRenderScope(
     override val predictiveBackController: PredictiveBackController = PredictiveBackController(),
     override val screenRegistry: ScreenRegistry = EmptyScreenRegistry,
     override val containerRegistry: ContainerRegistry = ContainerRegistry.Empty,
+    override val modalRegistry: ModalRegistry = ModalRegistry.Empty,
     override val sharedTransitionScope: SharedTransitionScope? = null,
 ) : NavRenderScope {
 

@@ -31,6 +31,7 @@ Use the DSL approach when you need:
 | `TransitionRegistry` | Maps destinations to custom transitions |
 | `ScopeRegistry` | Defines navigation scope membership |
 | `RouteRegistry` | Maps routes to destination classes |
+| `ModalRegistry` | Flags destinations/containers for draw-behind rendering |
 
 ---
 
@@ -48,6 +49,7 @@ interface NavigationConfig {
     val containerRegistry: ContainerRegistry
     val deepLinkRegistry: DeepLinkRegistry
     val paneRoleRegistry: PaneRoleRegistry
+    val modalRegistry: ModalRegistry  // defaults to ModalRegistry.Empty
     
     fun buildNavNode(
         destinationClass: KClass<out NavDestination>,
@@ -523,6 +525,91 @@ RouteRegistry.register(SettingsScreen::class, "settings")
 
 ---
 
+## ModalRegistry
+
+### Purpose
+
+The `ModalRegistry` tells the rendering system which destinations and containers should 
+use draw-behind (modal) rendering instead of standard animated transitions.
+
+### Interface
+
+```kotlin
+interface ModalRegistry {
+    fun isModalDestination(destinationClass: KClass<*>): Boolean
+    fun isModalContainer(containerKey: String): Boolean
+
+    companion object {
+        val Empty: ModalRegistry = object : ModalRegistry {
+            override fun isModalDestination(destinationClass: KClass<*>) = false
+            override fun isModalContainer(containerKey: String) = false
+        }
+    }
+}
+```
+
+### Registering Modal Destinations
+
+Use `modal<D>()` to register a destination class as modal:
+
+```kotlin
+val config = navigationConfig {
+    // ... screens and containers ...
+
+    // Register modal destinations
+    modal<NavigationMenuDestination>()
+    modal<SettingsSheetDestination>()
+}
+```
+
+### Registering Modal Containers
+
+Use `modalContainer("name")` to register a named container as modal:
+
+```kotlin
+val config = navigationConfig {
+    // ... screens and containers ...
+
+    // Register modal containers
+    modalContainer("overlayTabs")
+    modalContainer("detailStack")
+}
+```
+
+### Combined Example
+
+```kotlin
+val config = navigationConfig {
+    // Screen registry
+    screen<HomeDestination.Feed> { dest, nav -> FeedScreen(nav) }
+    screen<NavigationMenuDestination> { dest, nav -> NavigationMenuScreen(nav) }
+
+    // Container registry
+    stack("home", HomeDestination.Feed::class) { /* ... */ }
+    tabs("mainTabs") { /* ... */ }
+
+    // Modal registry
+    modal<NavigationMenuDestination>()
+    modal<SettingsSheetDestination>()
+    modalContainer("overlayTabs")
+
+    // Transitions
+    transition<HomeDestination.Feed>(NavTransition.SlideHorizontal)
+    transition<NavigationMenuDestination>(NavTransition.SlideVertical)
+}
+```
+
+### Multi-Module Composition
+
+When combining configs with `+`, modal registries are composited via `CompositeModalRegistry`:
+
+```kotlin
+val appConfig = mainModuleConfig + feature1Config + feature2Config
+// Each module's modal registrations are merged — if any says modal, it's modal
+```
+
+---
+
 ## Complete Configuration Example
 
 Here's a full DSL configuration demonstrating all features:
@@ -606,6 +693,12 @@ val appNavigationConfig = navigationConfig {
     transition<DetailScreen>(NavTransition.SlideHorizontal)
     transition<ModalScreen>(NavTransition.SlideVertical)
     transition<SettingsScreen>(NavTransition.Fade)
+    
+    // ═══════════════════════════════════════════════════════
+    // MODAL DESTINATIONS
+    // ═══════════════════════════════════════════════════════
+    
+    modal<ModalScreen>()
     
     // ═══════════════════════════════════════════════════════
     // CONTAINER WRAPPERS
@@ -699,6 +792,7 @@ fun App() {
 | Boilerplate | Medium | Low |
 | Dynamic graphs | ✅ Supported | ❌ Not supported |
 | Multi-module | ✅ Manual composition | ✅ Auto-merged |
+| Modal destinations | `modal<D>()`, `modalContainer("name")` | `@Modal` |
 | Learning curve | Medium | Low |
 
 ### Hybrid Approach

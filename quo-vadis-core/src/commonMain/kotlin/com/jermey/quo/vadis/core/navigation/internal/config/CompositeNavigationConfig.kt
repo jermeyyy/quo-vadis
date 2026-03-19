@@ -21,7 +21,9 @@ import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 import com.jermey.quo.vadis.core.registry.internal.CompositeContainerRegistry
+import com.jermey.quo.vadis.core.registry.internal.CompositeModalRegistry
 import com.jermey.quo.vadis.core.registry.internal.CompositeScreenRegistry
 import com.jermey.quo.vadis.core.registry.internal.CompositeScopeRegistry
 import com.jermey.quo.vadis.core.registry.internal.CompositeTransitionRegistry
@@ -87,6 +89,14 @@ class CompositeNavigationConfig(
     override val transitionRegistry: TransitionRegistry = CompositeTransitionRegistry(
         primary = primary.transitionRegistry,
         secondary = secondary.transitionRegistry
+    )
+
+    /**
+     * Composite modal registry that unions primary and secondary lookups.
+     */
+    override val modalRegistry: ModalRegistry = CompositeModalRegistry(
+        primary = primary.modalRegistry,
+        secondary = secondary.modalRegistry
     )
 
     /**

@@ -16,6 +16,7 @@ import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 import com.jermey.quo.vadis.core.navigation.config.CompositeNavigationConfig
 import com.jermey.quo.vadis.core.navigation.internal.config.EmptyNavigationConfig
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
@@ -74,7 +75,9 @@ internal class DslNavigationConfig(
     private val scopes: Map<ScopeKey, Set<KClass<out NavDestination>>>,
     private val transitions: Map<KClass<out NavDestination>, NavTransition>,
     private val tabsContainers: Map<String, @Composable TabsContainerScope.(@Composable () -> Unit) -> Unit>,
-    private val paneContainers: Map<String, @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit>
+    private val paneContainers: Map<String, @Composable PaneContainerScope.(@Composable () -> Unit) -> Unit>,
+    private val modalDestinations: Set<KClass<out NavDestination>> = emptySet(),
+    private val modalContainers: Set<String> = emptySet()
 ) : NavigationConfig {
 
     /**
@@ -110,6 +113,13 @@ internal class DslNavigationConfig(
      */
     override val transitionRegistry: TransitionRegistry by lazy {
         DslTransitionRegistry(transitions)
+    }
+
+    /**
+     * Registry for modal destination and container lookups.
+     */
+    override val modalRegistry: ModalRegistry by lazy {
+        DslModalRegistry(modalDestinations, modalContainers)
     }
 
     /**

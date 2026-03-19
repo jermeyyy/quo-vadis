@@ -546,9 +546,19 @@ export default function CoreConcepts() {
         </p>
         <ul>
           <li><strong>ScreenRenderer:</strong> Renders leaf <code>ScreenNode</code> content via the screen registry</li>
-          <li><strong>StackRenderer:</strong> Renders <code>StackNode</code> with animated push/pop transitions</li>
+          <li><strong>StackRenderer:</strong> Renders <code>StackNode</code> with animated push/pop transitions. When a child node is registered as modal, StackRenderer renders both the background node and the modal in a layered <code>Box</code> instead of using animated transitions.</li>
           <li><strong>TabRenderer:</strong> Renders <code>TabNode</code> with tab wrapper and switching animations</li>
           <li><strong>PaneRenderer:</strong> Renders <code>PaneNode</code> with adaptive multi-pane layouts</li>
+        </ul>
+
+        <p>
+          The rendering layer uses several registries to customize behavior:
+        </p>
+        <ul>
+          <li><strong>ScreenRegistry</strong> — Maps destinations to their composable screen content</li>
+          <li><strong>ContainerRegistry</strong> — Builds Tab/Pane container structures automatically</li>
+          <li><strong>TransitionRegistry</strong> — Defines custom transition animations per destination</li>
+          <li><strong>ModalRegistry</strong> — Flags destinations/containers for draw-behind rendering</li>
         </ul>
       </section>
 

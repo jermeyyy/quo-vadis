@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import { ScopePropertiesTable } from '@components/ScopePropertiesTable/ScopePropertiesTable'
 import { tabsAnnotationWithNestedStack, crossModuleTabsExample } from '@data/codeExamples'
@@ -344,10 +345,10 @@ export default function TabbedNavigation() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/adaptive-panes">Adaptive Panes</a> - Multi-pane layouts for larger screens</li>
-          <li><a href="/features/mvi-integration">MVI Integration</a> - State management with FlowMVI</li>
-          <li><a href="/features/transitions">Transitions</a> - Animate between tabs and screens</li>
-          <li><a href="/demo">Live Demo</a> - See tabbed navigation in action</li>
+          <li><Link to="/features/adaptive-panes">Adaptive Panes</Link> - Multi-pane layouts for larger screens</li>
+          <li><Link to="/features/mvi-integration">MVI Integration</Link> - State management with FlowMVI</li>
+          <li><Link to="/features/transitions">Transitions</Link> - Animate between tabs and screens</li>
+          <li><Link to="/demo">Live Demo</Link> - See tabbed navigation in action</li>
         </ul>
       </section>
     </article>

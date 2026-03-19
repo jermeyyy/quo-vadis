@@ -16,6 +16,7 @@ import com.jermey.quo.vadis.ksp.models.ScreenInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
 import com.jermey.quo.vadis.ksp.models.TransitionInfo
+import com.jermey.quo.vadis.ksp.models.ModalInfo
 import com.jermey.quo.vadis.ksp.models.ContainerInfoModel
 import com.jermey.quo.vadis.ksp.models.ContainerType
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -114,6 +115,7 @@ class NavigationConfigGenerator(
     private val containerBlockGenerator = ContainerBlockGenerator(logger)
     private val scopeBlockGenerator = ScopeBlockGenerator(logger)
     private val transitionBlockGenerator = TransitionBlockGenerator(logger)
+    private val modalBlockGenerator = ModalBlockGenerator(logger)
     private val wrapperBlockGenerator = WrapperBlockGenerator(logger)
     private val deepLinkBlockGenerator = DeepLinkBlockGenerator(logger)
 
@@ -128,6 +130,7 @@ class NavigationConfigGenerator(
      * @property tabs List of tab info from @Tab annotations
      * @property panes List of pane info from @Pane annotations
      * @property transitions List of transition info from @Transition annotations
+     * @property modals List of modal info from @Modal annotations
      * @property wrappers List of wrapper info from @TabsContainer/@PaneContainer annotations
      * @property destinations List of all destination info from @Destination annotations
      */
@@ -137,6 +140,7 @@ class NavigationConfigGenerator(
         val tabs: List<TabInfo>,
         val panes: List<PaneInfo>,
         val transitions: List<TransitionInfo>,
+        val modals: List<ModalInfo>,
         val wrappers: List<ContainerInfoModel>,
         val destinations: List<DestinationInfo>
     ) {
@@ -150,6 +154,7 @@ class NavigationConfigGenerator(
                 tabs = emptyList(),
                 panes = emptyList(),
                 transitions = emptyList(),
+                modals = emptyList(),
                 wrappers = emptyList(),
                 destinations = emptyList()
             )
@@ -167,7 +172,7 @@ class NavigationConfigGenerator(
         originatingFiles: List<KSFile>
     ) {
         val totalItems = data.screens.size + data.tabs.size + data.stacks.size +
-                data.panes.size + data.transitions.size + data.wrappers.size
+                data.panes.size + data.transitions.size + data.modals.size + data.wrappers.size
 
         logInfo("Generating NavigationConfig with $totalItems total items:")
         logInfo("  - ${data.screens.size} screens")
@@ -175,6 +180,7 @@ class NavigationConfigGenerator(
         logInfo("  - ${data.stacks.size} stack containers")
         logInfo("  - ${data.panes.size} pane containers")
         logInfo("  - ${data.transitions.size} transitions")
+        logInfo("  - ${data.modals.size} modals")
         logInfo("  - ${data.wrappers.size} wrappers")
 
         val fileSpec = buildFileSpec(data)
@@ -380,6 +386,14 @@ class NavigationConfigGenerator(
             builder.add(deepLinkBlockGenerator.generate(data.destinations))
         }
 
+        // MODALS section (no composable lambdas)
+        if (data.modals.isNotEmpty()) {
+            builder.add("\n")
+            builder.add(StringTemplates.MODALS_SECTION)
+            builder.add("\n\n")
+            builder.add(modalBlockGenerator.generate(data.modals))
+        }
+
         // NOTE: Screens and wrappers are NOT included in DSL to avoid
         // Compose compiler lambda casting issues. They are generated as
         // separate anonymous object implementations with when-based dispatch.
@@ -459,7 +473,8 @@ class NavigationConfigGenerator(
     private fun buildDelegationProperties(): List<PropertySpec> {
         return listOf(
             buildDelegationProperty("scopeRegistry", QuoVadisClassNames.SCOPE_REGISTRY),
-            buildDelegationProperty("transitionRegistry", QuoVadisClassNames.TRANSITION_REGISTRY)
+            buildDelegationProperty("transitionRegistry", QuoVadisClassNames.TRANSITION_REGISTRY),
+            buildDelegationProperty("modalRegistry", QuoVadisClassNames.MODAL_REGISTRY)
         )
     }
 

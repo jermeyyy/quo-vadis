@@ -29,6 +29,7 @@ export const navigationData: NavItem[] = [
       { label: 'Transitions & Animations', path: '/features/transitions' },
       { label: 'Tabbed Navigation', path: '/features/tabbed-navigation' },
       { label: 'Pane Layouts', path: '/features/pane-layouts' },
+      { label: 'Modal Navigation', path: '/features/modal-navigation' },
       {
         label: 'FlowMVI & Koin',
         children: [

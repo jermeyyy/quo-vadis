@@ -7,6 +7,7 @@ import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig.Companion.Empty
 import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
@@ -79,6 +80,16 @@ interface NavigationConfig {
      * Provides custom transitions defined via annotations on destination classes.
      */
     val transitionRegistry: TransitionRegistry
+
+    /**
+     * Registry for determining modal presentation of destinations and containers.
+     *
+     * Used by the navigation system to decide whether a destination should be
+     * presented modally (e.g., bottom sheet, dialog, or full-screen overlay)
+     * rather than with standard push navigation.
+     */
+    val modalRegistry: ModalRegistry
+        get() = ModalRegistry.Empty
 
     /**
      * Registry for container node builders and wrapper composables.

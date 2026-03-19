@@ -51,6 +51,18 @@ import com.jermey.quo.vadis.core.navigation.node.NavNode
  * - Nested structures (screens inside tabs/panes) can access the correct scope
  *   even during exit animations
  *
+ * ## Modal Support
+ *
+ * When [isTargetModal] is `true`, this component bypasses `AnimatedContent` and
+ * renders the target content directly with [StaticAnimatedVisibilityScope]. This
+ * ensures that when navigating to or from a modal destination, the background
+ * content beneath the modal is not removed by exit animations.
+ *
+ * Modal transitions with background layers are primarily handled by
+ * [StackRenderer] via [ModalContent]. This parameter supports the edge case
+ * where a modal is the only child in a stack (no background layer needed)
+ * or when future animated modal transitions are added.
+ *
  * ## Usage
  *
  * ```kotlin
@@ -75,6 +87,9 @@ import com.jermey.quo.vadis.core.navigation.node.NavNode
  *              animation scopes, and other rendering dependencies
  * @param predictiveBackEnabled Whether predictive back gesture handling should be active.
  *                              When `false`, always uses standard `AnimatedContent`
+ * @param isTargetModal Whether the target state represents a modal destination.
+ *                      When `true`, bypasses `AnimatedContent` and renders
+ *                      content directly to avoid removing background content.
  * @param modifier Optional [Modifier] applied to the container
  * @param content The composable content to render for each state, receiving an
  *                [AnimatedVisibilityScope] for enter/exit animation coordination
@@ -91,6 +106,7 @@ internal fun <T : NavNode> AnimatedNavContent(
     isBackNavigation: Boolean,
     scope: NavRenderScope,
     predictiveBackEnabled: Boolean,
+    isTargetModal: Boolean = false,
     modifier: Modifier = Modifier,
     content: @Composable AnimatedVisibilityScope.(T) -> Unit
 ) {
@@ -120,6 +136,21 @@ internal fun <T : NavNode> AnimatedNavContent(
             scope = scope,
             content = content
         )
+    } else if (isTargetModal) {
+        // Modal rendering - bypass AnimatedContent to avoid removing background
+        // content with exit animations. The modal content is rendered directly
+        // with a static scope, allowing the background to remain visible beneath.
+        StaticAnimatedVisibilityScope {
+            content(targetState)
+        }
+
+        // Update state tracking for predictive back
+        if (targetState != lastCommittedState) {
+            if (targetState.key != lastCommittedState.key) {
+                stateBeforeLast = lastCommittedState
+            }
+            lastCommittedState = targetState
+        }
     } else {
         // Standard AnimatedContent transition
         // Use contentKey to compare nodes by their key, not object reference.

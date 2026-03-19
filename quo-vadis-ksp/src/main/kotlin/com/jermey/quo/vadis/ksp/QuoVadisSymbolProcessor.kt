@@ -18,6 +18,7 @@ import com.jermey.quo.vadis.ksp.extractors.ScreenExtractor
 import com.jermey.quo.vadis.ksp.extractors.StackExtractor
 import com.jermey.quo.vadis.ksp.extractors.TabExtractor
 import com.jermey.quo.vadis.ksp.extractors.TransitionExtractor
+import com.jermey.quo.vadis.ksp.extractors.ModalExtractor
 import com.jermey.quo.vadis.ksp.extractors.ContainerExtractor
 import com.jermey.quo.vadis.ksp.generators.DeepLinkHandlerGenerator
 import com.jermey.quo.vadis.ksp.generators.dsl.NavigationConfigGenerator
@@ -27,6 +28,7 @@ import com.jermey.quo.vadis.ksp.models.ScreenInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
 import com.jermey.quo.vadis.ksp.models.TransitionInfo
+import com.jermey.quo.vadis.ksp.models.ModalInfo
 import com.jermey.quo.vadis.ksp.models.ContainerInfoModel
 import com.jermey.quo.vadis.ksp.validation.ValidationEngine
 
@@ -75,6 +77,7 @@ class QuoVadisSymbolProcessor(
     private val screenExtractor = ScreenExtractor(logger)
     private val containerExtractor = ContainerExtractor(logger)
     private val transitionExtractor = TransitionExtractor(logger)
+    private val modalExtractor = ModalExtractor(logger)
 
     // =========================================================================
     // Deeplink Generator
@@ -114,6 +117,7 @@ class QuoVadisSymbolProcessor(
     private val collectedScreens = mutableListOf<ScreenInfo>()
     private val collectedDestinations = mutableListOf<DestinationInfo>()
     private val collectedTransitions = mutableListOf<TransitionInfo>()
+    private val collectedModals = mutableListOf<ModalInfo>()
     private val collectedContainers = mutableListOf<ContainerInfoModel>()
 
     // Originating files for incremental processing
@@ -198,11 +202,14 @@ class QuoVadisSymbolProcessor(
         // Step 7: Extract transitions
         collectTransitions(resolver)
 
+        // Step 8: Extract modals
+        collectModals(resolver)
+
         logger.info(
             "QuoVadis: Collected ${collectedStacks.size} stacks, ${collectedTabs.size} tabs, " +
                     "${collectedPanes.size} panes, ${collectedScreens.size} screens, " +
                     "${collectedDestinations.size} destinations, ${collectedContainers.size} wrappers, " +
-                    "${collectedTransitions.size} transitions"
+                    "${collectedTransitions.size} transitions, ${collectedModals.size} modals"
         )
     }
 
@@ -276,6 +283,18 @@ class QuoVadisSymbolProcessor(
         // Track originating files from transitions
         transitions.forEach { transition ->
             originatingFiles.add(transition.containingFile)
+        }
+    }
+
+    /**
+     * Collects @Modal annotated classes.
+     */
+    private fun collectModals(resolver: Resolver) {
+        val modals = modalExtractor.extractAll(resolver)
+        collectedModals.addAll(modals)
+        // Track originating files from modals
+        modals.forEach { modal ->
+            originatingFiles.add(modal.containingFile)
         }
     }
 
@@ -421,6 +440,7 @@ class QuoVadisSymbolProcessor(
             tabs = collectedTabs,
             panes = collectedPanes,
             transitions = collectedTransitions,
+            modals = collectedModals,
             wrappers = collectedContainers,
             destinations = collectedDestinations
         )

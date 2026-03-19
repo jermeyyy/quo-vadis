@@ -12,6 +12,7 @@ import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.registry.TransitionRegistry
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 import kotlin.reflect.KClass
 
 /**
@@ -69,6 +70,11 @@ internal object EmptyNavigationConfig : NavigationConfig {
      * Returns [TransitionRegistry.Empty] which returns null for all lookups.
      */
     override val transitionRegistry: TransitionRegistry = TransitionRegistry.Empty
+
+    /**
+     * Returns [ModalRegistry.Empty] which returns false for all lookups.
+     */
+    override val modalRegistry: ModalRegistry = ModalRegistry.Empty
 
     /**
      * Returns [ContainerRegistry.Empty] which never creates containers

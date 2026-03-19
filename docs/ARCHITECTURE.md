@@ -14,6 +14,7 @@ This document describes the architectural design of the Quo Vadis navigation lib
   - [NavigationHost](#navigationhost)
   - [NavNodeRenderer](#navnoderenderer)
   - [Specialized Renderers](#specialized-renderers)
+  - [ModalContent](#modalcontent)
 - [NavNode Types](#navnode-types)
   - [NavNode (Base Interface)](#navnode-base-interface)
   - [ScreenNode](#screennode)
@@ -35,6 +36,8 @@ This separation ensures:
 - **Clean state management**: All navigation logic is isolated in the logic layer
 - **Flexible rendering**: UI adapts to different screen sizes and platforms
 - **Testability**: Logic can be unit tested without UI dependencies
+
+Registries (`ScreenRegistry`, `ContainerRegistry`, `TransitionRegistry`, `ScopeRegistry`, `ModalRegistry`) supply the configuration that both layers consume.
 
 ---
 
@@ -70,16 +73,17 @@ This separation ensures:
 │  │  - Leaf content │   │  - Animated stack   │   │  - Tab wrapper      │     │
 │  │  - Registry     │   │    transitions      │   │  - Tab switching    │     │
 │  │    lookup       │   │  - Predictive back  │   │    animations       │     │
-│  └─────────────────┘   └─────────────────────┘   └─────────────────────┘     │
+│  └─────────────────┘   │  - Modal detection  │   └─────────────────────┘     │
+│                         └─────────────────────┘                               │
 │                                                                               │
-│            ┌─────────────────────────┐                                        │
-│            ▼                                                                  │
-│  ┌─────────────────────┐                                                     │
-│  │    PaneRenderer     │                                                     │
-│  │  - Adaptive layout  │                                                     │
-│  │  - Multi-pane /     │                                                     │
-│  │    single-pane      │                                                     │
-│  └─────────────────────┘                                                     │
+│            ┌─────────────────────────┬─────────────────────────┐              │
+│            ▼                         ▼                                        │
+│  ┌─────────────────────┐   ┌─────────────────────┐                           │
+│  │    PaneRenderer     │   │    ModalContent     │                           │
+│  │  - Adaptive layout  │   │  - Draw-behind      │                           │
+│  │  - Multi-pane /     │   │    rendering        │                           │
+│  │    single-pane      │   │  - ModalRegistry    │                           │
+│  └─────────────────────┘   └─────────────────────┘                           │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     │ observes StateFlow<NavNode>
@@ -452,6 +456,9 @@ Renders `StackNode` with animated transitions.
 - Uses `AnimatedNavContent` for transitions
 - Enables predictive back for root stacks
 - Recursively renders active child via `NavNodeRenderer`
+- Detects modal children via `ModalRegistry` → renders `ModalContent` with draw-behind layering
+- Supports nested modal stacking (walks back to find non-modal base)
+- Bypasses `AnimatedContent` for modal targets to preserve background rendering
 
 #### TabRenderer
 
@@ -473,6 +480,17 @@ Renders `PaneNode` with adaptive layout.
 - **Compact mode**: Single pane with animations via `SinglePaneRenderer`
 - Creates `PaneContainerScope` for wrapper composable
 - Caches entire PaneNode for smooth layout transitions
+
+#### ModalContent
+
+Renders modal destinations with draw-behind semantics inside a `Box`.
+
+**Features**:
+- Renders background (non-modal node) and foreground (modal node) as stacked layers
+- Uses `StaticAnimatedVisibilityScope` for both layers
+- Supports nested modals (3+ layers via recursive stacking)
+- No scrim or dismiss behavior — user composable controls all presentation
+- Content routed through `NavNodeRenderer` → `ComposableCache` for state preservation
 
 ---
 
@@ -839,6 +857,7 @@ User Action (tap, gesture)
 | `StackRenderer` | Rendering | Animated stack transitions |
 | `TabRenderer` | Rendering | Tab wrapper and switching |
 | `PaneRenderer` | Rendering | Adaptive multi-pane layouts |
+| `ModalContent` | Rendering | Draw-behind modal layering |
 | `NavNode` | Data | Base interface for tree nodes |
 | `ScreenNode` | Data | Single screen destination |
 | `StackNode` | Data | Linear navigation stack |

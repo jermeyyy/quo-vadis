@@ -467,6 +467,13 @@ NavigationHost(
 )
 ```
 
+### Predictive Back with Modal Destinations
+
+Modal destinations participate in predictive back normally. Since modals use draw-behind 
+rendering (the background is already visible), the back gesture smoothly transitions from 
+the modal to the underlying screen. The `PredictiveBackContent` composable handles this 
+dual rendering during the gesture.
+
 ---
 
 ## Shared Element Transitions
@@ -662,6 +669,9 @@ AnimatedNavContent(
 )
 ```
 
+> **Note:** Modal destinations within a stack bypass the standard `AnimatedContent` 
+> transition. See [Modal Transitions](#modal-transitions) for details.
+
 ### Tab Switching Animations
 
 Tabs use **fade transitions** by default and **never** use predictive back:
@@ -702,6 +712,56 @@ AnimatedNavContent(
     predictiveBackEnabled = isPredictiveBackActive
 )
 ```
+
+---
+
+## Modal Transitions
+
+### Animation Bypass
+
+When navigating TO a modal destination, `StackRenderer` bypasses `AnimatedContent` to prevent 
+the exit animation from removing the background node. The `isTargetModal` flag triggers this bypass.
+
+This means:
+- The standard enter/exit transition pair does NOT run for modal navigation
+- The modal composable appears immediately in the foreground layer
+- The background node remains rendered (draw-behind)
+- User composable can implement its own enter animation (e.g., slide-up for bottom sheet)
+
+### Recommended Transitions for Modals
+
+While the library bypasses `AnimatedContent` for modals, the `@Transition` annotation 
+still influences predictive back animations:
+
+| Pattern | Recommended Transition | Reason |
+|---------|----------------------|--------|
+| Bottom sheet | `SlideVertical` | Natural slide-up/down gesture |
+| Dialog overlay | `Fade` | Smooth appear/disappear |
+| Full-screen modal | `SlideVertical` | iOS-style presentation |
+| No animation needed | `None` | Skip all animation |
+
+### Predictive Back with Modals
+
+Predictive back gestures work normally with modal destinations:
+- The modal is a regular stack entry → back gesture does a stack pop
+- `PredictiveBackContent` handles the dual rendering during the gesture
+- The modal slides away revealing the background (which is already rendered)
+- Completing the gesture removes the modal from the stack
+- Cancelling the gesture restores the modal to its full position
+
+### @Transition with @Modal
+
+You can combine `@Transition` with `@Modal`:
+
+```kotlin
+@Modal
+@Transition(type = TransitionType.SlideVertical)
+@Destination(route = "settings_sheet")
+data object SettingsSheet : HomeDestination()
+```
+
+The transition type is used for predictive back animation direction, but the forward 
+navigation bypasses `AnimatedContent`.
 
 ---
 

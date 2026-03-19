@@ -23,6 +23,7 @@ import DIIntegrationUsage from '@pages/Features/DIIntegration/Usage/Usage'
 import TabbedNavigation from '@pages/Features/TabbedNavigation/TabbedNavigation'
 import CoreConcepts from '@pages/Features/CoreConcepts/CoreConcepts'
 import PaneLayouts from '@pages/Features/PaneLayouts/PaneLayouts'
+import ModalNavigation from '@pages/Features/ModalNavigation/ModalNavigation'
 
 function App() {
   const basename = import.meta.env.PROD ? '/quo-vadis' : '/'
@@ -51,6 +52,7 @@ function App() {
               <Route path="/features/di-integration/usage" element={<DIIntegrationUsage />} />
               <Route path="/features/tabbed-navigation" element={<TabbedNavigation />} />
               <Route path="/features/pane-layouts" element={<PaneLayouts />} />
+              <Route path="/features/modal-navigation" element={<ModalNavigation />} />
               <Route path="/features/core-concepts" element={<CoreConcepts />} />
               <Route path="/features/architecture" element={<CoreConcepts />} />
               <Route path="/features/stack-management" element={<CoreConcepts />} />

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '@components/CodeBlock/CodeBlock'
 import styles from '../Features.module.css'
 
@@ -288,10 +289,10 @@ export default function Testing() {
       <section>
         <h2 id="next-steps">Next Steps</h2>
         <ul>
-          <li><a href="/features/di-integration">FlowMVI & Koin Integration</a> - Learn about MVI container patterns</li>
-          <li><a href="/features/navigation-results">Navigation Results</a> - Understand navigating for results</li>
-          <li><a href="/features/deep-links">Deep Links</a> - Configure deep link handling</li>
-          <li><a href="/demo">Demo Application</a> - See testing examples in action</li>
+          <li><Link to="/features/di-integration">FlowMVI & Koin Integration</Link> - Learn about MVI container patterns</li>
+          <li><Link to="/features/navigation-results">Navigation Results</Link> - Understand navigating for results</li>
+          <li><Link to="/features/deep-links">Deep Links</Link> - Configure deep link handling</li>
+          <li><Link to="/demo">Demo Application</Link> - See testing examples in action</li>
         </ul>
       </section>
     </article>
