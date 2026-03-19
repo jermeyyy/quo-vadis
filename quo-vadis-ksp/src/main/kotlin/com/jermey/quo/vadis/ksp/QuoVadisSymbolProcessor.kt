@@ -328,9 +328,10 @@ class QuoVadisSymbolProcessor(
             tab.tabs.forEach { tabItem ->
                 // For FLAT_SCREEN tabs, destinationInfo contains the destination
                 tabItem.destinationInfo?.let { dest ->
-                    if (seenQualifiedNames.add(dest.qualifiedName)) {
-                        collectedDestinations.add(dest)
-                        dest.classDeclaration.containingFile?.let { originatingFiles.add(it) }
+                    val resolvedDest = if (tab.isCrossModule) dest.copy(isCrossModule = true) else dest
+                    if (seenQualifiedNames.add(resolvedDest.qualifiedName)) {
+                        collectedDestinations.add(resolvedDest)
+                        resolvedDest.classDeclaration.containingFile?.let { originatingFiles.add(it) }
                     }
                 }
             }

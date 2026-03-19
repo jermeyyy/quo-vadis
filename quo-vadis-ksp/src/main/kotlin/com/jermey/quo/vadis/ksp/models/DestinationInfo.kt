@@ -30,5 +30,6 @@ data class DestinationInfo(
     val isSealedClass: Boolean,
     val constructorParams: List<ParamInfo>,
     val parentSealedClass: String?,
-    val paneRole: PaneRole? = null
+    val paneRole: PaneRole? = null,
+    val isCrossModule: Boolean = false
 )

@@ -426,13 +426,22 @@ class ValidationEngine(
             val destName = screen.destinationClass.qualifiedName?.asString() ?: return@forEach
 
             if (destName !in destinationQualifiedNames) {
-                reportError(
-                    screen.functionDeclaration,
-                    "@Screen(${screen.destinationClass.simpleName.asString()}::class) " +
-                            "references a class without @Destination",
-                    "Add @Destination annotation to ${screen.destinationClass.simpleName.asString()} " +
-                            "or reference a valid destination"
-                )
+                // Cross-module: @Screen references a destination from a compiled dependency.
+                // Verify via classpath annotation check instead of local destinations list.
+                val isCrossModuleDestination = screen.destinationClass.containingFile == null
+                val hasDestinationAnnotation = isCrossModuleDestination && screen.destinationClass.annotations.any {
+                    it.shortName.asString() == "Destination"
+                }
+
+                if (!hasDestinationAnnotation) {
+                    reportError(
+                        screen.functionDeclaration,
+                        "@Screen(${screen.destinationClass.simpleName.asString()}::class) " +
+                                "references a class without @Destination",
+                        "Add @Destination annotation to ${screen.destinationClass.simpleName.asString()} " +
+                                "or reference a valid destination"
+                    )
+                }
             }
 
             screenDestinations.getOrPut(destName) { mutableListOf() }.add(screen)
@@ -451,10 +460,10 @@ class ValidationEngine(
             }
         }
 
-        // Error: destinations must have screens
+        // Error: destinations must have screens (skip cross-module destinations)
         val boundDestinations = screenDestinations.keys
         destinations.forEach { destination ->
-            if (destination.qualifiedName !in boundDestinations) {
+            if (destination.qualifiedName !in boundDestinations && !destination.isCrossModule) {
                 reportError(
                     destination.classDeclaration,
                     "Missing @Screen binding for '${destination.className}'",
