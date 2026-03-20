@@ -10,6 +10,19 @@
     <ID>CyclomaticComplexMethod:TreeNodeOperations.kt:TreeNodeOperations$private fun tryReplaceNode: NavNode?</ID>
     <ID>EmptyKotlinFile:platformDefaultPredictiveBack.kt:com.jermey.quo.vadis.core.compose.platformDefaultPredictiveBack.kt</ID>
     <ID>ForbiddenComment:ComposableCache.kt:ComposableCache$// TODO: Replace with AtomicLong when kotlinx-atomicfu is added as a dependency</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `Empty returns false for any container key`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `Empty returns false for any destination class`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite returns false when neither says modal`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite returns true when both say modal`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite returns true when primary says modal`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite returns true when secondary says modal`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite unions containers from both registries`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite unions destinations from both registries`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `empty sets return false for all inputs`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `isModalContainer returns false for unregistered container`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `isModalContainer returns true for registered container`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `isModalDestination returns false for unregistered destination`</ID>
+    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `isModalDestination returns true for registered destination`</ID>
     <ID>LargeClass:NavNodeTest.kt:NavNodeTest</ID>
     <ID>LargeClass:TreeMutatorBackHandlingTest.kt:TreeMutatorBackHandlingTest</ID>
     <ID>LargeClass:TreeMutatorEdgeCasesTest.kt:TreeMutatorEdgeCasesTest</ID>
@@ -75,6 +88,7 @@
     <ID>ThrowsCount:PaneOperations.kt:PaneOperations$fun navigateToPane: NavNode</ID>
     <ID>TooManyFunctions:DslContainerRegistry.kt:DslContainerRegistry : ContainerRegistry</ID>
     <ID>TooManyFunctions:DslNavigationConfig.kt:DslNavigationConfig : NavigationConfig</ID>
+    <ID>TooManyFunctions:ModalRegistryTest.kt:ModalRegistryTest</ID>
     <ID>TooManyFunctions:NavNode.kt:com.jermey.quo.vadis.core.navigation.node.NavNode.kt</ID>
     <ID>TooManyFunctions:PushOperations.kt:PushOperations</ID>
     <ID>TooManyFunctions:TreeMutator.kt:TreeMutator</ID>

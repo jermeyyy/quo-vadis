@@ -57,3 +57,7 @@ class ProfileModule
 @Module
 @ComponentScan("com.jermey.navplayground.demo.ui.screens.explore")
 class ExploreModule
+
+@Module
+@ComponentScan("com.jermey.navplayground.demo.ui.screens.backhandler")
+class BackHandlerDemoModule

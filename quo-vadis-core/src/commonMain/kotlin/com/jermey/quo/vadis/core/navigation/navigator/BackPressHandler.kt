@@ -25,7 +25,14 @@ package com.jermey.quo.vadis.core.navigation.navigator
  */
 interface BackPressHandler {
     /**
-     * Handle a back press event.
+     * Handle a user-initiated back press event.
+     *
+     * Consults [com.jermey.quo.vadis.core.registry.BackHandlerRegistry] first,
+     * checking handlers from the active screen outward to the root.
+     * If no handler consumes the event, falls through to tree-based back navigation.
+     *
+     * This method is invoked by the system back button and predictive back gestures.
+     * For programmatic navigation, use [com.jermey.quo.vadis.core.navigation.navigator.Navigator.navigateBack] instead.
      *
      * @return `true` if the event was consumed (handled), `false` if it should bubble up.
      */

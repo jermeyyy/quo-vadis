@@ -134,7 +134,14 @@ interface Navigator : BackPressHandler {
     )
 
     /**
-     * Navigate back in the active stack.
+     * Navigate back programmatically in the active stack.
+     *
+     * This performs a direct tree pop without consulting user-defined back handlers
+     * registered via [com.jermey.quo.vadis.core.registry.BackHandlerRegistry].
+     * Use this for code-driven navigation (button clicks, programmatic flows).
+     *
+     * For user-initiated back events (system back button, gestures),
+     * use [com.jermey.quo.vadis.core.navigation.navigator.BackPressHandler.onBack] instead.
      *
      * @return true if navigation was successful, false if at root
      */

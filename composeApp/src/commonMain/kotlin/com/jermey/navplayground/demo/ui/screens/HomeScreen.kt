@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.SwipeLeft
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jermey.feature1.resultdemo.ResultDemoDestination
 import com.jermey.feature2.AuthFlowDestination
+import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.BackHandlerDemoDestination
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.HomeTab
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MasterDetailDestination
@@ -132,6 +134,12 @@ fun HomeScreen(
                     MessagesPane.ConversationList,
                     NavigationTransitions.SlideHorizontal
                 )
+            },
+            onNavigateToBackHandlerDemo = {
+                navigator.navigate(
+                    BackHandlerDemoDestination,
+                    NavigationTransitions.SlideHorizontal
+                )
             }
         )
     }
@@ -147,7 +155,8 @@ private fun HomeScreenContent(
     onNavigateToStateDriven: () -> Unit,
     onNavigateToAuthFlow: () -> Unit,
     onNavigateToResultDemo: () -> Unit,
-    onNavigateToMessagesPane: () -> Unit
+    onNavigateToMessagesPane: () -> Unit,
+    onNavigateToBackHandlerDemo: () -> Unit
 ) {
     val scrollState = rememberScrollState()
     Column(
@@ -230,6 +239,13 @@ private fun HomeScreenContent(
             title = "Adaptive Panes (Foldable)",
             description = "List-detail pane layout for foldables and tablets",
             onClick = onNavigateToMessagesPane
+        )
+
+        NavigationPatternCard(
+            icon = Icons.Default.SwipeLeft,
+            title = "Back Handler",
+            description = "Custom back handling with unsaved changes pattern",
+            onClick = onNavigateToBackHandlerDemo
         )
         Spacer(modifier = Modifier.height(64.dp))
     }

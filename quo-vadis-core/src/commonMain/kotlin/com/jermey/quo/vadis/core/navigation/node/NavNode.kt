@@ -115,6 +115,34 @@ fun NavNode.activeLeaf(): ScreenNode? {
 }
 
 /**
+ * Returns the path from the active leaf to the root, collecting all node keys.
+ * The list is ordered leaf-first, root-last, enabling handlers to be checked
+ * from the most specific scope outward.
+ */
+fun NavNode.activeNodePath(): List<NodeKey> {
+    val path = mutableListOf<NodeKey>()
+    fun collect(node: NavNode) {
+        when (node) {
+            is ScreenNode -> path.add(node.key)
+            is StackNode -> {
+                node.activeChild?.let { collect(it) }
+                path.add(node.key)
+            }
+            is TabNode -> {
+                collect(node.activeStack)
+                path.add(node.key)
+            }
+            is PaneNode -> {
+                node.activePaneContent?.let { collect(it) }
+                path.add(node.key)
+            }
+        }
+    }
+    collect(this)
+    return path
+}
+
+/**
  * Returns the deepest active StackNode in this subtree.
  * This is the stack that will receive push/pop operations.
  */
