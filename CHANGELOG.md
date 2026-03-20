@@ -9,9 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Scoped back handler support**: Back handlers are now scoped to individual navigation nodes (screens, tabs, panes), ensuring only the active screen's handlers fire on system back.
+- **`NavBackHandler` composable**: New composable in `quo-vadis-core` for registering back handlers scoped to the current screen node. Automatically registers/unregisters with `BackHandlerRegistry` via `DisposableEffect`.
+- **`registerBackHandler()` on `NavigationContainerScope`**: FlowMVI screen-scoped containers can now register back handlers that auto-cleanup when the container scope closes.
+- **`registerBackHandler()` on `SharedContainerScope`**: FlowMVI shared containers (tab/pane-scoped) can register back handlers scoped to the container node's lifecycle.
+- **`NavNode.activeNodePath()` extension**: Returns the path from active leaf to root, enabling hierarchical handler resolution from most-specific to least-specific scope.
+
 ### Changed
 
+- **`BackHandlerRegistry` is now scope-aware**: Internal data structure changed from a flat list to `Map<NodeKey, List<Handler>>`. Handlers are keyed by node and consulted in LIFO order per scope, walking the active node path from leaf to root.
+- **`BackHandlerRegistry` is now Compose-observable**: Uses a snapshot-tracked version counter so `hasHandlers()` triggers recomposition when handlers change.
+- **`NavigationHost` predictive back interaction**: Predictive back gestures are automatically disabled when the active screen has registered back handlers, falling back to a simple `onBack()` callback to avoid misleading preview animations.
+
 ### Fixed
+
+- **Programmatic `navigateBack()` no longer consults `BackHandlerRegistry`**: Previously, custom back handlers intercepted both user-initiated and programmatic back navigation. Now `navigateBack()` performs a direct tree pop, while `onBack()` (system back button/gesture) consults the registry first.
 
 ## [0.4.2] - 2026-03-19
 

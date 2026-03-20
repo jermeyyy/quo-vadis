@@ -96,6 +96,33 @@ The module transitively includes:
 | `screenKey` | `String` | Unique identifier for this screen instance |
 | `coroutineScope` | `CoroutineScope` | Scope tied to screen lifecycle |
 | `screenNode` | `ScreenNode` | The navigation node this container is attached to |
+| `backHandlerRegistry` | `BackHandlerRegistry` | Registry for scope-aware back handlers |
+
+### registerBackHandler()
+
+Register a back handler scoped to this screen's lifecycle. The handler is automatically unregistered when the container scope closes.
+
+```kotlin
+class EditorContainer(
+    scope: NavigationContainerScope,
+) : NavigationContainer<EditorState, EditorIntent, EditorAction>(scope) {
+
+    init {
+        scope.registerBackHandler {
+            if (currentState.hasUnsavedChanges) {
+                intent(EditorIntent.ShowDiscardDialog)
+                true // consumed
+            } else {
+                false // let normal back navigation proceed
+            }
+        }
+    }
+
+    // ...
+}
+```
+
+Returns a function to manually unregister before scope close if needed.
 
 ### Complete Example
 
@@ -268,6 +295,33 @@ class ProfileContainer(
 | `containerKey` | `String` | Unique identifier for this container instance |
 | `coroutineScope` | `CoroutineScope` | Scope tied to container lifecycle |
 | `containerNode` | `LifecycleAwareNode` | The TabNode or PaneNode this container is attached to |
+| `backHandlerRegistry` | `BackHandlerRegistry` | Registry for scope-aware back handlers |
+
+### registerBackHandler() (Shared)
+
+Register a back handler scoped to the tab/pane container's lifecycle. Since shared containers span multiple screens, the handler fires whenever any child screen is active.
+
+```kotlin
+class MainTabsContainer(
+    scope: SharedContainerScope,
+) : SharedNavigationContainer<TabsState, TabsIntent, TabsAction>(scope) {
+
+    init {
+        scope.registerBackHandler {
+            if (currentState.isDrawerOpen) {
+                intent(TabsIntent.CloseDrawer)
+                true // consumed
+            } else {
+                false // propagate
+            }
+        }
+    }
+
+    // ...
+}
+```
+
+Handlers registered on shared containers are checked after the active screen's handlers (leaf-to-root order).
 
 ### Complete Example
 

@@ -1,6 +1,7 @@
 package com.jermey.navplayground
 
 import com.jermey.feature1.resultdemo.Feature1Module
+import com.jermey.navplayground.demo.BackHandlerDemoModule
 import com.jermey.navplayground.demo.ExploreModule
 import com.jermey.navplayground.demo.NavigationModule
 import com.jermey.navplayground.demo.ProfileModule
@@ -16,6 +17,7 @@ import org.koin.core.annotation.KoinApplication
         ProfileModule::class,
         ExploreModule::class,
         Feature1Module::class,
+        BackHandlerDemoModule::class,
     ]
 )
 object NavPlaygroundKoinApp

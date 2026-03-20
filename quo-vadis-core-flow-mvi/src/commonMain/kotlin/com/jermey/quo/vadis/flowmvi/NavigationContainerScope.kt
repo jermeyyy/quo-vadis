@@ -3,6 +3,7 @@ package com.jermey.quo.vadis.flowmvi
 import androidx.compose.runtime.Stable
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
+import com.jermey.quo.vadis.core.registry.BackHandlerRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import org.koin.core.component.KoinScopeComponent
@@ -43,6 +44,7 @@ class NavigationContainerScope(
     override val scope: Scope,
     val screenNode: ScreenNode,
     val navigator: Navigator,
+    val backHandlerRegistry: BackHandlerRegistry,
 ) : KoinScopeComponent {
 
     /**
@@ -57,6 +59,50 @@ class NavigationContainerScope(
     val screenKey: String get() = screenNode.key.value
 
     /**
+     * Tracked handler unregister functions for cleanup on scope close.
+     */
+    private val handlerUnregisters = mutableListOf<() -> Unit>()
+
+    /**
+     * Register a back handler scoped to this screen's lifecycle.
+     *
+     * The handler is registered with the [BackHandlerRegistry] using this screen's
+     * [NodeKey][com.jermey.quo.vadis.core.navigation.node.NodeKey]. It is automatically
+     * unregistered when the container scope is closed (screen destroyed).
+     *
+     * ## Usage
+     *
+     * ```kotlin
+     * class EditorContainer(scope: NavigationContainerScope) :
+     *     NavigationContainer<EditorState, EditorIntent, EditorAction>(scope) {
+     *
+     *     init {
+     *         scope.registerBackHandler {
+     *             if (currentState.hasUnsavedChanges) {
+     *                 intent(EditorIntent.ShowDiscardDialog)
+     *                 true // consumed
+     *             } else {
+     *                 false // let normal back navigation proceed
+     *             }
+     *         }
+     *     }
+     * }
+     * ```
+     *
+     * @param handler A function returning `true` if the back event was consumed,
+     *   `false` to allow propagation to the next handler or default navigation.
+     * @return A function to manually unregister the handler before scope close.
+     */
+    fun registerBackHandler(handler: () -> Boolean): () -> Unit {
+        val unregister = backHandlerRegistry.register(screenNode.key, handler)
+        handlerUnregisters.add(unregister)
+        return {
+            unregister()
+            handlerUnregisters.remove(unregister)
+        }
+    }
+
+    /**
      * Callback registered with the screen node to close scope on destroy.
      */
     private val onDestroyCallback: () -> Unit = {
@@ -64,9 +110,11 @@ class NavigationContainerScope(
     }
 
     init {
-        // Cancel coroutine scope when Koin scope is closed
+        // Cancel coroutine scope and unregister back handlers when Koin scope is closed
         scope.registerCallback(object : ScopeCallback {
             override fun onScopeClose(scope: Scope) {
+                handlerUnregisters.forEach { it() }
+                handlerUnregisters.clear()
                 coroutineScope.cancel()
             }
         })

@@ -23,6 +23,7 @@ import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.node.activeLeaf
+import com.jermey.quo.vadis.core.navigation.node.activeNodePath
 import com.jermey.quo.vadis.core.navigation.node.activeStack
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
@@ -498,37 +499,50 @@ class TreeNavigator(
     }
 
     /**
-     * Navigate back in the stack.
+     * Navigate back programmatically.
      *
-     * @return true if navigation was successful
+     * Performs a direct tree pop without consulting [BackHandlerRegistry].
+     * This is intended for programmatic navigation (e.g., button clicks, code-driven navigation).
+     * User-initiated back events (system back button, gestures) should use [onBack] instead.
+     *
+     * @return true if navigation was successful, false if at root
      */
-    override fun navigateBack(): Boolean {
-        // Use ParentNavigator's delegation logic (tries child first, then handleBackInternal)
-        return onBack()
-    }
+    override fun navigateBack(): Boolean = performTreePop()
 
     /**
-     * Handle back press for this navigator's state.
+     * Handle a user-initiated back event.
      *
-     * Uses intelligent tree-based back handling:
-     * 1. Check user-defined handlers first (via BackHandlerRegistry)
-     * 2. Pop from active stack if possible
-     * 3. For tabs: switch to initial tab if not already there
-     * 4. For nested structures: cascade up the tree
-     * 5. Return false to delegate to system (e.g., close app)
+     * Consults the [BackHandlerRegistry] first (scope-aware, leaf-to-root ordering).
+     * If no registered handler consumes the event, falls through to tree-based back navigation.
+     *
+     * This method is called by the system back button and predictive back gestures.
+     * For programmatic back navigation, use [navigateBack] instead.
+     *
+     * @return true if the back event was handled, false to delegate to the system
      */
     override fun onBack(): Boolean {
-        // 1. Check user-defined handlers first
-        if (backHandlerRegistry?.handleBack() == true) {
+        // 1. Check user-defined handlers first (scope-aware, leaf-to-root)
+        val activeNodePath = _state.value.activeNodePath()
+        if (activeNodePath.isNotEmpty() && backHandlerRegistry?.handleBack(activeNodePath) == true) {
             return true
         }
 
+        // 2. Fall through to tree-based back navigation
+        return performTreePop()
+    }
+
+    /**
+     * Perform tree-based back navigation (pop from active stack).
+     *
+     * Shared logic between [navigateBack] (programmatic) and [onBack] (user-initiated).
+     */
+    private fun performTreePop(): Boolean {
         val currentState = _state.value
 
         // Determine compact mode for pane handling
         val isCompact = windowSizeClass?.isCompactWidth ?: true
 
-        // 2. Use tree-aware back handling with window size awareness
+        // Use tree-aware back handling with window size awareness
         return when (val result = TreeMutator.popWithTabBehavior(currentState, isCompact)) {
             is BackResult.Handled -> {
                 updateStateWithTransition(result.newState, null)
@@ -537,8 +551,6 @@ class TreeNavigator(
 
             is BackResult.DelegateToSystem -> false
             is BackResult.CannotHandle -> {
-                // Fallback to pane-specific behavior with window size awareness
-                // In compact mode, treat as simple stack; in expanded mode, use configured behavior
                 when (val popResult = TreeMutator.popPaneAdaptive(currentState, isCompact)) {
                     is PopResult.Popped -> {
                         updateStateWithTransition(popResult.newState, null)

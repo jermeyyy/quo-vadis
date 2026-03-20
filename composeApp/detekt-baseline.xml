@@ -5,6 +5,7 @@
     <ID>CyclomaticComplexMethod:BackstackEditorPanel.kt:@Composable private fun AddDestinationDialog</ID>
     <ID>FunctionNaming:MainViewController.kt:fun MainViewController</ID>
     <ID>LongMethod:AnimatedSearchBar.kt:@Composable fun AnimatedSearchBar</ID>
+    <ID>LongMethod:BackHandlerDemoScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(BackHandlerDemoDestination::class) @Composable fun BackHandlerDemoScreen</ID>
     <ID>LongMethod:BackstackEditorPanel.kt:@Composable private fun AddDestinationDialog</ID>
     <ID>LongMethod:BackstackEditorPanel.kt:@Composable private fun BackstackEntryItem</ID>
     <ID>LongMethod:BackstackEditorPanel.kt:@OptIn(ExperimentalLayoutApi::class) @Composable fun BackstackEditorPanel</ID>

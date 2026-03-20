@@ -46,9 +46,11 @@ import com.jermey.quo.vadis.core.navigation.destination.route
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
+import com.jermey.quo.vadis.core.navigation.navigator.BackPressHandler
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.activeLeaf
+import com.jermey.quo.vadis.core.navigation.node.activeNodePath
 import com.jermey.quo.vadis.core.registry.BackHandlerRegistry
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.registry.LocalBackHandlerRegistry
@@ -292,15 +294,21 @@ fun NavigationHost(
         }
     }
 
+    // Reactive check: does the active screen (or its ancestors) have registered back handlers?
+    val activeNodePath = remember(navState) { navState.activeNodePath() }
+    val hasActiveHandlers by remember(activeNodePath, backHandlerRegistry) {
+        derivedStateOf { backHandlerRegistry.hasHandlers(activeNodePath) }
+    }
+
     // Speculative state for predictive back - computed when gesture starts
     var speculativePopState by remember { mutableStateOf<NavNode?>(null) }
 
     // Coroutine scope for launching animations
     val coroutineScope = rememberCoroutineScope()
 
-    // Root container with QuoVadisBackHandler and SharedTransitionLayout
+    // Path A: Predictive back gesture (disabled when active screen has handlers)
     NavigateBackHandler(
-        enabled = enablePredictiveBack && canGoBack,
+        enabled = enablePredictiveBack && canGoBack && !hasActiveHandlers,
         currentScreenInfo = currentScreenInfo,
         previousScreenInfo = previousScreenInfo,
         onBackProgress = { event ->
@@ -342,64 +350,63 @@ fun NavigationHost(
             speculativePopState = null
         },
         onBackCompleted = {
-            // Complete animation and perform navigation
+            // Complete animation and perform navigation via onBack() (consults registry)
             backAnimationController.completeAnimation()
-
-            // Use the speculative state computed at gesture start
-            val targetState = speculativePopState
             speculativePopState = null
 
-            // Animate the completion - navigation happens at the start of animation
-            // so PredictiveBackContent shows the correct "previous" screen
             coroutineScope.launch {
                 predictiveBackController.animateCompleteGesture {
-                    if (targetState != null) {
-                        @Suppress("DEPRECATION")
-                        navigator.updateState(targetState)
-                    }
+                    navigator.onBack()
                 }
             }
         }
     ) {
-        SharedTransitionLayout(modifier = modifier) {
-            // Create the NavRenderScope implementation
-            val scope = remember(
-                this,
-                navigator,
-                cache,
-                saveableStateHolder,
-                animationCoordinator,
-                predictiveBackController,
-                screenRegistry,
-                containerRegistry,
-                modalRegistry,
-            ) {
-                NavRenderScopeImpl(
-                    navigator = navigator,
-                    cache = cache,
-                    saveableStateHolder = saveableStateHolder,
-                    animationCoordinator = animationCoordinator,
-                    predictiveBackController = predictiveBackController,
-                    screenRegistry = screenRegistry,
-                    containerRegistry = containerRegistry,
-                    modalRegistry = modalRegistry,
-                    sharedTransitionScope = this,
-                )
-            }
+        // Path B: Simple back handler when active screen has handlers
+        // (predictive back is disabled, but we still need to handle back events)
+        NavigateBackHandler(
+            enabled = hasActiveHandlers && canGoBack,
+            onBack = { (navigator as? BackPressHandler)?.onBack() }
+        ) {
+            SharedTransitionLayout(modifier = modifier) {
+                // Create the NavRenderScope implementation
+                val scope = remember(
+                    this,
+                    navigator,
+                    cache,
+                    saveableStateHolder,
+                    animationCoordinator,
+                    predictiveBackController,
+                    screenRegistry,
+                    containerRegistry,
+                    modalRegistry,
+                ) {
+                    NavRenderScopeImpl(
+                        navigator = navigator,
+                        cache = cache,
+                        saveableStateHolder = saveableStateHolder,
+                        animationCoordinator = animationCoordinator,
+                        predictiveBackController = predictiveBackController,
+                        screenRegistry = screenRegistry,
+                        containerRegistry = containerRegistry,
+                        modalRegistry = modalRegistry,
+                        sharedTransitionScope = this,
+                    )
+                }
 
-            // Provide scope to children via CompositionLocal
-            CompositionLocalProvider(
-                LocalNavRenderScope provides scope,
-                LocalNavigator provides navigator,
-                LocalBackHandlerRegistry provides backHandlerRegistry,
-                LocalBackAnimationController provides backAnimationController
-            ) {
-                // Render the navigation tree
-                NavNodeRenderer(
-                    node = navState,
-                    previousNode = previousState,
-                    scope = scope,
-                )
+                // Provide scope to children via CompositionLocal
+                CompositionLocalProvider(
+                    LocalNavRenderScope provides scope,
+                    LocalNavigator provides navigator,
+                    LocalBackHandlerRegistry provides backHandlerRegistry,
+                    LocalBackAnimationController provides backAnimationController
+                ) {
+                    // Render the navigation tree
+                    NavNodeRenderer(
+                        node = navState,
+                        previousNode = previousState,
+                        scope = scope,
+                    )
+                }
             }
         }
     }

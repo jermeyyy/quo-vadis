@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.compose.scope.LocalContainerNode
 import com.jermey.quo.vadis.core.compose.scope.LocalNavigator
 import com.jermey.quo.vadis.core.compose.scope.LocalScreenNode
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.registry.LocalBackHandlerRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -65,6 +66,7 @@ inline fun <reified Container, State, Intent, Action> rememberContainer(
         ?: error("rememberContainer must be called within a screen rendered by NavigationHost")
     val navigator = LocalNavigator.current
         ?: error("rememberContainer must be called within NavigationHost")
+    val backHandlerRegistry = LocalBackHandlerRegistry.current
 
     val koin = getKoin()
 
@@ -81,6 +83,7 @@ inline fun <reified Container, State, Intent, Action> rememberContainer(
             scope = koinScope,
             screenNode = screenNode,
             navigator = navigator,
+            backHandlerRegistry = backHandlerRegistry,
         )
 
         // Declare the scope itself so containers can inject it
@@ -151,6 +154,7 @@ inline fun <reified Container, State, Intent, Action> rememberSharedContainer(
         ?: error("rememberSharedContainer must be called within a Tab/Pane container wrapper")
     val navigator = LocalNavigator.current
         ?: error("rememberSharedContainer must be called within NavigationHost")
+    val backHandlerRegistry = LocalBackHandlerRegistry.current
 
     val koin = getKoin()
 
@@ -170,6 +174,7 @@ inline fun <reified Container, State, Intent, Action> rememberSharedContainer(
             scope = koinScope,
             containerNode = containerNode,
             navigator = navigator,
+            backHandlerRegistry = backHandlerRegistry,
         )
 
         // Declare the scope itself so containers can inject it
