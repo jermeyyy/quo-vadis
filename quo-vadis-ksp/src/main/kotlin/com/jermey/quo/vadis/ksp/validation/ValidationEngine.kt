@@ -427,13 +427,12 @@ class ValidationEngine(
 
             if (destName !in destinationQualifiedNames) {
                 // Cross-module: @Screen references a destination from a compiled dependency.
-                // Verify via classpath annotation check instead of local destinations list.
+                // Classes without a containingFile come from compiled .class files (other modules).
+                // We skip validation for these because @Destination has SOURCE retention and
+                // is not preserved in compiled bytecode, making annotation checks unreliable.
                 val isCrossModuleDestination = screen.destinationClass.containingFile == null
-                val hasDestinationAnnotation = isCrossModuleDestination && screen.destinationClass.annotations.any {
-                    it.shortName.asString() == "Destination"
-                }
 
-                if (!hasDestinationAnnotation) {
+                if (!isCrossModuleDestination) {
                     reportError(
                         screen.functionDeclaration,
                         "@Screen(${screen.destinationClass.simpleName.asString()}::class) " +
