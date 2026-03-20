@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.4.3] - 2026-03-20
+
+### Added
+
 - **Scoped back handler support**: Back handlers are now scoped to individual navigation nodes (screens, tabs, panes), ensuring only the active screen's handlers fire on system back.
 - **`NavBackHandler` composable**: New composable in `quo-vadis-core` for registering back handlers scoped to the current screen node. Automatically registers/unregisters with `BackHandlerRegistry` via `DisposableEffect`.
 - **`registerBackHandler()` on `NavigationContainerScope`**: FlowMVI screen-scoped containers can now register back handlers that auto-cleanup when the container scope closes.
