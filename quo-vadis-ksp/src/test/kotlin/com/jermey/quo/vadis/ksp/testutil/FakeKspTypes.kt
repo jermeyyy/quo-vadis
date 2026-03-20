@@ -3,10 +3,12 @@ package com.jermey.quo.vadis.ksp.testutil
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.FunctionKind
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSFunction
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSNode
@@ -16,6 +18,7 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueArgument
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
@@ -67,13 +70,13 @@ class FakeKSClassDeclaration(
     override val modifiers: Set<Modifier> = emptySet(),
     annotationNames: List<String> = emptyList(),
     override val parentDeclaration: KSDeclaration? = null,
+    override val containingFile: KSFile? = null,
 ) : KSClassDeclaration {
     override val simpleName: KSName = FakeKSName(name)
     override val qualifiedName: KSName = FakeKSName(qualifiedName)
     override val packageName: KSName = FakeKSName(packageName)
     override val annotations: Sequence<KSAnnotation> =
         annotationNames.map { FakeKSAnnotation(it) }.asSequence()
-    override val containingFile: KSFile? = null
     override val typeParameters: List<KSTypeParameter> = emptyList()
     override val docString: String? = null
     override val origin: Origin = Origin.KOTLIN
@@ -132,6 +135,60 @@ fun fakeResolver(): Resolver {
         arrayOf(Resolver::class.java),
         handler
     ) as Resolver
+}
+
+/**
+ * Fake [KSFile] for testing.
+ * Provides a minimal implementation to satisfy containingFile checks.
+ */
+class FakeKSFile(
+    private val path: String = "FakeFile.kt",
+    private val pkg: String = "com.example",
+) : KSFile {
+    override val fileName: String = path.substringAfterLast('/')
+    override val filePath: String = path
+    override val packageName: KSName = FakeKSName(pkg)
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
+    override val declarations: Sequence<KSDeclaration> = emptySequence()
+    override val origin: Origin = Origin.KOTLIN
+    override val location: Location = NonExistLocation
+    override val parent: KSNode? = null
+    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R = notImplemented("accept")
+}
+
+/**
+ * Fake [KSFunctionDeclaration] for testing.
+ * Provides the minimum surface needed by [ScreenInfo.functionDeclaration].
+ */
+class FakeKSFunctionDeclaration(
+    name: String,
+    packageName: String = "com.example",
+) : KSFunctionDeclaration {
+    override val simpleName: KSName = FakeKSName(name)
+    override val qualifiedName: KSName = FakeKSName("$packageName.$name")
+    override val packageName: KSName = FakeKSName(packageName)
+    override val containingFile: KSFile? = FakeKSFile(pkg = packageName)
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
+    override val modifiers: Set<Modifier> = emptySet()
+    override val typeParameters: List<KSTypeParameter> = emptyList()
+    override val docString: String? = null
+    override val origin: Origin = Origin.KOTLIN
+    override val location: Location = NonExistLocation
+    override val parent: KSNode? = null
+    override val parentDeclaration: KSDeclaration? = null
+    override val isActual: Boolean = false
+    override val isExpect: Boolean = false
+    override val parameters: List<KSValueParameter> = emptyList()
+    override val returnType: KSTypeReference? = null
+    override val extensionReceiver: KSTypeReference? = null
+    override val functionKind: FunctionKind = FunctionKind.TOP_LEVEL
+    override val isAbstract: Boolean = false
+    override val declarations: Sequence<KSDeclaration> = emptySequence()
+    override fun findActuals(): Sequence<KSDeclaration> = emptySequence()
+    override fun findExpects(): Sequence<KSDeclaration> = emptySequence()
+    override fun findOverridee(): KSDeclaration? = null
+    override fun asMemberOf(containing: KSType): KSFunction = notImplemented("asMemberOf")
+    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R = notImplemented("accept")
 }
 
 private fun notImplemented(name: String): Nothing =
