@@ -19,6 +19,9 @@ The `Navigator` interface is the central navigation controller in Quo Vadis. It 
   - [Returning a Result](#returning-a-result)
 - [Pane Operations](#pane-operations)
 - [Deep Link Handling](#deep-link-handling)
+- [Scoped Back Handlers](#scoped-back-handlers)
+  - [NavBackHandler Composable](#navbackhandler-composable)
+  - [Back Handler Scoping](#back-handler-scoping)
 - [Predictive Back Support](#predictive-back-support)
 - [State Observation](#state-observation)
 - [TreeNavigator Configuration](#treenavigator-configuration)
@@ -284,22 +287,40 @@ fun HomeScreen(navigator: Navigator = koinInject()) {
 
 ### Back Navigation
 
+Quo Vadis distinguishes between **programmatic** and **user-initiated** back navigation:
+
+| Method | Source | Back Handlers | Use Case |
+|--------|--------|---------------|----------|
+| `navigateBack()` | Code | **Bypassed** | Programmatic navigation (button tap, intent handler) |
+| `onBack()` | System | **Consulted** | System back button, predictive back gesture |
+
 #### navigateBack(): Boolean
 
-Pop from the active stack. Returns `true` if navigation occurred.
+Perform programmatic back navigation by popping from the active stack. This **bypasses** any registered back handlers — use it when you want unconditional navigation.
+
+Returns `true` if navigation occurred.
 
 ```kotlin
 // Simple back
 val didNavigate = navigator.navigateBack()
 
-// Conditional back (e.g., save prompt)
-fun onBackPressed() {
-    if (hasUnsavedChanges) {
-        showSaveDialog()
-    } else {
-        navigator.navigateBack()
-    }
+// After confirming discard in a dialog
+fun onConfirmDiscard() {
+    navigator.navigateBack() // Always navigates, ignores back handlers
 }
+```
+
+#### onBack(): Boolean
+
+Handle a user-initiated back event (system back button, predictive back gesture). This first consults the `BackHandlerRegistry` — handlers registered for the active screen (and its ancestor containers) are checked before any tree navigation occurs.
+
+Typically you don't call this directly; `NavigationHost` wires it to the system back dispatcher automatically.
+
+```kotlin
+// Flow:
+// 1. Check BackHandlerRegistry for active screen → parent containers
+// 2. If any handler returns true → event consumed, no navigation
+// 3. If no handler consumes → perform tree pop (same as navigateBack())
 ```
 
 **Back behavior in different contexts:**
@@ -598,9 +619,69 @@ fun DeepLinkDemoScreen(navigator: Navigator = koinInject()) {
 
 ---
 
+## Scoped Back Handlers
+
+Quo Vadis provides scope-aware back handler registration. Handlers are scoped to specific navigation nodes (screens, tabs, panes) and only fire when their node is active.
+
+### NavBackHandler Composable
+
+The primary API for intercepting back events in Compose screens:
+
+```kotlin
+@Screen(MyDestination.Editor::class)
+@Composable
+fun EditorScreen(navigator: Navigator) {
+    var hasUnsavedChanges by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
+
+    NavBackHandler(enabled = hasUnsavedChanges) {
+        showConfirmDialog = true
+    }
+
+    // ... editor UI ...
+
+    if (showConfirmDialog) {
+        ConfirmDialog(
+            onConfirm = { navigator.navigateBack() },
+            onDismiss = { showConfirmDialog = false }
+        )
+    }
+}
+```
+
+**Key behaviors:**
+- Handler is registered with `BackHandlerRegistry` using the current screen's `NodeKey`
+- Automatically unregistered when the composable leaves composition or `enabled` becomes `false`
+- When active handlers exist for a screen, predictive back gestures are disabled (falls back to simple `onBack()` callback)
+- Multiple handlers per screen are supported; they're consulted in LIFO order
+
+### Back Handler Scoping
+
+Handlers are organized by `NodeKey` in the `BackHandlerRegistry`. During a back event, the registry walks the **active node path** (leaf to root) and checks handlers at each level:
+
+```
+User presses back on "Editor" screen:
+
+1. Check handlers for ScreenNode("Editor")     ← most specific
+2. Check handlers for StackNode("HomeStack")   ← parent stack
+3. Check handlers for TabNode("MainTabs")      ← grandparent tab
+4. Check handlers for StackNode("Root")        ← root
+
+First handler returning true stops propagation.
+If no handler consumes → normal tree pop occurs.
+```
+
+This enables shared containers (e.g., a `TabNode` container) to register handlers that fire regardless of which child screen is active.
+
+For FlowMVI containers, see `registerBackHandler()` on `NavigationContainerScope` and `SharedContainerScope` in the [FlowMVI integration docs](FLOWMVI-KOIN.md).
+
+---
+
 ## Predictive Back Support
 
 `TreeNavigator` supports Android 14+ predictive back gestures through the `TransitionController` interface.
+
+> **Note:** When the active screen has registered back handlers (via `NavBackHandler` or `registerBackHandler()`), predictive back gestures are automatically disabled for that screen. The system falls back to a simple `onBack()` callback to avoid misleading preview animations.
 
 ### Gesture Lifecycle Methods
 

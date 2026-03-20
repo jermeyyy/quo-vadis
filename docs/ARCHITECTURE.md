@@ -37,7 +37,7 @@ This separation ensures:
 - **Flexible rendering**: UI adapts to different screen sizes and platforms
 - **Testability**: Logic can be unit tested without UI dependencies
 
-Registries (`ScreenRegistry`, `ContainerRegistry`, `TransitionRegistry`, `ScopeRegistry`, `ModalRegistry`) supply the configuration that both layers consume.
+Registries (`ScreenRegistry`, `ContainerRegistry`, `TransitionRegistry`, `ScopeRegistry`, `ModalRegistry`, `BackHandlerRegistry`) supply the configuration that both layers consume.
 
 ---
 
