@@ -116,8 +116,6 @@ data object NavigationMenuDestination : NavDestination
 # Run demo (platform-specific)
 ./gradlew :composeApp:run                           # Desktop
 ./gradlew :composeApp:installDebug                  # Android
-./gradlew :composeApp:jsBrowserDevelopmentRun       # JS Web
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun   # WASM Web
 ```
 
 ## Code Style & Conventions
@@ -179,4 +177,4 @@ assertEquals(HomeDestination.Article("123"), navigator.currentDestination.value)
 
 ## Platform Targets
 
-Android, iOS (arm64/simulator/x64), Desktop (JVM), JavaScript (IR), WebAssembly (wasmJs)
+Android, iOS (arm64/simulator/x64), Desktop (JVM)

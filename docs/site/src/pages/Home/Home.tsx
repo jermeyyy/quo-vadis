@@ -53,8 +53,6 @@ export default function Home() {
           <img src="https://img.shields.io/badge/-android-6EDB8D.svg?style=flat&logo=android" alt="Android" />
           <img src="https://img.shields.io/badge/-ios-CDCDCD.svg?style=flat&logo=apple" alt="iOS" />
           <img src="https://img.shields.io/badge/-desktop-4D76CD.svg?style=flat&logo=windows" alt="Desktop" />
-          <img src="https://img.shields.io/badge/-js-F8DB5D.svg?style=flat&logo=javascript" alt="JavaScript" />
-          <img src="https://img.shields.io/badge/-wasm-624FE8.svg?style=flat" alt="WebAssembly" />
         </div>
         
         <div className={styles.heroButtons}>
@@ -70,7 +68,7 @@ export default function Home() {
           <strong>Quo Vadis</strong> (Latin for "Where are you going?") is a comprehensive, type-safe navigation 
           library for Kotlin Multiplatform and Compose Multiplatform. It uses a tree-based navigation architecture 
           where navigation state is an immutable tree of NavNode objects, providing a clean, intuitive API for 
-          managing navigation across Android, iOS, Desktop, and Web platforms with zero string-based routing.
+          managing navigation across Android, iOS, and Desktop platforms with zero string-based routing.
         </p>
       </section>
 
@@ -85,7 +83,7 @@ export default function Home() {
 
           <div className={styles.featureCard}>
             <h4>True Multiplatform</h4>
-            <p>One codebase, 5+ platforms. Android, iOS, Desktop, JavaScript, and WebAssembly - all from the same navigation code.</p>
+            <p>One codebase, 3 platforms. Android, iOS, and Desktop - all from the same navigation code.</p>
           </div>
 
           <div className={styles.featureCard}>

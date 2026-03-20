@@ -19,15 +19,6 @@ kotlin {
     iosX64()
     iosSimulatorArm64()
 
-    js(IR) {
-        browser()
-    }
-
-    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-    }
-
     sourceSets {
         commonMain.dependencies {
             // No dependencies - pure annotation module

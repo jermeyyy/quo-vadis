@@ -143,15 +143,6 @@ const PlatformArchitectureDiagram = () => (
           <span>Keyboard nav</span>
         </div>
       </div>
-      
-      <div style={diagramStyles.platformBox}>
-        <div style={diagramStyles.platformTitle}>webMain</div>
-        <div style={diagramStyles.platformItems}>
-          <span>Browser entry</span>
-          <span>URL routing</span>
-          <span>History API</span>
-        </div>
-      </div>
     </div>
     
     {/* Code sharing indicator */}
@@ -196,7 +187,7 @@ sealed class HomeDestination : NavDestination {
 @Screen(HomeDestination.Feed::class)
 @Composable
 fun FeedScreen(navigator: Navigator) {
-    // Same code runs on Android, iOS, Desktop, Web
+    // Same code runs on Android, iOS, Desktop
 }`} />
       </section>
 
@@ -233,15 +224,6 @@ kotlin {
     
     jvm("desktop")
     
-    js(IR) {
-        browser()
-    }
-    
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-    }
-    
     sourceSets {
         commonMain.dependencies {
             implementation("io.github.jermeyyy:quo-vadis-core:0.3.4")
@@ -264,13 +246,7 @@ kotlin {
 ./gradlew :composeApp:run
 
 # iOS (requires Xcode)
-./gradlew :composeApp:iosSimulatorArm64Test
-
-# JavaScript Browser
-./gradlew :composeApp:jsBrowserDevelopmentRun
-
-# WebAssembly Browser
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun`} />
+./gradlew :composeApp:iosSimulatorArm64Test`} />
       </section>
 
       <section>
@@ -279,22 +255,6 @@ kotlin {
           Each platform requires minimal configuration to integrate deep links and native gestures.
           See the platform sections below for setup details.
         </p>
-      </section>
-
-      <section>
-        <h2 id="web-features">Web-Specific Features</h2>
-        <p>
-          On web platforms, Quo Vadis integrates with browser history and URL routing:
-        </p>
-        
-        <CodeBlock language="kotlin" code={`// Enable browser history integration
-NavigationHost(
-    navigator = navigator,
-    enableBrowserHistory = true  // Syncs with browser URL
-)
-
-// Deep links work as URLs
-// https://yourapp.com/home/article/123`} />
       </section>
 
       <section>
@@ -334,7 +294,6 @@ NavigationHost(
         <h2 id="known-limitations">Known Limitations</h2>
         <ul>
           <li><strong>iOS:</strong> Requires CocoaPods or SPM for framework integration</li>
-          <li><strong>Web (WASM):</strong> Larger initial bundle size compared to JS target</li>
           <li><strong>Desktop:</strong> No native system back gesture; uses keyboard shortcuts</li>
           <li><strong>Android &lt; 13:</strong> Predictive back preview not available (instant back still works)</li>
         </ul>

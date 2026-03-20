@@ -61,7 +61,7 @@ Comprehensive demo showcasing all navigation patterns:
 - ✅ **Annotation-based API** - KSP code generation for zero-boilerplate navigation
 - ✅ **Type-Safe Arguments** - Serializable data classes with automatic wiring
 - ✅ **Type-Safe Navigation** - Compile-time safety, no string-based routing
-- ✅ **Multiplatform** - Android, iOS, Desktop, Web (JS & WASM)
+- ✅ **Multiplatform** - Android, iOS, Desktop
 - ✅ **Lifecycle Management** - `LifecycleAwareNode` for proper lifecycle state
 - ✅ **FlowMVI Integration** - Screen and container-scoped MVI containers
 - ✅ **Deep Link Support** - URI-based navigation with pattern matching
@@ -78,8 +78,6 @@ Comprehensive demo showcasing all navigation patterns:
 |----------|--------|--------|
 | Android | `androidLibrary` | ✅ Production |
 | iOS | `iosArm64`, `iosSimulatorArm64`, `iosX64` | ✅ Production |
-| JavaScript | `js(IR)` | ✅ Production |
-| WebAssembly | `wasmJs` | ✅ Production |
 | Desktop | `jvm("desktop")` | ✅ Production |
 
 ## Package Structure

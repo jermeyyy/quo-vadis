@@ -5,11 +5,10 @@ export interface PlatformFeature {
   android: 'full' | 'partial' | 'none';
   ios: 'full' | 'partial' | 'none';
   desktop: 'full' | 'partial' | 'none';
-  web: 'full' | 'partial' | 'none';
 }
 
 export interface PlatformCardData {
-  platform: 'Android' | 'iOS' | 'Desktop' | 'Web';
+  platform: 'Android' | 'iOS' | 'Desktop';
   features: string[];
 }
 
@@ -35,13 +34,12 @@ const StatusIcon = ({ status }: { status: 'full' | 'partial' | 'none' }) => {
 
 // Default platform features for compact view
 const DEFAULT_FEATURES: PlatformFeature[] = [
-  { name: 'Stack navigation', android: 'full', ios: 'full', desktop: 'full', web: 'full' },
-  { name: 'Tab navigation', android: 'full', ios: 'full', desktop: 'full', web: 'full' },
-  { name: 'Pane layouts', android: 'full', ios: 'full', desktop: 'full', web: 'full' },
-  { name: 'Deep links', android: 'full', ios: 'full', desktop: 'partial', web: 'full' },
-  { name: 'Predictive back', android: 'full', ios: 'full', desktop: 'none', web: 'none' },
-  { name: 'Shared elements', android: 'full', ios: 'full', desktop: 'full', web: 'full' },
-  { name: 'Browser history', android: 'none', ios: 'none', desktop: 'none', web: 'full' },
+  { name: 'Stack navigation', android: 'full', ios: 'full', desktop: 'full' },
+  { name: 'Tab navigation', android: 'full', ios: 'full', desktop: 'full' },
+  { name: 'Pane layouts', android: 'full', ios: 'full', desktop: 'full' },
+  { name: 'Deep links', android: 'full', ios: 'full', desktop: 'partial' },
+  { name: 'Predictive back', android: 'full', ios: 'full', desktop: 'none' },
+  { name: 'Shared elements', android: 'full', ios: 'full', desktop: 'full' },
 ];
 
 // Default platform cards
@@ -73,15 +71,6 @@ const DEFAULT_CARDS: PlatformCardData[] = [
       'All core features',
     ],
   },
-  {
-    platform: 'Web',
-    features: [
-      'Browser history integration',
-      'URL routing',
-      'Forward/back buttons',
-      'Deep linking via URLs',
-    ],
-  },
 ];
 
 export function PlatformSupportGrid({
@@ -99,7 +88,6 @@ export function PlatformSupportGrid({
             <th style={{ textAlign: 'center' }}>Android</th>
             <th style={{ textAlign: 'center' }}>iOS</th>
             <th style={{ textAlign: 'center' }}>Desktop</th>
-            <th style={{ textAlign: 'center' }}>Web</th>
           </tr>
         </thead>
         <tbody>
@@ -109,7 +97,6 @@ export function PlatformSupportGrid({
               <td><StatusIcon status={feature.android} /></td>
               <td><StatusIcon status={feature.ios} /></td>
               <td><StatusIcon status={feature.desktop} /></td>
-              <td><StatusIcon status={feature.web} /></td>
             </tr>
           ))}
         </tbody>
@@ -170,18 +157,6 @@ export function PlatformSupportGrid({
             <td><span className={styles.platformBadge}>jvm</span></td>
             <td style={{ textAlign: 'center' }}><span className={styles.statusFull}>Full</span></td>
             {showRequirements && <td>macOS, Windows, Linux</td>}
-          </tr>
-          <tr>
-            <td className={styles.featureCell}>JavaScript</td>
-            <td><span className={styles.platformBadge}>js (IR)</span></td>
-            <td style={{ textAlign: 'center' }}><span className={styles.statusFull}>Full</span></td>
-            {showRequirements && <td>Modern browsers</td>}
-          </tr>
-          <tr>
-            <td className={styles.featureCell}>WebAssembly</td>
-            <td><span className={styles.platformBadge}>wasmJs</span></td>
-            <td style={{ textAlign: 'center' }}><span className={styles.statusFull}>Full</span></td>
-            {showRequirements && <td>WASM-compatible browsers</td>}
           </tr>
         </tbody>
       </table>

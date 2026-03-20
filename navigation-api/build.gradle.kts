@@ -25,15 +25,6 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
-    js(IR) {
-        browser()
-    }
-
-    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-    }
-
     jvm("desktop")
 
     sourceSets {

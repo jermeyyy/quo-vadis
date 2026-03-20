@@ -167,7 +167,6 @@ fun `test navigation to details screen`() {
 
 - Test on multiple platforms when adding multiplatform features
 - Verify Android and iOS specific behaviors
-- Test web targets when modifying Compose UI
 
 ## Documentation
 
