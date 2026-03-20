@@ -11,7 +11,6 @@ concurrency:
 permissions:
   contents: read
   checks: write
-  security-events: write
 
 jobs:
   check:
@@ -34,13 +33,6 @@ jobs:
       - name: Run check (detekt + unit tests)
         run: ./gradlew check --stacktrace
 
-      - name: Upload detekt SARIF to GitHub Code Scanning
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: .
-          category: detekt
-
       - name: Publish test results
         if: always()
         uses: mikepenz/action-junit-report@v5
@@ -49,19 +41,21 @@ jobs:
           check_name: Test Results
 
       - name: Upload test reports
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
           path: '**/build/reports/tests/'
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Upload detekt reports
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: detekt-reports
           path: '**/build/reports/detekt/'
+          if-no-files-found: ignore
           retention-days: 7
 
   build:
