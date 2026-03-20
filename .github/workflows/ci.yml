@@ -34,7 +34,7 @@ jobs:
         run: ./gradlew check --stacktrace
 
       - name: Publish test results
-        if: always()
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
         uses: mikepenz/action-junit-report@v5
         with:
           report_paths: '**/build/test-results/**/TEST-*.xml'
