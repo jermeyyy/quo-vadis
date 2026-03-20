@@ -46,11 +46,11 @@ import com.jermey.quo.vadis.core.navigation.destination.route
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
+import com.jermey.quo.vadis.core.navigation.navigator.BackPressHandler
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.activeLeaf
 import com.jermey.quo.vadis.core.navigation.node.activeNodePath
-import com.jermey.quo.vadis.core.navigation.navigator.BackPressHandler
 import com.jermey.quo.vadis.core.registry.BackHandlerRegistry
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.registry.LocalBackHandlerRegistry
@@ -356,7 +356,7 @@ fun NavigationHost(
 
             coroutineScope.launch {
                 predictiveBackController.animateCompleteGesture {
-                    (navigator as? BackPressHandler)?.onBack()
+                    navigator.onBack()
                 }
             }
         }
@@ -367,47 +367,47 @@ fun NavigationHost(
             enabled = hasActiveHandlers && canGoBack,
             onBack = { (navigator as? BackPressHandler)?.onBack() }
         ) {
-        SharedTransitionLayout(modifier = modifier) {
-            // Create the NavRenderScope implementation
-            val scope = remember(
-                this,
-                navigator,
-                cache,
-                saveableStateHolder,
-                animationCoordinator,
-                predictiveBackController,
-                screenRegistry,
-                containerRegistry,
-                modalRegistry,
-            ) {
-                NavRenderScopeImpl(
-                    navigator = navigator,
-                    cache = cache,
-                    saveableStateHolder = saveableStateHolder,
-                    animationCoordinator = animationCoordinator,
-                    predictiveBackController = predictiveBackController,
-                    screenRegistry = screenRegistry,
-                    containerRegistry = containerRegistry,
-                    modalRegistry = modalRegistry,
-                    sharedTransitionScope = this,
-                )
-            }
+            SharedTransitionLayout(modifier = modifier) {
+                // Create the NavRenderScope implementation
+                val scope = remember(
+                    this,
+                    navigator,
+                    cache,
+                    saveableStateHolder,
+                    animationCoordinator,
+                    predictiveBackController,
+                    screenRegistry,
+                    containerRegistry,
+                    modalRegistry,
+                ) {
+                    NavRenderScopeImpl(
+                        navigator = navigator,
+                        cache = cache,
+                        saveableStateHolder = saveableStateHolder,
+                        animationCoordinator = animationCoordinator,
+                        predictiveBackController = predictiveBackController,
+                        screenRegistry = screenRegistry,
+                        containerRegistry = containerRegistry,
+                        modalRegistry = modalRegistry,
+                        sharedTransitionScope = this,
+                    )
+                }
 
-            // Provide scope to children via CompositionLocal
-            CompositionLocalProvider(
-                LocalNavRenderScope provides scope,
-                LocalNavigator provides navigator,
-                LocalBackHandlerRegistry provides backHandlerRegistry,
-                LocalBackAnimationController provides backAnimationController
-            ) {
-                // Render the navigation tree
-                NavNodeRenderer(
-                    node = navState,
-                    previousNode = previousState,
-                    scope = scope,
-                )
+                // Provide scope to children via CompositionLocal
+                CompositionLocalProvider(
+                    LocalNavRenderScope provides scope,
+                    LocalNavigator provides navigator,
+                    LocalBackHandlerRegistry provides backHandlerRegistry,
+                    LocalBackAnimationController provides backAnimationController
+                ) {
+                    // Render the navigation tree
+                    NavNodeRenderer(
+                        node = navState,
+                        previousNode = previousState,
+                        scope = scope,
+                    )
+                }
             }
-        }
         }
     }
 }

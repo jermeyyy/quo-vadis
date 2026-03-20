@@ -158,11 +158,11 @@ fun BackHandlerDemoScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "• Container uses scope.registerBackHandler() in init\n" +
-                                "• Handler checks store state for unsaved changes\n" +
-                                "• Returns true (consumed) → shows dialog via intent\n" +
-                                "• Returns false (not consumed) → normal back navigation\n" +
-                                "• Discard uses navigator.navigateBack() (bypasses registry)\n" +
+                        "• Container uses scope.registerBackHandler() in whileSubscribed\n" +
+                                "• Handler always returns true and sends HandleSystemBack intent\n" +
+                                "• Store checks current state via updateState { }\n" +
+                                "• Unsaved changes → shows dialog via state update\n" +
+                                "• No changes → navigator.navigateBack() (bypasses registry)\n" +
                                 "• Handler auto-cleaned on container scope close",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

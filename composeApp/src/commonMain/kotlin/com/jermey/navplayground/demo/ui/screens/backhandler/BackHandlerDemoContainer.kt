@@ -9,6 +9,7 @@ import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
 import pro.respawn.flowmvi.dsl.store
+import pro.respawn.flowmvi.plugins.init
 import pro.respawn.flowmvi.plugins.reduce
 import pro.respawn.flowmvi.plugins.whileSubscribed
 
@@ -30,6 +31,7 @@ data class BackHandlerDemoState(
  */
 sealed interface BackHandlerDemoIntent : MVIIntent {
     data class UpdateText(val text: String) : BackHandlerDemoIntent
+    data object HandleSystemBack : BackHandlerDemoIntent
     data object ShowDiscardDialog : BackHandlerDemoIntent
     data object DismissDiscardDialog : BackHandlerDemoIntent
     data object DiscardAndNavigateBack : BackHandlerDemoIntent
@@ -58,24 +60,19 @@ class BackHandlerDemoContainer(
     scope: NavigationContainerScope,
 ) : NavigationContainer<BackHandlerDemoState, BackHandlerDemoIntent, BackHandlerDemoAction>(scope) {
 
-
     override val store = store(initial = BackHandlerDemoState()) {
         configure {
             name = "BackHandlerDemoStore"
         }
 
-        whileSubscribed {
+        init {
             // Register a back handler via the MVI container scope.
+            // Always intercept and delegate the decision to the store via intent.
+            // The store checks current state and either shows a dialog or navigates back.
             // This handler is automatically unregistered when the screen is destroyed.
-            withState {
-                scope.registerBackHandler {
-                    if (hasUnsavedChanges) {
-                        intent(BackHandlerDemoIntent.ShowDiscardDialog)
-                        true // consumed — show dialog instead of navigating back
-                    } else {
-                        false // not consumed — let normal back navigation proceed
-                    }
-                }
+            scope.registerBackHandler {
+                intent(BackHandlerDemoIntent.HandleSystemBack)
+                true // always consume — let the store decide based on current state
             }
         }
 
@@ -84,6 +81,23 @@ class BackHandlerDemoContainer(
             when (intent) {
                 is BackHandlerDemoIntent.UpdateText -> {
                     updateState { copy(text = intent.text) }
+                }
+
+                is BackHandlerDemoIntent.HandleSystemBack -> {
+                    // Check current state atomically and decide
+                    var shouldNavigate = false
+                    updateState {
+                        if (hasUnsavedChanges) {
+                            copy(showDiscardDialog = true)
+                        } else {
+                            shouldNavigate = true
+                            this
+                        }
+                    }
+                    if (shouldNavigate) {
+                        // No unsaved changes — navigate back programmatically
+                        navigator.navigateBack()
+                    }
                 }
 
                 is BackHandlerDemoIntent.ShowDiscardDialog -> {
