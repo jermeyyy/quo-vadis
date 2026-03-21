@@ -17,11 +17,43 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.types.shouldBeInstanceOf
+
+/**
+ * Creates a test ContainerRegistry with default wrapper implementations.
+ * Only the getContainerInfo function needs custom logic.
+ */
+private fun createTestContainerRegistry(
+    getContainerInfoImpl: (NavDestination) -> ContainerInfo?
+): ContainerRegistry = object : ContainerRegistry {
+    override fun getContainerInfo(destination: NavDestination): ContainerInfo? =
+        getContainerInfoImpl(destination)
+
+    @Composable
+    override fun TabsContainer(
+        tabNodeKey: String,
+        scope: TabsContainerScope,
+        content: @Composable () -> Unit
+    ) {
+        content()
+    }
+
+    @Composable
+    override fun PaneContainer(
+        paneNodeKey: String,
+        scope: PaneContainerScope,
+        content: @Composable () -> Unit
+    ) {
+        content()
+    }
+
+    override fun hasTabsContainer(tabNodeKey: String): Boolean = false
+    override fun hasPaneContainer(paneNodeKey: String): Boolean = false
+}
 
 /**
  * Tests for [ContainerRegistry] interface and [ContainerInfo] sealed class.
@@ -32,49 +64,36 @@ import kotlin.test.assertTrue
  * - ContainerInfo.PaneContainer properties
  * - Custom ContainerRegistry implementations
  */
-class ContainerRegistryTest {
-
-    // =========================================================================
-    // TEST DESTINATIONS
-    // =========================================================================
-
-    /**
-     * Simulates a destination that is part of a tab container.
-     */
-    private sealed interface MainTabs : NavDestination {
-        data object HomeTab : MainTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-
-        data object SettingsTab : MainTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
-
-    /**
-     * Simulates a destination that is part of a pane container.
-     */
-    private sealed interface DetailPane : NavDestination {
-        data object ListItem : DetailPane {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-
-        data object DetailItem : DetailPane {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
-
-    /**
-     * A destination that is NOT part of any container.
-     */
-    private data object StandaloneDestination : NavDestination {
+private sealed interface MainTabs : NavDestination {
+    data object HomeTab : MainTabs {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
+
+    data object SettingsTab : MainTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+}
+
+private sealed interface DetailPane : NavDestination {
+    data object ListItem : DetailPane {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+
+    data object DetailItem : DetailPane {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+}
+
+private data object StandaloneDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+}
+
+class ContainerRegistryTest : FunSpec({
 
     // =========================================================================
     // HELPER BUILDERS
@@ -83,7 +102,7 @@ class ContainerRegistryTest {
     /**
      * Creates a minimal TabNode builder for testing.
      */
-    private fun createTabNodeBuilder(): (NodeKey, NodeKey?, Int) -> TabNode =
+    fun createTabNodeBuilder(): (NodeKey, NodeKey?, Int) -> TabNode =
         { key, parentKey, initialTabIndex ->
             TabNode(
                 key = key,
@@ -108,7 +127,7 @@ class ContainerRegistryTest {
     /**
      * Creates a minimal PaneNode builder for testing.
      */
-    private fun createPaneNodeBuilder(): (NodeKey, NodeKey?) -> PaneNode = { key, parentKey ->
+    fun createPaneNodeBuilder(): (NodeKey, NodeKey?) -> PaneNode = { key, parentKey ->
         PaneNode(
             key = key,
             parentKey = parentKey,
@@ -129,27 +148,24 @@ class ContainerRegistryTest {
     // EMPTY REGISTRY TESTS
     // =========================================================================
 
-    @Test
-    fun `Empty registry returns null for any destination`() {
-        assertNull(ContainerRegistry.Empty.getContainerInfo(MainTabs.HomeTab))
-        assertNull(ContainerRegistry.Empty.getContainerInfo(MainTabs.SettingsTab))
-        assertNull(ContainerRegistry.Empty.getContainerInfo(DetailPane.ListItem))
-        assertNull(ContainerRegistry.Empty.getContainerInfo(StandaloneDestination))
+    test("Empty registry returns null for any destination") {
+        ContainerRegistry.Empty.getContainerInfo(MainTabs.HomeTab).shouldBeNull()
+        ContainerRegistry.Empty.getContainerInfo(MainTabs.SettingsTab).shouldBeNull()
+        ContainerRegistry.Empty.getContainerInfo(DetailPane.ListItem).shouldBeNull()
+        ContainerRegistry.Empty.getContainerInfo(StandaloneDestination).shouldBeNull()
     }
 
-    @Test
-    fun `Empty registry is a singleton`() {
+    test("Empty registry is a singleton") {
         val empty1 = ContainerRegistry.Empty
         val empty2 = ContainerRegistry.Empty
-        assertEquals(empty1, empty2)
+        empty2 shouldBe empty1
     }
 
     // =========================================================================
     // TAB CONTAINER INFO TESTS
     // =========================================================================
 
-    @Test
-    fun `TabContainer has correct initialTabIndex property`() {
+    test("TabContainer has correct initialTabIndex property") {
         val builder = createTabNodeBuilder()
         val info = ContainerInfo.TabContainer(
             builder = builder,
@@ -158,11 +174,10 @@ class ContainerRegistryTest {
             containerClass = MainTabs::class
         )
 
-        assertEquals(1, info.initialTabIndex)
+        info.initialTabIndex shouldBe 1
     }
 
-    @Test
-    fun `TabContainer has correct scopeKey property`() {
+    test("TabContainer has correct scopeKey property") {
         val builder = createTabNodeBuilder()
         val info = ContainerInfo.TabContainer(
             builder = builder,
@@ -171,11 +186,10 @@ class ContainerRegistryTest {
             containerClass = MainTabs::class
         )
 
-        assertEquals(ScopeKey("MainTabs"), info.scopeKey)
+        info.scopeKey shouldBe ScopeKey("MainTabs")
     }
 
-    @Test
-    fun `TabContainer builder creates valid TabNode`() {
+    test("TabContainer builder creates valid TabNode") {
         val builder = createTabNodeBuilder()
         val info = ContainerInfo.TabContainer(
             builder = builder,
@@ -186,14 +200,13 @@ class ContainerRegistryTest {
 
         val tabNode = info.builder(NodeKey("test-tabs"), NodeKey("parent"), 1)
 
-        assertEquals(NodeKey("test-tabs"), tabNode.key)
-        assertEquals(NodeKey("parent"), tabNode.parentKey)
-        assertEquals(1, tabNode.activeStackIndex)
-        assertEquals(2, tabNode.tabCount)
+        tabNode.key shouldBe NodeKey("test-tabs")
+        tabNode.parentKey shouldBe NodeKey("parent")
+        tabNode.activeStackIndex shouldBe 1
+        tabNode.tabCount shouldBe 2
     }
 
-    @Test
-    fun `TabContainer builder respects initialTabIndex`() {
+    test("TabContainer builder respects initialTabIndex") {
         val builder = createTabNodeBuilder()
         val info = ContainerInfo.TabContainer(
             builder = builder,
@@ -204,11 +217,10 @@ class ContainerRegistryTest {
 
         val tabNode = info.builder(NodeKey("tabs"), null, info.initialTabIndex)
 
-        assertEquals(0, tabNode.activeStackIndex)
+        tabNode.activeStackIndex shouldBe 0
     }
 
-    @Test
-    fun `TabContainer equality based on properties`() {
+    test("TabContainer equality based on properties") {
         val builder = createTabNodeBuilder()
         val info1 = ContainerInfo.TabContainer(
             builder,
@@ -229,12 +241,11 @@ class ContainerRegistryTest {
             containerClass = MainTabs::class
         )
 
-        assertEquals(info1, info2)
-        assertNotEquals(info1, info3)
+        info2 shouldBe info1
+        info3 shouldNotBe info1
     }
 
-    @Test
-    fun `TabContainer with different scopeKeys are not equal`() {
+    test("TabContainer with different scopeKeys are not equal") {
         val builder = createTabNodeBuilder()
         val info1 = ContainerInfo.TabContainer(
             builder,
@@ -249,15 +260,14 @@ class ContainerRegistryTest {
             containerClass = MainTabs::class
         )
 
-        assertNotEquals(info1, info2)
+        info2 shouldNotBe info1
     }
 
     // =========================================================================
     // PANE CONTAINER INFO TESTS
     // =========================================================================
 
-    @Test
-    fun `PaneContainer has correct initialPane property`() {
+    test("PaneContainer has correct initialPane property") {
         val builder = createPaneNodeBuilder()
         val info = ContainerInfo.PaneContainer(
             builder = builder,
@@ -266,11 +276,10 @@ class ContainerRegistryTest {
             containerClass = DetailPane::class
         )
 
-        assertEquals(PaneRole.Supporting, info.initialPane)
+        info.initialPane shouldBe PaneRole.Supporting
     }
 
-    @Test
-    fun `PaneContainer has correct scopeKey property`() {
+    test("PaneContainer has correct scopeKey property") {
         val builder = createPaneNodeBuilder()
         val info = ContainerInfo.PaneContainer(
             builder = builder,
@@ -279,11 +288,10 @@ class ContainerRegistryTest {
             containerClass = DetailPane::class
         )
 
-        assertEquals(ScopeKey("DetailPane"), info.scopeKey)
+        info.scopeKey shouldBe ScopeKey("DetailPane")
     }
 
-    @Test
-    fun `PaneContainer builder creates valid PaneNode`() {
+    test("PaneContainer builder creates valid PaneNode") {
         val builder = createPaneNodeBuilder()
         val info = ContainerInfo.PaneContainer(
             builder = builder,
@@ -294,14 +302,13 @@ class ContainerRegistryTest {
 
         val paneNode = info.builder(NodeKey("test-panes"), NodeKey("parent"))
 
-        assertEquals(NodeKey("test-panes"), paneNode.key)
-        assertEquals(NodeKey("parent"), paneNode.parentKey)
-        assertEquals(2, paneNode.paneCount)
-        assertEquals(setOf(PaneRole.Primary, PaneRole.Supporting), paneNode.configuredRoles)
+        paneNode.key shouldBe NodeKey("test-panes")
+        paneNode.parentKey shouldBe NodeKey("parent")
+        paneNode.paneCount shouldBe 2
+        paneNode.configuredRoles shouldBe setOf(PaneRole.Primary, PaneRole.Supporting)
     }
 
-    @Test
-    fun `PaneContainer supports all PaneRole values`() {
+    test("PaneContainer supports all PaneRole values") {
         val builder = createPaneNodeBuilder()
 
         listOf(PaneRole.Primary, PaneRole.Supporting, PaneRole.Extra).forEach { role ->
@@ -311,12 +318,11 @@ class ContainerRegistryTest {
                 scopeKey = ScopeKey("Test"),
                 containerClass = DetailPane::class
             )
-            assertEquals(role, info.initialPane)
+            info.initialPane shouldBe role
         }
     }
 
-    @Test
-    fun `PaneContainer equality based on properties`() {
+    test("PaneContainer equality based on properties") {
         val builder = createPaneNodeBuilder()
         val info1 = ContainerInfo.PaneContainer(
             builder,
@@ -337,12 +343,11 @@ class ContainerRegistryTest {
             containerClass = DetailPane::class
         )
 
-        assertEquals(info1, info2)
-        assertNotEquals(info1, info3)
+        info2 shouldBe info1
+        info3 shouldNotBe info1
     }
 
-    @Test
-    fun `PaneContainer with different scopeKeys are not equal`() {
+    test("PaneContainer with different scopeKeys are not equal") {
         val builder = createPaneNodeBuilder()
         val info1 = ContainerInfo.PaneContainer(
             builder,
@@ -357,15 +362,14 @@ class ContainerRegistryTest {
             containerClass = DetailPane::class
         )
 
-        assertNotEquals(info1, info2)
+        info2 shouldNotBe info1
     }
 
     // =========================================================================
     // CUSTOM REGISTRY TESTS
     // =========================================================================
 
-    @Test
-    fun `Custom registry returns TabContainer for registered tab destinations`() {
+    test("Custom registry returns TabContainer for registered tab destinations") {
         val tabContainerInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(),
             initialTabIndex = 0,
@@ -387,14 +391,13 @@ class ContainerRegistryTest {
         }
 
         val homeInfo = registry.getContainerInfo(MainTabs.HomeTab)
-        assertEquals(tabContainerInfo.copy(initialTabIndex = 0), homeInfo)
+        homeInfo shouldBe tabContainerInfo.copy(initialTabIndex = 0)
 
         val settingsInfo = registry.getContainerInfo(MainTabs.SettingsTab)
-        assertEquals(tabContainerInfo.copy(initialTabIndex = 1), settingsInfo)
+        settingsInfo shouldBe tabContainerInfo.copy(initialTabIndex = 1)
     }
 
-    @Test
-    fun `Custom registry returns PaneContainer for registered pane destinations`() {
+    test("Custom registry returns PaneContainer for registered pane destinations") {
         val paneContainerInfo = ContainerInfo.PaneContainer(
             builder = createPaneNodeBuilder(),
             initialPane = PaneRole.Primary,
@@ -416,14 +419,13 @@ class ContainerRegistryTest {
         }
 
         val listInfo = registry.getContainerInfo(DetailPane.ListItem)
-        assertEquals(paneContainerInfo.copy(initialPane = PaneRole.Primary), listInfo)
+        listInfo shouldBe paneContainerInfo.copy(initialPane = PaneRole.Primary)
 
         val detailInfo = registry.getContainerInfo(DetailPane.DetailItem)
-        assertEquals(paneContainerInfo.copy(initialPane = PaneRole.Supporting), detailInfo)
+        detailInfo shouldBe paneContainerInfo.copy(initialPane = PaneRole.Supporting)
     }
 
-    @Test
-    fun `Custom registry returns null for unregistered destinations`() {
+    test("Custom registry returns null for unregistered destinations") {
         val registry = createTestContainerRegistry { destination ->
             if (destination is MainTabs) {
                 ContainerInfo.TabContainer(
@@ -437,12 +439,11 @@ class ContainerRegistryTest {
             }
         }
 
-        assertNull(registry.getContainerInfo(StandaloneDestination))
-        assertNull(registry.getContainerInfo(DetailPane.ListItem))
+        registry.getContainerInfo(StandaloneDestination).shouldBeNull()
+        registry.getContainerInfo(DetailPane.ListItem).shouldBeNull()
     }
 
-    @Test
-    fun `Custom registry can handle mixed container types`() {
+    test("Custom registry can handle mixed container types") {
         val tabInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(),
             initialTabIndex = 0,
@@ -465,22 +466,21 @@ class ContainerRegistryTest {
         }
 
         val homeResult = registry.getContainerInfo(MainTabs.HomeTab)
-        assertEquals(tabInfo, homeResult)
-        assertTrue(homeResult is ContainerInfo.TabContainer)
+        homeResult shouldBe tabInfo
+        homeResult.shouldBeInstanceOf<ContainerInfo.TabContainer>()
 
         val detailResult = registry.getContainerInfo(DetailPane.ListItem)
-        assertEquals(paneInfo, detailResult)
-        assertTrue(detailResult is ContainerInfo.PaneContainer)
+        detailResult shouldBe paneInfo
+        detailResult.shouldBeInstanceOf<ContainerInfo.PaneContainer>()
 
-        assertNull(registry.getContainerInfo(StandaloneDestination))
+        registry.getContainerInfo(StandaloneDestination).shouldBeNull()
     }
 
     // =========================================================================
     // CONTAINER INFO SEALED CLASS TESTS
     // =========================================================================
 
-    @Test
-    fun `ContainerInfo scopeKey is accessible from both variants`() {
+    test("ContainerInfo scopeKey is accessible from both variants") {
         val tabInfo: ContainerInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(),
             initialTabIndex = 0,
@@ -495,12 +495,11 @@ class ContainerRegistryTest {
             containerClass = DetailPane::class
         )
 
-        assertEquals(ScopeKey("TabScope"), tabInfo.scopeKey)
-        assertEquals(ScopeKey("PaneScope"), paneInfo.scopeKey)
+        tabInfo.scopeKey shouldBe ScopeKey("TabScope")
+        paneInfo.scopeKey shouldBe ScopeKey("PaneScope")
     }
 
-    @Test
-    fun `ContainerInfo when expression exhaustive check`() {
+    test("ContainerInfo when expression exhaustive check") {
         val tabInfo: ContainerInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(),
             initialTabIndex = 0,
@@ -519,50 +518,13 @@ class ContainerRegistryTest {
             is ContainerInfo.TabContainer -> "tab"
             is ContainerInfo.PaneContainer -> "pane"
         }
-        assertEquals("tab", tabType)
+        tabType shouldBe "tab"
 
         val paneType = when (paneInfo) {
             is ContainerInfo.TabContainer -> "tab"
             is ContainerInfo.PaneContainer -> "pane"
         }
-        assertEquals("pane", paneType)
+        paneType shouldBe "pane"
     }
 
-    // =========================================================================
-    // HELPER FUNCTIONS
-    // =========================================================================
-
-    /**
-     * Creates a test ContainerRegistry with default wrapper implementations.
-     * Only the getContainerInfo function needs custom logic.
-     */
-    private fun createTestContainerRegistry(
-        getContainerInfoImpl: (NavDestination) -> ContainerInfo?
-    ): ContainerRegistry = object : ContainerRegistry {
-        override fun getContainerInfo(destination: NavDestination): ContainerInfo? =
-            getContainerInfoImpl(destination)
-
-        @Composable
-        override fun TabsContainer(
-            tabNodeKey: String,
-            scope: TabsContainerScope,
-            content: @Composable () -> Unit
-        ) {
-            // Default: just render content
-            content()
-        }
-
-        @Composable
-        override fun PaneContainer(
-            paneNodeKey: String,
-            scope: PaneContainerScope,
-            content: @Composable () -> Unit
-        ) {
-            // Default: just render content
-            content()
-        }
-
-        override fun hasTabsContainer(tabNodeKey: String): Boolean = false
-        override fun hasPaneContainer(paneNodeKey: String): Boolean = false
-    }
-}
+})

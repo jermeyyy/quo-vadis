@@ -104,8 +104,20 @@ data object NavigationMenuDestination : NavDestination
 # Full build
 ./gradlew build
 
+# Run all tests (Kotest)
+./gradlew allTests
+
 # Run tests
 ./gradlew test
+
+# Generate coverage report (HTML)
+./gradlew koverHtmlReport
+
+# Generate coverage report (XML)
+./gradlew koverXmlReport
+
+# Verify coverage rules (when thresholds are enabled)
+./gradlew koverVerify
 
 # Detekt (static analysis)
 ./gradlew detekt
@@ -126,6 +138,7 @@ data object NavigationMenuDestination : NavDestination
 - **Naming**: `*Destination` for sealed classes, `*Screen` for composables, `*Container` for MVI
 - **Immutability**: All tree mutations via `TreeMutator` - never modify `NavNode` directly
 - **Modal destinations**: `@Modal` marker annotation on `@Destination`/`@Tabs`/`@Stack`/`@Pane` classes
+- **Tests**: Kotest FunSpec style, `shouldBe`/`shouldThrow` assertions, no `@Test` annotations
 
 ## MVI Integration (quo-vadis-core-flow-mvi)
 
@@ -164,15 +177,16 @@ val store = rememberSharedContainer<MainTabsContainer, ...>()
 
 ## Testing
 
-Use `FakeNavigator` from `quo-vadis-core` for unit tests:
+Tests use **Kotest FunSpec** with `shouldBe` assertions. Use `FakeNavigator` from `quo-vadis-core` for unit tests:
 
 ```kotlin
-val navigator = TreeNavigator(
-    config = GeneratedNavigationConfig,
-    initialState = config.buildNavNode(HomeDestination::class, null)!!
-)
-navigator.navigate(HomeDestination.Article("123"))
-assertEquals(HomeDestination.Article("123"), navigator.currentDestination.value)
+class ExampleTest : FunSpec({
+    test("navigate to article") {
+        val navigator = FakeNavigator()
+        navigator.navigate(HomeDestination.Article("123"))
+        navigator.currentDestination.value shouldBe HomeDestination.Article("123")
+    }
+})
 ```
 
 ## Platform Targets

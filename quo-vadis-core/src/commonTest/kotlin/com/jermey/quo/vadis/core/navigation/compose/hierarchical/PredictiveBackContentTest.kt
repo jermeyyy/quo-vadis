@@ -9,13 +9,13 @@ import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.floats.plusOrMinus
 
 /**
  * Tests for predictive back gesture rendering.
@@ -26,18 +26,18 @@ import kotlin.test.assertTrue
  * - Previous content rendering during gesture
  * - Predictive back controller state
  */
-class PredictiveBackContentTest {
+class PredictiveBackContentTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object CurrentDestination : NavDestination {
+    val CurrentDestination = object : NavDestination {
         override val data: Any? = "current"
         override val transition: NavigationTransition? = null
     }
 
-    private object PreviousDestination : NavDestination {
+    val PreviousDestination = object : NavDestination {
         override val data: Any? = "previous"
         override val transition: NavigationTransition? = null
     }
@@ -46,13 +46,13 @@ class PredictiveBackContentTest {
     // TEST HELPERS
     // =========================================================================
 
-    private fun createScreen(
+    fun createScreen(
         key: String,
         parentKey: String? = null,
         destination: NavDestination = CurrentDestination
     ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
-    private fun createStack(
+    fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
@@ -62,42 +62,38 @@ class PredictiveBackContentTest {
     // PREDICTIVE BACK CONTROLLER TESTS
     // =========================================================================
 
-    @Test
-    fun `predictive back controller is inactive by default`() {
+    test("predictive back controller is inactive by default") {
         // Given
         val controller = PredictiveBackController()
 
         // Then
-        assertFalse(controller.isActive.value)
-        assertEquals(0f, controller.progress.value)
+        controller.isActive.value.shouldBeFalse()
+        controller.progress.value shouldBe 0f
     }
 
-    @Test
-    fun `FakeNavRenderScope provides predictive back controller`() {
+    test("FakeNavRenderScope provides predictive back controller") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertNotNull(scope.predictiveBackController)
-        assertFalse(scope.predictiveBackController.isActive.value)
+        scope.predictiveBackController.shouldNotBeNull()
+        scope.predictiveBackController.isActive.value.shouldBeFalse()
     }
 
-    @Test
-    fun `custom predictive back controller can be injected`() {
+    test("custom predictive back controller can be injected") {
         // Given
         val customController = PredictiveBackController()
         val scope = FakeNavRenderScope(predictiveBackController = customController)
 
         // Then
-        assertEquals(customController, scope.predictiveBackController)
+        scope.predictiveBackController shouldBe customController
     }
 
     // =========================================================================
     // GESTURE ACTIVE STATE TESTS
     // =========================================================================
 
-    @Test
-    fun `gesture inactive means normal animated content is used`() {
+    test("gesture inactive means normal animated content is used") {
         // Given
         val scope = FakeNavRenderScope()
 
@@ -105,11 +101,10 @@ class PredictiveBackContentTest {
         val isPredictiveBackActive = scope.predictiveBackController.isActive.value
 
         // Then
-        assertFalse(isPredictiveBackActive, "Predictive back should be inactive by default")
+        isPredictiveBackActive.shouldBeFalse()
     }
 
-    @Test
-    fun `predictive back enablement depends on root stack`() {
+    test("predictive back enablement depends on root stack") {
         // Given
         val rootStack = createStack("root", null, createScreen("s1", "root"))
         val nestedStack = createStack("nested", "parent", createScreen("s1", "nested"))
@@ -119,16 +114,15 @@ class PredictiveBackContentTest {
         val rootPredictiveBackEnabled = rootStack.parentKey == null
         val nestedPredictiveBackEnabled = nestedStack.parentKey == null
 
-        assertTrue(rootPredictiveBackEnabled)
-        assertFalse(nestedPredictiveBackEnabled)
+        rootPredictiveBackEnabled.shouldBeTrue()
+        nestedPredictiveBackEnabled.shouldBeFalse()
     }
 
     // =========================================================================
     // PROGRESS TRANSFORM TESTS
     // =========================================================================
 
-    @Test
-    fun `progress at zero means no transform`() {
+    test("progress at zero means no transform") {
         // Given
         val progress = 0f
 
@@ -141,14 +135,12 @@ class PredictiveBackContentTest {
         val currentScale = 1f - (progress * scaleFactor) // 1.0 at progress=0
 
         // Then
-        assertEquals(-0.3f, previousTranslationFactor)
-        assertEquals(0f, currentTranslationFactor)
-        assertEquals(1f, currentScale)
+        previousTranslationFactor shouldBe -0.3f
+        currentTranslationFactor shouldBe 0f
+        currentScale shouldBe 1f
     }
 
-    @Ignore
-    @Test
-    fun `progress at one means full transform`() {
+    test("progress at one means full transform").config(enabled = false) {
         // Given
         val progress = 1f
 
@@ -161,13 +153,12 @@ class PredictiveBackContentTest {
         val currentScale = 1f - (progress * scaleFactor) // 0.9 at progress=1
 
         // Then
-        assertEquals(0f, previousTranslationFactor)
-        assertEquals(1f, currentTranslationFactor)
-        assertEquals(0.9f, currentScale)
+        previousTranslationFactor shouldBe 0f
+        currentTranslationFactor shouldBe 1f
+        currentScale shouldBe 0.9f
     }
 
-    @Test
-    fun `progress at half means intermediate transform`() {
+    test("progress at half means intermediate transform") {
         // Given
         val progress = 0.5f
 
@@ -180,17 +171,16 @@ class PredictiveBackContentTest {
         val currentScale = 1f - (progress * scaleFactor) // 0.95 at progress=0.5
 
         // Then
-        assertEquals(-0.15f, previousTranslationFactor, 0.001f)
-        assertEquals(0.5f, currentTranslationFactor)
-        assertEquals(0.95f, currentScale)
+        previousTranslationFactor shouldBe (-0.15f plusOrMinus 0.001f)
+        currentTranslationFactor shouldBe 0.5f
+        currentScale shouldBe 0.95f
     }
 
     // =========================================================================
     // PREVIOUS CONTENT RENDERING TESTS
     // =========================================================================
 
-    @Test
-    fun `previous content is null initially`() {
+    test("previous content is null initially") {
         // Given
         val current = createScreen("current-screen", destination = CurrentDestination)
 
@@ -198,11 +188,10 @@ class PredictiveBackContentTest {
         val previous: ScreenNode? = null
 
         // Then
-        assertNull(previous)
+        previous.shouldBeNull()
     }
 
-    @Test
-    fun `previous content is available after navigation`() {
+    test("previous content is available after navigation") {
         // Given
         var previous: ScreenNode?
         var current = createScreen("screen-a", destination = PreviousDestination)
@@ -212,29 +201,27 @@ class PredictiveBackContentTest {
         current = createScreen("screen-b", destination = CurrentDestination)
 
         // Then
-        assertNotNull(previous)
-        assertEquals(NodeKey("screen-a"), previous.key)
-        assertEquals(NodeKey("screen-b"), current.key)
+        previous.shouldNotBeNull()
+        previous.key shouldBe NodeKey("screen-a")
+        current.key shouldBe NodeKey("screen-b")
     }
 
-    @Test
-    fun `previous and current are both accessible during gesture`() {
+    test("previous and current are both accessible during gesture") {
         // Given
         val previous = createScreen("previous", destination = PreviousDestination)
         val current = createScreen("current", destination = CurrentDestination)
 
         // Then - both are defined and distinct
-        assertNotNull(previous)
-        assertNotNull(current)
-        assertFalse(previous.key == current.key)
+        previous.shouldNotBeNull()
+        current.shouldNotBeNull()
+        (previous.key == current.key).shouldBeFalse()
     }
 
     // =========================================================================
     // STACK BACK NAVIGATION TESTS
     // =========================================================================
 
-    @Test
-    fun `stack provides previous and current for predictive back`() {
+    test("stack provides previous and current for predictive back") {
         // Given
         val screen1 = createScreen("s1", "stack")
         val screen2 = createScreen("s2", "stack")
@@ -247,12 +234,11 @@ class PredictiveBackContentTest {
         val previousChild = if (children.size >= 2) children[children.size - 2] else null
 
         // Then
-        assertEquals(screen3, currentChild)
-        assertEquals(screen2, previousChild)
+        currentChild shouldBe screen3
+        previousChild shouldBe screen2
     }
 
-    @Test
-    fun `single item stack has no previous for predictive back`() {
+    test("single item stack has no previous for predictive back") {
         // Given
         val screen = createScreen("only-screen", "stack")
         val stack = createStack("stack", null, screen)
@@ -263,13 +249,12 @@ class PredictiveBackContentTest {
         val previousChild = if (children.size >= 2) children[children.size - 2] else null
 
         // Then
-        assertEquals(screen, currentChild)
-        assertNull(previousChild)
-        assertFalse(stack.canGoBack)
+        currentChild shouldBe screen
+        previousChild.shouldBeNull()
+        stack.canGoBack.shouldBeFalse()
     }
 
-    @Test
-    fun `empty stack has no content for predictive back`() {
+    test("empty stack has no content for predictive back") {
         // Given
         val stack = StackNode(NodeKey("stack"), null, emptyList())
 
@@ -279,49 +264,45 @@ class PredictiveBackContentTest {
         val previousChild = if (children.size >= 2) children[children.size - 2] else null
 
         // Then
-        assertNull(currentChild)
-        assertNull(previousChild)
+        currentChild.shouldBeNull()
+        previousChild.shouldBeNull()
     }
 
     // =========================================================================
     // GESTURE CANCELLATION TESTS
     // =========================================================================
 
-    @Test
-    fun `gesture cancellation restores progress to zero`() {
+    test("gesture cancellation restores progress to zero") {
         // Given - simulate gesture in progress then cancelled
         val progressValues = listOf(0f, 0.25f, 0.5f, 0.75f, 0f) // Cancelled, back to 0
 
         // Then
-        assertEquals(0f, progressValues.first())
-        assertEquals(0f, progressValues.last())
+        progressValues.first() shouldBe 0f
+        progressValues.last() shouldBe 0f
     }
 
-    @Test
-    fun `gesture completion has progress at one`() {
+    test("gesture completion has progress at one") {
         // Given - simulate gesture to completion
         val progressValues = listOf(0f, 0.25f, 0.5f, 0.75f, 1f)
 
         // Then
-        assertEquals(1f, progressValues.last())
+        progressValues.last() shouldBe 1f
     }
 
     // =========================================================================
     // CACHE KEY TESTS FOR PREDICTIVE BACK
     // =========================================================================
 
-    @Test
-    fun `current and previous use distinct cache keys`() {
+    test("current and previous use distinct cache keys") {
         // Given
         val previous = createScreen("previous-key", "stack")
         val current = createScreen("current-key", "stack")
 
         // Then
-        assertFalse(previous.key == current.key, "Cache keys must be distinct")
+        (previous.key == current.key).shouldBeFalse()
     }
 
-    @Test
-    fun `cache key remains stable during gesture`() {
+    test("cache key remains stable during gesture") {
         // Given
         val screen = createScreen("stable-key", "stack")
 
@@ -330,7 +311,7 @@ class PredictiveBackContentTest {
 
         // Then - key doesn't change
         progressValues.forEach { _ ->
-            assertEquals(NodeKey("stable-key"), screen.key)
+            screen.key shouldBe NodeKey("stable-key")
         }
     }
 
@@ -338,8 +319,7 @@ class PredictiveBackContentTest {
     // PREDICTIVE BACK INTEGRATION SCENARIOS
     // =========================================================================
 
-    @Test
-    fun `deep stack supports predictive back with correct previous`() {
+    test("deep stack supports predictive back with correct previous") {
         // Given
         val screens = (1..10).map { createScreen("s$it", "stack") }
         val stack = StackNode(NodeKey("stack"), null, screens)
@@ -351,12 +331,11 @@ class PredictiveBackContentTest {
         } else null
 
         // Then
-        assertEquals(NodeKey("s10"), currentChild?.key)
-        assertEquals(NodeKey("s9"), previousChild?.key)
+        currentChild?.key shouldBe NodeKey("s10")
+        previousChild?.key shouldBe NodeKey("s9")
     }
 
-    @Test
-    fun `predictive back respects canGoBack`() {
+    test("predictive back respects canGoBack") {
         // Given
         val singleStack = createStack("stack", null, createScreen("single", "stack"))
         val multiStack = createStack(
@@ -366,63 +345,53 @@ class PredictiveBackContentTest {
         )
 
         // Then
-        assertFalse(singleStack.canGoBack, "Single item stack cannot go back")
-        assertTrue(multiStack.canGoBack, "Multi item stack can go back")
+        singleStack.canGoBack.shouldBeFalse()
+        multiStack.canGoBack.shouldBeTrue()
     }
 
     // =========================================================================
     // PARALLAX AND SCALE CONSTANT TESTS
     // =========================================================================
 
-    @Test
-    fun `parallax factor is reasonable value`() {
+    test("parallax factor is reasonable value") {
         // Given - expected parallax factor
         val parallaxFactor = 0.3f
 
         // Then
-        assertTrue(
-            parallaxFactor > 0f && parallaxFactor < 1f,
-            "Parallax factor should be between 0 and 1"
-        )
+        (parallaxFactor > 0f && parallaxFactor < 1f).shouldBeTrue()
     }
 
-    @Test
-    fun `scale factor is reasonable value`() {
+    test("scale factor is reasonable value") {
         // Given - expected scale factor
         val scaleFactor = 0.1f
 
         // Then
-        assertTrue(
-            scaleFactor > 0f && scaleFactor < 0.5f,
-            "Scale factor should be small for subtle effect"
-        )
+        (scaleFactor > 0f && scaleFactor < 0.5f).shouldBeTrue()
 
         // Minimum scale at full progress
         val minScale = 1f - scaleFactor
-        assertTrue(minScale >= 0.5f, "Content should not scale too small")
+        (minScale >= 0.5f).shouldBeTrue()
     }
 
     // =========================================================================
     // PREDICTIVE BACK STATE FLOW TESTS
     // =========================================================================
 
-    @Test
-    fun `predictive back controller provides isActive StateFlow`() {
+    test("predictive back controller provides isActive StateFlow") {
         // Given
         val controller = PredictiveBackController()
 
         // Then
-        assertNotNull(controller.isActive)
-        assertFalse(controller.isActive.value)
+        controller.isActive.shouldNotBeNull()
+        controller.isActive.value.shouldBeFalse()
     }
 
-    @Test
-    fun `predictive back controller provides progress StateFlow`() {
+    test("predictive back controller provides progress StateFlow") {
         // Given
         val controller = PredictiveBackController()
 
         // Then
-        assertNotNull(controller.progress)
-        assertEquals(0f, controller.progress.value)
+        controller.progress.shouldNotBeNull()
+        controller.progress.value shouldBe 0f
     }
-}
+})

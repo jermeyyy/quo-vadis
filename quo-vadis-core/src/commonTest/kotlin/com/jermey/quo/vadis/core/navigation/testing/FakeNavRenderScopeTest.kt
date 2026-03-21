@@ -12,14 +12,23 @@ import com.jermey.quo.vadis.core.navigation.FakeSaveableStateHolder
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.destination.route
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertSame
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+
+// =========================================================================
+// TEST DESTINATIONS
+// =========================================================================
+
+private object TestDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+}
 
 /**
  * Unit tests for [FakeNavRenderScope] test utility.
@@ -32,88 +41,72 @@ import kotlin.test.assertTrue
  * - Helper factory methods work
  */
 @OptIn(InternalQuoVadisApi::class)
-class FakeNavRenderScopeTest {
-
-    // =========================================================================
-    // TEST DESTINATIONS
-    // =========================================================================
-
-    private object TestDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
+class FakeNavRenderScopeTest : FunSpec({
 
     // =========================================================================
     // INSTANTIATION TESTS
     // =========================================================================
 
-    @Test
-    fun `FakeNavRenderScope can be created with defaults`() {
+    test("FakeNavRenderScope can be created with defaults") {
         // When
         val scope = FakeNavRenderScope()
 
         // Then
-        assertNotNull(scope.navigator)
-        assertNotNull(scope.cache)
-        assertNotNull(scope.saveableStateHolder)
-        assertNotNull(scope.animationCoordinator)
-        assertNotNull(scope.predictiveBackController)
-        assertNotNull(scope.screenRegistry)
-        assertNotNull(scope.containerRegistry)
-        assertNull(scope.sharedTransitionScope)
+        scope.navigator.shouldNotBeNull()
+        scope.cache.shouldNotBeNull()
+        scope.saveableStateHolder.shouldNotBeNull()
+        scope.animationCoordinator.shouldNotBeNull()
+        scope.predictiveBackController.shouldNotBeNull()
+        scope.screenRegistry.shouldNotBeNull()
+        scope.containerRegistry.shouldNotBeNull()
+        scope.sharedTransitionScope.shouldBeNull()
     }
 
-    @Test
-    fun `FakeNavRenderScope uses FakeNavigator by default`() {
+    test("FakeNavRenderScope uses FakeNavigator by default") {
         // When
         val scope = FakeNavRenderScope()
 
         // Then
-        assertTrue(scope.navigator is FakeNavigator)
+        scope.navigator.shouldBeInstanceOf<FakeNavigator>()
     }
 
-    @Test
-    fun `FakeNavRenderScope uses FakeSaveableStateHolder by default`() {
+    test("FakeNavRenderScope uses FakeSaveableStateHolder by default") {
         // When
         val scope = FakeNavRenderScope()
 
         // Then
-        assertTrue(scope.saveableStateHolder is FakeSaveableStateHolder)
+        scope.saveableStateHolder.shouldBeInstanceOf<FakeSaveableStateHolder>()
     }
 
-    @Test
-    fun `FakeNavRenderScope uses AnimationCoordinator Default by default`() {
+    test("FakeNavRenderScope uses AnimationCoordinator Default by default") {
         // When
         val scope = FakeNavRenderScope()
 
         // Then
-        assertSame(AnimationCoordinator.Default, scope.animationCoordinator)
+        scope.animationCoordinator shouldBeSameInstanceAs AnimationCoordinator.Default
     }
 
-    @Test
-    fun `FakeNavRenderScope uses EmptyScreenRegistry by default`() {
+    test("FakeNavRenderScope uses EmptyScreenRegistry by default") {
         // When
         val scope = FakeNavRenderScope()
 
         // Then
-        assertSame(EmptyScreenRegistry, scope.screenRegistry)
+        scope.screenRegistry shouldBeSameInstanceAs EmptyScreenRegistry
     }
 
-    @Test
-    fun `FakeNavRenderScope uses ContainerRegistry Empty by default`() {
+    test("FakeNavRenderScope uses ContainerRegistry Empty by default") {
         // When
         val scope = FakeNavRenderScope()
 
         // Then
-        assertSame(ContainerRegistry.Empty, scope.containerRegistry)
+        scope.containerRegistry shouldBeSameInstanceAs ContainerRegistry.Empty
     }
 
     // =========================================================================
     // CUSTOMIZATION TESTS
     // =========================================================================
 
-    @Test
-    fun `FakeNavRenderScope accepts custom navigator`() {
+    test("FakeNavRenderScope accepts custom navigator") {
         // Given
         val customNavigator = FakeNavigator()
 
@@ -121,11 +114,10 @@ class FakeNavRenderScopeTest {
         val scope = FakeNavRenderScope(navigator = customNavigator)
 
         // Then
-        assertSame(customNavigator, scope.navigator)
+        scope.navigator shouldBeSameInstanceAs customNavigator
     }
 
-    @Test
-    fun `FakeNavRenderScope accepts custom cache`() {
+    test("FakeNavRenderScope accepts custom cache") {
         // Given
         val customCache = ComposableCache(maxCacheSize = 10)
 
@@ -133,11 +125,10 @@ class FakeNavRenderScopeTest {
         val scope = FakeNavRenderScope(cache = customCache)
 
         // Then
-        assertSame(customCache, scope.cache)
+        scope.cache shouldBeSameInstanceAs customCache
     }
 
-    @Test
-    fun `FakeNavRenderScope accepts custom saveableStateHolder`() {
+    test("FakeNavRenderScope accepts custom saveableStateHolder") {
         // Given
         val customStateHolder = FakeSaveableStateHolder()
 
@@ -145,11 +136,10 @@ class FakeNavRenderScopeTest {
         val scope = FakeNavRenderScope(saveableStateHolder = customStateHolder)
 
         // Then
-        assertSame(customStateHolder, scope.saveableStateHolder)
+        scope.saveableStateHolder shouldBeSameInstanceAs customStateHolder
     }
 
-    @Test
-    fun `FakeNavRenderScope accepts custom animationCoordinator`() {
+    test("FakeNavRenderScope accepts custom animationCoordinator") {
         // Given
         val customCoordinator = AnimationCoordinator()
 
@@ -157,11 +147,10 @@ class FakeNavRenderScopeTest {
         val scope = FakeNavRenderScope(animationCoordinator = customCoordinator)
 
         // Then
-        assertSame(customCoordinator, scope.animationCoordinator)
+        scope.animationCoordinator shouldBeSameInstanceAs customCoordinator
     }
 
-    @Test
-    fun `FakeNavRenderScope accepts custom predictiveBackController`() {
+    test("FakeNavRenderScope accepts custom predictiveBackController") {
         // Given
         val customController = PredictiveBackController()
 
@@ -169,27 +158,27 @@ class FakeNavRenderScopeTest {
         val scope = FakeNavRenderScope(predictiveBackController = customController)
 
         // Then
-        assertSame(customController, scope.predictiveBackController)
+        scope.predictiveBackController shouldBeSameInstanceAs customController
     }
 
     // =========================================================================
     // FACTORY METHOD TESTS
     // =========================================================================
 
-    @Test
-    fun `withFakeNavigator returns scope and navigator pair`() {
+    test("withFakeNavigator returns scope and navigator pair") {
         // When
         val (scope, navigator) = FakeNavRenderScope.withFakeNavigator()
 
         // Then
-        assertNotNull(scope)
-        assertNotNull(navigator)
-        assertSame(navigator, scope.navigator)
+        scope.shouldNotBeNull()
+        navigator.shouldNotBeNull()
+        scope.navigator shouldBeSameInstanceAs navigator
     }
 
-    @Ignore
-    @Test
-    fun `withFakeNavigator navigator is usable for verification`() {
+    // TODO: TestDestination.route requires KSP-generated RouteRegistry registration,
+    //  which is not available in unit tests. Re-enable once route resolution is decoupled or
+    //  a test-friendly route registration mechanism is provided.
+    xtest("withFakeNavigator navigator is usable for verification") {
         // Given
         val (scope, navigator) = FakeNavRenderScope.withFakeNavigator()
 
@@ -197,15 +186,14 @@ class FakeNavRenderScopeTest {
         scope.navigator.navigate(TestDestination)
 
         // Then
-        assertTrue(navigator.verifyNavigateTo(TestDestination.route))
+        navigator.verifyNavigateTo(TestDestination.route).shouldBeTrue()
     }
 
     // =========================================================================
     // FAKE SAVEABLE STATE HOLDER TESTS
     // =========================================================================
 
-    @Test
-    fun `FakeSaveableStateHolder removeState is no-op`() {
+    test("FakeSaveableStateHolder removeState is no-op") {
         // Given
         val stateHolder = FakeSaveableStateHolder()
 
@@ -219,14 +207,12 @@ class FakeNavRenderScopeTest {
     // EMPTY SCREEN REGISTRY TESTS
     // =========================================================================
 
-    @Test
-    fun `EmptyScreenRegistry hasContent returns false for any destination`() {
+    test("EmptyScreenRegistry hasContent returns false for any destination") {
         // When/Then
-        assertFalse(EmptyScreenRegistry.hasContent(TestDestination))
+        EmptyScreenRegistry.hasContent(TestDestination).shouldBeFalse()
     }
 
-    @Test
-    fun `EmptyScreenRegistry hasContent returns false for different destinations`() {
+    test("EmptyScreenRegistry hasContent returns false for different destinations") {
         // Given
         val anotherDestination = object : NavDestination {
             override val data: Any? = "test"
@@ -234,65 +220,60 @@ class FakeNavRenderScopeTest {
         }
 
         // When/Then
-        assertFalse(EmptyScreenRegistry.hasContent(anotherDestination))
+        EmptyScreenRegistry.hasContent(anotherDestination).shouldBeFalse()
     }
 
     // =========================================================================
     // PREDICTIVE BACK CONTROLLER TESTS
     // =========================================================================
 
-    @Test
-    fun `predictiveBackController isActive is false by default`() {
+    test("predictiveBackController isActive is false by default") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertFalse(scope.predictiveBackController.isActive.value)
+        scope.predictiveBackController.isActive.value.shouldBeFalse()
     }
 
-    @Test
-    fun `predictiveBackController progress is zero by default`() {
+    test("predictiveBackController progress is zero by default") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertEquals(0f, scope.predictiveBackController.progress.value)
+        scope.predictiveBackController.progress.value shouldBe 0f
     }
 
     // =========================================================================
     // ANIMATION COORDINATOR TESTS
     // =========================================================================
 
-    @Test
-    fun `animationCoordinator provides default transitions`() {
+    test("animationCoordinator provides default transitions") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertNotNull(scope.animationCoordinator.defaultTransition)
-        assertNotNull(scope.animationCoordinator.defaultTabTransition)
-        assertNotNull(scope.animationCoordinator.defaultPaneTransition)
+        scope.animationCoordinator.defaultTransition.shouldNotBeNull()
+        scope.animationCoordinator.defaultTabTransition.shouldNotBeNull()
+        scope.animationCoordinator.defaultPaneTransition.shouldNotBeNull()
     }
 
     // =========================================================================
     // CONTAINER REGISTRY TESTS
     // =========================================================================
 
-    @Test
-    fun `containerRegistry hasTabsContainer returns false by default`() {
+    test("containerRegistry hasTabsContainer returns false by default") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertFalse(scope.containerRegistry.hasTabsContainer("any-key"))
+        scope.containerRegistry.hasTabsContainer("any-key").shouldBeFalse()
     }
 
-    @Test
-    fun `containerRegistry hasPaneContainer returns false by default`() {
+    test("containerRegistry hasPaneContainer returns false by default") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertFalse(scope.containerRegistry.hasPaneContainer("any-key"))
+        scope.containerRegistry.hasPaneContainer("any-key").shouldBeFalse()
     }
-}
+})

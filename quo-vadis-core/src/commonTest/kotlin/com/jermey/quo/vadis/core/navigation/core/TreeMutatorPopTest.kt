@@ -11,13 +11,12 @@ import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
 import com.jermey.quo.vadis.core.navigation.internal.tree.config.PopBehavior
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertSame
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 /**
  * Unit tests for TreeMutator pop operations.
@@ -30,42 +29,39 @@ import kotlin.test.assertTrue
  * - `PopBehavior`: CASCADE vs PRESERVE_EMPTY behavior
  */
 @OptIn(InternalQuoVadisApi::class)
-class TreeMutatorPopTest {
+class TreeMutatorPopTest : FunSpec() {
 
-    // =========================================================================
-    // TEST DESTINATIONS
-    // =========================================================================
-
-    private object HomeDestination : NavDestination {
+    object HomeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "home"
     }
 
-    private object ProfileDestination : NavDestination {
+    object ProfileDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "profile"
     }
 
-    private object SettingsDestination : NavDestination {
+    object SettingsDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "settings"
     }
 
-    private object DetailDestination : NavDestination {
+    object DetailDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "detail"
     }
 
+    init {
+
     // =========================================================================
     // TEST SETUP
     // =========================================================================
 
-    @BeforeTest
-    fun setup() {
+    beforeTest {
         NavKeyGenerator.reset()
     }
 
@@ -73,8 +69,7 @@ class TreeMutatorPopTest {
     // POP TESTS
     // =========================================================================
 
-    @Test
-    fun `pop removes last screen from stack`() {
+    test("pop removes last screen from stack") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -86,13 +81,12 @@ class TreeMutatorPopTest {
 
         val result = TreeMutator.pop(root)
 
-        assertNotNull(result)
-        assertEquals(1, (result as StackNode).children.size)
-        assertEquals(HomeDestination, (result.activeChild as ScreenNode).destination)
+        result.shouldNotBeNull()
+        (result as StackNode).children.size shouldBe 1
+        (result.activeChild as ScreenNode).destination shouldBe HomeDestination
     }
 
-    @Test
-    fun `pop with single item at root returns empty stack with PRESERVE_EMPTY`() {
+    test("pop with single item at root returns empty stack with PRESERVE_EMPTY") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -104,21 +98,19 @@ class TreeMutatorPopTest {
         val result = TreeMutator.pop(root, PopBehavior.PRESERVE_EMPTY)
 
         // PRESERVE_EMPTY returns a tree with empty stack
-        assertNotNull(result)
-        assertTrue((result as StackNode).isEmpty)
+        result.shouldNotBeNull()
+        (result as StackNode).isEmpty.shouldBeTrue()
     }
 
-    @Test
-    fun `pop returns null on empty stack`() {
+    test("pop returns null on empty stack") {
         val root = StackNode(NodeKey("root"), null, emptyList())
 
         val result = TreeMutator.pop(root)
 
-        assertNull(result)
+        result.shouldBeNull()
     }
 
-    @Test
-    fun `pop with PRESERVE_EMPTY preserves empty stack structure`() {
+    test("pop with PRESERVE_EMPTY preserves empty stack structure") {
         val innerStack = StackNode(
             key = NodeKey("inner"),
             parentKey = NodeKey("outer"),
@@ -135,14 +127,13 @@ class TreeMutatorPopTest {
         val result = TreeMutator.pop(outerStack, PopBehavior.PRESERVE_EMPTY)
 
         // PRESERVE_EMPTY keeps the structure - inner stack becomes empty
-        assertNotNull(result)
+        result.shouldNotBeNull()
         val resultOuter = result as StackNode
         val resultInner = resultOuter.children[0] as StackNode
-        assertTrue(resultInner.isEmpty)
+        resultInner.isEmpty.shouldBeTrue()
     }
 
-    @Test
-    fun `pop removes screen and preserves non-empty stack`() {
+    test("pop removes screen and preserves non-empty stack") {
         val innerStack = StackNode(
             key = NodeKey("inner"),
             parentKey = NodeKey("outer"),
@@ -159,15 +150,14 @@ class TreeMutatorPopTest {
 
         val result = TreeMutator.pop(outerStack)
 
-        assertNotNull(result)
+        result.shouldNotBeNull()
         val resultOuter = result as StackNode
         val resultInner = resultOuter.children[0] as StackNode
-        assertEquals(1, resultInner.children.size)
-        assertEquals(HomeDestination, (resultInner.activeChild as ScreenNode).destination)
+        resultInner.children.size shouldBe 1
+        (resultInner.activeChild as ScreenNode).destination shouldBe HomeDestination
     }
 
-    @Test
-    fun `pop from tab affects active tab only`() {
+    test("pop from tab affects active tab only") {
         val tabs = TabNode(
             key = NodeKey("tabs"),
             parentKey = null,
@@ -187,19 +177,18 @@ class TreeMutatorPopTest {
 
         val result = TreeMutator.pop(tabs)
 
-        assertNotNull(result)
+        result.shouldNotBeNull()
         val resultTabs = result as TabNode
 
         // Tab0 should have 1 item
-        assertEquals(1, resultTabs.stacks[0].children.size)
-        assertEquals(HomeDestination, (resultTabs.stacks[0].activeChild as ScreenNode).destination)
+        resultTabs.stacks[0].children.size shouldBe 1
+        (resultTabs.stacks[0].activeChild as ScreenNode).destination shouldBe HomeDestination
 
         // Tab1 should be unchanged
-        assertEquals(1, resultTabs.stacks[1].children.size)
+        resultTabs.stacks[1].children.size shouldBe 1
     }
 
-    @Test
-    fun `pop preserves structural sharing for unchanged branches`() {
+    test("pop preserves structural sharing for unchanged branches") {
         val tab1Screen = ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
         val tab1Stack = StackNode(NodeKey("tab1"), NodeKey("tabs"), listOf(tab1Screen))
 
@@ -220,12 +209,11 @@ class TreeMutatorPopTest {
         val result = TreeMutator.pop(tabs) as TabNode
 
         // Tab1 stack should be same reference
-        assertSame(tab1Stack, result.stacks[1])
-        assertSame(tab1Screen, result.stacks[1].children[0])
+        result.stacks[1] shouldBeSameInstanceAs tab1Stack
+        result.stacks[1].children[0] shouldBeSameInstanceAs tab1Screen
     }
 
-    @Test
-    fun `pop in tabs with single item returns empty stack with PRESERVE_EMPTY`() {
+    test("pop in tabs with single item returns empty stack with PRESERVE_EMPTY") {
         val tabs = TabNode(
             key = NodeKey("tabs"),
             parentKey = null,
@@ -241,26 +229,24 @@ class TreeMutatorPopTest {
         val result = TreeMutator.pop(tabs)
 
         // With default PRESERVE_EMPTY, tab's stack becomes empty but structure remains
-        assertNotNull(result)
+        result.shouldNotBeNull()
         val resultTabs = result as TabNode
-        assertTrue(resultTabs.stacks[0].isEmpty)
+        resultTabs.stacks[0].isEmpty.shouldBeTrue()
     }
 
-    @Test
-    fun `pop returns null for ScreenNode root`() {
+    test("pop returns null for ScreenNode root") {
         val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         val result = TreeMutator.pop(root)
 
-        assertNull(result)
+        result.shouldBeNull()
     }
 
     // =========================================================================
     // POP TO TESTS
     // =========================================================================
 
-    @Test
-    fun `popTo removes screens until predicate matches`() {
+    test("popTo removes screens until predicate matches") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -275,12 +261,11 @@ class TreeMutatorPopTest {
             node is ScreenNode && node.destination == ProfileDestination
         }
 
-        assertEquals(2, (result as StackNode).children.size)
-        assertEquals(ProfileDestination, (result.activeChild as ScreenNode).destination)
+        (result as StackNode).children.size shouldBe 2
+        (result.activeChild as ScreenNode).destination shouldBe ProfileDestination
     }
 
-    @Test
-    fun `popTo with inclusive removes matching screen`() {
+    test("popTo with inclusive removes matching screen") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -295,12 +280,11 @@ class TreeMutatorPopTest {
             node is ScreenNode && node.destination == ProfileDestination
         }
 
-        assertEquals(1, (result as StackNode).children.size)
-        assertEquals(HomeDestination, (result.activeChild as ScreenNode).destination)
+        (result as StackNode).children.size shouldBe 1
+        (result.activeChild as ScreenNode).destination shouldBe HomeDestination
     }
 
-    @Test
-    fun `popTo returns original when predicate not matched`() {
+    test("popTo returns original when predicate not matched") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -311,20 +295,18 @@ class TreeMutatorPopTest {
 
         val result = TreeMutator.popTo(root) { false }
 
-        assertSame(root, result)
+        result shouldBeSameInstanceAs root
     }
 
-    @Test
-    fun `popTo returns original when no active stack`() {
+    test("popTo returns original when no active stack") {
         val root = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         val result = TreeMutator.popTo(root) { true }
 
-        assertSame(root, result)
+        result shouldBeSameInstanceAs root
     }
 
-    @Test
-    fun `popTo preserves at least one item when inclusive would empty stack`() {
+    test("popTo preserves at least one item when inclusive would empty stack") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -340,11 +322,10 @@ class TreeMutatorPopTest {
         }
 
         // Since popping inclusive to the first would empty the stack, it returns original
-        assertSame(root, result)
+        result shouldBeSameInstanceAs root
     }
 
-    @Test
-    fun `popTo works in tabs targeting active stack`() {
+    test("popTo works in tabs targeting active stack") {
         val tabs = TabNode(
             key = NodeKey("tabs"),
             parentKey = null,
@@ -364,16 +345,15 @@ class TreeMutatorPopTest {
         }
 
         val resultTabs = result as TabNode
-        assertEquals(1, resultTabs.stacks[0].children.size)
-        assertEquals(HomeDestination, (resultTabs.stacks[0].activeChild as ScreenNode).destination)
+        resultTabs.stacks[0].children.size shouldBe 1
+        (resultTabs.stacks[0].activeChild as ScreenNode).destination shouldBe HomeDestination
     }
 
     // =========================================================================
     // POP TO ROUTE TESTS
     // =========================================================================
 
-    @Test
-    fun `popToRoute finds screen by route`() {
+    test("popToRoute finds screen by route") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -386,12 +366,11 @@ class TreeMutatorPopTest {
 
         val result = TreeMutator.popToRoute(root, "home")
 
-        assertEquals(1, (result as StackNode).children.size)
-        assertEquals(HomeDestination, (result.activeChild as ScreenNode).destination)
+        (result as StackNode).children.size shouldBe 1
+        (result.activeChild as ScreenNode).destination shouldBe HomeDestination
     }
 
-    @Test
-    fun `popToRoute with inclusive false keeps matching screen`() {
+    test("popToRoute with inclusive false keeps matching screen") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -404,12 +383,11 @@ class TreeMutatorPopTest {
 
         val result = TreeMutator.popToRoute(root, "profile", inclusive = false)
 
-        assertEquals(2, (result as StackNode).children.size)
-        assertEquals(ProfileDestination, (result.activeChild as ScreenNode).destination)
+        (result as StackNode).children.size shouldBe 2
+        (result.activeChild as ScreenNode).destination shouldBe ProfileDestination
     }
 
-    @Test
-    fun `popToRoute returns original when route not found`() {
+    test("popToRoute returns original when route not found") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -420,11 +398,10 @@ class TreeMutatorPopTest {
 
         val result = TreeMutator.popToRoute(root, "nonexistent")
 
-        assertSame(root, result)
+        result shouldBeSameInstanceAs root
     }
 
-    @Test
-    fun `popToRoute works with multiple screens of different routes`() {
+    test("popToRoute works with multiple screens of different routes") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -439,17 +416,16 @@ class TreeMutatorPopTest {
         // Should find the LAST occurrence of "home" (searching from back)
         val result = TreeMutator.popToRoute(root, "home", inclusive = false)
 
-        assertEquals(3, (result as StackNode).children.size)
+        (result as StackNode).children.size shouldBe 3
         // The third screen (index 2) is the last "home"
-        assertEquals(HomeDestination, (result.activeChild as ScreenNode).destination)
+        (result.activeChild as ScreenNode).destination shouldBe HomeDestination
     }
 
     // =========================================================================
     // POP TO DESTINATION TESTS
     // =========================================================================
 
-    @Test
-    fun `popToDestination finds screen by destination type`() {
+    test("popToDestination finds screen by destination type") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -462,13 +438,12 @@ class TreeMutatorPopTest {
 
         val result = TreeMutator.popToDestination<HomeDestination>(root)
 
-        assertEquals(1, (result as StackNode).children.size)
-        assertTrue(result.activeChild is ScreenNode)
-        assertTrue((result.activeChild as ScreenNode).destination is HomeDestination)
+        (result as StackNode).children.size shouldBe 1
+        (result.activeChild is ScreenNode).shouldBeTrue()
+        ((result.activeChild as ScreenNode).destination is HomeDestination).shouldBeTrue()
     }
 
-    @Test
-    fun `popToDestination with inclusive removes matching screen`() {
+    test("popToDestination with inclusive removes matching screen") {
         val root = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -481,16 +456,15 @@ class TreeMutatorPopTest {
 
         val result = TreeMutator.popToDestination<ProfileDestination>(root, inclusive = true)
 
-        assertEquals(1, (result as StackNode).children.size)
-        assertTrue((result.activeChild as ScreenNode).destination is HomeDestination)
+        (result as StackNode).children.size shouldBe 1
+        ((result.activeChild as ScreenNode).destination is HomeDestination).shouldBeTrue()
     }
 
     // =========================================================================
     // POP BEHAVIOR TESTS
     // =========================================================================
 
-    @Test
-    fun `pop with CASCADE behavior on tab preserves empty stack`() {
+    test("pop with CASCADE behavior on tab preserves empty stack") {
         // In tabs, CASCADE cannot remove a stack - it would break the tab structure
         // So it preserves the empty stack structure
         val tabs = TabNode(
@@ -508,13 +482,12 @@ class TreeMutatorPopTest {
         val result = TreeMutator.pop(tabs, PopBehavior.CASCADE)
 
         // CASCADE in tabs falls back to preserving empty stack
-        assertNotNull(result)
+        result.shouldNotBeNull()
         val resultTabs = result as TabNode
-        assertTrue(resultTabs.stacks[0].isEmpty)
+        resultTabs.stacks[0].isEmpty.shouldBeTrue()
     }
 
-    @Test
-    fun `pop with CASCADE removes nested empty stack from parent stack`() {
+    test("pop with CASCADE removes nested empty stack from parent stack") {
         val innerStack = StackNode(
             key = NodeKey("inner"),
             parentKey = NodeKey("outer"),
@@ -534,16 +507,15 @@ class TreeMutatorPopTest {
         // Pop from inner stack - with CASCADE, should try to remove empty inner
         val result = TreeMutator.pop(outerStack, PopBehavior.CASCADE)
 
-        assertNotNull(result)
+        result.shouldNotBeNull()
         val resultOuter = result as StackNode
         // Inner stack should be removed after becoming empty, leaving just s0
-        assertEquals(1, resultOuter.children.size)
-        assertTrue(resultOuter.children[0] is ScreenNode)
-        assertEquals(ProfileDestination, (resultOuter.children[0] as ScreenNode).destination)
+        resultOuter.children.size shouldBe 1
+        (resultOuter.children[0] is ScreenNode).shouldBeTrue()
+        (resultOuter.children[0] as ScreenNode).destination shouldBe ProfileDestination
     }
 
-    @Test
-    fun `pop multiple times until cannot go back`() {
+    test("pop multiple times until cannot go back") {
         var current: NavNode = StackNode(
             key = NodeKey("root"),
             parentKey = null,
@@ -563,7 +535,9 @@ class TreeMutatorPopTest {
         }
 
         // Should be able to pop 2 times (3 screens -> 2 -> 1 -> canGoBack false)
-        assertEquals(2, popCount)
-        assertEquals(1, (current as StackNode).children.size)
+        popCount shouldBe 2
+        (current as StackNode).children.size shouldBe 1
     }
+
+    } // init
 }

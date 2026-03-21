@@ -9,21 +9,23 @@ import com.jermey.quo.vadis.ksp.models.TabItemInfo
 import com.jermey.quo.vadis.ksp.models.TabItemType
 import com.jermey.quo.vadis.ksp.testutil.FakeKSClassDeclaration
 import com.jermey.quo.vadis.ksp.testutil.FakeKSPLogger
-import kotlin.test.Test
-import kotlin.test.assertTrue
+import io.kotest.assertions.withClue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.string.shouldContain
 
 /**
  * Tests for [ContainerBlockGenerator] focusing on tab entry code generation
  * for each [TabItemType].
  */
-class ContainerBlockGeneratorTabEntryTest {
+class ContainerBlockGeneratorTabEntryTest : FunSpec({
 
-    private val logger = FakeKSPLogger()
-    private val generator = ContainerBlockGenerator(logger)
+    val logger = FakeKSPLogger()
+    val generator = ContainerBlockGenerator(logger)
 
     // -- Helpers --
 
-    private fun sealedClassDecl(
+    fun sealedClassDecl(
         name: String,
         pkg: String = "com.example",
         classKind: ClassKind = ClassKind.CLASS,
@@ -38,7 +40,7 @@ class ContainerBlockGeneratorTabEntryTest {
         annotationNames = annotations,
     )
 
-    private fun tabInfo(
+    fun tabInfo(
         name: String = "TestTabs",
         items: List<TabItemInfo>,
     ): TabInfo {
@@ -54,8 +56,7 @@ class ContainerBlockGeneratorTabEntryTest {
 
     // -- DESTINATION tests --
 
-    @Test
-    fun `DESTINATION data object generates tab() call`() {
+    test("DESTINATION data object generates tab() call") {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "SettingsTab",
@@ -74,14 +75,10 @@ class ContainerBlockGeneratorTabEntryTest {
             panes = emptyList(),
         ).toString()
 
-        assertTrue(
-            output.contains("tab(com.example.SettingsTab)"),
-            "Expected tab(SettingsTab) call for DESTINATION data object, got:\n$output"
-        )
+        output.shouldContain("tab(com.example.SettingsTab)")
     }
 
-    @Test
-    fun `DESTINATION class generates containerTab call`() {
+    test("DESTINATION class generates containerTab call") {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "SettingsTab",
@@ -99,16 +96,12 @@ class ContainerBlockGeneratorTabEntryTest {
             panes = emptyList(),
         ).toString()
 
-        assertTrue(
-            output.contains("containerTab<com.example.SettingsTab>()"),
-            "Expected containerTab<SettingsTab>() call for DESTINATION class, got:\n$output"
-        )
+        output.shouldContain("containerTab<com.example.SettingsTab>()")
     }
 
     // -- STACK tests --
 
-    @Test
-    fun `STACK generates containerTab call`() {
+    test("STACK generates containerTab call") {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "HomeTab",
@@ -126,16 +119,12 @@ class ContainerBlockGeneratorTabEntryTest {
             panes = emptyList(),
         ).toString()
 
-        assertTrue(
-            output.contains("containerTab<com.example.HomeTab>()"),
-            "Expected containerTab<HomeTab>() for STACK, got:\n$output"
-        )
+        output.shouldContain("containerTab<com.example.HomeTab>()")
     }
 
     // -- TABS tests --
 
-    @Test
-    fun `TABS with Stack generates containerTab call`() {
+    test("TABS with Stack generates containerTab call") {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "FeatureDestination",
@@ -153,14 +142,10 @@ class ContainerBlockGeneratorTabEntryTest {
             panes = emptyList(),
         ).toString()
 
-        assertTrue(
-            output.contains("containerTab<com.example.FeatureDestination>()"),
-            "Expected containerTab<FeatureDestination>() for STACK, got:\n$output"
-        )
+        output.shouldContain("containerTab<com.example.FeatureDestination>()")
     }
 
-    @Test
-    fun `TABS with Tabs annotation generates containerTab call`() {
+    test("TABS with Tabs annotation generates containerTab call") {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "SubTabs",
@@ -178,16 +163,12 @@ class ContainerBlockGeneratorTabEntryTest {
             panes = emptyList(),
         ).toString()
 
-        assertTrue(
-            output.contains("containerTab<com.example.SubTabs>()"),
-            "Expected containerTab<SubTabs>() for TABS @Tabs, got:\n$output"
-        )
+        output.shouldContain("containerTab<com.example.SubTabs>()")
     }
 
     // -- Mixed tab types --
 
-    @Test
-    fun `mixed tab types generate correct calls`() {
+    test("mixed tab types generate correct calls") {
         val flatItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "SettingsTab",
@@ -220,15 +201,14 @@ class ContainerBlockGeneratorTabEntryTest {
             panes = emptyList(),
         ).toString()
 
-        assertTrue(output.contains("tab(com.example.SettingsTab)"), "Missing flat tab call")
-        assertTrue(output.contains("containerTab<com.example.HomeTab>()"), "Missing nested stack call")
-        assertTrue(output.contains("containerTab<com.example.FeatureDestination>()"), "Missing stack tab call")
+        output.shouldContain("tab(com.example.SettingsTab)")
+        output.shouldContain("containerTab<com.example.HomeTab>()")
+        output.shouldContain("containerTab<com.example.FeatureDestination>()")
     }
 
     // -- Container generation structure --
 
-    @Test
-    fun `tabs block uses scopeKey from tab name`() {
+    test("tabs block uses scopeKey from tab name") {
         val tabItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
                 name = "HomeTab",
@@ -245,20 +225,18 @@ class ContainerBlockGeneratorTabEntryTest {
             panes = emptyList(),
         ).toString()
 
-        assertTrue(
-            output.contains("scopeKey = \"mainTabs\""),
-            "Expected scopeKey = \"mainTabs\" in output, got:\n$output"
-        )
+        output.shouldContain("scopeKey = \"mainTabs\"")
     }
 
-    @Test
-    fun `empty containers produce empty CodeBlock`() {
+    test("empty containers produce empty CodeBlock") {
         val output = generator.generate(
             tabs = emptyList(),
             stacks = emptyList(),
             panes = emptyList(),
         ).toString()
 
-        assertTrue(output.isEmpty(), "Expected empty output for no containers, got:\n$output")
+        withClue("Expected empty output for no containers, got:\n$output") {
+            output.isEmpty().shouldBeTrue()
+        }
     }
-}
+})

@@ -10,24 +10,10 @@
     <ID>CyclomaticComplexMethod:TreeNodeOperations.kt:TreeNodeOperations$private fun tryReplaceNode: NavNode?</ID>
     <ID>EmptyKotlinFile:platformDefaultPredictiveBack.kt:com.jermey.quo.vadis.core.compose.platformDefaultPredictiveBack.kt</ID>
     <ID>ForbiddenComment:ComposableCache.kt:ComposableCache$// TODO: Replace with AtomicLong when kotlinx-atomicfu is added as a dependency</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `Empty returns false for any container key`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `Empty returns false for any destination class`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite returns false when neither says modal`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite returns true when both say modal`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite returns true when primary says modal`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite returns true when secondary says modal`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite unions containers from both registries`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `composite unions destinations from both registries`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `empty sets return false for all inputs`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `isModalContainer returns false for unregistered container`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `isModalContainer returns true for registered container`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `isModalDestination returns false for unregistered destination`</ID>
-    <ID>FunctionNaming:ModalRegistryTest.kt:ModalRegistryTest$@Test fun `isModalDestination returns true for registered destination`</ID>
-    <ID>LargeClass:NavNodeTest.kt:NavNodeTest</ID>
-    <ID>LargeClass:TreeMutatorBackHandlingTest.kt:TreeMutatorBackHandlingTest</ID>
-    <ID>LargeClass:TreeMutatorEdgeCasesTest.kt:TreeMutatorEdgeCasesTest</ID>
-    <ID>LargeClass:TreeMutatorPaneTest.kt:TreeMutatorPaneTest</ID>
-    <ID>LargeClass:TreeNavigatorTest.kt:TreeNavigatorTest</ID>
+    <ID>ForbiddenComment:FakeNavRenderScopeTest.kt:FakeNavRenderScopeTest$// TODO: TestDestination.route requires KSP-generated RouteRegistry registration,</ID>
+    <ID>LargeClass:NavNodeTest.kt:NavNodeTest : FunSpec</ID>
+    <ID>LargeClass:TreeMutatorPaneTest.kt:TreeMutatorPaneTest : FunSpec</ID>
+    <ID>LargeClass:TreeNavigatorTest.kt:TreeNavigatorTest : FunSpec</ID>
     <ID>LongMethod:CascadeBackState.kt:private fun calculateCascadeFromContainer: CascadeBackState</ID>
     <ID>LongMethod:CascadeBackState.kt:private fun calculateCascadeFromStack: CascadeBackState</ID>
     <ID>LongMethod:NavigationHost.kt:@Composable fun NavigationHost</ID>
@@ -88,7 +74,6 @@
     <ID>ThrowsCount:PaneOperations.kt:PaneOperations$fun navigateToPane: NavNode</ID>
     <ID>TooManyFunctions:DslContainerRegistry.kt:DslContainerRegistry : ContainerRegistry</ID>
     <ID>TooManyFunctions:DslNavigationConfig.kt:DslNavigationConfig : NavigationConfig</ID>
-    <ID>TooManyFunctions:ModalRegistryTest.kt:ModalRegistryTest</ID>
     <ID>TooManyFunctions:NavNode.kt:com.jermey.quo.vadis.core.navigation.node.NavNode.kt</ID>
     <ID>TooManyFunctions:PushOperations.kt:PushOperations</ID>
     <ID>TooManyFunctions:TreeMutator.kt:TreeMutator</ID>
@@ -98,5 +83,35 @@
     <ID>UnusedParameter:CompositeContainerRegistryTest.kt:CompositeContainerRegistryTest$containerClass: KClass&lt;out NavDestination></ID>
     <ID>UnusedParameter:NavigationHost.kt:scopeRegistry: ScopeRegistry = ScopeRegistry.Empty</ID>
     <ID>UnusedParameter:PredictiveBackContent.kt:scope: NavRenderScope</ID>
+    <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenADestination = object : NavDestination { override val data: Any? = "A" override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenBDestination = object : NavDestination { override val data: Any? = "B" override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenCDestination = object : NavDestination { override val data: Any? = "C" override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:CascadeBackStateTest.kt:CascadeBackStateTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null override fun toString(): String = "home" }</ID>
+    <ID>VariableNaming:CascadeBackStateTest.kt:CascadeBackStateTest$val ProfileDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null override fun toString(): String = "profile" }</ID>
+    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val PrimaryDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val SecondaryDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val SharedDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val UnknownDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val DetailDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val ProfileDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val SettingsDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val DetailDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val ExtraDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val ListDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:PredictiveBackContentTest.kt:PredictiveBackContentTest$val CurrentDestination = object : NavDestination { override val data: Any? = "current" override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:PredictiveBackContentTest.kt:PredictiveBackContentTest$val PreviousDestination = object : NavDestination { override val data: Any? = "previous" override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val ProfileDestination = object : NavDestination { override val data: Any = "profile-data" override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val SettingsDestination = object : NavDestination { override val data: Any = mapOf("theme" to "dark") override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val DetailDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val ProfileDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val SettingsDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TabRendererTest.kt:TabRendererTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TabRendererTest.kt:TabRendererTest$val ProfileDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TabRendererTest.kt:TabRendererTest$val SettingsDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TreeNavigatorBackHandlerTest.kt:TreeNavigatorBackHandlerTest$val DetailDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TreeNavigatorBackHandlerTest.kt:TreeNavigatorBackHandlerTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
   </CurrentIssues>
 </SmellBaseline>

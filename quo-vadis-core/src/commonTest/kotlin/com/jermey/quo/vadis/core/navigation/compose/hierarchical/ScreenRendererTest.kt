@@ -11,13 +11,14 @@ import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 /**
  * Tests for screen node rendering behavior.
@@ -28,23 +29,23 @@ import kotlin.test.assertTrue
  * - Cache entry creation for screens
  * - State preservation across navigation
  */
-class ScreenRendererTest {
+class ScreenRendererTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : NavDestination {
+    val HomeDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ProfileDestination : NavDestination {
+    val ProfileDestination = object : NavDestination {
         override val data: Any = "profile-data"
         override val transition: NavigationTransition? = null
     }
 
-    private object SettingsDestination : NavDestination {
+    val SettingsDestination = object : NavDestination {
         override val data: Any = mapOf("theme" to "dark")
         override val transition: NavigationTransition? = null
     }
@@ -53,7 +54,7 @@ class ScreenRendererTest {
     // TEST HELPERS
     // =========================================================================
 
-    private fun createScreen(
+    fun createScreen(
         key: String,
         parentKey: String? = null,
         destination: NavDestination = HomeDestination
@@ -63,72 +64,65 @@ class ScreenRendererTest {
     // SCREEN NODE DESTINATION TESTS
     // =========================================================================
 
-    @Test
-    fun `screen node renders destination content correctly`() {
+    test("screen node renders destination content correctly") {
         // Given
         val destination = ProfileDestination
         val screenNode = createScreen("profile-screen", destination = destination)
 
         // Then
-        assertEquals(destination, screenNode.destination)
-        assertEquals("profile-data", screenNode.destination.data)
+        screenNode.destination shouldBe destination
+        screenNode.destination.data shouldBe "profile-data"
     }
 
-    @Test
-    fun `screen node with null destination data is valid`() {
+    test("screen node with null destination data is valid") {
         // Given
         val screenNode = createScreen("home-screen", destination = HomeDestination)
 
         // Then
-        assertNull(screenNode.destination.data)
+        screenNode.destination.data.shouldBeNull()
     }
 
-    @Test
-    fun `screen node with complex destination data is preserved`() {
+    test("screen node with complex destination data is preserved") {
         // Given
         val screenNode = createScreen("settings-screen", destination = SettingsDestination)
 
         // Then
         val data = screenNode.destination.data
-        assertTrue(data is Map<*, *>)
-        assertEquals("dark", data["theme"])
+        data.shouldBeInstanceOf<Map<*, *>>()
+        data["theme"] shouldBe "dark"
     }
 
-    @Test
-    fun `screen node key is used for cache identification`() {
+    test("screen node key is used for cache identification") {
         // Given
         val screenNode = createScreen("unique-screen-key")
 
         // Then
-        assertEquals(NodeKey("unique-screen-key"), screenNode.key)
+        screenNode.key shouldBe NodeKey("unique-screen-key")
     }
 
-    @Test
-    fun `screen node parent key links to parent container`() {
+    test("screen node parent key links to parent container") {
         // Given
         val screenNode = createScreen("child-screen", parentKey = "parent-stack")
 
         // Then
-        assertEquals(NodeKey("parent-stack"), screenNode.parentKey)
+        screenNode.parentKey shouldBe NodeKey("parent-stack")
     }
 
     // =========================================================================
     // CACHE ENTRY TESTS
     // =========================================================================
 
-    @Test
-    fun `cache can be created for screen entry`() {
+    test("cache can be created for screen entry") {
         // Given
         val cache = ComposableCache()
         createScreen("screen-1")
 
         // Then
-        assertNotNull(cache, "Cache should be created")
+        cache.shouldNotBeNull()
         // Cache entry would be created when CachedEntry composable is called
     }
 
-    @Test
-    fun `multiple screens have distinct cache keys`() {
+    test("multiple screens have distinct cache keys") {
         // Given
         val screen1 = createScreen("screen-1")
         val screen2 = createScreen("screen-2")
@@ -136,11 +130,10 @@ class ScreenRendererTest {
 
         // Then
         val keys = listOf(screen1.key, screen2.key, screen3.key)
-        assertEquals(3, keys.distinct().size, "All screen keys should be unique")
+        keys.distinct().size shouldBe 3
     }
 
-    @Test
-    fun `screen key format is consistent`() {
+    test("screen key format is consistent") {
         // Given
         val screens = listOf(
             createScreen("home"),
@@ -151,8 +144,8 @@ class ScreenRendererTest {
 
         // Then
         screens.forEach { screen ->
-            assertFalse(screen.key.value.isEmpty(), "Screen key should not be empty")
-            assertFalse(screen.key.value.contains("/"), "Screen key should not contain path separators")
+            screen.key.value.isEmpty().shouldBeFalse()
+            screen.key.value.contains("/").shouldBeFalse()
         }
     }
 
@@ -160,8 +153,7 @@ class ScreenRendererTest {
     // STATE HOLDER TESTS
     // =========================================================================
 
-    @Test
-    fun `FakeSaveableStateHolder can be used for testing`() {
+    test("FakeSaveableStateHolder can be used for testing") {
         // Given
         val stateHolder = FakeSaveableStateHolder()
 
@@ -171,78 +163,71 @@ class ScreenRendererTest {
         stateHolder.removeState(createScreen("test"))
     }
 
-    @Test
-    fun `FakeNavRenderScope provides state holder`() {
+    test("FakeNavRenderScope provides state holder") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertNotNull(scope.saveableStateHolder)
-        assertTrue(scope.saveableStateHolder is FakeSaveableStateHolder)
+        scope.saveableStateHolder.shouldNotBeNull()
+        scope.saveableStateHolder.shouldBeInstanceOf<FakeSaveableStateHolder>()
     }
 
     // =========================================================================
     // SCREEN NODE EQUALITY TESTS
     // =========================================================================
 
-    @Test
-    fun `screen nodes with same properties are equal`() {
+    test("screen nodes with same properties are equal") {
         // Given
         val screen1 = ScreenNode(NodeKey("key1"), NodeKey("parent"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("key1"), NodeKey("parent"), HomeDestination)
 
         // Then
-        assertEquals(screen1, screen2)
-        assertEquals(screen1.hashCode(), screen2.hashCode())
+        screen2 shouldBe screen1
+        screen2.hashCode() shouldBe screen1.hashCode()
     }
 
-    @Test
-    fun `screen nodes with different keys are not equal`() {
+    test("screen nodes with different keys are not equal") {
         // Given
         val screen1 = ScreenNode(NodeKey("key1"), NodeKey("parent"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("key2"), NodeKey("parent"), HomeDestination)
 
         // Then
-        assertNotEquals(screen1, screen2)
+        screen2 shouldNotBe screen1
     }
 
-    @Test
-    fun `screen nodes with different parent keys are not equal`() {
+    test("screen nodes with different parent keys are not equal") {
         // Given
         val screen1 = ScreenNode(NodeKey("key"), NodeKey("parent1"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("key"), NodeKey("parent2"), HomeDestination)
 
         // Then
-        assertNotEquals(screen1, screen2)
+        screen2 shouldNotBe screen1
     }
 
-    @Test
-    fun `screen nodes with different destinations are not equal`() {
+    test("screen nodes with different destinations are not equal") {
         // Given
         val screen1 = ScreenNode(NodeKey("key"), NodeKey("parent"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("key"), NodeKey("parent"), ProfileDestination)
 
         // Then
-        assertNotEquals(screen1, screen2)
+        screen2 shouldNotBe screen1
     }
 
     // =========================================================================
     // SCREEN IN STACK CONTEXT TESTS
     // =========================================================================
 
-    @Test
-    fun `screen in stack has correct parent key`() {
+    test("screen in stack has correct parent key") {
         // Given
         val screen = createScreen("screen", parentKey = "my-stack")
         val stack = StackNode(NodeKey("my-stack"), null, listOf(screen))
 
         // Then
-        assertEquals(NodeKey("my-stack"), screen.parentKey)
-        assertEquals(screen, stack.activeChild)
+        screen.parentKey shouldBe NodeKey("my-stack")
+        stack.activeChild shouldBe screen
     }
 
-    @Test
-    fun `multiple screens in stack maintain order`() {
+    test("multiple screens in stack maintain order") {
         // Given
         val screen1 = createScreen("s1", "stack", HomeDestination)
         val screen2 = createScreen("s2", "stack", ProfileDestination)
@@ -250,15 +235,14 @@ class ScreenRendererTest {
         val stack = StackNode(NodeKey("stack"), null, listOf(screen1, screen2, screen3))
 
         // Then
-        assertEquals(3, stack.children.size)
-        assertEquals(screen1, stack.children[0])
-        assertEquals(screen2, stack.children[1])
-        assertEquals(screen3, stack.children[2])
-        assertEquals(screen3, stack.activeChild) // Last is active
+        stack.children.size shouldBe 3
+        stack.children[0] shouldBe screen1
+        stack.children[1] shouldBe screen2
+        stack.children[2] shouldBe screen3
+        stack.activeChild shouldBe screen3 // Last is active
     }
 
-    @Test
-    fun `screen transitions are preserved`() {
+    test("screen transitions are preserved") {
         // Given
         val transitionDestination = object : NavDestination {
             override val data: Any? = null
@@ -267,15 +251,14 @@ class ScreenRendererTest {
         val screen = createScreen("animated-screen", destination = transitionDestination)
 
         // Then
-        assertEquals(NavigationTransitions.SlideHorizontal, screen.destination.transition)
+        screen.destination.transition shouldBe NavigationTransitions.SlideHorizontal
     }
 
-    @Test
-    fun `screen without transition is valid`() {
+    test("screen without transition is valid") {
         // Given
         val screen = createScreen("no-transition", destination = HomeDestination)
 
         // Then
-        assertNull(screen.destination.transition)
+        screen.destination.transition.shouldBeNull()
     }
-}
+})

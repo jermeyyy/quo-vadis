@@ -3,12 +3,12 @@ package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.internal.BackAnimationController
 import com.jermey.quo.vadis.core.compose.internal.navback.BackNavigationEvent
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 
 /**
  * Unit tests for [com.jermey.quo.vadis.core.navigation.compose.animation.BackAnimationController].
@@ -22,45 +22,41 @@ import kotlin.test.assertTrue
  * - State transitions
  */
 @OptIn(InternalQuoVadisApi::class)
-class BackAnimationControllerTest {
+class BackAnimationControllerTest : FunSpec({
 
     // =========================================================================
     // INITIAL STATE TESTS
     // =========================================================================
 
-    @Test
-    fun `initial state is not animating`() {
+    test("initial state is not animating") {
         // Given/When
         val controller = BackAnimationController()
 
         // Then
-        assertFalse(controller.isAnimating)
+        controller.isAnimating.shouldBeFalse()
     }
 
-    @Test
-    fun `initial progress is zero`() {
+    test("initial progress is zero") {
         // Given/When
         val controller = BackAnimationController()
 
         // Then
-        assertEquals(0f, controller.progress)
+        controller.progress shouldBe 0f
     }
 
-    @Test
-    fun `initial currentEvent is null`() {
+    test("initial currentEvent is null") {
         // Given/When
         val controller = BackAnimationController()
 
         // Then
-        assertNull(controller.currentEvent)
+        controller.currentEvent.shouldBeNull()
     }
 
     // =========================================================================
     // START ANIMATION TESTS
     // =========================================================================
 
-    @Test
-    fun `startAnimation sets isAnimating to true`() {
+    test("startAnimation sets isAnimating to true") {
         // Given
         val controller = BackAnimationController()
         val event = BackNavigationEvent(progress = 0f)
@@ -69,11 +65,10 @@ class BackAnimationControllerTest {
         controller.startAnimation(event)
 
         // Then
-        assertTrue(controller.isAnimating)
+        controller.isAnimating.shouldBeTrue()
     }
 
-    @Test
-    fun `startAnimation sets progress from event`() {
+    test("startAnimation sets progress from event") {
         // Given
         val controller = BackAnimationController()
         val event = BackNavigationEvent(progress = 0.1f)
@@ -82,11 +77,10 @@ class BackAnimationControllerTest {
         controller.startAnimation(event)
 
         // Then
-        assertEquals(0.1f, controller.progress)
+        controller.progress shouldBe 0.1f
     }
 
-    @Test
-    fun `startAnimation sets currentEvent`() {
+    test("startAnimation sets currentEvent") {
         // Given
         val controller = BackAnimationController()
         val event = BackNavigationEvent(
@@ -100,12 +94,11 @@ class BackAnimationControllerTest {
         controller.startAnimation(event)
 
         // Then
-        assertNotNull(controller.currentEvent)
-        assertEquals(event, controller.currentEvent)
+        controller.currentEvent.shouldNotBeNull()
+        controller.currentEvent shouldBe event
     }
 
-    @Test
-    fun `startAnimation preserves all event properties`() {
+    test("startAnimation preserves all event properties") {
         // Given
         val controller = BackAnimationController()
         val event = BackNavigationEvent(
@@ -120,19 +113,18 @@ class BackAnimationControllerTest {
 
         // Then
         val storedEvent = controller.currentEvent
-        assertNotNull(storedEvent)
-        assertEquals(0.2f, storedEvent.progress)
-        assertEquals(75f, storedEvent.touchX)
-        assertEquals(150f, storedEvent.touchY)
-        assertEquals(BackNavigationEvent.EDGE_RIGHT, storedEvent.swipeEdge)
+        storedEvent.shouldNotBeNull()
+        storedEvent.progress shouldBe 0.2f
+        storedEvent.touchX shouldBe 75f
+        storedEvent.touchY shouldBe 150f
+        storedEvent.swipeEdge shouldBe BackNavigationEvent.EDGE_RIGHT
     }
 
     // =========================================================================
     // UPDATE PROGRESS TESTS
     // =========================================================================
 
-    @Test
-    fun `updateProgress updates progress value`() {
+    test("updateProgress updates progress value") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -141,11 +133,10 @@ class BackAnimationControllerTest {
         controller.updateProgress(BackNavigationEvent(progress = 0.5f))
 
         // Then
-        assertEquals(0.5f, controller.progress)
+        controller.progress shouldBe 0.5f
     }
 
-    @Test
-    fun `updateProgress updates currentEvent`() {
+    test("updateProgress updates currentEvent") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f, touchX = 10f))
@@ -155,11 +146,10 @@ class BackAnimationControllerTest {
         controller.updateProgress(updatedEvent)
 
         // Then
-        assertEquals(updatedEvent, controller.currentEvent)
+        controller.currentEvent shouldBe updatedEvent
     }
 
-    @Test
-    fun `updateProgress works without prior startAnimation`() {
+    test("updateProgress works without prior startAnimation") {
         // Given
         val controller = BackAnimationController()
 
@@ -167,12 +157,11 @@ class BackAnimationControllerTest {
         controller.updateProgress(BackNavigationEvent(progress = 0.5f))
 
         // Then
-        assertEquals(0.5f, controller.progress)
-        assertNotNull(controller.currentEvent)
+        controller.progress shouldBe 0.5f
+        controller.currentEvent.shouldNotBeNull()
     }
 
-    @Test
-    fun `updateProgress can be called multiple times`() {
+    test("updateProgress can be called multiple times") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -183,11 +172,10 @@ class BackAnimationControllerTest {
         controller.updateProgress(BackNavigationEvent(progress = 0.75f))
 
         // Then
-        assertEquals(0.75f, controller.progress)
+        controller.progress shouldBe 0.75f
     }
 
-    @Test
-    fun `updateProgress preserves all event properties`() {
+    test("updateProgress preserves all event properties") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -203,18 +191,17 @@ class BackAnimationControllerTest {
 
         // Then
         val storedEvent = controller.currentEvent
-        assertNotNull(storedEvent)
-        assertEquals(200f, storedEvent.touchX)
-        assertEquals(300f, storedEvent.touchY)
-        assertEquals(BackNavigationEvent.EDGE_RIGHT, storedEvent.swipeEdge)
+        storedEvent.shouldNotBeNull()
+        storedEvent.touchX shouldBe 200f
+        storedEvent.touchY shouldBe 300f
+        storedEvent.swipeEdge shouldBe BackNavigationEvent.EDGE_RIGHT
     }
 
     // =========================================================================
     // COMPLETE ANIMATION TESTS
     // =========================================================================
 
-    @Test
-    fun `completeAnimation sets isAnimating to false`() {
+    test("completeAnimation sets isAnimating to false") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -223,11 +210,10 @@ class BackAnimationControllerTest {
         controller.completeAnimation()
 
         // Then
-        assertFalse(controller.isAnimating)
+        controller.isAnimating.shouldBeFalse()
     }
 
-    @Test
-    fun `completeAnimation resets progress to zero`() {
+    test("completeAnimation resets progress to zero") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -237,11 +223,10 @@ class BackAnimationControllerTest {
         controller.completeAnimation()
 
         // Then
-        assertEquals(0f, controller.progress)
+        controller.progress shouldBe 0f
     }
 
-    @Test
-    fun `completeAnimation sets currentEvent to null`() {
+    test("completeAnimation sets currentEvent to null") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -250,11 +235,10 @@ class BackAnimationControllerTest {
         controller.completeAnimation()
 
         // Then
-        assertNull(controller.currentEvent)
+        controller.currentEvent.shouldBeNull()
     }
 
-    @Test
-    fun `completeAnimation works when already not animating`() {
+    test("completeAnimation works when already not animating") {
         // Given
         val controller = BackAnimationController()
 
@@ -262,17 +246,16 @@ class BackAnimationControllerTest {
         controller.completeAnimation()
 
         // Then
-        assertFalse(controller.isAnimating)
-        assertEquals(0f, controller.progress)
-        assertNull(controller.currentEvent)
+        controller.isAnimating.shouldBeFalse()
+        controller.progress shouldBe 0f
+        controller.currentEvent.shouldBeNull()
     }
 
     // =========================================================================
     // CANCEL ANIMATION TESTS
     // =========================================================================
 
-    @Test
-    fun `cancelAnimation sets isAnimating to false`() {
+    test("cancelAnimation sets isAnimating to false") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -281,11 +264,10 @@ class BackAnimationControllerTest {
         controller.cancelAnimation()
 
         // Then
-        assertFalse(controller.isAnimating)
+        controller.isAnimating.shouldBeFalse()
     }
 
-    @Test
-    fun `cancelAnimation resets progress to zero`() {
+    test("cancelAnimation resets progress to zero") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -295,11 +277,10 @@ class BackAnimationControllerTest {
         controller.cancelAnimation()
 
         // Then
-        assertEquals(0f, controller.progress)
+        controller.progress shouldBe 0f
     }
 
-    @Test
-    fun `cancelAnimation sets currentEvent to null`() {
+    test("cancelAnimation sets currentEvent to null") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -308,11 +289,10 @@ class BackAnimationControllerTest {
         controller.cancelAnimation()
 
         // Then
-        assertNull(controller.currentEvent)
+        controller.currentEvent.shouldBeNull()
     }
 
-    @Test
-    fun `cancelAnimation works when already not animating`() {
+    test("cancelAnimation works when already not animating") {
         // Given
         val controller = BackAnimationController()
 
@@ -320,56 +300,54 @@ class BackAnimationControllerTest {
         controller.cancelAnimation()
 
         // Then
-        assertFalse(controller.isAnimating)
-        assertEquals(0f, controller.progress)
-        assertNull(controller.currentEvent)
+        controller.isAnimating.shouldBeFalse()
+        controller.progress shouldBe 0f
+        controller.currentEvent.shouldBeNull()
     }
 
     // =========================================================================
     // STATE TRANSITION TESTS
     // =========================================================================
 
-    @Test
-    fun `full gesture lifecycle - start to complete`() {
+    test("full gesture lifecycle - start to complete") {
         // Given
         val controller = BackAnimationController()
 
         // Initial state
-        assertFalse(controller.isAnimating)
-        assertEquals(0f, controller.progress)
-        assertNull(controller.currentEvent)
+        controller.isAnimating.shouldBeFalse()
+        controller.progress shouldBe 0f
+        controller.currentEvent.shouldBeNull()
 
         // Start
         controller.startAnimation(BackNavigationEvent(progress = 0f))
-        assertTrue(controller.isAnimating)
-        assertEquals(0f, controller.progress)
-        assertNotNull(controller.currentEvent)
+        controller.isAnimating.shouldBeTrue()
+        controller.progress shouldBe 0f
+        controller.currentEvent.shouldNotBeNull()
 
         // Progress updates
         controller.updateProgress(BackNavigationEvent(progress = 0.33f))
-        assertEquals(0.33f, controller.progress)
+        controller.progress shouldBe 0.33f
 
         controller.updateProgress(BackNavigationEvent(progress = 0.66f))
-        assertEquals(0.66f, controller.progress)
+        controller.progress shouldBe 0.66f
 
         controller.updateProgress(BackNavigationEvent(progress = 1f))
-        assertEquals(1f, controller.progress)
+        controller.progress shouldBe 1f
 
         // Complete
         controller.completeAnimation()
-        assertFalse(controller.isAnimating)
-        assertEquals(0f, controller.progress)
-        assertNull(controller.currentEvent)
+        controller.isAnimating.shouldBeFalse()
+        controller.progress shouldBe 0f
+        controller.currentEvent.shouldBeNull()
     }
 
-    @Test
-    fun `full gesture lifecycle - start to cancel`() {
+    test("full gesture lifecycle - start to cancel") {
         // Given
         val controller = BackAnimationController()
 
         // Start
         controller.startAnimation(BackNavigationEvent(progress = 0f))
-        assertTrue(controller.isAnimating)
+        controller.isAnimating.shouldBeTrue()
 
         // Progress updates
         controller.updateProgress(BackNavigationEvent(progress = 0.2f))
@@ -377,13 +355,12 @@ class BackAnimationControllerTest {
 
         // Cancel (user released before threshold)
         controller.cancelAnimation()
-        assertFalse(controller.isAnimating)
-        assertEquals(0f, controller.progress)
-        assertNull(controller.currentEvent)
+        controller.isAnimating.shouldBeFalse()
+        controller.progress shouldBe 0f
+        controller.currentEvent.shouldBeNull()
     }
 
-    @Test
-    fun `can restart animation after completion`() {
+    test("can restart animation after completion") {
         // Given
         val controller = BackAnimationController()
 
@@ -394,12 +371,11 @@ class BackAnimationControllerTest {
 
         // Second gesture
         controller.startAnimation(BackNavigationEvent(progress = 0f))
-        assertTrue(controller.isAnimating)
-        assertNotNull(controller.currentEvent)
+        controller.isAnimating.shouldBeTrue()
+        controller.currentEvent.shouldNotBeNull()
     }
 
-    @Test
-    fun `can restart animation after cancellation`() {
+    test("can restart animation after cancellation") {
         // Given
         val controller = BackAnimationController()
 
@@ -410,12 +386,11 @@ class BackAnimationControllerTest {
 
         // Second gesture
         controller.startAnimation(BackNavigationEvent(progress = 0f))
-        assertTrue(controller.isAnimating)
-        assertNotNull(controller.currentEvent)
+        controller.isAnimating.shouldBeTrue()
+        controller.currentEvent.shouldNotBeNull()
     }
 
-    @Test
-    fun `calling startAnimation while already animating restarts animation`() {
+    test("calling startAnimation while already animating restarts animation") {
         // Given
         val controller = BackAnimationController()
         val firstEvent = BackNavigationEvent(
@@ -428,24 +403,23 @@ class BackAnimationControllerTest {
         )
 
         controller.startAnimation(firstEvent)
-        assertEquals(0.5f, controller.progress)
-        assertEquals(100f, controller.currentEvent?.touchX)
+        controller.progress shouldBe 0.5f
+        controller.currentEvent?.touchX shouldBe 100f
 
         // When - start new animation without completing first
         controller.startAnimation(secondEvent)
 
         // Then - new animation state
-        assertTrue(controller.isAnimating)
-        assertEquals(0.1f, controller.progress)
-        assertEquals(200f, controller.currentEvent?.touchX)
+        controller.isAnimating.shouldBeTrue()
+        controller.progress shouldBe 0.1f
+        controller.currentEvent?.touchX shouldBe 200f
     }
 
     // =========================================================================
     // EDGE CASE TESTS
     // =========================================================================
 
-    @Test
-    fun `progress values near zero are handled correctly`() {
+    test("progress values near zero are handled correctly") {
         // Given
         val controller = BackAnimationController()
 
@@ -453,11 +427,10 @@ class BackAnimationControllerTest {
         controller.startAnimation(BackNavigationEvent(progress = 0.001f))
 
         // Then
-        assertEquals(0.001f, controller.progress)
+        controller.progress shouldBe 0.001f
     }
 
-    @Test
-    fun `progress values near one are handled correctly`() {
+    test("progress values near one are handled correctly") {
         // Given
         val controller = BackAnimationController()
         controller.startAnimation(BackNavigationEvent(progress = 0f))
@@ -466,11 +439,10 @@ class BackAnimationControllerTest {
         controller.updateProgress(BackNavigationEvent(progress = 0.999f))
 
         // Then
-        assertEquals(0.999f, controller.progress)
+        controller.progress shouldBe 0.999f
     }
 
-    @Test
-    fun `rapid state changes are handled correctly`() {
+    test("rapid state changes are handled correctly") {
         // Given
         val controller = BackAnimationController()
 
@@ -481,13 +453,12 @@ class BackAnimationControllerTest {
         }
 
         // Then - still in clean state
-        assertFalse(controller.isAnimating)
-        assertEquals(0f, controller.progress)
-        assertNull(controller.currentEvent)
+        controller.isAnimating.shouldBeFalse()
+        controller.progress shouldBe 0f
+        controller.currentEvent.shouldBeNull()
     }
 
-    @Test
-    fun `different swipe edges are tracked correctly`() {
+    test("different swipe edges are tracked correctly") {
         // Given
         val controller = BackAnimationController()
 
@@ -498,7 +469,7 @@ class BackAnimationControllerTest {
                 swipeEdge = BackNavigationEvent.EDGE_LEFT
             )
         )
-        assertEquals(BackNavigationEvent.EDGE_LEFT, controller.currentEvent?.swipeEdge)
+        controller.currentEvent?.swipeEdge shouldBe BackNavigationEvent.EDGE_LEFT
         controller.cancelAnimation()
 
         // Right edge gesture
@@ -508,15 +479,14 @@ class BackAnimationControllerTest {
                 swipeEdge = BackNavigationEvent.EDGE_RIGHT
             )
         )
-        assertEquals(BackNavigationEvent.EDGE_RIGHT, controller.currentEvent?.swipeEdge)
+        controller.currentEvent?.swipeEdge shouldBe BackNavigationEvent.EDGE_RIGHT
     }
 
     // =========================================================================
     // ANIMATION PROGRESS INTERPOLATION SCENARIOS
     // =========================================================================
 
-    @Test
-    fun `typical gesture progress sequence`() {
+    test("typical gesture progress sequence") {
         // Given
         val controller = BackAnimationController()
         val progressValues = listOf(0f, 0.1f, 0.2f, 0.35f, 0.5f, 0.65f, 0.8f, 0.9f, 1f)
@@ -525,16 +495,15 @@ class BackAnimationControllerTest {
         controller.startAnimation(BackNavigationEvent(progress = progressValues[0]))
         for (i in 1 until progressValues.size) {
             controller.updateProgress(BackNavigationEvent(progress = progressValues[i]))
-            assertEquals(progressValues[i], controller.progress)
+            controller.progress shouldBe progressValues[i]
         }
 
         // Then - final state
-        assertEquals(1f, controller.progress)
-        assertTrue(controller.isAnimating)
+        controller.progress shouldBe 1f
+        controller.isAnimating.shouldBeTrue()
     }
 
-    @Test
-    fun `gesture with backwards progress - dragging back`() {
+    test("gesture with backwards progress - dragging back") {
         // Given
         val controller = BackAnimationController()
 
@@ -545,6 +514,6 @@ class BackAnimationControllerTest {
         controller.updateProgress(BackNavigationEvent(progress = 0.3f))
 
         // Then - progress can decrease
-        assertEquals(0.3f, controller.progress)
+        controller.progress shouldBe 0.3f
     }
-}
+})

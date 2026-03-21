@@ -20,13 +20,14 @@ import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import kotlin.reflect.KClass
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 /**
  * Tests for [com.jermey.quo.vadis.core.dsl.registry.CompositeContainerRegistry].
@@ -37,72 +38,78 @@ import kotlin.test.assertTrue
  * - TabsContainer/PaneContainer delegate to the correct registry
  * - hasTabsContainer/hasPaneContainer correctly check both registries
  */
-class CompositeContainerRegistryTest {
+private sealed interface PrimaryTabs : NavDestination {
+    data object Tab1 : PrimaryTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+
+    data object Tab2 : PrimaryTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+}
+
+private sealed interface SecondaryTabs : NavDestination {
+    data object Tab1 : SecondaryTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+
+    data object Tab2 : SecondaryTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+}
+
+private sealed interface SharedTabs : NavDestination {
+    data object Tab1 : SharedTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+
+    data object Tab2 : SharedTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+}
+
+private sealed interface PrimaryPane : NavDestination {
+    data object Pane1 : PrimaryPane {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+}
+
+private sealed interface SecondaryPane : NavDestination {
+    data object Pane1 : SecondaryPane {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+}
+
+private data object UnknownDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+}
+
+class CompositeContainerRegistryTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private sealed interface PrimaryTabs : NavDestination {
-        data object Tab1 : PrimaryTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
 
-        data object Tab2 : PrimaryTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
 
-    private sealed interface SecondaryTabs : NavDestination {
-        data object Tab1 : SecondaryTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
 
-        data object Tab2 : SecondaryTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
 
-    private sealed interface SharedTabs : NavDestination {
-        data object Tab1 : SharedTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
 
-        data object Tab2 : SharedTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
-
-    private sealed interface PrimaryPane : NavDestination {
-        data object Pane1 : PrimaryPane {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
-
-    private sealed interface SecondaryPane : NavDestination {
-        data object Pane1 : SecondaryPane {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
-
-    private data object UnknownDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
 
     // =========================================================================
     // HELPER BUILDERS
     // =========================================================================
 
-    private fun createTabNodeBuilder(
+    fun createTabNodeBuilder(
         containerClass: KClass<out NavDestination>,
         scopeKey: ScopeKey,
         builderTracker: MutableList<String>? = null
@@ -128,7 +135,7 @@ class CompositeContainerRegistryTest {
         )
     }
 
-    private fun createPaneNodeBuilder(
+    fun createPaneNodeBuilder(
         containerClass: KClass<out NavDestination>,
         scopeKey: ScopeKey,
         builderTracker: MutableList<String>? = null
@@ -147,7 +154,7 @@ class CompositeContainerRegistryTest {
         )
     }
 
-    private fun createTestContainerRegistry(
+    fun createTestContainerRegistry(
         tabDestinations: Map<NavDestination, ContainerInfo.TabContainer>,
         paneDestinations: Map<NavDestination, ContainerInfo.PaneContainer>,
         tabsContainerKeys: Set<String>,
@@ -187,8 +194,7 @@ class CompositeContainerRegistryTest {
     // PRIORITY TESTS - getContainerInfo
     // =========================================================================
 
-    @Test
-    fun `getContainerInfo returns secondary info when secondary has destination`() {
+    test("getContainerInfo returns secondary info when secondary has destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -229,13 +235,12 @@ class CompositeContainerRegistryTest {
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         val info = composite.getContainerInfo(SecondaryTabs.Tab1)
-        assertNotNull(info)
-        assertTrue(info is ContainerInfo.TabContainer)
-        assertEquals(ScopeKey("SecondaryTabs"), info.scopeKey)
+        info.shouldNotBeNull()
+        val tabInfo = info.shouldBeInstanceOf<ContainerInfo.TabContainer>()
+        tabInfo.scopeKey shouldBe ScopeKey("SecondaryTabs")
     }
 
-    @Test
-    fun `getContainerInfo returns primary info when only primary has destination`() {
+    test("getContainerInfo returns primary info when only primary has destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -269,13 +274,12 @@ class CompositeContainerRegistryTest {
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         val info = composite.getContainerInfo(PrimaryTabs.Tab1)
-        assertNotNull(info)
-        assertTrue(info is ContainerInfo.TabContainer)
-        assertEquals(ScopeKey("PrimaryTabs"), info.scopeKey)
+        info.shouldNotBeNull()
+        val tabInfo = info.shouldBeInstanceOf<ContainerInfo.TabContainer>()
+        tabInfo.scopeKey shouldBe ScopeKey("PrimaryTabs")
     }
 
-    @Test
-    fun `getContainerInfo returns null when neither has destination`() {
+    test("getContainerInfo returns null when neither has destination") {
         val primaryWrapperTracker = mutableListOf<String>()
         val secondaryWrapperTracker = mutableListOf<String>()
 
@@ -298,11 +302,10 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertNull(composite.getContainerInfo(UnknownDestination))
+        composite.getContainerInfo(UnknownDestination).shouldBeNull()
     }
 
-    @Test
-    fun `getContainerInfo prioritizes secondary when both have destination`() {
+    test("getContainerInfo prioritizes secondary when both have destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -347,19 +350,18 @@ class CompositeContainerRegistryTest {
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         val info = composite.getContainerInfo(SharedTabs.Tab1)
-        assertNotNull(info)
-        assertTrue(info is ContainerInfo.TabContainer)
+        info.shouldNotBeNull()
+        val tabInfo = info.shouldBeInstanceOf<ContainerInfo.TabContainer>()
         // Should use secondary's scopeKey
-        assertEquals(ScopeKey("SecondarySharedTabs"), info.scopeKey)
-        assertEquals(1, info.initialTabIndex)
+        tabInfo.scopeKey shouldBe ScopeKey("SecondarySharedTabs")
+        tabInfo.initialTabIndex shouldBe 1
     }
 
     // =========================================================================
     // WRAPPED BUILDER TESTS
     // =========================================================================
 
-    @Test
-    fun `wrapped TabContainer builder uses composite navNodeBuilder`() {
+    test("wrapped TabContainer builder uses composite navNodeBuilder") {
         val primaryTracker = mutableListOf<String>()
         val compositeBuilderTracker = mutableListOf<String>()
 
@@ -414,23 +416,22 @@ class CompositeContainerRegistryTest {
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         val info = composite.getContainerInfo(PrimaryTabs.Tab1)
-        assertNotNull(info)
-        assertTrue(info is ContainerInfo.TabContainer)
+        info.shouldNotBeNull()
+        val tabInfo = info.shouldBeInstanceOf<ContainerInfo.TabContainer>()
 
         // Call the wrapped builder
         val tabNode = info.builder(NodeKey("test-key"), NodeKey("parent-key"), 0)
 
         // Verify composite builder was called (not the original)
-        assertTrue(compositeBuilderTracker.isNotEmpty())
-        assertEquals("composite-builder:${PrimaryTabs::class}:test-key", compositeBuilderTracker[0])
+        compositeBuilderTracker.isNotEmpty().shouldBeTrue()
+        compositeBuilderTracker[0] shouldBe "composite-builder:${PrimaryTabs::class}:test-key"
 
         // Verify the node was created correctly
-        assertEquals(NodeKey("test-key"), tabNode.key)
-        assertEquals(NodeKey("parent-key"), tabNode.parentKey)
+        tabNode.key shouldBe NodeKey("test-key")
+        tabNode.parentKey shouldBe NodeKey("parent-key")
     }
 
-    @Test
-    fun `wrapped PaneContainer builder uses composite navNodeBuilder`() {
+    test("wrapped PaneContainer builder uses composite navNodeBuilder") {
         val primaryTracker = mutableListOf<String>()
         val compositeBuilderTracker = mutableListOf<String>()
 
@@ -478,23 +479,22 @@ class CompositeContainerRegistryTest {
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         val info = composite.getContainerInfo(PrimaryPane.Pane1)
-        assertNotNull(info)
-        assertTrue(info is ContainerInfo.PaneContainer)
+        info.shouldNotBeNull()
+        val paneInfo = info.shouldBeInstanceOf<ContainerInfo.PaneContainer>()
 
         // Call the wrapped builder
         val paneNode = info.builder(NodeKey("test-key"), NodeKey("parent-key"))
 
         // Verify composite builder was called (not the original)
-        assertTrue(compositeBuilderTracker.isNotEmpty())
-        assertEquals("composite-builder:${PrimaryPane::class}:test-key", compositeBuilderTracker[0])
+        compositeBuilderTracker.isNotEmpty().shouldBeTrue()
+        compositeBuilderTracker[0] shouldBe "composite-builder:${PrimaryPane::class}:test-key"
 
         // Verify the node was created correctly
-        assertEquals(NodeKey("test-key"), paneNode.key)
-        assertEquals(NodeKey("parent-key"), paneNode.parentKey)
+        paneNode.key shouldBe NodeKey("test-key")
+        paneNode.parentKey shouldBe NodeKey("parent-key")
     }
 
-    @Test
-    fun `wrapped builder throws exception when composite navNodeBuilder returns null`() {
+    test("wrapped builder throws exception when composite navNodeBuilder returns null") {
         val primaryTracker = mutableListOf<String>()
 
         val primaryTabInfo = ContainerInfo.TabContainer(
@@ -528,17 +528,16 @@ class CompositeContainerRegistryTest {
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
         val info = composite.getContainerInfo(PrimaryTabs.Tab1)
-        assertNotNull(info)
-        assertTrue(info is ContainerInfo.TabContainer)
+        info.shouldNotBeNull()
+        val tabInfo = info.shouldBeInstanceOf<ContainerInfo.TabContainer>()
 
         // Calling the wrapped builder should throw
-        assertFailsWith<IllegalStateException> {
+        shouldThrow<IllegalStateException> {
             info.builder(NodeKey("test-key"), null, 0)
         }
     }
 
-    @Test
-    fun `wrapped TabContainer builder applies initialTabIndex correctly`() {
+    test("wrapped TabContainer builder applies initialTabIndex correctly") {
         val primaryTabInfo = ContainerInfo.TabContainer(
             builder = createTabNodeBuilder(PrimaryTabs::class, ScopeKey("PrimaryTabs"), null),
             initialTabIndex = 0,
@@ -594,25 +593,24 @@ class CompositeContainerRegistryTest {
 
         // Test different initialTabIndex values (builder creates 3 stacks with indices 0, 1, 2)
         val node0 = info.builder(NodeKey("key"), null, 0)
-        assertEquals(0, node0.activeStackIndex)
+        node0.activeStackIndex shouldBe 0
 
         val node1 = info.builder(NodeKey("key"), null, 1)
-        assertEquals(1, node1.activeStackIndex)
+        node1.activeStackIndex shouldBe 1
 
         val node2 = info.builder(NodeKey("key"), null, 2)
-        assertEquals(2, node2.activeStackIndex)
+        node2.activeStackIndex shouldBe 2
 
         // Test out of bounds - should be coerced to max stack index
         val nodeHigh = info.builder(NodeKey("key"), null, 10)
-        assertEquals(2, nodeHigh.activeStackIndex) // Coerced to max index (2 = stacks.size - 1)
+        nodeHigh.activeStackIndex shouldBe 2 // Coerced to max index (2 = stacks.size - 1)
     }
 
     // =========================================================================
     // TABS/PANE CONTAINER WRAPPER TESTS
     // =========================================================================
 
-    @Test
-    fun `hasTabsContainer returns true when secondary has container`() {
+    test("hasTabsContainer returns true when secondary has container") {
         val primary = createTestContainerRegistry(
             emptyMap(),
             emptyMap(),
@@ -632,11 +630,10 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertTrue(composite.hasTabsContainer("secondary-tab"))
+        composite.hasTabsContainer("secondary-tab").shouldBeTrue()
     }
 
-    @Test
-    fun `hasTabsContainer returns true when primary has container`() {
+    test("hasTabsContainer returns true when primary has container") {
         val primary = createTestContainerRegistry(
             emptyMap(),
             emptyMap(),
@@ -656,11 +653,10 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertTrue(composite.hasTabsContainer("primary-tab"))
+        composite.hasTabsContainer("primary-tab").shouldBeTrue()
     }
 
-    @Test
-    fun `hasTabsContainer returns false when neither has container`() {
+    test("hasTabsContainer returns false when neither has container") {
         val primary = createTestContainerRegistry(
             emptyMap(),
             emptyMap(),
@@ -680,11 +676,10 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertFalse(composite.hasTabsContainer("unknown-tab"))
+        composite.hasTabsContainer("unknown-tab").shouldBeFalse()
     }
 
-    @Test
-    fun `hasTabsContainer returns true when both have container`() {
+    test("hasTabsContainer returns true when both have container") {
         val primary = createTestContainerRegistry(
             emptyMap(),
             emptyMap(),
@@ -704,11 +699,10 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertTrue(composite.hasTabsContainer("shared-tab"))
+        composite.hasTabsContainer("shared-tab").shouldBeTrue()
     }
 
-    @Test
-    fun `hasPaneContainer returns true when secondary has container`() {
+    test("hasPaneContainer returns true when secondary has container") {
         val primary = createTestContainerRegistry(
             emptyMap(),
             emptyMap(),
@@ -728,11 +722,10 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertTrue(composite.hasPaneContainer("secondary-pane"))
+        composite.hasPaneContainer("secondary-pane").shouldBeTrue()
     }
 
-    @Test
-    fun `hasPaneContainer returns true when primary has container`() {
+    test("hasPaneContainer returns true when primary has container") {
         val primary = createTestContainerRegistry(
             emptyMap(),
             emptyMap(),
@@ -752,11 +745,10 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertTrue(composite.hasPaneContainer("primary-pane"))
+        composite.hasPaneContainer("primary-pane").shouldBeTrue()
     }
 
-    @Test
-    fun `hasPaneContainer returns false when neither has container`() {
+    test("hasPaneContainer returns false when neither has container") {
         val primary = createTestContainerRegistry(
             emptyMap(),
             emptyMap(),
@@ -776,11 +768,10 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertFalse(composite.hasPaneContainer("unknown-pane"))
+        composite.hasPaneContainer("unknown-pane").shouldBeFalse()
     }
 
-    @Test
-    fun `hasPaneContainer returns true when both have container`() {
+    test("hasPaneContainer returns true when both have container") {
         val primary = createTestContainerRegistry(
             emptyMap(),
             emptyMap(),
@@ -800,15 +791,14 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertTrue(composite.hasPaneContainer("shared-pane"))
+        composite.hasPaneContainer("shared-pane").shouldBeTrue()
     }
 
     // =========================================================================
     // EMPTY REGISTRY TESTS
     // =========================================================================
 
-    @Test
-    fun `composite with both empty registries works correctly`() {
+    test("composite with both empty registries works correctly") {
         val primary = createTestContainerRegistry(
             emptyMap(),
             emptyMap(),
@@ -828,8 +818,8 @@ class CompositeContainerRegistryTest {
             { _, _, _ -> null }
         val composite = CompositeContainerRegistry(primary, secondary, navNodeBuilder)
 
-        assertNull(composite.getContainerInfo(PrimaryTabs.Tab1))
-        assertFalse(composite.hasTabsContainer("any-tab"))
-        assertFalse(composite.hasPaneContainer("any-pane"))
+        composite.getContainerInfo(PrimaryTabs.Tab1).shouldBeNull()
+        composite.hasTabsContainer("any-tab").shouldBeFalse()
+        composite.hasPaneContainer("any-pane").shouldBeFalse()
     }
-}
+})

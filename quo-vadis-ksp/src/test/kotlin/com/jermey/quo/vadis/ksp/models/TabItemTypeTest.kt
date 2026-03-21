@@ -1,36 +1,31 @@
 package com.jermey.quo.vadis.ksp.models
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.shouldBe
 
-class TabItemTypeTest {
+class TabItemTypeTest : FunSpec({
 
-    @Test
-    fun `TabItemType has three values`() {
-        assertEquals(3, TabItemType.entries.size)
+    test("TabItemType has three values") {
+        TabItemType.entries.size shouldBe 3
     }
 
-    @Test
-    fun `TabItemType values are DESTINATION, STACK, TABS`() {
+    test("TabItemType values are DESTINATION, STACK, TABS") {
         val names = TabItemType.entries.map { it.name }
-        assertTrue("DESTINATION" in names)
-        assertTrue("STACK" in names)
-        assertTrue("TABS" in names)
+        names.shouldContain("DESTINATION")
+        names.shouldContain("STACK")
+        names.shouldContain("TABS")
     }
 
-    @Test
-    fun `DESTINATION is the first enum value`() {
-        assertEquals(TabItemType.DESTINATION, TabItemType.entries[0])
+    test("DESTINATION is the first enum value") {
+        TabItemType.entries[0] shouldBe TabItemType.DESTINATION
     }
 
-    @Test
-    fun `STACK is the second enum value`() {
-        assertEquals(TabItemType.STACK, TabItemType.entries[1])
+    test("STACK is the second enum value") {
+        TabItemType.entries[1] shouldBe TabItemType.STACK
     }
 
-    @Test
-    fun `TABS is the third enum value`() {
-        assertEquals(TabItemType.TABS, TabItemType.entries[2])
+    test("TABS is the third enum value") {
+        TabItemType.entries[2] shouldBe TabItemType.TABS
     }
-}
+})

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.dokka)
+    alias(libs.plugins.kover)
     alias(libs.plugins.maven.publish)
 }
 
@@ -80,7 +81,8 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(libs.kotlin.test)
+                implementation(libs.kotest.framework.engine)
+                implementation(libs.kotest.assertions.core)
                 implementation(libs.flowmvi.test)
                 implementation(libs.koin.test)
             }
@@ -100,6 +102,12 @@ kotlin {
             }
         }
 
+        getByName("androidHostTest") {
+            dependencies {
+                implementation(libs.kotest.runner.junit5)
+            }
+        }
+
         iosMain {
             dependencies {
             }
@@ -110,6 +118,12 @@ kotlin {
                 implementation(compose.desktop.currentOs)
             }
         }
+
+        val desktopTest by getting {
+            dependencies {
+                implementation(libs.kotest.runner.junit5)
+            }
+        }
     }
 }
 
@@ -117,6 +131,14 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest>().configureEach {
+    failOnNoDiscoveredTests = false
 }
 
 mavenPublishing {

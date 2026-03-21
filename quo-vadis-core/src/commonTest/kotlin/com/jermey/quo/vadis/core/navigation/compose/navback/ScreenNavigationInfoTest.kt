@@ -3,12 +3,12 @@ package com.jermey.quo.vadis.core.navigation.compose.navback
 import androidx.navigationevent.NavigationEventInfo
 import com.jermey.quo.vadis.core.compose.internal.navback.NoScreenInfo
 import com.jermey.quo.vadis.core.compose.internal.navback.ScreenNavigationInfo
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNull
-import kotlin.test.assertSame
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 /**
  * Unit tests for [ScreenNavigationInfo] and [NoScreenInfo].
@@ -20,14 +20,13 @@ import kotlin.test.assertSame
  * - NavigationEventInfo inheritance
  * - Data class equality and copy behavior
  */
-class ScreenNavigationInfoTest {
+class ScreenNavigationInfoTest : FunSpec({
 
     // =========================================================================
     // SCREEN NAVIGATION INFO - CREATION TESTS
     // =========================================================================
 
-    @Test
-    fun `ScreenNavigationInfo creation with all parameters`() {
+    test("ScreenNavigationInfo creation with all parameters") {
         // Given
         val screenId = "home_screen"
         val displayName = "Home"
@@ -41,24 +40,22 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals(screenId, info.screenId)
-        assertEquals(displayName, info.displayName)
-        assertEquals(route, info.route)
+        info.screenId shouldBe screenId
+        info.displayName shouldBe displayName
+        info.route shouldBe route
     }
 
-    @Test
-    fun `ScreenNavigationInfo creation with only screenId`() {
+    test("ScreenNavigationInfo creation with only screenId") {
         // When
         val info = ScreenNavigationInfo(screenId = "simple_screen")
 
         // Then
-        assertEquals("simple_screen", info.screenId)
-        assertNull(info.displayName)
-        assertNull(info.route)
+        info.screenId shouldBe "simple_screen"
+        info.displayName.shouldBeNull()
+        info.route.shouldBeNull()
     }
 
-    @Test
-    fun `ScreenNavigationInfo creation with screenId and displayName`() {
+    test("ScreenNavigationInfo creation with screenId and displayName") {
         // When
         val info = ScreenNavigationInfo(
             screenId = "profile_screen",
@@ -66,13 +63,12 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals("profile_screen", info.screenId)
-        assertEquals("Profile", info.displayName)
-        assertNull(info.route)
+        info.screenId shouldBe "profile_screen"
+        info.displayName shouldBe "Profile"
+        info.route.shouldBeNull()
     }
 
-    @Test
-    fun `ScreenNavigationInfo creation with screenId and route`() {
+    test("ScreenNavigationInfo creation with screenId and route") {
         // When
         val info = ScreenNavigationInfo(
             screenId = "settings_screen",
@@ -80,30 +76,28 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals("settings_screen", info.screenId)
-        assertNull(info.displayName)
-        assertEquals("/settings", info.route)
+        info.screenId shouldBe "settings_screen"
+        info.displayName.shouldBeNull()
+        info.route shouldBe "/settings"
     }
 
     // =========================================================================
     // SCREEN NAVIGATION INFO - INHERITANCE TESTS
     // =========================================================================
 
-    @Test
-    fun `ScreenNavigationInfo extends NavigationEventInfo`() {
+    test("ScreenNavigationInfo extends NavigationEventInfo") {
         // Given/When
         val info = ScreenNavigationInfo(screenId = "test")
 
         // Then
-        assertIs<NavigationEventInfo>(info)
+        info.shouldBeInstanceOf<NavigationEventInfo>()
     }
 
     // =========================================================================
     // SCREEN NAVIGATION INFO - DATA CLASS BEHAVIOR TESTS
     // =========================================================================
 
-    @Test
-    fun `ScreenNavigationInfo equals works correctly`() {
+    test("ScreenNavigationInfo equals works correctly") {
         // Given
         val info1 = ScreenNavigationInfo(
             screenId = "screen",
@@ -122,12 +116,11 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals(info1, info2)
-        assertNotEquals(info1, info3)
+        info2 shouldBe info1
+        info3 shouldNotBe info1
     }
 
-    @Test
-    fun `ScreenNavigationInfo copy works correctly`() {
+    test("ScreenNavigationInfo copy works correctly") {
         // Given
         val original = ScreenNavigationInfo(
             screenId = "original",
@@ -139,13 +132,12 @@ class ScreenNavigationInfoTest {
         val copied = original.copy(screenId = "copied")
 
         // Then
-        assertEquals("copied", copied.screenId)
-        assertEquals("Original", copied.displayName)
-        assertEquals("/original", copied.route)
+        copied.screenId shouldBe "copied"
+        copied.displayName shouldBe "Original"
+        copied.route shouldBe "/original"
     }
 
-    @Test
-    fun `ScreenNavigationInfo copy with all parameters`() {
+    test("ScreenNavigationInfo copy with all parameters") {
         // Given
         val original = ScreenNavigationInfo(
             screenId = "original",
@@ -161,13 +153,12 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals("new_id", copied.screenId)
-        assertEquals("New Name", copied.displayName)
-        assertEquals("/new/route", copied.route)
+        copied.screenId shouldBe "new_id"
+        copied.displayName shouldBe "New Name"
+        copied.route shouldBe "/new/route"
     }
 
-    @Test
-    fun `ScreenNavigationInfo hashCode is consistent with equals`() {
+    test("ScreenNavigationInfo hashCode is consistent with equals") {
         // Given
         val info1 = ScreenNavigationInfo(
             screenId = "screen",
@@ -181,69 +172,63 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals(info1.hashCode(), info2.hashCode())
+        info2.hashCode() shouldBe info1.hashCode()
     }
 
     // =========================================================================
     // NO SCREEN INFO - SINGLETON TESTS
     // =========================================================================
 
-    @Test
-    fun `NoScreenInfo is a data object`() {
+    test("NoScreenInfo is a data object") {
         // Given/When
         val noScreenInfo = NoScreenInfo
 
         // Then
-        assertIs<NavigationEventInfo>(noScreenInfo)
+        noScreenInfo.shouldBeInstanceOf<NavigationEventInfo>()
     }
 
-    @Test
-    fun `NoScreenInfo is singleton`() {
+    test("NoScreenInfo is singleton") {
         // Given
         val instance1 = NoScreenInfo
         val instance2 = NoScreenInfo
 
         // Then
-        assertSame(instance1, instance2)
+        instance2 shouldBeSameInstanceAs instance1
     }
 
-    @Test
-    fun `NoScreenInfo equals itself`() {
+    test("NoScreenInfo equals itself") {
         // Given
         val instance1 = NoScreenInfo
         val instance2 = NoScreenInfo
 
         // Then
-        assertEquals(instance1, instance2)
+        instance2 shouldBe instance1
     }
 
-    @Test
-    fun `NoScreenInfo extends NavigationEventInfo`() {
+    test("NoScreenInfo extends NavigationEventInfo") {
         // Given/When
         val noScreenInfo: NavigationEventInfo = NoScreenInfo
 
         // Then
-        assertIs<NavigationEventInfo>(noScreenInfo)
+        noScreenInfo.shouldBeInstanceOf<NavigationEventInfo>()
     }
 
     // =========================================================================
     // TYPE DISTINCTION TESTS
     // =========================================================================
 
-    @Test
-    fun `ScreenNavigationInfo and NoScreenInfo are distinct types`() {
+    test("ScreenNavigationInfo and NoScreenInfo are distinct types") {
         // Given
         val screenInfo: NavigationEventInfo = ScreenNavigationInfo(screenId = "test")
         val noScreenInfo: NavigationEventInfo = NoScreenInfo
 
         // Then
-        assertIs<ScreenNavigationInfo>(screenInfo)
-        assertSame(NoScreenInfo, noScreenInfo)
-        assertNotEquals(screenInfo, noScreenInfo)
+        screenInfo.shouldBeInstanceOf<ScreenNavigationInfo>()
+        noScreenInfo shouldBeSameInstanceAs NoScreenInfo
+        noScreenInfo shouldNotBe screenInfo
     }
 
-    @Test
-    fun `when expression works with NavigationEventInfo subtypes`() {
+    test("when expression works with NavigationEventInfo subtypes") {
         // Given
         val screenInfo: NavigationEventInfo = ScreenNavigationInfo(screenId = "test")
         val noScreenInfo: NavigationEventInfo = NoScreenInfo
@@ -262,25 +247,23 @@ class ScreenNavigationInfoTest {
         }
 
         // Then
-        assertEquals("screen: test", screenResult)
-        assertEquals("no screen", noScreenResult)
+        screenResult shouldBe "screen: test"
+        noScreenResult shouldBe "no screen"
     }
 
     // =========================================================================
     // EDGE CASE TESTS
     // =========================================================================
 
-    @Test
-    fun `ScreenNavigationInfo with empty screenId`() {
+    test("ScreenNavigationInfo with empty screenId") {
         // Given/When
         val info = ScreenNavigationInfo(screenId = "")
 
         // Then
-        assertEquals("", info.screenId)
+        info.screenId shouldBe ""
     }
 
-    @Test
-    fun `ScreenNavigationInfo with empty displayName`() {
+    test("ScreenNavigationInfo with empty displayName") {
         // Given/When
         val info = ScreenNavigationInfo(
             screenId = "test",
@@ -288,11 +271,10 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals("", info.displayName)
+        info.displayName shouldBe ""
     }
 
-    @Test
-    fun `ScreenNavigationInfo with empty route`() {
+    test("ScreenNavigationInfo with empty route") {
         // Given/When
         val info = ScreenNavigationInfo(
             screenId = "test",
@@ -300,20 +282,18 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals("", info.route)
+        info.route shouldBe ""
     }
 
-    @Test
-    fun `ScreenNavigationInfo with special characters in screenId`() {
+    test("ScreenNavigationInfo with special characters in screenId") {
         // Given/When
         val info = ScreenNavigationInfo(screenId = "screen-with_special.chars:123")
 
         // Then
-        assertEquals("screen-with_special.chars:123", info.screenId)
+        info.screenId shouldBe "screen-with_special.chars:123"
     }
 
-    @Test
-    fun `ScreenNavigationInfo with unicode in displayName`() {
+    test("ScreenNavigationInfo with unicode in displayName") {
         // Given/When
         val info = ScreenNavigationInfo(
             screenId = "test",
@@ -321,11 +301,10 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals("日本語スクリーン", info.displayName)
+        info.displayName shouldBe "日本語スクリーン"
     }
 
-    @Test
-    fun `ScreenNavigationInfo with route parameters`() {
+    test("ScreenNavigationInfo with route parameters") {
         // Given/When
         val info = ScreenNavigationInfo(
             screenId = "detail",
@@ -333,11 +312,10 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals("/users/{userId}/posts/{postId}", info.route)
+        info.route shouldBe "/users/{userId}/posts/{postId}"
     }
 
-    @Test
-    fun `ScreenNavigationInfo with query parameters in route`() {
+    test("ScreenNavigationInfo with query parameters in route") {
         // Given/When
         val info = ScreenNavigationInfo(
             screenId = "search",
@@ -345,15 +323,14 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals("/search?q={query}&page={page}", info.route)
+        info.route shouldBe "/search?q={query}&page={page}"
     }
 
     // =========================================================================
     // COLLECTION USAGE TESTS
     // =========================================================================
 
-    @Test
-    fun `ScreenNavigationInfo can be used in collections`() {
+    test("ScreenNavigationInfo can be used in collections") {
         // Given
         val info1 = ScreenNavigationInfo(screenId = "screen1")
         val info2 = ScreenNavigationInfo(screenId = "screen2")
@@ -364,12 +341,11 @@ class ScreenNavigationInfoTest {
         val set = setOf(info1, info2, info3)
 
         // Then
-        assertEquals(3, list.size)
-        assertEquals(2, set.size) // info1 and info3 are equal
+        list.size shouldBe 3
+        set.size shouldBe 2 // info1 and info3 are equal
     }
 
-    @Test
-    fun `ScreenNavigationInfo can be used as map key`() {
+    test("ScreenNavigationInfo can be used as map key") {
         // Given
         val info1 = ScreenNavigationInfo(screenId = "screen1")
         val info2 = ScreenNavigationInfo(screenId = "screen2")
@@ -381,7 +357,7 @@ class ScreenNavigationInfoTest {
         )
 
         // Then
-        assertEquals("First Screen", map[info1])
-        assertEquals("First Screen", map[ScreenNavigationInfo(screenId = "screen1")])
+        map[info1] shouldBe "First Screen"
+        map[ScreenNavigationInfo(screenId = "screen1")] shouldBe "First Screen"
     }
-}
+})

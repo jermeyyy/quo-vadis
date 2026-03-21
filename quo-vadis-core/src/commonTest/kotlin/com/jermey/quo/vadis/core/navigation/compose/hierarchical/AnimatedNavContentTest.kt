@@ -9,11 +9,11 @@ import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldNotBeNull
 
 /**
  * Tests for animated transition content rendering.
@@ -25,23 +25,23 @@ import kotlin.test.assertTrue
  * - AnimatedContent behavior
  */
 @OptIn(InternalQuoVadisApi::class)
-class AnimatedNavContentTest {
+class AnimatedNavContentTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object ScreenADestination : NavDestination {
+    val ScreenADestination = object : NavDestination {
         override val data: Any? = "A"
         override val transition: NavigationTransition? = null
     }
 
-    private object ScreenBDestination : NavDestination {
+    val ScreenBDestination = object : NavDestination {
         override val data: Any? = "B"
         override val transition: NavigationTransition? = null
     }
 
-    private object ScreenCDestination : NavDestination {
+    val ScreenCDestination = object : NavDestination {
         override val data: Any? = "C"
         override val transition: NavigationTransition? = null
     }
@@ -50,13 +50,13 @@ class AnimatedNavContentTest {
     // TEST HELPERS
     // =========================================================================
 
-    private fun createScreen(
+    fun createScreen(
         key: String,
         parentKey: String? = null,
         destination: NavDestination = ScreenADestination
     ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
-    private fun createStack(
+    fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
@@ -66,8 +66,7 @@ class AnimatedNavContentTest {
     // ANIMATION STATE TRACKING TESTS
     // =========================================================================
 
-    @Test
-    fun `animation state tracks displayed state`() {
+    test("animation state tracks displayed state") {
         // Given - simulating AnimatedNavContent state tracking
         var displayedState: ScreenNode?
         var previousState: ScreenNode? = null
@@ -79,20 +78,19 @@ class AnimatedNavContentTest {
         displayedState = screenA
 
         // Then
-        assertEquals(screenA, displayedState)
-        assertEquals(null, previousState)
+        displayedState shouldBe screenA
+        previousState shouldBe null
 
         // When - navigate to B
         previousState = displayedState
         displayedState = screenB
 
         // Then
-        assertEquals(screenB, displayedState)
-        assertEquals(screenA, previousState)
+        displayedState shouldBe screenB
+        previousState shouldBe screenA
     }
 
-    @Test
-    fun `previous state updates correctly on navigation`() {
+    test("previous state updates correctly on navigation") {
         // Given - state sequence
         val screenA = createScreen("a", "stack", ScreenADestination)
         val screenB = createScreen("b", "stack", ScreenBDestination)
@@ -104,28 +102,27 @@ class AnimatedNavContentTest {
         // When - navigate A -> B
         previousState = displayedState
         displayedState = screenB
-        assertEquals(screenA, previousState)
-        assertEquals(screenB, displayedState)
+        previousState shouldBe screenA
+        displayedState shouldBe screenB
 
         // When - navigate B -> C
         previousState = displayedState
         displayedState = screenC
-        assertEquals(screenB, previousState)
-        assertEquals(screenC, displayedState)
+        previousState shouldBe screenB
+        displayedState shouldBe screenC
 
         // When - navigate C -> A (back)
         previousState = displayedState
         displayedState = screenA
-        assertEquals(screenC, previousState)
-        assertEquals(screenA, displayedState)
+        previousState shouldBe screenC
+        displayedState shouldBe screenA
     }
 
     // =========================================================================
     // TRANSITION DIRECTION DETECTION TESTS
     // =========================================================================
 
-    @Test
-    fun `forward navigation detected when target differs from displayed`() {
+    test("forward navigation detected when target differs from displayed") {
         // Given
         val displayed = createScreen("a", "stack")
         val target = createScreen("b", "stack")
@@ -136,11 +133,10 @@ class AnimatedNavContentTest {
         val isBack = target.key != displayed.key && previous?.key == target.key
 
         // Then
-        assertFalse(isBack, "Should be forward navigation")
+        isBack.shouldBeFalse()
     }
 
-    @Test
-    fun `back navigation detected when target matches previous`() {
+    test("back navigation detected when target matches previous") {
         // Given - A -> B, now going back to A
         val displayed = createScreen("b", "stack")
         val target = createScreen("a", "stack") // Going back to A
@@ -150,11 +146,10 @@ class AnimatedNavContentTest {
         val isBack = target.key != displayed.key && previous.key == target.key
 
         // Then
-        assertTrue(isBack, "Should be back navigation")
+        isBack.shouldBeTrue()
     }
 
-    @Test
-    fun `same target state is not back navigation`() {
+    test("same target state is not back navigation") {
         // Given
         val displayed = createScreen("a", "stack")
         val target = createScreen("a", "stack") // Same as displayed
@@ -164,93 +159,85 @@ class AnimatedNavContentTest {
         val isBack = target.key != displayed.key && previous.key == target.key
 
         // Then
-        assertFalse(isBack, "Same state navigation should not be back")
+        isBack.shouldBeFalse()
     }
 
     // =========================================================================
     // ANIMATION COORDINATOR TESTS
     // =========================================================================
 
-    @Test
-    fun `animation coordinator provides transition based on direction`() {
+    test("animation coordinator provides transition based on direction") {
         // Given
         val coordinator = AnimationCoordinator.Default
 
         // Then
-        assertNotNull(coordinator.defaultTransition)
+        coordinator.defaultTransition.shouldNotBeNull()
     }
 
-    @Test
-    fun `FakeNavRenderScope provides animation coordinator`() {
+    test("FakeNavRenderScope provides animation coordinator") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertNotNull(scope.animationCoordinator)
+        scope.animationCoordinator.shouldNotBeNull()
     }
 
-    @Test
-    fun `custom animation coordinator can be injected`() {
+    test("custom animation coordinator can be injected") {
         // Given
         val customCoordinator = AnimationCoordinator()
         val scope = FakeNavRenderScope(animationCoordinator = customCoordinator)
 
         // Then
-        assertEquals(customCoordinator, scope.animationCoordinator)
+        scope.animationCoordinator shouldBe customCoordinator
     }
 
     // =========================================================================
     // TRANSITION SPEC TESTS
     // =========================================================================
 
-    @Test
-    fun `coordinator provides tab transition`() {
+    test("coordinator provides tab transition") {
         // Given
         val coordinator = AnimationCoordinator.Default
 
         // Then
-        assertNotNull(coordinator.defaultTabTransition)
+        coordinator.defaultTabTransition.shouldNotBeNull()
     }
 
-    @Test
-    fun `coordinator provides pane transition`() {
+    test("coordinator provides pane transition") {
         // Given
         val coordinator = AnimationCoordinator.Default
 
         // Then
-        assertNotNull(coordinator.defaultPaneTransition)
+        coordinator.defaultPaneTransition.shouldNotBeNull()
     }
 
     // =========================================================================
     // NODE STATE TRACKING TESTS
     // =========================================================================
 
-    @Test
-    fun `node key is stable for same content`() {
+    test("node key is stable for same content") {
         // Given
         val screen1 = createScreen("unique-key", "stack", ScreenADestination)
         val screen2 = createScreen("unique-key", "stack", ScreenADestination)
 
         // Then - keys match for state tracking
-        assertEquals(screen1.key, screen2.key)
+        screen2.key shouldBe screen1.key
     }
 
-    @Test
-    fun `node key differs for different content`() {
+    test("node key differs for different content") {
         // Given
         val screenA = createScreen("key-a", "stack")
         val screenB = createScreen("key-b", "stack")
 
         // Then
-        assertFalse(screenA.key == screenB.key)
+        (screenA.key == screenB.key).shouldBeFalse()
     }
 
     // =========================================================================
     // ANIMATION CONTENT LIFECYCLE TESTS
     // =========================================================================
 
-    @Test
-    fun `stack active child is the animated target state`() {
+    test("stack active child is the animated target state") {
         // Given
         val screen1 = createScreen("s1", "stack")
         val screen2 = createScreen("s2", "stack")
@@ -258,11 +245,10 @@ class AnimatedNavContentTest {
         val stack = createStack("stack", null, screen1, screen2, screen3)
 
         // Then - active child (last) is the target for AnimatedContent
-        assertEquals(screen3, stack.activeChild)
+        stack.activeChild shouldBe screen3
     }
 
-    @Test
-    fun `push changes animated target state`() {
+    test("push changes animated target state") {
         // Given
         val screen1 = createScreen("s1", "stack")
         val screen2 = createScreen("s2", "stack")
@@ -271,12 +257,11 @@ class AnimatedNavContentTest {
         val afterPush = createStack("stack", null, screen1, screen2)
 
         // Then
-        assertEquals(screen1, beforePush.activeChild)
-        assertEquals(screen2, afterPush.activeChild)
+        beforePush.activeChild shouldBe screen1
+        afterPush.activeChild shouldBe screen2
     }
 
-    @Test
-    fun `pop changes animated target state`() {
+    test("pop changes animated target state") {
         // Given
         val screen1 = createScreen("s1", "stack")
         val screen2 = createScreen("s2", "stack")
@@ -285,21 +270,20 @@ class AnimatedNavContentTest {
         val afterPop = createStack("stack", null, screen1)
 
         // Then
-        assertEquals(screen2, beforePop.activeChild)
-        assertEquals(screen1, afterPop.activeChild)
+        beforePop.activeChild shouldBe screen2
+        afterPop.activeChild shouldBe screen1
     }
 
     // =========================================================================
     // ANIMATED VISIBILITY SCOPE TESTS
     // =========================================================================
 
-    @Test
-    fun `FakeNavRenderScope provides withAnimatedVisibilityScope capability`() {
+    test("FakeNavRenderScope provides withAnimatedVisibilityScope capability") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then - withAnimatedVisibilityScope is available (tested as method exists)
-        assertNotNull(scope)
+        scope.shouldNotBeNull()
         // Note: The actual Composable function testing would require Compose test framework
     }
 
@@ -307,8 +291,7 @@ class AnimatedNavContentTest {
     // NAVIGATION TRANSITION TESTS
     // =========================================================================
 
-    @Test
-    fun `screen destination can specify custom transition`() {
+    test("screen destination can specify custom transition") {
         // Given
         val slideDestination = object : NavDestination {
             override val data: Any? = null
@@ -318,16 +301,15 @@ class AnimatedNavContentTest {
         val screen = createScreen("animated-screen", destination = slideDestination)
 
         // Then
-        assertEquals(NavigationTransitions.SlideHorizontal, screen.destination.transition)
+        screen.destination.transition shouldBe NavigationTransitions.SlideHorizontal
     }
 
-    @Test
-    fun `screen without custom transition uses default`() {
+    test("screen without custom transition uses default") {
         // Given
         val screen = createScreen("default-screen", destination = ScreenADestination)
 
         // Then
-        assertEquals(null, screen.destination.transition)
+        screen.destination.transition shouldBe null
         // AnimationCoordinator will provide default transition
     }
 
@@ -335,8 +317,7 @@ class AnimatedNavContentTest {
     // COMPLEX ANIMATION SCENARIOS
     // =========================================================================
 
-    @Test
-    fun `rapid navigation maintains state consistency`() {
+    test("rapid navigation maintains state consistency") {
         // Given - simulating rapid A -> B -> C -> A
         val screenA = createScreen("a", "stack")
         val screenB = createScreen("b", "stack")
@@ -354,13 +335,12 @@ class AnimatedNavContentTest {
         }
 
         // Then
-        assertEquals(screenA, current)
-        assertEquals(screenC, previous)
-        assertEquals(listOf("a -> b", "b -> c", "c -> a"), history)
+        current shouldBe screenA
+        previous shouldBe screenC
+        history shouldBe listOf("a -> b", "b -> c", "c -> a")
     }
 
-    @Test
-    fun `back navigation through history is detected correctly`() {
+    test("back navigation through history is detected correctly") {
         // Given
         val screenA = createScreen("a", "stack")
         val screenB = createScreen("b", "stack")
@@ -375,6 +355,6 @@ class AnimatedNavContentTest {
         val isBack = target.key != displayed.key && previous.key == target.key
 
         // Then
-        assertTrue(isBack, "Going back from C to B should be detected as back navigation")
+        isBack.shouldBeTrue()
     }
-}
+})

@@ -7,9 +7,28 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.ModalRegistry
 import com.jermey.quo.vadis.core.registry.internal.CompositeModalRegistry
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+
+// =========================================================================
+// TEST DESTINATIONS
+// =========================================================================
+
+private data object ModalDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+}
+
+private data object RegularDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+}
+
+private data object AnotherModalDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+}
 
 /**
  * Tests for [ModalRegistry] implementations:
@@ -17,90 +36,65 @@ import kotlin.test.assertTrue
  * - [CompositeModalRegistry]
  * - [ModalRegistry.Empty]
  */
-class ModalRegistryTest {
-
-    // =========================================================================
-    // TEST DESTINATIONS
-    // =========================================================================
-
-    private data object ModalDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
-
-    private data object RegularDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
-
-    private data object AnotherModalDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
+class ModalRegistryTest : FunSpec({
 
     // =========================================================================
     // DslModalRegistry TESTS
     // =========================================================================
 
-    @Test
-    fun `isModalDestination returns true for registered destination`() {
+    test("isModalDestination returns true for registered destination") {
         val registry = DslModalRegistry(
             modalDestinations = setOf(ModalDestination::class),
             modalContainers = emptySet()
         )
 
-        assertTrue(registry.isModalDestination(ModalDestination::class))
+        registry.isModalDestination(ModalDestination::class).shouldBeTrue()
     }
 
-    @Test
-    fun `isModalDestination returns false for unregistered destination`() {
+    test("isModalDestination returns false for unregistered destination") {
         val registry = DslModalRegistry(
             modalDestinations = setOf(ModalDestination::class),
             modalContainers = emptySet()
         )
 
-        assertFalse(registry.isModalDestination(RegularDestination::class))
+        registry.isModalDestination(RegularDestination::class).shouldBeFalse()
     }
 
-    @Test
-    fun `isModalContainer returns true for registered container`() {
+    test("isModalContainer returns true for registered container") {
         val registry = DslModalRegistry(
             modalDestinations = emptySet(),
             modalContainers = setOf("bottom-sheet")
         )
 
-        assertTrue(registry.isModalContainer("bottom-sheet"))
+        registry.isModalContainer("bottom-sheet").shouldBeTrue()
     }
 
-    @Test
-    fun `isModalContainer returns false for unregistered container`() {
+    test("isModalContainer returns false for unregistered container") {
         val registry = DslModalRegistry(
             modalDestinations = emptySet(),
             modalContainers = setOf("bottom-sheet")
         )
 
-        assertFalse(registry.isModalContainer("dialog"))
+        registry.isModalContainer("dialog").shouldBeFalse()
     }
 
-    @Test
-    fun `empty sets return false for all inputs`() {
+    test("empty sets return false for all inputs") {
         val registry = DslModalRegistry(
             modalDestinations = emptySet(),
             modalContainers = emptySet()
         )
 
-        assertFalse(registry.isModalDestination(ModalDestination::class))
-        assertFalse(registry.isModalDestination(RegularDestination::class))
-        assertFalse(registry.isModalContainer("anything"))
-        assertFalse(registry.isModalContainer(""))
+        registry.isModalDestination(ModalDestination::class).shouldBeFalse()
+        registry.isModalDestination(RegularDestination::class).shouldBeFalse()
+        registry.isModalContainer("anything").shouldBeFalse()
+        registry.isModalContainer("").shouldBeFalse()
     }
 
     // =========================================================================
     // CompositeModalRegistry TESTS
     // =========================================================================
 
-    @Test
-    fun `composite returns true when primary says modal`() {
+    test("composite returns true when primary says modal") {
         val primary = DslModalRegistry(
             modalDestinations = setOf(ModalDestination::class),
             modalContainers = setOf("primary-container")
@@ -111,12 +105,11 @@ class ModalRegistryTest {
         )
         val composite = CompositeModalRegistry(primary, secondary)
 
-        assertTrue(composite.isModalDestination(ModalDestination::class))
-        assertTrue(composite.isModalContainer("primary-container"))
+        composite.isModalDestination(ModalDestination::class).shouldBeTrue()
+        composite.isModalContainer("primary-container").shouldBeTrue()
     }
 
-    @Test
-    fun `composite returns true when secondary says modal`() {
+    test("composite returns true when secondary says modal") {
         val primary = DslModalRegistry(
             modalDestinations = emptySet(),
             modalContainers = emptySet()
@@ -127,12 +120,11 @@ class ModalRegistryTest {
         )
         val composite = CompositeModalRegistry(primary, secondary)
 
-        assertTrue(composite.isModalDestination(ModalDestination::class))
-        assertTrue(composite.isModalContainer("secondary-container"))
+        composite.isModalDestination(ModalDestination::class).shouldBeTrue()
+        composite.isModalContainer("secondary-container").shouldBeTrue()
     }
 
-    @Test
-    fun `composite returns true when both say modal`() {
+    test("composite returns true when both say modal") {
         val primary = DslModalRegistry(
             modalDestinations = setOf(ModalDestination::class),
             modalContainers = setOf("shared-container")
@@ -143,12 +135,11 @@ class ModalRegistryTest {
         )
         val composite = CompositeModalRegistry(primary, secondary)
 
-        assertTrue(composite.isModalDestination(ModalDestination::class))
-        assertTrue(composite.isModalContainer("shared-container"))
+        composite.isModalDestination(ModalDestination::class).shouldBeTrue()
+        composite.isModalContainer("shared-container").shouldBeTrue()
     }
 
-    @Test
-    fun `composite returns false when neither says modal`() {
+    test("composite returns false when neither says modal") {
         val primary = DslModalRegistry(
             modalDestinations = emptySet(),
             modalContainers = emptySet()
@@ -159,12 +150,11 @@ class ModalRegistryTest {
         )
         val composite = CompositeModalRegistry(primary, secondary)
 
-        assertFalse(composite.isModalDestination(ModalDestination::class))
-        assertFalse(composite.isModalContainer("any-container"))
+        composite.isModalDestination(ModalDestination::class).shouldBeFalse()
+        composite.isModalContainer("any-container").shouldBeFalse()
     }
 
-    @Test
-    fun `composite unions destinations from both registries`() {
+    test("composite unions destinations from both registries") {
         val primary = DslModalRegistry(
             modalDestinations = setOf(ModalDestination::class),
             modalContainers = emptySet()
@@ -175,13 +165,12 @@ class ModalRegistryTest {
         )
         val composite = CompositeModalRegistry(primary, secondary)
 
-        assertTrue(composite.isModalDestination(ModalDestination::class))
-        assertTrue(composite.isModalDestination(AnotherModalDestination::class))
-        assertFalse(composite.isModalDestination(RegularDestination::class))
+        composite.isModalDestination(ModalDestination::class).shouldBeTrue()
+        composite.isModalDestination(AnotherModalDestination::class).shouldBeTrue()
+        composite.isModalDestination(RegularDestination::class).shouldBeFalse()
     }
 
-    @Test
-    fun `composite unions containers from both registries`() {
+    test("composite unions containers from both registries") {
         val primary = DslModalRegistry(
             modalDestinations = emptySet(),
             modalContainers = setOf("bottom-sheet")
@@ -192,27 +181,25 @@ class ModalRegistryTest {
         )
         val composite = CompositeModalRegistry(primary, secondary)
 
-        assertTrue(composite.isModalContainer("bottom-sheet"))
-        assertTrue(composite.isModalContainer("dialog"))
-        assertFalse(composite.isModalContainer("unknown"))
+        composite.isModalContainer("bottom-sheet").shouldBeTrue()
+        composite.isModalContainer("dialog").shouldBeTrue()
+        composite.isModalContainer("unknown").shouldBeFalse()
     }
 
     // =========================================================================
     // ModalRegistry.Empty TESTS
     // =========================================================================
 
-    @Test
-    fun `Empty returns false for any destination class`() {
-        assertFalse(ModalRegistry.Empty.isModalDestination(ModalDestination::class))
-        assertFalse(ModalRegistry.Empty.isModalDestination(RegularDestination::class))
-        assertFalse(ModalRegistry.Empty.isModalDestination(AnotherModalDestination::class))
+    test("Empty returns false for any destination class") {
+        ModalRegistry.Empty.isModalDestination(ModalDestination::class).shouldBeFalse()
+        ModalRegistry.Empty.isModalDestination(RegularDestination::class).shouldBeFalse()
+        ModalRegistry.Empty.isModalDestination(AnotherModalDestination::class).shouldBeFalse()
     }
 
-    @Test
-    fun `Empty returns false for any container key`() {
-        assertFalse(ModalRegistry.Empty.isModalContainer("bottom-sheet"))
-        assertFalse(ModalRegistry.Empty.isModalContainer("dialog"))
-        assertFalse(ModalRegistry.Empty.isModalContainer(""))
-        assertFalse(ModalRegistry.Empty.isModalContainer("any-key"))
+    test("Empty returns false for any container key") {
+        ModalRegistry.Empty.isModalContainer("bottom-sheet").shouldBeFalse()
+        ModalRegistry.Empty.isModalContainer("dialog").shouldBeFalse()
+        ModalRegistry.Empty.isModalContainer("").shouldBeFalse()
+        ModalRegistry.Empty.isModalContainer("any-key").shouldBeFalse()
     }
-}
+})

@@ -10,37 +10,35 @@ import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldBeNull
 
 /**
  * Unit tests for CascadeBackState calculation.
  */
 @OptIn(InternalQuoVadisApi::class)
-class CascadeBackStateTest {
+class CascadeBackStateTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : NavDestination {
+    val HomeDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "home"
     }
 
-    private object ProfileDestination : NavDestination {
+    val ProfileDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "profile"
     }
 
-    @BeforeTest
-    fun setup() {
+    beforeTest {
         NavKeyGenerator.reset()
     }
 
@@ -48,8 +46,7 @@ class CascadeBackStateTest {
     // NORMAL POP (NO CASCADE) TESTS
     // =========================================================================
 
-    @Test
-    fun `normal pop returns cascadeDepth 0`() {
+    test("normal pop returns cascadeDepth 0") {
         // Given: Stack with 2 items
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination)
@@ -63,14 +60,13 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then
-        assertEquals(0, state.cascadeDepth)
-        assertEquals(NodeKey("s2"), state.exitingNode.key) // Current screen exits
-        assertEquals(NodeKey("s1"), state.targetNode?.key) // Previous screen is target
-        assertFalse(state.delegatesToSystem)
+        state.cascadeDepth shouldBe 0
+        state.exitingNode.key shouldBe NodeKey("s2") // Current screen exits
+        state.targetNode?.key shouldBe NodeKey("s1") // Previous screen is target
+        state.delegatesToSystem.shouldBeFalse()
     }
 
-    @Test
-    fun `root with 1 item delegates to system`() {
+    test("root with 1 item delegates to system") {
         // Given: Stack with 1 item
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
         val root = StackNode(
@@ -83,17 +79,16 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then
-        assertTrue(state.delegatesToSystem)
-        assertEquals(0, state.cascadeDepth)
-        assertNull(state.targetNode)
+        state.delegatesToSystem.shouldBeTrue()
+        state.cascadeDepth shouldBe 0
+        state.targetNode.shouldBeNull()
     }
 
     // =========================================================================
     // SINGLE CASCADE TESTS
     // =========================================================================
 
-    @Test
-    fun `nested stack cascade returns cascadeDepth 1`() {
+    test("nested stack cascade returns cascadeDepth 1") {
         // Given: RootStack → [Screen1, ChildStack(1 item)]
         val childScreen = ScreenNode(NodeKey("c1"), NodeKey("child"), HomeDestination)
         val childStack = StackNode(
@@ -112,14 +107,13 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then
-        assertEquals(1, state.cascadeDepth)
-        assertEquals(NodeKey("child"), state.exitingNode.key) // ChildStack exits
-        assertEquals(NodeKey("r1"), state.targetNode?.key) // rootScreen is target
-        assertFalse(state.delegatesToSystem)
+        state.cascadeDepth shouldBe 1
+        state.exitingNode.key shouldBe NodeKey("child") // ChildStack exits
+        state.targetNode?.key shouldBe NodeKey("r1") // rootScreen is target
+        state.delegatesToSystem.shouldBeFalse()
     }
 
-    @Test
-    fun `tab pop entire TabNode returns cascade`() {
+    test("tab pop entire TabNode returns cascade") {
         // Given: RootStack → [Screen1, TabNode(initial tab with 1 item)]
         val tabScreen = ScreenNode(NodeKey("t1"), NodeKey("tab0"), HomeDestination)
         val tabStack = StackNode(
@@ -144,17 +138,16 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then: Should cascade through tab to pop TabNode
-        assertTrue(state.cascadeDepth > 0)
-        assertFalse(state.delegatesToSystem)
-        assertEquals(NodeKey("r1"), state.targetNode?.key)
+        (state.cascadeDepth > 0).shouldBeTrue()
+        state.delegatesToSystem.shouldBeFalse()
+        state.targetNode?.key shouldBe NodeKey("r1")
     }
 
     // =========================================================================
     // DEEP CASCADE TESTS
     // =========================================================================
 
-    @Test
-    fun `deep cascade through stack returns correct depth`() {
+    test("deep cascade through stack returns correct depth") {
         // Given: RootStack → [Screen1, MiddleStack(ChildStack(1 item))]
         val childScreen = ScreenNode(NodeKey("c1"), NodeKey("child"), HomeDestination)
         val childStack = StackNode(
@@ -178,13 +171,12 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then: Should cascade through 2 levels (child -> middle -> root)
-        assertTrue(state.cascadeDepth >= 1)
-        assertFalse(state.delegatesToSystem)
-        assertEquals(NodeKey("r1"), state.targetNode?.key)
+        (state.cascadeDepth >= 1).shouldBeTrue()
+        state.delegatesToSystem.shouldBeFalse()
+        state.targetNode?.key shouldBe NodeKey("r1")
     }
 
-    @Test
-    fun `non-initial tab with 1 item delegates to system when TabNode is only child`() {
+    test("non-initial tab with 1 item delegates to system when TabNode is only child") {
         // Given: RootStack → TabNode(2 tabs, active = 1) where TabNode is only child
         val tab0Screen = ScreenNode(NodeKey("t0"), NodeKey("tab0"), HomeDestination)
         val tab0Stack = StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(tab0Screen))
@@ -206,16 +198,15 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then: Should delegate to system (TabNode cannot be popped - only child of root)
-        assertTrue(state.delegatesToSystem)
-        assertNull(state.targetNode)
+        state.delegatesToSystem.shouldBeTrue()
+        state.targetNode.shouldBeNull()
     }
 
     // =========================================================================
     // DELEGATE TO SYSTEM TESTS
     // =========================================================================
 
-    @Test
-    fun `empty root stack delegates to system`() {
+    test("empty root stack delegates to system") {
         // Given: Empty root stack
         val root = StackNode(
             key = NodeKey("root"),
@@ -227,12 +218,11 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then
-        assertTrue(state.delegatesToSystem)
-        assertNull(state.targetNode)
+        state.delegatesToSystem.shouldBeTrue()
+        state.targetNode.shouldBeNull()
     }
 
-    @Test
-    fun `nested cascade that reaches root with 1 child delegates to system`() {
+    test("nested cascade that reaches root with 1 child delegates to system") {
         // Given: RootStack(only ChildStack with 1 item)
         val childScreen = ScreenNode(NodeKey("c1"), NodeKey("child"), HomeDestination)
         val childStack = StackNode(
@@ -250,16 +240,15 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then: Cascade reaches root which has only 1 child, delegates to system
-        assertTrue(state.delegatesToSystem)
-        assertNull(state.targetNode)
+        state.delegatesToSystem.shouldBeTrue()
+        state.targetNode.shouldBeNull()
     }
 
     // =========================================================================
     // WOULDCASCADE TESTS
     // =========================================================================
 
-    @Test
-    fun `wouldCascade returns false for normal pop`() {
+    test("wouldCascade returns false for normal pop") {
         // Given: Stack with 2 items
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination)
@@ -270,11 +259,10 @@ class CascadeBackStateTest {
         )
 
         // When/Then
-        assertFalse(wouldCascade(root))
+        wouldCascade(root).shouldBeFalse()
     }
 
-    @Test
-    fun `wouldCascade returns true for nested stack with 1 item`() {
+    test("wouldCascade returns true for nested stack with 1 item") {
         // Given: RootStack → [Screen1, ChildStack(1 item)]
         val childScreen = ScreenNode(NodeKey("c1"), NodeKey("child"), HomeDestination)
         val childStack = StackNode(
@@ -290,11 +278,10 @@ class CascadeBackStateTest {
         )
 
         // When/Then
-        assertTrue(wouldCascade(root))
+        wouldCascade(root).shouldBeTrue()
     }
 
-    @Test
-    fun `wouldCascade returns false for root with 1 item`() {
+    test("wouldCascade returns false for root with 1 item") {
         // Given: Root stack with 1 item (no cascade, just delegate to system)
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
         val root = StackNode(
@@ -304,11 +291,10 @@ class CascadeBackStateTest {
         )
 
         // When/Then: Root stack has no parent, so no cascade possible
-        assertFalse(wouldCascade(root))
+        wouldCascade(root).shouldBeFalse()
     }
 
-    @Test
-    fun `wouldCascade returns false for deeply nested stack with multiple items`() {
+    test("wouldCascade returns false for deeply nested stack with multiple items") {
         // Given: RootStack → ChildStack(2 items)
         val childScreen1 = ScreenNode(NodeKey("c1"), NodeKey("child"), HomeDestination)
         val childScreen2 = ScreenNode(NodeKey("c2"), NodeKey("child"), ProfileDestination)
@@ -324,15 +310,14 @@ class CascadeBackStateTest {
         )
 
         // When/Then: Child stack has 2 items, so normal pop, no cascade
-        assertFalse(wouldCascade(root))
+        wouldCascade(root).shouldBeFalse()
     }
 
     // =========================================================================
     // SOURCE NODE TESTS
     // =========================================================================
 
-    @Test
-    fun `sourceNode is the active screen for normal pop`() {
+    test("sourceNode is the active screen for normal pop") {
         // Given: Stack with 2 screens
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("root"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("s2"), NodeKey("root"), ProfileDestination)
@@ -346,11 +331,10 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then: Source should be the active (topmost) screen
-        assertEquals(NodeKey("s2"), state.sourceNode.key)
+        state.sourceNode.key shouldBe NodeKey("s2")
     }
 
-    @Test
-    fun `sourceNode is the nested active screen for cascade`() {
+    test("sourceNode is the nested active screen for cascade") {
         // Given: RootStack → ChildStack(1 screen)
         val childScreen = ScreenNode(NodeKey("c1"), NodeKey("child"), HomeDestination)
         val childStack = StackNode(
@@ -369,15 +353,14 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then: Source should still be the deepest active screen
-        assertEquals(NodeKey("c1"), state.sourceNode.key)
+        state.sourceNode.key shouldBe NodeKey("c1")
     }
 
     // =========================================================================
     // TAB SPECIFIC TESTS
     // =========================================================================
 
-    @Test
-    fun `tab with multiple items on initial tab - normal pop`() {
+    test("tab with multiple items on initial tab - normal pop") {
         // Given: TabNode with 2 items on initial tab
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
@@ -398,14 +381,13 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then: Should be normal pop (no cascade)
-        assertEquals(0, state.cascadeDepth)
-        assertEquals(NodeKey("s2"), state.exitingNode.key)
-        assertEquals(NodeKey("s1"), state.targetNode?.key)
-        assertFalse(state.delegatesToSystem)
+        state.cascadeDepth shouldBe 0
+        state.exitingNode.key shouldBe NodeKey("s2")
+        state.targetNode?.key shouldBe NodeKey("s1")
+        state.delegatesToSystem.shouldBeFalse()
     }
 
-    @Test
-    fun `tab with 1 item on non-initial tab - switches tab`() {
+    test("tab with 1 item on non-initial tab - switches tab") {
         // Given: TabNode on non-initial tab with 1 item (TabNode is only child of root)
         val tab0Screen = ScreenNode(NodeKey("t0"), NodeKey("tab0"), HomeDestination)
         val tab0Stack = StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(tab0Screen))
@@ -427,7 +409,7 @@ class CascadeBackStateTest {
         val state = calculateCascadeBackState(root)
 
         // Then: TabNode is only child of root, should delegate to system
-        assertTrue(state.delegatesToSystem)
-        assertNull(state.targetNode)
+        state.delegatesToSystem.shouldBeTrue()
+        state.targetNode.shouldBeNull()
     }
-}
+})
