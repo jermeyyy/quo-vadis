@@ -45,26 +45,6 @@ kotlin {
         }
     }
 
-    // Web targets
-    js(IR) {
-        browser {
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
-            }
-        }
-        binaries.executable()
-    }
-
-    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
-    wasmJs {
-        browser {
-            commonWebpackConfig {
-                outputFileName = "composeApp.wasm.js"
-            }
-        }
-        binaries.executable()
-    }
-
     // Desktop (JVM) target
     jvm("desktop")
 
@@ -115,15 +95,6 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-        }
-        jsMain.dependencies {
-            implementation(compose.html.core)
-            implementation(compose.materialIconsExtended)
-            implementation(libs.ktor.client.js)
-        }
-        wasmJsMain.dependencies {
-            implementation(compose.materialIconsExtended)
-            implementation(libs.ktor.client.js)
         }
         val desktopMain by getting {
             dependencies {

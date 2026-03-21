@@ -45,26 +45,6 @@ kotlin {
         }
     }
 
-    // Web targets
-    js(IR) {
-        browser {
-            commonWebpackConfig {
-                outputFileName = "quo-vadis-flowmvi.js"
-            }
-        }
-        binaries.executable()
-    }
-
-    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
-    wasmJs {
-        browser {
-            commonWebpackConfig {
-                outputFileName = "quo-vadis-flowmvi.wasm.js"
-            }
-        }
-        binaries.executable()
-    }
-
     jvm("desktop")
 
     sourceSets {
@@ -121,16 +101,6 @@ kotlin {
         }
 
         iosMain {
-            dependencies {
-            }
-        }
-
-        jsMain {
-            dependencies {
-            }
-        }
-
-        wasmJsMain {
             dependencies {
             }
         }

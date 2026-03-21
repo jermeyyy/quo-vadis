@@ -88,18 +88,6 @@ mcp_gradle-mcp_run_task(task=":quo-vadis-core:connectedAndroidTest")
 ./gradlew :quo-vadis-core:connectedAndroidTest
 ```
 
-### Run Web Tests
-**MCP (PREFERRED):**
-```python
-mcp_gradle-mcp_run_task(task=":composeApp:jsTest")              # JavaScript tests
-mcp_gradle-mcp_run_task(task=":quo-vadis-core:jsTest")          # Library JS tests
-```
-**Terminal:**
-```bash
-./gradlew :composeApp:jsTest              # JavaScript tests
-./gradlew :quo-vadis-core:jsTest          # Library JS tests
-```
-
 ## Cleaning Commands
 
 ### Clean Build
@@ -388,5 +376,4 @@ mcp_gradle-mcp_run_task(task="build")                                         # 
 - Build cache is enabled by default (reuses outputs across builds)
 - Gradle daemon uses 6GB heap, builds use 8GB heap
 - For desktop, use `:composeApp:run` task (not `desktopRun`)
-- For web, dev server runs on port 8080 by default
 - Desktop JAR task creates library JAR, not executable

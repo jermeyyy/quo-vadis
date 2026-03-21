@@ -63,12 +63,10 @@ org.gradle.jvmargs=-Xmx8192M -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF
 - `iosArm64` - iOS device (ARM64)
 - `iosSimulatorArm64` - iOS simulator (Apple Silicon)
 - `iosX64` - iOS simulator (Intel)
-- `js(IR)` - JavaScript with IR compiler
-- `wasmJs` - WebAssembly
 - `jvm("desktop")` - Desktop JVM
 
 ### Compose Platforms
-All platforms use Compose Multiplatform with Canvas-based rendering for web targets.
+All platforms use Compose Multiplatform.
 
 ## Serialization
 

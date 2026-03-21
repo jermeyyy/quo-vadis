@@ -33,7 +33,7 @@ Quo Vadis provides a powerful navigation solution with:
 - ✅ **Type-Safe Navigation** - Compile-time safety with no string-based routing
 - ✅ **Multiple Container Types** - `@Stack`, `@Tabs`, and `@Pane` for different navigation patterns
 - ✅ **Type-Safe Arguments** - `@Argument` annotation with automatic deep link serialization
-- ✅ **Multiplatform** - Works on Android, iOS, Desktop, Web (JS & WASM)
+- ✅ **Multiplatform** - Works on Android, iOS, Desktop
 - ✅ **Predictive Back Navigation** - Smooth animated back gestures (Android 13+ & iOS)
 - ✅ **Shared Element Transitions** - Material Design shared elements (forward & back!)
 - ✅ **Tabbed Navigation** - Independent backstacks per tab with `@Tabs` + `@TabItem`
@@ -577,8 +577,6 @@ val mviModule = module {
 - **KSP**: 2.3.0
 - **Android**: Min SDK 24, Target/Compile SDK 36
 - **iOS**: iosArm64, iosSimulatorArm64, iosX64
-- **JavaScript**: IR compiler with Canvas rendering
-- **WebAssembly**: Wasm-JS target with Canvas rendering
 - **Desktop**: JVM target (Java 11+)
 - **Gradle**: 8.14.3
 - **AGP**: 8.13.2
@@ -653,8 +651,6 @@ NavigationHost(
 |----------|--------|--------|----------|
 | **Android** | `androidLibrary` | ✅ Production | Predictive back, deep links, system integration |
 | **iOS** | `iosArm64` `iosSimulatorArm64` `iosX64` | ✅ Production | Swipe back, universal links |
-| **JavaScript** | `js(IR)` | ✅ Production | Browser history, Canvas rendering |
-| **WebAssembly** | `wasmJs` | ✅ Production | Near-native performance |
 | **Desktop** | `jvm("desktop")` | ✅ Production | Native windows (macOS, Windows, Linux) |
 
 ## 🎮 Demo Application
@@ -678,12 +674,6 @@ The `composeApp` module showcases all navigation patterns:
 # iOS (Apple Silicon simulator)
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
 open iosApp/iosApp.xcodeproj
-
-# Web (JavaScript)
-./gradlew :composeApp:jsBrowserDevelopmentRun --continuous
-
-# Web (WebAssembly)
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun --continuous
 
 # Desktop
 ./gradlew :composeApp:run
@@ -744,10 +734,6 @@ open quo-vadis-core/build/dokka/html/index.html
 
 # iOS
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
-
-# Web
-./gradlew :composeApp:jsBrowserDevelopmentRun
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun
 
 # Desktop
 ./gradlew :composeApp:run

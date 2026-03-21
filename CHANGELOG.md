@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ⚠️ Breaking Changes
+
+- **Dropped JavaScript (IR) and WebAssembly (wasmJs) platform targets**: The library no longer publishes JS or WASM artifacts. Supported platforms are now Android, iOS (arm64, simulatorArm64, x64), and Desktop (JVM).
+
+### Removed
+
+- `js(IR)` and `wasmJs` target declarations from all modules
+- `jsMain`, `wasmJsMain` source sets from `quo-vadis-core` and `composeApp`
+- `ktor-client-js` dependency from version catalog
+- `build-web.sh`, root `package.json`, and `kotlin-js-store/` tooling files
+- Web run commands (`jsBrowserDevelopmentRun`, `wasmJsBrowserDevelopmentRun`) from documentation
+
 ### Added
 
 ### Changed

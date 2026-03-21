@@ -17,7 +17,6 @@ NavPlayground/
 ├── CHANGELOG.md               # Version history
 ├── LICENSE                    # MIT License
 ├── build-desktop.sh           # Desktop build script
-├── build-web.sh               # Web build script
 └── publish-local.sh           # Local Maven publish script
 ```
 
@@ -62,8 +61,6 @@ quo-vadis-core/
     ├── androidMain/               # Android-specific
     ├── iosMain/                   # iOS-specific
     ├── desktopMain/               # Desktop-specific
-    ├── jsMain/                    # JS-specific
-    ├── wasmJsMain/                # WASM-specific
     ├── commonTest/                # Shared tests
     └── desktopTest/               # Desktop tests (fast)
 ```
@@ -119,12 +116,8 @@ composeApp/
     │   └── MainActivity.kt        # Android entry
     ├── iosMain/
     │   └── MainViewController.kt  # iOS entry
-    ├── desktopMain/
-    │   └── main.desktop.kt        # Desktop entry
-    ├── jsMain/
-    │   └── main.js.kt             # JS entry
-    └── wasmJsMain/
-        └── main.wasmJs.kt         # WASM entry
+    └── desktopMain/
+        └── main.desktop.kt        # Desktop entry
 ```
 
 ### iosApp (iOS Wrapper)

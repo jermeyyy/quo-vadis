@@ -8,13 +8,11 @@
 - **Maven Central URL**: https://central.sonatype.com/artifact/io.github.jermeyyy/quo-vadis-core
 
 ## Published Artifacts
-1. quo-vadis-core (7 platform variants)
+1. quo-vadis-core (5 platform variants)
    - Android AAR
    - iOS x64, Arm64, Simulator Arm64
    - Desktop JAR
-   - JavaScript
-   - WebAssembly
-2. quo-vadis-annotations (6 platform variants)
+2. quo-vadis-annotations (5 platform variants)
 3. quo-vadis-ksp (JVM only)
 
 ## Installation from Maven Central

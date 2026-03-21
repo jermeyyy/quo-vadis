@@ -71,7 +71,6 @@ For UI or platform-specific changes:
 - [ ] Feature works on Android
 - [ ] Feature works on iOS (if applicable)
 - [ ] Feature works on Desktop
-- [ ] Feature works on Web (JS/WASM)
 
 ### 6. Git Hygiene
 

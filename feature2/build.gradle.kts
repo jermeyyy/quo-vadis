@@ -51,25 +51,6 @@ kotlin {
         }
     }
 
-    js(IR) {
-        browser {
-            commonWebpackConfig {
-                outputFileName = "feature2.js"
-            }
-        }
-        binaries.executable()
-    }
-
-    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
-    wasmJs {
-        browser {
-            commonWebpackConfig {
-                outputFileName = "feature2.wasm.js"
-            }
-        }
-        binaries.executable()
-    }
-
     jvm("desktop")
 
     sourceSets {
@@ -122,13 +103,6 @@ kotlin {
             dependencies {
 
             }
-        }
-        jsMain.dependencies {
-            implementation(compose.html.core)
-            implementation(compose.materialIconsExtended)
-        }
-        wasmJsMain.dependencies {
-            implementation(compose.materialIconsExtended)
         }
     }
 }

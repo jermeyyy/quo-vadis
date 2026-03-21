@@ -70,13 +70,7 @@ cd quo-vadis
 open iosApp/iosApp.xcodeproj
 
 # Run on Desktop
-./gradlew :composeApp:run
-
-# Run on Web (JavaScript)
-./gradlew :composeApp:jsBrowserDevelopmentRun
-
-# Run on Web (WebAssembly)
-./gradlew :composeApp:wasmJsBrowserDevelopmentRun`
+./gradlew :composeApp:run`
 
 const mainAppCode = `@Composable
 fun DemoApp() {
@@ -313,15 +307,6 @@ export default function Demo() {
               <li><strong>Predictive Back:</strong> Interactive pop gesture with preview</li>
               <li><strong>Universal Links:</strong> Deep linking via HTTPS URLs</li>
               <li><strong>Navigation Bar:</strong> Automatic back button integration</li>
-            </ul>
-          </div>
-
-          <div className={styles.platformCard}>
-            <h3>Web</h3>
-            <ul>
-              <li><strong>Browser History:</strong> Forward/back buttons work naturally</li>
-              <li><strong>URL Routing:</strong> Deep linkable URLs for every screen</li>
-              <li><strong>Bookmarking:</strong> Users can bookmark specific screens</li>
             </ul>
           </div>
 
