@@ -9,6 +9,9 @@ on:
         description: 'Release tag to publish (e.g., v0.1.0)'
         required: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   publish-libraries:
     name: Publish Libraries
@@ -28,9 +31,6 @@ jobs:
           distribution: 'corretto'
           java-version: '21'
           cache: 'gradle'
-
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v3
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -86,9 +86,6 @@ jobs:
           distribution: 'corretto'
           java-version: '21'
           cache: 'gradle'
-
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v3
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
