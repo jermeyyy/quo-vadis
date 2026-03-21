@@ -64,10 +64,10 @@ private sealed interface HomeTabs : NavDestination {
 }
 
 /**
- * Tests for stack-scope-aware [com.jermey.quo.vadis.core.navigation.tree.TreeMutator] operations.
+ * Tests for stack-scope-aware [TreeMutator] operations.
  *
- * These tests verify that `TreeMutator.push` with a [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry] correctly routes
- * destinations based on whether they belong to a StackNode's scope.
+ * These tests verify that [TreeMutator.push] with a [ScopeRegistry] correctly routes
+ * destinations based on whether they belong to a [StackNode]'s scope.
  *
  * This complements [TreeMutatorScopeTest] which focuses on TabNode scopes.
  */

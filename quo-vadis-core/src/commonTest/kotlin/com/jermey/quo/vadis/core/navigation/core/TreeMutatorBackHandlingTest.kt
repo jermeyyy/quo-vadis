@@ -7,7 +7,6 @@ import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
-import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
@@ -48,14 +47,6 @@ private object SettingsDestination : NavDestination {
 
 @OptIn(InternalQuoVadisApi::class)
 class TreeMutatorBackHandlingTest : FunSpec({
-
-    // =========================================================================
-    // TEST SETUP
-    // =========================================================================
-
-    beforeTest {
-        NavKeyGenerator.reset()
-    }
 
     // =========================================================================
     // POP WITH TAB BEHAVIOR - STACK TESTS

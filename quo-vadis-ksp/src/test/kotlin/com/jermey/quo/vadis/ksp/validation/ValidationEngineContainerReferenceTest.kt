@@ -306,6 +306,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
 
         val result = validate(listOf(tabA, tabB, tabC))
 
+        result.shouldBeFalse()
         logger.warnings.filter { it.contains("nesting depth exceeds") }.shouldBeEmpty()
     }
 

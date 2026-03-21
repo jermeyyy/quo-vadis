@@ -20,7 +20,7 @@ private fun createTestScopeRegistry(
     scopes: Map<String, Set<KClass<out NavDestination>>>
 ): ScopeRegistry = object : ScopeRegistry {
     override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
-        val scopeClasses = scopes[scopeKey.value] ?: return true
+        val scopeClasses = scopes[scopeKey.value] ?: return false
         return scopeClasses.any { it.isInstance(destination) }
     }
 
@@ -32,7 +32,7 @@ private fun createTestScopeRegistry(
 }
 
 /**
- * Tests for [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry] interface and implementations.
+ * Tests for [com.jermey.quo.vadis.core.registry.ScopeRegistry] interface and implementations.
  */
 class ScopeRegistryTest : FunSpec() {
 
@@ -142,17 +142,16 @@ class ScopeRegistryTest : FunSpec() {
         (testRegistry.isInScope(ScopeKey("MainTabs"), OutOfScopeDestination)).shouldBeFalse()
     }
 
-    test("isInScope returns true for unknown scope keys") {
-        // Unknown scope keys allow all destinations (defensive behavior)
-        // This prevents crashes when scope configuration is incomplete
-        (testRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab)).shouldBeTrue()
-        (testRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination)).shouldBeTrue()
+    test("isInScope returns false for unknown scope keys") {
+        // Unknown scope keys reject all destinations (matches production DslScopeRegistry)
+        (testRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab)).shouldBeFalse()
+        (testRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination)).shouldBeFalse()
     }
 
     test("isInScope handles empty scope key") {
-        // Empty scope key is treated as unknown (allows all)
-        (testRegistry.isInScope(ScopeKey(""), MainTabs.HomeTab)).shouldBeTrue()
-        (testRegistry.isInScope(ScopeKey(""), OutOfScopeDestination)).shouldBeTrue()
+        // Empty scope key is treated as unknown (rejects all, matches production)
+        (testRegistry.isInScope(ScopeKey(""), MainTabs.HomeTab)).shouldBeFalse()
+        (testRegistry.isInScope(ScopeKey(""), OutOfScopeDestination)).shouldBeFalse()
     }
 
     // =========================================================================
@@ -278,12 +277,12 @@ class ScopeRegistryTest : FunSpec() {
         stackScopeRegistry.getScopeKey(OutOfScopeDestination).shouldBeNull()
     }
 
-    test("unknown scope key allows all destinations including stack destinations") {
-        // Unknown scope keys should still allow all (defensive behavior)
-        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), AuthFlow.Login)).shouldBeTrue()
-        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OnboardingFlow.Welcome)).shouldBeTrue()
-        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab)).shouldBeTrue()
-        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination)).shouldBeTrue()
+    test("unknown scope key rejects all destinations including stack destinations") {
+        // Unknown scope keys reject all destinations (matches production DslScopeRegistry)
+        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), AuthFlow.Login)).shouldBeFalse()
+        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OnboardingFlow.Welcome)).shouldBeFalse()
+        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab)).shouldBeFalse()
+        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination)).shouldBeFalse()
     }
 
     } // init
