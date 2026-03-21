@@ -7,6 +7,9 @@ on:
       - 'docs/site/**'
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: read
   pages: write
@@ -37,7 +40,7 @@ jobs:
           java-version: '21'
       
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
+        uses: gradle/actions/setup-gradle@v4
       
       - name: Install npm dependencies
         working-directory: docs/site
@@ -57,7 +60,7 @@ jobs:
           cp -r build/dokka/html _site/api
       
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: '_site'
   
