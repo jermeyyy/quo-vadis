@@ -108,14 +108,9 @@ class TreeMutatorStackScopeTest : FunSpec({
     // TEST SETUP
     // =========================================================================
 
-    var keyCounter = 0
-
     fun createKeyGenerator(): () -> NodeKey {
-        return { NodeKey("key-${keyCounter++}") }
-    }
-
-    beforeTest {
-        keyCounter = 0
+        var counter = 0
+        return { NodeKey("key-${counter++}") }
     }
 
     // =========================================================================
