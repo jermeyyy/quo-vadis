@@ -175,6 +175,9 @@ class FakeNavRenderScopeTest : FunSpec({
         scope.navigator shouldBeSameInstanceAs navigator
     }
 
+    // TODO: TestDestination.route requires KSP-generated RouteRegistry registration,
+    //  which is not available in unit tests. Re-enable once route resolution is decoupled or
+    //  a test-friendly route registration mechanism is provided.
     xtest("withFakeNavigator navigator is usable for verification") {
         // Given
         val (scope, navigator) = FakeNavRenderScope.withFakeNavigator()

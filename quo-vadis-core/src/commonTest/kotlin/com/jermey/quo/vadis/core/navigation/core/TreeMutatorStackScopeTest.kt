@@ -17,6 +17,52 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
+private sealed interface AuthFlow : NavDestination {
+    data object Login : AuthFlow {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+        override fun toString(): String = "Login"
+    }
+
+    data object Register : AuthFlow {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+        override fun toString(): String = "Register"
+    }
+
+    data object ForgotPassword : AuthFlow {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+        override fun toString(): String = "ForgotPassword"
+    }
+}
+
+private sealed interface MainFlow : NavDestination {
+    data object Home : MainFlow {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+        override fun toString(): String = "Home"
+    }
+
+    data object Profile : MainFlow {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+        override fun toString(): String = "Profile"
+    }
+}
+
+private sealed interface HomeTabs : NavDestination {
+    data object Feed : HomeTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+
+    data object Explore : HomeTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+}
+
 /**
  * Tests for stack-scope-aware [com.jermey.quo.vadis.core.navigation.tree.TreeMutator] operations.
  *
@@ -26,61 +72,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
  * This complements [TreeMutatorScopeTest] which focuses on TabNode scopes.
  */
 @OptIn(InternalQuoVadisApi::class)
-class TreeMutatorStackScopeTest : FunSpec() {
-
-    sealed interface AuthFlow : NavDestination {
-        data object Login : AuthFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-            override fun toString(): String = "Login"
-        }
-
-        data object Register : AuthFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-            override fun toString(): String = "Register"
-        }
-
-        data object ForgotPassword : AuthFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-            override fun toString(): String = "ForgotPassword"
-        }
-    }
-
-    sealed interface MainFlow : NavDestination {
-        data object Home : MainFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-            override fun toString(): String = "Home"
-        }
-
-        data object Profile : MainFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-            override fun toString(): String = "Profile"
-        }
-    }
-
-    data object UniversalDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-        override fun toString(): String = "Universal"
-    }
-
-    sealed interface HomeTabs : NavDestination {
-        data object Feed : HomeTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-
-        data object Explore : HomeTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
-
-    init {
+class TreeMutatorStackScopeTest : FunSpec({
 
     // =========================================================================
     // TEST REGISTRY
@@ -165,9 +157,9 @@ class TreeMutatorStackScopeTest : FunSpec() {
         resultAuthStack.scopeKey shouldBe ScopeKey("AuthFlow")
 
         val newScreen = resultAuthStack.children.last()
-        newScreen.shouldBeInstanceOf<ScreenNode>()
-        (newScreen as ScreenNode).destination shouldBe AuthFlow.Register
-        (newScreen as ScreenNode).parentKey shouldBe NodeKey("auth")
+        val typedScreen = newScreen.shouldBeInstanceOf<ScreenNode>()
+        typedScreen.destination shouldBe AuthFlow.Register
+        typedScreen.parentKey shouldBe NodeKey("auth")
     }
 
     test("push multiple in-scope destinations stays in same stack") {
@@ -250,9 +242,9 @@ class TreeMutatorStackScopeTest : FunSpec() {
 
         // New screen should be sibling to authStack
         val newScreen = resultRoot.children[1]
-        newScreen.shouldBeInstanceOf<ScreenNode>()
-        (newScreen as ScreenNode).destination shouldBe MainFlow.Home
-        (newScreen as ScreenNode).parentKey shouldBe NodeKey("root")
+        val typedScreen = newScreen.shouldBeInstanceOf<ScreenNode>()
+        typedScreen.destination shouldBe MainFlow.Home
+        typedScreen.parentKey shouldBe NodeKey("root")
     }
 
     test("push out-of-scope preserves scoped stack for predictive back") {
@@ -328,11 +320,11 @@ class TreeMutatorStackScopeTest : FunSpec() {
         resultRoot.children.size shouldBe 3
 
         resultRoot.children[0].shouldBeInstanceOf<StackNode>() // AuthStack preserved
-        resultRoot.children[1].shouldBeInstanceOf<ScreenNode>()
-        resultRoot.children[2].shouldBeInstanceOf<ScreenNode>()
+        val typedChild1 = resultRoot.children[1].shouldBeInstanceOf<ScreenNode>()
+        val typedChild2 = resultRoot.children[2].shouldBeInstanceOf<ScreenNode>()
 
-        (resultRoot.children[1] as ScreenNode).destination shouldBe MainFlow.Home
-        (resultRoot.children[2] as ScreenNode).destination shouldBe MainFlow.Profile
+        typedChild1.destination shouldBe MainFlow.Home
+        typedChild2.destination shouldBe MainFlow.Profile
     }
 
     // =========================================================================
@@ -383,9 +375,9 @@ class TreeMutatorStackScopeTest : FunSpec() {
         resultOuterStack.children[0].shouldBeInstanceOf<StackNode>()
         // New screen is sibling to innerStack
         val newScreen = resultOuterStack.children[1]
-        newScreen.shouldBeInstanceOf<ScreenNode>()
-        (newScreen as ScreenNode).destination shouldBe MainFlow.Home
-        (newScreen as ScreenNode).parentKey shouldBe NodeKey("outer")
+        val typedScreen = newScreen.shouldBeInstanceOf<ScreenNode>()
+        typedScreen.destination shouldBe MainFlow.Home
+        typedScreen.parentKey shouldBe NodeKey("outer")
     }
 
     test("doubly nested stacks - destination escapes both") {
@@ -470,9 +462,9 @@ class TreeMutatorStackScopeTest : FunSpec() {
         resultMainStack.children.size shouldBe 2
 
         val newScreen = resultMainStack.children.last()
-        newScreen.shouldBeInstanceOf<ScreenNode>()
-        (newScreen as ScreenNode).destination shouldBe AuthFlow.Login
-        (newScreen as ScreenNode).parentKey shouldBe NodeKey("main")
+        val typedScreen = newScreen.shouldBeInstanceOf<ScreenNode>()
+        typedScreen.destination shouldBe AuthFlow.Login
+        typedScreen.parentKey shouldBe NodeKey("main")
     }
 
     test("stack without scopeKey mixed with scoped stack") {
@@ -519,9 +511,9 @@ class TreeMutatorStackScopeTest : FunSpec() {
         resultUnscopedStack.children[0].shouldBeInstanceOf<StackNode>()
         // New screen in unscoped stack
         val newScreen = resultUnscopedStack.children[1]
-        newScreen.shouldBeInstanceOf<ScreenNode>()
-        (newScreen as ScreenNode).destination shouldBe MainFlow.Home
-        (newScreen as ScreenNode).parentKey shouldBe NodeKey("unscoped")
+        val typedScreen = newScreen.shouldBeInstanceOf<ScreenNode>()
+        typedScreen.destination shouldBe MainFlow.Home
+        typedScreen.parentKey shouldBe NodeKey("unscoped")
     }
 
     // =========================================================================
@@ -562,8 +554,8 @@ class TreeMutatorStackScopeTest : FunSpec() {
         resultAuthStack.children.size shouldBe 2
 
         val newScreen = resultAuthStack.children.last()
-        newScreen.shouldBeInstanceOf<ScreenNode>()
-        (newScreen as ScreenNode).destination shouldBe MainFlow.Home
+        val typedScreen = newScreen.shouldBeInstanceOf<ScreenNode>()
+        typedScreen.destination shouldBe MainFlow.Home
     }
 
     test("push without scopeRegistry parameter uses original behavior") {
@@ -678,8 +670,8 @@ class TreeMutatorStackScopeTest : FunSpec() {
         resultTabStack.children[0].shouldBeInstanceOf<StackNode>()
         // New screen added as sibling
         val newScreen = resultTabStack.children[1]
-        newScreen.shouldBeInstanceOf<ScreenNode>()
-        (newScreen as ScreenNode).destination shouldBe HomeTabs.Feed
+        val typedScreen = newScreen.shouldBeInstanceOf<ScreenNode>()
+        typedScreen.destination shouldBe HomeTabs.Feed
     }
 
     test("destination out of both tab and stack scope escapes innermost scope first") {
@@ -739,9 +731,9 @@ class TreeMutatorStackScopeTest : FunSpec() {
         resultTabStack.children[0].shouldBeInstanceOf<StackNode>()
         // New screen is sibling to auth-stack in tab0
         val newScreen = resultTabStack.children[1]
-        newScreen.shouldBeInstanceOf<ScreenNode>()
-        (newScreen as ScreenNode).destination shouldBe MainFlow.Home
-        (newScreen as ScreenNode).parentKey shouldBe NodeKey("tab0")
+        val typedScreen = newScreen.shouldBeInstanceOf<ScreenNode>()
+        typedScreen.destination shouldBe MainFlow.Home
+        typedScreen.parentKey shouldBe NodeKey("tab0")
     }
 
     // =========================================================================
@@ -810,5 +802,4 @@ class TreeMutatorStackScopeTest : FunSpec() {
         resultAuthStack.scopeKey shouldBe ScopeKey("AuthFlow")
     }
 
-    } // init
-}
+})

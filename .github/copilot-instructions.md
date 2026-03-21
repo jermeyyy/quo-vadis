@@ -182,10 +182,7 @@ Tests use **Kotest FunSpec** with `shouldBe` assertions. Use `FakeNavigator` fro
 ```kotlin
 class ExampleTest : FunSpec({
     test("navigate to article") {
-        val navigator = TreeNavigator(
-            config = GeneratedNavigationConfig,
-            initialState = config.buildNavNode(HomeDestination::class, null)!!
-        )
+        val navigator = FakeNavigator()
         navigator.navigate(HomeDestination.Article("123"))
         navigator.currentDestination.value shouldBe HomeDestination.Article("123")
     }

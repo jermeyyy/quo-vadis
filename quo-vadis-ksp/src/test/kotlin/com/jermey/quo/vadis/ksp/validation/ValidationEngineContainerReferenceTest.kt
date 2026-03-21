@@ -7,7 +7,6 @@ import com.jermey.quo.vadis.ksp.models.TabItemInfo
 import com.jermey.quo.vadis.ksp.models.TabItemType
 import com.jermey.quo.vadis.ksp.testutil.FakeKSClassDeclaration
 import com.jermey.quo.vadis.ksp.testutil.FakeKSPLogger
-import com.jermey.quo.vadis.ksp.testutil.fakeResolver
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -26,7 +25,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
 
     val logger = FakeKSPLogger()
     val engine = ValidationEngine(logger)
-    val resolver = fakeResolver()
 
     // -- Helpers --
 

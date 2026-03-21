@@ -20,7 +20,6 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.types.shouldBeInstanceOf
 
@@ -95,22 +94,6 @@ private data object StandaloneDestination : NavDestination {
 }
 
 class ContainerRegistryTest : FunSpec({
-
-    // =========================================================================
-    // TEST DESTINATIONS
-    // =========================================================================
-
-    /**
-     * Simulates a destination that is part of a tab container.
-     */
-
-    /**
-     * Simulates a destination that is part of a pane container.
-     */
-
-    /**
-     * A destination that is NOT part of any container.
-     */
 
     // =========================================================================
     // HELPER BUILDERS

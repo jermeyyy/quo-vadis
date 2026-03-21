@@ -16,6 +16,38 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
+private sealed interface MainTabs : NavDestination {
+    data object HomeTab : MainTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+        override fun toString(): String = "HomeTab"
+    }
+
+    data object SettingsTab : MainTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+        override fun toString(): String = "SettingsTab"
+    }
+
+    data object ProfileTab : MainTabs {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+        override fun toString(): String = "ProfileTab"
+    }
+}
+
+private data object OutOfScopeDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+    override fun toString(): String = "OutOfScope"
+}
+
+private data object DetailDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+    override fun toString(): String = "Detail"
+}
+
 /**
  * Tests for scope-aware [com.jermey.quo.vadis.core.navigation.tree.TreeMutator] operations.
  *
@@ -23,41 +55,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
  * destinations based on whether they belong to a container's scope.
  */
 @OptIn(InternalQuoVadisApi::class)
-class TreeMutatorScopeTest : FunSpec() {
-
-    sealed interface MainTabs : NavDestination {
-        data object HomeTab : MainTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-            override fun toString(): String = "HomeTab"
-        }
-
-        data object SettingsTab : MainTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-            override fun toString(): String = "SettingsTab"
-        }
-
-        data object ProfileTab : MainTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-            override fun toString(): String = "ProfileTab"
-        }
-    }
-
-    data object OutOfScopeDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-        override fun toString(): String = "OutOfScope"
-    }
-
-    data object DetailDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-        override fun toString(): String = "Detail"
-    }
-
-    init {
+class TreeMutatorScopeTest : FunSpec({
 
     // =========================================================================
     // TEST REGISTRY
@@ -553,5 +551,4 @@ class TreeMutatorScopeTest : FunSpec() {
         activeStack.key shouldBe NodeKey("tab1")
     }
 
-    } // init
-}
+})

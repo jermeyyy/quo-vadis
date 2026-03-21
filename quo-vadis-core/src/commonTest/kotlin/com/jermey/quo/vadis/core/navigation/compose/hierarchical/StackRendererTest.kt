@@ -26,7 +26,8 @@ import io.kotest.matchers.nulls.shouldNotBeNull
  * - Back navigation detection logic
  * - Stack state changes
  */
-class StackRendererTest : FunSpec({
+class StackRendererTest : FunSpec() {
+    init {
 
     // =========================================================================
     // TEST DESTINATIONS
@@ -424,4 +425,5 @@ class StackRendererTest : FunSpec({
         level2.parentKey shouldBe NodeKey("level1")
         screen.parentKey shouldBe NodeKey("level2")
     }
-})
+    } // init
+}

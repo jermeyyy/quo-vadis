@@ -28,28 +28,26 @@ import io.kotest.matchers.types.shouldBeInstanceOf
  * These tests verify the new back handling architecture introduced in Phase 5 of the
  * back handling refactoring plan.
  */
+private object HomeDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+    override fun toString(): String = "home"
+}
+
+private object ProfileDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+    override fun toString(): String = "profile"
+}
+
+private object SettingsDestination : NavDestination {
+    override val data: Any? = null
+    override val transition: NavigationTransition? = null
+    override fun toString(): String = "settings"
+}
+
 @OptIn(InternalQuoVadisApi::class)
-class TreeMutatorBackHandlingTest : FunSpec() {
-
-    object HomeDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-        override fun toString(): String = "home"
-    }
-
-    object ProfileDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-        override fun toString(): String = "profile"
-    }
-
-    object SettingsDestination : NavDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-        override fun toString(): String = "settings"
-    }
-
-    init {
+class TreeMutatorBackHandlingTest : FunSpec({
 
     // =========================================================================
     // TEST SETUP
@@ -75,11 +73,10 @@ class TreeMutatorBackHandlingTest : FunSpec() {
 
         val result = TreeMutator.popWithTabBehavior(root)
 
-        result.shouldBeInstanceOf<BackResult.Handled>()
-        val newState = (result as BackResult.Handled).newState
-        newState.shouldBeInstanceOf<StackNode>()
-        (newState as StackNode).children.size shouldBe 1
-        ((newState as StackNode).activeChild as ScreenNode).destination shouldBe HomeDestination
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        val newState = handled.newState.shouldBeInstanceOf<StackNode>()
+        newState.children.size shouldBe 1
+        (newState.activeChild as ScreenNode).destination shouldBe HomeDestination
     }
 
     test("popWithTabBehavior returns DelegateToSystem for root with one item") {
@@ -122,8 +119,8 @@ class TreeMutatorBackHandlingTest : FunSpec() {
 
         val result = TreeMutator.popWithTabBehavior(root)
 
-        result.shouldBeInstanceOf<BackResult.Handled>()
-        val newState = (result as BackResult.Handled).newState as StackNode
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        val newState = handled.newState.shouldBeInstanceOf<StackNode>()
         newState.children.size shouldBe 2
         (newState.activeChild as ScreenNode).destination shouldBe ProfileDestination
     }
@@ -218,8 +215,8 @@ class TreeMutatorBackHandlingTest : FunSpec() {
 
         val result = TreeMutator.popWithTabBehavior(root)
 
-        result.shouldBeInstanceOf<BackResult.Handled>()
-        val newState = (result as BackResult.Handled).newState as StackNode
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        val newState = handled.newState.shouldBeInstanceOf<StackNode>()
         val newTabNode = newState.children.first() as TabNode
         newTabNode.stacks[0].children.size shouldBe 1
         (newTabNode.stacks[0].activeChild as ScreenNode).destination shouldBe HomeDestination
@@ -285,8 +282,8 @@ class TreeMutatorBackHandlingTest : FunSpec() {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Should pop from root stack (remove Profile screen)
-        result.shouldBeInstanceOf<BackResult.Handled>()
-        val newState = (result as BackResult.Handled).newState as StackNode
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        val newState = handled.newState.shouldBeInstanceOf<StackNode>()
         newState.children.size shouldBe 1
         newState.children.first().shouldBeInstanceOf<TabNode>()
     }
@@ -421,8 +418,8 @@ class TreeMutatorBackHandlingTest : FunSpec() {
         )
         val result = BackResult.Handled(newState)
 
-        result.shouldBeInstanceOf<BackResult.Handled>()
-        (result as BackResult.Handled).newState shouldBe newState
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        handled.newState shouldBe newState
     }
 
     test("BackResult DelegateToSystem is singleton") {
@@ -478,15 +475,15 @@ class TreeMutatorBackHandlingTest : FunSpec() {
 
         // Back 1: Pop D from root
         val result1 = TreeMutator.popWithTabBehavior(root)
-        result1.shouldBeInstanceOf<BackResult.Handled>()
-        val state1 = (result1 as BackResult.Handled).newState as StackNode
+        val handled1 = result1.shouldBeInstanceOf<BackResult.Handled>()
+        val state1 = handled1.newState.shouldBeInstanceOf<StackNode>()
         state1.children.size shouldBe 1
         state1.children.first().shouldBeInstanceOf<TabNode>()
 
         // Back 2: Pop B from tab0
         val result2 = TreeMutator.popWithTabBehavior(state1)
-        result2.shouldBeInstanceOf<BackResult.Handled>()
-        val state2 = (result2 as BackResult.Handled).newState as StackNode
+        val handled2 = result2.shouldBeInstanceOf<BackResult.Handled>()
+        val state2 = handled2.newState.shouldBeInstanceOf<StackNode>()
         val tabs2 = state2.children.first() as TabNode
         tabs2.stacks[0].children.size shouldBe 1
 
@@ -582,8 +579,8 @@ class TreeMutatorBackHandlingTest : FunSpec() {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should pop childStack from root, revealing rootScreen
-        result.shouldBeInstanceOf<BackResult.Handled>()
-        val newState = (result as BackResult.Handled).newState as StackNode
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        val newState = handled.newState.shouldBeInstanceOf<StackNode>()
         newState.children.size shouldBe 1
         newState.activeChild?.key shouldBe NodeKey("r1")
     }
@@ -634,8 +631,8 @@ class TreeMutatorBackHandlingTest : FunSpec() {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should pop TabNode from root, revealing rootScreen
-        result.shouldBeInstanceOf<BackResult.Handled>()
-        val newState = (result as BackResult.Handled).newState as StackNode
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        val newState = handled.newState.shouldBeInstanceOf<StackNode>()
         newState.children.size shouldBe 1
         newState.activeChild?.key shouldBe NodeKey("r1")
     }
@@ -697,8 +694,8 @@ class TreeMutatorBackHandlingTest : FunSpec() {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should cascade through TabNode and MiddleStack, popping MiddleStack from root
-        result.shouldBeInstanceOf<BackResult.Handled>()
-        val newState = (result as BackResult.Handled).newState as StackNode
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        val newState = handled.newState.shouldBeInstanceOf<StackNode>()
         newState.children.size shouldBe 1
         newState.activeChild?.key shouldBe NodeKey("r1")
     }
@@ -728,8 +725,8 @@ class TreeMutatorBackHandlingTest : FunSpec() {
         val result = TreeMutator.popWithTabBehavior(root)
 
         // Then: Should pop child2Stack (parent has multiple children, no cascade needed)
-        result.shouldBeInstanceOf<BackResult.Handled>()
-        val newState = (result as BackResult.Handled).newState as StackNode
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        val newState = handled.newState.shouldBeInstanceOf<StackNode>()
         newState.children.size shouldBe 2
         newState.activeChild?.key shouldBe NodeKey("child1")
     }
@@ -778,5 +775,4 @@ class TreeMutatorBackHandlingTest : FunSpec() {
         TreeMutator.canHandleBackNavigation(root).shouldBeTrue()
     }
 
-    } // init
-}
+})

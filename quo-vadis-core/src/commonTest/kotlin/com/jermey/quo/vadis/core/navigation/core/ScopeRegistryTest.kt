@@ -10,6 +10,26 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import kotlin.reflect.KClass
+
+/**
+ * Creates a test [ScopeRegistry] backed by the given scope-to-classes mapping.
+ * Simulates what KSP would generate from sealed class hierarchies.
+ */
+private fun createTestScopeRegistry(
+    scopes: Map<String, Set<KClass<out NavDestination>>>
+): ScopeRegistry = object : ScopeRegistry {
+    override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
+        val scopeClasses = scopes[scopeKey.value] ?: return true
+        return scopeClasses.any { it.isInstance(destination) }
+    }
+
+    override fun getScopeKey(destination: NavDestination): ScopeKey? {
+        return scopes.entries.find { (_, classes) ->
+            classes.any { it.isInstance(destination) }
+        }?.key?.let { ScopeKey(it) }
+    }
+}
 
 /**
  * Tests for [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry] interface and implementations.
@@ -84,22 +104,9 @@ class ScopeRegistryTest : FunSpec() {
      * Test implementation of ScopeRegistry.
      * Simulates what KSP would generate from sealed class hierarchies.
      */
-    val testRegistry = object : ScopeRegistry {
-        val scopes = mapOf(
-            "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class)
-        )
-
-        override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey.value] ?: return true
-            return scopeClasses.any { it.isInstance(destination) }
-        }
-
-        override fun getScopeKey(destination: NavDestination): ScopeKey? {
-            return scopes.entries.find { (_, classes) ->
-                classes.any { it.isInstance(destination) }
-            }?.key?.let { ScopeKey(it) }
-        }
-    }
+    val testRegistry = createTestScopeRegistry(
+        mapOf("MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class))
+    )
 
     // =========================================================================
     // EMPTY REGISTRY TESTS
@@ -168,23 +175,12 @@ class ScopeRegistryTest : FunSpec() {
     /**
      * Registry with multiple scopes.
      */
-    val multiScopeRegistry = object : ScopeRegistry {
-        val scopes = mapOf(
+    val multiScopeRegistry = createTestScopeRegistry(
+        mapOf(
             "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class),
             "ProfileTabs" to setOf(ProfileTabs.OverviewTab::class, ProfileTabs.HistoryTab::class)
         )
-
-        override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey.value] ?: return true
-            return scopeClasses.any { it.isInstance(destination) }
-        }
-
-        override fun getScopeKey(destination: NavDestination): ScopeKey? {
-            return scopes.entries.find { (_, classes) ->
-                classes.any { it.isInstance(destination) }
-            }?.key?.let { ScopeKey(it) }
-        }
-    }
+    )
 
     test("Multiple scopes - each destination maps to correct scope") {
         multiScopeRegistry.getScopeKey(MainTabs.HomeTab) shouldBe ScopeKey("MainTabs")
@@ -222,8 +218,8 @@ class ScopeRegistryTest : FunSpec() {
      * Registry that includes stack scopes alongside tab scopes.
      * Simulates what KSP would generate from @Tab and @Stack annotations.
      */
-    val stackScopeRegistry = object : ScopeRegistry {
-        val scopes = mapOf(
+    val stackScopeRegistry = createTestScopeRegistry(
+        mapOf(
             // Tab scopes
             "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class),
             // Stack scopes
@@ -234,18 +230,7 @@ class ScopeRegistryTest : FunSpec() {
             ),
             "OnboardingFlow" to setOf(OnboardingFlow.Welcome::class, OnboardingFlow.Tutorial::class)
         )
-
-        override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey.value] ?: return true
-            return scopeClasses.any { it.isInstance(destination) }
-        }
-
-        override fun getScopeKey(destination: NavDestination): ScopeKey? {
-            return scopes.entries.find { (_, classes) ->
-                classes.any { it.isInstance(destination) }
-            }?.key?.let { ScopeKey(it) }
-        }
-    }
+    )
 
     test("registry includes stack destinations") {
         // Verify stack destinations are in scope map
