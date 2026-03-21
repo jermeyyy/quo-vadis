@@ -20,31 +20,33 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 
 /**
  * Tests for NavNode type-checking and type-requiring extension functions
  * defined in NavNodeTypeChecks.kt.
  */
 @OptIn(InternalQuoVadisApi::class)
-class NavNodeTypeChecksTest {
+class NavNodeTypeChecksTest : FunSpec() {
 
-    private object TestDestination : NavDestination {
+    object TestDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private val screenNode: NavNode = ScreenNode(
+    init {
+
+    val screenNode: NavNode = ScreenNode(
         key = NodeKey("screen-1"),
         parentKey = null,
         destination = TestDestination,
     )
 
-    private val stackNode: NavNode = StackNode(
+    val stackNode: NavNode = StackNode(
         key = NodeKey("stack-1"),
         parentKey = null,
         children = listOf(
@@ -52,7 +54,7 @@ class NavNodeTypeChecksTest {
         ),
     )
 
-    private val tabNode: NavNode = TabNode(
+    val tabNode: NavNode = TabNode(
         key = NodeKey("tab-1"),
         parentKey = null,
         stacks = listOf(
@@ -67,7 +69,7 @@ class NavNodeTypeChecksTest {
         activeStackIndex = 0,
     )
 
-    private val paneNode: NavNode = PaneNode(
+    val paneNode: NavNode = PaneNode(
         key = NodeKey("pane-1"),
         parentKey = null,
         paneConfigurations = mapOf(
@@ -89,131 +91,117 @@ class NavNodeTypeChecksTest {
     // isScreen
     // =========================================================================
 
-    @Test
-    fun `isScreen returns true for ScreenNode`() {
-        assertTrue(screenNode.isScreen())
+    test("isScreen returns true for ScreenNode") {
+        screenNode.isScreen().shouldBeTrue()
     }
 
-    @Test
-    fun `isScreen returns false for non-ScreenNode`() {
-        assertFalse(stackNode.isScreen())
-        assertFalse(tabNode.isScreen())
-        assertFalse(paneNode.isScreen())
+    test("isScreen returns false for non-ScreenNode") {
+        stackNode.isScreen().shouldBeFalse()
+        tabNode.isScreen().shouldBeFalse()
+        paneNode.isScreen().shouldBeFalse()
     }
 
     // =========================================================================
     // isStack
     // =========================================================================
 
-    @Test
-    fun `isStack returns true for StackNode`() {
-        assertTrue(stackNode.isStack())
+    test("isStack returns true for StackNode") {
+        stackNode.isStack().shouldBeTrue()
     }
 
-    @Test
-    fun `isStack returns false for non-StackNode`() {
-        assertFalse(screenNode.isStack())
-        assertFalse(tabNode.isStack())
-        assertFalse(paneNode.isStack())
+    test("isStack returns false for non-StackNode") {
+        screenNode.isStack().shouldBeFalse()
+        tabNode.isStack().shouldBeFalse()
+        paneNode.isStack().shouldBeFalse()
     }
 
     // =========================================================================
     // isTab
     // =========================================================================
 
-    @Test
-    fun `isTab returns true for TabNode`() {
-        assertTrue(tabNode.isTab())
+    test("isTab returns true for TabNode") {
+        tabNode.isTab().shouldBeTrue()
     }
 
-    @Test
-    fun `isTab returns false for non-TabNode`() {
-        assertFalse(screenNode.isTab())
-        assertFalse(stackNode.isTab())
-        assertFalse(paneNode.isTab())
+    test("isTab returns false for non-TabNode") {
+        screenNode.isTab().shouldBeFalse()
+        stackNode.isTab().shouldBeFalse()
+        paneNode.isTab().shouldBeFalse()
     }
 
     // =========================================================================
     // isPane
     // =========================================================================
 
-    @Test
-    fun `isPane returns true for PaneNode`() {
-        assertTrue(paneNode.isPane())
+    test("isPane returns true for PaneNode") {
+        paneNode.isPane().shouldBeTrue()
     }
 
-    @Test
-    fun `isPane returns false for non-PaneNode`() {
-        assertFalse(screenNode.isPane())
-        assertFalse(stackNode.isPane())
-        assertFalse(tabNode.isPane())
+    test("isPane returns false for non-PaneNode") {
+        screenNode.isPane().shouldBeFalse()
+        stackNode.isPane().shouldBeFalse()
+        tabNode.isPane().shouldBeFalse()
     }
 
     // =========================================================================
     // requireScreen
     // =========================================================================
 
-    @Test
-    fun `requireScreen returns ScreenNode for ScreenNode`() {
+    test("requireScreen returns ScreenNode for ScreenNode") {
         val result = screenNode.requireScreen()
-        assertEquals(NodeKey("screen-1"), result.key)
+        result.key shouldBe NodeKey("screen-1")
     }
 
-    @Test
-    fun `requireScreen throws for non-ScreenNode`() {
-        assertFailsWith<IllegalStateException> { stackNode.requireScreen() }
-        assertFailsWith<IllegalStateException> { tabNode.requireScreen() }
-        assertFailsWith<IllegalStateException> { paneNode.requireScreen() }
+    test("requireScreen throws for non-ScreenNode") {
+        shouldThrow<IllegalStateException> { stackNode.requireScreen() }
+        shouldThrow<IllegalStateException> { tabNode.requireScreen() }
+        shouldThrow<IllegalStateException> { paneNode.requireScreen() }
     }
 
     // =========================================================================
     // requireStack
     // =========================================================================
 
-    @Test
-    fun `requireStack returns StackNode for StackNode`() {
+    test("requireStack returns StackNode for StackNode") {
         val result = stackNode.requireStack()
-        assertEquals(NodeKey("stack-1"), result.key)
+        result.key shouldBe NodeKey("stack-1")
     }
 
-    @Test
-    fun `requireStack throws for non-StackNode`() {
-        assertFailsWith<IllegalStateException> { screenNode.requireStack() }
-        assertFailsWith<IllegalStateException> { tabNode.requireStack() }
-        assertFailsWith<IllegalStateException> { paneNode.requireStack() }
+    test("requireStack throws for non-StackNode") {
+        shouldThrow<IllegalStateException> { screenNode.requireStack() }
+        shouldThrow<IllegalStateException> { tabNode.requireStack() }
+        shouldThrow<IllegalStateException> { paneNode.requireStack() }
     }
 
     // =========================================================================
     // requireTab
     // =========================================================================
 
-    @Test
-    fun `requireTab returns TabNode for TabNode`() {
+    test("requireTab returns TabNode for TabNode") {
         val result = tabNode.requireTab()
-        assertEquals(NodeKey("tab-1"), result.key)
+        result.key shouldBe NodeKey("tab-1")
     }
 
-    @Test
-    fun `requireTab throws for non-TabNode`() {
-        assertFailsWith<IllegalStateException> { screenNode.requireTab() }
-        assertFailsWith<IllegalStateException> { stackNode.requireTab() }
-        assertFailsWith<IllegalStateException> { paneNode.requireTab() }
+    test("requireTab throws for non-TabNode") {
+        shouldThrow<IllegalStateException> { screenNode.requireTab() }
+        shouldThrow<IllegalStateException> { stackNode.requireTab() }
+        shouldThrow<IllegalStateException> { paneNode.requireTab() }
     }
 
     // =========================================================================
     // requirePane
     // =========================================================================
 
-    @Test
-    fun `requirePane returns PaneNode for PaneNode`() {
+    test("requirePane returns PaneNode for PaneNode") {
         val result = paneNode.requirePane()
-        assertEquals(NodeKey("pane-1"), result.key)
+        result.key shouldBe NodeKey("pane-1")
     }
 
-    @Test
-    fun `requirePane throws for non-PaneNode`() {
-        assertFailsWith<IllegalStateException> { screenNode.requirePane() }
-        assertFailsWith<IllegalStateException> { stackNode.requirePane() }
-        assertFailsWith<IllegalStateException> { tabNode.requirePane() }
+    test("requirePane throws for non-PaneNode") {
+        shouldThrow<IllegalStateException> { screenNode.requirePane() }
+        shouldThrow<IllegalStateException> { stackNode.requirePane() }
+        shouldThrow<IllegalStateException> { tabNode.requirePane() }
     }
+
+    } // init
 }

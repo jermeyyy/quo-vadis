@@ -2,13 +2,13 @@ package com.jermey.quo.vadis.core.navigation.compose.navback
 
 import com.jermey.quo.vadis.core.compose.internal.navback.BackNavigationEvent
 import com.jermey.quo.vadis.core.compose.internal.navback.BackTransitionState
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertIs
-import kotlin.test.assertNotEquals
-import kotlin.test.assertSame
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 /**
  * Unit tests for [BackNavigationEvent] and [BackTransitionState].
@@ -19,14 +19,13 @@ import kotlin.test.assertTrue
  * - BackTransitionState.Idle and BackTransitionState.InProgress states
  * - Data class equality and copy behavior
  */
-class BackNavigationEventTest {
+class BackNavigationEventTest : FunSpec({
 
     // =========================================================================
     // BACK NAVIGATION EVENT TESTS
     // =========================================================================
 
-    @Test
-    fun `BackNavigationEvent creation with all parameters`() {
+    test("BackNavigationEvent creation with all parameters") {
         // Given
         val progress = 0.5f
         val touchX = 100f
@@ -42,81 +41,72 @@ class BackNavigationEventTest {
         )
 
         // Then
-        assertEquals(progress, event.progress)
-        assertEquals(touchX, event.touchX)
-        assertEquals(touchY, event.touchY)
-        assertEquals(swipeEdge, event.swipeEdge)
+        event.progress shouldBe progress
+        event.touchX shouldBe touchX
+        event.touchY shouldBe touchY
+        event.swipeEdge shouldBe swipeEdge
     }
 
-    @Test
-    fun `BackNavigationEvent creation with default values`() {
+    test("BackNavigationEvent creation with default values") {
         // When
         val event = BackNavigationEvent(progress = 0.75f)
 
         // Then
-        assertEquals(0.75f, event.progress)
-        assertEquals(0f, event.touchX)
-        assertEquals(0f, event.touchY)
-        assertEquals(BackNavigationEvent.EDGE_LEFT, event.swipeEdge)
+        event.progress shouldBe 0.75f
+        event.touchX shouldBe 0f
+        event.touchY shouldBe 0f
+        event.swipeEdge shouldBe BackNavigationEvent.EDGE_LEFT
     }
 
-    @Test
-    fun `BackNavigationEvent progress at zero`() {
+    test("BackNavigationEvent progress at zero") {
         // Given/When
         val event = BackNavigationEvent(progress = 0f)
 
         // Then
-        assertEquals(0f, event.progress)
+        event.progress shouldBe 0f
     }
 
-    @Test
-    fun `BackNavigationEvent progress at one`() {
+    test("BackNavigationEvent progress at one") {
         // Given/When
         val event = BackNavigationEvent(progress = 1f)
 
         // Then
-        assertEquals(1f, event.progress)
+        event.progress shouldBe 1f
     }
 
-    @Test
-    fun `BackNavigationEvent progress at intermediate value`() {
+    test("BackNavigationEvent progress at intermediate value") {
         // Given/When
         val event = BackNavigationEvent(progress = 0.33f)
 
         // Then
-        assertEquals(0.33f, event.progress)
+        event.progress shouldBe 0.33f
     }
 
     // =========================================================================
     // EDGE CONSTANT TESTS
     // =========================================================================
 
-    @Test
-    fun `EDGE_LEFT constant has value 0`() {
-        assertEquals(0, BackNavigationEvent.EDGE_LEFT)
+    test("EDGE_LEFT constant has value 0") {
+        BackNavigationEvent.EDGE_LEFT shouldBe 0
     }
 
-    @Test
-    fun `EDGE_RIGHT constant has value 1`() {
-        assertEquals(1, BackNavigationEvent.EDGE_RIGHT)
+    test("EDGE_RIGHT constant has value 1") {
+        BackNavigationEvent.EDGE_RIGHT shouldBe 1
     }
 
-    @Test
-    fun `EDGE_LEFT and EDGE_RIGHT are distinct`() {
-        assertNotEquals(BackNavigationEvent.EDGE_LEFT, BackNavigationEvent.EDGE_RIGHT)
+    test("EDGE_LEFT and EDGE_RIGHT are distinct") {
+        BackNavigationEvent.EDGE_RIGHT shouldNotBe BackNavigationEvent.EDGE_LEFT
     }
 
-    @Test
-    fun `swipeEdge defaults to EDGE_LEFT`() {
+    test("swipeEdge defaults to EDGE_LEFT") {
         // Given/When
         val event = BackNavigationEvent(progress = 0f)
 
         // Then
-        assertEquals(BackNavigationEvent.EDGE_LEFT, event.swipeEdge)
+        event.swipeEdge shouldBe BackNavigationEvent.EDGE_LEFT
     }
 
-    @Test
-    fun `swipeEdge can be set to EDGE_RIGHT`() {
+    test("swipeEdge can be set to EDGE_RIGHT") {
         // Given/When
         val event = BackNavigationEvent(
             progress = 0f,
@@ -124,27 +114,25 @@ class BackNavigationEventTest {
         )
 
         // Then
-        assertEquals(BackNavigationEvent.EDGE_RIGHT, event.swipeEdge)
+        event.swipeEdge shouldBe BackNavigationEvent.EDGE_RIGHT
     }
 
     // =========================================================================
     // DATA CLASS BEHAVIOR TESTS
     // =========================================================================
 
-    @Test
-    fun `BackNavigationEvent equals works correctly`() {
+    test("BackNavigationEvent equals works correctly") {
         // Given
         val event1 = BackNavigationEvent(progress = 0.5f, touchX = 10f, touchY = 20f)
         val event2 = BackNavigationEvent(progress = 0.5f, touchX = 10f, touchY = 20f)
         val event3 = BackNavigationEvent(progress = 0.6f, touchX = 10f, touchY = 20f)
 
         // Then
-        assertEquals(event1, event2)
-        assertNotEquals(event1, event3)
+        event2 shouldBe event1
+        event3 shouldNotBe event1
     }
 
-    @Test
-    fun `BackNavigationEvent copy works correctly`() {
+    test("BackNavigationEvent copy works correctly") {
         // Given
         val original = BackNavigationEvent(
             progress = 0.5f,
@@ -157,61 +145,56 @@ class BackNavigationEventTest {
         val copied = original.copy(progress = 0.75f)
 
         // Then
-        assertEquals(0.75f, copied.progress)
-        assertEquals(100f, copied.touchX)
-        assertEquals(200f, copied.touchY)
-        assertEquals(BackNavigationEvent.EDGE_LEFT, copied.swipeEdge)
+        copied.progress shouldBe 0.75f
+        copied.touchX shouldBe 100f
+        copied.touchY shouldBe 200f
+        copied.swipeEdge shouldBe BackNavigationEvent.EDGE_LEFT
     }
 
-    @Test
-    fun `BackNavigationEvent hashCode is consistent with equals`() {
+    test("BackNavigationEvent hashCode is consistent with equals") {
         // Given
         val event1 = BackNavigationEvent(progress = 0.5f, touchX = 10f, touchY = 20f)
         val event2 = BackNavigationEvent(progress = 0.5f, touchX = 10f, touchY = 20f)
 
         // Then
-        assertEquals(event1.hashCode(), event2.hashCode())
+        event2.hashCode() shouldBe event1.hashCode()
     }
 
     // =========================================================================
     // BACK TRANSITION STATE TESTS - IDLE
     // =========================================================================
 
-    @Test
-    fun `BackTransitionState Idle is a data object`() {
+    test("BackTransitionState Idle is a data object") {
         // Given/When
         val idle = BackTransitionState.Idle
 
         // Then
-        assertIs<BackTransitionState>(idle)
+        idle.shouldBeInstanceOf<BackTransitionState>()
     }
 
-    @Test
-    fun `BackTransitionState Idle is singleton`() {
+    test("BackTransitionState Idle is singleton") {
         // Given
         val idle1 = BackTransitionState.Idle
         val idle2 = BackTransitionState.Idle
 
         // Then
-        assertSame(idle1, idle2)
+        idle2 shouldBeSameInstanceAs idle1
     }
 
-    @Test
-    fun `BackTransitionState Idle equals itself`() {
+    test("BackTransitionState Idle equals itself") {
         // Given
         val idle1 = BackTransitionState.Idle
         val idle2 = BackTransitionState.Idle
 
         // Then
-        assertEquals(idle1, idle2)
+        idle2 shouldBe idle1
     }
 
     // =========================================================================
     // BACK TRANSITION STATE TESTS - IN PROGRESS
     // =========================================================================
 
-    @Test
-    fun `BackTransitionState InProgress contains event`() {
+    test("BackTransitionState InProgress contains event") {
         // Given
         val event = BackNavigationEvent(progress = 0.5f)
 
@@ -219,12 +202,11 @@ class BackNavigationEventTest {
         val inProgress = BackTransitionState.InProgress(event)
 
         // Then
-        assertIs<BackTransitionState>(inProgress)
-        assertEquals(event, inProgress.event)
+        inProgress.shouldBeInstanceOf<BackTransitionState>()
+        inProgress.event shouldBe event
     }
 
-    @Test
-    fun `BackTransitionState InProgress with different events are not equal`() {
+    test("BackTransitionState InProgress with different events are not equal") {
         // Given
         val event1 = BackNavigationEvent(progress = 0.5f)
         val event2 = BackNavigationEvent(progress = 0.6f)
@@ -234,11 +216,10 @@ class BackNavigationEventTest {
         val inProgress2 = BackTransitionState.InProgress(event2)
 
         // Then
-        assertNotEquals(inProgress1, inProgress2)
+        inProgress2 shouldNotBe inProgress1
     }
 
-    @Test
-    fun `BackTransitionState InProgress with same event are equal`() {
+    test("BackTransitionState InProgress with same event are equal") {
         // Given
         val event = BackNavigationEvent(progress = 0.5f)
 
@@ -247,11 +228,10 @@ class BackNavigationEventTest {
         val inProgress2 = BackTransitionState.InProgress(event.copy())
 
         // Then
-        assertEquals(inProgress1, inProgress2)
+        inProgress2 shouldBe inProgress1
     }
 
-    @Test
-    fun `BackTransitionState InProgress copy works correctly`() {
+    test("BackTransitionState InProgress copy works correctly") {
         // Given
         val event1 = BackNavigationEvent(progress = 0.5f)
         val event2 = BackNavigationEvent(progress = 0.75f)
@@ -261,34 +241,31 @@ class BackNavigationEventTest {
         val copied = original.copy(event = event2)
 
         // Then
-        assertEquals(event2, copied.event)
+        copied.event shouldBe event2
     }
 
     // =========================================================================
     // BACK TRANSITION STATE TYPE CHECKING TESTS
     // =========================================================================
 
-    @Test
-    fun `BackTransitionState Idle is not InProgress`() {
+    test("BackTransitionState Idle is not InProgress") {
         // Given
         val state: BackTransitionState = BackTransitionState.Idle
 
         // Then
-        assertFalse(state is BackTransitionState.InProgress)
+        (state is BackTransitionState.InProgress).shouldBeFalse()
     }
 
-    @Test
-    fun `BackTransitionState InProgress is not Idle`() {
+    test("BackTransitionState InProgress is not Idle") {
         // Given
         val event = BackNavigationEvent(progress = 0.5f)
         val state: BackTransitionState = BackTransitionState.InProgress(event)
 
         // Then
-        assertTrue(state is BackTransitionState.InProgress)
+        state.shouldBeInstanceOf<BackTransitionState.InProgress>()
     }
 
-    @Test
-    fun `when expression works with BackTransitionState`() {
+    test("when expression works with BackTransitionState") {
         // Given
         val idleState: BackTransitionState = BackTransitionState.Idle
         val inProgressState: BackTransitionState = BackTransitionState.InProgress(
@@ -307,16 +284,15 @@ class BackNavigationEventTest {
         }
 
         // Then
-        assertEquals("idle", idleResult)
-        assertEquals("in-progress", inProgressResult)
+        idleResult shouldBe "idle"
+        inProgressResult shouldBe "in-progress"
     }
 
     // =========================================================================
     // EDGE CASE TESTS
     // =========================================================================
 
-    @Test
-    fun `BackNavigationEvent with negative touchX and touchY`() {
+    test("BackNavigationEvent with negative touchX and touchY") {
         // Given/When (edge case - shouldn't happen but testing robustness)
         val event = BackNavigationEvent(
             progress = 0.5f,
@@ -325,12 +301,11 @@ class BackNavigationEventTest {
         )
 
         // Then
-        assertEquals(-10f, event.touchX)
-        assertEquals(-20f, event.touchY)
+        event.touchX shouldBe -10f
+        event.touchY shouldBe -20f
     }
 
-    @Test
-    fun `BackNavigationEvent with very large touchX and touchY`() {
+    test("BackNavigationEvent with very large touchX and touchY") {
         // Given/When
         val event = BackNavigationEvent(
             progress = 0.5f,
@@ -339,25 +314,23 @@ class BackNavigationEventTest {
         )
 
         // Then
-        assertEquals(10000f, event.touchX)
-        assertEquals(20000f, event.touchY)
+        event.touchX shouldBe 10000f
+        event.touchY shouldBe 20000f
     }
 
-    @Test
-    fun `BackNavigationEvent progress can be negative`() {
+    test("BackNavigationEvent progress can be negative") {
         // Given/When (edge case - shouldn't happen but testing robustness)
         val event = BackNavigationEvent(progress = -0.1f)
 
         // Then
-        assertEquals(-0.1f, event.progress)
+        event.progress shouldBe -0.1f
     }
 
-    @Test
-    fun `BackNavigationEvent progress can exceed 1`() {
+    test("BackNavigationEvent progress can exceed 1") {
         // Given/When (edge case - shouldn't happen but testing robustness)
         val event = BackNavigationEvent(progress = 1.5f)
 
         // Then
-        assertEquals(1.5f, event.progress)
+        event.progress shouldBe 1.5f
     }
-}
+})

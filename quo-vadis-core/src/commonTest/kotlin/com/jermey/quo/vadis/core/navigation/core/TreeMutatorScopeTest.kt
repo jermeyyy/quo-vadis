@@ -11,11 +11,10 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.node.activeStack
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 /**
  * Tests for scope-aware [com.jermey.quo.vadis.core.navigation.tree.TreeMutator] operations.
@@ -24,17 +23,9 @@ import kotlin.test.assertNotNull
  * destinations based on whether they belong to a container's scope.
  */
 @OptIn(InternalQuoVadisApi::class)
-class TreeMutatorScopeTest {
+class TreeMutatorScopeTest : FunSpec() {
 
-    // =========================================================================
-    // TEST DESTINATIONS
-    // =========================================================================
-
-    /**
-     * Simulates a sealed interface for tab destinations.
-     * These are "in scope" for a TabNode with scopeKey="MainTabs".
-     */
-    private sealed interface MainTabs : NavDestination {
+    sealed interface MainTabs : NavDestination {
         data object HomeTab : MainTabs {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -47,10 +38,6 @@ class TreeMutatorScopeTest {
             override fun toString(): String = "SettingsTab"
         }
 
-        /**
-         * An in-scope destination that is NOT pre-populated in any tab.
-         * Should be pushed to the active tab's stack.
-         */
         data object ProfileTab : MainTabs {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -58,24 +45,19 @@ class TreeMutatorScopeTest {
         }
     }
 
-    /**
-     * A destination that is NOT part of MainTabs scope.
-     * Should be pushed outside the tab container.
-     */
-    private data object OutOfScopeDestination : NavDestination {
+    data object OutOfScopeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "OutOfScope"
     }
 
-    /**
-     * Another out-of-scope destination for variation.
-     */
-    private data object DetailDestination : NavDestination {
+    data object DetailDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "Detail"
     }
+
+    init {
 
     // =========================================================================
     // TEST REGISTRY
@@ -85,8 +67,8 @@ class TreeMutatorScopeTest {
      * Test implementation of ScopeRegistry.
      * Simulates what KSP would generate from sealed class hierarchies.
      */
-    private val testRegistry = object : ScopeRegistry {
-        private val scopes = mapOf(
+    val testRegistry = object : ScopeRegistry {
+        val scopes = mapOf(
             "MainTabs" to setOf(
                 MainTabs.HomeTab::class,
                 MainTabs.SettingsTab::class,
@@ -110,14 +92,13 @@ class TreeMutatorScopeTest {
     // TEST SETUP
     // =========================================================================
 
-    private var keyCounter = 0
+    var keyCounter = 0
 
-    private fun createKeyGenerator(): () -> NodeKey {
+    fun createKeyGenerator(): () -> NodeKey {
         return { NodeKey("key-${keyCounter++}") }
     }
 
-    @BeforeTest
-    fun setup() {
+    beforeTest {
         keyCounter = 0
     }
 
@@ -132,7 +113,7 @@ class TreeMutatorScopeTest {
      *              └── ScreenNode (SettingsTab)
      * ```
      */
-    private fun buildTestTree(): StackNode {
+    fun buildTestTree(): StackNode {
         val homeScreen = ScreenNode(
             key = NodeKey("home-screen"),
             parentKey = NodeKey("tab0"),
@@ -176,8 +157,7 @@ class TreeMutatorScopeTest {
     // IN-SCOPE DESTINATION TESTS
     // =========================================================================
 
-    @Test
-    fun `push in-scope destination existing in another tab switches to that tab`() {
+    test("push in-scope destination existing in another tab switches to that tab") {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
@@ -189,15 +169,14 @@ class TreeMutatorScopeTest {
         val tabNode = resultStack.children[0] as TabNode
 
         // Active tab should now be tab 1 (settings tab)
-        assertEquals(1, tabNode.activeStackIndex)
+        tabNode.activeStackIndex shouldBe 1
 
         // No new screens should be pushed - just tab switch
-        assertEquals(1, tabNode.stacks[0].children.size) // Home tab still has 1
-        assertEquals(1, tabNode.stacks[1].children.size) // Settings tab still has 1
+        tabNode.stacks[0].children.size shouldBe 1 // Home tab still has 1
+        tabNode.stacks[1].children.size shouldBe 1 // Settings tab still has 1
     }
 
-    @Test
-    fun `push in-scope destination preserves tab state`() {
+    test("push in-scope destination preserves tab state") {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
@@ -209,13 +188,12 @@ class TreeMutatorScopeTest {
         val tabNode = resultStack.children[0] as TabNode
 
         // Tab structure preserved - no change since already on HomeTab
-        assertEquals(2, tabNode.stacks.size)
-        assertEquals(0, tabNode.activeStackIndex)
-        assertEquals(ScopeKey("MainTabs"), tabNode.scopeKey)
+        tabNode.stacks.size shouldBe 2
+        tabNode.activeStackIndex shouldBe 0
+        tabNode.scopeKey shouldBe ScopeKey("MainTabs")
     }
 
-    @Test
-    fun `push in-scope destination not in any tab goes to active stack`() {
+    test("push in-scope destination not in any tab goes to active stack") {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
@@ -227,23 +205,22 @@ class TreeMutatorScopeTest {
         val tabNode = resultStack.children[0] as TabNode
 
         // Active tab should still be tab 0
-        assertEquals(0, tabNode.activeStackIndex)
+        tabNode.activeStackIndex shouldBe 0
 
         // Active stack should now have 2 children: HomeTab + ProfileTab
         val activeStack = tabNode.stacks[tabNode.activeStackIndex]
-        assertEquals(2, activeStack.children.size)
+        activeStack.children.size shouldBe 2
 
         val topScreen = activeStack.children.last()
-        assertIs<ScreenNode>(topScreen)
-        assertEquals(MainTabs.ProfileTab, topScreen.destination)
+        topScreen.shouldBeInstanceOf<ScreenNode>()
+        (topScreen as ScreenNode).destination shouldBe MainTabs.ProfileTab
     }
 
     // =========================================================================
     // OUT-OF-SCOPE DESTINATION TESTS
     // =========================================================================
 
-    @Test
-    fun `push out-of-scope destination goes to parent stack`() {
+    test("push out-of-scope destination goes to parent stack") {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
@@ -252,20 +229,19 @@ class TreeMutatorScopeTest {
         // Should push to root stack, not the tab's active stack
         // Root should now have: TabNode + ScreenNode
         val resultStack = result as StackNode
-        assertEquals(2, resultStack.children.size)
+        resultStack.children.size shouldBe 2
 
         // First child should still be TabNode
-        assertIs<TabNode>(resultStack.children[0])
+        resultStack.children[0].shouldBeInstanceOf<TabNode>()
 
         // Second child should be the new ScreenNode with out-of-scope destination
         val newScreen = resultStack.children[1]
-        assertIs<ScreenNode>(newScreen)
-        assertEquals(OutOfScopeDestination, newScreen.destination)
-        assertEquals(NodeKey("root"), newScreen.parentKey)
+        newScreen.shouldBeInstanceOf<ScreenNode>()
+        (newScreen as ScreenNode).destination shouldBe OutOfScopeDestination
+        (newScreen as ScreenNode).parentKey shouldBe NodeKey("root")
     }
 
-    @Test
-    fun `push out-of-scope destination preserves tab container`() {
+    test("push out-of-scope destination preserves tab container") {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
@@ -276,17 +252,16 @@ class TreeMutatorScopeTest {
         val tabNode = resultStack.children[0] as TabNode
 
         // Tab structure unchanged
-        assertEquals(2, tabNode.stacks.size)
-        assertEquals(0, tabNode.activeStackIndex)
-        assertEquals(ScopeKey("MainTabs"), tabNode.scopeKey)
+        tabNode.stacks.size shouldBe 2
+        tabNode.activeStackIndex shouldBe 0
+        tabNode.scopeKey shouldBe ScopeKey("MainTabs")
 
         // Tab content unchanged
-        assertEquals(1, tabNode.stacks[0].children.size)
-        assertEquals(1, tabNode.stacks[1].children.size)
+        tabNode.stacks[0].children.size shouldBe 1
+        tabNode.stacks[1].children.size shouldBe 1
     }
 
-    @Test
-    fun `push multiple out-of-scope destinations stacks correctly`() {
+    test("push multiple out-of-scope destinations stacks correctly") {
         var tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
@@ -297,21 +272,20 @@ class TreeMutatorScopeTest {
         tree = TreeMutator.push(tree, DetailDestination, testRegistry, generateKey = generateKey) as StackNode
 
         // Root should now have: TabNode + OutOfScope + Detail
-        assertEquals(3, tree.children.size)
-        assertIs<TabNode>(tree.children[0])
-        assertIs<ScreenNode>(tree.children[1])
-        assertIs<ScreenNode>(tree.children[2])
+        tree.children.size shouldBe 3
+        tree.children[0].shouldBeInstanceOf<TabNode>()
+        tree.children[1].shouldBeInstanceOf<ScreenNode>()
+        tree.children[2].shouldBeInstanceOf<ScreenNode>()
 
-        assertEquals(OutOfScopeDestination, (tree.children[1] as ScreenNode).destination)
-        assertEquals(DetailDestination, (tree.children[2] as ScreenNode).destination)
+        (tree.children[1] as ScreenNode).destination shouldBe OutOfScopeDestination
+        (tree.children[2] as ScreenNode).destination shouldBe DetailDestination
     }
 
     // =========================================================================
     // EMPTY REGISTRY TESTS (BACKWARD COMPATIBILITY)
     // =========================================================================
 
-    @Test
-    fun `push with Empty registry always goes to active stack`() {
+    test("push with Empty registry always goes to active stack") {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
@@ -322,21 +296,20 @@ class TreeMutatorScopeTest {
         val resultStack = result as StackNode
 
         // Root should still have only TabNode
-        assertEquals(1, resultStack.children.size)
-        assertIs<TabNode>(resultStack.children[0])
+        resultStack.children.size shouldBe 1
+        resultStack.children[0].shouldBeInstanceOf<TabNode>()
 
         // Active tab stack should have new screen
         val tabNode = resultStack.children[0] as TabNode
         val activeStack = tabNode.stacks[0]
-        assertEquals(2, activeStack.children.size)
+        activeStack.children.size shouldBe 2
 
         val topScreen = activeStack.children.last()
-        assertIs<ScreenNode>(topScreen)
-        assertEquals(OutOfScopeDestination, topScreen.destination)
+        topScreen.shouldBeInstanceOf<ScreenNode>()
+        (topScreen as ScreenNode).destination shouldBe OutOfScopeDestination
     }
 
-    @Test
-    fun `push without scopeRegistry uses original behavior`() {
+    test("push without scopeRegistry uses original behavior") {
         val tree = buildTestTree()
         val generateKey = createKeyGenerator()
 
@@ -347,13 +320,13 @@ class TreeMutatorScopeTest {
         val resultStack = result as StackNode
 
         // Root should still have only TabNode
-        assertEquals(1, resultStack.children.size)
-        assertIs<TabNode>(resultStack.children[0])
+        resultStack.children.size shouldBe 1
+        resultStack.children[0].shouldBeInstanceOf<TabNode>()
 
         // Active tab stack should have new screen
         val tabNode = resultStack.children[0] as TabNode
         val activeStack = tabNode.stacks[0]
-        assertEquals(2, activeStack.children.size)
+        activeStack.children.size shouldBe 2
     }
 
     // =========================================================================
@@ -369,7 +342,7 @@ class TreeMutatorScopeTest {
      *        └── StackNode (tab1)
      * ```
      */
-    private fun buildTreeWithoutScopeKey(): StackNode {
+    fun buildTreeWithoutScopeKey(): StackNode {
         val homeScreen = ScreenNode(
             key = NodeKey("home-screen"),
             parentKey = NodeKey("tab0"),
@@ -403,8 +376,7 @@ class TreeMutatorScopeTest {
         )
     }
 
-    @Test
-    fun `push to TabNode without scopeKey goes to active stack`() {
+    test("push to TabNode without scopeKey goes to active stack") {
         val tree = buildTreeWithoutScopeKey()
         val generateKey = createKeyGenerator()
 
@@ -415,17 +387,17 @@ class TreeMutatorScopeTest {
         val resultStack = result as StackNode
 
         // Root should still have only TabNode
-        assertEquals(1, resultStack.children.size)
-        assertIs<TabNode>(resultStack.children[0])
+        resultStack.children.size shouldBe 1
+        resultStack.children[0].shouldBeInstanceOf<TabNode>()
 
         // Active tab stack should have new screen
         val tabNode = resultStack.children[0] as TabNode
         val activeStack = tabNode.stacks[0]
-        assertEquals(2, activeStack.children.size)
+        activeStack.children.size shouldBe 2
 
         val topScreen = activeStack.children.last()
-        assertIs<ScreenNode>(topScreen)
-        assertEquals(OutOfScopeDestination, topScreen.destination)
+        topScreen.shouldBeInstanceOf<ScreenNode>()
+        (topScreen as ScreenNode).destination shouldBe OutOfScopeDestination
     }
 
     // =========================================================================
@@ -444,7 +416,7 @@ class TreeMutatorScopeTest {
      *        └── StackNode (tab1)
      * ```
      */
-    private fun buildNestedTestTree(): StackNode {
+    fun buildNestedTestTree(): StackNode {
         val rootScreen = ScreenNode(
             key = NodeKey("root-screen"),
             parentKey = NodeKey("root"),
@@ -490,8 +462,7 @@ class TreeMutatorScopeTest {
         )
     }
 
-    @Test
-    fun `push out-of-scope in nested tree goes to correct parent`() {
+    test("push out-of-scope in nested tree goes to correct parent") {
         val tree = buildNestedTestTree()
         val generateKey = createKeyGenerator()
 
@@ -501,19 +472,18 @@ class TreeMutatorScopeTest {
         val resultStack = result as StackNode
 
         // Root should now have 3 children: rootScreen, TabNode, OutOfScope
-        assertEquals(3, resultStack.children.size)
-        assertIs<ScreenNode>(resultStack.children[0])
-        assertIs<TabNode>(resultStack.children[1])
-        assertIs<ScreenNode>(resultStack.children[2])
+        resultStack.children.size shouldBe 3
+        resultStack.children[0].shouldBeInstanceOf<ScreenNode>()
+        resultStack.children[1].shouldBeInstanceOf<TabNode>()
+        resultStack.children[2].shouldBeInstanceOf<ScreenNode>()
 
         // New screen should be at the end
         val newScreen = resultStack.children[2] as ScreenNode
-        assertEquals(OutOfScopeDestination, newScreen.destination)
-        assertEquals(NodeKey("root"), newScreen.parentKey)
+        newScreen.destination shouldBe OutOfScopeDestination
+        newScreen.parentKey shouldBe NodeKey("root")
     }
 
-    @Test
-    fun `push in-scope in nested tree goes to active tab stack`() {
+    test("push in-scope in nested tree goes to active tab stack") {
         val tree = buildNestedTestTree()
         val generateKey = createKeyGenerator()
 
@@ -523,35 +493,33 @@ class TreeMutatorScopeTest {
         val resultStack = result as StackNode
 
         // Root should still have 2 children
-        assertEquals(2, resultStack.children.size)
+        resultStack.children.size shouldBe 2
 
         // Tab's active stack should have 3 children now
         val tabNode = resultStack.children[1] as TabNode
         val activeStack = tabNode.stacks[0]
-        assertEquals(3, activeStack.children.size)
+        activeStack.children.size shouldBe 3
 
         // New screen at the end
         val topScreen = activeStack.children.last()
-        assertIs<ScreenNode>(topScreen)
-        assertEquals(MainTabs.SettingsTab, topScreen.destination)
+        topScreen.shouldBeInstanceOf<ScreenNode>()
+        (topScreen as ScreenNode).destination shouldBe MainTabs.SettingsTab
     }
 
     // =========================================================================
     // ACTIVE STACK DETECTION TESTS
     // =========================================================================
 
-    @Test
-    fun `activeStack returns deepest active stack in tree`() {
+    test("activeStack returns deepest active stack in tree") {
         val tree = buildTestTree()
 
         val activeStack = tree.activeStack()
 
-        assertNotNull(activeStack)
-        assertEquals(NodeKey("tab0"), activeStack.key)
+        activeStack.shouldNotBeNull()
+        activeStack.key shouldBe NodeKey("tab0")
     }
 
-    @Test
-    fun `activeStack follows active tab index`() {
+    test("activeStack follows active tab index") {
         // Create tree with second tab active
         val homeStack = StackNode(
             key = NodeKey("tab0"),
@@ -581,7 +549,9 @@ class TreeMutatorScopeTest {
 
         val activeStack = tree.activeStack()
 
-        assertNotNull(activeStack)
-        assertEquals(NodeKey("tab1"), activeStack.key)
+        activeStack.shouldNotBeNull()
+        activeStack.key shouldBe NodeKey("tab1")
     }
+
+    } // init
 }

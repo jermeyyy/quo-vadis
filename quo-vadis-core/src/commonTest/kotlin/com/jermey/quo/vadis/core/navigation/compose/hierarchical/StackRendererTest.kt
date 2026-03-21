@@ -9,12 +9,12 @@ import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 
 /**
  * Tests for stack navigation rendering with animations.
@@ -26,28 +26,28 @@ import kotlin.test.assertTrue
  * - Back navigation detection logic
  * - Stack state changes
  */
-class StackRendererTest {
+class StackRendererTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : NavDestination {
+    val HomeDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ProfileDestination : NavDestination {
+    val ProfileDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object SettingsDestination : NavDestination {
+    val SettingsDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object DetailDestination : NavDestination {
+    val DetailDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -56,13 +56,13 @@ class StackRendererTest {
     // TEST HELPERS
     // =========================================================================
 
-    private fun createScreen(
+    fun createScreen(
         key: String,
         parentKey: String? = null,
         destination: NavDestination = HomeDestination
     ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
-    private fun createStack(
+    fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
@@ -72,7 +72,7 @@ class StackRendererTest {
      * Helper to detect back navigation by comparing stack sizes.
      * This mirrors the logic in NavTreeRenderer.detectBackNavigation.
      */
-    private fun detectBackNavigation(current: StackNode, previous: StackNode?): Boolean {
+    fun detectBackNavigation(current: StackNode, previous: StackNode?): Boolean {
         if (previous == null) return false
         return current.children.size < previous.children.size
     }
@@ -81,8 +81,7 @@ class StackRendererTest {
     // BACK NAVIGATION DETECTION TESTS
     // =========================================================================
 
-    @Test
-    fun `detectBackNavigation returns false when previous is null`() {
+    test("detectBackNavigation returns false when previous is null") {
         // Given
         val currentStack = createStack(
             "stack",
@@ -94,11 +93,10 @@ class StackRendererTest {
         val isBack = detectBackNavigation(currentStack, previous = null)
 
         // Then
-        assertFalse(isBack, "Should not be back navigation when previous is null")
+        isBack.shouldBeFalse()
     }
 
-    @Test
-    fun `detectBackNavigation returns true when stack shrinks - pop`() {
+    test("detectBackNavigation returns true when stack shrinks - pop") {
         // Given - previous stack has 3 screens
         val screenA = createScreen("a", "stack", HomeDestination)
         val screenB = createScreen("b", "stack", ProfileDestination)
@@ -113,11 +111,10 @@ class StackRendererTest {
         val isBack = detectBackNavigation(currentStack, previousStack)
 
         // Then
-        assertTrue(isBack, "Should detect back navigation when stack shrinks")
+        isBack.shouldBeTrue()
     }
 
-    @Test
-    fun `detectBackNavigation returns false when stack grows - push`() {
+    test("detectBackNavigation returns false when stack grows - push") {
         // Given - previous stack has 1 screen
         val screenA = createScreen("a", "stack", HomeDestination)
         val previousStack = createStack("stack", null, screenA)
@@ -130,11 +127,10 @@ class StackRendererTest {
         val isBack = detectBackNavigation(currentStack, previousStack)
 
         // Then
-        assertFalse(isBack, "Should not be back navigation when stack grows")
+        isBack.shouldBeFalse()
     }
 
-    @Test
-    fun `detectBackNavigation returns false when stack size unchanged`() {
+    test("detectBackNavigation returns false when stack size unchanged") {
         // Given
         val previousStack = createStack(
             "stack",
@@ -155,11 +151,10 @@ class StackRendererTest {
         val isBack = detectBackNavigation(currentStack, previousStack)
 
         // Then
-        assertFalse(isBack, "Should not be back navigation when size unchanged")
+        isBack.shouldBeFalse()
     }
 
-    @Test
-    fun `detectBackNavigation works for multiple pops`() {
+    test("detectBackNavigation works for multiple pops") {
         // Given - previous stack has 5 screens
         val previousStack = createStack(
             "stack", null,
@@ -181,15 +176,14 @@ class StackRendererTest {
         val isBack = detectBackNavigation(currentStack, previousStack)
 
         // Then
-        assertTrue(isBack, "Should detect back navigation for multiple pops")
+        isBack.shouldBeTrue()
     }
 
     // =========================================================================
     // STACK PUSH TESTS
     // =========================================================================
 
-    @Test
-    fun `stack push adds screen to children`() {
+    test("stack push adds screen to children") {
         // Given - initial stack
         val screenA = createScreen("a", "stack", HomeDestination)
         val initialStack = createStack("stack", null, screenA)
@@ -199,15 +193,14 @@ class StackRendererTest {
         val afterPushStack = createStack("stack", null, screenA, screenB)
 
         // Then
-        assertEquals(1, initialStack.children.size)
-        assertEquals(2, afterPushStack.children.size)
-        assertEquals(screenA, afterPushStack.children[0])
-        assertEquals(screenB, afterPushStack.children[1])
-        assertEquals(screenB, afterPushStack.activeChild)
+        initialStack.children.size shouldBe 1
+        afterPushStack.children.size shouldBe 2
+        afterPushStack.children[0] shouldBe screenA
+        afterPushStack.children[1] shouldBe screenB
+        afterPushStack.activeChild shouldBe screenB
     }
 
-    @Test
-    fun `stack push changes active child`() {
+    test("stack push changes active child") {
         // Given
         val screenA = createScreen("a", "stack", HomeDestination)
         val screenB = createScreen("b", "stack", ProfileDestination)
@@ -216,16 +209,15 @@ class StackRendererTest {
         val afterStack = createStack("stack", null, screenA, screenB)
 
         // Then
-        assertEquals(screenA, beforeStack.activeChild)
-        assertEquals(screenB, afterStack.activeChild)
+        beforeStack.activeChild shouldBe screenA
+        afterStack.activeChild shouldBe screenB
     }
 
     // =========================================================================
     // STACK POP TESTS
     // =========================================================================
 
-    @Test
-    fun `stack pop removes screen from children`() {
+    test("stack pop removes screen from children") {
         // Given - initial stack with 2 screens
         val screenA = createScreen("a", "stack", HomeDestination)
         val screenB = createScreen("b", "stack", ProfileDestination)
@@ -235,13 +227,12 @@ class StackRendererTest {
         val afterPopStack = createStack("stack", null, screenA)
 
         // Then
-        assertEquals(2, initialStack.children.size)
-        assertEquals(1, afterPopStack.children.size)
-        assertEquals(screenA, afterPopStack.activeChild)
+        initialStack.children.size shouldBe 2
+        afterPopStack.children.size shouldBe 1
+        afterPopStack.activeChild shouldBe screenA
     }
 
-    @Test
-    fun `stack pop to root leaves single screen`() {
+    test("stack pop to root leaves single screen") {
         // Given
         val screens = (1..5).map { createScreen("s$it", "stack") }
         val fullStack = StackNode(NodeKey("stack"), null, screens)
@@ -250,13 +241,12 @@ class StackRendererTest {
         val rootOnlyStack = createStack("stack", null, screens.first())
 
         // Then
-        assertEquals(5, fullStack.children.size)
-        assertEquals(1, rootOnlyStack.children.size)
-        assertFalse(rootOnlyStack.canGoBack)
+        fullStack.children.size shouldBe 5
+        rootOnlyStack.children.size shouldBe 1
+        rootOnlyStack.canGoBack.shouldBeFalse()
     }
 
-    @Test
-    fun `stack canGoBack reflects pop ability`() {
+    test("stack canGoBack reflects pop ability") {
         // Given
         val singleStack = createStack("stack", null, createScreen("s1", "stack"))
         val multiStack = createStack(
@@ -266,16 +256,15 @@ class StackRendererTest {
         )
 
         // Then
-        assertFalse(singleStack.canGoBack, "Single item stack cannot go back")
-        assertTrue(multiStack.canGoBack, "Multi item stack can go back")
+        singleStack.canGoBack.shouldBeFalse()
+        multiStack.canGoBack.shouldBeTrue()
     }
 
     // =========================================================================
     // PREDICTIVE BACK ENABLEMENT TESTS
     // =========================================================================
 
-    @Test
-    fun `root stack has null parentKey`() {
+    test("root stack has null parentKey") {
         // Given
         val rootStack = createStack(
             "root-stack",
@@ -284,11 +273,10 @@ class StackRendererTest {
         )
 
         // Then
-        assertNull(rootStack.parentKey)
+        rootStack.parentKey.shouldBeNull()
     }
 
-    @Test
-    fun `nested stack has parentKey`() {
+    test("nested stack has parentKey") {
         // Given
         val nestedStack = createStack(
             "nested-stack",
@@ -297,11 +285,10 @@ class StackRendererTest {
         )
 
         // Then
-        assertEquals(NodeKey("parent-tabs"), nestedStack.parentKey)
+        nestedStack.parentKey shouldBe NodeKey("parent-tabs")
     }
 
-    @Test
-    fun `predictive back should be enabled only for root stacks`() {
+    test("predictive back should be enabled only for root stacks") {
         // Given
         val rootStack = createStack(
             "root-stack",
@@ -319,61 +306,56 @@ class StackRendererTest {
         val rootPredictiveBackEnabled = rootStack.parentKey == null
         val nestedPredictiveBackEnabled = nestedStack.parentKey == null
 
-        assertTrue(rootPredictiveBackEnabled, "Root stack should have predictive back")
-        assertFalse(nestedPredictiveBackEnabled, "Nested stack should not have predictive back")
+        rootPredictiveBackEnabled.shouldBeTrue()
+        nestedPredictiveBackEnabled.shouldBeFalse()
     }
 
     // =========================================================================
     // ANIMATION COORDINATOR TESTS
     // =========================================================================
 
-    @Test
-    fun `animation coordinator provides default transition`() {
+    test("animation coordinator provides default transition") {
         // Given
         val coordinator = AnimationCoordinator.Default
 
         // Then
-        assertNotNull(coordinator.defaultTransition)
+        coordinator.defaultTransition.shouldNotBeNull()
     }
 
-    @Test
-    fun `FakeNavRenderScope provides animation coordinator`() {
+    test("FakeNavRenderScope provides animation coordinator") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertNotNull(scope.animationCoordinator)
-        assertEquals(AnimationCoordinator.Default, scope.animationCoordinator)
+        scope.animationCoordinator.shouldNotBeNull()
+        scope.animationCoordinator shouldBe AnimationCoordinator.Default
     }
 
-    @Test
-    fun `custom animation coordinator can be injected`() {
+    test("custom animation coordinator can be injected") {
         // Given
         val customCoordinator = AnimationCoordinator()
         val scope = FakeNavRenderScope(animationCoordinator = customCoordinator)
 
         // Then
-        assertEquals(customCoordinator, scope.animationCoordinator)
+        scope.animationCoordinator shouldBe customCoordinator
     }
 
     // =========================================================================
     // EMPTY STACK TESTS
     // =========================================================================
 
-    @Test
-    fun `empty stack has no active child`() {
+    test("empty stack has no active child") {
         // Given
         val emptyStack = StackNode(NodeKey("stack"), null, emptyList())
 
         // Then
-        assertNull(emptyStack.activeChild)
-        assertEquals(0, emptyStack.size)
-        assertTrue(emptyStack.isEmpty)
-        assertFalse(emptyStack.canGoBack)
+        emptyStack.activeChild.shouldBeNull()
+        emptyStack.size shouldBe 0
+        emptyStack.isEmpty.shouldBeTrue()
+        emptyStack.canGoBack.shouldBeFalse()
     }
 
-    @Test
-    fun `empty stack to single screen is not back navigation`() {
+    test("empty stack to single screen is not back navigation") {
         // Given
         val emptyStack = StackNode(NodeKey("stack"), null, emptyList())
         val singleStack = createStack("stack", null, createScreen("s1", "stack"))
@@ -382,58 +364,54 @@ class StackRendererTest {
         val isBack = detectBackNavigation(singleStack, emptyStack)
 
         // Then
-        assertFalse(isBack, "Growing from empty is not back navigation")
+        isBack.shouldBeFalse()
     }
 
     // =========================================================================
     // STACK STATE PRESERVATION TESTS
     // =========================================================================
 
-    @Test
-    fun `stack preserves all children order`() {
+    test("stack preserves all children order") {
         // Given
         val children = (1..10).map { createScreen("screen-$it", "stack") }
         val stack = StackNode(NodeKey("stack"), null, children)
 
         // Then
-        assertEquals(10, stack.children.size)
+        stack.children.size shouldBe 10
         children.forEachIndexed { index, expected ->
-            assertEquals(expected, stack.children[index])
+            stack.children[index] shouldBe expected
         }
     }
 
-    @Test
-    fun `stack key is consistent across state changes`() {
+    test("stack key is consistent across state changes") {
         // Given
         val key = NodeKey("my-stack")
         val stack1 = createStack(key.value, null, createScreen("s1", key.value))
         val stack2 = createStack(key.value, null, createScreen("s1", key.value), createScreen("s2", key.value))
 
         // Then
-        assertEquals(key, stack1.key)
-        assertEquals(key, stack2.key)
-        assertEquals(stack1.key, stack2.key)
+        stack1.key shouldBe key
+        stack2.key shouldBe key
+        stack2.key shouldBe stack1.key
     }
 
     // =========================================================================
     // NESTED STACK TESTS
     // =========================================================================
 
-    @Test
-    fun `nested stack maintains parent reference`() {
+    test("nested stack maintains parent reference") {
         // Given - outer stack containing inner stack
         val innerScreen = createScreen("inner-screen", "inner-stack")
         val innerStack = createStack("inner-stack", "outer-stack", innerScreen)
         val outerStack = StackNode(NodeKey("outer-stack"), null, listOf(innerStack))
 
         // Then
-        assertEquals(NodeKey("outer-stack"), innerStack.parentKey)
-        assertNull(outerStack.parentKey)
-        assertEquals(innerStack, outerStack.activeChild)
+        innerStack.parentKey shouldBe NodeKey("outer-stack")
+        outerStack.parentKey.shouldBeNull()
+        outerStack.activeChild shouldBe innerStack
     }
 
-    @Test
-    fun `deeply nested structure maintains hierarchy`() {
+    test("deeply nested structure maintains hierarchy") {
         // Given - 3 levels deep
         val screen = createScreen("screen", "level2")
         val level2 = createStack("level2", "level1", screen)
@@ -441,9 +419,9 @@ class StackRendererTest {
         val root = StackNode(NodeKey("root"), null, listOf(level1))
 
         // Then
-        assertNull(root.parentKey)
-        assertEquals(NodeKey("root"), level1.parentKey)
-        assertEquals(NodeKey("level1"), level2.parentKey)
-        assertEquals(NodeKey("level2"), screen.parentKey)
+        root.parentKey.shouldBeNull()
+        level1.parentKey shouldBe NodeKey("root")
+        level2.parentKey shouldBe NodeKey("level1")
+        screen.parentKey shouldBe NodeKey("level2")
     }
-}
+})

@@ -24,12 +24,12 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.node.nodeCount
 import com.jermey.quo.vadis.core.navigation.node.paneForRole
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 
 /**
  * Comprehensive unit tests for the NavNode hierarchy.
@@ -42,87 +42,81 @@ import kotlin.test.assertTrue
  * - Extension functions: findByKey, activePathToLeaf, activeLeaf, activeStack, allScreens, etc.
  */
 @OptIn(InternalQuoVadisApi::class)
-class NavNodeTest {
+class NavNodeTest : FunSpec() {
 
-    // =========================================================================
-    // TEST DESTINATIONS
-    // =========================================================================
-
-    private object HomeDestination : NavDestination {
+    object HomeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ProfileDestination : NavDestination {
+    object ProfileDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object SettingsDestination : NavDestination {
+    object SettingsDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object FeedDestination : NavDestination {
+    object FeedDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object DetailDestination : NavDestination {
+    object DetailDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ListDestination : NavDestination {
+    object ListDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
+
+    init {
 
     // =========================================================================
     // SCREEN NODE TESTS
     // =========================================================================
 
-    @Test
-    fun `ScreenNode holds destination correctly`() {
+    test("ScreenNode holds destination correctly") {
         val node = ScreenNode(
             key = NodeKey("screen-1"),
             parentKey = NodeKey("stack-1"),
             destination = HomeDestination
         )
 
-        assertEquals(NodeKey("screen-1"), node.key)
-        assertEquals(NodeKey("stack-1"), node.parentKey)
-        assertEquals(HomeDestination, node.destination)
+        node.key shouldBe NodeKey("screen-1")
+        node.parentKey shouldBe NodeKey("stack-1")
+        node.destination shouldBe HomeDestination
     }
 
-    @Test
-    fun `ScreenNode with null parentKey is valid root screen`() {
+    test("ScreenNode with null parentKey is valid root screen") {
         val node = ScreenNode(
             key = NodeKey("root-screen"),
             parentKey = null,
             destination = HomeDestination
         )
 
-        assertNull(node.parentKey)
-        assertEquals(NodeKey("root-screen"), node.key)
+        node.parentKey.shouldBeNull()
+        node.key shouldBe NodeKey("root-screen")
     }
 
-    @Test
-    fun `ScreenNode equality based on properties`() {
+    test("ScreenNode equality based on properties") {
         val node1 = ScreenNode(NodeKey("key1"), NodeKey("parent"), HomeDestination)
         val node2 = ScreenNode(NodeKey("key1"), NodeKey("parent"), HomeDestination)
         val node3 = ScreenNode(NodeKey("key2"), NodeKey("parent"), HomeDestination)
 
-        assertEquals(node1, node2)
-        assertFalse(node1 == node3)
+        node2 shouldBe node1
+        (node1 == node3).shouldBeFalse()
     }
 
     // =========================================================================
     // STACK NODE TESTS
     // =========================================================================
 
-    @Test
-    fun `StackNode activeChild returns last element`() {
+    test("StackNode activeChild returns last element") {
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("stack"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("s2"), NodeKey("stack"), ProfileDestination)
         val screen3 = ScreenNode(NodeKey("s3"), NodeKey("stack"), SettingsDestination)
@@ -133,22 +127,20 @@ class NavNodeTest {
             children = listOf(screen1, screen2, screen3)
         )
 
-        assertEquals(screen3, stack.activeChild)
+        stack.activeChild shouldBe screen3
     }
 
-    @Test
-    fun `StackNode activeChild returns null when empty`() {
+    test("StackNode activeChild returns null when empty") {
         val stack = StackNode(
             key = NodeKey("stack"),
             parentKey = null,
             children = emptyList()
         )
 
-        assertNull(stack.activeChild)
+        stack.activeChild.shouldBeNull()
     }
 
-    @Test
-    fun `StackNode canGoBack true when multiple children`() {
+    test("StackNode canGoBack true when multiple children") {
         val stack = StackNode(
             key = NodeKey("stack"),
             parentKey = null,
@@ -158,49 +150,44 @@ class NavNodeTest {
             )
         )
 
-        assertTrue(stack.canGoBack)
+        stack.canGoBack.shouldBeTrue()
     }
 
-    @Test
-    fun `StackNode canGoBack false when single child`() {
+    test("StackNode canGoBack false when single child") {
         val stack = StackNode(
             key = NodeKey("stack"),
             parentKey = null,
             children = listOf(ScreenNode(NodeKey("s1"), NodeKey("stack"), HomeDestination))
         )
 
-        assertFalse(stack.canGoBack)
+        stack.canGoBack.shouldBeFalse()
     }
 
-    @Test
-    fun `StackNode canGoBack false when empty`() {
+    test("StackNode canGoBack false when empty") {
         val stack = StackNode(NodeKey("stack"), null, emptyList())
 
-        assertFalse(stack.canGoBack)
+        stack.canGoBack.shouldBeFalse()
     }
 
-    @Test
-    fun `StackNode isEmpty true when no children`() {
+    test("StackNode isEmpty true when no children") {
         val stack = StackNode(NodeKey("stack"), null, emptyList())
 
-        assertTrue(stack.isEmpty)
-        assertEquals(0, stack.size)
+        stack.isEmpty.shouldBeTrue()
+        stack.size shouldBe 0
     }
 
-    @Test
-    fun `StackNode isEmpty false when has children`() {
+    test("StackNode isEmpty false when has children") {
         val stack = StackNode(
             key = NodeKey("stack"),
             parentKey = null,
             children = listOf(ScreenNode(NodeKey("s1"), NodeKey("stack"), HomeDestination))
         )
 
-        assertFalse(stack.isEmpty)
-        assertEquals(1, stack.size)
+        stack.isEmpty.shouldBeFalse()
+        stack.size shouldBe 1
     }
 
-    @Test
-    fun `StackNode size reflects children count`() {
+    test("StackNode size reflects children count") {
         val stack = StackNode(
             key = NodeKey("stack"),
             parentKey = null,
@@ -211,11 +198,10 @@ class NavNodeTest {
             )
         )
 
-        assertEquals(3, stack.size)
+        stack.size shouldBe 3
     }
 
-    @Test
-    fun `StackNode with nested stack`() {
+    test("StackNode with nested stack") {
         val innerStack = StackNode(
             key = NodeKey("inner"),
             parentKey = NodeKey("outer"),
@@ -227,17 +213,16 @@ class NavNodeTest {
             children = listOf(innerStack)
         )
 
-        assertEquals(innerStack, outerStack.activeChild)
-        assertFalse(outerStack.canGoBack)
+        outerStack.activeChild shouldBe innerStack
+        outerStack.canGoBack.shouldBeFalse()
     }
 
     // =========================================================================
     // TAB NODE TESTS
     // =========================================================================
 
-    @Test
-    fun `TabNode requires at least one stack`() {
-        assertFailsWith<IllegalArgumentException> {
+    test("TabNode requires at least one stack") {
+        shouldThrow<IllegalArgumentException> {
             TabNode(
                 key = NodeKey("tabs"),
                 parentKey = null,
@@ -247,11 +232,10 @@ class NavNodeTest {
         }
     }
 
-    @Test
-    fun `TabNode validates activeStackIndex bounds - too high`() {
+    test("TabNode validates activeStackIndex bounds - too high") {
         val stack = StackNode(NodeKey("s1"), NodeKey("tabs"), emptyList())
 
-        assertFailsWith<IllegalArgumentException> {
+        shouldThrow<IllegalArgumentException> {
             TabNode(
                 key = NodeKey("tabs"),
                 parentKey = null,
@@ -261,11 +245,10 @@ class NavNodeTest {
         }
     }
 
-    @Test
-    fun `TabNode validates negative activeStackIndex`() {
+    test("TabNode validates negative activeStackIndex") {
         val stack = StackNode(NodeKey("s1"), NodeKey("tabs"), emptyList())
 
-        assertFailsWith<IllegalArgumentException> {
+        shouldThrow<IllegalArgumentException> {
             TabNode(
                 key = NodeKey("tabs"),
                 parentKey = null,
@@ -275,8 +258,7 @@ class NavNodeTest {
         }
     }
 
-    @Test
-    fun `TabNode activeStack returns correct stack`() {
+    test("TabNode activeStack returns correct stack") {
         val stack0 = StackNode(NodeKey("s0"), NodeKey("tabs"), emptyList())
         val stack1 = StackNode(NodeKey("s1"), NodeKey("tabs"), emptyList())
         val stack2 = StackNode(NodeKey("s2"), NodeKey("tabs"), emptyList())
@@ -288,12 +270,11 @@ class NavNodeTest {
             activeStackIndex = 1
         )
 
-        assertEquals(stack1, tabs.activeStack)
-        assertEquals(3, tabs.tabCount)
+        tabs.activeStack shouldBe stack1
+        tabs.tabCount shouldBe 3
     }
 
-    @Test
-    fun `TabNode stackAt returns correct stack`() {
+    test("TabNode stackAt returns correct stack") {
         val stack0 = StackNode(NodeKey("s0"), NodeKey("tabs"), emptyList())
         val stack1 = StackNode(NodeKey("s1"), NodeKey("tabs"), emptyList())
 
@@ -304,12 +285,11 @@ class NavNodeTest {
             activeStackIndex = 0
         )
 
-        assertEquals(stack0, tabs.stackAt(0))
-        assertEquals(stack1, tabs.stackAt(1))
+        tabs.stackAt(0) shouldBe stack0
+        tabs.stackAt(1) shouldBe stack1
     }
 
-    @Test
-    fun `TabNode stackAt throws for invalid index`() {
+    test("TabNode stackAt throws for invalid index") {
         val tabs = TabNode(
             key = NodeKey("tabs"),
             parentKey = null,
@@ -317,13 +297,12 @@ class NavNodeTest {
             activeStackIndex = 0
         )
 
-        assertFailsWith<IndexOutOfBoundsException> {
+        shouldThrow<IndexOutOfBoundsException> {
             tabs.stackAt(5)
         }
     }
 
-    @Test
-    fun `TabNode tabCount returns number of stacks`() {
+    test("TabNode tabCount returns number of stacks") {
         val tabs = TabNode(
             key = NodeKey("tabs"),
             parentKey = null,
@@ -335,11 +314,10 @@ class NavNodeTest {
             activeStackIndex = 0
         )
 
-        assertEquals(3, tabs.tabCount)
+        tabs.tabCount shouldBe 3
     }
 
-    @Test
-    fun `TabNode activeStackIndex at boundary is valid`() {
+    test("TabNode activeStackIndex at boundary is valid") {
         val tabs = TabNode(
             key = NodeKey("tabs"),
             parentKey = null,
@@ -350,17 +328,16 @@ class NavNodeTest {
             activeStackIndex = 1 // Last valid index
         )
 
-        assertEquals(1, tabs.activeStackIndex)
-        assertEquals(tabs.stacks[1], tabs.activeStack)
+        tabs.activeStackIndex shouldBe 1
+        tabs.activeStack shouldBe tabs.stacks[1]
     }
 
     // =========================================================================
     // PANE NODE TESTS
     // =========================================================================
 
-    @Test
-    fun `PaneNode requires Primary pane`() {
-        assertFailsWith<IllegalArgumentException> {
+    test("PaneNode requires Primary pane") {
+        shouldThrow<IllegalArgumentException> {
             PaneNode(
                 key = NodeKey("panes"),
                 parentKey = null,
@@ -374,9 +351,8 @@ class NavNodeTest {
         }
     }
 
-    @Test
-    fun `PaneNode validates activePaneRole exists in configurations`() {
-        assertFailsWith<IllegalArgumentException> {
+    test("PaneNode validates activePaneRole exists in configurations") {
+        shouldThrow<IllegalArgumentException> {
             PaneNode(
                 key = NodeKey("panes"),
                 parentKey = null,
@@ -390,8 +366,7 @@ class NavNodeTest {
         }
     }
 
-    @Test
-    fun `PaneNode activePane returns correct pane content`() {
+    test("PaneNode activePane returns correct pane content") {
         val primaryContent = ScreenNode(NodeKey("primary"), NodeKey("panes"), ListDestination)
         val supportingContent = ScreenNode(NodeKey("supporting"), NodeKey("panes"), DetailDestination)
 
@@ -405,12 +380,11 @@ class NavNodeTest {
             activePaneRole = PaneRole.Supporting
         )
 
-        assertEquals(supportingContent, panes.activePaneContent)
-        assertEquals(2, panes.paneCount)
+        panes.activePaneContent shouldBe supportingContent
+        panes.paneCount shouldBe 2
     }
 
-    @Test
-    fun `PaneNode paneCount returns number of configured panes`() {
+    test("PaneNode paneCount returns number of configured panes") {
         val panes = PaneNode(
             key = NodeKey("panes"),
             parentKey = null,
@@ -428,11 +402,10 @@ class NavNodeTest {
             activePaneRole = PaneRole.Primary
         )
 
-        assertEquals(3, panes.paneCount)
+        panes.paneCount shouldBe 3
     }
 
-    @Test
-    fun `PaneNode paneContent returns content for given role`() {
+    test("PaneNode paneContent returns content for given role") {
         val primaryContent = ScreenNode(NodeKey("primary"), NodeKey("panes"), ListDestination)
         val supportingContent = ScreenNode(NodeKey("supporting"), NodeKey("panes"), DetailDestination)
 
@@ -446,13 +419,12 @@ class NavNodeTest {
             activePaneRole = PaneRole.Primary
         )
 
-        assertEquals(primaryContent, panes.paneContent(PaneRole.Primary))
-        assertEquals(supportingContent, panes.paneContent(PaneRole.Supporting))
-        assertNull(panes.paneContent(PaneRole.Extra))
+        panes.paneContent(PaneRole.Primary) shouldBe primaryContent
+        panes.paneContent(PaneRole.Supporting) shouldBe supportingContent
+        panes.paneContent(PaneRole.Extra).shouldBeNull()
     }
 
-    @Test
-    fun `PaneNode adaptStrategy returns strategy for given role`() {
+    test("PaneNode adaptStrategy returns strategy for given role") {
         val panes = PaneNode(
             key = NodeKey("panes"),
             parentKey = null,
@@ -469,13 +441,12 @@ class NavNodeTest {
             activePaneRole = PaneRole.Primary
         )
 
-        assertEquals(AdaptStrategy.Hide, panes.adaptStrategy(PaneRole.Primary))
-        assertEquals(AdaptStrategy.Levitate, panes.adaptStrategy(PaneRole.Supporting))
-        assertNull(panes.adaptStrategy(PaneRole.Extra))
+        panes.adaptStrategy(PaneRole.Primary) shouldBe AdaptStrategy.Hide
+        panes.adaptStrategy(PaneRole.Supporting) shouldBe AdaptStrategy.Levitate
+        panes.adaptStrategy(PaneRole.Extra).shouldBeNull()
     }
 
-    @Test
-    fun `PaneNode configuredRoles returns all configured roles`() {
+    test("PaneNode configuredRoles returns all configured roles") {
         val panes = PaneNode(
             key = NodeKey("panes"),
             parentKey = null,
@@ -490,11 +461,10 @@ class NavNodeTest {
             activePaneRole = PaneRole.Primary
         )
 
-        assertEquals(setOf(PaneRole.Primary, PaneRole.Supporting), panes.configuredRoles)
+        panes.configuredRoles shouldBe setOf(PaneRole.Primary, PaneRole.Supporting)
     }
 
-    @Test
-    fun `PaneNode with default backBehavior`() {
+    test("PaneNode with default backBehavior") {
         val panes = PaneNode(
             key = NodeKey("panes"),
             parentKey = null,
@@ -506,11 +476,10 @@ class NavNodeTest {
             activePaneRole = PaneRole.Primary
         )
 
-        assertEquals(PaneBackBehavior.PopUntilScaffoldValueChange, panes.backBehavior)
+        panes.backBehavior shouldBe PaneBackBehavior.PopUntilScaffoldValueChange
     }
 
-    @Test
-    fun `PaneNode with custom backBehavior`() {
+    test("PaneNode with custom backBehavior") {
         val panes = PaneNode(
             key = NodeKey("panes"),
             parentKey = null,
@@ -523,22 +492,20 @@ class NavNodeTest {
             backBehavior = PaneBackBehavior.PopLatest
         )
 
-        assertEquals(PaneBackBehavior.PopLatest, panes.backBehavior)
+        panes.backBehavior shouldBe PaneBackBehavior.PopLatest
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - findByKey
     // =========================================================================
 
-    @Test
-    fun `findByKey finds root node`() {
+    test("findByKey finds root node") {
         val root = StackNode(NodeKey("root"), null, emptyList())
 
-        assertEquals(root, root.findByKey(NodeKey("root")))
+        root.findByKey(NodeKey("root")) shouldBe root
     }
 
-    @Test
-    fun `findByKey finds nested screen in StackNode`() {
+    test("findByKey finds nested screen in StackNode") {
         val screen = ScreenNode(NodeKey("target"), NodeKey("stack"), HomeDestination)
         val root = StackNode(
             key = NodeKey("root"),
@@ -549,18 +516,16 @@ class NavNodeTest {
             )
         )
 
-        assertEquals(screen, root.findByKey(NodeKey("target")))
+        root.findByKey(NodeKey("target")) shouldBe screen
     }
 
-    @Test
-    fun `findByKey returns null when not found`() {
+    test("findByKey returns null when not found") {
         val root = StackNode(NodeKey("root"), null, emptyList())
 
-        assertNull(root.findByKey(NodeKey("nonexistent")))
+        root.findByKey(NodeKey("nonexistent")).shouldBeNull()
     }
 
-    @Test
-    fun `findByKey finds node in TabNode`() {
+    test("findByKey finds node in TabNode") {
         val targetScreen = ScreenNode(NodeKey("target"), NodeKey("tab1"), HomeDestination)
         val root = TabNode(
             key = NodeKey("tabs"),
@@ -572,11 +537,10 @@ class NavNodeTest {
             activeStackIndex = 0
         )
 
-        assertEquals(targetScreen, root.findByKey(NodeKey("target")))
+        root.findByKey(NodeKey("target")) shouldBe targetScreen
     }
 
-    @Test
-    fun `findByKey finds node in inactive tab`() {
+    test("findByKey finds node in inactive tab") {
         val targetScreen = ScreenNode(NodeKey("target"), NodeKey("tab1"), HomeDestination)
         val tabs = TabNode(
             key = NodeKey("tabs"),
@@ -591,11 +555,10 @@ class NavNodeTest {
             activeStackIndex = 0 // tab0 is active, but we're looking in tab1
         )
 
-        assertEquals(targetScreen, tabs.findByKey(NodeKey("target")))
+        tabs.findByKey(NodeKey("target")) shouldBe targetScreen
     }
 
-    @Test
-    fun `findByKey finds node in PaneNode`() {
+    test("findByKey finds node in PaneNode") {
         val targetScreen = ScreenNode(NodeKey("target"), NodeKey("panes"), HomeDestination)
         val panes = PaneNode(
             key = NodeKey("panes"),
@@ -609,11 +572,10 @@ class NavNodeTest {
             activePaneRole = PaneRole.Primary
         )
 
-        assertEquals(targetScreen, panes.findByKey(NodeKey("target")))
+        panes.findByKey(NodeKey("target")) shouldBe targetScreen
     }
 
-    @Test
-    fun `findByKey in deeply nested structure`() {
+    test("findByKey in deeply nested structure") {
         val targetScreen = ScreenNode(NodeKey("deep-target"), NodeKey("inner-stack"), HomeDestination)
         val root = StackNode(
             key = NodeKey("root"),
@@ -642,47 +604,43 @@ class NavNodeTest {
             )
         )
 
-        assertEquals(targetScreen, root.findByKey(NodeKey("deep-target")))
+        root.findByKey(NodeKey("deep-target")) shouldBe targetScreen
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - activePathToLeaf
     // =========================================================================
 
-    @Test
-    fun `activePathToLeaf returns single element for ScreenNode`() {
+    test("activePathToLeaf returns single element for ScreenNode") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         val path = screen.activePathToLeaf()
 
-        assertEquals(1, path.size)
-        assertEquals(screen, path[0])
+        path.size shouldBe 1
+        path[0] shouldBe screen
     }
 
-    @Test
-    fun `activePathToLeaf returns empty-ish path for empty StackNode`() {
+    test("activePathToLeaf returns empty-ish path for empty StackNode") {
         val stack = StackNode(NodeKey("stack"), null, emptyList())
 
         val path = stack.activePathToLeaf()
 
-        assertEquals(1, path.size)
-        assertEquals(stack, path[0])
+        path.size shouldBe 1
+        path[0] shouldBe stack
     }
 
-    @Test
-    fun `activePathToLeaf returns complete path through StackNode`() {
+    test("activePathToLeaf returns complete path through StackNode") {
         val screen = ScreenNode(NodeKey("leaf"), NodeKey("stack"), HomeDestination)
         val stack = StackNode(NodeKey("stack"), null, listOf(screen))
 
         val path = stack.activePathToLeaf()
 
-        assertEquals(2, path.size)
-        assertEquals(stack, path[0])
-        assertEquals(screen, path[1])
+        path.size shouldBe 2
+        path[0] shouldBe stack
+        path[1] shouldBe screen
     }
 
-    @Test
-    fun `activePathToLeaf returns complete path through TabNode`() {
+    test("activePathToLeaf returns complete path through TabNode") {
         val screen = ScreenNode(NodeKey("leaf"), NodeKey("stack"), HomeDestination)
         val stack = StackNode(NodeKey("stack"), NodeKey("tabs"), listOf(screen))
         val tabs = TabNode(
@@ -694,14 +652,13 @@ class NavNodeTest {
 
         val path = tabs.activePathToLeaf()
 
-        assertEquals(3, path.size)
-        assertEquals(tabs, path[0])
-        assertEquals(stack, path[1])
-        assertEquals(screen, path[2])
+        path.size shouldBe 3
+        path[0] shouldBe tabs
+        path[1] shouldBe stack
+        path[2] shouldBe screen
     }
 
-    @Test
-    fun `activePathToLeaf returns complete path through PaneNode`() {
+    test("activePathToLeaf returns complete path through PaneNode") {
         val screen = ScreenNode(NodeKey("leaf"), NodeKey("panes"), HomeDestination)
         val panes = PaneNode(
             key = NodeKey("panes"),
@@ -714,13 +671,12 @@ class NavNodeTest {
 
         val path = panes.activePathToLeaf()
 
-        assertEquals(2, path.size)
-        assertEquals(panes, path[0])
-        assertEquals(screen, path[1])
+        path.size shouldBe 2
+        path[0] shouldBe panes
+        path[1] shouldBe screen
     }
 
-    @Test
-    fun `activePathToLeaf follows active tab only`() {
+    test("activePathToLeaf follows active tab only") {
         val activeScreen = ScreenNode(NodeKey("active-screen"), NodeKey("tab0"), HomeDestination)
         val inactiveScreen = ScreenNode(NodeKey("inactive-screen"), NodeKey("tab1"), ProfileDestination)
 
@@ -736,39 +692,35 @@ class NavNodeTest {
 
         val path = tabs.activePathToLeaf()
 
-        assertEquals(3, path.size)
-        assertTrue(path.contains(activeScreen))
-        assertFalse(path.contains(inactiveScreen))
+        path.size shouldBe 3
+        path.contains(activeScreen).shouldBeTrue()
+        path.contains(inactiveScreen).shouldBeFalse()
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - activeLeaf
     // =========================================================================
 
-    @Test
-    fun `activeLeaf returns ScreenNode itself`() {
+    test("activeLeaf returns ScreenNode itself") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
-        assertEquals(screen, screen.activeLeaf())
+        screen.activeLeaf() shouldBe screen
     }
 
-    @Test
-    fun `activeLeaf returns null when no screens in stack`() {
+    test("activeLeaf returns null when no screens in stack") {
         val stack = StackNode(NodeKey("stack"), null, emptyList())
 
-        assertNull(stack.activeLeaf())
+        stack.activeLeaf().shouldBeNull()
     }
 
-    @Test
-    fun `activeLeaf returns deepest ScreenNode in StackNode`() {
+    test("activeLeaf returns deepest ScreenNode in StackNode") {
         val screen = ScreenNode(NodeKey("leaf"), NodeKey("stack"), HomeDestination)
         val stack = StackNode(NodeKey("stack"), null, listOf(screen))
 
-        assertEquals(screen, stack.activeLeaf())
+        stack.activeLeaf() shouldBe screen
     }
 
-    @Test
-    fun `activeLeaf returns deepest active ScreenNode in TabNode`() {
+    test("activeLeaf returns deepest active ScreenNode in TabNode") {
         val activeScreen = ScreenNode(NodeKey("active"), NodeKey("tab0"), HomeDestination)
         val tabs = TabNode(
             key = NodeKey("tabs"),
@@ -783,11 +735,10 @@ class NavNodeTest {
             activeStackIndex = 0
         )
 
-        assertEquals(activeScreen, tabs.activeLeaf())
+        tabs.activeLeaf() shouldBe activeScreen
     }
 
-    @Test
-    fun `activeLeaf returns deepest active ScreenNode in PaneNode`() {
+    test("activeLeaf returns deepest active ScreenNode in PaneNode") {
         val activeScreen = ScreenNode(NodeKey("active"), NodeKey("primary-stack"), HomeDestination)
         val panes = PaneNode(
             key = NodeKey("panes"),
@@ -803,33 +754,30 @@ class NavNodeTest {
             activePaneRole = PaneRole.Primary
         )
 
-        assertEquals(activeScreen, panes.activeLeaf())
+        panes.activeLeaf() shouldBe activeScreen
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - activeStack
     // =========================================================================
 
-    @Test
-    fun `activeStack returns null for ScreenNode`() {
+    test("activeStack returns null for ScreenNode") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
-        assertNull(screen.activeStack())
+        screen.activeStack().shouldBeNull()
     }
 
-    @Test
-    fun `activeStack returns self for StackNode with no deeper stacks`() {
+    test("activeStack returns self for StackNode with no deeper stacks") {
         val stack = StackNode(
             key = NodeKey("stack"),
             parentKey = null,
             children = listOf(ScreenNode(NodeKey("s1"), NodeKey("stack"), HomeDestination))
         )
 
-        assertEquals(stack, stack.activeStack())
+        stack.activeStack() shouldBe stack
     }
 
-    @Test
-    fun `activeStack returns deepest active StackNode`() {
+    test("activeStack returns deepest active StackNode") {
         val innerStack = StackNode(
             key = NodeKey("inner"),
             parentKey = NodeKey("outer"),
@@ -841,11 +789,10 @@ class NavNodeTest {
             children = listOf(innerStack)
         )
 
-        assertEquals(innerStack, outerStack.activeStack())
+        outerStack.activeStack() shouldBe innerStack
     }
 
-    @Test
-    fun `activeStack returns deepest stack in TabNode`() {
+    test("activeStack returns deepest stack in TabNode") {
         val deepStack = StackNode(NodeKey("deep"), NodeKey("tab0"), listOf(
                 ScreenNode(NodeKey("s"), NodeKey("deep"), HomeDestination)
             )
@@ -860,11 +807,10 @@ class NavNodeTest {
             activeStackIndex = 0
         )
 
-        assertEquals(deepStack, tabs.activeStack())
+        tabs.activeStack() shouldBe deepStack
     }
 
-    @Test
-    fun `activeStack returns deepest stack in PaneNode`() {
+    test("activeStack returns deepest stack in PaneNode") {
         val deepStack = StackNode(NodeKey("deep"), NodeKey("primary"), listOf(
                 ScreenNode(NodeKey("s"), NodeKey("deep"), HomeDestination)
             )
@@ -880,11 +826,10 @@ class NavNodeTest {
             activePaneRole = PaneRole.Primary
         )
 
-        assertEquals(deepStack, panes.activeStack())
+        panes.activeStack() shouldBe deepStack
     }
 
-    @Test
-    fun `activeStack returns TabNode activeStack when it has no deeper stacks`() {
+    test("activeStack returns TabNode activeStack when it has no deeper stacks") {
         val tabStack = StackNode(NodeKey("tab0"), NodeKey("tabs"), listOf(
                 ScreenNode(NodeKey("s"), NodeKey("tab0"), HomeDestination)
             )
@@ -896,47 +841,43 @@ class NavNodeTest {
             activeStackIndex = 0
         )
 
-        assertEquals(tabStack, tabs.activeStack())
+        tabs.activeStack() shouldBe tabStack
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - allScreens
     // =========================================================================
 
-    @Test
-    fun `allScreens returns single screen for ScreenNode`() {
+    test("allScreens returns single screen for ScreenNode") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
         val screens = screen.allScreens()
 
-        assertEquals(1, screens.size)
-        assertTrue(screens.contains(screen))
+        screens.size shouldBe 1
+        screens.contains(screen).shouldBeTrue()
     }
 
-    @Test
-    fun `allScreens returns empty list for empty StackNode`() {
+    test("allScreens returns empty list for empty StackNode") {
         val stack = StackNode(NodeKey("stack"), null, emptyList())
 
         val screens = stack.allScreens()
 
-        assertTrue(screens.isEmpty())
+        screens.isEmpty().shouldBeTrue()
     }
 
-    @Test
-    fun `allScreens returns all screens in StackNode`() {
+    test("allScreens returns all screens in StackNode") {
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("stack"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("s2"), NodeKey("stack"), ProfileDestination)
         val stack = StackNode(NodeKey("stack"), null, listOf(screen1, screen2))
 
         val screens = stack.allScreens()
 
-        assertEquals(2, screens.size)
-        assertTrue(screens.contains(screen1))
-        assertTrue(screens.contains(screen2))
+        screens.size shouldBe 2
+        screens.contains(screen1).shouldBeTrue()
+        screens.contains(screen2).shouldBeTrue()
     }
 
-    @Test
-    fun `allScreens returns all screens from all tabs in TabNode`() {
+    test("allScreens returns all screens from all tabs in TabNode") {
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("tab0"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("s2"), NodeKey("tab0"), ProfileDestination)
         val screen3 = ScreenNode(NodeKey("s3"), NodeKey("tab1"), SettingsDestination)
@@ -953,14 +894,13 @@ class NavNodeTest {
 
         val allScreens = tabs.allScreens()
 
-        assertEquals(3, allScreens.size)
-        assertTrue(allScreens.contains(screen1))
-        assertTrue(allScreens.contains(screen2))
-        assertTrue(allScreens.contains(screen3))
+        allScreens.size shouldBe 3
+        allScreens.contains(screen1).shouldBeTrue()
+        allScreens.contains(screen2).shouldBeTrue()
+        allScreens.contains(screen3).shouldBeTrue()
     }
 
-    @Test
-    fun `allScreens returns all screens from all panes in PaneNode`() {
+    test("allScreens returns all screens from all panes in PaneNode") {
         val screen1 = ScreenNode(NodeKey("s1"), NodeKey("primary"), HomeDestination)
         val screen2 = ScreenNode(NodeKey("s2"), NodeKey("supporting"), DetailDestination)
 
@@ -976,24 +916,22 @@ class NavNodeTest {
 
         val allScreens = panes.allScreens()
 
-        assertEquals(2, allScreens.size)
-        assertTrue(allScreens.contains(screen1))
-        assertTrue(allScreens.contains(screen2))
+        allScreens.size shouldBe 2
+        allScreens.contains(screen1).shouldBeTrue()
+        allScreens.contains(screen2).shouldBeTrue()
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - paneForRole
     // =========================================================================
 
-    @Test
-    fun `paneForRole returns null for ScreenNode`() {
+    test("paneForRole returns null for ScreenNode") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
-        assertNull(screen.paneForRole(PaneRole.Primary))
+        screen.paneForRole(PaneRole.Primary).shouldBeNull()
     }
 
-    @Test
-    fun `paneForRole returns content for matching role in PaneNode`() {
+    test("paneForRole returns content for matching role in PaneNode") {
         val primaryContent = ScreenNode(NodeKey("primary"), NodeKey("panes"), HomeDestination)
         val panes = PaneNode(
             key = NodeKey("panes"),
@@ -1004,11 +942,10 @@ class NavNodeTest {
             activePaneRole = PaneRole.Primary
         )
 
-        assertEquals(primaryContent, panes.paneForRole(PaneRole.Primary))
+        panes.paneForRole(PaneRole.Primary) shouldBe primaryContent
     }
 
-    @Test
-    fun `paneForRole searches recursively through StackNode`() {
+    test("paneForRole searches recursively through StackNode") {
         val primaryContent = ScreenNode(NodeKey("primary"), NodeKey("panes"), HomeDestination)
         val panes = PaneNode(
             key = NodeKey("panes"),
@@ -1020,22 +957,20 @@ class NavNodeTest {
         )
         val stack = StackNode(NodeKey("stack"), null, listOf(panes))
 
-        assertEquals(primaryContent, stack.paneForRole(PaneRole.Primary))
+        stack.paneForRole(PaneRole.Primary) shouldBe primaryContent
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - allPaneNodes
     // =========================================================================
 
-    @Test
-    fun `allPaneNodes returns empty for ScreenNode`() {
+    test("allPaneNodes returns empty for ScreenNode") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
-        assertTrue(screen.allPaneNodes().isEmpty())
+        screen.allPaneNodes().isEmpty().shouldBeTrue()
     }
 
-    @Test
-    fun `allPaneNodes returns all PaneNodes in tree`() {
+    test("allPaneNodes returns all PaneNodes in tree") {
         val innerPane = PaneNode(
             key = NodeKey("inner-pane"),
             parentKey = NodeKey("outer-pane"),
@@ -1057,24 +992,22 @@ class NavNodeTest {
 
         val allPanes = outerPane.allPaneNodes()
 
-        assertEquals(2, allPanes.size)
-        assertTrue(allPanes.contains(outerPane))
-        assertTrue(allPanes.contains(innerPane))
+        allPanes.size shouldBe 2
+        allPanes.contains(outerPane).shouldBeTrue()
+        allPanes.contains(innerPane).shouldBeTrue()
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - allTabNodes
     // =========================================================================
 
-    @Test
-    fun `allTabNodes returns empty for ScreenNode`() {
+    test("allTabNodes returns empty for ScreenNode") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
-        assertTrue(screen.allTabNodes().isEmpty())
+        screen.allTabNodes().isEmpty().shouldBeTrue()
     }
 
-    @Test
-    fun `allTabNodes returns all TabNodes in tree`() {
+    test("allTabNodes returns all TabNodes in tree") {
         val innerTabs = TabNode(
             key = NodeKey("inner-tabs"),
             parentKey = NodeKey("tab0"),
@@ -1092,24 +1025,22 @@ class NavNodeTest {
 
         val allTabs = outerTabs.allTabNodes()
 
-        assertEquals(2, allTabs.size)
-        assertTrue(allTabs.contains(outerTabs))
-        assertTrue(allTabs.contains(innerTabs))
+        allTabs.size shouldBe 2
+        allTabs.contains(outerTabs).shouldBeTrue()
+        allTabs.contains(innerTabs).shouldBeTrue()
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - allStackNodes
     // =========================================================================
 
-    @Test
-    fun `allStackNodes returns empty for ScreenNode`() {
+    test("allStackNodes returns empty for ScreenNode") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
-        assertTrue(screen.allStackNodes().isEmpty())
+        screen.allStackNodes().isEmpty().shouldBeTrue()
     }
 
-    @Test
-    fun `allStackNodes returns all StackNodes in tree`() {
+    test("allStackNodes returns all StackNodes in tree") {
         val stack1 = StackNode(NodeKey("stack1"), NodeKey("tabs"), emptyList())
         val stack2 = StackNode(NodeKey("stack2"), NodeKey("tabs"), emptyList())
         val tabs = TabNode(
@@ -1122,40 +1053,36 @@ class NavNodeTest {
 
         val allStacks = root.allStackNodes()
 
-        assertEquals(3, allStacks.size)
-        assertTrue(allStacks.contains(root))
-        assertTrue(allStacks.contains(stack1))
-        assertTrue(allStacks.contains(stack2))
+        allStacks.size shouldBe 3
+        allStacks.contains(root).shouldBeTrue()
+        allStacks.contains(stack1).shouldBeTrue()
+        allStacks.contains(stack2).shouldBeTrue()
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - depth
     // =========================================================================
 
-    @Test
-    fun `depth returns 0 for ScreenNode`() {
+    test("depth returns 0 for ScreenNode") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
-        assertEquals(0, screen.depth())
+        screen.depth() shouldBe 0
     }
 
-    @Test
-    fun `depth returns 0 for empty StackNode`() {
+    test("depth returns 0 for empty StackNode") {
         val stack = StackNode(NodeKey("stack"), null, emptyList())
 
-        assertEquals(0, stack.depth())
+        stack.depth() shouldBe 0
     }
 
-    @Test
-    fun `depth returns correct value for nested structure`() {
+    test("depth returns correct value for nested structure") {
         val screen = ScreenNode(NodeKey("screen"), NodeKey("stack"), HomeDestination)
         val stack = StackNode(NodeKey("stack"), null, listOf(screen))
 
-        assertEquals(1, stack.depth())
+        stack.depth() shouldBe 1
     }
 
-    @Test
-    fun `depth calculates max depth in TabNode`() {
+    test("depth calculates max depth in TabNode") {
         val tabs = TabNode(
             key = NodeKey("tabs"),
             parentKey = null,
@@ -1173,29 +1100,26 @@ class NavNodeTest {
             activeStackIndex = 0
         )
 
-        assertEquals(2, tabs.depth()) // tabs -> stack -> screen
+        tabs.depth() shouldBe 2 // tabs -> stack -> screen
     }
 
     // =========================================================================
     // EXTENSION FUNCTION TESTS - nodeCount
     // =========================================================================
 
-    @Test
-    fun `nodeCount returns 1 for ScreenNode`() {
+    test("nodeCount returns 1 for ScreenNode") {
         val screen = ScreenNode(NodeKey("screen"), null, HomeDestination)
 
-        assertEquals(1, screen.nodeCount())
+        screen.nodeCount() shouldBe 1
     }
 
-    @Test
-    fun `nodeCount returns 1 for empty StackNode`() {
+    test("nodeCount returns 1 for empty StackNode") {
         val stack = StackNode(NodeKey("stack"), null, emptyList())
 
-        assertEquals(1, stack.nodeCount())
+        stack.nodeCount() shouldBe 1
     }
 
-    @Test
-    fun `nodeCount returns correct total for nested structure`() {
+    test("nodeCount returns correct total for nested structure") {
         val tabs = TabNode(
             key = NodeKey("tabs"),
             parentKey = null,
@@ -1213,61 +1137,56 @@ class NavNodeTest {
         )
 
         // 1 (tabs) + 2 (stacks) + 2 (screens) = 5
-        assertEquals(5, tabs.nodeCount())
+        tabs.nodeCount() shouldBe 5
     }
 
     // =========================================================================
     // NAV KEY GENERATOR TESTS
     // =========================================================================
 
-    @Test
-    fun `NavKeyGenerator generates unique keys`() {
+    test("NavKeyGenerator generates unique keys") {
         NavKeyGenerator.reset()
 
         val key1 = NodeKey(NavKeyGenerator.generate())
         val key2 = NodeKey(NavKeyGenerator.generate())
         val key3 = NodeKey(NavKeyGenerator.generate())
 
-        assertFalse(key1 == key2)
-        assertFalse(key2 == key3)
-        assertFalse(key1 == key3)
+        (key1 == key2).shouldBeFalse()
+        (key2 == key3).shouldBeFalse()
+        (key1 == key3).shouldBeFalse()
     }
 
-    @Test
-    fun `NavKeyGenerator includes debug label when provided`() {
+    test("NavKeyGenerator includes debug label when provided") {
         NavKeyGenerator.reset()
 
         val key = NavKeyGenerator.generate("home")
 
-        assertTrue(key.startsWith("home-"))
+        key.startsWith("home-").shouldBeTrue()
     }
 
-    @Test
-    fun `NavKeyGenerator uses default prefix when no label`() {
+    test("NavKeyGenerator uses default prefix when no label") {
         NavKeyGenerator.reset()
 
         val key = NodeKey(NavKeyGenerator.generate())
 
-        assertTrue(key.value.startsWith("node-"))
+        key.value.startsWith("node-").shouldBeTrue()
     }
 
-    @Test
-    fun `NavKeyGenerator reset restarts counter`() {
+    test("NavKeyGenerator reset restarts counter") {
         NavKeyGenerator.reset()
         val key1 = NodeKey(NavKeyGenerator.generate())
 
         NavKeyGenerator.reset()
         val key2 = NodeKey(NavKeyGenerator.generate())
 
-        assertEquals(key1, key2)
+        key2 shouldBe key1
     }
 
     // =========================================================================
     // COMPLEX INTEGRATION TESTS
     // =========================================================================
 
-    @Test
-    fun `complex tree navigation scenario`() {
+    test("complex tree navigation scenario") {
         // Build a complex tree: root stack -> tabs -> nested stacks with screens
         val homeScreen = ScreenNode(NodeKey("home-screen"), NodeKey("home-stack"), HomeDestination)
         val profileScreen1 = ScreenNode(NodeKey("profile-screen-1"), NodeKey("profile-stack"), ProfileDestination)
@@ -1287,31 +1206,30 @@ class NavNodeTest {
         val rootStack = StackNode(NodeKey("root"), null, listOf(tabs))
 
         // Verify activeLeaf
-        assertEquals(profileScreen2, rootStack.activeLeaf())
+        rootStack.activeLeaf() shouldBe profileScreen2
 
         // Verify activeStack
-        assertEquals(profileStack, rootStack.activeStack())
+        rootStack.activeStack() shouldBe profileStack
 
         // Verify activePathToLeaf
         val path = rootStack.activePathToLeaf()
-        assertEquals(4, path.size)
-        assertEquals(rootStack, path[0])
-        assertEquals(tabs, path[1])
-        assertEquals(profileStack, path[2])
-        assertEquals(profileScreen2, path[3])
+        path.size shouldBe 4
+        path[0] shouldBe rootStack
+        path[1] shouldBe tabs
+        path[2] shouldBe profileStack
+        path[3] shouldBe profileScreen2
 
         // Verify allScreens
         val allScreens = rootStack.allScreens()
-        assertEquals(3, allScreens.size)
+        allScreens.size shouldBe 3
 
         // Verify findByKey works across the tree
-        assertEquals(homeScreen, rootStack.findByKey(NodeKey("home-screen")))
-        assertEquals(profileScreen1, rootStack.findByKey(NodeKey("profile-screen-1")))
-        assertEquals(tabs, rootStack.findByKey(NodeKey("tabs")))
+        rootStack.findByKey(NodeKey("home-screen")) shouldBe homeScreen
+        rootStack.findByKey(NodeKey("profile-screen-1")) shouldBe profileScreen1
+        rootStack.findByKey(NodeKey("tabs")) shouldBe tabs
     }
 
-    @Test
-    fun `pane-based adaptive layout scenario`() {
+    test("pane-based adaptive layout scenario") {
         // Build a list-detail pane layout
         val listScreen = ScreenNode(NodeKey("list"), NodeKey("list-stack"), ListDestination)
         val detailScreen = ScreenNode(NodeKey("detail"), NodeKey("detail-stack"), DetailDestination)
@@ -1337,23 +1255,25 @@ class NavNodeTest {
         )
 
         // Verify activeLeaf follows activePaneRole
-        assertEquals(detailScreen, panes.activeLeaf())
+        panes.activeLeaf() shouldBe detailScreen
 
         // Verify activeStack follows activePaneRole
-        assertEquals(detailStack, panes.activeStack())
+        panes.activeStack() shouldBe detailStack
 
         // Verify paneContent
-        assertEquals(listStack, panes.paneContent(PaneRole.Primary))
-        assertEquals(detailStack, panes.paneContent(PaneRole.Supporting))
+        panes.paneContent(PaneRole.Primary) shouldBe listStack
+        panes.paneContent(PaneRole.Supporting) shouldBe detailStack
 
         // Verify adaptStrategies
-        assertEquals(AdaptStrategy.Hide, panes.adaptStrategy(PaneRole.Primary))
-        assertEquals(AdaptStrategy.Levitate, panes.adaptStrategy(PaneRole.Supporting))
+        panes.adaptStrategy(PaneRole.Primary) shouldBe AdaptStrategy.Hide
+        panes.adaptStrategy(PaneRole.Supporting) shouldBe AdaptStrategy.Levitate
 
         // Verify allScreens includes both panes
         val allScreens = panes.allScreens()
-        assertEquals(2, allScreens.size)
-        assertTrue(allScreens.contains(listScreen))
-        assertTrue(allScreens.contains(detailScreen))
+        allScreens.size shouldBe 2
+        allScreens.contains(listScreen).shouldBeTrue()
+        allScreens.contains(detailScreen).shouldBeTrue()
     }
+
+    } // init
 }

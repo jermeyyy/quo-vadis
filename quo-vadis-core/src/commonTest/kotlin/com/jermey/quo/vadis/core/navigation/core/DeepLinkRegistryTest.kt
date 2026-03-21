@@ -6,12 +6,12 @@ import com.jermey.quo.vadis.core.registry.internal.RuntimeDeepLinkRegistry
 import com.jermey.quo.vadis.core.navigation.destination.DeepLink
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 
 /**
  * Simple test destination for registry tests.
@@ -35,10 +35,9 @@ private data class TestDestination(
  * - getRegisteredPatterns
  */
 @OptIn(InternalQuoVadisApi::class)
-class RuntimeDeepLinkRegistryTest {
+class RuntimeDeepLinkRegistryTest : FunSpec({
 
-    @Test
-    fun `register and resolve pattern with path params`() {
+    test("register and resolve pattern with path params") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("profile/{userId}") { params ->
@@ -46,13 +45,12 @@ class RuntimeDeepLinkRegistryTest {
         }
 
         val destination = registry.resolve("app://profile/123")
-        assertNotNull(destination)
-        assertTrue(destination is TestDestination)
-        assertEquals("123", (destination as TestDestination).id)
+        destination.shouldNotBeNull()
+        (destination is TestDestination).shouldBeTrue()
+        (destination as TestDestination).id shouldBe "123"
     }
 
-    @Test
-    fun `resolve includes query params in allParams`() {
+    test("resolve includes query params in allParams") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("profile/{id}") { params ->
@@ -60,14 +58,13 @@ class RuntimeDeepLinkRegistryTest {
         }
 
         val destination = registry.resolve("app://profile/123?ref=email")
-        assertNotNull(destination)
-        assertTrue(destination is TestDestination)
-        assertEquals("123", (destination as TestDestination).id)
-        assertEquals("email", (destination as TestDestination).ref)
+        destination.shouldNotBeNull()
+        (destination is TestDestination).shouldBeTrue()
+        (destination as TestDestination).id shouldBe "123"
+        (destination as TestDestination).ref shouldBe "email"
     }
 
-    @Test
-    fun `resolve returns null for unmatched patterns`() {
+    test("resolve returns null for unmatched patterns") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("profile/{userId}") { params ->
@@ -75,36 +72,33 @@ class RuntimeDeepLinkRegistryTest {
         }
 
         val destination = registry.resolve("app://settings")
-        assertNull(destination)
+        destination.shouldBeNull()
     }
 
-    @Test
-    fun `canHandle returns true for registered patterns`() {
+    test("canHandle returns true for registered patterns") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("profile/{userId}") { params ->
             TestDestination(id = params["userId"]!!)
         }
 
-        assertTrue(registry.canHandle("app://profile/123"))
-        assertFalse(registry.canHandle("app://settings"))
+        registry.canHandle("app://profile/123").shouldBeTrue()
+        registry.canHandle("app://settings").shouldBeFalse()
     }
 
-    @Test
-    fun `getRegisteredPatterns returns all patterns`() {
+    test("getRegisteredPatterns returns all patterns") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("profile/{userId}") { TestDestination(it["userId"]!!) }
         registry.register("settings") { TestDestination("settings") }
 
         val patterns = registry.getRegisteredPatterns()
-        assertEquals(2, patterns.size)
-        assertTrue(patterns.contains("profile/{userId}"))
-        assertTrue(patterns.contains("settings"))
+        patterns.size shouldBe 2
+        patterns.contains("profile/{userId}").shouldBeTrue()
+        patterns.contains("settings").shouldBeTrue()
     }
 
-    @Test
-    fun `pattern matching handles multiple path params`() {
+    test("pattern matching handles multiple path params") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("user/{userId}/post/{postId}") { params ->
@@ -112,28 +106,26 @@ class RuntimeDeepLinkRegistryTest {
         }
 
         val destination = registry.resolve("app://user/42/post/99")
-        assertNotNull(destination)
-        assertEquals("42-99", (destination as TestDestination).id)
+        destination.shouldNotBeNull()
+        (destination as TestDestination).id shouldBe "42-99"
     }
 
-    @Test
-    fun `pattern matching handles static segments`() {
+    test("pattern matching handles static segments") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("home/feed") { TestDestination("feed") }
         registry.register("home/detail/{id}") { TestDestination(it["id"]!!) }
 
         val feedDest = registry.resolve("app://home/feed")
-        assertNotNull(feedDest)
-        assertEquals("feed", (feedDest as TestDestination).id)
+        feedDest.shouldNotBeNull()
+        (feedDest as TestDestination).id shouldBe "feed"
 
         val detailDest = registry.resolve("app://home/detail/123")
-        assertNotNull(detailDest)
-        assertEquals("123", (detailDest as TestDestination).id)
+        detailDest.shouldNotBeNull()
+        (detailDest as TestDestination).id shouldBe "123"
     }
 
-    @Test
-    fun `resolve with DeepLink object works`() {
+    test("resolve with DeepLink object works") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("profile/{id}") { params ->
@@ -143,12 +135,11 @@ class RuntimeDeepLinkRegistryTest {
         val deepLink = DeepLink.parse("app://profile/456")
         val destination = registry.resolve(deepLink)
 
-        assertNotNull(destination)
-        assertEquals("456", (destination as TestDestination).id)
+        destination.shouldNotBeNull()
+        (destination as TestDestination).id shouldBe "456"
     }
 
-    @Test
-    fun `canHandle works with different schemes`() {
+    test("canHandle works with different schemes") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("profile/{userId}") { params ->
@@ -156,57 +147,53 @@ class RuntimeDeepLinkRegistryTest {
         }
 
         // canHandle checks path pattern regardless of scheme
-        assertTrue(registry.canHandle("app://profile/123"))
-        assertTrue(registry.canHandle("myapp://profile/456"))
-        assertTrue(registry.canHandle("https://profile/789"))
+        registry.canHandle("app://profile/123").shouldBeTrue()
+        registry.canHandle("myapp://profile/456").shouldBeTrue()
+        registry.canHandle("https://profile/789").shouldBeTrue()
     }
 
-    @Test
-    fun `createUri returns null for runtime registry`() {
+    test("createUri returns null for runtime registry") {
         val registry = RuntimeDeepLinkRegistry()
         registry.register("profile/{id}") { TestDestination(it["id"]!!) }
 
         val destination = TestDestination("123")
         // Runtime registry doesn't track destination-to-route mapping
-        assertNull(registry.createUri(destination))
+        registry.createUri(destination).shouldBeNull()
     }
 
-    @Test
-    fun `registerAction and getRegisteredPatterns includes action patterns`() {
+    test("registerAction and getRegisteredPatterns includes action patterns") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("profile/{id}") { TestDestination(it["id"]!!) }
         registry.registerAction("navigate/{target}") { _, _ -> }
 
         val patterns = registry.getRegisteredPatterns()
-        assertEquals(2, patterns.size)
-        assertTrue(patterns.contains("profile/{id}"))
-        assertTrue(patterns.contains("navigate/{target}"))
+        patterns.size shouldBe 2
+        patterns.contains("profile/{id}").shouldBeTrue()
+        patterns.contains("navigate/{target}").shouldBeTrue()
     }
 
-    @Test
-    fun `empty registry returns empty patterns`() {
+    test("empty registry returns empty patterns") {
         val registry = RuntimeDeepLinkRegistry()
 
-        assertEquals(emptyList(), registry.getRegisteredPatterns())
-        assertFalse(registry.canHandle("app://anything"))
+        registry.getRegisteredPatterns() shouldBe emptyList()
+        registry.canHandle("app://anything").shouldBeFalse()
     }
 
-    @Test
-    fun `pattern with no params matches exact path`() {
+    test("pattern with no params matches exact path") {
         val registry = RuntimeDeepLinkRegistry()
 
         registry.register("home") { TestDestination("home") }
 
         val destination = registry.resolve("app://home")
-        assertNotNull(destination)
-        assertEquals("home", (destination as TestDestination).id)
+        destination.shouldNotBeNull()
+        (destination as TestDestination).id shouldBe "home"
 
         // Should not match different paths
-        assertNull(registry.resolve("app://home/extra"))
-        assertNull(registry.resolve("app://homex"))
+        registry.resolve("app://home/extra").shouldBeNull()
+        registry.resolve("app://homex").shouldBeNull()
     }
-}
+})
 
 /**
  * Unit tests for [com.jermey.quo.vadis.core.dsl.registry.CompositeDeepLinkRegistry].
@@ -218,10 +205,9 @@ class RuntimeDeepLinkRegistryTest {
  * - canHandle across both registries
  */
 @OptIn(InternalQuoVadisApi::class)
-class CompositeDeepLinkRegistryTest {
+class CompositeDeepLinkRegistryTest : FunSpec({
 
-    @Test
-    fun `runtime registry takes precedence over generated`() {
+    test("runtime registry takes precedence over generated") {
         val generated = RuntimeDeepLinkRegistry().apply {
             register("profile/{id}") { TestDestination("generated-${it["id"]}") }
         }
@@ -233,12 +219,11 @@ class CompositeDeepLinkRegistryTest {
         composite.register("profile/{id}") { TestDestination("runtime-${it["id"]}") }
 
         val destination = composite.resolve("app://profile/123")
-        assertNotNull(destination)
-        assertEquals("runtime-123", (destination as TestDestination).id)
+        destination.shouldNotBeNull()
+        (destination as TestDestination).id shouldBe "runtime-123"
     }
 
-    @Test
-    fun `falls back to generated registry when runtime has no match`() {
+    test("falls back to generated registry when runtime has no match") {
         val generated = RuntimeDeepLinkRegistry().apply {
             register("profile/{id}") { TestDestination("generated-${it["id"]}") }
         }
@@ -247,12 +232,11 @@ class CompositeDeepLinkRegistryTest {
         val composite = CompositeDeepLinkRegistry(generated, runtime)
 
         val destination = composite.resolve("app://profile/123")
-        assertNotNull(destination)
-        assertEquals("generated-123", (destination as TestDestination).id)
+        destination.shouldNotBeNull()
+        (destination as TestDestination).id shouldBe "generated-123"
     }
 
-    @Test
-    fun `getRegisteredPatterns combines both registries`() {
+    test("getRegisteredPatterns combines both registries") {
         val generated = RuntimeDeepLinkRegistry().apply {
             register("profile/{id}") { TestDestination(it["id"]!!) }
         }
@@ -262,13 +246,12 @@ class CompositeDeepLinkRegistryTest {
         composite.register("settings") { TestDestination("settings") }
 
         val patterns = composite.getRegisteredPatterns()
-        assertEquals(2, patterns.size)
-        assertTrue(patterns.contains("settings"))
-        assertTrue(patterns.contains("profile/{id}"))
+        patterns.size shouldBe 2
+        patterns.contains("settings").shouldBeTrue()
+        patterns.contains("profile/{id}").shouldBeTrue()
     }
 
-    @Test
-    fun `canHandle checks both registries`() {
+    test("canHandle checks both registries") {
         val generated = RuntimeDeepLinkRegistry().apply {
             register("profile/{id}") { TestDestination(it["id"]!!) }
         }
@@ -277,45 +260,41 @@ class CompositeDeepLinkRegistryTest {
         val composite = CompositeDeepLinkRegistry(generated, runtime)
         composite.register("settings") { TestDestination("settings") }
 
-        assertTrue(composite.canHandle("app://profile/123"))
-        assertTrue(composite.canHandle("app://settings"))
-        assertFalse(composite.canHandle("app://unknown"))
+        composite.canHandle("app://profile/123").shouldBeTrue()
+        composite.canHandle("app://settings").shouldBeTrue()
+        composite.canHandle("app://unknown").shouldBeFalse()
     }
 
-    @Test
-    fun `resolve with null generated registry`() {
+    test("resolve with null generated registry") {
         val composite = CompositeDeepLinkRegistry(null)
         composite.register("profile/{id}") { TestDestination(it["id"]!!) }
 
         val destination = composite.resolve("app://profile/123")
-        assertNotNull(destination)
-        assertEquals("123", (destination as TestDestination).id)
+        destination.shouldNotBeNull()
+        (destination as TestDestination).id shouldBe "123"
 
         // No fallback available
-        assertNull(composite.resolve("app://unknown"))
+        composite.resolve("app://unknown").shouldBeNull()
     }
 
-    @Test
-    fun `canHandle with null generated registry`() {
+    test("canHandle with null generated registry") {
         val composite = CompositeDeepLinkRegistry(null)
         composite.register("profile/{id}") { TestDestination(it["id"]!!) }
 
-        assertTrue(composite.canHandle("app://profile/123"))
-        assertFalse(composite.canHandle("app://unknown"))
+        composite.canHandle("app://profile/123").shouldBeTrue()
+        composite.canHandle("app://unknown").shouldBeFalse()
     }
 
-    @Test
-    fun `getRegisteredPatterns with null generated registry`() {
+    test("getRegisteredPatterns with null generated registry") {
         val composite = CompositeDeepLinkRegistry(null)
         composite.register("settings") { TestDestination("settings") }
 
         val patterns = composite.getRegisteredPatterns()
-        assertEquals(1, patterns.size)
-        assertTrue(patterns.contains("settings"))
+        patterns.size shouldBe 1
+        patterns.contains("settings").shouldBeTrue()
     }
 
-    @Test
-    fun `resolve DeepLink object uses both registries`() {
+    test("resolve DeepLink object uses both registries") {
         val generated = RuntimeDeepLinkRegistry().apply {
             register("generated-path") { TestDestination("from-generated") }
         }
@@ -328,15 +307,14 @@ class CompositeDeepLinkRegistryTest {
         val runtimeDest = composite.resolve(runtimeDeepLink)
         val generatedDest = composite.resolve(generatedDeepLink)
 
-        assertNotNull(runtimeDest)
-        assertEquals("from-runtime", (runtimeDest as TestDestination).id)
+        runtimeDest.shouldNotBeNull()
+        (runtimeDest as TestDestination).id shouldBe "from-runtime"
 
-        assertNotNull(generatedDest)
-        assertEquals("from-generated", (generatedDest as TestDestination).id)
+        generatedDest.shouldNotBeNull()
+        (generatedDest as TestDestination).id shouldBe "from-generated"
     }
 
-    @Test
-    fun `registerAction delegates to runtime`() {
+    test("registerAction delegates to runtime") {
         val composite = CompositeDeepLinkRegistry(null)
 
         var actionCalled = false
@@ -345,12 +323,11 @@ class CompositeDeepLinkRegistryTest {
         }
 
         val patterns = composite.getRegisteredPatterns()
-        assertTrue(patterns.contains("action/{id}"))
-        assertTrue(composite.canHandle("app://action/123"))
+        patterns.contains("action/{id}").shouldBeTrue()
+        composite.canHandle("app://action/123").shouldBeTrue()
     }
 
-    @Test
-    fun `createUri delegates to generated registry`() {
+    test("createUri delegates to generated registry") {
         // Generated registry with createUri implementation could return a value
         // but RuntimeDeepLinkRegistry returns null
         val generated = RuntimeDeepLinkRegistry().apply {
@@ -360,14 +337,13 @@ class CompositeDeepLinkRegistryTest {
 
         val destination = TestDestination("123")
         // RuntimeDeepLinkRegistry.createUri returns null
-        assertNull(composite.createUri(destination))
+        composite.createUri(destination).shouldBeNull()
     }
 
-    @Test
-    fun `createUri returns null when generated is null`() {
+    test("createUri returns null when generated is null") {
         val composite = CompositeDeepLinkRegistry(null)
 
         val destination = TestDestination("123")
-        assertNull(composite.createUri(destination))
+        composite.createUri(destination).shouldBeNull()
     }
-}
+})

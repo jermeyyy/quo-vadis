@@ -8,23 +8,24 @@ import com.jermey.quo.vadis.ksp.testutil.FakeKSClassDeclaration
 import com.jermey.quo.vadis.ksp.testutil.FakeKSFile
 import com.jermey.quo.vadis.ksp.testutil.FakeKSFunctionDeclaration
 import com.jermey.quo.vadis.ksp.testutil.FakeKSPLogger
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
 
 /**
  * Tests for [ValidationEngine.validateScreenBindings] — specifically the cross-module
  * `@Screen` binding fix where destinations from compiled dependencies (containingFile == null)
  * should not produce "references a class without @Destination" errors.
  */
-class ValidationEngineScreenBindingTest {
+class ValidationEngineScreenBindingTest : FunSpec({
 
-    private val logger = FakeKSPLogger()
-    private val engine = ValidationEngine(logger)
+    val logger = FakeKSPLogger()
+    val engine = ValidationEngine(logger)
 
     // -- Helpers --
 
-    private fun destClassDecl(
+    fun destClassDecl(
         name: String,
         pkg: String = "com.example",
         containingFile: com.google.devtools.ksp.symbol.KSFile? = FakeKSFile(pkg = pkg),
@@ -39,7 +40,7 @@ class ValidationEngineScreenBindingTest {
         containingFile = containingFile,
     )
 
-    private fun screenInfo(
+    fun screenInfo(
         functionName: String,
         destinationClass: FakeKSClassDeclaration,
         pkg: String = "com.example",
@@ -53,7 +54,7 @@ class ValidationEngineScreenBindingTest {
         packageName = pkg,
     )
 
-    private fun destinationInfo(
+    fun destinationInfo(
         classDecl: FakeKSClassDeclaration,
         isCrossModule: Boolean = false,
     ) = DestinationInfo(
@@ -71,7 +72,7 @@ class ValidationEngineScreenBindingTest {
         isCrossModule = isCrossModule,
     )
 
-    private fun validate(
+    fun validate(
         screens: List<ScreenInfo>,
         destinations: List<DestinationInfo> = emptyList(),
     ): Boolean {
@@ -90,8 +91,7 @@ class ValidationEngineScreenBindingTest {
     // Cross-module @Screen binding (the bug fix)
     // =========================================================================
 
-    @Test
-    fun `cross-module Screen referencing destination not in local list does not produce error`() {
+    test("cross-module Screen referencing destination not in local list does not produce error") {
         // Destination from compiled dependency: containingFile == null, not in allDestinations
         val crossModuleDest = destClassDecl(
             name = "RemoteDestination",
@@ -102,15 +102,10 @@ class ValidationEngineScreenBindingTest {
 
         validate(screens = listOf(screen), destinations = emptyList())
 
-        val screenErrors = logger.errors.filter { it.contains("references a class without @Destination") }
-        assertTrue(
-            screenErrors.isEmpty(),
-            "Cross-module @Screen should NOT produce 'class without @Destination' error, got: $screenErrors",
-        )
+        logger.errors.filter { it.contains("references a class without @Destination") }.shouldBeEmpty()
     }
 
-    @Test
-    fun `local Screen referencing class without Destination produces error`() {
+    test("local Screen referencing class without Destination produces error") {
         // Local class (has containingFile) NOT in allDestinations → should error
         val localNonDest = destClassDecl(
             name = "NotADestination",
@@ -121,30 +116,21 @@ class ValidationEngineScreenBindingTest {
 
         val result = validate(screens = listOf(screen), destinations = emptyList())
 
-        assertFalse(result, "Validation should fail for local @Screen referencing non-destination")
-        assertTrue(
-            logger.errors.any { it.contains("references a class without @Destination") },
-            "Expected 'references a class without @Destination' error, got: ${logger.errors}",
-        )
+        result.shouldBeFalse()
+        logger.errors.any { it.contains("references a class without @Destination") }.shouldBeTrue()
     }
 
-    @Test
-    fun `local Screen referencing valid destination in list does not produce error`() {
+    test("local Screen referencing valid destination in list does not produce error") {
         val destDecl = destClassDecl("ValidDest", containingFile = FakeKSFile())
         val dest = destinationInfo(destDecl)
         val screen = screenInfo("GoodScreen", destDecl)
 
         validate(screens = listOf(screen), destinations = listOf(dest))
 
-        val screenErrors = logger.errors.filter { it.contains("references a class without @Destination") }
-        assertTrue(
-            screenErrors.isEmpty(),
-            "Valid local @Screen should not produce error, got: $screenErrors",
-        )
+        logger.errors.filter { it.contains("references a class without @Destination") }.shouldBeEmpty()
     }
 
-    @Test
-    fun `duplicate Screen bindings for same destination produce errors`() {
+    test("duplicate Screen bindings for same destination produce errors") {
         val destDecl = destClassDecl("SharedDest", containingFile = FakeKSFile())
         val dest = destinationInfo(destDecl)
         val screen1 = screenInfo("ScreenA", destDecl)
@@ -152,38 +138,26 @@ class ValidationEngineScreenBindingTest {
 
         val result = validate(screens = listOf(screen1, screen2), destinations = listOf(dest))
 
-        assertFalse(result, "Validation should fail for duplicate screen bindings")
-        assertTrue(
-            logger.errors.any { it.contains("Multiple @Screen bindings") },
-            "Expected duplicate binding error, got: ${logger.errors}",
-        )
+        result.shouldBeFalse()
+        logger.errors.any { it.contains("Multiple @Screen bindings") }.shouldBeTrue()
     }
 
-    @Test
-    fun `missing Screen binding for local destination produces error`() {
+    test("missing Screen binding for local destination produces error") {
         val destDecl = destClassDecl("UnboundDest", containingFile = FakeKSFile())
         val dest = destinationInfo(destDecl, isCrossModule = false)
 
         val result = validate(screens = emptyList(), destinations = listOf(dest))
 
-        assertFalse(result, "Validation should fail for destination without @Screen")
-        assertTrue(
-            logger.errors.any { it.contains("Missing @Screen binding") },
-            "Expected missing screen binding error, got: ${logger.errors}",
-        )
+        result.shouldBeFalse()
+        logger.errors.any { it.contains("Missing @Screen binding") }.shouldBeTrue()
     }
 
-    @Test
-    fun `missing Screen binding for cross-module destination is skipped`() {
+    test("missing Screen binding for cross-module destination is skipped") {
         val destDecl = destClassDecl("CrossModuleDest", containingFile = null)
         val dest = destinationInfo(destDecl, isCrossModule = true)
 
         validate(screens = emptyList(), destinations = listOf(dest))
 
-        val missingErrors = logger.errors.filter { it.contains("Missing @Screen binding") }
-        assertTrue(
-            missingErrors.isEmpty(),
-            "Cross-module destination should not require @Screen binding, got: $missingErrors",
-        )
+        logger.errors.filter { it.contains("Missing @Screen binding") }.shouldBeEmpty()
     }
-}
+})

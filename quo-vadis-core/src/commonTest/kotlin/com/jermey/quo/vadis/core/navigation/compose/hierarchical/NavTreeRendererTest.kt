@@ -15,12 +15,13 @@ import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 /**
  * Integration tests for hierarchical rendering components.
@@ -32,28 +33,28 @@ import kotlin.test.assertTrue
  * - Pane content list building
  * - Component integration scenarios
  */
-class NavTreeRendererTest {
+class NavTreeRendererTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : NavDestination {
+    val HomeDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ProfileDestination : NavDestination {
+    val ProfileDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object SettingsDestination : NavDestination {
+    val SettingsDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object DetailDestination : NavDestination {
+    val DetailDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -62,42 +63,40 @@ class NavTreeRendererTest {
     // TEST HELPERS
     // =========================================================================
 
-    private fun createScreen(
+    fun createScreen(
         key: String,
         parentKey: String? = null,
         destination: NavDestination = HomeDestination
     ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
-    private fun createStack(
+    fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
     ): StackNode = StackNode(NodeKey(key), parentKey?.let { NodeKey(it) }, screens.toList())
 
-    private fun createFakeScope(): FakeNavRenderScope = FakeNavRenderScope()
+    fun createFakeScope(): FakeNavRenderScope = FakeNavRenderScope()
 
     // =========================================================================
     // NAV TREE RENDERER TESTS - NODE ROUTING
     // =========================================================================
 
-    @Test
-    fun `renderer creates FakeNavRenderScope with all dependencies`() {
+    test("renderer creates FakeNavRenderScope with all dependencies") {
         // Given
         val scope = createFakeScope()
 
         // Then
-        assertNotNull(scope.navigator, "Navigator should be provided")
-        assertNotNull(scope.cache, "Cache should be provided")
-        assertNotNull(scope.saveableStateHolder, "SaveableStateHolder should be provided")
-        assertNotNull(scope.animationCoordinator, "AnimationCoordinator should be provided")
-        assertNotNull(scope.predictiveBackController, "PredictiveBackController should be provided")
-        assertNotNull(scope.screenRegistry, "ScreenRegistry should be provided")
-        assertNotNull(scope.containerRegistry, "ContainerRegistry should be provided")
-        assertNull(scope.sharedTransitionScope, "SharedTransitionScope should be null by default")
+        scope.navigator.shouldNotBeNull()
+        scope.cache.shouldNotBeNull()
+        scope.saveableStateHolder.shouldNotBeNull()
+        scope.animationCoordinator.shouldNotBeNull()
+        scope.predictiveBackController.shouldNotBeNull()
+        scope.screenRegistry.shouldNotBeNull()
+        scope.containerRegistry.shouldNotBeNull()
+        scope.sharedTransitionScope.shouldBeNull()
     }
 
-    @Test
-    fun `scope navigator is functional`() {
+    test("scope navigator is functional") {
         // Given
         val (scope, navigator) = FakeNavRenderScope.withFakeNavigator()
         val destination = HomeDestination
@@ -106,62 +105,54 @@ class NavTreeRendererTest {
         scope.navigator.navigate(destination)
 
         // Then
-        assertTrue(
-            navigator.navigationCalls.isNotEmpty(),
-            "Navigator should have recorded navigation"
-        )
+        navigator.navigationCalls.isNotEmpty().shouldBeTrue()
     }
 
-    @Test
-    fun `scope container registry provides defaults`() {
+    test("scope container registry provides defaults") {
         // Given
         val scope = createFakeScope()
 
         // Then
-        assertEquals(ContainerRegistry.Empty, scope.containerRegistry)
-        assertFalse(scope.containerRegistry.hasTabsContainer("any-key"))
-        assertFalse(scope.containerRegistry.hasPaneContainer("any-key"))
+        scope.containerRegistry shouldBe ContainerRegistry.Empty
+        scope.containerRegistry.hasTabsContainer("any-key").shouldBeFalse()
+        scope.containerRegistry.hasPaneContainer("any-key").shouldBeFalse()
     }
 
     // =========================================================================
     // SCREEN NODE RENDERING TESTS
     // =========================================================================
 
-    @Test
-    fun `screen node holds correct destination reference`() {
+    test("screen node holds correct destination reference") {
         // Given
         val destination = ProfileDestination
         val screenNode = createScreen("profile-screen", destination = destination)
 
         // Then
-        assertEquals(NodeKey("profile-screen"), screenNode.key)
-        assertEquals(destination, screenNode.destination)
+        screenNode.key shouldBe NodeKey("profile-screen")
+        screenNode.destination shouldBe destination
     }
 
-    @Test
-    fun `screen node can have null parent key for root screens`() {
+    test("screen node can have null parent key for root screens") {
         // Given
         val screenNode = createScreen("root-screen", parentKey = null)
 
         // Then
-        assertNull(screenNode.parentKey)
+        screenNode.parentKey.shouldBeNull()
     }
 
-    @Test
-    fun `screen node with parent key references correct parent`() {
+    test("screen node with parent key references correct parent") {
         // Given
         val screenNode = createScreen("child-screen", parentKey = "parent-stack")
 
         // Then
-        assertEquals(NodeKey("parent-stack"), screenNode.parentKey)
+        screenNode.parentKey shouldBe NodeKey("parent-stack")
     }
 
     // =========================================================================
     // STACK NODE RENDERING TESTS
     // =========================================================================
 
-    @Test
-    fun `stack node activeChild returns last element`() {
+    test("stack node activeChild returns last element") {
         // Given
         val screen1 = createScreen("s1", "stack")
         val screen2 = createScreen("s2", "stack")
@@ -169,20 +160,18 @@ class NavTreeRendererTest {
         val stack = createStack("stack", null, screen1, screen2, screen3)
 
         // Then
-        assertEquals(screen3, stack.activeChild)
+        stack.activeChild shouldBe screen3
     }
 
-    @Test
-    fun `stack node activeChild returns null for empty stack`() {
+    test("stack node activeChild returns null for empty stack") {
         // Given
         val stack = StackNode(NodeKey("stack"), null, emptyList())
 
         // Then
-        assertNull(stack.activeChild)
+        stack.activeChild.shouldBeNull()
     }
 
-    @Test
-    fun `stack node canGoBack is true when multiple children`() {
+    test("stack node canGoBack is true when multiple children") {
         // Given
         val stack = createStack(
             "stack",
@@ -192,20 +181,18 @@ class NavTreeRendererTest {
         )
 
         // Then
-        assertTrue(stack.canGoBack)
+        stack.canGoBack.shouldBeTrue()
     }
 
-    @Test
-    fun `stack node canGoBack is false when single child`() {
+    test("stack node canGoBack is false when single child") {
         // Given
         val stack = createStack("stack", null, createScreen("s1", "stack"))
 
         // Then
-        assertFalse(stack.canGoBack)
+        stack.canGoBack.shouldBeFalse()
     }
 
-    @Test
-    fun `stack renders only active child not all children`() {
+    test("stack renders only active child not all children") {
         // Given
         val screen1 = createScreen("s1", "stack", HomeDestination)
         val screen2 = createScreen("s2", "stack", ProfileDestination)
@@ -215,17 +202,16 @@ class NavTreeRendererTest {
         val activeChild = stack.activeChild
 
         // Then - only the last screen is "active"
-        assertEquals(screen2, activeChild)
-        assertNotNull(activeChild)
-        assertEquals(NodeKey("s2"), activeChild.key)
+        activeChild shouldBe screen2
+        activeChild.shouldNotBeNull()
+        activeChild.key shouldBe NodeKey("s2")
     }
 
     // =========================================================================
     // TAB NODE RENDERING TESTS
     // =========================================================================
 
-    @Test
-    fun `tab node renders active stack correctly`() {
+    test("tab node renders active stack correctly") {
         // Given
         val homeStack = createStack(
             "home-stack", "tabs",
@@ -243,13 +229,12 @@ class NavTreeRendererTest {
         )
 
         // Then
-        assertEquals(profileStack, tabs.activeStack)
-        assertEquals(1, tabs.activeStackIndex)
-        assertEquals(2, tabs.tabCount)
+        tabs.activeStack shouldBe profileStack
+        tabs.activeStackIndex shouldBe 1
+        tabs.tabCount shouldBe 2
     }
 
-    @Test
-    fun `tab switching changes active stack`() {
+    test("tab switching changes active stack") {
         // Given
         val stack0 = createStack("tab0", "tabs", createScreen("s0", "tab0"))
         val stack1 = createStack("tab1", "tabs", createScreen("s1", "tab1"))
@@ -270,12 +255,11 @@ class NavTreeRendererTest {
         )
 
         // Then
-        assertEquals(stack0, previousTabs.activeStack)
-        assertEquals(stack2, currentTabs.activeStack)
+        previousTabs.activeStack shouldBe stack0
+        currentTabs.activeStack shouldBe stack2
     }
 
-    @Test
-    fun `tab node preserves all stacks during switching`() {
+    test("tab node preserves all stacks during switching") {
         // Given
         val homeStack = createStack(
             "home-stack", "tabs",
@@ -295,20 +279,19 @@ class NavTreeRendererTest {
         )
 
         // Then - all stacks are preserved
-        assertEquals(2, tabs.stacks.size)
-        assertEquals(homeStack, tabs.stackAt(0))
-        assertEquals(profileStack, tabs.stackAt(1))
+        tabs.stacks.size shouldBe 2
+        tabs.stackAt(0) shouldBe homeStack
+        tabs.stackAt(1) shouldBe profileStack
 
         // Home stack still has 2 children
-        assertEquals(2, tabs.stackAt(0).children.size)
+        tabs.stackAt(0).children.size shouldBe 2
     }
 
     // =========================================================================
     // PANE NODE RENDERING TESTS
     // =========================================================================
 
-    @Test
-    fun `pane node renders active pane correctly`() {
+    test("pane node renders active pane correctly") {
         // Given
         val primaryContent = createScreen("primary", "panes", HomeDestination)
         val supportingContent = createScreen("supporting", "panes", DetailDestination)
@@ -324,12 +307,11 @@ class NavTreeRendererTest {
         )
 
         // Then
-        assertEquals(supportingContent, panes.activePaneContent)
-        assertEquals(2, panes.paneCount)
+        panes.activePaneContent shouldBe supportingContent
+        panes.paneCount shouldBe 2
     }
 
-    @Test
-    fun `pane node respects adapt strategy`() {
+    test("pane node respects adapt strategy") {
         // Given
         val panes = PaneNode(
             key = NodeKey("panes"),
@@ -348,12 +330,11 @@ class NavTreeRendererTest {
         )
 
         // Then
-        assertEquals(AdaptStrategy.Hide, panes.adaptStrategy(PaneRole.Primary))
-        assertEquals(AdaptStrategy.Levitate, panes.adaptStrategy(PaneRole.Supporting))
+        panes.adaptStrategy(PaneRole.Primary) shouldBe AdaptStrategy.Hide
+        panes.adaptStrategy(PaneRole.Supporting) shouldBe AdaptStrategy.Levitate
     }
 
-    @Test
-    fun `pane node has correct back behavior`() {
+    test("pane node has correct back behavior") {
         // Given - default back behavior
         val panesDefault = PaneNode(
             key = NodeKey("panes"),
@@ -376,16 +357,15 @@ class NavTreeRendererTest {
         )
 
         // Then
-        assertEquals(PaneBackBehavior.PopUntilScaffoldValueChange, panesDefault.backBehavior)
-        assertEquals(PaneBackBehavior.PopLatest, panesCustom.backBehavior)
+        panesDefault.backBehavior shouldBe PaneBackBehavior.PopUntilScaffoldValueChange
+        panesCustom.backBehavior shouldBe PaneBackBehavior.PopLatest
     }
 
     // =========================================================================
     // COMPLEX STRUCTURE TESTS
     // =========================================================================
 
-    @Test
-    fun `nested navigation structures work correctly`() {
+    test("nested navigation structures work correctly") {
         // Given - a complex nested structure: Root Stack -> Tabs -> Stack per tab
         val homeScreen1 = createScreen("home-1", "home-stack", HomeDestination)
         val homeScreen2 = createScreen("home-2", "home-stack", ProfileDestination)
@@ -404,13 +384,12 @@ class NavTreeRendererTest {
         val rootStack = StackNode(NodeKey("root"), null, listOf(tabs))
 
         // Then - verify the full hierarchy
-        assertEquals(tabs, rootStack.activeChild)
-        assertEquals(homeStack, tabs.activeStack)
-        assertEquals(homeScreen2, tabs.activeStack.activeChild)
+        rootStack.activeChild shouldBe tabs
+        tabs.activeStack shouldBe homeStack
+        tabs.activeStack.activeChild shouldBe homeScreen2
     }
 
-    @Test
-    fun `pane with nested stack works correctly`() {
+    test("pane with nested stack works correctly") {
         // Given
         val listScreen = createScreen("list", "list-stack")
         val listStack = createStack("list-stack", "panes", listScreen)
@@ -431,17 +410,16 @@ class NavTreeRendererTest {
 
         // Then
         val activePaneContent = panes.activePaneContent
-        assertTrue(activePaneContent is StackNode)
-        assertEquals(detailStack, activePaneContent)
-        assertEquals(detailScreen2, activePaneContent.activeChild)
+        activePaneContent.shouldBeInstanceOf<StackNode>()
+        activePaneContent shouldBe detailStack
+        activePaneContent.activeChild shouldBe detailScreen2
     }
 
     // =========================================================================
     // CACHE KEY UNIQUENESS TESTS
     // =========================================================================
 
-    @Test
-    fun `screen nodes have unique keys`() {
+    test("screen nodes have unique keys") {
         // Given
         val screen1 = createScreen("screen-1")
         val screen2 = createScreen("screen-2")
@@ -449,11 +427,10 @@ class NavTreeRendererTest {
 
         // Then
         val keys = setOf(screen1.key, screen2.key, screen3.key)
-        assertEquals(3, keys.size, "All screen keys should be unique")
+        keys.size shouldBe 3
     }
 
-    @Test
-    fun `stack nodes have unique keys`() {
+    test("stack nodes have unique keys") {
         // Given
         val stack1 = createStack("stack-1")
         val stack2 = createStack("stack-2")
@@ -461,6 +438,6 @@ class NavTreeRendererTest {
 
         // Then
         val keys = setOf(stack1.key, stack2.key, stack3.key)
-        assertEquals(3, keys.size, "All stack keys should be unique")
+        keys.size shouldBe 3
     }
-}
+})

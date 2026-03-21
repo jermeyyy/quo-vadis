@@ -2,9 +2,10 @@ package com.jermey.quo.vadis.core.navigation.compose
 
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.registry.BackHandlerRegistry
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
 
 /**
  * Unit tests for [BackHandlerRegistry].
@@ -16,51 +17,46 @@ import kotlin.test.assertTrue
  * - hasHandlers state management
  * - unregisterAll bulk cleanup
  */
-class BackHandlerRegistryTest {
+class BackHandlerRegistryTest : FunSpec({
 
-    private val screenKey = NodeKey("screen")
-    private val stackKey = NodeKey("stack")
-    private val tabKey = NodeKey("tab")
-    private val defaultPath = listOf(screenKey, stackKey, tabKey)
+    val screenKey = NodeKey("screen")
+    val stackKey = NodeKey("stack")
+    val tabKey = NodeKey("tab")
+    val defaultPath = listOf(screenKey, stackKey, tabKey)
 
     // =========================================================================
     // BASIC REGISTRATION AND HANDLING TESTS
     // =========================================================================
 
-    @Test
-    fun `handleBack returns false when no handlers registered`() {
+    test("handleBack returns false when no handlers registered") {
         val registry = BackHandlerRegistry()
-        assertFalse(registry.handleBack(defaultPath))
+        registry.handleBack(defaultPath).shouldBeFalse()
     }
 
-    @Test
-    fun `handleBack returns true when handler consumes event`() {
+    test("handleBack returns true when handler consumes event") {
         val registry = BackHandlerRegistry()
         registry.register(screenKey) { true }
-        assertTrue(registry.handleBack(defaultPath))
+        registry.handleBack(defaultPath).shouldBeTrue()
     }
 
-    @Test
-    fun `handleBack returns false when handler does not consume event`() {
+    test("handleBack returns false when handler does not consume event") {
         val registry = BackHandlerRegistry()
         registry.register(screenKey) { false }
-        assertFalse(registry.handleBack(defaultPath))
+        registry.handleBack(defaultPath).shouldBeFalse()
     }
 
-    @Test
-    fun `handleBack ignores handlers not on active path`() {
+    test("handleBack ignores handlers not on active path") {
         val registry = BackHandlerRegistry()
         val otherKey = NodeKey("other")
         registry.register(otherKey) { true }
-        assertFalse(registry.handleBack(defaultPath))
+        registry.handleBack(defaultPath).shouldBeFalse()
     }
 
     // =========================================================================
     // LIFO ORDER TESTS (within a single scope)
     // =========================================================================
 
-    @Test
-    fun `handlers are invoked in LIFO order - last registered first`() {
+    test("handlers are invoked in LIFO order - last registered first") {
         val registry = BackHandlerRegistry()
         val callOrder = mutableListOf<Int>()
 
@@ -80,11 +76,10 @@ class BackHandlerRegistryTest {
         registry.handleBack(defaultPath)
 
         // Only handler 3 should be called (LIFO, first one to consume)
-        assertTrue(callOrder == listOf(3))
+        callOrder shouldBe listOf(3)
     }
 
-    @Test
-    fun `all handlers called when none consume - in LIFO order`() {
+    test("all handlers called when none consume - in LIFO order") {
         val registry = BackHandlerRegistry()
         val callOrder = mutableListOf<Int>()
 
@@ -95,11 +90,10 @@ class BackHandlerRegistryTest {
         registry.handleBack(defaultPath)
 
         // All called in reverse order (LIFO)
-        assertTrue(callOrder == listOf(3, 2, 1))
+        callOrder shouldBe listOf(3, 2, 1)
     }
 
-    @Test
-    fun `first handler to consume stops propagation`() {
+    test("first handler to consume stops propagation") {
         val registry = BackHandlerRegistry()
         val callOrder = mutableListOf<Int>()
 
@@ -120,15 +114,14 @@ class BackHandlerRegistryTest {
 
         // Handler 3 called first (doesn't consume), then 2 (consumes, stops)
         // Handler 1 should not be called
-        assertTrue(callOrder == listOf(3, 2))
+        callOrder shouldBe listOf(3, 2)
     }
 
     // =========================================================================
     // SCOPE TRAVERSAL TESTS (leaf-to-root)
     // =========================================================================
 
-    @Test
-    fun `handleBack checks leaf scope before parent scope`() {
+    test("handleBack checks leaf scope before parent scope") {
         val registry = BackHandlerRegistry()
         val callOrder = mutableListOf<String>()
 
@@ -138,11 +131,10 @@ class BackHandlerRegistryTest {
         registry.handleBack(defaultPath)
 
         // Screen (leaf) should be checked first
-        assertTrue(callOrder == listOf("screen"))
+        callOrder shouldBe listOf("screen")
     }
 
-    @Test
-    fun `handleBack falls through to parent scope when leaf does not consume`() {
+    test("handleBack falls through to parent scope when leaf does not consume") {
         val registry = BackHandlerRegistry()
         val callOrder = mutableListOf<String>()
 
@@ -151,11 +143,10 @@ class BackHandlerRegistryTest {
 
         registry.handleBack(defaultPath)
 
-        assertTrue(callOrder == listOf("screen", "stack"))
+        callOrder shouldBe listOf("screen", "stack")
     }
 
-    @Test
-    fun `handleBack cascades through all scopes leaf to root`() {
+    test("handleBack cascades through all scopes leaf to root") {
         val registry = BackHandlerRegistry()
         val callOrder = mutableListOf<String>()
 
@@ -165,15 +156,14 @@ class BackHandlerRegistryTest {
 
         registry.handleBack(defaultPath)
 
-        assertTrue(callOrder == listOf("screen", "stack", "tab"))
+        callOrder shouldBe listOf("screen", "stack", "tab")
     }
 
     // =========================================================================
     // UNREGISTER TESTS
     // =========================================================================
 
-    @Test
-    fun `unregister removes handler`() {
+    test("unregister removes handler") {
         val registry = BackHandlerRegistry()
         var called = false
 
@@ -181,11 +171,10 @@ class BackHandlerRegistryTest {
         unregister()
 
         registry.handleBack(defaultPath)
-        assertFalse(called)
+        called.shouldBeFalse()
     }
 
-    @Test
-    fun `unregister is idempotent - safe to call multiple times`() {
+    test("unregister is idempotent - safe to call multiple times") {
         val registry = BackHandlerRegistry()
         val unregister = registry.register(screenKey) { true }
 
@@ -193,11 +182,10 @@ class BackHandlerRegistryTest {
         unregister() // Should not throw
         unregister() // Should not throw
 
-        assertFalse(registry.hasHandlers(defaultPath))
+        registry.hasHandlers(defaultPath).shouldBeFalse()
     }
 
-    @Test
-    fun `unregistered handler does not affect other handlers`() {
+    test("unregistered handler does not affect other handlers") {
         val registry = BackHandlerRegistry()
         var handler1Called = false
         var handler2Called = false
@@ -209,12 +197,11 @@ class BackHandlerRegistryTest {
 
         registry.handleBack(defaultPath)
 
-        assertFalse(handler1Called)
-        assertTrue(handler2Called)
+        handler1Called.shouldBeFalse()
+        handler2Called.shouldBeTrue()
     }
 
-    @Test
-    fun `unregister middle handler preserves order of remaining handlers`() {
+    test("unregister middle handler preserves order of remaining handlers") {
         val registry = BackHandlerRegistry()
         val callOrder = mutableListOf<Int>()
 
@@ -227,15 +214,14 @@ class BackHandlerRegistryTest {
         registry.handleBack(defaultPath)
 
         // Handler 2 was removed, remaining should still be LIFO
-        assertTrue(callOrder == listOf(3, 1))
+        callOrder shouldBe listOf(3, 1)
     }
 
     // =========================================================================
     // UNREGISTER ALL TESTS
     // =========================================================================
 
-    @Test
-    fun `unregisterAll removes all handlers for a key`() {
+    test("unregisterAll removes all handlers for a key") {
         val registry = BackHandlerRegistry()
 
         registry.register(screenKey) { true }
@@ -243,11 +229,10 @@ class BackHandlerRegistryTest {
 
         registry.unregisterAll(screenKey)
 
-        assertFalse(registry.hasHandlers(listOf(screenKey)))
+        registry.hasHandlers(listOf(screenKey)).shouldBeFalse()
     }
 
-    @Test
-    fun `unregisterAll does not affect other keys`() {
+    test("unregisterAll does not affect other keys") {
         val registry = BackHandlerRegistry()
 
         registry.register(screenKey) { true }
@@ -255,12 +240,11 @@ class BackHandlerRegistryTest {
 
         registry.unregisterAll(screenKey)
 
-        assertFalse(registry.hasHandlers(listOf(screenKey)))
-        assertTrue(registry.hasHandlers(listOf(stackKey)))
+        registry.hasHandlers(listOf(screenKey)).shouldBeFalse()
+        registry.hasHandlers(listOf(stackKey)).shouldBeTrue()
     }
 
-    @Test
-    fun `unregisterAll on empty key does not throw`() {
+    test("unregisterAll on empty key does not throw") {
         val registry = BackHandlerRegistry()
         registry.unregisterAll(screenKey) // Should not throw
     }
@@ -269,77 +253,69 @@ class BackHandlerRegistryTest {
     // HAS HANDLERS TESTS
     // =========================================================================
 
-    @Test
-    fun `hasHandlers returns false when empty`() {
+    test("hasHandlers returns false when empty") {
         val registry = BackHandlerRegistry()
-        assertFalse(registry.hasHandlers(defaultPath))
+        registry.hasHandlers(defaultPath).shouldBeFalse()
     }
 
-    @Test
-    fun `hasHandlers returns true after registration`() {
+    test("hasHandlers returns true after registration") {
         val registry = BackHandlerRegistry()
         registry.register(screenKey) { true }
-        assertTrue(registry.hasHandlers(defaultPath))
+        registry.hasHandlers(defaultPath).shouldBeTrue()
     }
 
-    @Test
-    fun `hasHandlers returns true when handler is on ancestor in path`() {
+    test("hasHandlers returns true when handler is on ancestor in path") {
         val registry = BackHandlerRegistry()
         registry.register(tabKey) { true }
-        assertTrue(registry.hasHandlers(defaultPath))
+        registry.hasHandlers(defaultPath).shouldBeTrue()
     }
 
-    @Test
-    fun `hasHandlers returns false when handler is not on path`() {
+    test("hasHandlers returns false when handler is not on path") {
         val registry = BackHandlerRegistry()
         val otherKey = NodeKey("other")
         registry.register(otherKey) { true }
-        assertFalse(registry.hasHandlers(defaultPath))
+        registry.hasHandlers(defaultPath).shouldBeFalse()
     }
 
-    @Test
-    fun `hasHandlers returns false after all handlers unregistered`() {
+    test("hasHandlers returns false after all handlers unregistered") {
         val registry = BackHandlerRegistry()
 
         val unregister1 = registry.register(screenKey) { true }
         val unregister2 = registry.register(screenKey) { false }
 
-        assertTrue(registry.hasHandlers(defaultPath))
+        registry.hasHandlers(defaultPath).shouldBeTrue()
 
         unregister1()
-        assertTrue(registry.hasHandlers(defaultPath)) // Still has handler2
+        registry.hasHandlers(defaultPath).shouldBeTrue() // Still has handler2
 
         unregister2()
-        assertFalse(registry.hasHandlers(defaultPath)) // Now empty
+        registry.hasHandlers(defaultPath).shouldBeFalse() // Now empty
     }
 
     // =========================================================================
     // EDGE CASES
     // =========================================================================
 
-    @Test
-    fun `handleBack can be called multiple times`() {
+    test("handleBack can be called multiple times") {
         val registry = BackHandlerRegistry()
         var callCount = 0
 
         registry.register(screenKey) { callCount++; true }
 
-        assertTrue(registry.handleBack(defaultPath))
-        assertTrue(registry.handleBack(defaultPath))
-        assertTrue(registry.handleBack(defaultPath))
+        registry.handleBack(defaultPath).shouldBeTrue()
+        registry.handleBack(defaultPath).shouldBeTrue()
+        registry.handleBack(defaultPath).shouldBeTrue()
 
-        assertTrue(callCount == 3)
+        callCount shouldBe 3
     }
 
-    @Test
-    fun `handleBack with empty path returns false`() {
+    test("handleBack with empty path returns false") {
         val registry = BackHandlerRegistry()
         registry.register(screenKey) { true }
-        assertFalse(registry.handleBack(emptyList()))
+        registry.handleBack(emptyList()).shouldBeFalse()
     }
 
-    @Test
-    fun `registry handles many handlers correctly`() {
+    test("registry handles many handlers correctly") {
         val registry = BackHandlerRegistry()
         val callOrder = mutableListOf<Int>()
 
@@ -355,11 +331,10 @@ class BackHandlerRegistryTest {
 
         // Handlers 99 down to 50 should be called (LIFO)
         val expectedOrder = (99 downTo 50).toList()
-        assertTrue(callOrder == expectedOrder)
+        callOrder shouldBe expectedOrder
     }
 
-    @Test
-    fun `handler registration during handleBack is safe`() {
+    test("handler registration during handleBack is safe") {
         // This tests that we don't get ConcurrentModificationException
         val registry = BackHandlerRegistry()
         var secondHandlerCalled = false
@@ -377,10 +352,10 @@ class BackHandlerRegistryTest {
 
         // First call won't invoke newly registered handler (already iterating)
         // But the handler should be registered for future calls
-        assertFalse(secondHandlerCalled)
+        secondHandlerCalled.shouldBeFalse()
 
         // Second call should invoke the new handler
         registry.handleBack(defaultPath)
-        assertTrue(secondHandlerCalled)
+        secondHandlerCalled.shouldBeTrue()
     }
-}
+})

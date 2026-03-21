@@ -58,6 +58,19 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Generate coverage report
+        if: always()
+        run: ./gradlew koverXmlReport koverHtmlReport --stacktrace
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/reports/kover/html/
+          if-no-files-found: ignore
+          retention-days: 14
+
   build:
     name: Build (Android + iOS Debug)
     needs: check

@@ -14,12 +14,18 @@ import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.types.shouldBeInstanceOf
+
+private data class PaneContentTestResult(
+    val role: PaneRole,
+    val isVisible: Boolean
+)
 
 /**
  * Tests for pane layout rendering.
@@ -31,23 +37,23 @@ import kotlin.test.assertTrue
  * - Multi-pane layout scenarios
  * - PaneContent building
  */
-class PaneRendererTest {
+class PaneRendererTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object ListDestination : NavDestination {
+    val ListDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object DetailDestination : NavDestination {
+    val DetailDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ExtraDestination : NavDestination {
+    val ExtraDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -56,19 +62,19 @@ class PaneRendererTest {
     // TEST HELPERS
     // =========================================================================
 
-    private fun createScreen(
+    fun createScreen(
         key: String,
         parentKey: String? = null,
         destination: NavDestination = ListDestination
     ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
-    private fun createStack(
+    fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
     ): StackNode = StackNode(NodeKey(key), parentKey?.let { NodeKey(it) }, screens.toList())
 
-    private fun createPanes(
+    fun createPanes(
         key: String,
         parentKey: String? = null,
         configurations: Map<PaneRole, PaneConfiguration>,
@@ -80,7 +86,7 @@ class PaneRendererTest {
      * Simulates buildPaneContentList logic for testing.
      * Determines visibility based on expanded mode and adapt strategy.
      */
-    private fun simulateBuildPaneContentList(
+    fun simulateBuildPaneContentList(
         node: PaneNode,
         isExpanded: Boolean
     ): List<PaneContentTestResult> {
@@ -95,17 +101,11 @@ class PaneRendererTest {
         }
     }
 
-    private data class PaneContentTestResult(
-        val role: PaneRole,
-        val isVisible: Boolean
-    )
-
     // =========================================================================
     // EXPANDED MODE TESTS (Multi-pane visible)
     // =========================================================================
 
-    @Test
-    fun `expanded mode shows all panes without Hide strategy`() {
+    test("expanded mode shows all panes without Hide strategy") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -126,13 +126,12 @@ class PaneRendererTest {
         val contents = simulateBuildPaneContentList(panes, isExpanded = true)
 
         // Then - both panes visible in expanded mode
-        assertEquals(2, contents.size)
-        assertTrue(contents.find { it.role == PaneRole.Primary }!!.isVisible)
-        assertTrue(contents.find { it.role == PaneRole.Supporting }!!.isVisible)
+        contents.size shouldBe 2
+        contents.find { it.role == PaneRole.Primary }!!.isVisible.shouldBeTrue()
+        contents.find { it.role == PaneRole.Supporting }!!.isVisible.shouldBeTrue()
     }
 
-    @Test
-    fun `expanded mode hides panes with Hide strategy`() {
+    test("expanded mode hides panes with Hide strategy") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -153,12 +152,11 @@ class PaneRendererTest {
         val contents = simulateBuildPaneContentList(panes, isExpanded = true)
 
         // Then - Primary visible, Supporting hidden
-        assertTrue(contents.find { it.role == PaneRole.Primary }!!.isVisible)
-        assertFalse(contents.find { it.role == PaneRole.Supporting }!!.isVisible)
+        contents.find { it.role == PaneRole.Primary }!!.isVisible.shouldBeTrue()
+        contents.find { it.role == PaneRole.Supporting }!!.isVisible.shouldBeFalse()
     }
 
-    @Test
-    fun `expanded mode always shows Primary regardless of strategy`() {
+    test("expanded mode always shows Primary regardless of strategy") {
         // Given - Primary with Hide strategy (unusual but valid)
         val panes = createPanes(
             "panes", null,
@@ -175,15 +173,14 @@ class PaneRendererTest {
         val contents = simulateBuildPaneContentList(panes, isExpanded = true)
 
         // Then - Primary is ALWAYS visible in expanded mode
-        assertTrue(contents.find { it.role == PaneRole.Primary }!!.isVisible)
+        contents.find { it.role == PaneRole.Primary }!!.isVisible.shouldBeTrue()
     }
 
     // =========================================================================
     // COMPACT MODE TESTS (Single pane visible)
     // =========================================================================
 
-    @Test
-    fun `compact mode shows only active pane`() {
+    test("compact mode shows only active pane") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -198,12 +195,11 @@ class PaneRendererTest {
         val contents = simulateBuildPaneContentList(panes, isExpanded = false)
 
         // Then - only Supporting visible
-        assertFalse(contents.find { it.role == PaneRole.Primary }!!.isVisible)
-        assertTrue(contents.find { it.role == PaneRole.Supporting }!!.isVisible)
+        contents.find { it.role == PaneRole.Primary }!!.isVisible.shouldBeFalse()
+        contents.find { it.role == PaneRole.Supporting }!!.isVisible.shouldBeTrue()
     }
 
-    @Test
-    fun `compact mode shows Primary when active`() {
+    test("compact mode shows Primary when active") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -218,12 +214,11 @@ class PaneRendererTest {
         val contents = simulateBuildPaneContentList(panes, isExpanded = false)
 
         // Then - only Primary visible
-        assertTrue(contents.find { it.role == PaneRole.Primary }!!.isVisible)
-        assertFalse(contents.find { it.role == PaneRole.Supporting }!!.isVisible)
+        contents.find { it.role == PaneRole.Primary }!!.isVisible.shouldBeTrue()
+        contents.find { it.role == PaneRole.Supporting }!!.isVisible.shouldBeFalse()
     }
 
-    @Test
-    fun `compact mode ignores adapt strategy for visibility`() {
+    test("compact mode ignores adapt strategy for visibility") {
         // Given - Hide strategy shouldn't matter in compact mode
         val panes = createPanes(
             "panes", null,
@@ -244,16 +239,15 @@ class PaneRendererTest {
         val contents = simulateBuildPaneContentList(panes, isExpanded = false)
 
         // Then - only active pane visible, regardless of strategy
-        assertFalse(contents.find { it.role == PaneRole.Primary }!!.isVisible)
-        assertTrue(contents.find { it.role == PaneRole.Supporting }!!.isVisible)
+        contents.find { it.role == PaneRole.Primary }!!.isVisible.shouldBeFalse()
+        contents.find { it.role == PaneRole.Supporting }!!.isVisible.shouldBeTrue()
     }
 
     // =========================================================================
     // PANE SWITCHING TESTS
     // =========================================================================
 
-    @Test
-    fun `pane switching changes active pane role`() {
+    test("pane switching changes active pane role") {
         // Given
         val config = mapOf(
             PaneRole.Primary to PaneConfiguration(createScreen("primary", "panes")),
@@ -264,12 +258,11 @@ class PaneRendererTest {
         val afterSwitch = createPanes("panes", null, config, activeRole = PaneRole.Supporting)
 
         // Then
-        assertEquals(PaneRole.Primary, beforeSwitch.activePaneRole)
-        assertEquals(PaneRole.Supporting, afterSwitch.activePaneRole)
+        beforeSwitch.activePaneRole shouldBe PaneRole.Primary
+        afterSwitch.activePaneRole shouldBe PaneRole.Supporting
     }
 
-    @Test
-    fun `pane switching preserves content in both panes`() {
+    test("pane switching preserves content in both panes") {
         // Given
         val primaryContent = createScreen("primary", "panes")
         val supportingContent = createScreen("supporting", "panes")
@@ -284,16 +277,15 @@ class PaneRendererTest {
         )
 
         // Then
-        assertEquals(primaryContent, panes.paneContent(PaneRole.Primary))
-        assertEquals(supportingContent, panes.paneContent(PaneRole.Supporting))
+        panes.paneContent(PaneRole.Primary) shouldBe primaryContent
+        panes.paneContent(PaneRole.Supporting) shouldBe supportingContent
     }
 
     // =========================================================================
     // PANE CONFIGURATION TESTS
     // =========================================================================
 
-    @Test
-    fun `pane returns correct adapt strategy per role`() {
+    test("pane returns correct adapt strategy per role") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -315,13 +307,12 @@ class PaneRendererTest {
         )
 
         // Then
-        assertEquals(AdaptStrategy.Hide, panes.adaptStrategy(PaneRole.Primary))
-        assertEquals(AdaptStrategy.Levitate, panes.adaptStrategy(PaneRole.Supporting))
-        assertEquals(AdaptStrategy.Reflow, panes.adaptStrategy(PaneRole.Extra))
+        panes.adaptStrategy(PaneRole.Primary) shouldBe AdaptStrategy.Hide
+        panes.adaptStrategy(PaneRole.Supporting) shouldBe AdaptStrategy.Levitate
+        panes.adaptStrategy(PaneRole.Extra) shouldBe AdaptStrategy.Reflow
     }
 
-    @Test
-    fun `pane returns null adapt strategy for unconfigured role`() {
+    test("pane returns null adapt strategy for unconfigured role") {
         // Given - only Primary configured
         val panes = createPanes(
             "panes", null,
@@ -332,13 +323,12 @@ class PaneRendererTest {
         )
 
         // Then
-        assertNotNull(panes.adaptStrategy(PaneRole.Primary))
-        assertNull(panes.adaptStrategy(PaneRole.Supporting))
-        assertNull(panes.adaptStrategy(PaneRole.Extra))
+        panes.adaptStrategy(PaneRole.Primary).shouldNotBeNull()
+        panes.adaptStrategy(PaneRole.Supporting).shouldBeNull()
+        panes.adaptStrategy(PaneRole.Extra).shouldBeNull()
     }
 
-    @Test
-    fun `pane configured roles returns all configured roles`() {
+    test("pane configured roles returns all configured roles") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -350,16 +340,15 @@ class PaneRendererTest {
         )
 
         // Then
-        assertEquals(setOf(PaneRole.Primary, PaneRole.Supporting), panes.configuredRoles)
-        assertEquals(2, panes.paneCount)
+        panes.configuredRoles shouldBe setOf(PaneRole.Primary, PaneRole.Supporting)
+        panes.paneCount shouldBe 2
     }
 
     // =========================================================================
     // PANE BACK BEHAVIOR TESTS
     // =========================================================================
 
-    @Test
-    fun `pane has default back behavior`() {
+    test("pane has default back behavior") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -370,11 +359,10 @@ class PaneRendererTest {
         )
 
         // Then
-        assertEquals(PaneBackBehavior.PopUntilScaffoldValueChange, panes.backBehavior)
+        panes.backBehavior shouldBe PaneBackBehavior.PopUntilScaffoldValueChange
     }
 
-    @Test
-    fun `pane supports custom back behavior`() {
+    test("pane supports custom back behavior") {
         // Given
         val popLatestPanes = createPanes(
             "panes", null,
@@ -395,42 +383,36 @@ class PaneRendererTest {
         )
 
         // Then
-        assertEquals(PaneBackBehavior.PopLatest, popLatestPanes.backBehavior)
-        assertEquals(
-            PaneBackBehavior.PopUntilCurrentDestinationChange,
-            popDestinationPanes.backBehavior
-        )
+        popLatestPanes.backBehavior shouldBe PaneBackBehavior.PopLatest
+        popDestinationPanes.backBehavior shouldBe PaneBackBehavior.PopUntilCurrentDestinationChange
     }
 
     // =========================================================================
     // PANE WRAPPER TESTS
     // =========================================================================
 
-    @Test
-    fun `FakeNavRenderScope container registry has no pane wrapper by default`() {
+    test("FakeNavRenderScope container registry has no pane wrapper by default") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertFalse(scope.containerRegistry.hasPaneContainer("any-key"))
-        assertFalse(scope.containerRegistry.hasPaneContainer("panes"))
+        scope.containerRegistry.hasPaneContainer("any-key").shouldBeFalse()
+        scope.containerRegistry.hasPaneContainer("panes").shouldBeFalse()
     }
 
-    @Test
-    fun `container registry is empty by default`() {
+    test("container registry is empty by default") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertEquals(ContainerRegistry.Empty, scope.containerRegistry)
+        scope.containerRegistry shouldBe ContainerRegistry.Empty
     }
 
     // =========================================================================
     // THREE-PANE LAYOUT TESTS
     // =========================================================================
 
-    @Test
-    fun `three pane layout has correct pane count`() {
+    test("three pane layout has correct pane count") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -443,15 +425,11 @@ class PaneRendererTest {
         )
 
         // Then
-        assertEquals(3, panes.paneCount)
-        assertEquals(
-            setOf(PaneRole.Primary, PaneRole.Supporting, PaneRole.Extra),
-            panes.configuredRoles
-        )
+        panes.paneCount shouldBe 3
+        panes.configuredRoles shouldBe setOf(PaneRole.Primary, PaneRole.Supporting, PaneRole.Extra)
     }
 
-    @Test
-    fun `three pane expanded mode visibility`() {
+    test("three pane expanded mode visibility") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -476,17 +454,16 @@ class PaneRendererTest {
         val contents = simulateBuildPaneContentList(panes, isExpanded = true)
 
         // Then
-        assertTrue(contents.find { it.role == PaneRole.Primary }!!.isVisible)
-        assertFalse(contents.find { it.role == PaneRole.Supporting }!!.isVisible) // Hide strategy
-        assertTrue(contents.find { it.role == PaneRole.Extra }!!.isVisible)
+        contents.find { it.role == PaneRole.Primary }!!.isVisible.shouldBeTrue()
+        contents.find { it.role == PaneRole.Supporting }!!.isVisible.shouldBeFalse() // Hide strategy
+        contents.find { it.role == PaneRole.Extra }!!.isVisible.shouldBeTrue()
     }
 
     // =========================================================================
     // PANE WITH NESTED STACK TESTS
     // =========================================================================
 
-    @Test
-    fun `pane can contain stack as content`() {
+    test("pane can contain stack as content") {
         // Given
         val listStack = createStack(
             "list-stack", "panes",
@@ -504,12 +481,11 @@ class PaneRendererTest {
 
         // Then
         val primaryContent = panes.paneContent(PaneRole.Primary)
-        assertTrue(primaryContent is StackNode)
-        assertEquals(2, primaryContent.children.size)
+        primaryContent.shouldBeInstanceOf<StackNode>()
+        primaryContent.children.size shouldBe 2
     }
 
-    @Test
-    fun `pane nested stack maintains navigation state`() {
+    test("pane nested stack maintains navigation state") {
         // Given
         val listStack = createStack(
             "list-stack", "panes",
@@ -533,16 +509,15 @@ class PaneRendererTest {
 
         // Then - list stack maintains its navigation history
         val listContent = panes.paneContent(PaneRole.Primary) as StackNode
-        assertEquals(3, listContent.children.size)
-        assertTrue(listContent.canGoBack)
+        listContent.children.size shouldBe 3
+        listContent.canGoBack.shouldBeTrue()
     }
 
     // =========================================================================
     // PANE ACTIVE CONTENT TESTS
     // =========================================================================
 
-    @Test
-    fun `activePaneContent returns content of active pane`() {
+    test("activePaneContent returns content of active pane") {
         // Given
         val primaryContent = createScreen("primary-screen", "panes")
         val supportingContent = createScreen("supporting-screen", "panes")
@@ -557,11 +532,10 @@ class PaneRendererTest {
         )
 
         // Then
-        assertEquals(supportingContent, panes.activePaneContent)
+        panes.activePaneContent shouldBe supportingContent
     }
 
-    @Test
-    fun `paneContent returns correct content for each role`() {
+    test("paneContent returns correct content for each role") {
         // Given
         val primaryContent = createScreen("primary", "panes")
         val supportingContent = createScreen("supporting", "panes")
@@ -578,13 +552,12 @@ class PaneRendererTest {
         )
 
         // Then
-        assertEquals(primaryContent, panes.paneContent(PaneRole.Primary))
-        assertEquals(supportingContent, panes.paneContent(PaneRole.Supporting))
-        assertEquals(extraContent, panes.paneContent(PaneRole.Extra))
+        panes.paneContent(PaneRole.Primary) shouldBe primaryContent
+        panes.paneContent(PaneRole.Supporting) shouldBe supportingContent
+        panes.paneContent(PaneRole.Extra) shouldBe extraContent
     }
 
-    @Test
-    fun `paneContent returns null for unconfigured role`() {
+    test("paneContent returns null for unconfigured role") {
         // Given
         val panes = createPanes(
             "panes", null,
@@ -595,7 +568,7 @@ class PaneRendererTest {
         )
 
         // Then
-        assertNull(panes.paneContent(PaneRole.Supporting))
-        assertNull(panes.paneContent(PaneRole.Extra))
+        panes.paneContent(PaneRole.Supporting).shouldBeNull()
+        panes.paneContent(PaneRole.Extra).shouldBeNull()
     }
-}
+})

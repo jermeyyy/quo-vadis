@@ -8,26 +8,27 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.BackHandlerRegistry
 import kotlinx.coroutines.Dispatchers
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
 
 @OptIn(InternalQuoVadisApi::class)
-class TreeNavigatorBackHandlerTest {
+class TreeNavigatorBackHandlerTest : FunSpec({
 
     // Test destinations
-    private object HomeDestination : NavDestination {
+    val HomeDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object DetailDestination : NavDestination {
+    val DetailDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private fun createNavigatorWithRegistry(): Pair<TreeNavigator, BackHandlerRegistry> {
+    fun createNavigatorWithRegistry(): Pair<TreeNavigator, BackHandlerRegistry> {
         val rootStackKey = NodeKey("root-stack")
         val homeScreen = ScreenNode(
             destination = HomeDestination,
@@ -55,8 +56,7 @@ class TreeNavigatorBackHandlerTest {
     // navigateBack() BYPASSES REGISTRY
     // =========================================================================
 
-    @Test
-    fun `navigateBack does not trigger registered back handler`() {
+    test("navigateBack does not trigger registered back handler") {
         val (navigator, registry) = createNavigatorWithRegistry()
         var handlerCalled = false
 
@@ -64,12 +64,11 @@ class TreeNavigatorBackHandlerTest {
 
         val result = navigator.navigateBack()
 
-        assertTrue(result, "navigateBack should succeed (pop detail)")
-        assertFalse(handlerCalled, "navigateBack should NOT consult registry")
+        result.shouldBeTrue()
+        handlerCalled.shouldBeFalse()
     }
 
-    @Test
-    fun `navigateBack pops stack even when handler would consume`() {
+    test("navigateBack pops stack even when handler would consume") {
         val (navigator, registry) = createNavigatorWithRegistry()
 
         registry.register(NodeKey("detail")) { true } // Would consume if consulted
@@ -79,15 +78,14 @@ class TreeNavigatorBackHandlerTest {
         val stateAfter = navigator.state.value
 
         // State should have changed (detail popped)
-        assertTrue(stateBefore != stateAfter, "State should change after navigateBack")
+        stateAfter shouldNotBe stateBefore
     }
 
     // =========================================================================
     // onBack() CONSULTS REGISTRY
     // =========================================================================
 
-    @Test
-    fun `onBack triggers registered back handler`() {
+    test("onBack triggers registered back handler") {
         val (navigator, registry) = createNavigatorWithRegistry()
         var handlerCalled = false
 
@@ -98,12 +96,11 @@ class TreeNavigatorBackHandlerTest {
 
         val result = navigator.onBack()
 
-        assertTrue(result, "onBack should return true (handler consumed)")
-        assertTrue(handlerCalled, "onBack SHOULD consult registry")
+        result.shouldBeTrue()
+        handlerCalled.shouldBeTrue()
     }
 
-    @Test
-    fun `onBack does not pop when handler consumes event`() {
+    test("onBack does not pop when handler consumes event") {
         val (navigator, registry) = createNavigatorWithRegistry()
 
         registry.register(NodeKey("detail")) { true } // Consumes
@@ -112,11 +109,10 @@ class TreeNavigatorBackHandlerTest {
         navigator.onBack()
         val stateAfter = navigator.state.value
 
-        assertEquals(stateBefore, stateAfter, "State should NOT change when handler consumes")
+        stateAfter shouldBe stateBefore
     }
 
-    @Test
-    fun `onBack falls through to tree pop when handler returns false`() {
+    test("onBack falls through to tree pop when handler returns false") {
         val (navigator, registry) = createNavigatorWithRegistry()
         var handlerCalled = false
 
@@ -129,13 +125,12 @@ class TreeNavigatorBackHandlerTest {
         val result = navigator.onBack()
         val stateAfter = navigator.state.value
 
-        assertTrue(result, "onBack should succeed (tree pop)")
-        assertTrue(handlerCalled, "Handler should be called")
-        assertTrue(stateBefore != stateAfter, "State should change (tree pop happened)")
+        result.shouldBeTrue()
+        handlerCalled.shouldBeTrue()
+        stateAfter shouldNotBe stateBefore
     }
 
-    @Test
-    fun `onBack stops propagation when handler returns true`() {
+    test("onBack stops propagation when handler returns true") {
         val (navigator, registry) = createNavigatorWithRegistry()
         var handler1Called = false
         var handler2Called = false
@@ -153,16 +148,15 @@ class TreeNavigatorBackHandlerTest {
 
         navigator.onBack()
 
-        assertTrue(handler1Called, "Leaf handler should be called")
-        assertFalse(handler2Called, "Parent handler should NOT be called when leaf consumes")
+        handler1Called.shouldBeTrue()
+        handler2Called.shouldBeFalse()
     }
 
     // =========================================================================
     // NO REGISTRY SET
     // =========================================================================
 
-    @Test
-    fun `onBack without registry falls through to tree pop`() {
+    test("onBack without registry falls through to tree pop") {
         val rootStackKey = NodeKey("root-stack")
         val homeScreen = ScreenNode(
             destination = HomeDestination,
@@ -185,6 +179,6 @@ class TreeNavigatorBackHandlerTest {
 
         val result = navigator.onBack()
 
-        assertTrue(result, "onBack should succeed via tree pop when no registry")
+        result.shouldBeTrue()
     }
-}
+})

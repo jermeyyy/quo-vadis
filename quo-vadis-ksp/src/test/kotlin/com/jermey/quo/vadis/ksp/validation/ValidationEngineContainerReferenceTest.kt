@@ -8,9 +8,11 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
 import com.jermey.quo.vadis.ksp.testutil.FakeKSClassDeclaration
 import com.jermey.quo.vadis.ksp.testutil.FakeKSPLogger
 import com.jermey.quo.vadis.ksp.testutil.fakeResolver
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldNotBeEmpty
 
 /**
  * Tests for [ValidationEngine] container reference validation (Phases 1-4 of Issue #41).
@@ -20,15 +22,15 @@ import kotlin.test.assertTrue
  * - validateTabNestingDepth: warning when nesting exceeds 3 levels
  * - validateTabItemAnnotations: annotation combination checks for tab items
  */
-class ValidationEngineContainerReferenceTest {
+class ValidationEngineContainerReferenceTest : FunSpec({
 
-    private val logger = FakeKSPLogger()
-    private val engine = ValidationEngine(logger)
-    private val resolver = fakeResolver()
+    val logger = FakeKSPLogger()
+    val engine = ValidationEngine(logger)
+    val resolver = fakeResolver()
 
     // -- Helpers --
 
-    private fun sealedClassDecl(
+    fun sealedClassDecl(
         name: String,
         pkg: String = "com.example",
         classKind: ClassKind = ClassKind.CLASS,
@@ -43,7 +45,7 @@ class ValidationEngineContainerReferenceTest {
         annotationNames = annotations,
     )
 
-    private fun tabItemDecl(
+    fun tabItemDecl(
         name: String,
         pkg: String = "com.example",
         classKind: ClassKind = ClassKind.CLASS,
@@ -61,7 +63,7 @@ class ValidationEngineContainerReferenceTest {
     /**
      * Creates a [TabInfo] for the sealed container with the given items.
      */
-    private fun tabInfo(
+    fun tabInfo(
         name: String = "TestTabs",
         items: List<TabItemInfo>,
     ): TabInfo {
@@ -75,7 +77,7 @@ class ValidationEngineContainerReferenceTest {
         )
     }
 
-    private fun validate(tabs: List<TabInfo>): Boolean {
+    fun validate(tabs: List<TabInfo>): Boolean {
         logger.errors.clear()
         logger.warnings.clear()
         return engine.validate(
@@ -91,8 +93,7 @@ class ValidationEngineContainerReferenceTest {
     // validateTabItemAnnotations — annotation combination checks
     // =========================================================================
 
-    @Test
-    fun `TabItem without Stack or Tabs or Destination produces error`() {
+    test("TabItem without Stack or Tabs or Destination produces error") {
         // With tabType-based validation, the validator trusts the extractor-determined type.
         // Conflict/missing annotation detection is now handled in TabExtractor.detectTabItemType().
         // A TabItemInfo that reaches the validator always has a valid tabType.
@@ -103,11 +104,10 @@ class ValidationEngineContainerReferenceTest {
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
-        assertTrue(result, "Validation should pass since tabType is set; annotation checks are in extractor")
+        result.shouldBeTrue()
     }
 
-    @Test
-    fun `TabItem with Tabs annotation is accepted as valid`() {
+    test("TabItem with Tabs annotation is accepted as valid") {
         val item = TabItemInfo(
             classDeclaration = tabItemDecl("SubTabs", annotations = listOf("Tabs", "TabItem")),
             tabType = TabItemType.TABS,
@@ -115,11 +115,10 @@ class ValidationEngineContainerReferenceTest {
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
-        assertTrue(result, "Validation should pass for @TabItem + @Tabs, errors: ${logger.errors}")
+        result.shouldBeTrue()
     }
 
-    @Test
-    fun `TabItem with Stack annotation is accepted as STACK`() {
+    test("TabItem with Stack annotation is accepted as STACK") {
         val item = TabItemInfo(
             classDeclaration = tabItemDecl("FeatureStack", annotations = listOf("Stack", "TabItem")),
             tabType = TabItemType.STACK,
@@ -127,15 +126,14 @@ class ValidationEngineContainerReferenceTest {
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
-        assertTrue(result, "Validation should pass for @TabItem + @Stack, errors: ${logger.errors}")
+        result.shouldBeTrue()
     }
 
     // =========================================================================
     // validateCircularTabNesting — cycle detection
     // =========================================================================
 
-    @Test
-    fun `circular nesting A to B to A produces error`() {
+    test("circular nesting A to B to A produces error") {
         // A references B, B references A
         val declA = sealedClassDecl("TabsA", annotations = listOf("Tabs"))
         val declB = sealedClassDecl("TabsB", annotations = listOf("Tabs"))
@@ -169,15 +167,11 @@ class ValidationEngineContainerReferenceTest {
 
         val result = validate(listOf(tabA, tabB))
 
-        assertFalse(result, "Validation should fail for circular A→B→A")
-        assertTrue(
-            logger.errors.any { it.contains("Circular tab nesting detected") },
-            "Expected circular nesting error, got: ${logger.errors}"
-        )
+        result.shouldBeFalse()
+        logger.errors.any { it.contains("Circular tab nesting detected") }.shouldBeTrue()
     }
 
-    @Test
-    fun `circular nesting A to B to C to A produces error`() {
+    test("circular nesting A to B to C to A produces error") {
         val declA = sealedClassDecl("TabsA", annotations = listOf("Tabs"))
         val declB = sealedClassDecl("TabsB", annotations = listOf("Tabs"))
         val declC = sealedClassDecl("TabsC", annotations = listOf("Tabs"))
@@ -212,15 +206,11 @@ class ValidationEngineContainerReferenceTest {
 
         val result = validate(listOf(tabA, tabB, tabC))
 
-        assertFalse(result, "Validation should fail for circular A→B→C→A")
-        assertTrue(
-            logger.errors.any { it.contains("Circular tab nesting detected") },
-            "Expected circular nesting error, got: ${logger.errors}"
-        )
+        result.shouldBeFalse()
+        logger.errors.any { it.contains("Circular tab nesting detected") }.shouldBeTrue()
     }
 
-    @Test
-    fun `non-circular nesting A to B to C passes`() {
+    test("non-circular nesting A to B to C passes") {
         val declA = sealedClassDecl("TabsA", annotations = listOf("Tabs"))
         val declB = sealedClassDecl("TabsB", annotations = listOf("Tabs"))
         val declC = sealedClassDecl("TabsC", annotations = listOf("Tabs"))
@@ -266,19 +256,14 @@ class ValidationEngineContainerReferenceTest {
 
         val result = validate(listOf(tabA, tabB, tabC))
 
-        val circularErrors = logger.errors.filter { it.contains("Circular tab nesting") }
-        assertTrue(
-            circularErrors.isEmpty(),
-            "Should have no circular nesting errors, got: $circularErrors"
-        )
+        logger.errors.filter { it.contains("Circular tab nesting") }.shouldBeEmpty()
     }
 
     // =========================================================================
     // validateTabNestingDepth — depth warning at > 3 levels
     // =========================================================================
 
-    @Test
-    fun `nesting depth of 3 or less produces no warning`() {
+    test("nesting depth of 3 or less produces no warning") {
         // A→B→C (depth 3), no warning expected
         val declA = sealedClassDecl("TabsA", annotations = listOf("Tabs"))
         val declB = sealedClassDecl("TabsB", annotations = listOf("Tabs"))
@@ -323,15 +308,10 @@ class ValidationEngineContainerReferenceTest {
 
         val result = validate(listOf(tabA, tabB, tabC))
 
-        val depthWarnings = logger.warnings.filter { it.contains("nesting depth exceeds") }
-        assertTrue(
-            depthWarnings.isEmpty(),
-            "Should not warn for depth ≤ 3, got: $depthWarnings"
-        )
+        logger.warnings.filter { it.contains("nesting depth exceeds") }.shouldBeEmpty()
     }
 
-    @Test
-    fun `nesting depth greater than 3 produces warning`() {
+    test("nesting depth greater than 3 produces warning") {
         // A→B→C→D (depth 4), warning expected on A
         val declA = sealedClassDecl("TabsA", annotations = listOf("Tabs"))
         val declB = sealedClassDecl("TabsB", annotations = listOf("Tabs"))
@@ -386,15 +366,10 @@ class ValidationEngineContainerReferenceTest {
 
         val result = validate(listOf(tabA, tabB, tabC, tabD))
 
-        val depthWarnings = logger.warnings.filter { it.contains("nesting depth exceeds") }
-        assertTrue(
-            depthWarnings.isNotEmpty(),
-            "Expected depth warning for 4 levels of nesting, warnings: ${logger.warnings}"
-        )
+        logger.warnings.filter { it.contains("nesting depth exceeds") }.shouldNotBeEmpty()
     }
 
-    @Test
-    fun `single tab container has depth 1 and no warning`() {
+    test("single tab container has depth 1 and no warning") {
         val flatItem = TabItemInfo(
             classDeclaration = tabItemDecl(
                 "HomeTab",
@@ -408,10 +383,6 @@ class ValidationEngineContainerReferenceTest {
 
         val result = validate(listOf(tabInfo(items = listOf(flatItem))))
 
-        val depthWarnings = logger.warnings.filter { it.contains("nesting depth exceeds") }
-        assertTrue(
-            depthWarnings.isEmpty(),
-            "Single tab should not produce depth warning, got: $depthWarnings"
-        )
+        logger.warnings.filter { it.contains("nesting depth exceeds") }.shouldBeEmpty()
     }
-}
+})

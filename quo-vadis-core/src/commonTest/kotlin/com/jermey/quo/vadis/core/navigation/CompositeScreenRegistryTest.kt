@@ -9,9 +9,9 @@ import com.jermey.quo.vadis.core.registry.internal.CompositeScreenRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
 
 /**
  * Tests for [com.jermey.quo.vadis.core.dsl.registry.CompositeScreenRegistry].
@@ -22,28 +22,28 @@ import kotlin.test.assertTrue
  * - Content() delegates to the appropriate registry
  * - Content() throws appropriate error when neither has the destination
  */
-class CompositeScreenRegistryTest {
+class CompositeScreenRegistryTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private data object PrimaryDestination : NavDestination {
+    val PrimaryDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private data object SecondaryDestination : NavDestination {
+    val SecondaryDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private data object SharedDestination : NavDestination {
+    val SharedDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private data object UnknownDestination : NavDestination {
+    val UnknownDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -55,7 +55,7 @@ class CompositeScreenRegistryTest {
     /**
      * Creates a test ScreenRegistry that tracks which destinations it has rendered.
      */
-    private fun createTestRegistry(
+    fun createTestRegistry(
         destinations: Set<NavDestination>,
         renderedTracker: MutableList<String>
     ): ScreenRegistry = object : ScreenRegistry {
@@ -81,8 +81,7 @@ class CompositeScreenRegistryTest {
     // PRIORITY TESTS
     // =========================================================================
 
-    @Test
-    fun `hasContent returns true when secondary has destination`() {
+    test("hasContent returns true when secondary has destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -91,11 +90,10 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        assertTrue(composite.hasContent(SecondaryDestination))
+        composite.hasContent(SecondaryDestination).shouldBeTrue()
     }
 
-    @Test
-    fun `hasContent returns true when primary has destination`() {
+    test("hasContent returns true when primary has destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -104,11 +102,10 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        assertTrue(composite.hasContent(PrimaryDestination))
+        composite.hasContent(PrimaryDestination).shouldBeTrue()
     }
 
-    @Test
-    fun `hasContent returns false when neither has destination`() {
+    test("hasContent returns false when neither has destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -117,11 +114,10 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        assertFalse(composite.hasContent(UnknownDestination))
+        composite.hasContent(UnknownDestination).shouldBeFalse()
     }
 
-    @Test
-    fun `hasContent returns true when both have destination`() {
+    test("hasContent returns true when both have destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -132,15 +128,14 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        assertTrue(composite.hasContent(SharedDestination))
+        composite.hasContent(SharedDestination).shouldBeTrue()
     }
 
     // =========================================================================
     // CONTENT DELEGATION TESTS
     // =========================================================================
 
-    @Test
-    fun `Content delegates to secondary when secondary has destination`() {
+    test("Content delegates to secondary when secondary has destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -150,13 +145,12 @@ class CompositeScreenRegistryTest {
         val composite = CompositeScreenRegistry(primary, secondary)
 
         // Verify secondary destination is found (delegation tested implicitly)
-        assertTrue(composite.hasContent(SecondaryDestination))
-        assertTrue(secondary.hasContent(SecondaryDestination))
-        assertFalse(primary.hasContent(SecondaryDestination))
+        composite.hasContent(SecondaryDestination).shouldBeTrue()
+        secondary.hasContent(SecondaryDestination).shouldBeTrue()
+        primary.hasContent(SecondaryDestination).shouldBeFalse()
     }
 
-    @Test
-    fun `Content delegates to primary when only primary has destination`() {
+    test("Content delegates to primary when only primary has destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -166,13 +160,12 @@ class CompositeScreenRegistryTest {
         val composite = CompositeScreenRegistry(primary, secondary)
 
         // Verify primary destination is found (delegation tested implicitly)
-        assertTrue(composite.hasContent(PrimaryDestination))
-        assertTrue(primary.hasContent(PrimaryDestination))
-        assertFalse(secondary.hasContent(PrimaryDestination))
+        composite.hasContent(PrimaryDestination).shouldBeTrue()
+        primary.hasContent(PrimaryDestination).shouldBeTrue()
+        secondary.hasContent(PrimaryDestination).shouldBeFalse()
     }
 
-    @Test
-    fun `Content delegates to secondary when both have destination - secondary priority`() {
+    test("Content delegates to secondary when both have destination - secondary priority") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -185,16 +178,15 @@ class CompositeScreenRegistryTest {
 
         // When both have the destination, secondary should have priority
         // We verify this by checking hasContent returns true
-        assertTrue(composite.hasContent(SharedDestination))
-        assertTrue(secondary.hasContent(SharedDestination))
+        composite.hasContent(SharedDestination).shouldBeTrue()
+        secondary.hasContent(SharedDestination).shouldBeTrue()
     }
 
     // =========================================================================
     // ERROR HANDLING TESTS
     // =========================================================================
 
-    @Test
-    fun `hasContent returns false for unknown destination`() {
+    test("hasContent returns false for unknown destination") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -203,15 +195,14 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        assertFalse(composite.hasContent(UnknownDestination))
+        composite.hasContent(UnknownDestination).shouldBeFalse()
     }
 
     // =========================================================================
     // EMPTY REGISTRY TESTS
     // =========================================================================
 
-    @Test
-    fun `hasContent returns false when both registries are empty`() {
+    test("hasContent returns false when both registries are empty") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -220,13 +211,12 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        assertFalse(composite.hasContent(PrimaryDestination))
-        assertFalse(composite.hasContent(SecondaryDestination))
-        assertFalse(composite.hasContent(UnknownDestination))
+        composite.hasContent(PrimaryDestination).shouldBeFalse()
+        composite.hasContent(SecondaryDestination).shouldBeFalse()
+        composite.hasContent(UnknownDestination).shouldBeFalse()
     }
 
-    @Test
-    fun `hasContent works when primary is empty`() {
+    test("hasContent works when primary is empty") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -235,12 +225,11 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        assertTrue(composite.hasContent(SecondaryDestination))
-        assertFalse(composite.hasContent(PrimaryDestination))
+        composite.hasContent(SecondaryDestination).shouldBeTrue()
+        composite.hasContent(PrimaryDestination).shouldBeFalse()
     }
 
-    @Test
-    fun `hasContent works when secondary is empty`() {
+    test("hasContent works when secondary is empty") {
         val primaryTracker = mutableListOf<String>()
         val secondaryTracker = mutableListOf<String>()
 
@@ -249,16 +238,15 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        assertTrue(composite.hasContent(PrimaryDestination))
-        assertFalse(composite.hasContent(SecondaryDestination))
+        composite.hasContent(PrimaryDestination).shouldBeTrue()
+        composite.hasContent(SecondaryDestination).shouldBeFalse()
     }
 
     // =========================================================================
     // MULTIPLE DESTINATIONS TESTS
     // =========================================================================
 
-    @Test
-    fun `hasContent works correctly with multiple destinations in each registry`() {
+    test("hasContent works correctly with multiple destinations in each registry") {
         val dest1 = object : NavDestination {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -284,10 +272,10 @@ class CompositeScreenRegistryTest {
 
         val composite = CompositeScreenRegistry(primary, secondary)
 
-        assertTrue(composite.hasContent(dest1))
-        assertTrue(composite.hasContent(dest2))
-        assertTrue(composite.hasContent(dest3))
-        assertTrue(composite.hasContent(dest4))
-        assertFalse(composite.hasContent(UnknownDestination))
+        composite.hasContent(dest1).shouldBeTrue()
+        composite.hasContent(dest2).shouldBeTrue()
+        composite.hasContent(dest3).shouldBeTrue()
+        composite.hasContent(dest4).shouldBeTrue()
+        composite.hasContent(UnknownDestination).shouldBeFalse()
     }
-}
+})

@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.android.lint) apply false
     alias(libs.plugins.detekt)
     alias(libs.plugins.dokka)
+    alias(libs.plugins.kover)
     alias(libs.plugins.maven.publish) apply false
 }
 
@@ -35,6 +36,13 @@ dependencies {
     dokka(projects.quoVadisCore)
     dokka(projects.quoVadisAnnotations)
     dokka(projects.quoVadisKsp)
+}
+
+// Kover merged coverage reporting
+dependencies {
+    kover(projects.quoVadisCore)
+    kover(projects.quoVadisKsp)
+    kover(projects.quoVadisCoreFlowMvi)
 }
 
 allprojects {
@@ -64,5 +72,38 @@ allprojects {
                 }
             }
         }
+    }
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "*.generated.*",
+                    "*.BuildConfig",
+                    "*.Companion",
+                    "*Test*",
+                    "*Fake*",
+                )
+                annotatedBy("androidx.compose.runtime.Composable")
+            }
+        }
+        total {
+            xml {
+                onCheck = false
+                xmlFile = layout.buildDirectory.file("reports/kover/report.xml")
+            }
+            html {
+                onCheck = false
+                htmlDir = layout.buildDirectory.dir("reports/kover/html")
+            }
+        }
+        // Verification rules — uncomment when ready to enforce thresholds
+        // verify {
+        //     rule {
+        //         minBound(50) // Minimum 50% line coverage
+        //     }
+        // }
     }
 }

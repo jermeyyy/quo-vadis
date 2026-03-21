@@ -12,10 +12,13 @@ import com.jermey.quo.vadis.core.navigation.node.activeStack
 import com.jermey.quo.vadis.core.navigation.node.allScreens
 import com.jermey.quo.vadis.core.navigation.node.nodeCount
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
-import kotlin.test.fail
+import io.kotest.assertions.fail
+import io.kotest.assertions.withClue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
 
 /**
@@ -131,42 +134,47 @@ class NavigationTestScope(val navigator: TreeNavigator) {
      */
     inline fun <reified D : NavDestination> assertCurrentDestination(): D {
         val current = navigator.currentDestination.value
-        assertTrue(
-            current is D,
+        return withClue(
             "Expected current destination to be ${D::class.simpleName}, " +
                 "but was ${current?.let { it::class.simpleName } ?: "null"}"
-        )
-        @Suppress("UNCHECKED_CAST")
-        return current
+        ) {
+            current.shouldBeInstanceOf<D>()
+        }
     }
 
     /**
      * Assert the number of children in the deepest active [StackNode].
      */
     fun assertBackStackSize(expectedSize: Int) {
-        val activeStack = assertNotNull(navigator.state.value.activeStack(), "No active stack found")
-        assertEquals(expectedSize, activeStack.size, "Back stack size mismatch")
+        val activeStack = withClue("No active stack found") {
+            navigator.state.value.activeStack().shouldNotBeNull()
+        }
+        withClue("Back stack size mismatch") { activeStack.size shouldBe expectedSize }
     }
 
     /**
      * Assert that backward navigation is possible.
      */
     fun assertCanNavigateBack() {
-        assertTrue(navigator.canNavigateBack.value, "Expected to be able to navigate back, but cannot")
+        withClue("Expected to be able to navigate back, but cannot") {
+            navigator.canNavigateBack.value.shouldBeTrue()
+        }
     }
 
     /**
      * Assert that backward navigation is **not** possible.
      */
     fun assertCannotNavigateBack() {
-        assertFalse(navigator.canNavigateBack.value, "Expected not to be able to navigate back, but can")
+        withClue("Expected not to be able to navigate back, but can") {
+            navigator.canNavigateBack.value.shouldBeFalse()
+        }
     }
 
     /**
      * Assert the total number of nodes in the navigation tree.
      */
     fun assertNodeCount(expectedCount: Int) {
-        assertEquals(expectedCount, navigator.state.value.nodeCount(), "Node count mismatch")
+        withClue("Node count mismatch") { navigator.state.value.nodeCount() shouldBe expectedCount }
     }
 
     /**
@@ -175,11 +183,12 @@ class NavigationTestScope(val navigator: TreeNavigator) {
     inline fun <reified D : NavDestination> assertDestinationInBackStack() {
         val screens = navigator.state.value.allScreens()
         val found = screens.any { it.destination is D }
-        assertTrue(
-            found,
+        withClue(
             "Expected ${D::class.simpleName} in back stack, but it was not found. " +
                 "Destinations present: ${screens.map { it.destination::class.simpleName }}"
-        )
+        ) {
+            found.shouldBeTrue()
+        }
     }
 }
 
@@ -247,14 +256,4 @@ fun navigationTest(
     NavigationTestScope(navigator).block()
 }
 
-// =============================================================================
-// PRIVATE HELPERS
-// =============================================================================
 
-/**
- * Inline assertNotNull that returns a non-null value for chaining.
- */
-private fun <T : Any> assertNotNull(value: T?, message: String): T {
-    kotlin.test.assertNotNull(value, message)
-    return value
-}

@@ -12,11 +12,25 @@ import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldNotBeNull
+
+/**
+ * Recursively finds the first ScreenNode's destination in a node tree.
+ * This mirrors the implementation in TabRenderer.
+ */
+private fun findFirstScreenDestination(node: NavNode): NavDestination? {
+    return when (node) {
+        is ScreenNode -> node.destination
+        is StackNode -> node.children.firstOrNull()?.let { findFirstScreenDestination(it) }
+        is TabNode -> node.stacks.firstOrNull()?.let { findFirstScreenDestination(it) }
+        is com.jermey.quo.vadis.core.navigation.node.PaneNode ->
+            node.paneConfigurations.values.firstOrNull()?.let { findFirstScreenDestination(it.content) }
+    }
+}
 
 /**
  * Tests for tab navigation rendering.
@@ -28,23 +42,23 @@ import kotlin.test.assertTrue
  * - Tab animation direction
  * - Tab destination extraction
  */
-class TabRendererTest {
+class TabRendererTest : FunSpec({
 
     // =========================================================================
     // TEST DESTINATIONS
     // =========================================================================
 
-    private object HomeDestination : NavDestination {
+    val HomeDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object ProfileDestination : NavDestination {
+    val ProfileDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
-    private object SettingsDestination : NavDestination {
+    val SettingsDestination = object : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
@@ -53,19 +67,19 @@ class TabRendererTest {
     // TEST HELPERS
     // =========================================================================
 
-    private fun createScreen(
+    fun createScreen(
         key: String,
         parentKey: String? = null,
         destination: NavDestination = HomeDestination
     ): ScreenNode = ScreenNode(NodeKey(key), parentKey?.let { NodeKey(it) }, destination)
 
-    private fun createStack(
+    fun createStack(
         key: String,
         parentKey: String? = null,
         vararg screens: ScreenNode
     ): StackNode = StackNode(NodeKey(key), parentKey?.let { NodeKey(it) }, screens.toList())
 
-    private fun createTabs(
+    fun createTabs(
         key: String,
         parentKey: String? = null,
         stacks: List<StackNode>,
@@ -76,8 +90,7 @@ class TabRendererTest {
     // TAB SWITCHING TESTS
     // =========================================================================
 
-    @Test
-    fun `tab switching changes active stack index`() {
+    test("tab switching changes active stack index") {
         // Given
         val homeStack = createStack("home", "tabs", createScreen("home-screen", "home"))
         val profileStack = createStack("profile", "tabs", createScreen("profile-screen", "profile"))
@@ -99,14 +112,13 @@ class TabRendererTest {
         )
 
         // Then
-        assertEquals(0, beforeSwitch.activeStackIndex)
-        assertEquals(2, afterSwitch.activeStackIndex)
-        assertEquals(homeStack, beforeSwitch.activeStack)
-        assertEquals(settingsStack, afterSwitch.activeStack)
+        beforeSwitch.activeStackIndex shouldBe 0
+        afterSwitch.activeStackIndex shouldBe 2
+        beforeSwitch.activeStack shouldBe homeStack
+        afterSwitch.activeStack shouldBe settingsStack
     }
 
-    @Test
-    fun `tab switching preserves all tab stacks`() {
+    test("tab switching preserves all tab stacks") {
         // Given - home tab has 3 screens, profile has 1
         val homeStack = createStack(
             "home", "tabs",
@@ -121,14 +133,13 @@ class TabRendererTest {
         val tab1Active = createTabs("tabs", null, listOf(homeStack, profileStack), activeIndex = 1)
 
         // Then - both stacks preserve their state
-        assertEquals(3, tab0Active.stackAt(0).children.size)
-        assertEquals(1, tab0Active.stackAt(1).children.size)
-        assertEquals(3, tab1Active.stackAt(0).children.size) // Home still has 3
-        assertEquals(1, tab1Active.stackAt(1).children.size)
+        tab0Active.stackAt(0).children.size shouldBe 3
+        tab0Active.stackAt(1).children.size shouldBe 1
+        tab1Active.stackAt(0).children.size shouldBe 3 // Home still has 3
+        tab1Active.stackAt(1).children.size shouldBe 1
     }
 
-    @Test
-    fun `switching to same tab does not change state`() {
+    test("switching to same tab does not change state") {
         // Given
         val tabs = createTabs(
             "tabs", null,
@@ -143,16 +154,15 @@ class TabRendererTest {
         val sameTabs = createTabs("tabs", null, tabs.stacks, activeIndex = 0)
 
         // Then
-        assertEquals(tabs.activeStackIndex, sameTabs.activeStackIndex)
-        assertEquals(tabs.activeStack, sameTabs.activeStack)
+        sameTabs.activeStackIndex shouldBe tabs.activeStackIndex
+        sameTabs.activeStack shouldBe tabs.activeStack
     }
 
     // =========================================================================
     // TAB STATE PRESERVATION TESTS
     // =========================================================================
 
-    @Test
-    fun `inactive tab stack state is preserved`() {
+    test("inactive tab stack state is preserved") {
         // Given - start on tab 0, push screens, switch to tab 1, check tab 0 state
         val initialHomeStack = createStack("home", "tabs", createScreen("h1", "home"))
         val pushedHomeStack = createStack(
@@ -167,12 +177,11 @@ class TabRendererTest {
         val tabs = createTabs("tabs", null, listOf(pushedHomeStack, profileStack), activeIndex = 1)
 
         // Then - home stack still has 3 screens
-        assertEquals(3, tabs.stackAt(0).children.size)
-        assertEquals(profileStack, tabs.activeStack)
+        tabs.stackAt(0).children.size shouldBe 3
+        tabs.activeStack shouldBe profileStack
     }
 
-    @Test
-    fun `tab count returns correct number`() {
+    test("tab count returns correct number") {
         // Given
         val tabs2 = createTabs(
             "tabs", null,
@@ -194,12 +203,11 @@ class TabRendererTest {
         )
 
         // Then
-        assertEquals(2, tabs2.tabCount)
-        assertEquals(5, tabs5.tabCount)
+        tabs2.tabCount shouldBe 2
+        tabs5.tabCount shouldBe 5
     }
 
-    @Test
-    fun `stackAt returns correct stack for each index`() {
+    test("stackAt returns correct stack for each index") {
         // Given
         val stack0 = createStack("stack0", "tabs", createScreen("s0", "stack0"))
         val stack1 = createStack("stack1", "tabs", createScreen("s1", "stack1"))
@@ -207,86 +215,79 @@ class TabRendererTest {
         val tabs = createTabs("tabs", null, listOf(stack0, stack1, stack2))
 
         // Then
-        assertEquals(stack0, tabs.stackAt(0))
-        assertEquals(stack1, tabs.stackAt(1))
-        assertEquals(stack2, tabs.stackAt(2))
+        tabs.stackAt(0) shouldBe stack0
+        tabs.stackAt(1) shouldBe stack1
+        tabs.stackAt(2) shouldBe stack2
     }
 
     // =========================================================================
     // TAB WRAPPER TESTS
     // =========================================================================
 
-    @Test
-    fun `FakeNavRenderScope provides container registry`() {
+    test("FakeNavRenderScope provides container registry") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertNotNull(scope.containerRegistry)
-        assertEquals(ContainerRegistry.Empty, scope.containerRegistry)
+        scope.containerRegistry.shouldNotBeNull()
+        scope.containerRegistry shouldBe ContainerRegistry.Empty
     }
 
-    @Test
-    fun `container registry hasTabsContainer returns false for empty registry`() {
+    test("container registry hasTabsContainer returns false for empty registry") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertFalse(scope.containerRegistry.hasTabsContainer("any-key"))
-        assertFalse(scope.containerRegistry.hasTabsContainer("tabs"))
-        assertFalse(scope.containerRegistry.hasTabsContainer(""))
+        scope.containerRegistry.hasTabsContainer("any-key").shouldBeFalse()
+        scope.containerRegistry.hasTabsContainer("tabs").shouldBeFalse()
+        scope.containerRegistry.hasTabsContainer("").shouldBeFalse()
     }
 
     // =========================================================================
     // TAB ANIMATION DIRECTION TESTS
     // =========================================================================
 
-    @Test
-    fun `switching from lower to higher index suggests forward direction`() {
+    test("switching from lower to higher index suggests forward direction") {
         // Given
         val previousIndex = 0
         val currentIndex = 2
 
         // Then - direction logic (higher index = forward)
         val isForward = currentIndex > previousIndex
-        assertTrue(isForward)
+        isForward.shouldBeTrue()
     }
 
-    @Test
-    fun `switching from higher to lower index suggests backward direction`() {
+    test("switching from higher to lower index suggests backward direction") {
         // Given
         val previousIndex = 3
         val currentIndex = 1
 
         // Then
         val isBackward = currentIndex < previousIndex
-        assertTrue(isBackward)
+        isBackward.shouldBeTrue()
     }
 
-    @Test
-    fun `animation coordinator provides tab transition`() {
+    test("animation coordinator provides tab transition") {
         // Given
         val coordinator = AnimationCoordinator.Default
 
         // Then
-        assertNotNull(coordinator.defaultTabTransition)
+        coordinator.defaultTabTransition.shouldNotBeNull()
     }
 
-    @Test
-    fun `FakeNavRenderScope animation coordinator has tab transition`() {
+    test("FakeNavRenderScope animation coordinator has tab transition") {
         // Given
         val scope = FakeNavRenderScope()
 
         // Then
-        assertNotNull(scope.animationCoordinator.defaultTabTransition)
+        scope.animationCoordinator.defaultTabTransition.shouldNotBeNull()
     }
 
     // =========================================================================
     // TAB METADATA TESTS
     // =========================================================================
 
-    @Test
-    fun `tab stacks have meaningful keys for metadata`() {
+    test("tab stacks have meaningful keys for metadata") {
         // Given
         val homeStack = createStack("home_stack", "tabs", createScreen("h", "home_stack"))
         val profileStack = createStack("profile_stack", "tabs", createScreen("p", "profile_stack"))
@@ -296,13 +297,12 @@ class TabRendererTest {
         val tabs = createTabs("tabs", null, listOf(homeStack, profileStack, settingsStack))
 
         // Then - keys can be used for metadata generation
-        assertEquals(NodeKey("home_stack"), tabs.stackAt(0).key)
-        assertEquals(NodeKey("profile_stack"), tabs.stackAt(1).key)
-        assertEquals(NodeKey("settings_stack"), tabs.stackAt(2).key)
+        tabs.stackAt(0).key shouldBe NodeKey("home_stack")
+        tabs.stackAt(1).key shouldBe NodeKey("profile_stack")
+        tabs.stackAt(2).key shouldBe NodeKey("settings_stack")
     }
 
-    @Test
-    fun `tab destination extraction from stacks`() {
+    test("tab destination extraction from stacks") {
         // Given - simulating getTabDestinations logic
         val homeScreen = createScreen("h", "home_stack", HomeDestination)
         val profileScreen = createScreen("p", "profile_stack", ProfileDestination)
@@ -320,14 +320,13 @@ class TabRendererTest {
         }
 
         // Then - destinations can be used for pattern matching
-        assertEquals(3, destinations.size)
-        assertEquals(HomeDestination, destinations[0])
-        assertEquals(ProfileDestination, destinations[1])
-        assertEquals(SettingsDestination, destinations[2])
+        destinations.size shouldBe 3
+        destinations[0] shouldBe HomeDestination
+        destinations[1] shouldBe ProfileDestination
+        destinations[2] shouldBe SettingsDestination
     }
 
-    @Test
-    fun `tab destination extraction from nested stacks - TabItem Stack pattern`() {
+    test("tab destination extraction from nested stacks - TabItem Stack pattern") {
         // Given - simulating @TabItem @Stack structure where each tab's wrapper stack
         // contains a nested StackNode, which contains the actual ScreenNode
         // Structure: TabNode > StackNode (wrapper) > StackNode (nested) > ScreenNode
@@ -353,32 +352,17 @@ class TabRendererTest {
         }
 
         // Then - destinations are correctly extracted from nested structure
-        assertEquals(3, destinations.size)
-        assertEquals(HomeDestination, destinations[0])
-        assertEquals(ProfileDestination, destinations[1])
-        assertEquals(SettingsDestination, destinations[2])
-    }
-
-    /**
-     * Recursively finds the first ScreenNode's destination in a node tree.
-     * This mirrors the implementation in TabRenderer.
-     */
-    private fun findFirstScreenDestination(node: NavNode): NavDestination? {
-        return when (node) {
-            is ScreenNode -> node.destination
-            is StackNode -> node.children.firstOrNull()?.let { findFirstScreenDestination(it) }
-            is TabNode -> node.stacks.firstOrNull()?.let { findFirstScreenDestination(it) }
-            is com.jermey.quo.vadis.core.navigation.node.PaneNode -> 
-                node.paneConfigurations.values.firstOrNull()?.let { findFirstScreenDestination(it.content) }
-        }
+        destinations.size shouldBe 3
+        destinations[0] shouldBe HomeDestination
+        destinations[1] shouldBe ProfileDestination
+        destinations[2] shouldBe SettingsDestination
     }
 
     // =========================================================================
     // TAB PREDICTIVE BACK TESTS
     // =========================================================================
 
-    @Test
-    fun `tab switching does not use predictive back`() {
+    test("tab switching does not use predictive back") {
         // This is a documentation/behavior test
         // Tab switching animations should NOT use predictive back gestures
         // Predictive back is handled at the stack level within each tab
@@ -395,15 +379,14 @@ class TabRendererTest {
         // Then - tab nodes don't have a parentKey at root, but predictive back
         // is still disabled for tab content switching (per design)
         // This is enforced in TabRenderer by passing predictiveBackEnabled = false
-        assertNotNull(tabs.activeStack)
+        tabs.activeStack.shouldNotBeNull()
     }
 
     // =========================================================================
     // NESTED TAB TESTS
     // =========================================================================
 
-    @Test
-    fun `nested tabs maintain parent reference`() {
+    test("nested tabs maintain parent reference") {
         // Given - tabs within a stack
         val innerTabs = createTabs(
             "inner-tabs",
@@ -415,11 +398,10 @@ class TabRendererTest {
         )
 
         // Then
-        assertEquals(NodeKey("outer-stack"), innerTabs.parentKey)
+        innerTabs.parentKey shouldBe NodeKey("outer-stack")
     }
 
-    @Test
-    fun `root tabs have null parent key`() {
+    test("root tabs have null parent key") {
         // Given
         val rootTabs = createTabs(
             "root-tabs",
@@ -428,15 +410,14 @@ class TabRendererTest {
         )
 
         // Then
-        assertEquals(null, rootTabs.parentKey)
+        rootTabs.parentKey shouldBe null
     }
 
     // =========================================================================
     // TAB INDEX VALIDATION TESTS
     // =========================================================================
 
-    @Test
-    fun `active stack index at lower bound is valid`() {
+    test("active stack index at lower bound is valid") {
         // Given
         val tabs = createTabs(
             "tabs", null,
@@ -448,12 +429,11 @@ class TabRendererTest {
         )
 
         // Then
-        assertEquals(0, tabs.activeStackIndex)
-        assertEquals(tabs.stacks[0], tabs.activeStack)
+        tabs.activeStackIndex shouldBe 0
+        tabs.activeStack shouldBe tabs.stacks[0]
     }
 
-    @Test
-    fun `active stack index at upper bound is valid`() {
+    test("active stack index at upper bound is valid") {
         // Given
         val tabs = createTabs(
             "tabs", null,
@@ -466,16 +446,15 @@ class TabRendererTest {
         )
 
         // Then
-        assertEquals(2, tabs.activeStackIndex)
-        assertEquals(tabs.stacks[2], tabs.activeStack)
+        tabs.activeStackIndex shouldBe 2
+        tabs.activeStack shouldBe tabs.stacks[2]
     }
 
     // =========================================================================
     // COMPLEX TAB SCENARIOS
     // =========================================================================
 
-    @Test
-    fun `tab with deep stack navigation`() {
+    test("tab with deep stack navigation") {
         // Given - home tab has deep navigation history
         val homeStack = createStack(
             "home", "tabs",
@@ -492,15 +471,14 @@ class TabRendererTest {
         val tabs = createTabs("tabs", null, listOf(homeStack, profileStack), activeIndex = 0)
 
         // Then
-        assertEquals(4, tabs.activeStack.children.size)
-        assertTrue(tabs.activeStack.canGoBack)
+        tabs.activeStack.children.size shouldBe 4
+        tabs.activeStack.canGoBack.shouldBeTrue()
 
         // Active leaf should be the last screen in active stack
-        assertEquals(NodeKey("home-edit"), tabs.activeStack.activeChild?.key)
+        tabs.activeStack.activeChild?.key shouldBe NodeKey("home-edit")
     }
 
-    @Test
-    fun `switching tabs preserves deep navigation history`() {
+    test("switching tabs preserves deep navigation history") {
         // Given
         val homeStack = createStack(
             "home", "tabs",
@@ -515,7 +493,7 @@ class TabRendererTest {
             createTabs("tabs", null, listOf(homeStack, profileStack), activeIndex = 1)
 
         // Then - home stack still has 3
-        assertEquals(3, tabsOnProfile.stackAt(0).children.size)
-        assertEquals(1, tabsOnProfile.activeStack.children.size)
+        tabsOnProfile.stackAt(0).children.size shouldBe 3
+        tabsOnProfile.activeStack.children.size shouldBe 1
     }
-}
+})

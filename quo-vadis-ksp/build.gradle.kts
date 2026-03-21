@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     kotlin("jvm")
     alias(libs.plugins.dokka)
+    alias(libs.plugins.kover)
     alias(libs.plugins.maven.publish)
 }
 
@@ -21,9 +22,13 @@ dependencies {
     implementation(libs.kotlinpoet.ksp)
     
     // Testing
-    testImplementation(libs.kotlin.test)
-    testImplementation(libs.kotlin.testJunit)
-    testImplementation(libs.junit)
+    testImplementation(libs.kotest.framework.engine)
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.runner.junit5)
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 java {

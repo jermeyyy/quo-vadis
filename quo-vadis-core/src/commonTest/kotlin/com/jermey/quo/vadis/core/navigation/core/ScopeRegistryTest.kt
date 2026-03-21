@@ -4,27 +4,19 @@ import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 
 /**
  * Tests for [com.jermey.quo.vadis.core.navigation.compose.registry.ScopeRegistry] interface and implementations.
  */
-class ScopeRegistryTest {
+class ScopeRegistryTest : FunSpec() {
 
-    // =========================================================================
-    // TEST DESTINATIONS
-    // =========================================================================
-
-    /**
-     * Simulates a sealed interface for tab destinations.
-     * In real apps, this would be generated from @Tab annotations.
-     */
-    private sealed interface MainTabs : NavDestination {
+    sealed interface MainTabs : NavDestination {
         data object HomeTab : MainTabs {
             override val data: Any? = null
             override val transition: NavigationTransition? = null
@@ -36,13 +28,53 @@ class ScopeRegistryTest {
         }
     }
 
-    /**
-     * A destination that is NOT part of MainTabs scope.
-     */
-    private data object OutOfScopeDestination : NavDestination {
+    data object OutOfScopeDestination : NavDestination {
         override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
+
+    sealed interface ProfileTabs : NavDestination {
+        data object OverviewTab : ProfileTabs {
+            override val data: Any? = null
+            override val transition: NavigationTransition? = null
+        }
+
+        data object HistoryTab : ProfileTabs {
+            override val data: Any? = null
+            override val transition: NavigationTransition? = null
+        }
+    }
+
+    sealed interface AuthFlow : NavDestination {
+        data object Login : AuthFlow {
+            override val data: Any? = null
+            override val transition: NavigationTransition? = null
+        }
+
+        data object Register : AuthFlow {
+            override val data: Any? = null
+            override val transition: NavigationTransition? = null
+        }
+
+        data object ForgotPassword : AuthFlow {
+            override val data: Any? = null
+            override val transition: NavigationTransition? = null
+        }
+    }
+
+    sealed interface OnboardingFlow : NavDestination {
+        data object Welcome : OnboardingFlow {
+            override val data: Any? = null
+            override val transition: NavigationTransition? = null
+        }
+
+        data object Tutorial : OnboardingFlow {
+            override val data: Any? = null
+            override val transition: NavigationTransition? = null
+        }
+    }
+
+    init {
 
     // =========================================================================
     // TEST REGISTRY IMPLEMENTATION
@@ -52,8 +84,8 @@ class ScopeRegistryTest {
      * Test implementation of ScopeRegistry.
      * Simulates what KSP would generate from sealed class hierarchies.
      */
-    private val testRegistry = object : ScopeRegistry {
-        private val scopes = mapOf(
+    val testRegistry = object : ScopeRegistry {
+        val scopes = mapOf(
             "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class)
         )
 
@@ -73,69 +105,60 @@ class ScopeRegistryTest {
     // EMPTY REGISTRY TESTS
     // =========================================================================
 
-    @Test
-    fun `Empty registry always returns true for isInScope`() {
-        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey("AnyScope"), MainTabs.HomeTab))
-        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey("AnyScope"), OutOfScopeDestination))
+    test("Empty registry always returns true for isInScope") {
+        (ScopeRegistry.Empty.isInScope(ScopeKey("AnyScope"), MainTabs.HomeTab)).shouldBeTrue()
+        (ScopeRegistry.Empty.isInScope(ScopeKey("AnyScope"), OutOfScopeDestination)).shouldBeTrue()
     }
 
-    @Test
-    fun `Empty registry always returns null for getScopeKey`() {
-        assertNull(ScopeRegistry.Empty.getScopeKey(MainTabs.HomeTab))
-        assertNull(ScopeRegistry.Empty.getScopeKey(OutOfScopeDestination))
+    test("Empty registry always returns null for getScopeKey") {
+        ScopeRegistry.Empty.getScopeKey(MainTabs.HomeTab).shouldBeNull()
+        ScopeRegistry.Empty.getScopeKey(OutOfScopeDestination).shouldBeNull()
     }
 
-    @Test
-    fun `Empty registry allows any destination in any scope`() {
+    test("Empty registry allows any destination in any scope") {
         // This is the backward-compatible behavior
-        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey("MainTabs"), OutOfScopeDestination))
-        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey("NonExistent"), MainTabs.HomeTab))
-        assertTrue(ScopeRegistry.Empty.isInScope(ScopeKey(""), MainTabs.SettingsTab))
+        (ScopeRegistry.Empty.isInScope(ScopeKey("MainTabs"), OutOfScopeDestination)).shouldBeTrue()
+        (ScopeRegistry.Empty.isInScope(ScopeKey("NonExistent"), MainTabs.HomeTab)).shouldBeTrue()
+        (ScopeRegistry.Empty.isInScope(ScopeKey(""), MainTabs.SettingsTab)).shouldBeTrue()
     }
 
     // =========================================================================
     // CUSTOM REGISTRY TESTS - isInScope
     // =========================================================================
 
-    @Test
-    fun `isInScope returns true for destinations in scope`() {
-        assertTrue(testRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.HomeTab))
-        assertTrue(testRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.SettingsTab))
+    test("isInScope returns true for destinations in scope") {
+        (testRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.HomeTab)).shouldBeTrue()
+        (testRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.SettingsTab)).shouldBeTrue()
     }
 
-    @Test
-    fun `isInScope returns false for destinations out of scope`() {
-        assertFalse(testRegistry.isInScope(ScopeKey("MainTabs"), OutOfScopeDestination))
+    test("isInScope returns false for destinations out of scope") {
+        (testRegistry.isInScope(ScopeKey("MainTabs"), OutOfScopeDestination)).shouldBeFalse()
     }
 
-    @Test
-    fun `isInScope returns true for unknown scope keys`() {
+    test("isInScope returns true for unknown scope keys") {
         // Unknown scope keys allow all destinations (defensive behavior)
         // This prevents crashes when scope configuration is incomplete
-        assertTrue(testRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab))
-        assertTrue(testRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination))
+        (testRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab)).shouldBeTrue()
+        (testRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination)).shouldBeTrue()
     }
 
-    @Test
-    fun `isInScope handles empty scope key`() {
+    test("isInScope handles empty scope key") {
         // Empty scope key is treated as unknown (allows all)
-        assertTrue(testRegistry.isInScope(ScopeKey(""), MainTabs.HomeTab))
-        assertTrue(testRegistry.isInScope(ScopeKey(""), OutOfScopeDestination))
+        (testRegistry.isInScope(ScopeKey(""), MainTabs.HomeTab)).shouldBeTrue()
+        (testRegistry.isInScope(ScopeKey(""), OutOfScopeDestination)).shouldBeTrue()
     }
 
     // =========================================================================
     // CUSTOM REGISTRY TESTS - getScopeKey
     // =========================================================================
 
-    @Test
-    fun `getScopeKey returns correct scope for in-scope destinations`() {
-        assertEquals(ScopeKey("MainTabs"), testRegistry.getScopeKey(MainTabs.HomeTab))
-        assertEquals(ScopeKey("MainTabs"), testRegistry.getScopeKey(MainTabs.SettingsTab))
+    test("getScopeKey returns correct scope for in-scope destinations") {
+        testRegistry.getScopeKey(MainTabs.HomeTab) shouldBe ScopeKey("MainTabs")
+        testRegistry.getScopeKey(MainTabs.SettingsTab) shouldBe ScopeKey("MainTabs")
     }
 
-    @Test
-    fun `getScopeKey returns null for out-of-scope destinations`() {
-        assertNull(testRegistry.getScopeKey(OutOfScopeDestination))
+    test("getScopeKey returns null for out-of-scope destinations") {
+        testRegistry.getScopeKey(OutOfScopeDestination).shouldBeNull()
     }
 
     // =========================================================================
@@ -143,25 +166,10 @@ class ScopeRegistryTest {
     // =========================================================================
 
     /**
-     * Additional destinations for testing multiple scopes.
-     */
-    private sealed interface ProfileTabs : NavDestination {
-        data object OverviewTab : ProfileTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-
-        data object HistoryTab : ProfileTabs {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
-
-    /**
      * Registry with multiple scopes.
      */
-    private val multiScopeRegistry = object : ScopeRegistry {
-        private val scopes = mapOf(
+    val multiScopeRegistry = object : ScopeRegistry {
+        val scopes = mapOf(
             "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class),
             "ProfileTabs" to setOf(ProfileTabs.OverviewTab::class, ProfileTabs.HistoryTab::class)
         )
@@ -178,36 +186,32 @@ class ScopeRegistryTest {
         }
     }
 
-    @Test
-    fun `Multiple scopes - each destination maps to correct scope`() {
-        assertEquals(ScopeKey("MainTabs"), multiScopeRegistry.getScopeKey(MainTabs.HomeTab))
-        assertEquals(ScopeKey("MainTabs"), multiScopeRegistry.getScopeKey(MainTabs.SettingsTab))
-        assertEquals(ScopeKey("ProfileTabs"), multiScopeRegistry.getScopeKey(ProfileTabs.OverviewTab))
-        assertEquals(ScopeKey("ProfileTabs"), multiScopeRegistry.getScopeKey(ProfileTabs.HistoryTab))
+    test("Multiple scopes - each destination maps to correct scope") {
+        multiScopeRegistry.getScopeKey(MainTabs.HomeTab) shouldBe ScopeKey("MainTabs")
+        multiScopeRegistry.getScopeKey(MainTabs.SettingsTab) shouldBe ScopeKey("MainTabs")
+        multiScopeRegistry.getScopeKey(ProfileTabs.OverviewTab) shouldBe ScopeKey("ProfileTabs")
+        multiScopeRegistry.getScopeKey(ProfileTabs.HistoryTab) shouldBe ScopeKey("ProfileTabs")
     }
 
-    @Test
-    fun `Multiple scopes - destinations are not in wrong scope`() {
+    test("Multiple scopes - destinations are not in wrong scope") {
         // MainTabs destinations should not be in ProfileTabs scope
-        assertFalse(multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), MainTabs.HomeTab))
-        assertFalse(multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), MainTabs.SettingsTab))
+        (multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), MainTabs.HomeTab)).shouldBeFalse()
+        (multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), MainTabs.SettingsTab)).shouldBeFalse()
 
         // ProfileTabs destinations should not be in MainTabs scope
-        assertFalse(multiScopeRegistry.isInScope(ScopeKey("MainTabs"), ProfileTabs.OverviewTab))
-        assertFalse(multiScopeRegistry.isInScope(ScopeKey("MainTabs"), ProfileTabs.HistoryTab))
+        (multiScopeRegistry.isInScope(ScopeKey("MainTabs"), ProfileTabs.OverviewTab)).shouldBeFalse()
+        (multiScopeRegistry.isInScope(ScopeKey("MainTabs"), ProfileTabs.HistoryTab)).shouldBeFalse()
     }
 
-    @Test
-    fun `Multiple scopes - destinations are in correct scope`() {
-        assertTrue(multiScopeRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.HomeTab))
-        assertTrue(multiScopeRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.SettingsTab))
-        assertTrue(multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), ProfileTabs.OverviewTab))
-        assertTrue(multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), ProfileTabs.HistoryTab))
+    test("Multiple scopes - destinations are in correct scope") {
+        (multiScopeRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.HomeTab)).shouldBeTrue()
+        (multiScopeRegistry.isInScope(ScopeKey("MainTabs"), MainTabs.SettingsTab)).shouldBeTrue()
+        (multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), ProfileTabs.OverviewTab)).shouldBeTrue()
+        (multiScopeRegistry.isInScope(ScopeKey("ProfileTabs"), ProfileTabs.HistoryTab)).shouldBeTrue()
     }
 
-    @Test
-    fun `Multiple scopes - out-of-scope destination returns null for getScopeKey`() {
-        assertNull(multiScopeRegistry.getScopeKey(OutOfScopeDestination))
+    test("Multiple scopes - out-of-scope destination returns null for getScopeKey") {
+        multiScopeRegistry.getScopeKey(OutOfScopeDestination).shouldBeNull()
     }
 
     // =========================================================================
@@ -215,47 +219,11 @@ class ScopeRegistryTest {
     // =========================================================================
 
     /**
-     * Simulates a sealed interface for stack destinations (auth flow).
-     * In real apps, this would be generated from @Stack annotations.
-     */
-    private sealed interface AuthFlow : NavDestination {
-        data object Login : AuthFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-
-        data object Register : AuthFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-
-        data object ForgotPassword : AuthFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
-
-    /**
-     * Another stack scope for testing.
-     */
-    private sealed interface OnboardingFlow : NavDestination {
-        data object Welcome : OnboardingFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-
-        data object Tutorial : OnboardingFlow {
-            override val data: Any? = null
-            override val transition: NavigationTransition? = null
-        }
-    }
-
-    /**
      * Registry that includes stack scopes alongside tab scopes.
      * Simulates what KSP would generate from @Tab and @Stack annotations.
      */
-    private val stackScopeRegistry = object : ScopeRegistry {
-        private val scopes = mapOf(
+    val stackScopeRegistry = object : ScopeRegistry {
+        val scopes = mapOf(
             // Tab scopes
             "MainTabs" to setOf(MainTabs.HomeTab::class, MainTabs.SettingsTab::class),
             // Stack scopes
@@ -279,64 +247,59 @@ class ScopeRegistryTest {
         }
     }
 
-    @Test
-    fun `registry includes stack destinations`() {
+    test("registry includes stack destinations") {
         // Verify stack destinations are in scope map
-        assertTrue(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), AuthFlow.Login))
-        assertTrue(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), AuthFlow.Register))
-        assertTrue(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), AuthFlow.ForgotPassword))
+        (stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), AuthFlow.Login)).shouldBeTrue()
+        (stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), AuthFlow.Register)).shouldBeTrue()
+        (stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), AuthFlow.ForgotPassword)).shouldBeTrue()
 
-        assertTrue(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), OnboardingFlow.Welcome))
-        assertTrue(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), OnboardingFlow.Tutorial))
+        (stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), OnboardingFlow.Welcome)).shouldBeTrue()
+        (stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), OnboardingFlow.Tutorial)).shouldBeTrue()
     }
 
-    @Test
-    fun `getScopeKey returns stack scope for stack destinations`() {
+    test("getScopeKey returns stack scope for stack destinations") {
         // Verify scope key lookup works for stack destinations
-        assertEquals(ScopeKey("AuthFlow"), stackScopeRegistry.getScopeKey(AuthFlow.Login))
-        assertEquals(ScopeKey("AuthFlow"), stackScopeRegistry.getScopeKey(AuthFlow.Register))
-        assertEquals(ScopeKey("AuthFlow"), stackScopeRegistry.getScopeKey(AuthFlow.ForgotPassword))
+        stackScopeRegistry.getScopeKey(AuthFlow.Login) shouldBe ScopeKey("AuthFlow")
+        stackScopeRegistry.getScopeKey(AuthFlow.Register) shouldBe ScopeKey("AuthFlow")
+        stackScopeRegistry.getScopeKey(AuthFlow.ForgotPassword) shouldBe ScopeKey("AuthFlow")
 
-        assertEquals(ScopeKey("OnboardingFlow"), stackScopeRegistry.getScopeKey(OnboardingFlow.Welcome))
-        assertEquals(ScopeKey("OnboardingFlow"), stackScopeRegistry.getScopeKey(OnboardingFlow.Tutorial))
+        stackScopeRegistry.getScopeKey(OnboardingFlow.Welcome) shouldBe ScopeKey("OnboardingFlow")
+        stackScopeRegistry.getScopeKey(OnboardingFlow.Tutorial) shouldBe ScopeKey("OnboardingFlow")
     }
 
-    @Test
-    fun `stack destinations are not in wrong stack scope`() {
+    test("stack destinations are not in wrong stack scope") {
         // AuthFlow destinations should not be in OnboardingFlow scope
-        assertFalse(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), AuthFlow.Login))
-        assertFalse(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), AuthFlow.Register))
+        (stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), AuthFlow.Login)).shouldBeFalse()
+        (stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), AuthFlow.Register)).shouldBeFalse()
 
         // OnboardingFlow destinations should not be in AuthFlow scope
-        assertFalse(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), OnboardingFlow.Welcome))
-        assertFalse(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), OnboardingFlow.Tutorial))
+        (stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), OnboardingFlow.Welcome)).shouldBeFalse()
+        (stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), OnboardingFlow.Tutorial)).shouldBeFalse()
     }
 
-    @Test
-    fun `stack destinations are not in tab scope`() {
+    test("stack destinations are not in tab scope") {
         // Stack destinations should not be in tab scopes
-        assertFalse(stackScopeRegistry.isInScope(ScopeKey("MainTabs"), AuthFlow.Login))
-        assertFalse(stackScopeRegistry.isInScope(ScopeKey("MainTabs"), OnboardingFlow.Welcome))
+        (stackScopeRegistry.isInScope(ScopeKey("MainTabs"), AuthFlow.Login)).shouldBeFalse()
+        (stackScopeRegistry.isInScope(ScopeKey("MainTabs"), OnboardingFlow.Welcome)).shouldBeFalse()
     }
 
-    @Test
-    fun `tab destinations are not in stack scope`() {
+    test("tab destinations are not in stack scope") {
         // Tab destinations should not be in stack scopes
-        assertFalse(stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), MainTabs.HomeTab))
-        assertFalse(stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), MainTabs.SettingsTab))
+        (stackScopeRegistry.isInScope(ScopeKey("AuthFlow"), MainTabs.HomeTab)).shouldBeFalse()
+        (stackScopeRegistry.isInScope(ScopeKey("OnboardingFlow"), MainTabs.SettingsTab)).shouldBeFalse()
     }
 
-    @Test
-    fun `out-of-scope destination returns null for getScopeKey in mixed registry`() {
-        assertNull(stackScopeRegistry.getScopeKey(OutOfScopeDestination))
+    test("out-of-scope destination returns null for getScopeKey in mixed registry") {
+        stackScopeRegistry.getScopeKey(OutOfScopeDestination).shouldBeNull()
     }
 
-    @Test
-    fun `unknown scope key allows all destinations including stack destinations`() {
+    test("unknown scope key allows all destinations including stack destinations") {
         // Unknown scope keys should still allow all (defensive behavior)
-        assertTrue(stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), AuthFlow.Login))
-        assertTrue(stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OnboardingFlow.Welcome))
-        assertTrue(stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab))
-        assertTrue(stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination))
+        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), AuthFlow.Login)).shouldBeTrue()
+        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OnboardingFlow.Welcome)).shouldBeTrue()
+        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), MainTabs.HomeTab)).shouldBeTrue()
+        (stackScopeRegistry.isInScope(ScopeKey("UnknownScope"), OutOfScopeDestination)).shouldBeTrue()
     }
+
+    } // init
 }
