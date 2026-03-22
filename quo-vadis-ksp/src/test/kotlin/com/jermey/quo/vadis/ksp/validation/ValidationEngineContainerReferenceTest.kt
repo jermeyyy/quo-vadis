@@ -91,7 +91,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
     // validateTabItemAnnotations — annotation combination checks
     // =========================================================================
 
-    test("TabItem without Stack or Tabs or Destination produces error") {
+    test("TabItem without Stack or Tabs or Destination is valid") {
         // With tabType-based validation, the validator trusts the extractor-determined type.
         // Conflict/missing annotation detection is now handled in TabExtractor.detectTabItemType().
         // A TabItemInfo that reaches the validator always has a valid tabType.
@@ -254,6 +254,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
 
         val result = validate(listOf(tabA, tabB, tabC))
 
+        result.shouldBeFalse()
         logger.errors.filter { it.contains("Circular tab nesting") }.shouldBeEmpty()
     }
 
@@ -365,6 +366,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
 
         val result = validate(listOf(tabA, tabB, tabC, tabD))
 
+        result.shouldBeFalse()
         logger.warnings.filter { it.contains("nesting depth exceeds") }.shouldNotBeEmpty()
     }
 
@@ -382,6 +384,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
 
         val result = validate(listOf(tabInfo(items = listOf(flatItem))))
 
+        result.shouldBeFalse()
         logger.warnings.filter { it.contains("nesting depth exceeds") }.shouldBeEmpty()
     }
 })

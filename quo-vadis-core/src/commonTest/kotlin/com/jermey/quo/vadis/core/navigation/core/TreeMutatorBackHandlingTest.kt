@@ -120,7 +120,7 @@ class TreeMutatorBackHandlingTest : FunSpec({
     // POP WITH TAB BEHAVIOR - TAB TESTS
     // =========================================================================
 
-    test("popWithTabBehavior switches to initial tab when on non-initial tab at root") {
+    test("popWithTabBehavior returns DelegateToSystem when on non-initial tab at root") {
         val tabNode = TabNode(
             key = NodeKey("tabs"),
             parentKey = NodeKey("root"),
