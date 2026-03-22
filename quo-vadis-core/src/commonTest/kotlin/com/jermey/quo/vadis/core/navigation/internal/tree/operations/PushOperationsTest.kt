@@ -14,7 +14,6 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.node.findByKey
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.PaneRoleRegistry
 import com.jermey.quo.vadis.core.registry.ScopeRegistry
 import io.kotest.assertions.throwables.shouldThrow
@@ -29,64 +28,44 @@ import kotlin.reflect.KClass
 // =============================================================================
 
 private object HomeDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Home"
 }
 
 private object ProfileDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Profile"
 }
 
 private object SettingsDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Settings"
 }
 
 private object DetailDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Detail"
 }
 
 private object OutOfScopeDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "OutOfScope"
 }
 
 private sealed interface ScopedDestination : NavDestination {
     data object TabA : ScopedDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
         override fun toString(): String = "TabA"
     }
 
     data object TabB : ScopedDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
         override fun toString(): String = "TabB"
     }
 
     data object TabC : ScopedDestination {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
         override fun toString(): String = "TabC"
     }
 }
 
 private object PanePrimaryDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PanePrimary"
 }
 
 private object PaneSupportingDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PaneSupporting"
 }
 

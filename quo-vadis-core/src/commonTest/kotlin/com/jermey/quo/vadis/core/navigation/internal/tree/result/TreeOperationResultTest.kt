@@ -7,17 +7,13 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
-private object TreeOpTestDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object TreeOpTestDest : NavDestination
 
 class TreeOperationResultTest : FunSpec({
 

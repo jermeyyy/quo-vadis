@@ -8,7 +8,6 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -17,10 +16,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-private object PBCTestDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object PBCTestDest : NavDestination
 
 class PredictiveBackControllerTest : FunSpec({
 
@@ -114,7 +110,7 @@ class PredictiveBackControllerTest : FunSpec({
         val result = controller.cascadeState.value
         result.shouldNotBeNull()
         result.cascadeDepth shouldBe 2
-        result.delegatesToSystem shouldBe false
+        result.delegatesToSystem.shouldBeFalse()
     }
 
     test("startGestureWithCascade resets progress to 0") {

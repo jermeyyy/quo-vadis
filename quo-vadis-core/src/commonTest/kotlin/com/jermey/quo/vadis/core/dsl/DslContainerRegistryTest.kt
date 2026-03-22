@@ -7,7 +7,6 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.ContainerInfo
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -19,62 +18,29 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 
 // ─── Test Destinations ───────────────────────────────────────────────
 
-private data object RegHomeDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object RegHomeDest : NavDestination
 
-private data object RegDetailDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object RegDetailDest : NavDestination
 
-private data object RegSettingsDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object RegSettingsDest : NavDestination
 
 private sealed interface RegTabs : NavDestination {
-    data object Tab1 : RegTabs {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
-    data object Tab2 : RegTabs {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
+    data object Tab1 : RegTabs
+    data object Tab2 : RegTabs
 }
 
 private sealed interface RegNestedStack : NavDestination {
-    data object Root : RegNestedStack {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
-    data object Child : RegNestedStack {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
+    data object Root : RegNestedStack
+    data object Child : RegNestedStack
 }
 
-private data object RegPaneDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object RegPaneDest : NavDestination
 
-private data object RegPrimaryDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object RegPrimaryDest : NavDestination
 
-private data object RegSupportingDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object RegSupportingDest : NavDestination
 
-private data object UnregisteredDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object UnregisteredDest : NavDestination
 
 // ─── Tests ───────────────────────────────────────────────────────────
 

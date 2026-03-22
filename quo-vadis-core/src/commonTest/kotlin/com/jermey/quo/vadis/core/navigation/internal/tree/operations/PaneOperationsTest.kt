@@ -15,9 +15,9 @@ import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
@@ -26,26 +26,18 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 // =============================================================================
 
 private object PaneListDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PaneListDest"
 }
 
 private object PaneDetailDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PaneDetailDest"
 }
 
 private object PaneNewDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PaneNewDest"
 }
 
 private object PaneExtraDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PaneExtraDest"
 }
 
@@ -281,13 +273,13 @@ class PaneOperationsTest : FunSpec({
     test("popPane returns null when pane stack has single screen") {
         val root = createDualPaneTree()
         val result = PaneOperations.popPane(root, NodeKey("pane"), PaneRole.Primary)
-        result shouldBe null
+        result.shouldBeNull()
     }
 
     test("popPane returns null for empty pane stack") {
         val root = createDualPaneTree(primaryChildren = emptyList())
         val result = PaneOperations.popPane(root, NodeKey("pane"), PaneRole.Primary)
-        result shouldBe null
+        result.shouldBeNull()
     }
 
     test("popPane throws for non-existent pane key") {

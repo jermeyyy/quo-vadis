@@ -13,9 +13,9 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
@@ -24,26 +24,18 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 // =============================================================================
 
 private object TnoHome : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Home"
 }
 
 private object TnoProfile : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Profile"
 }
 
 private object TnoSettings : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Settings"
 }
 
 private object TnoDetail : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Detail"
 }
 
@@ -224,7 +216,7 @@ class TreeNodeOperationsTest : FunSpec({
 
         val result = TreeNodeOperations.removeNode(root, NodeKey("root"))
 
-        result shouldBe null
+        result.shouldBeNull()
     }
 
     test("removeNode - key not found returns NodeNotFound") {

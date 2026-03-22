@@ -22,10 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
-private object TransitionTestDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object TransitionTestDest : NavDestination
 
 class TransitionManagerTest : FunSpec({
 

@@ -6,37 +6,21 @@ import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.dsl.internal.DslScopeRegistry
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.ScopeKey
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
-private object ScopeHome : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object ScopeHome : NavDestination
 
-private object ScopeDetail : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object ScopeDetail : NavDestination
 
-private object ScopeSettings : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object ScopeSettings : NavDestination
 
-private object ScopeProfile : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object ScopeProfile : NavDestination
 
-private object ScopeUnregistered : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object ScopeUnregistered : NavDestination
 
 class DslScopeRegistryTest : FunSpec({
 

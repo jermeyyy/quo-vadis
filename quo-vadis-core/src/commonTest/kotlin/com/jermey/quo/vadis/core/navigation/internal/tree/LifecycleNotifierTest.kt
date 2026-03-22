@@ -14,15 +14,11 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 
-private object LifecycleTestDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object LifecycleTestDest : NavDestination
 
 class LifecycleNotifierTest : FunSpec({
 

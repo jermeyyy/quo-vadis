@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
 class NavigationResultManagerTest : FunSpec({
@@ -40,7 +41,7 @@ class NavigationResultManagerTest : FunSpec({
         val manager = NavigationResultManager()
         val deferred = manager.requestResult("screen-1")
         manager.completeResultSync("screen-1", null)
-        deferred.await() shouldBe null
+        deferred.await().shouldBeNull()
     }
 
     test("completeResultSync for unknown key is a no-op") {
@@ -54,7 +55,7 @@ class NavigationResultManagerTest : FunSpec({
         val manager = NavigationResultManager()
         val deferred = manager.requestResult("screen-1")
         manager.cancelResult("screen-1")
-        deferred.await() shouldBe null
+        deferred.await().shouldBeNull()
         manager.hasPendingResult("screen-1").shouldBeFalse()
     }
 
@@ -77,7 +78,7 @@ class NavigationResultManagerTest : FunSpec({
         manager.hasPendingResult("screen-2").shouldBeTrue()
 
         manager.cancelResult("screen-2")
-        d2.await() shouldBe null
+        d2.await().shouldBeNull()
         manager.pendingCount() shouldBe 0
     }
 

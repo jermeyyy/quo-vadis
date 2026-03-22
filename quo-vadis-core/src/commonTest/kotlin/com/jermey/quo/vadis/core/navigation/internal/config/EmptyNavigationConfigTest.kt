@@ -6,23 +6,17 @@ import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.ScopeKey
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
-private object TestDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object TestDest : NavDestination
 
-private object OtherDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object OtherDest : NavDestination
 
 class EmptyNavigationConfigTest : FunSpec({
 
@@ -39,7 +33,7 @@ class EmptyNavigationConfigTest : FunSpec({
     }
 
     test("scopeRegistry isInScope returns true (allows all)") {
-        NavigationConfig.Empty.scopeRegistry.isInScope(ScopeKey("any"), TestDest) shouldBe true
+        NavigationConfig.Empty.scopeRegistry.isInScope(ScopeKey("any"), TestDest).shouldBeTrue()
     }
 
     test("scopeRegistry getScopeKey returns null") {

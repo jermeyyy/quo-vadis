@@ -12,7 +12,6 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -24,26 +23,18 @@ import io.kotest.matchers.shouldBe
 // =============================================================================
 
 private object TdcHome : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Home"
 }
 
 private object TdcProfile : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Profile"
 }
 
 private object TdcSettings : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Settings"
 }
 
 private object TdcDetail : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Detail"
 }
 
