@@ -11,6 +11,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
 private object TreeOpTestDest : NavDestination
@@ -54,7 +55,7 @@ class TreeOperationResultTest : FunSpec({
         val a = TreeOperationResult.Success(tree1)
         val b = TreeOperationResult.Success(tree2)
 
-        (a == b) shouldBe false
+        a shouldNotBe b
     }
 
     // =========================================================================

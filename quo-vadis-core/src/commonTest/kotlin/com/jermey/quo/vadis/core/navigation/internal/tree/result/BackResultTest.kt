@@ -9,6 +9,7 @@ import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
@@ -53,7 +54,7 @@ class BackResultTest : FunSpec({
         val a = BackResult.Handled(tree1)
         val b = BackResult.Handled(tree2)
 
-        (a == b) shouldBe false
+        a shouldNotBe b
     }
 
     // =========================================================================

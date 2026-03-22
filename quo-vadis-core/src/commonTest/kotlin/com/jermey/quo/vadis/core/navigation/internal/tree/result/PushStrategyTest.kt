@@ -13,6 +13,7 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
 private object PushTestDest : NavDestination
@@ -106,7 +107,7 @@ class PushStrategyTest : FunSpec({
         val a = PushStrategy.SwitchToTab(tabNode, 0)
         val b = PushStrategy.SwitchToTab(tabNode, 1)
 
-        (a == b) shouldBe false
+        a shouldNotBe b
     }
 
     // =========================================================================

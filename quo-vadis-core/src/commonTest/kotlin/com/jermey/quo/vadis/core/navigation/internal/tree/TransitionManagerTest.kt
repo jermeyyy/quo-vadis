@@ -14,6 +14,8 @@ import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.transition.TransitionState
 import com.jermey.quo.vadis.core.navigation.transition.progress
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -225,7 +227,7 @@ class TransitionManagerTest : FunSpec({
 
         manager.commitPredictiveBack()
 
-        commitCalled shouldBe true
+        commitCalled.shouldBeTrue()
         manager.transitionState.value shouldBe TransitionState.Idle
     }
 
@@ -235,7 +237,7 @@ class TransitionManagerTest : FunSpec({
 
         manager.commitPredictiveBack()
 
-        commitCalled shouldBe false
+        commitCalled.shouldBeFalse()
         manager.transitionState.value shouldBe TransitionState.Idle
     }
 
@@ -258,7 +260,7 @@ class TransitionManagerTest : FunSpec({
         mgr.startPredictiveBack()
         mgr.commitPredictiveBack()
 
-        observedCommittedState shouldBe true
+        observedCommittedState.shouldBeTrue()
     }
 
     // =========================================================================
