@@ -6,7 +6,10 @@ import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.generated.ComposeAppNavigationConfig
 import com.jermey.quo.vadis.generated.Feature1NavigationConfig
+import com.jermey.quo.vadis.generated.NavigationApiNavigationConfig
+import com.jermey.quo.vadis.generated.Feature2ApiNavigationConfig
 import com.jermey.quo.vadis.generated.Feature2NavigationConfig
+import com.jermey.quo.vadis.generated.Feature3NavigationConfig
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
@@ -17,8 +20,11 @@ class NavigationModule {
     @Single
     fun navigationConfig(): NavigationConfig =
         ComposeAppNavigationConfig +
+                NavigationApiNavigationConfig +
                 Feature1NavigationConfig +
-                Feature2NavigationConfig
+                Feature2ApiNavigationConfig +
+                Feature2NavigationConfig +
+                Feature3NavigationConfig
 
     @Single
     fun navigator(navigationConfig: NavigationConfig): Navigator {
@@ -49,14 +55,6 @@ class StateDrivenDemoModule
 @Module
 @ComponentScan("com.jermey.navplayground.demo.ui.screens.tabs")
 class TabsDemoModule
-
-@Module
-@ComponentScan("com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.ui.screens.profile")
-class ProfileModule
-
-@Module
-@ComponentScan("com.jermey.navplayground.demo.ui.screens.explore")
-class ExploreModule
 
 @Module
 @ComponentScan("com.jermey.navplayground.demo.ui.screens.backhandler")

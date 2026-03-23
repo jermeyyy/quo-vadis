@@ -10,6 +10,10 @@ plugins {
     alias(libs.plugins.koin.compiler)
 }
 
+compose.resources {
+    packageOfResClass = "navplayground.feature1.generated.resources"
+}
+
 // Quo Vadis KSP configuration (using local processor for development)
 quoVadis {
     useLocalKsp = true
@@ -74,6 +78,16 @@ kotlin {
                 implementation(projects.quoVadisCore)
                 implementation(projects.quoVadisCoreFlowMvi)
                 implementation(projects.navigationApi)
+                implementation(projects.feature1Api)
+                implementation(projects.feature2Api)
+                implementation(projects.quoVadisAnnotations)
+
+                // Haze (glassmorphism blur effects, used by moved screens)
+                implementation(libs.haze)
+                implementation(libs.haze.materials)
+
+                // Coil (image loading, used by ExploreDetailScreen)
+                implementation(libs.coil.compose)
 
                 // Koin
                 implementation(libs.koin.core)
@@ -110,4 +124,19 @@ kotlin {
         }
     }
 
+}
+// TEMPORARY WORKAROUND: Configure compose resources for new Android KMP library plugin
+afterEvaluate {
+    tasks.matching { it.name == "copyAndroidMainComposeResourcesToAndroidAssets" }.configureEach {
+        val outputDirProperty = this::class.java.getDeclaredMethod("getOutputDirectory")
+        val outputDir = outputDirProperty.invoke(this) as DirectoryProperty
+        outputDir.set(layout.buildDirectory.dir("generated/compose/resourceGenerator/androidAssets/androidMain"))
+    }
+
+    tasks.matching { it.name == "processAndroidMainJavaRes" }.configureEach {
+        dependsOn("copyAndroidMainComposeResourcesToAndroidAssets")
+
+        val javaResTask = this as Sync
+        javaResTask.from(layout.buildDirectory.dir("generated/compose/resourceGenerator/androidAssets/androidMain"))
+    }
 }

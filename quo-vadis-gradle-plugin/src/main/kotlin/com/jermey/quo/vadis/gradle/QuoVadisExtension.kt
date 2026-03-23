@@ -27,4 +27,11 @@ abstract class QuoVadisExtension {
      * When false, uses Maven Central artifact.
      */
     abstract val useLocalKsp: Property<Boolean>
+
+    /**
+     * Whether this module is an API-only module that defines destinations without @Screen bindings.
+     * When true, the KSP processor skips "Missing @Screen binding" validation.
+     * Defaults to false.
+     */
+    abstract val apiModule: Property<Boolean>
 }

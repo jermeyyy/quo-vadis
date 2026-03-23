@@ -26,7 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.BackHandlerDemoDestination
+import com.jermey.navplayground.navigation.BackHandlerDemoDestination
 import com.jermey.navplayground.demo.ui.screens.backhandler.BackHandlerDemoAction
 import com.jermey.navplayground.demo.ui.screens.backhandler.BackHandlerDemoContainer
 import com.jermey.navplayground.demo.ui.screens.backhandler.BackHandlerDemoIntent

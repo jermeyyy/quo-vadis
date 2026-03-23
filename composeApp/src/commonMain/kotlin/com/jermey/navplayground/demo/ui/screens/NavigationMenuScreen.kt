@@ -3,9 +3,9 @@ package com.jermey.navplayground.demo.ui.screens
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.NavigationMenuDestination
+import com.jermey.navplayground.navigation.NavigationMenuDestination
 import com.jermey.navplayground.demo.ui.components.NavigationBottomSheetContent
-import com.jermey.navplayground.demo.ui.components.glassmorphism.GlassBottomSheet
+import com.jermey.feature1.ui.glassmorphism.GlassBottomSheet
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import dev.chrisbanes.haze.HazeState

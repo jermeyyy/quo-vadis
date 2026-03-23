@@ -43,4 +43,8 @@ include(":quo-vadis-annotations")
 include(":quo-vadis-ksp")
 
 include(":feature1")
+include(":feature1-api")
 include(":feature2")
+include(":feature2-api")
+include(":feature3")
+include(":feature3-api")

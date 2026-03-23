@@ -160,4 +160,24 @@ class ValidationEngineScreenBindingTest : FunSpec({
 
         logger.errors.filter { it.contains("Missing @Screen binding") }.shouldBeEmpty()
     }
+
+    test("missing Screen binding in apiModule mode is skipped") {
+        val apiLogger = FakeKSPLogger()
+        val apiEngine = ValidationEngine(apiLogger, apiModule = true)
+
+        val destDecl = destClassDecl("ApiOnlyDest", containingFile = FakeKSFile())
+        val dest = destinationInfo(destDecl, isCrossModule = false)
+
+        apiLogger.errors.clear()
+        apiLogger.warnings.clear()
+        apiEngine.validate(
+            stacks = emptyList(),
+            tabs = emptyList(),
+            panes = emptyList(),
+            screens = emptyList(),
+            allDestinations = listOf(dest),
+        )
+
+        apiLogger.errors.filter { it.contains("Missing @Screen binding") }.shouldBeEmpty()
+    }
 })

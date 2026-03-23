@@ -23,7 +23,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Cross-module wrapper key resolution**: DSL now uses `destinationClass.qualifiedName` (FQCN) for `TabNode.wrapperKey` instead of `scopeKey.value`. This ensures `@TabsContainer` wrappers are correctly resolved when `@Tabs` and `@TabsContainer` annotations are in different modules.
+- **KSP `getWrapperKey()` always returns FQCN**: Removed `scopeKeyMap` lookup fallback that only worked when `@Tabs` and `@TabsContainer` were in the same module. Container registry keys now consistently use fully-qualified class names.
+- **PaneRenderer uses FQCN for pane container lookup**: Changed from `node.scopeKey?.value` to `node.key.value` for cross-module consistency with KSP-generated pane container keys.
+- **Demo app multi-module restructuring**: Moved all `@TabItem` destination classes (`HomeTab`, `ExploreTab`, `ProfileTab`, `SettingsTab`, `ShowcaseTab`, `ResultDemoDestination`) from feature-api modules to `navigation-api` module to ensure single KSP round generates complete tab structure.
+- **Demo app DI config chain**: Removed empty `Feature1ApiNavigationConfig` and `Feature3ApiNavigationConfig` from merge chain after destination move.
+
 ### Fixed
+
+- **Bottom navigation missing in multi-module setup**: `@TabsContainer` wrappers were never invoked because DSL-generated `wrapperKey` (scopeKey-based) didn't match KSP-generated container registry keys (FQCN-based) when `@Tabs` and `@TabsContainer` were in different modules.
+- **DemoTabs crash "No DemoTabsStore provided"**: Same wrapper key mismatch caused `DemoTabsWrapper` to be skipped, so `CompositionLocalProvider` for `LocalDemoTabsStore` was never applied.
+- **Duplicate screen files in composeApp**: Removed 7 duplicate screen files from `composeApp/ui/screens/` that conflicted with feature module `@Screen` bindings after multi-module restructuring.
 
 ## [0.4.3] - 2026-03-20
 

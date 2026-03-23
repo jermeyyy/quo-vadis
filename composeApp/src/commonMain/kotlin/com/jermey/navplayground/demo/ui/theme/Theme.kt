@@ -6,6 +6,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.jermey.navplayground.navigation.ThemeMode
 
 /**
  * Platform-specific function to configure system UI (status bar, navigation bar).
@@ -99,15 +100,6 @@ private val DarkColorScheme = darkColorScheme(
     surfaceContainerHigh = Color(0xFF2B2930),
     surfaceContainerHighest = Color(0xFF36343B),
 )
-
-/**
- * Theme mode for the app.
- */
-enum class ThemeMode {
-    LIGHT,
-    DARK,
-    SYSTEM
-}
 
 /**
  * Main theme for the demo app with support for light/dark modes.

@@ -64,7 +64,8 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
  * @param logger KSP logger for reporting errors and warnings with source locations
  */
 class ValidationEngine(
-    private val logger: KSPLogger
+    private val logger: KSPLogger,
+    private val apiModule: Boolean = false
 ) {
 
     private var hasErrors = false
@@ -459,10 +460,10 @@ class ValidationEngine(
             }
         }
 
-        // Error: destinations must have screens (skip cross-module destinations)
+        // Error: destinations must have screens (skip cross-module and API-only module destinations)
         val boundDestinations = screenDestinations.keys
         destinations.forEach { destination ->
-            if (destination.qualifiedName !in boundDestinations && !destination.isCrossModule) {
+            if (destination.qualifiedName !in boundDestinations && !destination.isCrossModule && !apiModule) {
                 reportError(
                     destination.classDeclaration,
                     "Missing @Screen binding for '${destination.className}'",

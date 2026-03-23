@@ -18,14 +18,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DeepLinkDestination
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.MasterDetailDestination
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProcessDestination
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.DemoTabs
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.HomeTab
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProfileTab
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.SettingsTab
+import com.jermey.navplayground.navigation.ExploreTab
+import com.jermey.navplayground.navigation.HomeTab
+import com.jermey.navplayground.navigation.ProfileTab
+import com.jermey.navplayground.navigation.SettingsTab
+import com.jermey.navplayground.navigation.DeepLinkDestination
+import com.jermey.navplayground.navigation.DemoTabs
+import com.jermey.navplayground.navigation.MasterDetailDestination
+import com.jermey.navplayground.navigation.ProcessDestination
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 @Composable

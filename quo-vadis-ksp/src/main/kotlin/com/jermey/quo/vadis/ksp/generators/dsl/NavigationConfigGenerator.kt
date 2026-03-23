@@ -898,23 +898,14 @@ class NavigationConfigGenerator(
      * class in the scope key map.
      *
      * @param wrapper The wrapper info
-     * @param scopeKeyMap Map from qualified class name to scopeKey
      * @return The key to use for wrapper lookup
      */
-    private fun getWrapperKey(wrapper: ContainerInfoModel, scopeKeyMap: Map<String, String>): String {
-        // Direct match
-        scopeKeyMap[wrapper.targetClassQualifiedName]?.let { return it }
-
-        // For Companion objects, try the parent class
-        if (wrapper.targetClassSimpleName == "Companion" ||
-            wrapper.targetClassQualifiedName.endsWith(".Companion")
-        ) {
-            val parentQualifiedName = wrapper.targetClassQualifiedName.removeSuffix(".Companion")
-            scopeKeyMap[parentQualifiedName]?.let { return it }
-        }
-
-        // Fallback to qualified name
-        return wrapper.targetClassQualifiedName
+    private fun getWrapperKey(wrapper: ContainerInfoModel): String {
+        // Always use FQCN for cross-module consistency.
+        // The DSL uses destinationClass.qualifiedName as wrapperKey,
+        // so the container registry must use the same FQCN-based key.
+        val qn = wrapper.targetClassQualifiedName
+        return if (qn.endsWith(".Companion")) qn.removeSuffix(".Companion") else qn
     }
 
     /**
@@ -980,7 +971,7 @@ class NavigationConfigGenerator(
         wrappers: List<ContainerInfoModel>,
         scopeKeyMap: Map<String, String>
     ): PropertySpec {
-        val keys = wrappers.map { getWrapperKey(it, scopeKeyMap) }
+        val keys = wrappers.map { getWrapperKey(it) }
         val setType = SET.parameterizedBy(STRING)
         val initializer = if (keys.isEmpty()) {
             CodeBlock.of("emptySet()")
@@ -1022,7 +1013,7 @@ class NavigationConfigGenerator(
                 } else {
                     beginControlFlow("when (tabNodeKey)")
                     tabWrappers.forEach { wrapper ->
-                        val wrapperKey = getWrapperKey(wrapper, scopeKeyMap)
+                        val wrapperKey = getWrapperKey(wrapper)
                         addStatement(
                             "%S -> %M(scope = scope, content = content)",
                             wrapperKey,
@@ -1061,7 +1052,7 @@ class NavigationConfigGenerator(
                 } else {
                     beginControlFlow("when (paneNodeKey)")
                     paneWrappers.forEach { wrapper ->
-                        val wrapperKey = getWrapperKey(wrapper, scopeKeyMap)
+                        val wrapperKey = getWrapperKey(wrapper)
                         addStatement(
                             "%S -> %M(scope = scope, content = content)",
                             wrapperKey,

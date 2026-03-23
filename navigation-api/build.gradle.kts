@@ -11,6 +11,7 @@ plugins {
 // Quo Vadis KSP configuration (using local processor for development)
 quoVadis {
     useLocalKsp = true
+    apiModule = true
 }
 
 kotlin {
