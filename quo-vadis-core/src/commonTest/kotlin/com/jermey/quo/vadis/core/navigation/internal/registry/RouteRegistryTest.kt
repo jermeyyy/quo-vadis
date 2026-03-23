@@ -1,32 +1,19 @@
 package com.jermey.quo.vadis.core.navigation.internal.registry
 
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.RouteRegistry
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
 // Unique test destinations to avoid state leaking in singleton RouteRegistry
-private object RouteDest1 : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object RouteDest1 : NavDestination
 
-private object RouteDest2 : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object RouteDest2 : NavDestination
 
-private object RouteDest3 : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object RouteDest3 : NavDestination
 
-private object UnregisteredDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object UnregisteredDest : NavDestination
 
 class RouteRegistryTest : FunSpec({
 

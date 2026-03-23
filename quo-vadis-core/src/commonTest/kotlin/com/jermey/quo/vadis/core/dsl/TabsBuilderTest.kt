@@ -5,7 +5,6 @@ package com.jermey.quo.vadis.core.dsl
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -14,35 +13,17 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
-private data object Tab1Dest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object Tab1Dest : NavDestination
 
-private data object Tab2Dest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object Tab2Dest : NavDestination
 
-private data object Tab3Dest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object Tab3Dest : NavDestination
 
-private data object NestedScreen1 : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object NestedScreen1 : NavDestination
 
-private data object NestedScreen2 : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object NestedScreen2 : NavDestination
 
-private data object ContainerDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object ContainerDest : NavDestination
 
 class TabsBuilderTest : FunSpec({
 

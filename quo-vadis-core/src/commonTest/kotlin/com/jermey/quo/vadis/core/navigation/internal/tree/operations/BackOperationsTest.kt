@@ -14,7 +14,6 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -28,32 +27,22 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 // =============================================================================
 
 private object Home : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Home"
 }
 
 private object Profile : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Profile"
 }
 
 private object Settings : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Settings"
 }
 
 private object Detail : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Detail"
 }
 
 private object ListDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "ListDest"
 }
 

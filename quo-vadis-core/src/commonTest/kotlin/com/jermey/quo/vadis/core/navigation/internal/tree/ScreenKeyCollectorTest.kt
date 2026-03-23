@@ -13,8 +13,9 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,20 +25,14 @@ import kotlinx.coroutines.Dispatchers
 // =============================================================================
 
 private object SkcHome : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Home"
 }
 
 private object SkcProfile : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Profile"
 }
 
 private object SkcSettings : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "Settings"
 }
 
@@ -114,7 +109,7 @@ class ScreenKeyCollectorTest : FunSpec({
         collector.cancelResultsForKeys(setOf(NodeKey("s1"), NodeKey("s3")))
 
         resultManager.pendingCount() shouldBe 1
-        resultManager.hasPendingResult("s2") shouldBe true
+        resultManager.hasPendingResult("s2").shouldBeTrue()
     }
 
     // -------------------------------------------------------------------------
@@ -155,8 +150,8 @@ class ScreenKeyCollectorTest : FunSpec({
 
         collector.cancelResultsForDestroyedScreens(oldTree, newTree)
 
-        resultManager.hasPendingResult("s1") shouldBe true
-        resultManager.hasPendingResult("s2") shouldBe false
+        resultManager.hasPendingResult("s1").shouldBeTrue()
+        resultManager.hasPendingResult("s2").shouldBeFalse()
     }
 
     // -------------------------------------------------------------------------
@@ -181,9 +176,9 @@ class ScreenKeyCollectorTest : FunSpec({
 
         collector.cancelResultsForDestroyedScreens(oldTree, newTree)
 
-        resultManager.hasPendingResult("s1") shouldBe false
-        resultManager.hasPendingResult("s2") shouldBe false
-        resultManager.hasPendingResult("s3") shouldBe true
+        resultManager.hasPendingResult("s1").shouldBeFalse()
+        resultManager.hasPendingResult("s2").shouldBeFalse()
+        resultManager.hasPendingResult("s3").shouldBeTrue()
     }
 
     // -------------------------------------------------------------------------
@@ -210,8 +205,8 @@ class ScreenKeyCollectorTest : FunSpec({
 
         collector.cancelResultsForDestroyedScreens(oldTree, newTree)
 
-        resultManager.hasPendingResult("tab1-s1") shouldBe false
-        resultManager.hasPendingResult("tab2-s1") shouldBe false
+        resultManager.hasPendingResult("tab1-s1").shouldBeFalse()
+        resultManager.hasPendingResult("tab2-s1").shouldBeFalse()
     }
 
     // -------------------------------------------------------------------------
@@ -244,8 +239,8 @@ class ScreenKeyCollectorTest : FunSpec({
 
         collector.cancelResultsForDestroyedScreens(oldTree, newTree)
 
-        resultManager.hasPendingResult("p-s1") shouldBe false
-        resultManager.hasPendingResult("sup-s1") shouldBe false
+        resultManager.hasPendingResult("p-s1").shouldBeFalse()
+        resultManager.hasPendingResult("sup-s1").shouldBeFalse()
     }
 
     // -------------------------------------------------------------------------
@@ -265,7 +260,7 @@ class ScreenKeyCollectorTest : FunSpec({
         collector.cancelResultsForDestroyedScreens(oldTree, newTree)
 
         // No screen keys collected, so s1 remains pending
-        resultManager.hasPendingResult("s1") shouldBe true
+        resultManager.hasPendingResult("s1").shouldBeTrue()
     }
 
     // -------------------------------------------------------------------------
@@ -300,6 +295,6 @@ class ScreenKeyCollectorTest : FunSpec({
         collector.cancelResultsForKeys(setOf(NodeKey("nonexistent")))
 
         resultManager.pendingCount() shouldBe 1
-        resultManager.hasPendingResult("s1") shouldBe true
+        resultManager.hasPendingResult("s1").shouldBeTrue()
     }
 })

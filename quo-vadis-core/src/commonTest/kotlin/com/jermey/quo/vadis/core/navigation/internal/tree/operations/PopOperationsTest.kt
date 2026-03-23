@@ -13,8 +13,9 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -26,26 +27,18 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 // =============================================================================
 
 private object PopHome : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PopHome"
 }
 
 private object PopProfile : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PopProfile"
 }
 
 private object PopSettings : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PopSettings"
 }
 
 private object PopDetail : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "PopDetail"
 }
 
@@ -103,7 +96,7 @@ class PopOperationsTest : FunSpec({
         val result = PopOperations.pop(root, PopBehavior.PRESERVE_EMPTY)
 
         result.shouldNotBeNull()
-        (result as StackNode).isEmpty shouldBe true
+        (result as StackNode).isEmpty.shouldBeTrue()
     }
 
     test("pop with CASCADE on single-screen root stack returns null") {
@@ -207,7 +200,7 @@ class PopOperationsTest : FunSpec({
 
         result.shouldNotBeNull()
         val tabs = (result as StackNode).children[0] as TabNode
-        tabs.stacks[0].isEmpty shouldBe true
+        tabs.stacks[0].isEmpty.shouldBeTrue()
     }
 
     test("pop with CASCADE inside pane preserves empty stack") {
@@ -232,7 +225,7 @@ class PopOperationsTest : FunSpec({
         result.shouldNotBeNull()
         val resultPane = (result as StackNode).children[0] as PaneNode
         val resultPrimary = resultPane.paneConfigurations[PaneRole.Primary]!!.content as StackNode
-        resultPrimary.isEmpty shouldBe true
+        resultPrimary.isEmpty.shouldBeTrue()
     }
 
     test("pop with CASCADE removes nested empty stack from parent stack") {
@@ -279,7 +272,7 @@ class PopOperationsTest : FunSpec({
         result.shouldNotBeNull()
         val resultOuter = result as StackNode
         val resultInner = resultOuter.children[0] as StackNode
-        resultInner.isEmpty shouldBe true
+        resultInner.isEmpty.shouldBeTrue()
     }
 
     test("pop preserves structural sharing for unchanged branches") {
@@ -748,7 +741,7 @@ class PopOperationsTest : FunSpec({
         val resultPane = (result as StackNode).children[0] as PaneNode
         // Primary becomes empty, supporting unchanged
         val resultPrimary = resultPane.paneConfigurations[PaneRole.Primary]!!.content as StackNode
-        resultPrimary.isEmpty shouldBe true
+        resultPrimary.isEmpty.shouldBeTrue()
         val resultSupporting = resultPane.paneConfigurations[PaneRole.Supporting]!!.content as StackNode
         resultSupporting.children.size shouldBe 1
     }

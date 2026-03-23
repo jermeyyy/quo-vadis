@@ -14,15 +14,13 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 
-private object LifecycleTestDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object LifecycleTestDest : NavDestination
 
 class LifecycleNotifierTest : FunSpec({
 
@@ -56,13 +54,13 @@ class LifecycleNotifierTest : FunSpec({
         s1.attachToNavigator()
         s2.attachToNavigator()
 
-        s1.isAttachedToNavigator shouldBe true
-        s2.isAttachedToNavigator shouldBe true
+        s1.isAttachedToNavigator.shouldBeTrue()
+        s2.isAttachedToNavigator.shouldBeTrue()
 
         notifier.notifyRemovedNodes(listOf(s1, s2))
 
-        s1.isAttachedToNavigator shouldBe false
-        s2.isAttachedToNavigator shouldBe false
+        s1.isAttachedToNavigator.shouldBeFalse()
+        s2.isAttachedToNavigator.shouldBeFalse()
     }
 
     test("notifyRemovedNodes with empty list does nothing") {
@@ -78,7 +76,7 @@ class LifecycleNotifierTest : FunSpec({
 
         notifier.notifyRemovedNodes(listOf(s1))
 
-        callbackCalled shouldBe true
+        callbackCalled.shouldBeTrue()
     }
 
     // =========================================================================
@@ -97,9 +95,9 @@ class LifecycleNotifierTest : FunSpec({
         notifier.notifyRemovedNodesDetached(oldState, newState)
 
         // s2 was removed, should be detached
-        s2.isAttachedToNavigator shouldBe false
+        s2.isAttachedToNavigator.shouldBeFalse()
         // s1 still in tree, should remain attached
-        s1.isAttachedToNavigator shouldBe true
+        s1.isAttachedToNavigator.shouldBeTrue()
     }
 
     test("notifyRemovedNodesDetached with identical trees detaches nothing") {
@@ -111,7 +109,7 @@ class LifecycleNotifierTest : FunSpec({
 
         notifier.notifyRemovedNodesDetached(oldState, newState)
 
-        s1.isAttachedToNavigator shouldBe true
+        s1.isAttachedToNavigator.shouldBeTrue()
     }
 
     test("notifyRemovedNodesDetached handles tab nodes") {
@@ -133,9 +131,9 @@ class LifecycleNotifierTest : FunSpec({
         notifier.notifyRemovedNodesDetached(oldState, newState)
 
         // s1 still in tree
-        s1.isAttachedToNavigator shouldBe true
+        s1.isAttachedToNavigator.shouldBeTrue()
         // s2 removed
-        s2.isAttachedToNavigator shouldBe false
+        s2.isAttachedToNavigator.shouldBeFalse()
     }
 
     test("notifyRemovedNodesDetached detaches TabNode itself when removed") {
@@ -152,8 +150,8 @@ class LifecycleNotifierTest : FunSpec({
 
         notifier.notifyRemovedNodesDetached(oldState, newState)
 
-        tabNode.isAttachedToNavigator shouldBe false
-        s1.isAttachedToNavigator shouldBe false
+        tabNode.isAttachedToNavigator.shouldBeFalse()
+        s1.isAttachedToNavigator.shouldBeFalse()
     }
 
     test("notifyRemovedNodesDetached handles pane nodes") {
@@ -181,9 +179,9 @@ class LifecycleNotifierTest : FunSpec({
 
         notifier.notifyRemovedNodesDetached(oldState, newState)
 
-        paneOld.isAttachedToNavigator shouldBe false
-        primaryScreen.isAttachedToNavigator shouldBe false
-        supportingScreen.isAttachedToNavigator shouldBe false
+        paneOld.isAttachedToNavigator.shouldBeFalse()
+        primaryScreen.isAttachedToNavigator.shouldBeFalse()
+        supportingScreen.isAttachedToNavigator.shouldBeFalse()
     }
 
     test("notifyRemovedNodesDetached with all nodes removed") {
@@ -199,8 +197,8 @@ class LifecycleNotifierTest : FunSpec({
 
         notifier.notifyRemovedNodesDetached(oldState, newState)
 
-        s1.isAttachedToNavigator shouldBe false
-        s2.isAttachedToNavigator shouldBe false
+        s1.isAttachedToNavigator.shouldBeFalse()
+        s2.isAttachedToNavigator.shouldBeFalse()
     }
 
     test("notifyRemovedNodesDetached nested stacks in tabs") {
@@ -221,7 +219,7 @@ class LifecycleNotifierTest : FunSpec({
 
         notifier.notifyRemovedNodesDetached(oldState, newState)
 
-        s1.isAttachedToNavigator shouldBe true
-        s2.isAttachedToNavigator shouldBe false
+        s1.isAttachedToNavigator.shouldBeTrue()
+        s2.isAttachedToNavigator.shouldBeFalse()
     }
 })

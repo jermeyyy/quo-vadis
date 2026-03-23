@@ -14,7 +14,6 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -28,67 +27,31 @@ import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 
 // ─── Test Destinations ───────────────────────────────────────────────
 
-private data object CnfHomeDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CnfHomeDest : NavDestination
 
-private data object CnfDetailDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CnfDetailDest : NavDestination
 
-private data object CnfSettingsDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CnfSettingsDest : NavDestination
 
-private data object CnfModalDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CnfModalDest : NavDestination
 
 private sealed interface CnfTabs : NavDestination {
-    data object Tab1 : CnfTabs {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
-    data object Tab2 : CnfTabs {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
+    data object Tab1 : CnfTabs
+    data object Tab2 : CnfTabs
 }
 
 private sealed interface CnfNestedStack : NavDestination {
-    data object Root : CnfNestedStack {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
-    data object Child : CnfNestedStack {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
+    data object Root : CnfNestedStack
+    data object Child : CnfNestedStack
 }
 
-private data object CnfPaneDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CnfPaneDest : NavDestination
 
-private data object CnfPrimaryDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CnfPrimaryDest : NavDestination
 
-private data object CnfSecondaryDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CnfSecondaryDest : NavDestination
 
-private data object CnfUnknownDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CnfUnknownDest : NavDestination
 
 // ─── Tests ───────────────────────────────────────────────────────────
 

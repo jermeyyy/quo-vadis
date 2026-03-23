@@ -31,32 +31,22 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
 
 private object HomeDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "home"
 }
 
 private object DetailDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "detail"
 }
 
 private object SettingsDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "settings"
 }
 
 private object ProfileDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "profile"
 }
 
 private object ListDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
     override fun toString(): String = "list"
 }
 
@@ -401,7 +391,6 @@ class TreeNavigatorExtendedTest : FunSpec({
 
     test("navigate uses destination's own transition when no explicit transition given") {
         val destWithTransition = object : NavDestination {
-            override val data: Any? = null
             override val transition: NavigationTransition = TestTransition
         }
         val navigator = TreeNavigator.withDestination(HomeDest)
@@ -413,7 +402,6 @@ class TreeNavigatorExtendedTest : FunSpec({
 
     test("navigate with explicit transition overrides destination transition") {
         val destWithTransition = object : NavDestination {
-            override val data: Any? = null
             override val transition: NavigationTransition = TestTransition
         }
         val customTransition = object : NavigationTransition {
@@ -573,14 +561,12 @@ class TreeNavigatorExtendedTest : FunSpec({
         navigator.navigate(DetailDest)
         val screenKey = navigator.state.value.activeLeaf()?.key?.value!!
 
-        val deferred = kotlinx.coroutines.runBlocking {
-            navigator.resultManager.requestResult(screenKey)
-        }
+        val deferred = navigator.resultManager.requestResult(screenKey)
 
         navigator.resultManager.completeResultSync(screenKey, "result-value")
 
-        deferred.isCompleted shouldBe true
-        kotlinx.coroutines.runBlocking { deferred.await() } shouldBe "result-value"
+        deferred.isCompleted.shouldBeTrue()
+        deferred.await() shouldBe "result-value"
     }
 
     test("resultManager cancelResult completes with null") {
@@ -588,14 +574,12 @@ class TreeNavigatorExtendedTest : FunSpec({
         navigator.navigate(DetailDest)
         val screenKey = navigator.state.value.activeLeaf()?.key?.value!!
 
-        val deferred = kotlinx.coroutines.runBlocking {
-            navigator.resultManager.requestResult(screenKey)
-        }
+        val deferred = navigator.resultManager.requestResult(screenKey)
 
-        kotlinx.coroutines.runBlocking { navigator.resultManager.cancelResult(screenKey) }
+        navigator.resultManager.cancelResult(screenKey)
 
-        deferred.isCompleted shouldBe true
-        kotlinx.coroutines.runBlocking { deferred.await() }.shouldBeNull()
+        deferred.isCompleted.shouldBeTrue()
+        deferred.await().shouldBeNull()
     }
 
     // =========================================================================

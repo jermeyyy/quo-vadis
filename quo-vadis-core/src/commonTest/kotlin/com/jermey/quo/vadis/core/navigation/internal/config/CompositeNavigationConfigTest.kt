@@ -16,9 +16,12 @@ import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.TransitionRegistry
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
@@ -110,7 +113,7 @@ class CompositeNavigationConfigTest : FunSpec({
         }
         val composite = primary + secondary
 
-        composite.modalRegistry.isModalDestination(CompDest.ScreenA::class) shouldBe true
+        composite.modalRegistry.isModalDestination(CompDest.ScreenA::class).shouldBeTrue()
     }
 
     test("modalRegistry finds modal from primary as fallback") {
@@ -120,7 +123,7 @@ class CompositeNavigationConfigTest : FunSpec({
         val secondary = navigationConfig { }
         val composite = primary + secondary
 
-        composite.modalRegistry.isModalDestination(CompDest.ScreenA::class) shouldBe true
+        composite.modalRegistry.isModalDestination(CompDest.ScreenA::class).shouldBeTrue()
     }
 
     test("modalRegistry returns false when neither has modal") {
@@ -128,7 +131,7 @@ class CompositeNavigationConfigTest : FunSpec({
         val secondary = navigationConfig { }
         val composite = primary + secondary
 
-        composite.modalRegistry.isModalDestination(CompDest.ScreenA::class) shouldBe false
+        composite.modalRegistry.isModalDestination(CompDest.ScreenA::class).shouldBeFalse()
     }
 
     // ── buildNavNode ────────────────────────────────────────────────
@@ -235,7 +238,7 @@ class CompositeNavigationConfigTest : FunSpec({
         val secondKey = tabNode.stacks[1].key.value
         // Keys should be different
         firstKey shouldBe firstKey // sanity
-        (firstKey != secondKey) shouldBe true
+        firstKey shouldNotBe secondKey
     }
 
     test("rekeyed stacks have children with updated parentKey prefix") {

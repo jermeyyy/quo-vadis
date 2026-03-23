@@ -10,7 +10,6 @@ import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.node.ScopeKey
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -20,52 +19,25 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
-private data object HomeDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object HomeDestination : NavDestination
 
-private data object DetailDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object DetailDestination : NavDestination
 
-private data object SettingsDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object SettingsDestination : NavDestination
 
-private data object ModalDestination : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object ModalDestination : NavDestination
 
 private sealed interface MainTabs : NavDestination {
-    data object Tab1 : MainTabs {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
+    data object Tab1 : MainTabs
 
-    data object Tab2 : MainTabs {
-        override val data: Any? = null
-        override val transition: NavigationTransition? = null
-    }
+    data object Tab2 : MainTabs
 }
 
-private data object CfgPanesDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CfgPanesDest : NavDestination
 
-private data object CfgPrimaryDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CfgPrimaryDest : NavDestination
 
-private data object CfgSecondaryDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object CfgSecondaryDest : NavDestination
 
 class NavigationConfigBuilderTest : FunSpec({
 

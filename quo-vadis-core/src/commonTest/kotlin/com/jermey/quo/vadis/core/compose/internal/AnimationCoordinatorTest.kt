@@ -10,21 +10,16 @@ import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.TransitionRegistry
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.reflect.KClass
 
-private object ACTestDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object ACTestDest : NavDestination
 
 private object ACCustomTransitionDest : NavDestination {
     override val data: Any? = "custom"
-    override val transition: NavigationTransition? = null
 }
 
 class AnimationCoordinatorTest : FunSpec({

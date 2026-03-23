@@ -5,7 +5,6 @@ package com.jermey.quo.vadis.core.dsl
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -13,20 +12,11 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-private data object HomeScreen : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object HomeScreen : NavDestination
 
-private data object DetailScreen : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object DetailScreen : NavDestination
 
-private data object SettingsScreen : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private data object SettingsScreen : NavDestination
 
 class StackBuilderTest : FunSpec({
 

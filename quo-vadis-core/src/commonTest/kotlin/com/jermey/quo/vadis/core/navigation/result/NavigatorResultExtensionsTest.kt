@@ -9,28 +9,19 @@ import com.jermey.quo.vadis.core.navigation.internal.NavigationResultManager
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.node.activeLeaf
 import com.jermey.quo.vadis.core.navigation.testing.withDestination
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-private object HomeDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object HomeDest : NavDestination
 
-private object DetailDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object DetailDest : NavDestination
 
 private data class PickerDest(val items: List<String> = emptyList()) :
-    NavDestination, ReturnsResult<String> {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+    NavDestination, ReturnsResult<String>
 
 class NavigatorResultExtensionsTest : FunSpec({
 
@@ -55,15 +46,8 @@ class NavigatorResultExtensionsTest : FunSpec({
         val screenKey = navigator.state.value.activeLeaf()?.key?.value
         screenKey.shouldNotBeNull()
 
-        // Simulate a pending result request
-        val resultManager = navigator.resultManager
-        val deferred = kotlinx.coroutines.CompletableDeferred<Any?>()
-        // We can't use requestResult (suspend) in non-suspend context.
-        // Instead test that completeResultSync is called by checking behavior.
-
         navigator.navigateBackWithResult("my-result")
 
-        // After navigateBackWithResult, we should be back on home
         navigator.currentDestination.value shouldBe HomeDest
     }
 
@@ -91,41 +75,33 @@ class NavigatorResultExtensionsTest : FunSpec({
     test("resultManager requestResult creates pending deferred") {
         val manager = NavigationResultManager()
 
-        manager.hasPendingResult("screen-1").shouldBe(false)
+        manager.hasPendingResult("screen-1").shouldBeFalse()
 
-        val deferred = kotlinx.coroutines.runBlocking {
-            manager.requestResult("screen-1")
-        }
+        val deferred = manager.requestResult("screen-1")
 
         manager.hasPendingResult("screen-1").shouldBeTrue()
         manager.pendingCount() shouldBe 1
-        deferred.isCompleted.shouldBe(false)
+        deferred.isCompleted.shouldBeFalse()
     }
 
     test("resultManager completeResultSync delivers result to deferred") {
         val manager = NavigationResultManager()
-        val deferred = kotlinx.coroutines.runBlocking {
-            manager.requestResult("screen-1")
-        }
+        val deferred = manager.requestResult("screen-1")
 
         manager.completeResultSync("screen-1", "hello")
 
         deferred.isCompleted.shouldBeTrue()
-        val result = kotlinx.coroutines.runBlocking { deferred.await() }
-        result shouldBe "hello"
+        deferred.await() shouldBe "hello"
     }
 
     test("resultManager cancelResult delivers null") {
         val manager = NavigationResultManager()
-        val deferred = kotlinx.coroutines.runBlocking {
-            manager.requestResult("screen-1")
-        }
+        val deferred = manager.requestResult("screen-1")
 
-        kotlinx.coroutines.runBlocking { manager.cancelResult("screen-1") }
+        manager.cancelResult("screen-1")
 
         deferred.isCompleted.shouldBeTrue()
-        val result = kotlinx.coroutines.runBlocking { deferred.await() }
-        result.shouldBeNull()
+        deferred.await().shouldBeNull()
     }
 
     test("resultManager completeResultSync for unknown key is no-op") {
@@ -141,15 +117,15 @@ class NavigatorResultExtensionsTest : FunSpec({
         val manager = NavigationResultManager()
 
         // Should not throw
-        kotlinx.coroutines.runBlocking { manager.cancelResult("unknown-key") }
+        manager.cancelResult("unknown-key")
 
         manager.pendingCount() shouldBe 0
     }
 
     test("resultManager supports multiple pending results") {
         val manager = NavigationResultManager()
-        val deferred1 = kotlinx.coroutines.runBlocking { manager.requestResult("s1") }
-        val deferred2 = kotlinx.coroutines.runBlocking { manager.requestResult("s2") }
+        val deferred1 = manager.requestResult("s1")
+        val deferred2 = manager.requestResult("s2")
 
         manager.pendingCount() shouldBe 2
 
@@ -159,7 +135,7 @@ class NavigatorResultExtensionsTest : FunSpec({
         manager.completeResultSync("s2", "result-b")
         manager.pendingCount() shouldBe 0
 
-        kotlinx.coroutines.runBlocking { deferred1.await() } shouldBe "result-a"
-        kotlinx.coroutines.runBlocking { deferred2.await() } shouldBe "result-b"
+        deferred1.await() shouldBe "result-a"
+        deferred2.await() shouldBe "result-b"
     }
 })

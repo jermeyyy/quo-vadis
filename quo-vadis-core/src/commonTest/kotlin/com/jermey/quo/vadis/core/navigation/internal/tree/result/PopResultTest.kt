@@ -8,16 +8,13 @@ import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
-private object PopTestDest : NavDestination {
-    override val data: Any? = null
-    override val transition: NavigationTransition? = null
-}
+private object PopTestDest : NavDestination
 
 class PopResultTest : FunSpec({
 
@@ -58,7 +55,7 @@ class PopResultTest : FunSpec({
         val a = PopResult.Popped(tree1)
         val b = PopResult.Popped(tree2)
 
-        (a == b) shouldBe false
+        a shouldNotBe b
     }
 
     // =========================================================================
@@ -94,7 +91,7 @@ class PopResultTest : FunSpec({
         val a = PopResult.PaneEmpty(PaneRole.Primary)
         val b = PopResult.PaneEmpty(PaneRole.Supporting)
 
-        (a == b) shouldBe false
+        a shouldNotBe b
     }
 
     // =========================================================================

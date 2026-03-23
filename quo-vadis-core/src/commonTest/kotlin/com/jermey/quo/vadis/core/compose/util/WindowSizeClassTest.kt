@@ -10,6 +10,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 
 class WindowSizeClassTest : FunSpec({
 
@@ -202,12 +203,12 @@ class WindowSizeClassTest : FunSpec({
     test("WindowSizeClass inequality on different width") {
         val a = WindowSizeClass(WindowWidthSizeClass.Compact, WindowHeightSizeClass.Medium)
         val b = WindowSizeClass(WindowWidthSizeClass.Expanded, WindowHeightSizeClass.Medium)
-        (a == b) shouldBe false
+        a shouldNotBe b
     }
 
     test("WindowSizeClass inequality on different height") {
         val a = WindowSizeClass(WindowWidthSizeClass.Medium, WindowHeightSizeClass.Compact)
         val b = WindowSizeClass(WindowWidthSizeClass.Medium, WindowHeightSizeClass.Expanded)
-        (a == b) shouldBe false
+        a shouldNotBe b
     }
 })
