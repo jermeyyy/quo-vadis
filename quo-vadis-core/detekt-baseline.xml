@@ -94,7 +94,6 @@
     <ID>UnusedParameter:CompositeContainerRegistryTest.kt:CompositeContainerRegistryTest$containerClass: KClass&lt;out NavDestination></ID>
     <ID>UnusedParameter:NavigationHost.kt:scopeRegistry: ScopeRegistry = ScopeRegistry.Empty</ID>
     <ID>UnusedParameter:PredictiveBackContent.kt:scope: NavRenderScope</ID>
-    <ID>UnusedPrivateClass:NavigatorResultExtensionsTest.kt:PickerDest : NavDestinationReturnsResult</ID>
     <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenADestination = object : NavDestination { override val data: Any? = "A" override val transition: NavigationTransition? = null }</ID>
     <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenBDestination = object : NavDestination { override val data: Any? = "B" override val transition: NavigationTransition? = null }</ID>
     <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenCDestination = object : NavDestination { override val data: Any? = "C" override val transition: NavigationTransition? = null }</ID>

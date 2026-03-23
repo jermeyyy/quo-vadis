@@ -170,7 +170,7 @@ class ValidationEngineScreenBindingTest : FunSpec({
 
         apiLogger.errors.clear()
         apiLogger.warnings.clear()
-        apiEngine.validate(
+        val isValid = apiEngine.validate(
             stacks = emptyList(),
             tabs = emptyList(),
             panes = emptyList(),
@@ -178,6 +178,7 @@ class ValidationEngineScreenBindingTest : FunSpec({
             allDestinations = listOf(dest),
         )
 
+        isValid.shouldBeTrue()
         apiLogger.errors.filter { it.contains("Missing @Screen binding") }.shouldBeEmpty()
     }
 })

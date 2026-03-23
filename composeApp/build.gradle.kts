@@ -78,11 +78,9 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
 
             implementation(projects.feature1)
-            implementation(projects.feature1Api)
             implementation(projects.feature2)
             implementation(projects.feature2Api)
             implementation(projects.feature3)
-            implementation(projects.feature3Api)
 
             // Haze for glassmorphism
             implementation(libs.haze)

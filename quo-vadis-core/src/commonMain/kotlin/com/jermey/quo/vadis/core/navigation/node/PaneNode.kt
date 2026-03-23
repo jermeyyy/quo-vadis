@@ -60,6 +60,10 @@ import kotlinx.serialization.Serializable
  * @property paneConfigurations Map of pane roles to their configurations
  * @property activePaneRole The pane that currently has navigation focus
  * @property backBehavior How back navigation should behave in this container
+ * @property wrapperKey Key used to lookup the wrapper in [com.jermey.quo.vadis.core.registry.ContainerRegistry].
+ *   This is typically the qualified name of the pane class (e.g., "com.example.MainPane")
+ *   and is used by the hierarchical renderer to find the correct wrapper.
+ *   Defaults to null, which means no custom wrapper is registered.
  * @property scopeKey Identifier for scope-aware navigation. When set, destinations
  *   not in this scope will navigate outside the pane container. Typically the
  *   sealed class simple name. Defaults to null (no scope enforcement).
@@ -72,6 +76,7 @@ class PaneNode(
     val paneConfigurations: Map<PaneRole, PaneConfiguration>,
     val activePaneRole: PaneRole = PaneRole.Primary,
     val backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange,
+    val wrapperKey: String? = null,
     val scopeKey: ScopeKey? = null
 ) : NavNode, LifecycleAwareNode by LifecycleDelegate() {
 
@@ -126,6 +131,7 @@ class PaneNode(
         paneConfigurations: Map<PaneRole, PaneConfiguration> = this.paneConfigurations,
         activePaneRole: PaneRole = this.activePaneRole,
         backBehavior: PaneBackBehavior = this.backBehavior,
+        wrapperKey: String? = this.wrapperKey,
         scopeKey: ScopeKey? = this.scopeKey
     ): PaneNode = PaneNode(
         key = key,
@@ -133,6 +139,7 @@ class PaneNode(
         paneConfigurations = paneConfigurations,
         activePaneRole = activePaneRole,
         backBehavior = backBehavior,
+        wrapperKey = wrapperKey,
         scopeKey = scopeKey
     )
 
@@ -146,6 +153,7 @@ class PaneNode(
             paneConfigurations == other.paneConfigurations &&
             activePaneRole == other.activePaneRole &&
             backBehavior == other.backBehavior &&
+            wrapperKey == other.wrapperKey &&
             scopeKey == other.scopeKey
     }
 
@@ -155,6 +163,7 @@ class PaneNode(
         result = 31 * result + paneConfigurations.hashCode()
         result = 31 * result + activePaneRole.hashCode()
         result = 31 * result + backBehavior.hashCode()
+        result = 31 * result + (wrapperKey?.hashCode() ?: 0)
         result = 31 * result + (scopeKey?.hashCode() ?: 0)
         return result
     }

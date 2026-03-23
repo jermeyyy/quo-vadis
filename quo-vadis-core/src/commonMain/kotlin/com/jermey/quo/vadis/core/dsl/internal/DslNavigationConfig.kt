@@ -440,6 +440,7 @@ internal class DslNavigationConfig(
             paneConfigurations = paneConfigurations,
             activePaneRole = config.initialPane,
             backBehavior = config.backBehavior,
+            wrapperKey = builder.destinationClass.qualifiedName ?: builder.scopeKey.value,
             scopeKey = builder.scopeKey
         )
     }

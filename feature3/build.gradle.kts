@@ -56,10 +56,6 @@ kotlin {
                 implementation(projects.quoVadisAnnotations)
                 implementation(projects.quoVadisCore)
                 implementation(projects.navigationApi)
-                implementation(projects.feature3Api)
-
-                // Cross-module navigation: can navigate to feature1-api destinations
-                implementation(projects.feature1Api)
 
                 // Koin for dependency injection
                 implementation(libs.koin.core)

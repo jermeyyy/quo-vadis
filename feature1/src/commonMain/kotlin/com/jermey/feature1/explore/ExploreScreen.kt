@@ -72,12 +72,7 @@ import com.jermey.feature1.explore.components.ExploreGrid
 import com.jermey.feature1.explore.components.FilterSheet
 import com.jermey.feature1.explore.components.QuickPreviewSheet
 import com.jermey.feature1.explore.components.rememberStaggerAnimationState
-import com.jermey.feature1.explore.ExploreAction
-import com.jermey.feature1.explore.ExploreContainer
-import com.jermey.feature1.explore.ExploreIntent
-import com.jermey.feature1.explore.ExploreState
-import com.jermey.feature1.explore.FilterChangeType
-import com.jermey.feature1.explore.rememberExploreFilterState
+
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.flowmvi.rememberContainer

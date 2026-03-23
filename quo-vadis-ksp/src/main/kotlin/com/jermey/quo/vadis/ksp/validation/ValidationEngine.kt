@@ -62,6 +62,7 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
  * ```
  *
  * @param logger KSP logger for reporting errors and warnings with source locations
+ * @param apiModule When true, relaxes validation for API-only modules (e.g., skips missing @Screen binding checks)
  */
 class ValidationEngine(
     private val logger: KSPLogger,
