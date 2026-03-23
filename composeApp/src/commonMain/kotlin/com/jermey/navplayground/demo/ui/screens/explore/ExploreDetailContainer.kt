@@ -2,6 +2,7 @@ package com.jermey.navplayground.demo.ui.screens.explore
 
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Qualifier
 import org.koin.core.annotation.Scope
 import org.koin.core.annotation.Scoped
@@ -50,7 +51,7 @@ sealed interface ExploreDetailAction : MVIAction {
 @Scope(NavigationContainerScope::class)
 @Qualifier(ExploreDetailContainer::class)
 class ExploreDetailContainer(
-    scope: NavigationContainerScope,
+    @Provided scope: NavigationContainerScope,
     repository: ExploreRepository,
     itemId: String,
 ) : NavigationContainer<ExploreDetailState, ExploreDetailIntent, ExploreDetailAction>(scope) {

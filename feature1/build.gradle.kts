@@ -15,6 +15,12 @@ quoVadis {
     useLocalKsp = true
 }
 
+// Disable Koin compile-time safety: @Provided on NavigationContainerScope
+// is not recognized by the compiler plugin 0.4.1
+koinCompiler {
+    compileSafety = false
+}
+
 kotlin {
 
     androidLibrary {

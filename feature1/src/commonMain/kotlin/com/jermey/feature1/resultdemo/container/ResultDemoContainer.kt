@@ -12,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Qualifier
 import org.koin.core.annotation.Scope
 import org.koin.core.annotation.Scoped
@@ -65,7 +66,7 @@ data class ResultDemoState(
 @Scope(NavigationContainerScope::class)
 @Qualifier(ResultDemoContainer::class)
 class ResultDemoContainer(
-    scope: NavigationContainerScope,
+    @Provided scope: NavigationContainerScope,
 ) : NavigationContainer<ResultDemoState, Intent, Action>(scope) {
     sealed class Intent : MVIIntent {
         data object PickItem : Intent()

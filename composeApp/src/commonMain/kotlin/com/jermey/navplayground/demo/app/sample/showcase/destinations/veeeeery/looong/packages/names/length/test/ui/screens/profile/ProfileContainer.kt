@@ -3,6 +3,7 @@ package com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.SettingsTab
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Qualifier
 import org.koin.core.annotation.Scope
 import org.koin.core.annotation.Scoped
@@ -33,7 +34,7 @@ private typealias Ctx = PipelineContext<ProfileState, ProfileIntent, ProfileActi
 @Scope(NavigationContainerScope::class)
 @Qualifier(ProfileContainer::class)
 class ProfileContainer(
-    scope: NavigationContainerScope,
+    @Provided scope: NavigationContainerScope,
     private val repository: ProfileRepository,
 ) : NavigationContainer<ProfileState, ProfileIntent, ProfileAction>(scope) {
 

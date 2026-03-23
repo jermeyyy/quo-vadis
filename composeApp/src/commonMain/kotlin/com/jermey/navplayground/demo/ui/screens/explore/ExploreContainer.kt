@@ -3,6 +3,7 @@ package com.jermey.navplayground.demo.ui.screens.explore
 import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Qualifier
 import org.koin.core.annotation.Scope
 import org.koin.core.annotation.Scoped
@@ -33,7 +34,7 @@ private typealias Ctx = pro.respawn.flowmvi.api.PipelineContext<ExploreState, Ex
 @Scope(NavigationContainerScope::class)
 @Qualifier(ExploreContainer::class)
 class ExploreContainer(
-    scope: NavigationContainerScope,
+    @Provided scope: NavigationContainerScope,
     repository: ExploreRepository,
 ) : NavigationContainer<ExploreState, ExploreIntent, ExploreAction>(scope) {
 

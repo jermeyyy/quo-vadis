@@ -4,6 +4,7 @@ import com.jermey.feature1.resultdemo.SelectedItem
 import com.jermey.quo.vadis.core.navigation.result.navigateBackWithResult
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Qualifier
 import org.koin.core.annotation.Scope
 import org.koin.core.annotation.Scoped
@@ -72,7 +73,7 @@ private val defaultItems = listOf(
 @Scope(NavigationContainerScope::class)
 @Qualifier(ItemPickerContainer::class)
 class ItemPickerContainer(
-    scope: NavigationContainerScope,
+    @Provided scope: NavigationContainerScope,
 ) : NavigationContainer<ItemPickerState, ItemPickerContainer.Intent, ItemPickerContainer.Action>(
     scope
 ) {

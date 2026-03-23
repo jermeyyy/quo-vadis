@@ -5,6 +5,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedNavigationContainer
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Qualifier
 import org.koin.core.annotation.Scope
 import org.koin.core.annotation.Scoped
@@ -88,7 +89,7 @@ sealed interface DemoTabsAction : MVIAction
 @Scope(SharedContainerScope::class)
 @Qualifier(DemoTabsContainer::class)
 class DemoTabsContainer(
-    scope: SharedContainerScope,
+    @Provided scope: SharedContainerScope,
 ) : SharedNavigationContainer<DemoTabsState, DemoTabsIntent, DemoTabsAction>(scope) {
 
     override val store: Store<DemoTabsState, DemoTabsIntent, DemoTabsAction> =
