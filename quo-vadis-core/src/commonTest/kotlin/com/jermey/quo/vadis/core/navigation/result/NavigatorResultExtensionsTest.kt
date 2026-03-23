@@ -2,7 +2,6 @@
 
 package com.jermey.quo.vadis.core.navigation.result
 
-import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.internal.NavigationResultManager
@@ -19,9 +18,6 @@ import io.kotest.matchers.shouldBe
 private object HomeDest : NavDestination
 
 private object DetailDest : NavDestination
-
-private data class PickerDest(val items: List<String> = emptyList()) :
-    NavDestination, ReturnsResult<String>
 
 class NavigatorResultExtensionsTest : FunSpec({
 

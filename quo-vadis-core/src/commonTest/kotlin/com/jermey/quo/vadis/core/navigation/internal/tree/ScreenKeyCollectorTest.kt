@@ -6,6 +6,7 @@ import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.internal.NavigationResultManager
+import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
@@ -41,9 +42,13 @@ private object SkcSettings : NavDestination {
 // =============================================================================
 
 private fun screenNode(key: String, parentKey: String?, destination: NavDestination) =
-    ScreenNode(key = NodeKey(key), parentKey = parentKey?.let { NodeKey(it) }, destination = destination)
+    ScreenNode(
+        key = NodeKey(key),
+        parentKey = parentKey?.let { NodeKey(it) },
+        destination = destination
+    )
 
-private fun stackNode(key: String, parentKey: String?, children: List<com.jermey.quo.vadis.core.navigation.node.NavNode>) =
+private fun stackNode(key: String, parentKey: String?, children: List<NavNode>) =
     StackNode(key = NodeKey(key), parentKey = parentKey?.let { NodeKey(it) }, children = children)
 
 private fun tabNode(
@@ -225,17 +230,21 @@ class ScreenKeyCollectorTest : FunSpec({
         val supportingScreen = screenNode("sup-s1", "sup-stack", SkcProfile)
         val primaryStack = stackNode("p-stack", "pane", listOf(primaryScreen))
         val supportingStack = stackNode("sup-stack", "pane", listOf(supportingScreen))
-        val oldTree = paneNode("pane", null, mapOf(
-            PaneRole.Primary to PaneConfiguration(primaryStack),
-            PaneRole.Supporting to PaneConfiguration(supportingStack)
-        ))
+        val oldTree = paneNode(
+            "pane", null, mapOf(
+                PaneRole.Primary to PaneConfiguration(primaryStack),
+                PaneRole.Supporting to PaneConfiguration(supportingStack)
+            )
+        )
 
         // New tree: only primary pane, different screen
         val newPrimaryScreen = screenNode("p-s2", "p-stack2", SkcSettings)
         val newPrimaryStack = stackNode("p-stack2", "pane2", listOf(newPrimaryScreen))
-        val newTree = paneNode("pane2", null, mapOf(
-            PaneRole.Primary to PaneConfiguration(newPrimaryStack)
-        ))
+        val newTree = paneNode(
+            "pane2", null, mapOf(
+                PaneRole.Primary to PaneConfiguration(newPrimaryStack)
+            )
+        )
 
         collector.cancelResultsForDestroyedScreens(oldTree, newTree)
 

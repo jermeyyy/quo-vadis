@@ -55,7 +55,11 @@ class PushStrategyTest : FunSpec({
             key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(NodeKey("t0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest)))
+                StackNode(
+                    NodeKey("t0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest))
+                )
             ),
             activeStackIndex = 0
         )
@@ -70,7 +74,11 @@ class PushStrategyTest : FunSpec({
             key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(NodeKey("t0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest)))
+                StackNode(
+                    NodeKey("t0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest))
+                )
             ),
             activeStackIndex = 0
         )
@@ -84,7 +92,11 @@ class PushStrategyTest : FunSpec({
             key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(NodeKey("t0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest)))
+                StackNode(
+                    NodeKey("t0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest))
+                )
             ),
             activeStackIndex = 0
         )
@@ -99,8 +111,16 @@ class PushStrategyTest : FunSpec({
             key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(NodeKey("t0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest))),
-                StackNode(NodeKey("t1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("t1"), PushTestDest)))
+                StackNode(
+                    NodeKey("t0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest))
+                ),
+                StackNode(
+                    NodeKey("t1"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s1"), NodeKey("t1"), PushTestDest))
+                )
             ),
             activeStackIndex = 0
         )
@@ -115,7 +135,11 @@ class PushStrategyTest : FunSpec({
     // =========================================================================
 
     test("PushToPaneStack holds paneNode and role") {
-        val primaryStack = StackNode(NodeKey("ps"), NodeKey("pane"), listOf(ScreenNode(NodeKey("s"), NodeKey("ps"), PushTestDest)))
+        val primaryStack = StackNode(
+            NodeKey("ps"),
+            NodeKey("pane"),
+            listOf(ScreenNode(NodeKey("s"), NodeKey("ps"), PushTestDest))
+        )
         val paneNode = PaneNode(
             key = NodeKey("pane"),
             parentKey = null,
@@ -129,7 +153,11 @@ class PushStrategyTest : FunSpec({
     }
 
     test("PushToPaneStack is instance of PushStrategy") {
-        val primaryStack = StackNode(NodeKey("ps"), NodeKey("pane"), listOf(ScreenNode(NodeKey("s"), NodeKey("ps"), PushTestDest)))
+        val primaryStack = StackNode(
+            NodeKey("ps"),
+            NodeKey("pane"),
+            listOf(ScreenNode(NodeKey("s"), NodeKey("ps"), PushTestDest))
+        )
         val paneNode = PaneNode(
             key = NodeKey("pane"),
             parentKey = null,
@@ -142,7 +170,11 @@ class PushStrategyTest : FunSpec({
     }
 
     test("PushToPaneStack data class equality") {
-        val primaryStack = StackNode(NodeKey("ps"), NodeKey("pane"), listOf(ScreenNode(NodeKey("s"), NodeKey("ps"), PushTestDest)))
+        val primaryStack = StackNode(
+            NodeKey("ps"),
+            NodeKey("pane"),
+            listOf(ScreenNode(NodeKey("s"), NodeKey("ps"), PushTestDest))
+        )
         val paneNode = PaneNode(
             key = NodeKey("pane"),
             parentKey = null,
@@ -191,11 +223,19 @@ class PushStrategyTest : FunSpec({
             key = NodeKey("tabs"),
             parentKey = null,
             stacks = listOf(
-                StackNode(NodeKey("t0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest)))
+                StackNode(
+                    NodeKey("t0"),
+                    NodeKey("tabs"),
+                    listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest))
+                )
             ),
             activeStackIndex = 0
         )
-        val primaryStack = StackNode(NodeKey("ps"), NodeKey("pane"), listOf(ScreenNode(NodeKey("s1"), NodeKey("ps"), PushTestDest)))
+        val primaryStack = StackNode(
+            NodeKey("ps"),
+            NodeKey("pane"),
+            listOf(ScreenNode(NodeKey("s1"), NodeKey("ps"), PushTestDest))
+        )
         val paneNode = PaneNode(
             key = NodeKey("pane"),
             parentKey = null,
@@ -219,6 +259,11 @@ class PushStrategyTest : FunSpec({
             }
         }
 
-        labels shouldBe listOf("push_to_stack", "switch_to_tab", "push_to_pane", "push_out_of_scope")
+        labels shouldBe listOf(
+            "push_to_stack",
+            "switch_to_tab",
+            "push_to_pane",
+            "push_out_of_scope"
+        )
     }
 })

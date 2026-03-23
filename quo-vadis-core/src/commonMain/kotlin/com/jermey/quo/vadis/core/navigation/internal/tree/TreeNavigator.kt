@@ -843,12 +843,7 @@ class TreeNavigator(
      * @param newState The new navigation state
      * @param transition Optional transition for animation
      */
-    @Suppress("DEPRECATION")
-    @Deprecated(
-        message = "Use navigate(), navigateBack(), or navigateAndClearTo() instead. " +
-                "Direct state manipulation bypasses validation and lifecycle management.",
-        level = DeprecationLevel.WARNING,
-    )
+    @InternalQuoVadisApi
     override fun updateState(newState: NavNode, transition: NavigationTransition?) {
         updateStateWithTransition(newState, transition)
     }

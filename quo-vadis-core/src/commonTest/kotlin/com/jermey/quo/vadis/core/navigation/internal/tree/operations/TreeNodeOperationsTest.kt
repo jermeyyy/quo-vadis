@@ -44,9 +44,17 @@ private object TnoDetail : NavDestination {
 // =============================================================================
 
 private fun screenNode(key: String, parentKey: String?, destination: NavDestination) =
-    ScreenNode(key = NodeKey(key), parentKey = parentKey?.let { NodeKey(it) }, destination = destination)
+    ScreenNode(
+        key = NodeKey(key),
+        parentKey = parentKey?.let { NodeKey(it) },
+        destination = destination
+    )
 
-private fun stackNode(key: String, parentKey: String?, children: List<com.jermey.quo.vadis.core.navigation.node.NavNode>) =
+private fun stackNode(
+    key: String,
+    parentKey: String?,
+    children: List<com.jermey.quo.vadis.core.navigation.node.NavNode>
+) =
     StackNode(key = NodeKey(key), parentKey = parentKey?.let { NodeKey(it) }, children = children)
 
 private fun tabNode(
@@ -111,11 +119,17 @@ class TreeNodeOperationsTest : FunSpec({
     }
 
     test("replaceNode - key not found returns NodeNotFound") {
-        val root = stackNode("stack", null, listOf(
-            screenNode("s1", "stack", TnoHome)
-        ))
+        val root = stackNode(
+            "stack", null, listOf(
+                screenNode("s1", "stack", TnoHome)
+            )
+        )
 
-        val result = TreeNodeOperations.replaceNode(root, NodeKey("nonexistent"), screenNode("x", null, TnoHome))
+        val result = TreeNodeOperations.replaceNode(
+            root,
+            NodeKey("nonexistent"),
+            screenNode("x", null, TnoHome)
+        )
 
         result.shouldBeInstanceOf<TreeOperationResult.NodeNotFound>()
         result.key shouldBe NodeKey("nonexistent")
@@ -129,9 +143,11 @@ class TreeNodeOperationsTest : FunSpec({
         val tabs = tabNode("tabs", "root-stack", listOf(tabStack1, tabStack2))
         val root = stackNode("root-stack", null, listOf(tabs))
 
-        val newStack = stackNode("tab-stack1-new", "tabs", listOf(
-            screenNode("home-new", "tab-stack1-new", TnoSettings)
-        ))
+        val newStack = stackNode(
+            "tab-stack1-new", "tabs", listOf(
+                screenNode("home-new", "tab-stack1-new", TnoSettings)
+            )
+        )
 
         val result = TreeNodeOperations.replaceNode(root, NodeKey("tab-stack1"), newStack)
 
@@ -165,10 +181,12 @@ class TreeNodeOperationsTest : FunSpec({
         val supportingScreen = screenNode("supporting-s", "supporting-stack", TnoProfile)
         val primaryStack = stackNode("primary-stack", "pane", listOf(primaryScreen))
         val supportingStack = stackNode("supporting-stack", "pane", listOf(supportingScreen))
-        val pane = paneNode("pane", "root", mapOf(
-            PaneRole.Primary to PaneConfiguration(primaryStack),
-            PaneRole.Supporting to PaneConfiguration(supportingStack)
-        ))
+        val pane = paneNode(
+            "pane", "root", mapOf(
+                PaneRole.Primary to PaneConfiguration(primaryStack),
+                PaneRole.Supporting to PaneConfiguration(supportingStack)
+            )
+        )
         val root = stackNode("root", null, listOf(pane))
 
         val replacement = screenNode("new-s", "supporting-stack", TnoSettings)
@@ -177,7 +195,8 @@ class TreeNodeOperationsTest : FunSpec({
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
         val newRoot = result.newTree.shouldBeInstanceOf<StackNode>()
         val newPane = newRoot.children[0].shouldBeInstanceOf<PaneNode>()
-        val newSupportingStack = newPane.paneConfigurations[PaneRole.Supporting]!!.content.shouldBeInstanceOf<StackNode>()
+        val newSupportingStack =
+            newPane.paneConfigurations[PaneRole.Supporting]!!.content.shouldBeInstanceOf<StackNode>()
         val newScreen = newSupportingStack.children[0].shouldBeInstanceOf<ScreenNode>()
         newScreen.destination shouldBe TnoSettings
         // Primary pane unchanged
@@ -187,7 +206,11 @@ class TreeNodeOperationsTest : FunSpec({
     test("replaceNode - ScreenNode with missing key returns NodeNotFound") {
         val root = screenNode("leaf", null, TnoHome)
 
-        val result = TreeNodeOperations.replaceNode(root, NodeKey("other"), screenNode("x", null, TnoProfile))
+        val result = TreeNodeOperations.replaceNode(
+            root,
+            NodeKey("other"),
+            screenNode("x", null, TnoProfile)
+        )
 
         result.shouldBeInstanceOf<TreeOperationResult.NodeNotFound>()
     }
@@ -210,9 +233,11 @@ class TreeNodeOperationsTest : FunSpec({
     }
 
     test("removeNode - remove root returns null") {
-        val root = stackNode("root", null, listOf(
-            screenNode("s1", "root", TnoHome)
-        ))
+        val root = stackNode(
+            "root", null, listOf(
+                screenNode("s1", "root", TnoHome)
+            )
+        )
 
         val result = TreeNodeOperations.removeNode(root, NodeKey("root"))
 
@@ -220,9 +245,11 @@ class TreeNodeOperationsTest : FunSpec({
     }
 
     test("removeNode - key not found returns NodeNotFound") {
-        val root = stackNode("stack", null, listOf(
-            screenNode("s1", "stack", TnoHome)
-        ))
+        val root = stackNode(
+            "stack", null, listOf(
+                screenNode("s1", "stack", TnoHome)
+            )
+        )
 
         val result = TreeNodeOperations.removeNode(root, NodeKey("nonexistent"))
 
@@ -251,9 +278,11 @@ class TreeNodeOperationsTest : FunSpec({
         val s1 = screenNode("s1", "pane-stack", TnoHome)
         val s2 = screenNode("s2", "pane-stack", TnoProfile)
         val paneStack = stackNode("pane-stack", "pane", listOf(s1, s2))
-        val pane = paneNode("pane", "root", mapOf(
-            PaneRole.Primary to PaneConfiguration(paneStack)
-        ))
+        val pane = paneNode(
+            "pane", "root", mapOf(
+                PaneRole.Primary to PaneConfiguration(paneStack)
+            )
+        )
         val root = stackNode("root", null, listOf(pane))
 
         val result = TreeNodeOperations.removeNode(root, NodeKey("s2"))
@@ -261,14 +290,17 @@ class TreeNodeOperationsTest : FunSpec({
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
         val newRoot = result.newTree.shouldBeInstanceOf<StackNode>()
         val newPane = newRoot.children[0].shouldBeInstanceOf<PaneNode>()
-        val newPaneStack = newPane.paneConfigurations[PaneRole.Primary]!!.content.shouldBeInstanceOf<StackNode>()
+        val newPaneStack =
+            newPane.paneConfigurations[PaneRole.Primary]!!.content.shouldBeInstanceOf<StackNode>()
         newPaneStack.children.size shouldBe 1
     }
 
     test("removeNode - cannot remove stack from TabNode throws exception") {
-        val innerStack = stackNode("tab-stack", "tabs", listOf(
-            screenNode("s1", "tab-stack", TnoHome)
-        ))
+        val innerStack = stackNode(
+            "tab-stack", "tabs", listOf(
+                screenNode("s1", "tab-stack", TnoHome)
+            )
+        )
         val tabs = tabNode("tabs", null, listOf(innerStack))
 
         shouldThrow<IllegalArgumentException> {
@@ -277,12 +309,16 @@ class TreeNodeOperationsTest : FunSpec({
     }
 
     test("removeNode - cannot remove pane content directly throws exception") {
-        val paneStack = stackNode("pane-stack", "pane", listOf(
-            screenNode("s1", "pane-stack", TnoHome)
-        ))
-        val pane = paneNode("pane", null, mapOf(
-            PaneRole.Primary to PaneConfiguration(paneStack)
-        ))
+        val paneStack = stackNode(
+            "pane-stack", "pane", listOf(
+                screenNode("s1", "pane-stack", TnoHome)
+            )
+        )
+        val pane = paneNode(
+            "pane", null, mapOf(
+                PaneRole.Primary to PaneConfiguration(paneStack)
+            )
+        )
 
         shouldThrow<IllegalArgumentException> {
             TreeNodeOperations.removeNode(pane, NodeKey("pane-stack"))

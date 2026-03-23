@@ -5,6 +5,7 @@ package com.jermey.quo.vadis.core.navigation.internal.tree
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
+import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
@@ -43,10 +44,18 @@ private object TdcDetail : NavDestination {
 // =============================================================================
 
 private fun screenNode(key: String, parentKey: String?, destination: NavDestination) =
-    ScreenNode(key = NodeKey(key), parentKey = parentKey?.let { NodeKey(it) }, destination = destination)
+    ScreenNode(
+        key = NodeKey(key),
+        parentKey = parentKey?.let { NodeKey(it) },
+        destination = destination
+    )
 
-private fun stackNode(key: String, parentKey: String?, children: List<com.jermey.quo.vadis.core.navigation.node.NavNode>) =
-    StackNode(key = NodeKey(key), parentKey = parentKey?.let { NodeKey(it) }, children = children)
+private fun stackNode(key: String, parentKey: String?, children: List<NavNode>) =
+    StackNode(
+        key = NodeKey(key),
+        parentKey = parentKey?.let { NodeKey(it) },
+        children = children
+    )
 
 private fun tabNode(
     key: String,
@@ -170,18 +179,22 @@ class TreeDiffCalculatorTest : FunSpec({
         val supportingScreen = screenNode("sup-s1", "sup-stack", TdcProfile)
         val primaryStack = stackNode("p-stack", "pane", listOf(primaryScreen))
         val supportingStack = stackNode("sup-stack", "pane", listOf(supportingScreen))
-        val oldPane = paneNode("pane", null, mapOf(
-            PaneRole.Primary to PaneConfiguration(primaryStack),
-            PaneRole.Supporting to PaneConfiguration(supportingStack)
-        ))
+        val oldPane = paneNode(
+            "pane", null, mapOf(
+                PaneRole.Primary to PaneConfiguration(primaryStack),
+                PaneRole.Supporting to PaneConfiguration(supportingStack)
+            )
+        )
 
         // New tree: supporting pane has different screen
         val newSupportingScreen = screenNode("sup-s2", "sup-stack", TdcSettings)
         val newSupportingStack = stackNode("sup-stack", "pane", listOf(newSupportingScreen))
-        val newPane = paneNode("pane", null, mapOf(
-            PaneRole.Primary to PaneConfiguration(primaryStack),
-            PaneRole.Supporting to PaneConfiguration(newSupportingStack)
-        ))
+        val newPane = paneNode(
+            "pane", null, mapOf(
+                PaneRole.Primary to PaneConfiguration(primaryStack),
+                PaneRole.Supporting to PaneConfiguration(newSupportingStack)
+            )
+        )
 
         val diff = TreeDiffCalculator.computeDiff(oldPane, newPane)
 
@@ -245,16 +258,20 @@ class TreeDiffCalculatorTest : FunSpec({
     test("computeDiff - adding pane configuration has no removed keys") {
         val primaryScreen = screenNode("p-s1", "p-stack", TdcHome)
         val primaryStack = stackNode("p-stack", "pane", listOf(primaryScreen))
-        val oldPane = paneNode("pane", null, mapOf(
-            PaneRole.Primary to PaneConfiguration(primaryStack)
-        ))
+        val oldPane = paneNode(
+            "pane", null, mapOf(
+                PaneRole.Primary to PaneConfiguration(primaryStack)
+            )
+        )
 
         val supportingScreen = screenNode("sup-s1", "sup-stack", TdcProfile)
         val supportingStack = stackNode("sup-stack", "pane", listOf(supportingScreen))
-        val newPane = paneNode("pane", null, mapOf(
-            PaneRole.Primary to PaneConfiguration(primaryStack),
-            PaneRole.Supporting to PaneConfiguration(supportingStack)
-        ))
+        val newPane = paneNode(
+            "pane", null, mapOf(
+                PaneRole.Primary to PaneConfiguration(primaryStack),
+                PaneRole.Supporting to PaneConfiguration(supportingStack)
+            )
+        )
 
         val diff = TreeDiffCalculator.computeDiff(oldPane, newPane)
 

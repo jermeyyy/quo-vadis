@@ -931,7 +931,7 @@ class BackOperationsTest : FunSpec({
         val result: BackResult = BackResult.Handled(state)
 
         result.shouldBeInstanceOf<BackResult.Handled>()
-        (result as BackResult.Handled).newState shouldBe state
+        result.newState shouldBe state
     }
 
     test("BackResult.DelegateToSystem is a singleton") {

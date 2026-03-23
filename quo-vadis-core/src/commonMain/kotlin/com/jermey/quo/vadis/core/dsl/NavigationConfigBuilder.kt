@@ -228,7 +228,7 @@ class NavigationConfigBuilder {
         val scopeMembers = scopes.getOrPut(scopeKeyValue) { mutableSetOf() }
         tabsBuilder.tabs.forEach { entry ->
             when (entry) {
-                is TabEntry.FlatScreen -> entry.destinationClass?.let { scopeMembers.add(it) }
+                is TabEntry.FlatScreen -> entry.destinationClass.let { scopeMembers.add(it) }
                 is TabEntry.NestedStack -> entry.screens.forEach { screen ->
                     screen.destinationClass?.let { scopeMembers.add(it) }
                 }

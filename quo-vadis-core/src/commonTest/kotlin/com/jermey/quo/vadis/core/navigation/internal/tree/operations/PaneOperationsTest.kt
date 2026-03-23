@@ -329,7 +329,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popWithPaneBehavior(root)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         val primaryStack = pane.paneContent(PaneRole.Primary) as StackNode
         primaryStack.children.size shouldBe 1
     }
@@ -366,7 +366,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popWithPaneBehavior(root)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         pane.activePaneRole shouldBe PaneRole.Primary
     }
 
@@ -393,7 +393,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popWithPaneBehavior(root)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         pane.activePaneRole shouldBe PaneRole.Supporting
     }
 
@@ -425,7 +425,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popWithPaneBehavior(root)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         // Supporting was popped (2→1), then since 1 ≤ 1 and not Primary, cleared and switched
         val suppStack = pane.paneContent(PaneRole.Supporting) as StackNode
         suppStack.children.size shouldBe 0
@@ -445,7 +445,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popWithPaneBehavior(root)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         // Supporting was popped (3→2), still has >1 children so no clearing
         val suppStack = pane.paneContent(PaneRole.Supporting) as StackNode
         suppStack.children.size shouldBe 2
@@ -471,7 +471,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popWithPaneBehavior(root)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         pane.activePaneRole shouldBe PaneRole.Primary
     }
 
@@ -486,7 +486,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popPaneAdaptive(root, isCompact = true)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         val primaryStack = pane.paneContent(PaneRole.Primary) as StackNode
         primaryStack.children.size shouldBe 1
     }
@@ -505,7 +505,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popPaneAdaptive(root, isCompact = true)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         pane.activePaneRole shouldBe PaneRole.Primary
     }
 
@@ -519,7 +519,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popPaneAdaptive(root, isCompact = true)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         val suppStack = pane.paneContent(PaneRole.Supporting) as StackNode
         suppStack.children.size shouldBe 1
     }
@@ -536,7 +536,7 @@ class PaneOperationsTest : FunSpec({
 
         val result = PaneOperations.popPaneAdaptive(root, isCompact = false)
         result.shouldBeInstanceOf<PopResult.Popped>()
-        val pane = (result as PopResult.Popped).newState.findByKey(NodeKey("pane")) as PaneNode
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         pane.activePaneRole shouldBe PaneRole.Primary
     }
 
@@ -605,7 +605,12 @@ class PaneOperationsTest : FunSpec({
         val root = createDualPaneTree()
         val config = PaneConfiguration(content = StackNode(NodeKey("s"), null))
         shouldThrow<IllegalArgumentException> {
-            PaneOperations.setPaneConfiguration(root, NodeKey("nonexistent"), PaneRole.Extra, config)
+            PaneOperations.setPaneConfiguration(
+                root,
+                NodeKey("nonexistent"),
+                PaneRole.Extra,
+                config
+            )
         }
     }
 

@@ -1,4 +1,4 @@
-@file:OptIn(com.jermey.quo.vadis.core.InternalQuoVadisApi::class)
+@file:OptIn(InternalQuoVadisApi::class)
 
 package com.jermey.quo.vadis.core.navigation.internal.tree.operations
 
@@ -247,7 +247,8 @@ class PushOperationsTest : FunSpec({
         )
         val gen = createKeyGenerator()
 
-        val result = PushOperations.pushToStack(root, NodeKey("tab1"), ProfileDestination, gen) as TabNode
+        val result =
+            PushOperations.pushToStack(root, NodeKey("tab1"), ProfileDestination, gen) as TabNode
 
         result.stacks[0].children.size shouldBe 0
         result.stacks[1].children.size shouldBe 1
@@ -259,7 +260,8 @@ class PushOperationsTest : FunSpec({
         val root = StackNode(NodeKey("root"), null, listOf(screen1))
         val gen = createKeyGenerator()
 
-        val result = PushOperations.pushToStack(root, NodeKey("root"), ProfileDestination, gen) as StackNode
+        val result =
+            PushOperations.pushToStack(root, NodeKey("root"), ProfileDestination, gen) as StackNode
 
         result.children.size shouldBe 2
         (result.children[0] as ScreenNode).destination shouldBe HomeDestination
@@ -337,7 +339,8 @@ class PushOperationsTest : FunSpec({
         )
         val gen = createKeyGenerator()
 
-        val result = PushOperations.pushToStack(root, NodeKey("tab1"), ProfileDestination, gen) as TabNode
+        val result =
+            PushOperations.pushToStack(root, NodeKey("tab1"), ProfileDestination, gen) as TabNode
 
         result.activeStackIndex shouldBe 0
         result.stacks[1].children.size shouldBe 1
@@ -386,7 +389,8 @@ class PushOperationsTest : FunSpec({
         val gen = createKeyGenerator()
 
         // TabC is in scope but not in any tab stack → push to active stack
-        val result = PushOperations.push(root, ScopedDestination.TabC, testScopeRegistry, generateKey = gen)
+        val result =
+            PushOperations.push(root, ScopedDestination.TabC, testScopeRegistry, generateKey = gen)
 
         val resultStack = result as StackNode
         val tabNode = resultStack.children[0] as TabNode
@@ -418,7 +422,8 @@ class PushOperationsTest : FunSpec({
         val gen = createKeyGenerator()
 
         // TabB exists in tab1 → should switch to tab1
-        val result = PushOperations.push(root, ScopedDestination.TabB, testScopeRegistry, generateKey = gen)
+        val result =
+            PushOperations.push(root, ScopedDestination.TabB, testScopeRegistry, generateKey = gen)
 
         val resultStack = result as StackNode
         val tabNode = resultStack.children[0] as TabNode
@@ -450,7 +455,8 @@ class PushOperationsTest : FunSpec({
         val gen = createKeyGenerator()
 
         // TabA exists in tab0 which is already active → no switch, push to active
-        val result = PushOperations.push(root, ScopedDestination.TabA, testScopeRegistry, generateKey = gen)
+        val result =
+            PushOperations.push(root, ScopedDestination.TabA, testScopeRegistry, generateKey = gen)
 
         val resultStack = result as StackNode
         val tabNode = resultStack.children[0] as TabNode
@@ -477,7 +483,8 @@ class PushOperationsTest : FunSpec({
         )
         val gen = createKeyGenerator()
 
-        val result = PushOperations.push(root, OutOfScopeDestination, testScopeRegistry, generateKey = gen)
+        val result =
+            PushOperations.push(root, OutOfScopeDestination, testScopeRegistry, generateKey = gen)
 
         val resultStack = result as StackNode
         resultStack.children.size shouldBe 2
@@ -506,7 +513,12 @@ class PushOperationsTest : FunSpec({
         )
         val gen = createKeyGenerator()
 
-        val result = PushOperations.push(root, OutOfScopeDestination, testScopeRegistry, generateKey = gen) as StackNode
+        val result = PushOperations.push(
+            root,
+            OutOfScopeDestination,
+            testScopeRegistry,
+            generateKey = gen
+        ) as StackNode
         val tabNode = result.children[0] as TabNode
 
         tabNode.stacks.size shouldBe 1
@@ -548,7 +560,8 @@ class PushOperationsTest : FunSpec({
         ) as StackNode
 
         val resultPane = result.children[0] as PaneNode
-        val resultSupporting = resultPane.paneConfigurations[PaneRole.Supporting]!!.content as StackNode
+        val resultSupporting =
+            resultPane.paneConfigurations[PaneRole.Supporting]!!.content as StackNode
 
         resultSupporting.children.size shouldBe 2
         (resultSupporting.activeChild as ScreenNode).destination shouldBe PaneSupportingDestination
@@ -611,7 +624,12 @@ class PushOperationsTest : FunSpec({
         )
         val gen = createKeyGenerator()
 
-        val result = PushOperations.push(root, DetailDestination, testScopeRegistry, generateKey = gen) as StackNode
+        val result = PushOperations.push(
+            root,
+            DetailDestination,
+            testScopeRegistry,
+            generateKey = gen
+        ) as StackNode
         val tabNode = result.children[0] as TabNode
         val activeStack = tabNode.stacks[0]
 
@@ -634,7 +652,12 @@ class PushOperationsTest : FunSpec({
         )
         val gen = createKeyGenerator()
 
-        val result = PushOperations.push(root, OutOfScopeDestination, testScopeRegistry, generateKey = gen) as StackNode
+        val result = PushOperations.push(
+            root,
+            OutOfScopeDestination,
+            testScopeRegistry,
+            generateKey = gen
+        ) as StackNode
 
         // Out of scope from inner → should push to root
         result.children.size shouldBe 2
@@ -750,7 +773,12 @@ class PushOperationsTest : FunSpec({
         )
         val gen = createKeyGenerator()
 
-        val result = PushOperations.clearStackAndPush(root, NodeKey("tab1"), DetailDestination, gen) as TabNode
+        val result = PushOperations.clearStackAndPush(
+            root,
+            NodeKey("tab1"),
+            DetailDestination,
+            gen
+        ) as TabNode
 
         result.stacks[0].children.size shouldBe 1
         (result.stacks[0].activeChild as ScreenNode).destination shouldBe HomeDestination
@@ -762,7 +790,12 @@ class PushOperationsTest : FunSpec({
         val root = StackNode(NodeKey("root"), null, emptyList())
         val gen = createKeyGenerator()
 
-        val result = PushOperations.clearStackAndPush(root, NodeKey("root"), HomeDestination, gen) as StackNode
+        val result = PushOperations.clearStackAndPush(
+            root,
+            NodeKey("root"),
+            HomeDestination,
+            gen
+        ) as StackNode
 
         result.children.size shouldBe 1
         (result.activeChild as ScreenNode).destination shouldBe HomeDestination
@@ -811,7 +844,12 @@ class PushOperationsTest : FunSpec({
         )
         val gen = createKeyGenerator()
 
-        val result = PushOperations.clearStackAndPush(root, NodeKey("tab0"), DetailDestination, gen) as TabNode
+        val result = PushOperations.clearStackAndPush(
+            root,
+            NodeKey("tab0"),
+            DetailDestination,
+            gen
+        ) as TabNode
 
         result.stacks[1] shouldBeSameInstanceAs tab1Stack
     }

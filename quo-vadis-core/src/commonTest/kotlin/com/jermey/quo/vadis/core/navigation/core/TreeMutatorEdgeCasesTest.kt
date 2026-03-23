@@ -101,7 +101,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         val result = TreeMutator.replaceNode(oldRoot, NodeKey("root"), newRoot)
 
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
-        (result as TreeOperationResult.Success).newTree shouldBeSameInstanceAs newRoot
+        result.newTree shouldBeSameInstanceAs newRoot
     }
 
     test("replaceNode replaces nested screen") {
@@ -116,7 +116,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         val result = TreeMutator.replaceNode(root, NodeKey("target"), newScreen)
 
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
-        val resultStack = (result as TreeOperationResult.Success).newTree as StackNode
+        val resultStack = result.newTree as StackNode
         resultStack.children.size shouldBe 1
         val replacedScreen = resultStack.children[0] as ScreenNode
         replacedScreen.destination shouldBe ProfileDestination
@@ -143,7 +143,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         val result = TreeMutator.replaceNode(root, NodeKey("tab0"), newStack)
 
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
-        val resultTab = (result as TreeOperationResult.Success).newTree as TabNode
+        val resultTab = result.newTree as TabNode
         resultTab.stacks[0].children.size shouldBe 1
         resultTab.stacks[1].children.size shouldBe 0
     }
@@ -156,7 +156,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         )
 
         result.shouldBeInstanceOf<TreeOperationResult.NodeNotFound>()
-        (result as TreeOperationResult.NodeNotFound).key shouldBe NodeKey("nonexistent")
+        result.key shouldBe NodeKey("nonexistent")
     }
 
     test("replaceNode preserves structural sharing for unchanged branches") {
@@ -180,7 +180,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         val result = TreeMutator.replaceNode(root, NodeKey("s1"), newScreen)
 
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
-        val resultTab = (result as TreeOperationResult.Success).newTree as TabNode
+        val resultTab = result.newTree as TabNode
         // tab1 stack should be same reference
         resultTab.stacks[1] shouldBeSameInstanceAs unchangedStack
         resultTab.stacks[1].children[0] shouldBeSameInstanceAs unchangedScreen
@@ -203,7 +203,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         val result = TreeMutator.replaceNode(root, NodeKey("target"), newScreen)
 
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
-        val resultPanes = (result as TreeOperationResult.Success).newTree as PaneNode
+        val resultPanes = result.newTree as PaneNode
         val primaryStack = resultPanes.paneContent(PaneRole.Primary) as StackNode
         val replacedScreen = primaryStack.children[0] as ScreenNode
         replacedScreen.destination shouldBe ProfileDestination
@@ -226,7 +226,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         val result = TreeMutator.removeNode(root, NodeKey("s2"))
 
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
-        val resultStack = (result as TreeOperationResult.Success).newTree as StackNode
+        val resultStack = result.newTree as StackNode
         resultStack.children.size shouldBe 1
         resultStack.children[0].key shouldBe NodeKey("s1")
     }
@@ -278,7 +278,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         val result = TreeMutator.removeNode(root, NodeKey("s2"))
 
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
-        val tabs = ((result as TreeOperationResult.Success).newTree as StackNode).children[0] as TabNode
+        val tabs = (result.newTree as StackNode).children[0] as TabNode
         val tab0 = tabs.stacks[0]
         tab0.children.size shouldBe 1
         tab0.children[0].key shouldBe NodeKey("s1")
@@ -290,7 +290,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         val result = TreeMutator.removeNode(root, NodeKey("nonexistent"))
 
         result.shouldBeInstanceOf<TreeOperationResult.NodeNotFound>()
-        (result as TreeOperationResult.NodeNotFound).key shouldBe NodeKey("nonexistent")
+        result.key shouldBe NodeKey("nonexistent")
     }
 
     test("removeNode throws when removing pane content directly") {
@@ -328,7 +328,7 @@ class TreeMutatorEdgeCasesTest : FunSpec() {
         val result = TreeMutator.removeNode(root, NodeKey("s2"))
 
         result.shouldBeInstanceOf<TreeOperationResult.Success>()
-        val resultPanes = (result as TreeOperationResult.Success).newTree as PaneNode
+        val resultPanes = result.newTree as PaneNode
         val primaryStack = resultPanes.paneContent(PaneRole.Primary) as StackNode
         primaryStack.children.size shouldBe 1
         primaryStack.children[0].key shouldBe NodeKey("s1")

@@ -11,7 +11,10 @@
     <ID>EmptyKotlinFile:platformDefaultPredictiveBack.kt:com.jermey.quo.vadis.core.compose.platformDefaultPredictiveBack.kt</ID>
     <ID>ForbiddenComment:ComposableCache.kt:ComposableCache$// TODO: Replace with AtomicLong when kotlinx-atomicfu is added as a dependency</ID>
     <ID>ForbiddenComment:FakeNavRenderScopeTest.kt:FakeNavRenderScopeTest$// TODO: TestDestination.route requires KSP-generated RouteRegistry registration,</ID>
+    <ID>LargeClass:BackOperationsTest.kt:BackOperationsTest : FunSpec</ID>
     <ID>LargeClass:NavNodeTest.kt:NavNodeTest : FunSpec</ID>
+    <ID>LargeClass:PopOperationsTest.kt:PopOperationsTest : FunSpec</ID>
+    <ID>LargeClass:PushOperationsTest.kt:PushOperationsTest : FunSpec</ID>
     <ID>LargeClass:TreeMutatorPaneTest.kt:TreeMutatorPaneTest : FunSpec</ID>
     <ID>LargeClass:TreeNavigatorTest.kt:TreeNavigatorTest : FunSpec</ID>
     <ID>LongMethod:CascadeBackState.kt:private fun calculateCascadeFromContainer: CascadeBackState</ID>
@@ -33,11 +36,11 @@
     <ID>MaxLineLength:NavigationHost.kt:*</ID>
     <ID>MaxLineLength:Navigator.kt:Navigator$*</ID>
     <ID>MaxLineLength:NavigatorResultExtensions.kt:?:</ID>
+    <ID>MaxLineLength:PaneOperationsTest.kt:PaneOperationsTest$test</ID>
     <ID>MaxLineLength:PaneRenderer.kt:*</ID>
     <ID>MaxLineLength:StackNode.kt:StackNode$*</ID>
     <ID>MaxLineLength:TransitionRegistry.kt:TransitionRegistry$*</ID>
     <ID>MaxLineLength:TreeMutatorScopeTest.kt:TreeMutatorScopeTest$*</ID>
-    <ID>MaxLineLength:TreeMutatorStackScopeTest.kt:TreeMutatorStackScopeTest$*</ID>
     <ID>MaxLineLength:TreeNavigator.kt:TreeNavigator$*</ID>
     <ID>MaxLineLength:WindowSizeClass.kt:WindowWidthSizeClass$*</ID>
     <ID>NestedBlockDepth:DslContainerRegistry.kt:DslContainerRegistry$private fun addReferencedContainerMembers</ID>

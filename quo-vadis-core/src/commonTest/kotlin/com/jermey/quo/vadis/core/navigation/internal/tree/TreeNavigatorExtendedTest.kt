@@ -4,7 +4,6 @@ package com.jermey.quo.vadis.core.navigation.internal.tree
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
@@ -329,7 +328,7 @@ class TreeNavigatorExtendedTest : FunSpec({
 
         val state = navigator.state.value
         state.shouldBeInstanceOf<StackNode>()
-        (state as StackNode).children.size shouldBe 1
+        state.children.size shouldBe 1
     }
 
     test("constructor wraps TabNode initial state in StackNode") {
@@ -349,9 +348,8 @@ class TreeNavigatorExtendedTest : FunSpec({
 
         val state = navigator.state.value
         state.shouldBeInstanceOf<StackNode>()
-        val root = state as StackNode
-        root.children.size shouldBe 1
-        root.children[0].shouldBeInstanceOf<TabNode>()
+        state.children.size shouldBe 1
+        state.children[0].shouldBeInstanceOf<TabNode>()
     }
 
     test("constructor uses StackNode with null parentKey directly") {
@@ -741,7 +739,7 @@ class TreeNavigatorExtendedTest : FunSpec({
 
         val state = navigator.state.value
         state.shouldBeInstanceOf<StackNode>()
-        (state as StackNode).children.size shouldBe 1
+        state.children.size shouldBe 1
         navigator.currentDestination.value shouldBe HomeDest
     }
 
