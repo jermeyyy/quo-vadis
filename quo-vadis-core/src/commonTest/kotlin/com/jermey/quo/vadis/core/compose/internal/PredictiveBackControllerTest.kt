@@ -16,13 +16,13 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-private object PBCTestDest : NavDestination
+private object PBCTestDestination : NavDestination
 
 class PredictiveBackControllerTest : FunSpec({
 
     beforeTest { NavKeyGenerator.reset() }
 
-    fun screen(key: String) = ScreenNode(NodeKey(key), null, PBCTestDest)
+    fun screen(key: String) = ScreenNode(NodeKey(key), null, PBCTestDestination)
 
     // =========================================================================
     // Initial state
@@ -322,8 +322,9 @@ class PredictiveBackControllerTest : FunSpec({
 
         controller.startGestureWithCascade(cascadeState)
         controller.isActive.value.shouldBeTrue()
-        controller.cascadeState.value.shouldNotBeNull()
-        controller.cascadeState.value!!.cascadeDepth shouldBe 1
+        val cascade = controller.cascadeState.value
+        cascade.shouldNotBeNull()
+        cascade.cascadeDepth shouldBe 1
 
         controller.updateGestureProgress(0.08f)
         controller.progress.value shouldBe (0.08f plusOrMinus 0.001f)

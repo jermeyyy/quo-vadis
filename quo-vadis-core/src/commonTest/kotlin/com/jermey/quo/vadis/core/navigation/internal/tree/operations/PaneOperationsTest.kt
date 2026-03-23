@@ -20,6 +20,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 // =============================================================================
 // Test destinations
@@ -225,7 +226,7 @@ class PaneOperationsTest : FunSpec({
     test("switchActivePane returns same root when already on target pane") {
         val root = createDualPaneTree(activePaneRole = PaneRole.Primary)
         val result = PaneOperations.switchActivePane(root, NodeKey("pane"), PaneRole.Primary)
-        result shouldBe root
+        result shouldBeSameInstanceAs root
     }
 
     test("switchActivePane throws for non-existent pane key") {
@@ -343,6 +344,9 @@ class PaneOperationsTest : FunSpec({
         // Primary has 1 child → pop empties it (PRESERVE_EMPTY) → Popped
         val result = PaneOperations.popWithPaneBehavior(root)
         result.shouldBeInstanceOf<PopResult.Popped>()
+        val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
+        val primaryStack = pane.paneContent(PaneRole.Primary) as StackNode
+        primaryStack.children shouldBe emptyList()
     }
 
     test("popWithPaneBehavior PopLatest returns CannotPop for empty active stack") {

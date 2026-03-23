@@ -82,15 +82,18 @@ class NavigationResultManagerTest : FunSpec({
         manager.pendingCount() shouldBe 0
     }
 
-    test("requestResult overwrites previous pending result for same key") {
+    test("requestResult cancels previous pending result for same key") {
         val manager = NavigationResultManager()
         val d1 = manager.requestResult("screen-1")
         val d2 = manager.requestResult("screen-1")
         manager.pendingCount() shouldBe 1
 
+        // d1 was completed with null when d2 was requested
+        d1.isCompleted.shouldBeTrue()
+        d1.await().shouldBeNull()
+
         manager.completeResultSync("screen-1", "result")
         d2.await() shouldBe "result"
-        // d1 was replaced and never completed — it's orphaned but that's expected
     }
 
     test("completeResultSync delivers typed result values") {

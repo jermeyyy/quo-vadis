@@ -218,7 +218,7 @@ class TreeDiffCalculatorTest : FunSpec({
 
         diff.removedScreenKeys shouldBe setOf(NodeKey("s1"))
         // TabNode and ScreenNode are LifecycleAwareNodes, StackNode is not
-        diff.removedLifecycleNodes shouldHaveSize 2 // TabNode + ScreenNode
+        diff.removedLifecycleNodes.map { (it as NavNode).key }.toSet() shouldBe setOf(NodeKey("tabs"), NodeKey("s1"))
     }
 
     // -------------------------------------------------------------------------

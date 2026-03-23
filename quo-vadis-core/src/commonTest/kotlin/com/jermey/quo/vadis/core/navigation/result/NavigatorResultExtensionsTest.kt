@@ -5,6 +5,7 @@ package com.jermey.quo.vadis.core.navigation.result
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.internal.NavigationResultManager
+import com.jermey.quo.vadis.core.navigation.internal.ResultCapable
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.node.activeLeaf
 import com.jermey.quo.vadis.core.navigation.testing.withDestination
@@ -42,8 +43,13 @@ class NavigatorResultExtensionsTest : FunSpec({
         val screenKey = navigator.state.value.activeLeaf()?.key?.value
         screenKey.shouldNotBeNull()
 
+        val resultManager = (navigator as ResultCapable).resultManager
+        val deferred = resultManager.requestResult(screenKey)
+
         navigator.navigateBackWithResult("my-result")
 
+        deferred.isCompleted.shouldBeTrue()
+        deferred.await() shouldBe "my-result"
         navigator.currentDestination.value shouldBe HomeDest
     }
 

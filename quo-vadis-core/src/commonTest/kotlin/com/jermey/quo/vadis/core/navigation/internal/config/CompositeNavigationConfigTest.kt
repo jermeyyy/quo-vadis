@@ -102,6 +102,7 @@ class CompositeNavigationConfigTest : FunSpec({
         // Secondary config registered CompStack.Home under "comp-scope-override"
         val scopeKey = composite.scopeRegistry.getScopeKey(CompStack.Home)
         scopeKey.shouldNotBeNull()
+        scopeKey shouldBe ScopeKey("comp-scope-override")
     }
 
     // ── modalRegistry priority ──────────────────────────────────────
@@ -281,6 +282,7 @@ class CompositeNavigationConfigTest : FunSpec({
             }
         }
         val result = config + NavigationConfig.Empty
+        result shouldBeSameInstanceAs config
 
         // DslNavigationConfig.plus delegates to CompositeNavigationConfig creation,
         // but CompositeNavigationConfig.plus optimizes Empty away

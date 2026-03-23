@@ -23,6 +23,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 
 // ─── Test Destinations ───────────────────────────────────────────────
@@ -400,7 +401,7 @@ class DslNavigationConfigTest : FunSpec({
         config.scopeRegistry.isInScope(ScopeKey("tabs"), CnfNestedStack.Child).shouldBeTrue()
     }
 
-    test("scopeRegistry infers container reference tab membership adds container class") {
+    test("scopeRegistry infers nested stack membership for container-referenced stack screens") {
         val config = navigationConfig {
             tabs<CnfTabs.Tab1>("tabs") {
                 tab(CnfTabs.Tab1, title = "T1")
@@ -436,7 +437,7 @@ class DslNavigationConfigTest : FunSpec({
             screen<CnfHomeDest> { _, _, _ -> {} }
         }
         val result = config + NavigationConfig.Companion.Empty
-        result shouldBe config
+        result shouldBeSameInstanceAs config
     }
 
     test("plus with another config creates composite") {

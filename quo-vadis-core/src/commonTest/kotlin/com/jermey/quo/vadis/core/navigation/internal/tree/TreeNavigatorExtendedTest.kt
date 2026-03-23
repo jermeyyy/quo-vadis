@@ -208,6 +208,9 @@ class TreeNavigatorExtendedTest : FunSpec({
         val panes = root.children[0] as PaneNode
         val supportingContent = panes.paneContent(PaneRole.Supporting)
         supportingContent.shouldNotBeNull()
+        val stack = supportingContent.shouldBeInstanceOf<StackNode>()
+        stack.children.size shouldBe 1
+        (stack.children[0] as ScreenNode).destination shouldBe DetailDest
     }
 
     // =========================================================================

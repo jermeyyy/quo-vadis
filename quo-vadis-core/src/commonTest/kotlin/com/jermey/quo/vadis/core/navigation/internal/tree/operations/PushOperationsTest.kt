@@ -461,6 +461,8 @@ class PushOperationsTest : FunSpec({
         val resultStack = result as StackNode
         val tabNode = resultStack.children[0] as TabNode
         tabNode.activeStackIndex shouldBe 0
+        tabNode.stacks[0].children.size shouldBe 2
+        (tabNode.stacks[0].children.last() as ScreenNode).destination shouldBe ScopedDestination.TabA
     }
 
     test("scope-aware push out-of-scope destination goes to parent stack") {

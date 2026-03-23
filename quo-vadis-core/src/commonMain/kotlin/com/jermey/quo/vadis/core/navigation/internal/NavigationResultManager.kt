@@ -44,6 +44,7 @@ class NavigationResultManager {
      */
     suspend fun requestResult(screenKey: String): CompletableDeferred<Any?> {
         return mutex.withLock {
+            pendingResults[screenKey]?.complete(null)
             val deferred = CompletableDeferred<Any?>()
             pendingResults[screenKey] = deferred
             deferred

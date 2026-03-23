@@ -13,6 +13,8 @@ private object RouteDest2 : NavDestination
 
 private object RouteDest3 : NavDestination
 
+private object RouteDest4 : NavDestination
+
 private object UnregisteredDest : NavDestination
 
 class RouteRegistryTest : FunSpec({
@@ -35,10 +37,10 @@ class RouteRegistryTest : FunSpec({
     }
 
     test("multiple destinations with different routes") {
-        RouteRegistry.register(RouteDest1::class, "route/one")
+        RouteRegistry.register(RouteDest4::class, "route/one")
         RouteRegistry.register(RouteDest3::class, "route/three")
 
-        RouteRegistry.getRoute(RouteDest1::class) shouldBe "route/one"
+        RouteRegistry.getRoute(RouteDest4::class) shouldBe "route/one"
         RouteRegistry.getRoute(RouteDest3::class) shouldBe "route/three"
     }
 })

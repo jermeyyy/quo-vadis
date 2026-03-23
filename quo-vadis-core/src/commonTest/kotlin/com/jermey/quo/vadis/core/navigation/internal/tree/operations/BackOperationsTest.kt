@@ -496,6 +496,12 @@ class BackOperationsTest : FunSpec({
         // The active stack (primary) has >1 children, so pop directly succeeds
         val handled = result.shouldBeInstanceOf<BackResult.Handled>()
         handled.newState.shouldNotBeNull()
+        val newRoot = handled.newState as StackNode
+        val pane = newRoot.children[0] as PaneNode
+        val primaryStack = pane.paneContent(PaneRole.Primary) as StackNode
+        primaryStack.children.size shouldBe 1
+        (primaryStack.children[0] as ScreenNode).destination shouldBe Home
+        pane.activePaneRole shouldBe PaneRole.Primary
     }
 
     test("popWithTabBehavior in expanded mode pops entire PaneNode") {

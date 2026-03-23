@@ -405,5 +405,6 @@ class DslContainerRegistryTest : FunSpec({
         val info = config.containerRegistry.getContainerInfo(UnregisteredDest)
         info.shouldNotBeNull()
         info.shouldBeInstanceOf<ContainerInfo.TabContainer>()
+        info.initialTabIndex shouldBe 1 // containerTab is the second tab item (index 1)
     }
 })

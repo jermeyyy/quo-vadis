@@ -709,6 +709,11 @@ class PopOperationsTest : FunSpec({
         // The innerStack becomes empty; CASCADE parent is tab0 (StackNode)
         // So it gets removed from tab0's children → tab0 becomes empty stack
         result.shouldNotBeNull()
+        val newRoot = result as StackNode
+        val tabNode = newRoot.children[0] as TabNode
+        val tab0 = tabNode.stacks[0]
+        tabNode.activeStackIndex shouldBe 0
+        tab0.children shouldBe emptyList()
     }
 
     test("pop with PRESERVE_EMPTY in pane leaves pane structure intact") {

@@ -216,7 +216,7 @@ class NavNodeExtensionsTest : FunSpec({
         val visited = mutableListOf<NodeKey>()
         panes.forEachNode { visited.add(it.key) }
         visited shouldHaveSize 3
-        visited[0] shouldBe NodeKey("panes")
+        visited shouldContainExactly listOf(NodeKey("panes"), NodeKey("s1"), NodeKey("s2"))
     }
 
     // =========================================================================

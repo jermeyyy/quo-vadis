@@ -17,6 +17,7 @@ import com.jermey.quo.vadis.core.navigation.navigator.NavigationErrorHandler
 import com.jermey.quo.vadis.core.navigation.pane.PaneConfiguration
 import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.navigation.testing.withDestination
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -179,8 +180,9 @@ class TreeNavigatorCoverageTest : FunSpec({
         val navigator = TreeNavigator(coroutineContext = Dispatchers.Unconfined)
         navigator.errorHandler shouldBe NavigationErrorHandler.LogAndRecover
 
-        // Navigate on empty stack triggers error path but recovers
+        // Navigate to set up state, then trigger error via clearPane on non-pane tree
         navigator.navigate(CovHomeDest)
+        navigator.clearPane(PaneRole.Primary)
         navigator.currentDestination.value shouldBe CovHomeDest
     }
 
@@ -188,7 +190,10 @@ class TreeNavigatorCoverageTest : FunSpec({
         val navigator = TreeNavigator(coroutineContext = Dispatchers.Unconfined)
         navigator.errorHandler = NavigationErrorHandler.ThrowOnError
 
-        navigator.errorHandler shouldBe NavigationErrorHandler.ThrowOnError
+        navigator.navigate(CovHomeDest)
+        shouldThrow<Exception> {
+            navigator.clearPane(PaneRole.Primary)
+        }
     }
 
     test("custom errorHandler callback is invoked") {

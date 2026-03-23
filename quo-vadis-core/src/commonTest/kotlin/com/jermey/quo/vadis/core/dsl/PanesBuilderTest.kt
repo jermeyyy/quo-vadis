@@ -16,11 +16,11 @@ import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
-private data object ListDest : NavDestination
+private data object PaneListDestination : NavDestination
 
-private data object DetailDest : NavDestination
+private data object PaneDetailDestination : NavDestination
 
-private data object ExtraDest : NavDestination
+private data object PaneExtraDestination : NavDestination
 
 class PanesBuilderTest : FunSpec({
 
@@ -39,7 +39,7 @@ class PanesBuilderTest : FunSpec({
     test("primary pane is configured correctly") {
         val builder = PanesBuilder()
         builder.primary(weight = 0.4f, minWidth = 300.dp) {
-            root(ListDest)
+            root(PaneListDestination)
             alwaysVisible()
         }
 
@@ -49,14 +49,14 @@ class PanesBuilderTest : FunSpec({
         pane.role shouldBe PaneRole.Primary
         pane.weight shouldBe 0.4f
         pane.minWidth shouldBe 300.dp
-        pane.content.rootDestination shouldBe ListDest
+        pane.content.rootDestination shouldBe PaneListDestination
         pane.content.isAlwaysVisible.shouldBeTrue()
     }
 
     test("secondary pane is configured correctly") {
         val builder = PanesBuilder()
         builder.secondary(weight = 0.6f) {
-            root(DetailDest)
+            root(PaneDetailDestination)
         }
 
         val config = builder.build()
@@ -65,14 +65,14 @@ class PanesBuilderTest : FunSpec({
         pane.role shouldBe PaneRole.Supporting
         pane.weight shouldBe 0.6f
         pane.minWidth shouldBe 0.dp
-        pane.content.rootDestination shouldBe DetailDest
+        pane.content.rootDestination shouldBe PaneDetailDestination
         pane.content.isAlwaysVisible.shouldBeFalse()
     }
 
     test("extra pane is configured correctly") {
         val builder = PanesBuilder()
         builder.extra(weight = 0.25f, minWidth = 200.dp) {
-            root(ExtraDest)
+            root(PaneExtraDestination)
         }
 
         val config = builder.build()
@@ -81,26 +81,26 @@ class PanesBuilderTest : FunSpec({
         pane.role shouldBe PaneRole.Extra
         pane.weight shouldBe 0.25f
         pane.minWidth shouldBe 200.dp
-        pane.content.rootDestination shouldBe ExtraDest
+        pane.content.rootDestination shouldBe PaneExtraDestination
     }
 
     test("tertiary is alias for secondary") {
         val builder = PanesBuilder()
         builder.tertiary(weight = 0.5f) {
-            root(DetailDest)
+            root(PaneDetailDestination)
         }
 
         val config = builder.build()
         config.panes shouldContainKey PaneRole.Supporting
         val pane = config.panes[PaneRole.Supporting]!!
-        pane.content.rootDestination shouldBe DetailDest
+        pane.content.rootDestination shouldBe PaneDetailDestination
     }
 
     test("initialPane setting is preserved in build") {
         val builder = PanesBuilder()
         builder.initialPane = PaneRole.Supporting
-        builder.primary { root(ListDest) }
-        builder.secondary { root(DetailDest) }
+        builder.primary { root(PaneListDestination) }
+        builder.secondary { root(PaneDetailDestination) }
 
         val config = builder.build()
         config.initialPane shouldBe PaneRole.Supporting
@@ -109,7 +109,7 @@ class PanesBuilderTest : FunSpec({
     test("backBehavior setting is preserved in build") {
         val builder = PanesBuilder()
         builder.backBehavior = PaneBackBehavior.PopUntilScaffoldValueChange
-        builder.primary { root(ListDest) }
+        builder.primary { root(PaneListDestination) }
 
         val config = builder.build()
         config.backBehavior shouldBe PaneBackBehavior.PopUntilScaffoldValueChange
@@ -117,9 +117,9 @@ class PanesBuilderTest : FunSpec({
 
     test("three-pane layout") {
         val builder = PanesBuilder()
-        builder.primary(weight = 0.25f) { root(ListDest) }
-        builder.secondary(weight = 0.35f) { root(DetailDest) }
-        builder.extra(weight = 0.4f) { root(ExtraDest) }
+        builder.primary(weight = 0.25f) { root(PaneListDestination) }
+        builder.secondary(weight = 0.35f) { root(PaneDetailDestination) }
+        builder.extra(weight = 0.4f) { root(PaneExtraDestination) }
 
         val config = builder.build()
         config.panes shouldHaveSize 3
@@ -141,7 +141,7 @@ class PanesBuilderTest : FunSpec({
 
     test("default weight is 1f and default minWidth is 0.dp") {
         val builder = PanesBuilder()
-        builder.primary { root(ListDest) }
+        builder.primary { root(PaneListDestination) }
 
         val config = builder.build()
         val pane = config.panes[PaneRole.Primary]!!
