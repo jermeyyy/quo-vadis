@@ -1,0 +1,46 @@
+package com.jermey.quo.vadis.core.navigation.internal.registry
+
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.registry.RouteRegistry
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+
+// Unique test destinations to avoid state leaking in singleton RouteRegistry
+private object RouteDest1 : NavDestination
+
+private object RouteDest2 : NavDestination
+
+private object RouteDest3 : NavDestination
+
+private object RouteDest4 : NavDestination
+
+private object UnregisteredDest : NavDestination
+
+class RouteRegistryTest : FunSpec({
+
+    test("register a route and retrieve it") {
+        RouteRegistry.register(RouteDest1::class, "home/feed")
+
+        RouteRegistry.getRoute(RouteDest1::class) shouldBe "home/feed"
+    }
+
+    test("getRoute for unregistered destination returns null") {
+        RouteRegistry.getRoute(UnregisteredDest::class).shouldBeNull()
+    }
+
+    test("register overwrites previous route") {
+        RouteRegistry.register(RouteDest2::class, "original/route")
+        RouteRegistry.register(RouteDest2::class, "updated/route")
+
+        RouteRegistry.getRoute(RouteDest2::class) shouldBe "updated/route"
+    }
+
+    test("multiple destinations with different routes") {
+        RouteRegistry.register(RouteDest4::class, "route/one")
+        RouteRegistry.register(RouteDest3::class, "route/three")
+
+        RouteRegistry.getRoute(RouteDest4::class) shouldBe "route/one"
+        RouteRegistry.getRoute(RouteDest3::class) shouldBe "route/three"
+    }
+})

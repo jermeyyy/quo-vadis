@@ -133,6 +133,38 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
     failOnNoDiscoveredTests = false
 }
 
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "*.generated.*",
+                    "*.BuildConfig",
+                    "*.Companion",
+                    "*Test*",
+                    "*Fake*",
+                )
+                annotatedBy("androidx.compose.runtime.Composable")
+            }
+        }
+        total {
+            xml {
+                onCheck = false
+                xmlFile = layout.buildDirectory.file("reports/kover/report.xml")
+            }
+            html {
+                onCheck = false
+                htmlDir = layout.buildDirectory.dir("reports/kover/html")
+            }
+        }
+        verify {
+            rule {
+                minBound(70) // Minimum 70% line coverage for quo-vadis-core
+            }
+        }
+    }
+}
+
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()

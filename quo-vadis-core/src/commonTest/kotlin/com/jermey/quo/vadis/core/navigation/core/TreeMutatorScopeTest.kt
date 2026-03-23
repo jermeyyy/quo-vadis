@@ -211,7 +211,7 @@ class TreeMutatorScopeTest : FunSpec({
 
         val topScreen = activeStack.children.last()
         topScreen.shouldBeInstanceOf<ScreenNode>()
-        (topScreen as ScreenNode).destination shouldBe MainTabs.ProfileTab
+        topScreen.destination shouldBe MainTabs.ProfileTab
     }
 
     // =========================================================================
@@ -235,8 +235,8 @@ class TreeMutatorScopeTest : FunSpec({
         // Second child should be the new ScreenNode with out-of-scope destination
         val newScreen = resultStack.children[1]
         newScreen.shouldBeInstanceOf<ScreenNode>()
-        (newScreen as ScreenNode).destination shouldBe OutOfScopeDestination
-        (newScreen as ScreenNode).parentKey shouldBe NodeKey("root")
+        newScreen.destination shouldBe OutOfScopeDestination
+        newScreen.parentKey shouldBe NodeKey("root")
     }
 
     test("push out-of-scope destination preserves tab container") {
@@ -304,7 +304,7 @@ class TreeMutatorScopeTest : FunSpec({
 
         val topScreen = activeStack.children.last()
         topScreen.shouldBeInstanceOf<ScreenNode>()
-        (topScreen as ScreenNode).destination shouldBe OutOfScopeDestination
+        topScreen.destination shouldBe OutOfScopeDestination
     }
 
     test("push without scopeRegistry uses original behavior") {
@@ -395,7 +395,7 @@ class TreeMutatorScopeTest : FunSpec({
 
         val topScreen = activeStack.children.last()
         topScreen.shouldBeInstanceOf<ScreenNode>()
-        (topScreen as ScreenNode).destination shouldBe OutOfScopeDestination
+        topScreen.destination shouldBe OutOfScopeDestination
     }
 
     // =========================================================================
@@ -501,7 +501,7 @@ class TreeMutatorScopeTest : FunSpec({
         // New screen at the end
         val topScreen = activeStack.children.last()
         topScreen.shouldBeInstanceOf<ScreenNode>()
-        (topScreen as ScreenNode).destination shouldBe MainTabs.SettingsTab
+        topScreen.destination shouldBe MainTabs.SettingsTab
     }
 
     // =========================================================================

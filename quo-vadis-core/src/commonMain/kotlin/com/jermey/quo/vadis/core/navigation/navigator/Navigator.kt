@@ -1,12 +1,14 @@
 package com.jermey.quo.vadis.core.navigation.navigator
 
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.destination.DeepLink
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.registry.DeepLinkRegistry
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -214,10 +216,6 @@ interface Navigator : BackPressHandler {
      * @param newState The new navigation tree
      * @param transition Optional transition for animation
      */
-    @Deprecated(
-        message = "Use navigate(), navigateBack(), or navigateAndClearTo() instead. " +
-            "Direct state manipulation bypasses validation and lifecycle management.",
-        level = DeprecationLevel.WARNING,
-    )
+    @InternalQuoVadisApi
     fun updateState(newState: NavNode, transition: NavigationTransition? = null)
 }

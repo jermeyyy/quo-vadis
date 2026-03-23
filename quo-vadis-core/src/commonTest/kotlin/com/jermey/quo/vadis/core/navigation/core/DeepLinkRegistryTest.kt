@@ -61,7 +61,7 @@ class RuntimeDeepLinkRegistryTest : FunSpec({
         destination.shouldNotBeNull()
         (destination is TestDestination).shouldBeTrue()
         (destination as TestDestination).id shouldBe "123"
-        (destination as TestDestination).ref shouldBe "email"
+        destination.ref shouldBe "email"
     }
 
     test("resolve returns null for unmatched patterns") {
