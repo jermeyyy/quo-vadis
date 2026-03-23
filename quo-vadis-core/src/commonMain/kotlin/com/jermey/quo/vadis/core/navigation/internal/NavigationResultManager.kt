@@ -43,12 +43,13 @@ class NavigationResultManager {
      * @return A [CompletableDeferred] that will receive the result
      */
     suspend fun requestResult(screenKey: String): CompletableDeferred<Any?> {
-        return mutex.withLock {
-            pendingResults[screenKey]?.complete(null)
-            val deferred = CompletableDeferred<Any?>()
-            pendingResults[screenKey] = deferred
-            deferred
+        val previousDeferred: CompletableDeferred<Any?>?
+        val deferred = CompletableDeferred<Any?>()
+        mutex.withLock {
+            previousDeferred = pendingResults.put(screenKey, deferred)
         }
+        previousDeferred?.complete(null)
+        return deferred
     }
 
     /**

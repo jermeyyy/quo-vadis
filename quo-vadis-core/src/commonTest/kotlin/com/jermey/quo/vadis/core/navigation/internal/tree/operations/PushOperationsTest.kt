@@ -90,7 +90,7 @@ class PushOperationsTest : FunSpec({
         )
 
         override fun isInScope(scopeKey: ScopeKey, destination: NavDestination): Boolean {
-            val scopeClasses = scopes[scopeKey.value] ?: return true
+            val scopeClasses = scopes[scopeKey.value] ?: return false
             return scopeClasses.any { it.isInstance(destination) }
         }
 

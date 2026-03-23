@@ -4,7 +4,6 @@ package com.jermey.quo.vadis.core.navigation.internal.tree
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
-import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.PaneNode
@@ -84,8 +83,6 @@ private fun paneNode(
 // =============================================================================
 
 class TreeDiffCalculatorTest : FunSpec({
-
-    beforeTest { NavKeyGenerator.reset() }
 
     // -------------------------------------------------------------------------
     // computeDiff — identical trees

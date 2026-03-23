@@ -372,6 +372,9 @@ class PaneOperationsTest : FunSpec({
         result.shouldBeInstanceOf<PopResult.Popped>()
         val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         pane.activePaneRole shouldBe PaneRole.Primary
+        // Supporting pane should still have its content (only focus switched)
+        val suppStack = pane.paneContent(PaneRole.Supporting) as StackNode
+        suppStack.children.size shouldBe 1
     }
 
     test("popWithPaneBehavior PopUntilScaffoldValueChange returns RequiresScaffoldChange on Primary") {
@@ -477,6 +480,9 @@ class PaneOperationsTest : FunSpec({
         result.shouldBeInstanceOf<PopResult.Popped>()
         val pane = result.newState.findByKey(NodeKey("pane")) as PaneNode
         pane.activePaneRole shouldBe PaneRole.Primary
+        // Supporting pane should have been cleared
+        val suppStack = pane.paneContent(PaneRole.Supporting) as StackNode
+        suppStack.children.size shouldBe 0
     }
 
     // =========================================================================

@@ -24,6 +24,22 @@ class PredictiveBackControllerTest : FunSpec({
 
     fun screen(key: String) = ScreenNode(NodeKey(key), null, PBCTestDestination)
 
+    fun cascadeState(
+        source: ScreenNode = screen("s1"),
+        exiting: ScreenNode = source,
+        target: ScreenNode? = screen("s2"),
+        animatingStackKey: NodeKey? = NodeKey("stack"),
+        cascadeDepth: Int = 0,
+        delegatesToSystem: Boolean = false
+    ) = CascadeBackState(
+        sourceNode = source,
+        exitingNode = exiting,
+        targetNode = target,
+        animatingStackKey = animatingStackKey,
+        cascadeDepth = cascadeDepth,
+        delegatesToSystem = delegatesToSystem
+    )
+
     // =========================================================================
     // Initial state
     // =========================================================================
@@ -62,15 +78,7 @@ class PredictiveBackControllerTest : FunSpec({
     test("startGesture clears cascadeState") {
         val controller = PredictiveBackController()
         // Start with cascade, then start fresh
-        val cascadeState = CascadeBackState(
-            sourceNode = screen("s1"),
-            exitingNode = screen("s1"),
-            targetNode = screen("s2"),
-            animatingStackKey = NodeKey("stack"),
-            cascadeDepth = 0,
-            delegatesToSystem = false
-        )
-        controller.startGestureWithCascade(cascadeState)
+        controller.startGestureWithCascade(cascadeState())
         controller.cascadeState.value.shouldNotBeNull()
 
         controller.startGesture()
@@ -83,29 +91,13 @@ class PredictiveBackControllerTest : FunSpec({
 
     test("startGestureWithCascade sets isActive to true") {
         val controller = PredictiveBackController()
-        val cascadeState = CascadeBackState(
-            sourceNode = screen("s1"),
-            exitingNode = screen("s1"),
-            targetNode = screen("s2"),
-            animatingStackKey = NodeKey("stack"),
-            cascadeDepth = 1,
-            delegatesToSystem = false
-        )
-        controller.startGestureWithCascade(cascadeState)
+        controller.startGestureWithCascade(cascadeState(cascadeDepth = 1))
         controller.isActive.value.shouldBeTrue()
     }
 
     test("startGestureWithCascade sets cascadeState") {
         val controller = PredictiveBackController()
-        val cascadeState = CascadeBackState(
-            sourceNode = screen("s1"),
-            exitingNode = screen("s1"),
-            targetNode = screen("s2"),
-            animatingStackKey = NodeKey("stack"),
-            cascadeDepth = 2,
-            delegatesToSystem = false
-        )
-        controller.startGestureWithCascade(cascadeState)
+        controller.startGestureWithCascade(cascadeState(cascadeDepth = 2))
 
         val result = controller.cascadeState.value
         result.shouldNotBeNull()
@@ -115,15 +107,9 @@ class PredictiveBackControllerTest : FunSpec({
 
     test("startGestureWithCascade resets progress to 0") {
         val controller = PredictiveBackController()
-        val cascadeState = CascadeBackState(
-            sourceNode = screen("s1"),
-            exitingNode = screen("s1"),
-            targetNode = null,
-            animatingStackKey = null,
-            cascadeDepth = 0,
-            delegatesToSystem = true
+        controller.startGestureWithCascade(
+            cascadeState(target = null, animatingStackKey = null, delegatesToSystem = true)
         )
-        controller.startGestureWithCascade(cascadeState)
         controller.progress.value shouldBe 0f
     }
 
@@ -194,15 +180,7 @@ class PredictiveBackControllerTest : FunSpec({
 
     test("completeGesture clears cascadeState") {
         val controller = PredictiveBackController()
-        val cascadeState = CascadeBackState(
-            sourceNode = screen("s1"),
-            exitingNode = screen("s1"),
-            targetNode = screen("s2"),
-            animatingStackKey = NodeKey("stack"),
-            cascadeDepth = 0,
-            delegatesToSystem = false
-        )
-        controller.startGestureWithCascade(cascadeState)
+        controller.startGestureWithCascade(cascadeState())
 
         controller.completeGesture()
 
@@ -235,15 +213,7 @@ class PredictiveBackControllerTest : FunSpec({
 
     test("cancelGesture clears cascadeState") {
         val controller = PredictiveBackController()
-        val cascadeState = CascadeBackState(
-            sourceNode = screen("s1"),
-            exitingNode = screen("s1"),
-            targetNode = screen("s2"),
-            animatingStackKey = NodeKey("stack"),
-            cascadeDepth = 1,
-            delegatesToSystem = false
-        )
-        controller.startGestureWithCascade(cascadeState)
+        controller.startGestureWithCascade(cascadeState(cascadeDepth = 1))
 
         controller.cancelGesture()
 
@@ -311,16 +281,8 @@ class PredictiveBackControllerTest : FunSpec({
 
     test("cascade gesture lifecycle") {
         val controller = PredictiveBackController()
-        val cascadeState = CascadeBackState(
-            sourceNode = screen("s1"),
-            exitingNode = screen("s1"),
-            targetNode = screen("s2"),
-            animatingStackKey = NodeKey("stack"),
-            cascadeDepth = 1,
-            delegatesToSystem = false
-        )
 
-        controller.startGestureWithCascade(cascadeState)
+        controller.startGestureWithCascade(cascadeState(cascadeDepth = 1))
         controller.isActive.value.shouldBeTrue()
         val cascade = controller.cascadeState.value
         cascade.shouldNotBeNull()

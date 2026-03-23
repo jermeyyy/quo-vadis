@@ -323,6 +323,12 @@ class TreeNavigatorCoverageTest : FunSpec({
         navigator.navigateToPane(CovSettingsDest, PaneRole.Supporting)
 
         navigator.currentDestination.value shouldBe CovSettingsDest
+        // Verify the supporting pane stack was replaced (not pushed)
+        val updatedRoot = navigator.state.value as StackNode
+        val updatedPanes = updatedRoot.children[0] as PaneNode
+        val supportingStack = updatedPanes.paneContent(PaneRole.Supporting) as StackNode
+        supportingStack.children.size shouldBe 1
+        (supportingStack.children[0] as ScreenNode).destination shouldBe CovSettingsDest
     }
 
     // =========================================================================
@@ -394,6 +400,12 @@ class TreeNavigatorCoverageTest : FunSpec({
 
         val result = navigator.navigateBackInPane(PaneRole.Primary)
         result.shouldBeTrue()
+        // Verify the primary pane stack was actually popped
+        val updatedRoot = navigator.state.value as StackNode
+        val updatedPanes = updatedRoot.children[0] as PaneNode
+        val primaryStack = updatedPanes.paneContent(PaneRole.Primary) as StackNode
+        primaryStack.children.size shouldBe 1
+        (primaryStack.children[0] as ScreenNode).key shouldBe NodeKey("s1")
     }
 
     test("navigateBackInPane returns false when no PaneNode") {
@@ -531,6 +543,12 @@ class TreeNavigatorCoverageTest : FunSpec({
 
         val result = navigator.onBack()
         result.shouldBeTrue()
+        // Verify the expanded-mode back actually mutated the correct branch
+        val updatedRoot = navigator.state.value as StackNode
+        val updatedPanes = updatedRoot.children[0] as PaneNode
+        val primaryStack = updatedPanes.paneContent(PaneRole.Primary) as StackNode
+        primaryStack.children.size shouldBe 1
+        (primaryStack.children[0] as ScreenNode).destination shouldBe CovHomeDest
     }
 
     test("onBack with compact windowSizeClass on tab structure pops active tab") {
@@ -554,7 +572,11 @@ class TreeNavigatorCoverageTest : FunSpec({
 
         val result = navigator.onBack()
         result.shouldBeTrue()
-        // Should have popped from tab0
+        // Verify the compact-mode back popped from the active tab
+        val updatedRoot = navigator.state.value as StackNode
+        val updatedTabs = updatedRoot.children[0] as TabNode
+        updatedTabs.stacks[0].children.size shouldBe 1
+        (updatedTabs.stacks[0].activeChild as ScreenNode).destination shouldBe CovHomeDest
     }
 
     // =========================================================================

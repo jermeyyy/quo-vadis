@@ -1085,7 +1085,12 @@ class BackOperationsTest : FunSpec({
         // Active stack is supporting with 2 children -> pop succeeds
         val result = BackOperations.popWithTabBehavior(root, isCompact = true)
 
-        result.shouldBeInstanceOf<BackResult.Handled>()
+        val handled = result.shouldBeInstanceOf<BackResult.Handled>()
+        val newRoot = handled.newState as StackNode
+        val pane = newRoot.children[0] as PaneNode
+        val supportingStack = pane.paneContent(PaneRole.Supporting) as StackNode
+        supportingStack.children.size shouldBe 1
+        (supportingStack.children[0] as ScreenNode).destination shouldBe ListDest
     }
 
     // =========================================================================

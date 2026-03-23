@@ -322,6 +322,53 @@ class NavNodeExtensionsTest : FunSpec({
         panes.canHandleBackInternally().shouldBeFalse()
     }
 
+    test("canHandleBackInternally true for PaneNode when non-active pane has poppable stack") {
+        val panes = PaneNode(
+            key = NodeKey("panes"), parentKey = null,
+            paneConfigurations = mapOf(
+                PaneRole.Primary to PaneConfiguration(
+                    StackNode(
+                        NodeKey("pstack"), NodeKey("panes"),
+                        listOf(ScreenNode(NodeKey("ps1"), NodeKey("pstack"), TestDest))
+                    )
+                ),
+                PaneRole.Supporting to PaneConfiguration(
+                    StackNode(
+                        NodeKey("sstack"), NodeKey("panes"),
+                        listOf(
+                            ScreenNode(NodeKey("ss1"), NodeKey("sstack"), TestDest),
+                            ScreenNode(NodeKey("ss2"), NodeKey("sstack"), TestDest2)
+                        )
+                    )
+                )
+            ),
+            activePaneRole = PaneRole.Primary
+        )
+        panes.canHandleBackInternally().shouldBeTrue()
+    }
+
+    test("canHandleBackInternally true for PaneNode with nested tab containing poppable stack") {
+        val innerStack = StackNode(
+            NodeKey("tab0"), NodeKey("tabs"),
+            listOf(
+                ScreenNode(NodeKey("ts1"), NodeKey("tab0"), TestDest),
+                ScreenNode(NodeKey("ts2"), NodeKey("tab0"), TestDest2)
+            )
+        )
+        val tabs = TabNode(
+            key = NodeKey("tabs"), parentKey = NodeKey("panes"),
+            stacks = listOf(innerStack), activeStackIndex = 0
+        )
+        val panes = PaneNode(
+            key = NodeKey("panes"), parentKey = null,
+            paneConfigurations = mapOf(
+                PaneRole.Primary to PaneConfiguration(tabs)
+            ),
+            activePaneRole = PaneRole.Primary
+        )
+        panes.canHandleBackInternally().shouldBeTrue()
+    }
+
     // =========================================================================
     // Additional branch coverage for paneForRole through TabNode
     // =========================================================================
