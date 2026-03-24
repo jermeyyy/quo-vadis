@@ -106,6 +106,7 @@ class ValidationEngine(
 
         // Route validations
         validateRouteParameters(allDestinations)
+        validateTabItemInheritedRouteParams(tabs, allDestinations)
         validateDuplicateRoutes(allDestinations)
 
         // Argument validations
@@ -276,11 +277,15 @@ class ValidationEngine(
                 // Check route params have matching constructor params
                 destination.routeParams.forEach { routeParam ->
                     if (routeParam !in constructorParamNames) {
-                        reportError(
+                        reportWarning(
                             destination.classDeclaration,
                             "Route param '{$routeParam}' in @Destination on ${destination.className} " +
-                                    "has no matching constructor parameter",
-                            "Add a constructor parameter named '$routeParam' or remove '{$routeParam}' from the route"
+                                    "has no matching constructor parameter. This is acceptable for child " +
+                                    "destinations inheriting route params from a parent container (e.g., @Tabs). " +
+                                    "The route template will be preserved in generated code for deep link matching.",
+                            "Add a constructor parameter named '$routeParam' if this destination should own " +
+                                    "this parameter, or ignore this warning if the parameter is inherited from " +
+                                    "a parent container"
                         )
                     }
                 }
@@ -298,6 +303,45 @@ class ValidationEngine(
                                 "Add '{$missingParam}' to the route pattern or remove @Argument annotation"
                             )
                         }
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates that route parameters in DESTINATION-type tab items are either owned by the child
+     * (present in its constructor) or inherited from the parent @Tabs container's route.
+     *
+     * Warns when a route parameter appears in a child destination's route but is neither
+     * a child constructor parameter nor present in the parent @Tabs @Destination route pattern.
+     */
+    private fun validateTabItemInheritedRouteParams(
+        tabs: List<TabInfo>,
+        allDestinations: List<DestinationInfo>
+    ) {
+        tabs.forEach { tab ->
+            val parentQualifiedName = tab.classDeclaration.qualifiedName?.asString() ?: return@forEach
+            val parentDestination = allDestinations.find { it.qualifiedName == parentQualifiedName }
+            if (parentDestination == null || parentDestination.route == null) return@forEach
+
+            val parentRouteParams = parentDestination.routeParams.toSet()
+
+            tab.tabs.filter { it.tabType == TabItemType.DESTINATION }.forEach { tabItem ->
+                val tabItemDestination = tabItem.destinationInfo ?: return@forEach
+                val constructorParamNames = tabItemDestination.constructorParams.map { it.name }.toSet()
+
+                tabItemDestination.routeParams.forEach { routeParam ->
+                    if (routeParam in constructorParamNames) return@forEach
+                    if (routeParam !in parentRouteParams) {
+                        reportWarning(
+                            tabItemDestination.classDeclaration,
+                            "Route param '{$routeParam}' in @Destination on ${tabItemDestination.className} " +
+                                    "is not defined in parent @Tabs container ${tab.className}'s " +
+                                    "route '${parentDestination.route}' nor in child constructor",
+                            "Ensure the route parameter appears in the parent @Tabs @Destination route pattern, " +
+                                    "add it as a constructor parameter, or remove it from this route"
+                        )
+                    }
                 }
             }
         }
