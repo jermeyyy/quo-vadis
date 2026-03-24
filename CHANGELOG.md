@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-03-24
+
+### Added
+
+- **KSP: Cross-reference validation for `@TabItem` inherited route params**: New `validateTabItemInheritedRouteParams()` cross-references `@TabItem` route parameters against parent `@Tabs` route, warning only on truly orphaned params.
+
+### Changed
+
+- **KSP: Route parameter validation demoted to warning for inherited params**: `validateRouteParameters()` now issues warnings instead of errors when child `@TabItem` destinations inherit route params from parent `@Tabs` containers. `@Argument` parameters not present in the route remain errors.
+
+### Fixed
+
 ## [0.4.5] - 2026-03-24
 
 ### Fixed
