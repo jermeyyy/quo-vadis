@@ -65,6 +65,8 @@ class QuoVadisSymbolProcessor(
     private val modulePrefix: String = options["quoVadis.modulePrefix"] ?: ""
     private val strictValidation: Boolean = options["quoVadis.strictValidation"]
         ?.toBooleanStrictOrNull() ?: true
+    private val apiModule: Boolean = options["quoVadis.apiModule"]
+        ?.toBooleanStrictOrNull() ?: false
 
     // =========================================================================
     // Extractors for new NavNode architecture (KSP-001)
@@ -101,7 +103,7 @@ class QuoVadisSymbolProcessor(
     // Validation engine (KSP-006)
     // =========================================================================
 
-    private val validationEngine = ValidationEngine(logger)
+    private val validationEngine = ValidationEngine(logger, apiModule = apiModule)
 
     // =========================================================================
     // State

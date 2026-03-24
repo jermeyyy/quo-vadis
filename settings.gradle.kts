@@ -44,3 +44,5 @@ include(":quo-vadis-ksp")
 
 include(":feature1")
 include(":feature2")
+include(":feature2-api")
+include(":feature3")

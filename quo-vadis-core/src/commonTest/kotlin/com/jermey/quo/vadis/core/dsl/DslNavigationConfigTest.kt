@@ -212,7 +212,7 @@ class DslNavigationConfigTest : FunSpec({
         node.shouldNotBeNull()
         val tabNode = node.shouldBeInstanceOf<TabNode>()
         tabNode.stacks shouldHaveSize 2
-        tabNode.wrapperKey shouldBe "tabs"
+        tabNode.wrapperKey shouldBe CnfTabs.Tab1::class.qualifiedName
         tabNode.activeStackIndex shouldBe 0
 
         tabNode.stacks.forEach { stack ->

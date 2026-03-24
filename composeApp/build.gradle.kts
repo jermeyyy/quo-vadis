@@ -79,6 +79,8 @@ kotlin {
 
             implementation(projects.feature1)
             implementation(projects.feature2)
+            implementation(projects.feature2Api)
+            implementation(projects.feature3)
 
             // Haze for glassmorphism
             implementation(libs.haze)

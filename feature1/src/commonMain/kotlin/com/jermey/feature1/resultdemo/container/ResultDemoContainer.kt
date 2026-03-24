@@ -1,7 +1,7 @@
 package com.jermey.feature1.resultdemo.container
 
-import com.jermey.feature1.resultdemo.ResultDemoDestination
-import com.jermey.feature1.resultdemo.SelectedItem
+import com.jermey.navplayground.navigation.ResultDemoDestination
+import com.jermey.navplayground.navigation.SelectedItem
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Action
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Intent
 import com.jermey.quo.vadis.core.navigation.result.navigateForResult

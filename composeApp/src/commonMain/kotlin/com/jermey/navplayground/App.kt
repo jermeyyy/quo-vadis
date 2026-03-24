@@ -5,7 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.jermey.navplayground.demo.DemoApp
 import com.jermey.navplayground.demo.ui.theme.NavPlaygroundTheme
-import com.jermey.navplayground.demo.ui.theme.rememberThemeManager
+import com.jermey.feature2.settings.rememberThemeManager
 import org.koin.compose.KoinApplication
 import org.koin.plugin.module.dsl.koinConfiguration
 

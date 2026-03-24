@@ -2,8 +2,38 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
+    <ID>LongMethod:AnimatedSearchBar.kt:@Composable fun AnimatedSearchBar</ID>
+    <ID>LongMethod:ExploreCard.kt:@OptIn(ExperimentalSharedTransitionApi::class) @Composable fun ExploreCard</ID>
+    <ID>LongMethod:ExploreDetailScreen.kt:@Composable private fun DetailContent</ID>
+    <ID>LongMethod:ExploreDetailScreen.kt:@OptIn(ExperimentalSharedTransitionApi::class) @Composable private fun CollapsingImageHeader</ID>
+    <ID>LongMethod:ExploreRepository.kt:ExploreRepository$private fun generateItems: List&lt;ExploreItem></ID>
+    <ID>LongMethod:ExploreScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(ExploreTab.Feed::class) @Composable fun ExploreScreen</ID>
+    <ID>LongMethod:HomeScreen.kt:@Composable private fun HomeScreenContent</ID>
+    <ID>LongMethod:HomeScreen.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class) @Screen(HomeTab::class) @Composable fun HomeScreen</ID>
     <ID>LongMethod:ItemPickerScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(ResultDemoDestination.ItemPicker::class) @Composable fun ItemPickerScreen</ID>
+    <ID>LongMethod:ProfileScreen.kt:@Composable private fun ProfileEditForm</ID>
+    <ID>LongMethod:ProfileScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(ProfileTab::class) @Composable fun ProfileScreen</ID>
+    <ID>LongMethod:QuickPreviewSheet.kt:@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalHazeMaterialsApi::class) @Composable private fun PreviewHeroImage</ID>
     <ID>LongMethod:ResultDemoScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Screen(ResultDemoDestination.Demo::class) @Composable fun ResultDemoScreen</ID>
+    <ID>MagicNumber:ExploreDetailScreen.kt:10</ID>
+    <ID>MagicNumber:ExploreDetailScreen.kt:10.0</ID>
+    <ID>MagicNumber:ExploreDetailScreen.kt:4.5f</ID>
+    <ID>MagicNumber:ExploreScreen.kt:200</ID>
+    <ID>MagicNumber:ExploreScreen.kt:300</ID>
+    <ID>MagicNumber:FilterSheet.kt:10</ID>
+    <ID>MagicNumber:FilterSheet.kt:10.0</ID>
+    <ID>MagicNumber:QuickPreviewSheet.kt:10</ID>
+    <ID>MagicNumber:QuickPreviewSheet.kt:10.0</ID>
     <ID>MatchingDeclarationName:Di.kt:Feature1Module</ID>
+    <ID>MaxLineLength:ExploreDetailScreen.kt:"feedback or suggestions, please don't hesitate to reach out through our support channels.\n\n"</ID>
+    <ID>MaxLineLength:ExploreDetailScreen.kt:text = "• Similar items in this category\n• Popular picks this week\n• Editor's recommendations\n• Trending content"</ID>
+    <ID>SwallowedException:ExploreContainer.kt:ExploreContainer$e: Exception</ID>
+    <ID>SwallowedException:ProfileContainer.kt:ProfileContainer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ExploreContainer.kt:ExploreContainer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProfileContainer.kt:ProfileContainer$e: Exception</ID>
+    <ID>TooManyFunctions:ExploreContainer.kt:ExploreContainer : NavigationContainer</ID>
+    <ID>TooManyFunctions:ExploreDetailScreen.kt:com.jermey.feature1.explore.ExploreDetailScreen.kt</ID>
+    <ID>UnusedParameter:ExploreDetailScreen.kt:itemId: String</ID>
+    <ID>UnusedParameter:QuickPreviewSheet.kt:hazeState: HazeState</ID>
   </CurrentIssues>
 </SmellBaseline>

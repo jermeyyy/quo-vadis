@@ -27,13 +27,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.jermey.feature1.resultdemo.ResultDemoDestination
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ExploreTab
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.HomeTab
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.ProfileTab
-import com.jermey.navplayground.demo.app.sample.showcase.destinations.veeeeery.looong.packages.names.length.test.destinations.SettingsTab
+import com.jermey.navplayground.navigation.ResultDemoDestination
+import com.jermey.navplayground.navigation.ExploreTab
+import com.jermey.navplayground.navigation.HomeTab
+import com.jermey.navplayground.navigation.ProfileTab
+import com.jermey.navplayground.navigation.SettingsTab
+import com.jermey.navplayground.navigation.ShowcaseTab
 import com.jermey.navplayground.navigation.MainTabs
-import com.jermey.navplayground.demo.ui.components.glassmorphism.LocalHazeState
+import com.jermey.feature1.ui.glassmorphism.LocalHazeState
 import com.jermey.quo.vadis.annotations.TabsContainer
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
@@ -143,6 +144,7 @@ private fun GlassBottomNavigationBar(
                 is ProfileTab -> "Profile" to Icons.Default.Person
                 is SettingsTab -> "Settings" to Icons.Default.Settings
                 is ResultDemoDestination -> "Results" to Icons.Default.Star
+                is ShowcaseTab -> "Showcase" to Icons.Default.Star
                 else -> "Tab" to Icons.Default.Circle
             }
             NavigationBarItem(
@@ -187,6 +189,7 @@ private fun MainBottomNavigationBar(
                 is ProfileTab -> "Profile" to Icons.Default.Person
                 is SettingsTab -> "Settings" to Icons.Default.Settings
                 is ResultDemoDestination -> "Results" to Icons.Default.Star
+                is ShowcaseTab -> "Showcase" to Icons.Default.Star
                 else -> "Tab" to Icons.Default.Circle
             }
             NavigationBarItem(

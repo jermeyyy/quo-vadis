@@ -37,6 +37,7 @@ import com.jermey.feature1.resultdemo.container.ItemPickerContainer.Action
 import com.jermey.feature1.resultdemo.container.ItemPickerContainer.Intent
 import com.jermey.feature1.resultdemo.container.ItemPickerState
 import com.jermey.feature1.resultdemo.container.PickerItem
+import com.jermey.navplayground.navigation.ResultDemoDestination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.flowmvi.rememberContainer
 import org.koin.core.qualifier.qualifier

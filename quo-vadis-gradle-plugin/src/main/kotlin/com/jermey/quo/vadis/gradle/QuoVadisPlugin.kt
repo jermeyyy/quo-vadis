@@ -47,6 +47,7 @@ class QuoVadisPlugin : Plugin<Project> {
         // Set defaults
         extension.modulePrefix.convention(project.name.toCamelCase())
         extension.useLocalKsp.convention(false)
+        extension.apiModule.convention(false)
 
         // Configure after both KMP and KSP plugins are applied
         project.afterEvaluate {
@@ -80,6 +81,9 @@ class QuoVadisPlugin : Plugin<Project> {
         // Configure KSP arguments
         project.extensions.configure<KspExtension> {
             arg("quoVadis.modulePrefix", extension.modulePrefix.get())
+            if (extension.apiModule.get()) {
+                arg("quoVadis.apiModule", "true")
+            }
         }
 
         // Configure generated source directory for commonMain

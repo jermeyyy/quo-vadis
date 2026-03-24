@@ -38,6 +38,7 @@ import com.jermey.feature1.resultdemo.container.ResultDemoContainer
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Action
 import com.jermey.feature1.resultdemo.container.ResultDemoContainer.Intent
 import com.jermey.feature1.resultdemo.container.ResultDemoState
+import com.jermey.navplayground.navigation.ResultDemoDestination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.compose.scope.LocalNavigator
 import com.jermey.quo.vadis.flowmvi.rememberContainer

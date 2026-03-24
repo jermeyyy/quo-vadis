@@ -71,6 +71,12 @@ kotlin {
 
                 implementation(projects.quoVadisCore)
                 implementation(projects.quoVadisCoreFlowMvi)
+                implementation(projects.feature2Api)
+                implementation(projects.quoVadisAnnotations)
+                implementation(projects.navigationApi)
+
+                // Haze (for Settings screen glassmorphism)
+                implementation(libs.haze)
 
                 // Koin
                 implementation(libs.koin.core)

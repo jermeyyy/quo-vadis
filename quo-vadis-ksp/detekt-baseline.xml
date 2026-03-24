@@ -11,7 +11,6 @@
     <ID>MaxLineLength:TransitionExtractor.kt:TransitionExtractor$logger.warn("Could not determine containing file for @Transition on ${classDeclaration.simpleName.asString()}")</ID>
     <ID>NestedBlockDepth:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor$private fun collectAllDestinations</ID>
     <ID>ReturnCount:ContainerExtractor.kt:ContainerExtractor$private fun extractWrapper: ContainerInfoModel?</ID>
-    <ID>ReturnCount:NavigationConfigGenerator.kt:NavigationConfigGenerator$private fun getWrapperKey: String</ID>
     <ID>ReturnCount:PaneExtractor.kt:PaneExtractor$fun extract: PaneInfo?</ID>
     <ID>ReturnCount:PaneExtractor.kt:PaneExtractor$private fun extractPaneItem: PaneItemInfo?</ID>
     <ID>ReturnCount:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor$override fun process: List&lt;KSAnnotated></ID>

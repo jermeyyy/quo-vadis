@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MatchingDeclarationName:ExploreTabDestination.kt:ExploreTab : NavDestination</ID>
+    <ID>MatchingDeclarationName:HomeTabDestination.kt:HomeTab : NavDestination</ID>
+    <ID>MatchingDeclarationName:MessagesPaneDestination.kt:MessagesPane : NavDestination</ID>
+    <ID>MatchingDeclarationName:ProfileTabDestination.kt:ProfileTab : NavDestination</ID>
+    <ID>MatchingDeclarationName:SettingsTabDestination.kt:SettingsTab : NavDestination</ID>
+    <ID>MatchingDeclarationName:ShowcaseTabDestination.kt:ShowcaseTab : NavDestination</ID>
+  </CurrentIssues>
+</SmellBaseline>

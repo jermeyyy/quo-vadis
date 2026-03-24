@@ -1,6 +1,6 @@
 package com.jermey.feature1.resultdemo.container
 
-import com.jermey.feature1.resultdemo.SelectedItem
+import com.jermey.navplayground.navigation.SelectedItem
 import com.jermey.quo.vadis.core.navigation.result.navigateBackWithResult
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
@@ -99,7 +99,7 @@ class ItemPickerContainer(
      * Select an item and return it as a result to the caller.
      *
      * Uses [navigateBackWithResult] to:
-     * 1. Create a [com.jermey.feature1.resultdemo.SelectedItem] from the picker item
+     * 1. Create a [com.jermey.navplayground.navigation.SelectedItem] from the picker item
      * 2. Return the result to the calling screen
      * 3. Navigate back
      *

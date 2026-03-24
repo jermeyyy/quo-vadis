@@ -327,7 +327,7 @@ internal class DslNavigationConfig(
             parentKey = parentKey?.let { NodeKey(it) },
             stacks = stacks,
             activeStackIndex = config.initialTab,
-            wrapperKey = builder.scopeKey.value,
+            wrapperKey = builder.destinationClass.qualifiedName ?: builder.scopeKey.value,
             tabMetadata = tabMetadata,
             scopeKey = builder.scopeKey
         )
@@ -440,6 +440,7 @@ internal class DslNavigationConfig(
             paneConfigurations = paneConfigurations,
             activePaneRole = config.initialPane,
             backBehavior = config.backBehavior,
+            wrapperKey = builder.destinationClass.qualifiedName ?: builder.scopeKey.value,
             scopeKey = builder.scopeKey
         )
     }

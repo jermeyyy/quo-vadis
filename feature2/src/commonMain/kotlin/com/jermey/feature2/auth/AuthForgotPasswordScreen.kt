@@ -26,7 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.jermey.feature2.AuthFlowDestination
+import com.jermey.feature2.api.AuthFlowDestination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
