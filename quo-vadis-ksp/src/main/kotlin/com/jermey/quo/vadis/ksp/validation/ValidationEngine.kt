@@ -48,7 +48,6 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
  *
  * ### 4. Type Validations
  * - Non-sealed class containers
- * - Non-data object/class destinations
  *
  * ## Usage
  *
@@ -117,7 +116,6 @@ class ValidationEngine(
 
         // Type validations
         validateContainerTypes(stacks, tabs, panes)
-        validateDestinationTypes(allDestinations)
 
         // Tab ordinal validations
         validateOrdinalZeroExists(tabs)
@@ -508,35 +506,6 @@ class ValidationEngine(
                     pane.classDeclaration,
                     "@Pane '${pane.className}' must be a sealed class",
                     "Change 'class ${pane.className}' to 'sealed class ${pane.className}'"
-                )
-            }
-        }
-    }
-
-    /**
-     * Validates that @Destination is applied to data objects or data classes.
-     *
-     * Sealed classes that are also containers (@Tabs, @Stack, @Pane) are allowed
-     * to have @Destination for deep linking purposes but are not validated here.
-     */
-    private fun validateDestinationTypes(destinations: List<DestinationInfo>) {
-        destinations.forEach { destination ->
-            // Skip sealed classes that are also containers - they're valid with @Destination
-            val isContainer = destination.classDeclaration.annotations.any {
-                val name = it.shortName.asString()
-                name == "Tabs" || name == "Tab" || name == "Stack" || name == "Pane"
-            }
-            if (isContainer) return@forEach
-
-            // Also skip plain sealed classes - they may be container markers
-            if (destination.isSealedClass) return@forEach
-
-            if (!destination.isDataObject && !destination.isDataClass) {
-                reportError(
-                    destination.classDeclaration,
-                    "@Destination '${destination.className}' must be a data object or data class",
-                    "Use 'data object ${destination.className}' for destinations without parameters, " +
-                            "or 'data class ${destination.className}(...)' for destinations with parameters"
                 )
             }
         }
