@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-03-24
+
+### Fixed
+
+- **KSP: Removed data object/class requirement for `@Destination`**: The `validateDestinationTypes` validation incorrectly required all `@Destination`-annotated classes to be data objects or data classes. `@Destination` can now be applied to any class type.
+
 ## [0.4.4] - 2026-03-24
 
 ### ⚠️ Breaking Changes
