@@ -46,7 +46,9 @@ class TabExtractor(
      *
      * 1. Discovers all `@TabItem`-annotated classes and groups them by parent
      * 2. Discovers all `@Tabs`-annotated classes and matches children from step 1
-     * 3. Returns fully assembled [TabInfo] list with children in discovery order
+     * 3. Returns fully assembled [TabInfo] list with the default tab first, followed by
+     *    remaining tabs in discovery order. The first tab in the list becomes the initially
+     *    selected tab at runtime.
      *
      * @param resolver KSP resolver to query for symbols
      * @return List of [TabInfo] for all `@Tabs`-annotated classes

@@ -701,8 +701,9 @@ fun DemoTabsWrapper(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
             // Tab strip with type-safe pattern matching
-            TabRow(selectedTabIndex = scope.tabs.indexOf(scope.activeTab)) {
-                scope.tabs.forEach { tab ->
+            val tabsList = scope.tabs.toList()
+            TabRow(selectedTabIndex = tabsList.indexOf(scope.activeTab).coerceAtLeast(0)) {
+                tabsList.forEach { tab ->
                     val (label, icon) = when (tab) {
                         is MusicTab -> "Music" to Icons.Default.MusicNote
                         is MoviesTab -> "Movies" to Icons.Default.Movie

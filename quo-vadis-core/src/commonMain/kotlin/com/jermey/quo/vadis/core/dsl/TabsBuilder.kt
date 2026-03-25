@@ -78,18 +78,21 @@ class TabsBuilder {
      * @param destination The destination to display in this tab
      * @param title Optional display title for the tab
      * @param icon Optional icon for the tab (type is Any to support various icon types)
+     * @param isDefault Whether this tab is the initially selected tab
      */
     fun tab(
         destination: NavDestination,
         title: String? = null,
-        icon: Any? = null
+        icon: Any? = null,
+        isDefault: Boolean = false
     ) {
         tabs.add(
             TabEntry.FlatScreen(
                 destination = destination,
                 destinationClass = destination::class,
                 title = title,
-                icon = icon
+                icon = icon,
+                isDefault = isDefault
             )
         )
     }
@@ -112,12 +115,14 @@ class TabsBuilder {
      * @param destination The root destination for this tab
      * @param title Optional display title for the tab
      * @param icon Optional icon for the tab
+     * @param isDefault Whether this tab is the initially selected tab
      * @param builder Stack configuration lambda
      */
     fun tab(
         destination: NavDestination,
         title: String?,
         icon: Any?,
+        isDefault: Boolean = false,
         builder: StackBuilder.() -> Unit
     ) {
         val stackBuilder = StackBuilder().apply(builder)
@@ -127,7 +132,8 @@ class TabsBuilder {
                 destinationClass = destination::class,
                 screens = stackBuilder.build(),
                 title = title,
-                icon = icon
+                icon = icon,
+                isDefault = isDefault
             )
         )
     }
@@ -153,17 +159,20 @@ class TabsBuilder {
      * @param containerClass The class of the container destination
      * @param title Optional display title for the tab
      * @param icon Optional icon for the tab
+     * @param isDefault Whether this tab is the initially selected tab
      */
     fun containerTab(
         containerClass: KClass<out NavDestination>,
         title: String? = null,
-        icon: Any? = null
+        icon: Any? = null,
+        isDefault: Boolean = false
     ) {
         tabs.add(
             TabEntry.ContainerReference(
                 containerClass = containerClass,
                 title = title,
-                icon = icon
+                icon = icon,
+                isDefault = isDefault
             )
         )
     }
@@ -180,12 +189,14 @@ class TabsBuilder {
      * @param D The container destination type
      * @param title Optional display title for the tab
      * @param icon Optional icon for the tab
+     * @param isDefault Whether this tab is the initially selected tab
      */
     inline fun <reified D : NavDestination> containerTab(
         title: String? = null,
-        icon: Any? = null
+        icon: Any? = null,
+        isDefault: Boolean = false
     ) {
-        containerTab(D::class, title, icon)
+        containerTab(D::class, title, icon, isDefault)
     }
 
     /**
@@ -195,7 +206,7 @@ class TabsBuilder {
      */
     fun build(): BuiltTabsConfig = BuiltTabsConfig(
         tabs = tabs.toList(),
-        initialTab = initialTab
+        initialTab = tabs.indexOfFirst { it.isDefault }.takeIf { it >= 0 } ?: initialTab
     )
 }
 
@@ -220,18 +231,25 @@ sealed class TabEntry {
     abstract val icon: Any?
 
     /**
+     * Whether this tab is the initially selected tab.
+     */
+    abstract val isDefault: Boolean
+
+    /**
      * A tab displaying a single screen without nested navigation.
      *
      * @property destination The destination instance
      * @property destinationClass The destination class
      * @property title Display title
      * @property icon Tab icon
+     * @property isDefault Whether this tab is the initially selected tab
      */
     data class FlatScreen(
         val destination: NavDestination,
         val destinationClass: KClass<out NavDestination>,
         override val title: String?,
-        override val icon: Any?
+        override val icon: Any?,
+        override val isDefault: Boolean = false
     ) : TabEntry()
 
     /**
@@ -242,13 +260,15 @@ sealed class TabEntry {
      * @property screens List of screens in this tab's stack
      * @property title Display title
      * @property icon Tab icon
+     * @property isDefault Whether this tab is the initially selected tab
      */
     data class NestedStack(
         val rootDestination: NavDestination,
         val destinationClass: KClass<out NavDestination>,
         val screens: List<StackScreenEntry>,
         override val title: String?,
-        override val icon: Any?
+        override val icon: Any?,
+        override val isDefault: Boolean = false
     ) : TabEntry()
 
     /**
@@ -257,10 +277,12 @@ sealed class TabEntry {
      * @property containerClass The class of the referenced container
      * @property title Display title
      * @property icon Tab icon
+     * @property isDefault Whether this tab is the initially selected tab
      */
     data class ContainerReference(
         val containerClass: KClass<out NavDestination>,
         override val title: String?,
-        override val icon: Any?
+        override val icon: Any?,
+        override val isDefault: Boolean = false
     ) : TabEntry()
 }

@@ -144,13 +144,25 @@ class ContainerBlockGenerator(
 
         return when (tabItem.tabType) {
             TabItemType.STACK, TabItemType.TABS -> {
-                CodeBlock.of("containerTab<%T>()\n", tabClassName)
+                if (tabItem.isDefault) {
+                    CodeBlock.of("containerTab<%T>(isDefault = true)\n", tabClassName)
+                } else {
+                    CodeBlock.of("containerTab<%T>()\n", tabClassName)
+                }
             }
             TabItemType.DESTINATION -> {
                 if (isObject) {
-                    CodeBlock.of("tab(%T)\n", tabClassName)
+                    if (tabItem.isDefault) {
+                        CodeBlock.of("tab(%T, isDefault = true)\n", tabClassName)
+                    } else {
+                        CodeBlock.of("tab(%T)\n", tabClassName)
+                    }
                 } else {
-                    CodeBlock.of("containerTab<%T>()\n", tabClassName)
+                    if (tabItem.isDefault) {
+                        CodeBlock.of("containerTab<%T>(isDefault = true)\n", tabClassName)
+                    } else {
+                        CodeBlock.of("containerTab<%T>()\n", tabClassName)
+                    }
                 }
             }
         }

@@ -204,7 +204,7 @@ class ValidationEngine(
             if (defaultCount > 1) {
                 reportError(
                     tab.classDeclaration,
-                    "Multiple @TabItem entries marked as isDefault in @Tabs '${tab.name}'. " +
+                    "Multiple @TabItem entries marked as isDefault in @Tabs '${tab.className}' (name='${tab.name}'). " +
                         "Only one tab can be the default.",
                     "Remove isDefault = true from all but one @TabItem"
                 )
@@ -212,7 +212,7 @@ class ValidationEngine(
             if (defaultCount == 0 && !tab.isCrossModule) {
                 reportWarning(
                     tab.classDeclaration,
-                    "No @TabItem marked as isDefault in @Tabs '${tab.name}'. " +
+                    "No @TabItem marked as isDefault in @Tabs '${tab.className}' (name='${tab.name}'). " +
                         "The first discovered tab will be used as default.",
                     "Consider marking one tab with " +
                         "@TabItem(parent = ${tab.className}::class, isDefault = true)"

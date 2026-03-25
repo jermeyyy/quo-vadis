@@ -25,9 +25,11 @@ import kotlinx.serialization.Serializable
  * ```
  *
  * @property route The route identifier for this tab's content
+ * @property isDefault Whether this tab is the initially selected tab
  */
 @InternalQuoVadisApi
 @Serializable
 data class GeneratedTabMetadata(
-    val route: String
+    val route: String,
+    val isDefault: Boolean = false
 )

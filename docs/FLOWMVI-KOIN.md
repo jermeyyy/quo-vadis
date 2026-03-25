@@ -514,7 +514,8 @@ fun DemoTabsWrapper(
             }
         ) { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues)) {
-                TabRow(selectedTabIndex = scope.tabs.indexOf(scope.activeTab)) {
+                val tabsList = scope.tabs.toList()
+                TabRow(selectedTabIndex = tabsList.indexOf(scope.activeTab).coerceAtLeast(0)) {
                     // Tab strip with badges from shared state
                 }
                 content()

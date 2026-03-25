@@ -318,7 +318,8 @@ internal class DslNavigationConfig(
 
         val tabMetadata = config.tabs.map { tabEntry ->
             GeneratedTabMetadata(
-                route = getTabRoute(tabEntry)
+                route = getTabRoute(tabEntry),
+                isDefault = tabEntry.isDefault
             )
         }
 
