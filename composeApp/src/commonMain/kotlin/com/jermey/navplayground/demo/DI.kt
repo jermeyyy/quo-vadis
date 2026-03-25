@@ -1,5 +1,6 @@
 package com.jermey.navplayground.demo
 
+import com.jermey.navplayground.navigation.HomeTab
 import com.jermey.navplayground.navigation.MainTabs
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator

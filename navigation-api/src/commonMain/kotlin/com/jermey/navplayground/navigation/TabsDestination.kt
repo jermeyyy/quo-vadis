@@ -30,7 +30,7 @@ sealed class DemoTabs : NavDestination {
     /**
      * Music tab - shows a list of music items
      */
-    @TabItem(parent = DemoTabs::class, ordinal = 0)
+    @TabItem(parent = DemoTabs::class)
     @Stack(name = "musicStack", startDestination = MusicTab.List::class)
     sealed class MusicTab : DemoTabs() {
 
@@ -41,7 +41,7 @@ sealed class DemoTabs : NavDestination {
     /**
      * Movies tab - shows a list of movie items
      */
-    @TabItem(parent = DemoTabs::class, ordinal = 1)
+    @TabItem(parent = DemoTabs::class)
     @Stack(name = "moviesStack", startDestination = MoviesTab.List::class)
     sealed class MoviesTab : DemoTabs() {
 
@@ -52,7 +52,7 @@ sealed class DemoTabs : NavDestination {
     /**
      * Books tab - shows a list of book items
      */
-    @TabItem(parent = DemoTabs::class, ordinal = 2)
+    @TabItem(parent = DemoTabs::class)
     @Stack(name = "booksStack", startDestination = BooksTab.List::class)
     sealed class BooksTab : DemoTabs() {
 

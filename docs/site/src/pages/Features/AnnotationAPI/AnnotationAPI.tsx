@@ -294,23 +294,23 @@ export default function AnnotationAPI() {
           <li><code>name: String</code> — Unique identifier for the tab container</li>
         </ul>
         <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
-          Tab ordering and the initial tab are determined by <code>@TabItem</code> ordinals (child-to-parent pattern),
-          not by <code>@Tabs</code> properties. The <code>@Tabs</code> annotation only provides a name for the tab container.
+          The initial tab is determined by the <code>@TabItem</code> with <code>isDefault = true</code> (child-to-parent pattern).
+          If no tab is explicitly marked as default, the first discovered tab becomes the initial tab.
+          The <code>@Tabs</code> annotation only provides a name for the tab container.
         </p>
 
         <h3>@TabItem Properties</h3>
         <ul>
           <li><code>parent: KClass&lt;*&gt;</code> — The <code>@Tabs</code>-annotated class this tab belongs to</li>
-          <li><code>ordinal: Int</code> — Display position (0-based). <code>ordinal = 0</code> is the initial tab.</li>
+          <li><code>isDefault: Boolean</code> — When <code>true</code>, this tab is the initially selected tab. Defaults to <code>false</code>.</li>
         </ul>
 
-        <h3>Ordinal Rules</h3>
+        <h3>Default Tab Rules</h3>
         <ul>
-          <li>Ordinals must be contiguous integers starting at 0 (i.e., 0, 1, 2, …, N-1 with no gaps)</li>
-          <li>No gaps allowed (e.g., 0, 1, 3 is invalid because 2 is missing)</li>
-          <li>No duplicate ordinals</li>
-          <li>KSP validates ordinal rules at compile time</li>
-          <li>Cross-module ordinal validation is relaxed — only ordinals visible to the processor are checked</li>
+          <li>At most one <code>@TabItem</code> per <code>@Tabs</code> parent may have <code>isDefault = true</code></li>
+          <li>If no <code>isDefault = true</code> is set, the first discovered tab becomes the default</li>
+          <li>KSP validates these rules at compile time</li>
+          <li>Cross-module tab registration is supported — each module only validates the tab items it can see</li>
         </ul>
 
         <h3>Tab Item Types</h3>
@@ -345,8 +345,8 @@ export default function AnnotationAPI() {
         <p>
           Feature modules can register tabs without modifying the parent <code>@Tabs</code> declaration.
           Define the <code>@Tabs</code> class in a shared API module, then each feature module
-          uses <code>@TabItem(parent = SharedTabs::class, ordinal = N)</code> to register as a tab.
-          Ordinal validation is relaxed for cross-module tabs since only partial tab items are visible to the processor.
+          uses <code>@TabItem(parent = SharedTabs::class)</code> to register as a tab.
+          One tab should be marked <code>isDefault = true</code> to set the initial tab.
         </p>
 
         <CodeBlock code={crossModuleTabsExample} language="kotlin" />
@@ -364,9 +364,9 @@ export default function AnnotationAPI() {
 
         <h3>TabsContainerScope</h3>
         <ul>
-          <li><code>tabMetadata: List&lt;GeneratedTabMetadata&gt;</code> — Tab metadata for custom labels, icons, and behavior via destination type matching</li>
-          <li><code>activeTabIndex: Int</code> — Currently selected tab index</li>
-          <li><code>switchTab(index: Int)</code> — Function to switch to a different tab</li>
+          <li><code>tabs: Set&lt;NavDestination&gt;</code> — Tab destinations for type-safe pattern matching to customize labels, icons, and behavior</li>
+          <li><code>activeTab: NavDestination</code> — Currently selected tab destination</li>
+          <li><code>switchTab(destination: NavDestination)</code> — Function to switch to a different tab</li>
           <li><code>isTransitioning: Boolean</code> — Whether tab switching animation is in progress</li>
         </ul>
       </section>
@@ -650,22 +650,12 @@ export default function AnnotationAPI() {
             <tr>
               <td>Empty tabs</td>
               <td>Error</td>
-              <td><code>@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one class annotated with @TabItem(parent = EmptyTabs::class, ordinal = 0)</code></td>
+              <td><code>@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one class annotated with @TabItem(parent = EmptyTabs::class)</code></td>
             </tr>
             <tr>
-              <td>Missing ordinal 0</td>
+              <td>Multiple defaults</td>
               <td>Error</td>
-              <td><code>@Tabs 'MainTabs' has no @TabItem with ordinal 0 in file 'MainTabs.kt' (line 5). Fix: Add ordinal = 0 to one @TabItem to define the initial tab</code></td>
-            </tr>
-            <tr>
-              <td>Duplicate ordinals</td>
-              <td>Error</td>
-              <td><code>Duplicate ordinal 1 in @Tabs 'MainTabs': [ExploreTab, ProfileTab] in file 'MainTabs.kt' (line 5). Fix: Assign unique ordinal values to each @TabItem</code></td>
-            </tr>
-            <tr>
-              <td>Ordinal gap</td>
-              <td>Error</td>
-              <td><code>Ordinal gap in @Tabs 'MainTabs': missing ordinal 2 (found [0, 1, 3]) in file 'MainTabs.kt' (line 5). Fix: Use contiguous ordinals starting at 0</code></td>
+              <td><code>@Tabs 'MainTabs' has multiple @TabItem entries with isDefault = true: [HomeTab, ProfileTab] in file 'MainTabs.kt' (line 5). Fix: At most one @TabItem per @Tabs parent may have isDefault = true</code></td>
             </tr>
           </tbody>
         </table>

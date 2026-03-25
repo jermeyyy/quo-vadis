@@ -7,7 +7,7 @@ import com.jermey.quo.vadis.annotations.Transition
 import com.jermey.quo.vadis.annotations.TransitionType
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
-@TabItem(parent = MainTabs::class, ordinal = 3)
+@TabItem(parent = MainTabs::class)
 @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
 @Transition(type = TransitionType.Fade)
 sealed class SettingsTab : NavDestination {

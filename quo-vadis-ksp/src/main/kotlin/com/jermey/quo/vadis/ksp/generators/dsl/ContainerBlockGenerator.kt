@@ -116,8 +116,8 @@ class ContainerBlockGenerator(
         val builder = CodeBlock.builder()
             .beginControlFlow("tabs<%T>(scopeKey = %S)", containerClass, scopeKey)
 
-        // Generate tab entries sorted by ordinal; index 0 is initial tab
-        tab.tabs.sortedBy { it.ordinal }.forEach { tabItem ->
+        // Generate tab entries; first tab is the initial tab
+        tab.tabs.forEach { tabItem ->
             builder.add(generateTabEntry(tabItem))
         }
 

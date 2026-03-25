@@ -338,15 +338,15 @@ class NavigationConfigBuilder {
      *     Scaffold(
      *         bottomBar = {
      *             NavigationBar {
-     *                 tabs.forEachIndexed { index, tab ->
+     *                 tabs.forEach { tab ->
      *                     val (label, icon) = when (tab) {
      *                         is HomeTab -> "Home" to Icons.Default.Home
      *                         is ExploreTab -> "Explore" to Icons.Default.Explore
      *                         else -> "Tab" to Icons.Default.Circle
      *                     }
      *                     NavigationBarItem(
-     *                         selected = activeTabIndex == index,
-     *                         onClick = { switchTab(index) },
+     *                         selected = activeTab == tab,
+     *                         onClick = { switchTab(tab) },
      *                         icon = { Icon(icon, contentDescription = label) },
      *                         label = { Text(label) }
      *                     )

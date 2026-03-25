@@ -14,11 +14,10 @@ export interface ScopePropertiesTableProps {
 
 const TABS_SCOPE_PROPERTIES: ScopeProperty[] = [
   { property: 'navigator', type: 'Navigator', description: 'Navigation operations' },
-  { property: 'activeTabIndex', type: 'Int', description: 'Currently selected tab (0-based)' },
-  { property: 'tabCount', type: 'Int', description: 'Total number of tabs' },
-  { property: 'tabs', type: 'List<NavDestination>', description: 'Tab destinations for custom labels, icons, and behavior' },
+  { property: 'activeTab', type: 'NavDestination', description: 'Currently selected tab destination' },
+  { property: 'tabs', type: 'Set<NavDestination>', description: 'Tab destinations for custom labels, icons, and behavior' },
   { property: 'isTransitioning', type: 'Boolean', description: 'Whether transition is in progress' },
-  { property: 'switchTab(index)', type: 'Function', description: 'Switch to different tab' },
+  { property: 'switchTab(destination)', type: 'Function', description: 'Switch to a different tab by destination' },
 ];
 
 const PANE_SCOPE_PROPERTIES: ScopeProperty[] = [

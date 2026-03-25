@@ -12,29 +12,29 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 
 /**
- * Bottom navigation bar component using index-based tab selection.
+ * Bottom navigation bar component using destination-based tab selection.
  *
  * This component renders a Material 3 NavigationBar with items based on
- * the provided [tabs] list. Use [getTabDisplayInfo] to map destinations to labels/icons.
+ * the provided [tabs] set. Use [getTabDisplayInfo] to map destinations to labels/icons.
  *
- * @param activeTabIndex The index of the currently selected tab
- * @param tabs List of tab destinations
+ * @param activeTab The currently active tab destination
+ * @param tabs Set of tab destinations
  * @param getTabDisplayInfo Callback to get display info (label, icon) for each tab destination
- * @param onTabSelected Callback invoked when a tab is selected, receives the tab index
+ * @param onTabSelected Callback invoked when a tab is selected, receives the tab destination
  * @param isTransitioning Whether a tab transition is in progress (disables interaction)
  * @param modifier Modifier for the NavigationBar
  */
 @Composable
 fun BottomNavigationBar(
-    activeTabIndex: Int,
-    tabs: List<NavDestination>,
+    activeTab: NavDestination,
+    tabs: Set<NavDestination>,
     getTabDisplayInfo: (NavDestination) -> Pair<String, ImageVector>,
-    onTabSelected: (Int) -> Unit,
+    onTabSelected: (NavDestination) -> Unit,
     isTransitioning: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     NavigationBar(modifier = modifier) {
-        tabs.forEachIndexed { index, tab ->
+        tabs.forEach { tab ->
             val (label, icon) = getTabDisplayInfo(tab)
             NavigationBarItem(
                 icon = {
@@ -44,8 +44,8 @@ fun BottomNavigationBar(
                     )
                 },
                 label = { Text(label) },
-                selected = activeTabIndex == index,
-                onClick = { onTabSelected(index) },
+                selected = activeTab == tab,
+                onClick = { onTabSelected(tab) },
                 enabled = !isTransitioning
             )
         }

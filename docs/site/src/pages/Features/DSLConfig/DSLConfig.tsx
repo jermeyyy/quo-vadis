@@ -87,12 +87,12 @@ const tabsContainerWrapper = `navigationConfig {
         Scaffold(
             bottomBar = {
                 NavigationBar {
-                    tabMetadata.forEachIndexed { index, meta ->
+                    tabs.forEach { tab ->
                         NavigationBarItem(
-                            selected = activeTabIndex == index,
-                            onClick = { switchTab(index) },
-                            icon = { Icon(meta.icon, meta.label) },
-                            label = { Text(meta.label) }
+                            selected = activeTab == tab,
+                            onClick = { switchTab(tab) },
+                            icon = { Icon(getTabIcon(tab), getTabLabel(tab)) },
+                            label = { Text(getTabLabel(tab)) }
                         )
                     }
                 }
@@ -255,17 +255,18 @@ const completeExample = `val appNavigationConfig = navigationConfig {
                 content()
             }
             NavigationBar {
-                tabMetadata.forEachIndexed { index, meta ->
+                tabs.forEach { tab ->
+                    val (label, icon) = when (tab) {
+                        is HomeTab -> \"Home\" to Icons.Default.Home
+                        is SearchTab -> \"Search\" to Icons.Default.Search
+                        is ProfileTab -> \"Profile\" to Icons.Default.Person
+                        else -> \"Tab\" to Icons.Default.Circle
+                    }
                     NavigationBarItem(
-                        selected = activeTabIndex == index,
-                        onClick = { switchTab(index) },
-                        icon = { 
-                            Icon(
-                                imageVector = meta.icon ?: Icons.Default.Circle,
-                                contentDescription = meta.label
-                            )
-                        },
-                        label = { Text(meta.label) },
+                        selected = activeTab == tab,
+                        onClick = { switchTab(tab) },
+                        icon = { Icon(icon, contentDescription = label) },
+                        label = { Text(label) },
                         enabled = !isTransitioning
                     )
                 }

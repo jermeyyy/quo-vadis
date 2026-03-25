@@ -38,6 +38,7 @@ import com.jermey.feature1.ui.glassmorphism.LocalHazeState
 import com.jermey.quo.vadis.annotations.TabsContainer
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import androidx.compose.ui.graphics.vector.ImageVector
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -94,13 +95,58 @@ fun MainTabsContainer(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
-            activeTabIndex = scope.activeTabIndex,
+            activeTab = scope.activeTab,
             tabs = scope.tabs,
-            onTabSelected = { index -> scope.switchTab(index) },
+            onTabSelected = { destination -> scope.switchTab(destination) },
             isTransitioning = scope.isTransitioning,
             hazeState = hazeState
         )
     }
+}
+
+/**
+ * Returns the display label and icon for a tab destination.
+ */
+private fun getTabDisplayInfo(tab: NavDestination): Pair<String, ImageVector> = when (tab) {
+    is HomeTab -> "Home" to Icons.Default.Home
+    is ExploreTab -> "Explore" to Icons.Default.Explore
+    is ProfileTab -> "Profile" to Icons.Default.Person
+    is SettingsTab -> "Settings" to Icons.Default.Settings
+    is ResultDemoDestination -> "Results" to Icons.Default.Star
+    is ShowcaseTab -> "Showcase" to Icons.Default.Star
+    else -> "Tab" to Icons.Default.Circle
+}
+
+/**
+ * Consumer-defined display order for main tabs.
+ *
+ * Since [TabsContainerScope.tabs] is an unordered set, the consumer
+ * controls the visual ordering explicitly.
+ */
+private val mainTabDisplayOrder: List<(NavDestination) -> Boolean> = listOf(
+    { it is HomeTab },
+    { it is ExploreTab },
+    { it is ProfileTab },
+    { it is SettingsTab },
+    { it is ShowcaseTab },
+)
+
+/**
+ * Returns tabs from [available] in the consumer-defined display order.
+ * Tabs not in [mainTabDisplayOrder] are appended at the end.
+ */
+private fun orderedTabs(available: Set<NavDestination>): List<NavDestination> {
+    val ordered = mutableListOf<NavDestination>()
+    val remaining = available.toMutableSet()
+    for (predicate in mainTabDisplayOrder) {
+        val match = remaining.firstOrNull(predicate)
+        if (match != null) {
+            ordered.add(match)
+            remaining.remove(match)
+        }
+    }
+    ordered.addAll(remaining)
+    return ordered
 }
 
 /**
@@ -109,8 +155,8 @@ fun MainTabsContainer(
  * Uses [HazeState] to create a frosted glass effect with content visible through the blur.
  * Supports edge-to-edge display with proper navigation bar insets.
  *
- * @param activeTabIndex The currently selected tab index (0-based)
- * @param tabs List of tab destinations for pattern matching
+ * @param activeTab The currently active tab destination
+ * @param tabs Set of tab destinations for pattern matching
  * @param onTabSelected Callback when a tab is selected
  * @param isTransitioning Whether tab switch animation is in progress
  * @param hazeState The HazeState for blur effect
@@ -119,9 +165,9 @@ fun MainTabsContainer(
 @Composable
 private fun GlassBottomNavigationBar(
     modifier: Modifier = Modifier,
-    activeTabIndex: Int,
-    tabs: List<NavDestination>,
-    onTabSelected: (Int) -> Unit,
+    activeTab: NavDestination,
+    tabs: Set<NavDestination>,
+    onTabSelected: (NavDestination) -> Unit,
     isTransitioning: Boolean = false,
     hazeState: HazeState
 ) {
@@ -137,16 +183,8 @@ private fun GlassBottomNavigationBar(
         containerColor = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
-        tabs.forEachIndexed { index, tab ->
-            val (label, icon) = when (tab) {
-                is HomeTab -> "Home" to Icons.Default.Home
-                is ExploreTab -> "Explore" to Icons.Default.Explore
-                is ProfileTab -> "Profile" to Icons.Default.Person
-                is SettingsTab -> "Settings" to Icons.Default.Settings
-                is ResultDemoDestination -> "Results" to Icons.Default.Star
-                is ShowcaseTab -> "Showcase" to Icons.Default.Star
-                else -> "Tab" to Icons.Default.Circle
-            }
+        orderedTabs(tabs).forEach { tab ->
+            val (label, icon) = getTabDisplayInfo(tab)
             NavigationBarItem(
                 icon = {
                     Icon(
@@ -155,8 +193,8 @@ private fun GlassBottomNavigationBar(
                     )
                 },
                 label = { Text(label) },
-                selected = activeTabIndex == index,
-                onClick = { onTabSelected(index) },
+                selected = activeTab == tab,
+                onClick = { onTabSelected(tab) },
                 enabled = !isTransitioning // Disable during animations
             )
         }
@@ -168,30 +206,22 @@ private fun GlassBottomNavigationBar(
  *
  * Uses pattern matching on tab destinations to determine labels and icons.
  *
- * @param activeTabIndex The currently selected tab index (0-based)
- * @param tabs List of tab destinations for pattern matching
+ * @param activeTab The currently active tab destination
+ * @param tabs Set of tab destinations for pattern matching
  * @param onTabSelected Callback when a tab is selected
  * @param isTransitioning Whether tab switch animation is in progress
  */
 @Composable
 private fun MainBottomNavigationBar(
     modifier: Modifier = Modifier,
-    activeTabIndex: Int,
-    tabs: List<NavDestination>,
-    onTabSelected: (Int) -> Unit,
+    activeTab: NavDestination,
+    tabs: Set<NavDestination>,
+    onTabSelected: (NavDestination) -> Unit,
     isTransitioning: Boolean = false
 ) {
     NavigationBar(modifier = modifier) {
-        tabs.forEachIndexed { index, tab ->
-            val (label, icon) = when (tab) {
-                is HomeTab -> "Home" to Icons.Default.Home
-                is ExploreTab -> "Explore" to Icons.Default.Explore
-                is ProfileTab -> "Profile" to Icons.Default.Person
-                is SettingsTab -> "Settings" to Icons.Default.Settings
-                is ResultDemoDestination -> "Results" to Icons.Default.Star
-                is ShowcaseTab -> "Showcase" to Icons.Default.Star
-                else -> "Tab" to Icons.Default.Circle
-            }
+        orderedTabs(tabs).forEach { tab ->
+            val (label, icon) = getTabDisplayInfo(tab)
             NavigationBarItem(
                 icon = {
                     Icon(
@@ -200,8 +230,8 @@ private fun MainBottomNavigationBar(
                     )
                 },
                 label = { Text(label) },
-                selected = activeTabIndex == index,
-                onClick = { onTabSelected(index) },
+                selected = activeTab == tab,
+                onClick = { onTabSelected(tab) },
                 enabled = !isTransitioning // Disable during animations
             )
         }

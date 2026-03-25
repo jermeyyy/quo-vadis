@@ -274,7 +274,7 @@ navigationConfig {
         Scaffold(
             bottomBar = {
                 NavigationBar {
-                    tabs.forEachIndexed { index, tab ->
+                    tabs.forEach { tab ->
                         val (label, icon) = when (tab) {
                             is MainTabs.HomeTab -> "Home" to Icons.Default.Home
                             is MainTabs.SearchTab -> "Search" to Icons.Default.Search
@@ -282,8 +282,8 @@ navigationConfig {
                             else -> "Tab" to Icons.Default.Circle
                         }
                         NavigationBarItem(
-                            selected = activeTabIndex == index,
-                            onClick = { switchTab(index) },
+                            selected = activeTab == tab,
+                            onClick = { switchTab(tab) },
                             icon = { Icon(icon, contentDescription = label) },
                             label = { Text(label) }
                         )
@@ -312,14 +312,13 @@ The `TabsContainerScope` provides access to tab state:
 | Property | Type | Description |
 |----------|------|-------------|
 | `navigator` | `Navigator` | Navigator instance for programmatic navigation |
-| `activeTabIndex` | `Int` | Currently selected tab (0-based) |
-| `tabCount` | `Int` | Total number of tabs |
-| `tabs` | `List<NavDestination>` | Tab destinations for type-safe pattern matching |
+| `activeTab` | `NavDestination` | Currently selected tab destination |
+| `tabs` | `Set<NavDestination>` | Tab destinations for type-safe pattern matching |
 | `isTransitioning` | `Boolean` | Whether tab switch animation is in progress |
 
 | Method | Description |
 |--------|-------------|
-| `switchTab(index)` | Switch to tab at given index |
+| `switchTab(destination)` | Switch to tab by destination |
 
 ### Pane Container Wrapper
 
@@ -710,7 +709,7 @@ val appNavigationConfig = navigationConfig {
                 content()
             }
             NavigationBar {
-                tabs.forEachIndexed { index, tab ->
+                tabs.forEach { tab ->
                     val (label, icon) = when (tab) {
                         is HomeTab -> "Home" to Icons.Default.Home
                         is SearchTab -> "Search" to Icons.Default.Search
@@ -719,8 +718,8 @@ val appNavigationConfig = navigationConfig {
                         else -> "Tab" to Icons.Default.Circle
                     }
                     NavigationBarItem(
-                        selected = activeTabIndex == index,
-                        onClick = { switchTab(index) },
+                        selected = activeTab == tab,
+                        onClick = { switchTab(tab) },
                         icon = { Icon(icon, contentDescription = label) },
                         label = { Text(label) },
                         enabled = !isTransitioning

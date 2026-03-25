@@ -102,15 +102,22 @@ internal fun TabRenderer(
     val activeStack = node.activeStack
     val previousActiveStack = previousNode?.activeStack
 
+    // Bridge destination-based public API to index-based internal tree operations
+    val tabDestinations = getTabDestinations(node)
+    val activeTab = tabDestinations[node.activeStackIndex]
+    val tabDestinationSet = tabDestinations.toSet()
+
     // Create TabsContainerScope with tab navigation state and actions
     // The scope is remembered to maintain referential stability
-    val tabsContainerScope = remember(node.key, node.activeStackIndex, node.tabCount) {
+    val tabsContainerScope = remember(node.key, node.activeStackIndex, tabDestinationSet.size) {
         createTabsContainerScope(
             navigator = scope.navigator,
-            activeTabIndex = node.activeStackIndex,
-            tabs = getTabDestinations(node),
+            activeTab = activeTab,
+            tabs = tabDestinationSet,
             isTransitioning = false, // Transition state is tracked by AnimatedNavContent
-            onSwitchTab = { index ->
+            onSwitchTab = { destination ->
+                val index = tabDestinations.indexOf(destination)
+                require(index >= 0) { "Destination $destination not found in tabs" }
                 val newState = TreeMutator.switchActiveTab(scope.navigator.state.value, index)
                 @Suppress("DEPRECATION")
                 scope.navigator.updateState(newState)
@@ -123,10 +130,12 @@ internal fun TabRenderer(
         derivedStateOf {
             createTabsContainerScope(
                 navigator = scope.navigator,
-                activeTabIndex = node.activeStackIndex,
-                tabs = getTabDestinations(node),
+                activeTab = tabDestinations[node.activeStackIndex],
+                tabs = tabDestinationSet,
                 isTransitioning = false,
-                onSwitchTab = { index ->
+                onSwitchTab = { destination ->
+                    val index = tabDestinations.indexOf(destination)
+                    require(index >= 0) { "Destination $destination not found in tabs" }
                     val newState = TreeMutator.switchActiveTab(scope.navigator.state.value, index)
                     @Suppress("DEPRECATION")
                     scope.navigator.updateState(newState)

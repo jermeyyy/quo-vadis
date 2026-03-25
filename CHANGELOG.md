@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ⚠️ Breaking Changes
+
+- **`@TabItem` API: Replaced `ordinal` with `isDefault`**: The `ordinal: Int` parameter on `@TabItem` has been removed. Use `isDefault: Boolean = false` instead. Set `isDefault = true` on exactly one tab item per `@Tabs` parent to designate the initial tab. If no tab is marked as default, the first discovered tab is used.
+- **`TabsContainerScope` API redesigned for destination-based tab switching**:
+  - `activeTabIndex: Int` → `activeTab: NavDestination` (currently selected tab destination)
+  - `tabs: List<NavDestination>` → `tabs: Set<NavDestination>` (unordered set of tab destinations)
+  - `switchTab(index: Int)` → `switchTab(destination: NavDestination)` (switch by destination reference)
+  - Removed `tabCount: Int` (use `tabs.size` if needed)
+
+### Changed
+
+- **KSP: Default tab validation**: Compile-time validation now checks that at most one `@TabItem` per `@Tabs` parent has `isDefault = true`. Previous ordinal continuity/gap/uniqueness rules no longer apply.
+
 ## [0.4.6] - 2026-03-24
 
 ### Added

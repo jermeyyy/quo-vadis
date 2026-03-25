@@ -73,7 +73,7 @@ sealed class StateDrivenDemoDestination : NavDestination {
      * The single tab containing the state-driven navigation stack.
      * Destinations are nested inside.
      */
-    @TabItem(parent = StateDrivenDemoDestination::class, ordinal = 0)
+    @TabItem(parent = StateDrivenDemoDestination::class)
     @Stack(name = "stateDrivenStack", startDestination = DemoTab.Home::class)
     sealed class DemoTab : StateDrivenDemoDestination() {
         /**

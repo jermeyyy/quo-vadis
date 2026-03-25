@@ -103,6 +103,7 @@ class ValidationEngine(
         // Structural validations
         validateContainerStartDestinations(stacks)
         validateEmptyContainers(stacks, tabs, panes)
+        validateDefaultTab(tabs)
 
         // Route validations
         validateRouteParameters(allDestinations)
@@ -117,11 +118,6 @@ class ValidationEngine(
 
         // Type validations
         validateContainerTypes(stacks, tabs, panes)
-
-        // Tab ordinal validations
-        validateOrdinalZeroExists(tabs)
-        validateOrdinalCollisions(tabs)
-        validateOrdinalContinuity(tabs)
 
         // Mixed tab type validations
         validateTabItemAnnotations(tabs)
@@ -149,66 +145,6 @@ class ValidationEngine(
                     stack.classDeclaration,
                     "Invalid startDestination '${stack.startDestination}' for @Stack '${stack.name}'",
                     "Use one of the available destinations: $availableDestinations"
-                )
-            }
-        }
-    }
-    // =========================================================================
-    // Tab Ordinal Validations
-    // =========================================================================
-
-    /**
-     * Validates that each @Tabs container has at least one @TabItem with ordinal = 0 (initial tab).
-     * Skips cross-module @Tabs where only partial tab items are visible.
-     */
-    private fun validateOrdinalZeroExists(tabs: List<TabInfo>) {
-        tabs.filter { !it.isCrossModule }.forEach { tab ->
-            val hasZero = tab.tabs.any { it.ordinal == 0 }
-            if (!hasZero) {
-                reportError(
-                    tab.classDeclaration,
-                    "@Tabs '${tab.className}' has no @TabItem with ordinal = 0 (initial tab)",
-                    "Add ordinal = 0 to one of the @TabItem annotations targeting this @Tabs"
-                )
-            }
-        }
-    }
-
-    /**
-     * Validates that no two @TabItem entries targeting the same @Tabs share the same ordinal.
-     * Skips cross-module @Tabs where only partial tab items are visible.
-     */
-    private fun validateOrdinalCollisions(tabs: List<TabInfo>) {
-        tabs.filter { !it.isCrossModule }.forEach { tab ->
-            val ordinals = tab.tabs.groupBy { it.ordinal }
-            ordinals.filter { it.value.size > 1 }.forEach { (ordinal, items) ->
-                items.forEach { item ->
-                    reportError(
-                        item.classDeclaration,
-                        "Duplicate ordinal $ordinal for @Tabs '${tab.className}'",
-                        "Each @TabItem targeting '${tab.className}' must have a unique ordinal"
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * Validates that ordinals are consecutive starting from 0 (no gaps).
-     * Skips cross-module @Tabs where only partial tab items are visible.
-     */
-    private fun validateOrdinalContinuity(tabs: List<TabInfo>) {
-        tabs.filter { !it.isCrossModule }.forEach { tab ->
-            val ordinals = tab.tabs.map { it.ordinal }
-            // Skip continuity check when duplicates exist (already reported by validateOrdinalCollisions)
-            if (ordinals.size != ordinals.toSet().size) return@forEach
-            val sorted = ordinals.sorted()
-            val expected = (0 until sorted.size).toList()
-            if (sorted != expected) {
-                reportError(
-                    tab.classDeclaration,
-                    "@Tabs '${tab.className}' has ordinal gaps: found $sorted, expected $expected",
-                    "Ordinals must be consecutive starting from 0"
                 )
             }
         }
@@ -253,6 +189,35 @@ class ValidationEngine(
                 "@Pane container '${pane.className}' has no @PaneItem entries",
                 "Add at least one class annotated with @PaneItem targeting this @Pane"
             )
+        }
+    }
+
+    /**
+     * Validates that each `@Tabs` container has at most one `@TabItem` with `isDefault = true`.
+     *
+     * For non-cross-module tabs, emits a warning if no default is set.
+     * For cross-module tabs, the zero-default warning is skipped (partial visibility).
+     */
+    private fun validateDefaultTab(tabs: List<TabInfo>) {
+        tabs.forEach { tab ->
+            val defaultCount = tab.tabs.count { it.isDefault }
+            if (defaultCount > 1) {
+                reportError(
+                    tab.classDeclaration,
+                    "Multiple @TabItem entries marked as isDefault in @Tabs '${tab.name}'. " +
+                        "Only one tab can be the default.",
+                    "Remove isDefault = true from all but one @TabItem"
+                )
+            }
+            if (defaultCount == 0 && !tab.isCrossModule) {
+                reportWarning(
+                    tab.classDeclaration,
+                    "No @TabItem marked as isDefault in @Tabs '${tab.name}'. " +
+                        "The first discovered tab will be used as default.",
+                    "Consider marking one tab with " +
+                        "@TabItem(parent = ${tab.className}::class, isDefault = true)"
+                )
+            }
         }
     }
 

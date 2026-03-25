@@ -83,11 +83,12 @@ fun DemoTabsWrapper(
                     .padding(paddingValues)
             ) {
                 // Tab strip with badges showing favorites count per category
+                val tabsList = scope.tabs.toList()
                 TabRow(
-                    selectedTabIndex = scope.activeTabIndex,
+                    selectedTabIndex = tabsList.indexOf(scope.activeTab).coerceAtLeast(0),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    scope.tabs.forEachIndexed { index, tab ->
+                    tabsList.forEach { tab ->
                         val (label, icon) = when (tab) {
                             is DemoTabs.MusicTab -> "Music" to Icons.Default.MusicNote
                             is DemoTabs.MoviesTab -> "Movies" to Icons.Default.Movie
@@ -96,8 +97,8 @@ fun DemoTabsWrapper(
                         }
                         val favoriteCount = getFavoriteCountForTab(tab, state.favoriteItems)
                         Tab(
-                            selected = scope.activeTabIndex == index,
-                            onClick = { scope.switchTab(index) },
+                            selected = scope.activeTab == tab,
+                            onClick = { scope.switchTab(tab) },
                             enabled = !scope.isTransitioning,
                             text = { Text(label) },
                             icon = {

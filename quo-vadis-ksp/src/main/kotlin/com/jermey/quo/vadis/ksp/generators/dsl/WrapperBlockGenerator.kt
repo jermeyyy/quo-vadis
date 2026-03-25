@@ -52,9 +52,9 @@ data class WrapperBlockResult(
  * Generated wrapper blocks execute within a scope that provides:
  *
  * ### TabsContainerScope
- * - `tabs` - List of tab metadata
- * - `activeTabIndex` - Currently selected tab index
- * - `switchTab(index)` - Function to switch tabs
+ * - `tabs` - Set of tab metadata
+ * - `activeTab` - Currently active tab destination
+ * - `switchTab(destination)` - Function to switch tabs
  *
  * ### PaneContainerScope
  * - Pane layout utilities
