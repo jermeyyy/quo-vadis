@@ -38,18 +38,10 @@
     <ID>MaxLineLength:NavigatorResultExtensions.kt:?:</ID>
     <ID>MaxLineLength:PaneOperationsTest.kt:PaneOperationsTest$test</ID>
     <ID>MaxLineLength:PaneRenderer.kt:*</ID>
-    <ID>MaxLineLength:PushStrategyTest.kt:PushStrategyTest$StackNode(NodeKey("t0"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s0"), NodeKey("t0"), PushTestDest)))</ID>
-    <ID>MaxLineLength:PushStrategyTest.kt:PushStrategyTest$StackNode(NodeKey("t1"), NodeKey("tabs"), listOf(ScreenNode(NodeKey("s1"), NodeKey("t1"), PushTestDest)))</ID>
-    <ID>MaxLineLength:PushStrategyTest.kt:PushStrategyTest$val primaryStack = StackNode(NodeKey("ps"), NodeKey("pane"), listOf(ScreenNode(NodeKey("s"), NodeKey("ps"), PushTestDest)))</ID>
-    <ID>MaxLineLength:PushStrategyTest.kt:PushStrategyTest$val primaryStack = StackNode(NodeKey("ps"), NodeKey("pane"), listOf(ScreenNode(NodeKey("s1"), NodeKey("ps"), PushTestDest)))</ID>
-    <ID>MaxLineLength:ScreenKeyCollectorTest.kt:private</ID>
     <ID>MaxLineLength:StackNode.kt:StackNode$*</ID>
     <ID>MaxLineLength:TransitionRegistry.kt:TransitionRegistry$*</ID>
-    <ID>MaxLineLength:TreeDiffCalculatorTest.kt:private</ID>
     <ID>MaxLineLength:TreeMutatorScopeTest.kt:TreeMutatorScopeTest$*</ID>
     <ID>MaxLineLength:TreeNavigator.kt:TreeNavigator$*</ID>
-    <ID>MaxLineLength:TreeNodeOperationsTest.kt:TreeNodeOperationsTest$val newSupportingStack = newPane.paneConfigurations[PaneRole.Supporting]!!.content.shouldBeInstanceOf&lt;StackNode>()</ID>
-    <ID>MaxLineLength:TreeNodeOperationsTest.kt:private</ID>
     <ID>MaxLineLength:WindowSizeClass.kt:WindowWidthSizeClass$*</ID>
     <ID>NestedBlockDepth:DslContainerRegistry.kt:DslContainerRegistry$private fun addReferencedContainerMembers</ID>
     <ID>NestedBlockDepth:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior: PopResult</ID>
@@ -57,7 +49,6 @@
     <ID>NewLineAtEndOfFile:CompositeContainerRegistry.kt:com.jermey.quo.vadis.core.registry.internal.CompositeContainerRegistry.kt</ID>
     <ID>NewLineAtEndOfFile:CompositeDeepLinkRegistry.kt:com.jermey.quo.vadis.core.registry.internal.CompositeDeepLinkRegistry.kt</ID>
     <ID>NewLineAtEndOfFile:DeepLinkRegistry.kt:com.jermey.quo.vadis.core.registry.DeepLinkRegistry.kt</ID>
-    <ID>NewLineAtEndOfFile:DslNavigationConfig.kt:com.jermey.quo.vadis.core.dsl.DslNavigationConfig.kt</ID>
     <ID>NewLineAtEndOfFile:DslNavigationConfig.kt:com.jermey.quo.vadis.core.dsl.internal.DslNavigationConfig.kt</ID>
     <ID>NewLineAtEndOfFile:Navigator.kt:com.jermey.quo.vadis.core.navigation.navigator.Navigator.kt</ID>
     <ID>NewLineAtEndOfFile:PlatformBackInput.android.kt:com.jermey.quo.vadis.core.compose.internal.navback.PlatformBackInput.android.kt</ID>

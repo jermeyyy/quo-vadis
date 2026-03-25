@@ -77,6 +77,12 @@ allprojects {
                     sarif.required.set(true)
                     checkstyle.required.set(true)
                 }
+                // Exclude generated sources (KSP, Compose resources) from detekt analysis
+                exclude { it.file.path.contains("/build/") }
+                // Ensure KSP runs before detekt when the project uses KSP
+                if (project.tasks.findByName("kspCommonMainKotlinMetadata") != null) {
+                    dependsOn("kspCommonMainKotlinMetadata")
+                }
             }
 
             detektReportMerge {
