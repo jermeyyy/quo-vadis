@@ -45,6 +45,11 @@ dependencies {
     kover(projects.quoVadisCoreFlowMvi)
 }
 
+// Merged SARIF report for GitHub Code Scanning
+val detektReportMerge by tasks.registering(dev.detekt.gradle.report.ReportMergeTask::class) {
+    output.set(rootProject.layout.buildDirectory.file("reports/detekt/merge.sarif"))
+}
+
 allprojects {
     // Skip detekt for gradle plugin module and androidApp to avoid conflicts
     if (project.name !in listOf("quo-vadis-gradle-plugin", "androidApp")) {
@@ -58,6 +63,7 @@ allprojects {
                 autoCorrect = true
                 parallel = true
                 buildUponDefaultConfig = true
+                basePath.set(rootProject.projectDir)
                 source = fileTree("src").apply {
                     include("**/*.kt")
                     include("**/*.kts")
@@ -69,7 +75,12 @@ allprojects {
                 reports {
                     html.required.set(true)
                     sarif.required.set(true)
+                    checkstyle.required.set(true)
                 }
+            }
+
+            detektReportMerge {
+                input.from(tasks.withType<dev.detekt.gradle.Detekt>().map { it.reports.sarif.outputLocation })
             }
         }
     }

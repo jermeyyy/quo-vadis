@@ -34,7 +34,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Run check (detekt + unit tests)
-        run: ./gradlew check --stacktrace
+        run: ./gradlew check detektReportMerge --continue --stacktrace
 
       - name: Publish test results
         if: always() && github.event.pull_request.head.repo.full_name == github.repository
