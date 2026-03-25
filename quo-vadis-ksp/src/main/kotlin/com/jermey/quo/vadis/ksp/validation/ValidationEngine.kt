@@ -209,7 +209,7 @@ class ValidationEngine(
                     "Remove isDefault = true from all but one @TabItem"
                 )
             }
-            if (defaultCount == 0 && !tab.isCrossModule) {
+            if (defaultCount == 0 && !tab.isCrossModule && tab.tabs.isNotEmpty()) {
                 reportWarning(
                     tab.classDeclaration,
                     "No @TabItem marked as isDefault in @Tabs '${tab.className}' (name='${tab.name}'). " +

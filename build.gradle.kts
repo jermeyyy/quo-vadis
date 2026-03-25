@@ -1,3 +1,5 @@
+import dev.detekt.gradle.report.ReportMergeTask
+
 plugins {
     // this is necessary to avoid the plugins to be loaded multiple times
     // in each subproject's classloader
@@ -46,7 +48,7 @@ dependencies {
 }
 
 // Merged SARIF report for GitHub Code Scanning
-val detektReportMerge by tasks.registering(dev.detekt.gradle.report.ReportMergeTask::class) {
+val detektReportMerge by tasks.registering(ReportMergeTask::class) {
     output.set(rootProject.layout.buildDirectory.file("reports/detekt/merge.sarif"))
 }
 
@@ -86,7 +88,14 @@ allprojects {
             }
 
             detektReportMerge {
-                input.from(tasks.withType<dev.detekt.gradle.Detekt>().map { it.reports.sarif.outputLocation })
+                // Only include source set tasks + lifecycle detekt task (which use baselines correctly).
+                // Type resolution tasks (detektMainAndroid, detektMainDesktop, etc.) find additional
+                // issues not covered by the baselines generated via `detektBaseline`.
+                input.from(
+                    tasks.withType<dev.detekt.gradle.Detekt>()
+                        .matching { it.name == "detekt" || it.name.endsWith("SourceSet") }
+                        .map { it.reports.sarif.outputLocation }
+                )
             }
         }
     }

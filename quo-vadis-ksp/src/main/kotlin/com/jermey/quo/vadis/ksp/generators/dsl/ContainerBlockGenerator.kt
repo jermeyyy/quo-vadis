@@ -116,7 +116,8 @@ class ContainerBlockGenerator(
         val builder = CodeBlock.builder()
             .beginControlFlow("tabs<%T>(scopeKey = %S)", containerClass, scopeKey)
 
-        // Generate tab entries; first tab is the initial tab
+        // Generate tab entries; the tab with isDefault = true is the initial tab,
+        // otherwise the first tab becomes the initial selection.
         tab.tabs.forEach { tabItem ->
             builder.add(generateTabEntry(tabItem))
         }
