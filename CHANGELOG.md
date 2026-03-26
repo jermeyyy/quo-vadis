@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-26
+
 ### ⚠️ Breaking Changes
 
 - **`@TabItem` API: Replaced `ordinal` with `isDefault`**: The `ordinal: Int` parameter on `@TabItem` has been removed. Use `isDefault: Boolean = false` instead. Set `isDefault = true` on exactly one tab item per `@Tabs` parent to designate the initial tab. If no tab is marked as default, the first discovered tab is used.
