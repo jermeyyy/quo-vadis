@@ -12,9 +12,8 @@ import com.jermey.quo.vadis.core.navigation.destination.NavDestination
  * Showcase tab — demonstrates cross-module navigation patterns.
  *
  * Defined in feature3-api, screens implemented in feature3.
- * Ordinal = 4 (after Settings ordinal).
  */
-@TabItem(parent = MainTabs::class, ordinal = 4)
+@TabItem(parent = MainTabs::class)
 @Stack(name = "showcaseTabStack", startDestination = ShowcaseTab.Overview::class)
 @Transition(type = TransitionType.Fade)
 sealed class ShowcaseTab : NavDestination {

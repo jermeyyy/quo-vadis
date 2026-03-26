@@ -98,7 +98,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
         val item = TabItemInfo(
             classDeclaration = tabItemDecl("Orphan"),
             tabType = TabItemType.TABS,
-            ordinal = 0,
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
@@ -109,7 +108,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
         val item = TabItemInfo(
             classDeclaration = tabItemDecl("SubTabs", annotations = listOf("Tabs", "TabItem")),
             tabType = TabItemType.TABS,
-            ordinal = 0,
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
@@ -120,7 +118,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
         val item = TabItemInfo(
             classDeclaration = tabItemDecl("FeatureStack", annotations = listOf("Stack", "TabItem")),
             tabType = TabItemType.STACK,
-            ordinal = 0,
         )
         val result = validate(listOf(tabInfo(items = listOf(item))))
 
@@ -145,7 +142,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
                 TabItemInfo(
                     classDeclaration = declB,
                     tabType = TabItemType.TABS,
-                    ordinal = 0,
                 )
             ),
         )
@@ -158,7 +154,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
                 TabItemInfo(
                     classDeclaration = declA,
                     tabType = TabItemType.TABS,
-                    ordinal = 0,
                 )
             ),
         )
@@ -180,7 +175,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsA",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS)
             ),
         )
         val tabB = TabInfo(
@@ -189,7 +184,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsB",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS)
             ),
         )
         val tabC = TabInfo(
@@ -198,7 +193,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsC",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declA, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declA, tabType = TabItemType.TABS)
             ),
         )
 
@@ -222,7 +217,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
                 annotations = listOf("Destination"),
             ),
             tabType = TabItemType.DESTINATION,
-            ordinal = 0,
             destinationInfo = null,
         )
 
@@ -232,7 +226,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsA",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS)
             ),
         )
         val tabB = TabInfo(
@@ -241,7 +235,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsB",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS)
             ),
         )
         val tabC = TabInfo(
@@ -276,7 +270,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
                 annotations = listOf("Destination"),
             ),
             tabType = TabItemType.DESTINATION,
-            ordinal = 0,
         )
 
         val tabA = TabInfo(
@@ -285,7 +278,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsA",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS)
             ),
         )
         val tabB = TabInfo(
@@ -294,7 +287,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsB",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS)
             ),
         )
         val tabC = TabInfo(
@@ -326,7 +319,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
                 annotations = listOf("Destination"),
             ),
             tabType = TabItemType.DESTINATION,
-            ordinal = 0,
         )
 
         val tabA = TabInfo(
@@ -335,7 +327,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsA",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declB, tabType = TabItemType.TABS)
             ),
         )
         val tabB = TabInfo(
@@ -344,7 +336,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsB",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declC, tabType = TabItemType.TABS)
             ),
         )
         val tabC = TabInfo(
@@ -353,7 +345,7 @@ class ValidationEngineContainerReferenceTest : FunSpec({
             className = "TabsC",
             packageName = "com.example",
             tabs = listOf(
-                TabItemInfo(classDeclaration = declD, tabType = TabItemType.TABS, ordinal = 0)
+                TabItemInfo(classDeclaration = declD, tabType = TabItemType.TABS)
             ),
         )
         val tabD = TabInfo(
@@ -379,7 +371,6 @@ class ValidationEngineContainerReferenceTest : FunSpec({
                 annotations = listOf("Destination"),
             ),
             tabType = TabItemType.DESTINATION,
-            ordinal = 0,
         )
 
         val result = validate(listOf(tabInfo(items = listOf(flatItem))))

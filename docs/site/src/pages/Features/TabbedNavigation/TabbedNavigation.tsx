@@ -31,12 +31,12 @@ fun MainTabsWrapper(
     Scaffold(
         bottomBar = {
             NavigationBar {
-                scope.tabMetadata.forEachIndexed { index, meta ->
+                scope.tabs.forEach { tab ->
                     NavigationBarItem(
-                        selected = index == scope.activeTabIndex,
-                        onClick = { scope.switchTab(index) },
-                        icon = { Icon(getTabIcon(meta.icon), meta.label) },
-                        label = { Text(meta.label) },
+                        selected = tab == scope.activeTab,
+                        onClick = { scope.switchTab(tab) },
+                        icon = { Icon(getTabIcon(tab), getTabLabel(tab)) },
+                        label = { Text(getTabLabel(tab)) },
                         enabled = !scope.isTransitioning
                     )
                 }
@@ -58,11 +58,11 @@ fun AppTabsWrapper(
     Scaffold(
         bottomBar = {
             NavigationBar {
-                scope.tabMetadata.forEachIndexed { index, metadata ->
+                scope.tabs.forEach { tab ->
                     NavigationBarItem(
-                        selected = index == scope.activeTabIndex,
-                        onClick = { scope.switchTab(index) },
-                        icon = { /* Use metadata.destination for type matching */ },
+                        selected = tab == scope.activeTab,
+                        onClick = { scope.switchTab(tab) },
+                        icon = { /* Use tab destination for type matching */ },
                         label = { /* Tab label */ }
                     )
                 }
@@ -78,7 +78,7 @@ class AppTabs : NavDestination {
     companion object : NavDestination
 }
 
-@TabItem(parent = AppTabs::class, ordinal = 0)
+@TabItem(parent = AppTabs::class, isDefault = true)
 @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
 sealed class HomeTab : NavDestination {
     @Destination(route = "home/feed")
@@ -88,7 +88,7 @@ sealed class HomeTab : NavDestination {
     data class Article(@Argument val articleId: String) : HomeTab()
 }
 
-@TabItem(parent = AppTabs::class, ordinal = 1)
+@TabItem(parent = AppTabs::class)
 @Stack(name = "searchStack", startDestination = SearchTab.Search::class)
 sealed class SearchTab : NavDestination {
     @Destination(route = "search")
@@ -188,7 +188,7 @@ export default function TabbedNavigation() {
           </tbody>
         </table>
         <p>
-          The initial tab and ordering are determined by <code>@TabItem</code> ordinals.
+          The initial tab is determined by the <code>@TabItem</code> with <code>isDefault = true</code>. If no tab is explicitly marked as default, the first discovered tab becomes the initial tab.
         </p>
       </section>
 
@@ -211,20 +211,19 @@ export default function TabbedNavigation() {
               <td>The <code>@Tabs</code>-annotated class this tab belongs to</td>
             </tr>
             <tr>
-              <td><code>ordinal</code></td>
-              <td><code>Int</code></td>
-              <td><IconNa /></td>
-              <td>Display position (0-based). <code>ordinal = 0</code> is the initial tab.</td>
+              <td><code>isDefault</code></td>
+              <td><code>Boolean</code></td>
+              <td><code>false</code></td>
+              <td>When <code>true</code>, this tab is the initially selected tab.</td>
             </tr>
           </tbody>
         </table>
-        <h3>Ordinal Validation Rules</h3>
+        <h3>Default Tab Rules</h3>
         <ul>
-          <li>Ordinals must be contiguous integers starting at 0 (e.g., 0, 1, 2, …, N-1)</li>
-          <li>No gaps allowed (e.g., 0, 1, 3 is invalid because 2 is missing)</li>
-          <li>No duplicate ordinals</li>
+          <li>At most one <code>@TabItem</code> per <code>@Tabs</code> parent may have <code>isDefault = true</code></li>
+          <li>If no <code>isDefault = true</code> is set, the first discovered tab becomes the default</li>
           <li>KSP validates these rules at compile time</li>
-          <li>Cross-module ordinal validation is relaxed (only partial tab items visible to the processor)</li>
+          <li>Cross-module tab registration is supported — each module only validates the tab items it can see</li>
         </ul>
       </section>
 
@@ -306,7 +305,7 @@ export default function TabbedNavigation() {
         <h2 id="tab-ui-customization">Tab UI Customization</h2>
         <p>
           Icons, labels, and all tab bar UI are handled in your <code>@TabsContainer</code> wrapper
-          composable. Use <code>scope.tabMetadata</code> and destination type matching to dynamically
+          composable. Use <code>scope.tabs</code> and destination type matching to dynamically
           assign icons and labels, giving you full control over tab bar appearance per platform.
         </p>
         <CodeBlock code={tabUiCustomizationCode} language="kotlin" />
@@ -320,10 +319,10 @@ export default function TabbedNavigation() {
         <h2 id="cross-module-tabs">Cross-Module Tabs</h2>
         <p>
           Feature modules can register as tabs independently using{' '}
-          <code>@TabItem(parent = SharedTabs::class, ordinal = N)</code>. The shared{' '}
+          <code>@TabItem(parent = SharedTabs::class)</code>. The shared{' '}
           <code>@Tabs</code> class lives in a common API module, and each feature module
-          declares itself as a tab item pointing back to it. Ordinal validation is relaxed
-          for cross-module scenarios where only partial tab items are visible to the processor.
+          declares itself as a tab item pointing back to it. One tab should be marked
+          <code>isDefault = true</code> to set the initial tab.
         </p>
         <CodeBlock code={crossModuleTabsExample} language="kotlin" />
       </section>

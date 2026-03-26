@@ -92,13 +92,13 @@ const crossModuleTabsCode = `// shared-api module — just the @Tabs declaration
 @Tabs(name = "main")
 object MainTabs
 
-// feature1 module — registers itself as a tab
-@TabItem(parent = MainTabs::class, ordinal = 0)
+// feature1 module — registers itself as a tab (and sets it as default)
+@TabItem(parent = MainTabs::class, isDefault = true)
 @Stack(name = "feature1", startDestination = Feature1List::class)
 sealed class Feature1Destination : NavDestination { /* ... */ }
 
 // feature2 module — registers itself as another tab
-@TabItem(parent = MainTabs::class, ordinal = 1)
+@TabItem(parent = MainTabs::class)
 @Stack(name = "feature2", startDestination = Feature2Home::class)
 sealed class Feature2Destination : NavDestination { /* ... */ }`
 
@@ -212,14 +212,13 @@ export default function Modular() {
           Feature modules can register themselves as tabs in a shared tab container
           using the <code>@TabItem</code> annotation. The parent <code>@Tabs</code> declaration
           lives in a shared API module, while each feature module independently declares
-          its tab membership and position via <code>ordinal</code>:
+          its tab membership. One tab is marked <code>isDefault = true</code> to set the initial tab:
         </p>
         <CodeBlock code={crossModuleTabsCode} language="kotlin" />
         <p>
-          Each <code>@TabItem</code> specifies its <code>parent</code> (the <code>@Tabs</code>-annotated class)
-          and an <code>ordinal</code> (0-based display position, where <code>ordinal = 0</code> is the initial tab).
-          Since tab items are spread across modules, ordinal continuity validation is
-          skipped at compile time for cross-module tabs.
+          Each <code>@TabItem</code> specifies its <code>parent</code> (the <code>@Tabs</code>-annotated class).
+          Set <code>isDefault = true</code> on one tab to make it the initially selected tab.
+          If no tab is marked as default, the first discovered tab becomes the initial tab.
           See <Link to="/features/tabbed-navigation">Tabbed Navigation</Link> for full details
           on the <code>@Tabs</code> / <code>@TabItem</code> API.
         </p>

@@ -43,15 +43,15 @@ import kotlin.reflect.KClass
  *         Scaffold(
  *             bottomBar = {
  *                 NavigationBar {
- *                     tabs.forEachIndexed { index, tab ->
+ *                     tabs.forEach { tab ->
  *                         val label = when (tab) {
  *                             is HomeTab -> "Home"
  *                             is ProfileTab -> "Profile"
  *                             else -> "Tab"
  *                         }
  *                         NavigationBarItem(
- *                             selected = activeTabIndex == index,
- *                             onClick = { switchTab(index) },
+ *                             selected = activeTab == tab,
+ *                             onClick = { switchTab(tab) },
  *                             label = { Text(label) }
  *                         )
  *                     }

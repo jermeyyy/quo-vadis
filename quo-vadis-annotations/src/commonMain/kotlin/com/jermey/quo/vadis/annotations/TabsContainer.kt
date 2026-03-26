@@ -29,9 +29,9 @@ import kotlin.reflect.KClass
  *
  * The scope provides:
  * - `navigator` - The Navigator instance for navigation operations
- * - `activeTabIndex` - The currently selected tab index
- * - `tabs` - List of NavDestination instances for pattern matching
- * - `switchTab(index)` - Function to switch to a different tab
+ * - `activeTab` - The currently active tab destination
+ * - `tabs` - Set of NavDestination instances for pattern matching
+ * - `switchTab(destination)` - Function to switch to a different tab
  *
  * ## Tab UI Customization
  *
@@ -47,7 +47,7 @@ import kotlin.reflect.KClass
  *     Scaffold(
  *         bottomBar = {
  *             NavigationBar {
- *                 scope.tabs.forEachIndexed { index, tab ->
+ *                 scope.tabs.forEach { tab ->
  *                     val (label, icon) = when (tab) {
  *                         is HomeTab -> "Home" to Icons.Default.Home
  *                         is ExploreTab -> "Explore" to Icons.Default.Explore
@@ -55,8 +55,8 @@ import kotlin.reflect.KClass
  *                         else -> "Tab" to Icons.Default.Circle
  *                     }
  *                     NavigationBarItem(
- *                         selected = index == scope.activeTabIndex,
- *                         onClick = { scope.switchTab(index) },
+ *                         selected = tab == scope.activeTab,
+ *                         onClick = { scope.switchTab(tab) },
  *                         icon = { Icon(icon, contentDescription = label) },
  *                         label = { Text(label) }
  *                     )
@@ -82,15 +82,15 @@ import kotlin.reflect.KClass
  * ) {
  *     Row {
  *         NavigationRail {
- *             scope.tabs.forEachIndexed { index, tab ->
+ *             scope.tabs.forEach { tab ->
  *                 val (label, icon) = when (tab) {
  *                     is HomeTab -> "Home" to Icons.Default.Home
  *                     is ExploreTab -> "Explore" to Icons.Default.Explore
  *                     else -> "Tab" to Icons.Default.Circle
  *                 }
  *                 NavigationRailItem(
- *                     selected = index == scope.activeTabIndex,
- *                     onClick = { scope.switchTab(index) },
+ *                     selected = tab == scope.activeTab,
+ *                     onClick = { scope.switchTab(tab) },
  *                     icon = { Icon(icon, contentDescription = label) },
  *                     label = { Text(label) }
  *                 )

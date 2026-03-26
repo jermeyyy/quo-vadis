@@ -216,18 +216,18 @@ class MainTabs : NavDestination {
     companion object : NavDestination  // Wrapper key for @TabsContainer
 }
 
-// Tab items declare their parent and ordinal
-@TabItem(parent = MainTabs::class, ordinal = 0)
+// Tab items declare their parent
+@TabItem(parent = MainTabs::class, isDefault = true)
 @Destination(route = "main/home")
 @Transition(type = TransitionType.Fade)
 data object HomeTab : NavDestination
 
-@TabItem(parent = MainTabs::class, ordinal = 1)
+@TabItem(parent = MainTabs::class)
 @Destination(route = "main/explore")
 @Transition(type = TransitionType.Fade)
 data object ExploreTab : NavDestination
 
-@TabItem(parent = MainTabs::class, ordinal = 2)
+@TabItem(parent = MainTabs::class)
 @Destination(route = "main/profile")
 @Transition(type = TransitionType.Fade)
 data object ProfileTab : NavDestination`;
@@ -241,13 +241,13 @@ class MainTabs : NavDestination {
 }
 
 // Flat tab (single screen, no back stack)
-@TabItem(parent = MainTabs::class, ordinal = 0)
+@TabItem(parent = MainTabs::class, isDefault = true)
 @Destination(route = "main/home")
 @Transition(type = TransitionType.Fade)
 data object HomeTab : NavDestination
 
 // Stack tab (nested navigation with back stack)
-@TabItem(parent = MainTabs::class, ordinal = 1)
+@TabItem(parent = MainTabs::class)
 @Stack(name = "exploreStack", startDestination = ExploreTab.Feed::class)
 @Transition(type = TransitionType.Fade)
 sealed class ExploreTab : NavDestination {
@@ -258,14 +258,14 @@ sealed class ExploreTab : NavDestination {
     data class Detail(@Argument val id: String) : ExploreTab()
 }
 
-@TabItem(parent = MainTabs::class, ordinal = 2)
+@TabItem(parent = MainTabs::class)
 @Destination(route = "main/profile")
 @Transition(type = TransitionType.Fade)
 data object ProfileTab : NavDestination
 
 // Stack tab in a feature module (cross-module registration)
 // In feature1 module:
-@TabItem(parent = MainTabs::class, ordinal = 3)
+@TabItem(parent = MainTabs::class)
 @Stack(name = "settingsStack", startDestination = SettingsTab.Main::class)
 sealed class SettingsTab : NavDestination {
     @Destination(route = "settings/main")
@@ -285,16 +285,16 @@ fun MainTabsWrapper(
         bottomBar = {
             NavigationBar {
                 // Icons and labels come from the container, not annotations
-                scope.tabMetadata.forEachIndexed { index, metadata ->
-                    val (label, icon) = when (metadata.destination) {
+                scope.tabs.forEach { tab ->
+                    val (label, icon) = when (tab) {
                         is HomeTab -> "Home" to Icons.Default.Home
                         is ExploreTab -> "Explore" to Icons.Default.Explore
                         is ProfileTab -> "Profile" to Icons.Default.Person
                         else -> "Tab" to Icons.Default.Circle
                     }
                     NavigationBarItem(
-                        selected = index == scope.activeTabIndex,
-                        onClick = { scope.switchTab(index) },
+                        selected = tab == scope.activeTab,
+                        onClick = { scope.switchTab(tab) },
                         icon = { Icon(icon, label) },
                         label = { Text(label) },
                         enabled = !scope.isTransitioning
@@ -319,12 +319,12 @@ class MainTabs : NavDestination {
 }
 
 // App module
-@TabItem(parent = MainTabs::class, ordinal = 0)
+@TabItem(parent = MainTabs::class, isDefault = true)
 @Destination(route = "main/home")
 data object HomeTab : NavDestination
 
 // Feature module (feature1)
-@TabItem(parent = MainTabs::class, ordinal = 1)
+@TabItem(parent = MainTabs::class)
 @Stack(name = "featureStack", startDestination = FeatureDestination.Main::class)
 sealed class FeatureDestination : NavDestination {
     @Destination(route = "feature/main")
@@ -814,11 +814,11 @@ export const modalAnnotationContainer = `@Modal
 sealed class OverlayTabs : NavDestination {
     companion object : NavDestination
 
-    @TabItem(OverlayTabs::class, ordinal = 0)
+    @TabItem(OverlayTabs::class, isDefault = true)
     @Destination(route = "overlay/info")
     data object InfoTab : OverlayTabs()
 
-    @TabItem(OverlayTabs::class, ordinal = 1)
+    @TabItem(OverlayTabs::class)
     @Destination(route = "overlay/actions")
     data object ActionsTab : OverlayTabs()
 }`;

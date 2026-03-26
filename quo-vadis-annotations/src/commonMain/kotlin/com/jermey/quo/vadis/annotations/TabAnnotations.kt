@@ -25,14 +25,14 @@ import kotlin.reflect.KClass
  * @Tabs(name = "mainTabs")
  * object MainTabs
  *
- * @TabItem(parent = MainTabs::class, ordinal = 0)
+ * @TabItem(parent = MainTabs::class)
  * @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
  * sealed class HomeTab : NavDestination {
  *     @Destination(route = "home/feed")
  *     data object Feed : HomeTab()
  * }
  *
- * @TabItem(parent = MainTabs::class, ordinal = 1)
+ * @TabItem(parent = MainTabs::class)
  * @Stack(name = "exploreStack", startDestination = ExploreTab.ExploreRoot::class)
  * sealed class ExploreTab : NavDestination {
  *     @Destination(route = "explore/root")
@@ -42,7 +42,7 @@ import kotlin.reflect.KClass
  *
  * ## Initial Tab
  *
- * The tab with `ordinal = 0` is the initial tab. Ordinals define tab order.
+ * Mark one `@TabItem` with `isDefault = true` to set the initial tab.
  *
  * ## NavNode Mapping
  *
@@ -50,7 +50,7 @@ import kotlin.reflect.KClass
  * ```
  * @Tabs → TabNode(
  *     key = "{name}",
- *     stacks = [StackNode for each @TabItem sorted by ordinal],
+ *     stacks = [StackNode for each @TabItem in declaration order],
  *     activeStackIndex = 0
  * )
  * ```
@@ -76,7 +76,8 @@ annotation class Tabs(
  * tab discovery — tabs can be defined in separate modules and still be collected
  * under the same parent container at compile time.
  *
- * The [ordinal] parameter defines the tab's position; `ordinal = 0` is the initial tab.
+ * Tab ordering is determined by declaration/discovery order.
+ * Mark one `@TabItem` with `isDefault = true` to control which tab is initially selected.
  *
  * ## Usage
  *
@@ -84,7 +85,7 @@ annotation class Tabs(
  * @Tabs(name = "mainTabs")
  * object MainTabs
  *
- * @TabItem(parent = MainTabs::class, ordinal = 0)
+ * @TabItem(parent = MainTabs::class, isDefault = true)
  * @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
  * sealed class HomeTab : NavDestination {
  *     @Destination(route = "home/feed")
@@ -94,7 +95,7 @@ annotation class Tabs(
  *     data class Article(val id: String) : HomeTab()
  * }
  *
- * @TabItem(parent = MainTabs::class, ordinal = 1)
+ * @TabItem(parent = MainTabs::class)
  * @Stack(name = "exploreStack", startDestination = ExploreTab.ExploreRoot::class)
  * sealed class ExploreTab : NavDestination {
  *     @Destination(route = "explore/root")
@@ -114,8 +115,9 @@ annotation class Tabs(
  * Customize tab labels and icons in your `@TabsContainer` wrapper using pattern matching.
  *
  * @property parent Reference to the `@Tabs`-annotated class this tab belongs to.
- * @property ordinal Position of this tab within the parent container.
- *   `0` = initial (first) tab. Tabs are sorted by ordinal.
+ * @property isDefault When true, this tab is the initially selected tab. Exactly one
+ *   `@TabItem` per `@Tabs` container should set this to true. If none is set, the first
+ *   discovered tab becomes the default.
  *
  * @see Tabs
  * @see Stack
@@ -125,5 +127,5 @@ annotation class Tabs(
 @Retention(AnnotationRetention.BINARY)
 annotation class TabItem(
     val parent: KClass<*>,
-    val ordinal: Int,
+    val isDefault: Boolean = false,
 )

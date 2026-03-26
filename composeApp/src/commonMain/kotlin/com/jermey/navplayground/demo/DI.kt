@@ -6,10 +6,10 @@ import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.generated.ComposeAppNavigationConfig
 import com.jermey.quo.vadis.generated.Feature1NavigationConfig
-import com.jermey.quo.vadis.generated.NavigationApiNavigationConfig
 import com.jermey.quo.vadis.generated.Feature2ApiNavigationConfig
 import com.jermey.quo.vadis.generated.Feature2NavigationConfig
 import com.jermey.quo.vadis.generated.Feature3NavigationConfig
+import com.jermey.quo.vadis.generated.NavigationApiNavigationConfig
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
@@ -45,7 +45,6 @@ class NavigationModule {
         )
     }
 }
-
 
 
 @Module

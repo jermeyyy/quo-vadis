@@ -116,8 +116,9 @@ class ContainerBlockGenerator(
         val builder = CodeBlock.builder()
             .beginControlFlow("tabs<%T>(scopeKey = %S)", containerClass, scopeKey)
 
-        // Generate tab entries sorted by ordinal; index 0 is initial tab
-        tab.tabs.sortedBy { it.ordinal }.forEach { tabItem ->
+        // Generate tab entries; the tab with isDefault = true is the initial tab,
+        // otherwise the first tab becomes the initial selection.
+        tab.tabs.forEach { tabItem ->
             builder.add(generateTabEntry(tabItem))
         }
 
@@ -144,13 +145,25 @@ class ContainerBlockGenerator(
 
         return when (tabItem.tabType) {
             TabItemType.STACK, TabItemType.TABS -> {
-                CodeBlock.of("containerTab<%T>()\n", tabClassName)
+                if (tabItem.isDefault) {
+                    CodeBlock.of("containerTab<%T>(isDefault = true)\n", tabClassName)
+                } else {
+                    CodeBlock.of("containerTab<%T>()\n", tabClassName)
+                }
             }
             TabItemType.DESTINATION -> {
                 if (isObject) {
-                    CodeBlock.of("tab(%T)\n", tabClassName)
+                    if (tabItem.isDefault) {
+                        CodeBlock.of("tab(%T, isDefault = true)\n", tabClassName)
+                    } else {
+                        CodeBlock.of("tab(%T)\n", tabClassName)
+                    }
                 } else {
-                    CodeBlock.of("containerTab<%T>()\n", tabClassName)
+                    if (tabItem.isDefault) {
+                        CodeBlock.of("containerTab<%T>(isDefault = true)\n", tabClassName)
+                    } else {
+                        CodeBlock.of("containerTab<%T>()\n", tabClassName)
+                    }
                 }
             }
         }

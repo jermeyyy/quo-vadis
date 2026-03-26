@@ -309,12 +309,12 @@ class MainTabs : NavDestination {
 }
 
 // App module (composeApp) — tab items declare their parent
-@TabItem(parent = MainTabs::class, ordinal = 0)
+@TabItem(parent = MainTabs::class, isDefault = true)
 @Destination(route = "main/home")
 @Transition(type = TransitionType.Fade)
 data object HomeTab : NavDestination
 
-@TabItem(parent = MainTabs::class, ordinal = 1)
+@TabItem(parent = MainTabs::class)
 @Stack(name = "exploreStack", startDestination = ExploreTab.Feed::class)
 @Transition(type = TransitionType.Fade)
 sealed class ExploreTab : NavDestination {
@@ -325,12 +325,12 @@ sealed class ExploreTab : NavDestination {
     data class Detail(@Argument val id: String) : ExploreTab()
 }
 
-@TabItem(parent = MainTabs::class, ordinal = 2)
+@TabItem(parent = MainTabs::class)
 @Destination(route = "main/profile")
 @Transition(type = TransitionType.Fade)
 data object ProfileTab : NavDestination
 
-@TabItem(parent = MainTabs::class, ordinal = 3)
+@TabItem(parent = MainTabs::class)
 @Stack(name = "settingsStack", startDestination = SettingsTab.Main::class)
 @Transition(type = TransitionType.Fade)
 sealed class SettingsTab : NavDestination {
@@ -342,7 +342,7 @@ sealed class SettingsTab : NavDestination {
 }
 
 // Feature module (feature1) — cross-module tab registration
-@TabItem(parent = MainTabs::class, ordinal = 4)
+@TabItem(parent = MainTabs::class)
 @Stack(name = "result_demo", startDestination = ResultDemoDestination.Demo::class)
 sealed class ResultDemoDestination : NavDestination {
     @Destination(route = "result/demo")
@@ -350,9 +350,9 @@ sealed class ResultDemoDestination : NavDestination {
 }
 ```
 
-> **Child-to-Parent Pattern:** Each `@TabItem` declares its `parent` (the `@Tabs`-annotated class) and `ordinal` (display position). `ordinal = 0` denotes the initial tab. Ordinals must be contiguous integers starting at 0 (i.e., 0, 1, 2, …, N-1 with no gaps). The KSP processor validates ordinal correctness at compile time. Tab customization (labels, icons) is done in the `@TabsContainer` wrapper using type-safe pattern matching.
+> **Child-to-Parent Pattern:** Each `@TabItem` declares its `parent` (the `@Tabs`-annotated class). One tab is marked `isDefault = true` to set the initial tab; if none is set, the first discovered tab becomes the default. Tab customization (labels, icons) is done in the `@TabsContainer` wrapper using type-safe pattern matching.
 >
-> **Cross-module tabs:** Feature modules can register as tabs by referencing a shared `@Tabs` class (e.g., `@TabItem(parent = MainTabs::class, ordinal = 4)`). Ordinal continuity validation is skipped for cross-module `@Tabs` where only partial tab items are visible to the processor.
+> **Cross-module tabs:** Feature modules can register as tabs by referencing a shared `@Tabs` class (e.g., `@TabItem(parent = MainTabs::class)`). Each module only validates the tab items it can see.
 
 #### When to Use
 
@@ -369,7 +369,7 @@ TabNodes can contain other TabNodes for nested tab structures:
 sealed class DemoTabs : NavDestination {
     companion object : NavDestination
 
-    @TabItem(parent = DemoTabs::class, ordinal = 0)
+    @TabItem(parent = DemoTabs::class, isDefault = true)
     @Stack(name = "musicStack", startDestination = MusicTab.List::class)
     sealed class MusicTab : DemoTabs() {
         @Destination(route = "music/list")
@@ -379,7 +379,7 @@ sealed class DemoTabs : NavDestination {
         data class Detail(@Argument val id: String) : MusicTab()
     }
 
-    @TabItem(parent = DemoTabs::class, ordinal = 1)
+    @TabItem(parent = DemoTabs::class)
     @Stack(name = "moviesStack", startDestination = MoviesTab.List::class)
     sealed class MoviesTab : DemoTabs() {
         @Destination(route = "movies/list")

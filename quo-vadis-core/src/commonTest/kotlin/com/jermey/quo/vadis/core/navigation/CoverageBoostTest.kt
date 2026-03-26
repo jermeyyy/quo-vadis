@@ -2,10 +2,9 @@
 
 package com.jermey.quo.vadis.core.navigation
 
-import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.navigation.destination.DeepLinkResult
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.navigation.internal.GeneratedTabMetadata
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue

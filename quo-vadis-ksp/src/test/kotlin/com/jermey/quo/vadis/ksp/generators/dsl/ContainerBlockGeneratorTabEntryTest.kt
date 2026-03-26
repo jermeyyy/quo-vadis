@@ -64,7 +64,6 @@ class ContainerBlockGeneratorTabEntryTest : FunSpec({
                 modifiers = setOf(Modifier.DATA),
             ),
             tabType = TabItemType.DESTINATION,
-            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -85,7 +84,6 @@ class ContainerBlockGeneratorTabEntryTest : FunSpec({
                 classKind = ClassKind.CLASS,
             ),
             tabType = TabItemType.DESTINATION,
-            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -108,7 +106,6 @@ class ContainerBlockGeneratorTabEntryTest : FunSpec({
                 annotations = listOf("Stack"),
             ),
             tabType = TabItemType.STACK,
-            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -131,7 +128,6 @@ class ContainerBlockGeneratorTabEntryTest : FunSpec({
                 annotations = listOf("Stack"),
             ),
             tabType = TabItemType.STACK,
-            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -152,7 +148,6 @@ class ContainerBlockGeneratorTabEntryTest : FunSpec({
                 annotations = listOf("Tabs"),
             ),
             tabType = TabItemType.TABS,
-            ordinal = 0,
             destinationInfo = null,
             stackInfo = null,
         )
@@ -176,7 +171,6 @@ class ContainerBlockGeneratorTabEntryTest : FunSpec({
                 modifiers = setOf(Modifier.DATA),
             ),
             tabType = TabItemType.DESTINATION,
-            ordinal = 0,
         )
         val nestedItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
@@ -184,7 +178,6 @@ class ContainerBlockGeneratorTabEntryTest : FunSpec({
                 annotations = listOf("Stack"),
             ),
             tabType = TabItemType.STACK,
-            ordinal = 1,
         )
         val refItem = TabItemInfo(
             classDeclaration = sealedClassDecl(
@@ -192,7 +185,6 @@ class ContainerBlockGeneratorTabEntryTest : FunSpec({
                 annotations = listOf("Stack"),
             ),
             tabType = TabItemType.STACK,
-            ordinal = 2,
         )
 
         val output = generator.generate(
@@ -216,7 +208,6 @@ class ContainerBlockGeneratorTabEntryTest : FunSpec({
                 modifiers = setOf(Modifier.DATA),
             ),
             tabType = TabItemType.DESTINATION,
-            ordinal = 0,
         )
 
         val output = generator.generate(

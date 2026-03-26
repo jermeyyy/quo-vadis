@@ -305,7 +305,7 @@ fun SearchResultsScreen(
 
 Define tabbed navigation containers with independent back stacks per tab, state preservation across switches, and configurable initial tab selection.
 
-Tabs use a **child-to-parent** dependency model: each `@TabItem` declares which `@Tabs` container it belongs to via a `parent` reference and its display position via `ordinal`. This enables cross-module tab composition without the parent needing to know about all its children at declaration time.
+Tabs use a **child-to-parent** dependency model: each `@TabItem` declares which `@Tabs` container it belongs to via a `parent` reference. One tab is marked `isDefault = true` to set the initial tab. This enables cross-module tab composition without the parent needing to know about all its children at declaration time.
 
 ### @Tabs Properties
 
@@ -313,7 +313,7 @@ Tabs use a **child-to-parent** dependency model: each `@TabItem` declares which 
 |----------|------|-------------|
 | `name` | `String` | Unique identifier for the tab container |
 
-`@Tabs` does **not** declare its children or initial tab. Children register themselves via `@TabItem(parent, ordinal)`. The tab with `ordinal = 0` is the initial tab by convention.
+`@Tabs` does **not** declare its children or initial tab. Children register themselves via `@TabItem(parent)`. The tab marked `isDefault = true` is the initial tab (if none is set, the first discovered tab becomes the default).
 
 `@Tabs` can be placed on any class or object — it does **not** require a sealed class.
 
@@ -322,7 +322,7 @@ Tabs use a **child-to-parent** dependency model: each `@TabItem` declares which 
 | Property | Type | Description |
 |----------|------|-------------|
 | `parent` | `KClass<*>` | The `@Tabs`-annotated class this item belongs to |
-| `ordinal` | `Int` | Display position (0-based). `ordinal = 0` = initial tab. |
+| `isDefault` | `Boolean` | When `true`, this tab is the initially selected tab. Defaults to `false`. |
 
 Tab customization (labels, icons) is handled in the `@TabsContainer` wrapper using type-safe pattern matching on `scope.tabs`.
 
@@ -344,17 +344,17 @@ For tabs defined alongside their parent using a data object:
 @Tabs(name = "mainTabs")
 data object MainTabs : NavDestination
 
-@TabItem(MainTabs::class, ordinal = 0)
+@TabItem(MainTabs::class, isDefault = true)
 @Destination(route = "main/home")
 @Transition(type = TransitionType.Fade)
 data object HomeTab : NavDestination
 
-@TabItem(MainTabs::class, ordinal = 1)
+@TabItem(MainTabs::class)
 @Destination(route = "main/explore")
 @Transition(type = TransitionType.Fade)
 data object ExploreTab : NavDestination
 
-@TabItem(MainTabs::class, ordinal = 2)
+@TabItem(MainTabs::class)
 @Destination(route = "main/profile")
 @Transition(type = TransitionType.Fade)
 data object ProfileTab : NavDestination
@@ -362,7 +362,7 @@ data object ProfileTab : NavDestination
 
 ### Pattern: Sealed Class Grouping
 
-`@Tabs` can still be placed on a sealed class to group tab items for organizational purposes. Tab items inside the sealed class still use `@TabItem(parent, ordinal)`:
+`@Tabs` can still be placed on a sealed class to group tab items for organizational purposes. Tab items inside the sealed class still use `@TabItem(parent)`:
 
 ```kotlin
 @Tabs(name = "mainTabs")
@@ -370,12 +370,12 @@ sealed class MainTabs : NavDestination {
 
     companion object : NavDestination  // Wrapper key for @TabsContainer
 
-    @TabItem(MainTabs::class, ordinal = 0)
+    @TabItem(MainTabs::class, isDefault = true)
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
-    @TabItem(MainTabs::class, ordinal = 1)
+    @TabItem(MainTabs::class)
     @Stack(name = "exploreStack", startDestination = ExploreTab.Feed::class)
     @Transition(type = TransitionType.Fade)
     sealed class ExploreTab : MainTabs() {
@@ -383,7 +383,7 @@ sealed class MainTabs : NavDestination {
         data object Feed : ExploreTab()
     }
 
-    @TabItem(MainTabs::class, ordinal = 2)
+    @TabItem(MainTabs::class)
     @Destination(route = "main/profile")
     @Transition(type = TransitionType.Fade)
     data object ProfileTab : MainTabs()
@@ -398,21 +398,21 @@ For tabs containing multiple destinations:
 @Tabs(name = "demoTabs")
 data object DemoTabs : NavDestination
 
-@TabItem(DemoTabs::class, ordinal = 0)
+@TabItem(DemoTabs::class, isDefault = true)
 @Stack(name = "musicStack", startDestination = MusicTab.List::class)
 sealed class MusicTab : NavDestination {
     @Destination(route = "demo/tabs/music/list")
     data object List : MusicTab()
 }
 
-@TabItem(DemoTabs::class, ordinal = 1)
+@TabItem(DemoTabs::class)
 @Stack(name = "moviesStack", startDestination = MoviesTab.List::class)
 sealed class MoviesTab : NavDestination {
     @Destination(route = "demo/tabs/movies/list")
     data object List : MoviesTab()
 }
 
-@TabItem(DemoTabs::class, ordinal = 2)
+@TabItem(DemoTabs::class)
 @Stack(name = "booksStack", startDestination = BooksTab.List::class)
 sealed class BooksTab : NavDestination {
     @Destination(route = "demo/tabs/books/list")
@@ -453,12 +453,12 @@ A feature module declares itself as a tab of a parent defined elsewhere:
 @Tabs(name = "mainTabs")
 data object MainTabs : NavDestination
 
-@TabItem(MainTabs::class, ordinal = 0)
+@TabItem(MainTabs::class, isDefault = true)
 @Destination(route = "main/home")
 data object HomeTab : NavDestination
 
 // feature-settings module — registers as a tab in MainTabs
-@TabItem(MainTabs::class, ordinal = 1)
+@TabItem(MainTabs::class)
 @Stack(name = "settingsStack", startDestination = SettingsDestination.Main::class)
 sealed class SettingsDestination : NavDestination {
     @Destination(route = "settings/main")
@@ -473,8 +473,8 @@ sealed class SettingsDestination : NavDestination {
 
 ```
 TabNode (mainTabs)
-├── ScreenNode (HomeTab)            ← ordinal 0, local flat screen
-└── StackNode (settingsStack)       ← ordinal 1, cross-module stack
+├── ScreenNode (HomeTab)            ← default tab, local flat screen
+└── StackNode (settingsStack)       ← cross-module stack
     ├── ScreenNode (Settings.Main)
     └── ScreenNode (Settings.Detail)
 ```
@@ -488,24 +488,24 @@ A `@TabItem` can also be annotated with `@Tabs` to create nested tab containers:
 @Tabs(name = "mainTabs")
 data object MainTabs : NavDestination
 
-@TabItem(MainTabs::class, ordinal = 0)
+@TabItem(MainTabs::class, isDefault = true)
 @Destination(route = "main/home")
 data object HomeTab : NavDestination
 
 // feature-media module — registers as nested tabs within MainTabs
-@TabItem(MainTabs::class, ordinal = 1)
+@TabItem(MainTabs::class)
 @Tabs(name = "mediaTabs")
 data object MediaTabs : NavDestination
 
-@TabItem(MediaTabs::class, ordinal = 0)
+@TabItem(MediaTabs::class, isDefault = true)
 @Destination(route = "media/music")
 data object MusicTab : NavDestination
 
-@TabItem(MediaTabs::class, ordinal = 1)
+@TabItem(MediaTabs::class)
 @Destination(route = "media/videos")
 data object VideosTab : NavDestination
 
-@TabItem(MainTabs::class, ordinal = 2)
+@TabItem(MainTabs::class)
 @Destination(route = "main/profile")
 data object ProfileTab : NavDestination
 ```
@@ -514,11 +514,11 @@ data object ProfileTab : NavDestination
 
 ```
 TabNode (mainTabs)
-├── ScreenNode (HomeTab)            ← ordinal 0
-├── TabNode (mediaTabs)             ← ordinal 1, nested tabs from feature module
+├── ScreenNode (HomeTab)            ← default tab
+├── TabNode (mediaTabs)             ← nested tabs from feature module
 │   ├── ScreenNode (MusicTab)
 │   └── ScreenNode (VideosTab)
-└── ScreenNode (ProfileTab)         ← ordinal 2
+└── ScreenNode (ProfileTab)
 ```
 
 ### Config Composition
@@ -544,17 +544,16 @@ val navigator = rememberTreeNavigator(
 | `@TabItem` + `@Stack` | `STACK` | Tab with its own navigation stack |
 | `@TabItem` + `@Tabs` | `TABS` | Nested tab container |
 
-### Ordinal Validation Rules
+### Default Tab Validation Rules
 
 | Rule | Severity |
 |------|----------|
-| `ordinal = 0` must exist for each `@Tabs` parent (defines initial tab) | Error |
-| Ordinals must be unique within a `@Tabs` parent | Error |
-| Ordinals must be consecutive starting from 0 (no gaps) | Error |
+| At most one `@TabItem` per `@Tabs` parent may have `isDefault = true` | Error |
+| If no `isDefault = true` is set, the first discovered tab becomes the default | — |
 | Circular nesting is detected and rejected at compile time | Error |
 | Nesting depth > 3 levels produces a warning | Warning |
 
-> **Note:** Ordinal continuity validation is skipped for cross-module `@Tabs` where only partial tab items are visible to the KSP processor. Each module only validates the ordinals it can see.
+> **Note:** Cross-module `@Tabs` containers aggregate tab items from all modules. Each module only validates the tab items it can see.
 
 ### FlowMVI with Nested Containers
 
@@ -672,10 +671,10 @@ fun DemoTabsWrapper(
 | Property | Type | Description |
 |----------|------|-------------|
 | `navigator` | `Navigator` | Navigation operations |
-| `activeTabIndex` | `Int` | Currently selected tab index |
-| `tabs` | `List<NavDestination>` | Tab destinations for type-safe pattern matching |
+| `activeTab` | `NavDestination` | Currently selected tab destination |
+| `tabs` | `Set<NavDestination>` | Tab destinations for type-safe pattern matching |
 | `isTransitioning` | `Boolean` | Whether a transition is in progress |
-| `switchTab(index)` | Function | Switch to a different tab |
+| `switchTab(destination)` | Function | Switch to a different tab by destination |
 
 **Example: Tab Strip Wrapper with Pattern Matching**
 
@@ -702,8 +701,9 @@ fun DemoTabsWrapper(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
             // Tab strip with type-safe pattern matching
-            TabRow(selectedTabIndex = scope.activeTabIndex) {
-                scope.tabs.forEachIndexed { index, tab ->
+            val tabsList = scope.tabs.toList()
+            TabRow(selectedTabIndex = tabsList.indexOf(scope.activeTab).coerceAtLeast(0)) {
+                tabsList.forEach { tab ->
                     val (label, icon) = when (tab) {
                         is MusicTab -> "Music" to Icons.Default.MusicNote
                         is MoviesTab -> "Movies" to Icons.Default.Movie
@@ -711,8 +711,8 @@ fun DemoTabsWrapper(
                         else -> "Tab" to Icons.Default.Circle
                     }
                     Tab(
-                        selected = scope.activeTabIndex == index,
-                        onClick = { scope.switchTab(index) },
+                        selected = scope.activeTab == tab,
+                        onClick = { scope.switchTab(tab) },
                         enabled = !scope.isTransitioning,
                         text = { Text(label) },
                         icon = { Icon(icon, contentDescription = label) }
@@ -916,11 +916,11 @@ fun NavigationMenuScreen(navigator: Navigator = koinInject()) {
 sealed class OverlayTabs : NavDestination {
     companion object : NavDestination
 
-    @TabItem(OverlayTabs::class, ordinal = 0)
+    @TabItem(OverlayTabs::class, isDefault = true)
     @Destination(route = "overlay/info")
     data object InfoTab : OverlayTabs()
 
-    @TabItem(OverlayTabs::class, ordinal = 1)
+    @TabItem(OverlayTabs::class)
     @Destination(route = "overlay/actions")
     data object ActionsTab : OverlayTabs()
 }
@@ -1059,22 +1059,22 @@ sealed class MainTabs : NavDestination {
 
     companion object : NavDestination
 
-    @TabItem(MainTabs::class, ordinal = 0)
+    @TabItem(MainTabs::class, isDefault = true)
     @Destination(route = "main/home")
     @Transition(type = TransitionType.Fade)
     data object HomeTab : MainTabs()
 
-    @TabItem(MainTabs::class, ordinal = 1)
+    @TabItem(MainTabs::class)
     @Destination(route = "main/explore")
     @Transition(type = TransitionType.Fade)
     data object ExploreTab : MainTabs()
 
-    @TabItem(MainTabs::class, ordinal = 2)
+    @TabItem(MainTabs::class)
     @Destination(route = "main/profile")
     @Transition(type = TransitionType.Fade)
     data object ProfileTab : MainTabs()
 
-    @TabItem(MainTabs::class, ordinal = 3)
+    @TabItem(MainTabs::class)
     @Stack(name = "settingsTabStack", startDestination = SettingsTab.Main::class)
     @Transition(type = TransitionType.Fade)
     sealed class SettingsTab : MainTabs() {
@@ -1137,7 +1137,7 @@ fun MainTabsWrapper(
     Scaffold(
         bottomBar = {
             NavigationBar {
-                scope.tabs.forEachIndexed { index, tab ->
+                scope.tabs.forEach { tab ->
                     val (label, icon) = when (tab) {
                         is MainTabs.HomeTab -> "Home" to Icons.Default.Home
                         is MainTabs.ExploreTab -> "Explore" to Icons.Default.Explore
@@ -1146,8 +1146,8 @@ fun MainTabsWrapper(
                         else -> "Tab" to Icons.Default.Circle
                     }
                     NavigationBarItem(
-                        selected = index == scope.activeTabIndex,
-                        onClick = { scope.switchTab(index) },
+                        selected = scope.activeTab == tab,
+                        onClick = { scope.switchTab(tab) },
                         icon = { Icon(icon, contentDescription = label) },
                         label = { Text(label) },
                         enabled = !scope.isTransitioning
@@ -1248,10 +1248,8 @@ Quo Vadis validates annotation usage at compile time. When validation fails, the
 
 | Rule | Severity | Example Message |
 |------|----------|-----------------|
-| No `@TabItem` children found | Error | `@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one class annotated with @TabItem(EmptyTabs::class, ordinal = N)` |
-| Missing ordinal 0 | Error | `@Tabs 'mainTabs' has no tab with ordinal 0 in file 'MainTabs.kt' (line 5). Fix: Ensure one @TabItem has ordinal = 0 (this defines the initial tab)` |
-| Duplicate ordinals | Error | `@Tabs 'mainTabs' has duplicate ordinal 1: [ExploreTab, ProfileTab] in file 'MainTabs.kt' (line 5). Fix: Each @TabItem must have a unique ordinal within its parent` |
-| Ordinal gap | Error | `@Tabs 'mainTabs' has non-consecutive ordinals [0, 1, 3] in file 'MainTabs.kt' (line 5). Fix: Ordinals must be consecutive starting from 0 (missing: 2)` |
+| No `@TabItem` children found | Error | `@Tabs container 'EmptyTabs' has no @TabItem entries in file 'EmptyTabs.kt' (line 3). Fix: Add at least one class annotated with @TabItem(parent = EmptyTabs::class)` |
+| Multiple defaults | Error | `@Tabs 'mainTabs' has multiple @TabItem entries with isDefault = true: [HomeTab, ProfileTab] in file 'MainTabs.kt' (line 5). Fix: At most one @TabItem per @Tabs parent may have isDefault = true` |
 
 ### @TabItem Validation
 

@@ -1,3 +1,5 @@
+import dev.detekt.gradle.report.ReportMergeTask
+
 plugins {
     // this is necessary to avoid the plugins to be loaded multiple times
     // in each subproject's classloader
@@ -45,6 +47,11 @@ dependencies {
     kover(projects.quoVadisCoreFlowMvi)
 }
 
+// Merged SARIF report for GitHub Code Scanning
+val detektReportMerge by tasks.registering(ReportMergeTask::class) {
+    output.set(rootProject.layout.buildDirectory.file("reports/detekt/merge.sarif"))
+}
+
 allprojects {
     // Skip detekt for gradle plugin module and androidApp to avoid conflicts
     if (project.name !in listOf("quo-vadis-gradle-plugin", "androidApp")) {
@@ -58,6 +65,7 @@ allprojects {
                 autoCorrect = true
                 parallel = true
                 buildUponDefaultConfig = true
+                basePath.set(rootProject.projectDir)
                 source = fileTree("src").apply {
                     include("**/*.kt")
                     include("**/*.kts")
@@ -69,7 +77,25 @@ allprojects {
                 reports {
                     html.required.set(true)
                     sarif.required.set(true)
+                    checkstyle.required.set(true)
                 }
+                // Exclude generated sources (KSP, Compose resources) from detekt analysis
+                exclude { it.file.path.contains("/build/") }
+                // Ensure KSP runs before detekt when the project uses KSP
+                if (project.tasks.findByName("kspCommonMainKotlinMetadata") != null) {
+                    dependsOn("kspCommonMainKotlinMetadata")
+                }
+            }
+
+            detektReportMerge {
+                // Only include source set tasks + lifecycle detekt task (which use baselines correctly).
+                // Type resolution tasks (detektMainAndroid, detektMainDesktop, etc.) find additional
+                // issues not covered by the baselines generated via `detektBaseline`.
+                input.from(
+                    tasks.withType<dev.detekt.gradle.Detekt>()
+                        .matching { it.name == "detekt" || it.name.endsWith("SourceSet") }
+                        .map { it.reports.sarif.outputLocation }
+                )
             }
         }
     }

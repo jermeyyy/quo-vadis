@@ -23,7 +23,7 @@ import com.jermey.quo.vadis.core.navigation.navigator.Navigator
  *     Scaffold(
  *         bottomBar = {
  *             NavigationBar {
- *                 scope.tabs.forEachIndexed { index, tab ->
+ *                 scope.tabs.forEach { tab ->
  *                     val (label, icon) = when (tab) {
  *                         is HomeTab -> "Home" to Icons.Default.Home
  *                         is ExploreTab -> "Explore" to Icons.Default.Explore
@@ -31,8 +31,8 @@ import com.jermey.quo.vadis.core.navigation.navigator.Navigator
  *                         else -> "Tab" to Icons.Default.Circle
  *                     }
  *                     NavigationBarItem(
- *                         selected = activeTabIndex == index,
- *                         onClick = { switchTab(index) },
+ *                         selected = activeTab == tab,
+ *                         onClick = { switchTab(tab) },
  *                         icon = { Icon(icon, contentDescription = label) },
  *                         label = { Text(label) }
  *                     )
@@ -61,23 +61,18 @@ interface TabsContainerScope {
     val navigator: Navigator
 
     /**
-     * The currently active tab index (0-based).
+     * The currently active tab destination.
      *
      * Use this to highlight the selected tab in your UI.
      */
-    val activeTabIndex: Int
+    val activeTab: NavDestination
 
     /**
-     * Total number of tabs in this container.
-     */
-    val tabCount: Int
-
-    /**
-     * List of destination instances for all tabs in order.
+     * Set of destination instances for all tabs.
      *
      * Use this with pattern matching to customize tab UI:
      * ```kotlin
-     * tabs.forEachIndexed { index, tab ->
+     * tabs.forEach { tab ->
      *     val (label, icon) = when (tab) {
      *         is HomeTab -> "Home" to Icons.Default.Home
      *         is ExploreTab -> "Explore" to Icons.Default.Explore
@@ -87,7 +82,7 @@ interface TabsContainerScope {
      * }
      * ```
      */
-    val tabs: List<NavDestination>
+    val tabs: Set<NavDestination>
 
     /**
      * Whether tab switching animation is currently in progress.
@@ -97,15 +92,15 @@ interface TabsContainerScope {
     val isTransitioning: Boolean
 
     /**
-     * Switch to the tab at the given index.
+     * Switch to the tab with the given destination.
      *
      * This triggers the tab change through the navigation system,
      * handling any necessary state updates and animations.
      *
-     * @param index The 0-based index of the tab to switch to
-     * @throws IndexOutOfBoundsException if index is out of range
+     * @param destination The destination of the tab to switch to
+     * @throws IllegalArgumentException if destination is not a tab in this container
      */
-    fun switchTab(index: Int)
+    fun switchTab(destination: NavDestination)
 
 }
 
@@ -116,26 +111,24 @@ interface TabsContainerScope {
  * with access to tab navigation state and actions.
  *
  * @property navigator The navigator instance for this tab container
- * @property activeTabIndex The currently selected tab index (0-based)
- * @property tabCount Total number of tabs
- * @property tabs List of destination instances for all tabs in order
+ * @property activeTab The currently active tab destination
+ * @property tabs Set of destination instances for all tabs
  * @property isTransitioning Whether a tab transition is in progress
  * @property onSwitchTab Callback invoked when user switches tabs
  */
 internal class TabsContainerScopeImpl(
     override val navigator: Navigator,
-    override val activeTabIndex: Int,
-    override val tabCount: Int,
-    override val tabs: List<NavDestination>,
+    override val activeTab: NavDestination,
+    override val tabs: Set<NavDestination>,
     override val isTransitioning: Boolean,
-    private val onSwitchTab: (Int) -> Unit
+    private val onSwitchTab: (NavDestination) -> Unit
 ) : TabsContainerScope {
 
-    override fun switchTab(index: Int) {
-        require(index in 0 until tabCount) {
-            "Tab index $index out of bounds [0, $tabCount)"
+    override fun switchTab(destination: NavDestination) {
+        require(destination in tabs) {
+            "Destination $destination is not a tab in this container"
         }
-        onSwitchTab(index)
+        onSwitchTab(destination)
     }
 
 }
@@ -146,22 +139,21 @@ internal class TabsContainerScopeImpl(
  * Factory function for creating tabs container scopes.
  *
  * @param navigator The navigator instance
- * @param activeTabIndex Currently selected tab index
- * @param tabs List of destination instances for all tabs
+ * @param activeTab The currently active tab destination
+ * @param tabs Set of destination instances for all tabs
  * @param isTransitioning Whether transitioning between tabs
  * @param onSwitchTab Callback for tab switching
  * @return A new [TabsContainerScope] implementation
  */
 internal fun createTabsContainerScope(
     navigator: Navigator,
-    activeTabIndex: Int,
-    tabs: List<NavDestination>,
+    activeTab: NavDestination,
+    tabs: Set<NavDestination>,
     isTransitioning: Boolean,
-    onSwitchTab: (Int) -> Unit
+    onSwitchTab: (NavDestination) -> Unit
 ): TabsContainerScope = TabsContainerScopeImpl(
     navigator = navigator,
-    activeTabIndex = activeTabIndex,
-    tabCount = tabs.size,
+    activeTab = activeTab,
     tabs = tabs,
     isTransitioning = isTransitioning,
     onSwitchTab = onSwitchTab

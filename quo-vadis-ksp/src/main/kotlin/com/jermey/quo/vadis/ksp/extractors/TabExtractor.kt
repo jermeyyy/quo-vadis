@@ -22,11 +22,11 @@ import com.jermey.quo.vadis.ksp.models.TabItemType
  * @Tabs(name = "mainTabs")
  * object MainTabs
  *
- * @TabItem(parent = MainTabs::class, ordinal = 0)
+ * @TabItem(parent = MainTabs::class)
  * @Stack(name = "homeStack", startDestination = HomeTab.Feed::class)
  * sealed class HomeTab : NavDestination { ... }
  *
- * @TabItem(parent = MainTabs::class, ordinal = 1)
+ * @TabItem(parent = MainTabs::class)
  * @Stack(name = "exploreStack", startDestination = ExploreTab.Root::class)
  * sealed class ExploreTab : NavDestination { ... }
  * ```
@@ -46,7 +46,9 @@ class TabExtractor(
      *
      * 1. Discovers all `@TabItem`-annotated classes and groups them by parent
      * 2. Discovers all `@Tabs`-annotated classes and matches children from step 1
-     * 3. Returns fully assembled [TabInfo] list with children sorted by ordinal
+     * 3. Returns fully assembled [TabInfo] list with the default tab first, followed by
+     *    remaining tabs in discovery order. The first tab in the list becomes the initially
+     *    selected tab at runtime.
      *
      * @param resolver KSP resolver to query for symbols
      * @return List of [TabInfo] for all `@Tabs`-annotated classes
@@ -59,11 +61,11 @@ class TabExtractor(
     /**
      * Discover all `@TabItem`-annotated classes and group by parent qualified name.
      *
-     * @return Map of parent qualified name → list of (classDeclaration, ordinal)
+     * @return Map of parent qualified name → list of (classDeclaration, isDefault) pairs
      */
     private fun extractAllTabItems(
         resolver: Resolver
-    ): Map<String, List<Pair<KSClassDeclaration, Int>>> {
+    ): Map<String, List<Pair<KSClassDeclaration, Boolean>>> {
         val tabItems = resolver
             .getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.TabItem")
             .filterIsInstance<KSClassDeclaration>()
@@ -81,24 +83,6 @@ class TabExtractor(
                 .value as? KSType
             val parentQualifiedName = parentType?.declaration?.qualifiedName?.asString()
 
-            val ordinalArg = annotation.arguments
-                .firstOrNull { it.name?.asString() == "ordinal" }
-            if (ordinalArg == null) {
-                logger.error(
-                    "@TabItem '${classDecl.simpleName.asString()}' is missing required 'ordinal' argument",
-                    classDecl
-                )
-                return@mapNotNull null
-            }
-            val ordinal = ordinalArg.value as? Int
-            if (ordinal == null) {
-                logger.error(
-                    "@TabItem '${classDecl.simpleName.asString()}' has non-Int 'ordinal' value: ${ordinalArg.value}",
-                    classDecl
-                )
-                return@mapNotNull null
-            }
-
             if (parentQualifiedName == null) {
                 logger.error(
                     "@TabItem '${classDecl.simpleName.asString()}' has unresolvable parent",
@@ -107,12 +91,16 @@ class TabExtractor(
                 return@mapNotNull null
             }
 
+            val isDefault = annotation.arguments
+                .firstOrNull { it.name?.asString() == "isDefault" }
+                ?.value as? Boolean ?: false
+
             logger.info(
                 "  - ${classDecl.simpleName.asString()} " +
-                    "(parent=$parentQualifiedName, ordinal=$ordinal)"
+                    "(parent=$parentQualifiedName, isDefault=$isDefault)"
             )
 
-            Triple(parentQualifiedName, classDecl, ordinal)
+            Triple(parentQualifiedName, classDecl, isDefault)
         }.groupBy(
             keySelector = { it.first },
             valueTransform = { it.second to it.third }
@@ -125,7 +113,7 @@ class TabExtractor(
      */
     private fun extractAllTabs(
         resolver: Resolver,
-        tabItemsByParent: Map<String, List<Pair<KSClassDeclaration, Int>>>
+        tabItemsByParent: Map<String, List<Pair<KSClassDeclaration, Boolean>>>
     ): List<TabInfo> {
         val tabsClasses = resolver
             .getSymbolsWithAnnotation("com.jermey.quo.vadis.annotations.Tabs")
@@ -199,8 +187,8 @@ class TabExtractor(
             }
 
             val tabs = children
-                .sortedBy { (_, ordinal) -> ordinal }
-                .mapNotNull { (childDecl, ordinal) -> extractTabItem(childDecl, ordinal) }
+                .mapNotNull { (childDecl, isDefault) -> extractTabItem(childDecl, isDefault) }
+                .sortedByDescending { it.isDefault }
 
             logger.info("@Tabs '$name' assembled with ${tabs.size} tab items" +
                 if (isCrossModule) " (cross-module)" else "")
@@ -220,25 +208,25 @@ class TabExtractor(
      * Build a [TabItemInfo] from a `@TabItem`-annotated class.
      *
      * @param classDeclaration The `@TabItem` class
-     * @param ordinal The tab's ordinal position
+     * @param isDefault Whether this tab is marked as the default tab
      * @return [TabItemInfo] or null if extraction fails
      */
     private fun extractTabItem(
         classDeclaration: KSClassDeclaration,
-        ordinal: Int
+        isDefault: Boolean = false,
     ): TabItemInfo? {
         val tabType = detectTabItemType(classDeclaration) ?: return null
         val (destinationInfo, stackInfo) = extractTypeSpecificInfo(classDeclaration, tabType)
 
         logger.info(
             "Extracted @TabItem '${classDeclaration.simpleName.asString()}' " +
-                "(tabType=$tabType, ordinal=$ordinal)"
+                "(tabType=$tabType, isDefault=$isDefault)"
         )
 
         return TabItemInfo(
             classDeclaration = classDeclaration,
             tabType = tabType,
-            ordinal = ordinal,
+            isDefault = isDefault,
             destinationInfo = destinationInfo,
             stackInfo = stackInfo
         )
