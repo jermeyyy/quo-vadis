@@ -114,8 +114,10 @@ internal fun StackRenderer(
 
     // Determine previous background target for animation pairing
     val previousBackgroundTarget = if (hasModalOverlay) {
-        val baseIndex = findNonModalBaseIndex(node.children, modalRegistry)
-        previousNode?.children?.getOrNull(baseIndex)
+        previousNode?.let {
+            val baseIndex = findNonModalBaseIndex(it.children, modalRegistry)
+            it.children.getOrNull(baseIndex)
+        }
     } else {
         previousActiveChild
     }
@@ -153,11 +155,12 @@ internal fun StackRenderer(
     if (hasModalOverlay) {
         val baseIndex = findNonModalBaseIndex(node.children, modalRegistry)
         val modalNodes = node.children.subList(baseIndex + 1, node.children.size)
-        for (modalNode in modalNodes) {
+        for ((i, modalNode) in modalNodes.withIndex()) {
+            val previousChild = previousNode?.children?.getOrNull(baseIndex + 1 + i)
             StaticAnimatedVisibilityScope {
                 NavNodeRenderer(
                     node = modalNode,
-                    previousNode = null,
+                    previousNode = previousChild,
                     scope = scope,
                 )
             }
