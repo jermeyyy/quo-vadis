@@ -59,9 +59,11 @@ import com.jermey.quo.vadis.core.navigation.node.NavNode
  * content beneath the modal is not removed by exit animations.
  *
  * Modal transitions with background layers are primarily handled by
- * [StackRenderer] via [ModalContent]. This parameter supports the edge case
- * where a modal is the only child in a stack (no background layer needed)
- * or when future animated modal transitions are added.
+ * [StackRenderer], which renders modal nodes as sibling overlays while
+ * keeping the background in this [AnimatedNavContent]. This parameter
+ * supports the edge case where a modal is the only child in a stack
+ * (no background layer needed) or when future animated modal transitions
+ * are added.
  *
  * ## Usage
  *

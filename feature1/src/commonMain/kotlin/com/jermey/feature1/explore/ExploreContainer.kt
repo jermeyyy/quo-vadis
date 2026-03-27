@@ -1,11 +1,15 @@
 package com.jermey.feature1.explore
 
+import com.jermey.navplayground.navigation.ExploreFilterResult
 import com.jermey.navplayground.navigation.ExploreTab
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
+import com.jermey.quo.vadis.core.navigation.result.navigateForResult
+import kotlinx.coroutines.launch
 import org.koin.core.annotation.Qualifier
 import org.koin.core.annotation.Scope
 import org.koin.core.annotation.Scoped
+import pro.respawn.flowmvi.dsl.intent
 import pro.respawn.flowmvi.dsl.store
 import pro.respawn.flowmvi.plugins.enableLogging
 import pro.respawn.flowmvi.plugins.recover
@@ -52,7 +56,6 @@ class ExploreContainer(
             sortOrder = SortOrder.RATING_DESC,
             ratingFilter = 0f,
             isSearchFocused = false,
-            isFilterSheetVisible = false,
             previewItem = null
         )
     }
@@ -72,7 +75,8 @@ class ExploreContainer(
                 is ExploreIntent.SelectCategory -> handleSelectCategory(intent.category)
                 is ExploreIntent.SetRatingFilter -> handleSetRatingFilter(intent.minRating)
                 is ExploreIntent.SetSortOrder -> handleSetSortOrder(intent.order)
-                is ExploreIntent.ToggleFilterSheet -> handleToggleFilterSheet()
+                is ExploreIntent.OpenFilters -> handleOpenFilters()
+                is ExploreIntent.ApplyFilterResult -> handleApplyFilterResult(intent.result)
                 is ExploreIntent.ShowPreview -> handleShowPreview(intent.item)
                 is ExploreIntent.DismissPreview -> handleDismissPreview()
                 is ExploreIntent.NavigateToDetail -> handleNavigateToDetail(intent.item)
@@ -136,11 +140,39 @@ class ExploreContainer(
     }
 
     /**
-     * Toggle filter sheet visibility.
+     * Open the filters modal screen using navigateForResult.
      */
-    private suspend fun Ctx.handleToggleFilterSheet() {
+    private suspend fun Ctx.handleOpenFilters() {
         withContentState { content ->
-            updateState { content.copy(isFilterSheetVisible = !content.isFilterSheetVisible) }
+            coroutineScope.launch {
+                val result = navigator.navigateForResult(
+                    ExploreTab.Filters(
+                        sortOrder = content.sortOrder.name,
+                        ratingFilter = content.ratingFilter.toString(),
+                        category = content.selectedCategory.name
+                    )
+                )
+                if (result != null) {
+                    intent(ExploreIntent.ApplyFilterResult(result))
+                }
+            }
+        }
+    }
+
+    /**
+     * Apply filter result returned from the filters modal.
+     */
+    private suspend fun Ctx.handleApplyFilterResult(result: ExploreFilterResult) {
+        withContentState { content ->
+            val sortOrder = SortOrder.entries.find { it.name == result.sortOrder } ?: content.sortOrder
+            val category = ExploreCategory.entries.find { it.name == result.category } ?: content.selectedCategory
+            val updated = content.copy(
+                sortOrder = sortOrder,
+                ratingFilter = result.ratingFilter,
+                selectedCategory = category
+            )
+            updateState { applyFiltersAndSort(updated) }
+            action(ExploreAction.ScrollToTop)
         }
     }
 

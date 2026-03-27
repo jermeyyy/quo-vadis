@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Modal composition retaining (#67)**: Background screen no longer disposes and recreates when a modal is pushed or dismissed. `StackRenderer` now keeps the background at a stable composition tree position via `AnimatedNavContent`, with modals rendered as sibling overlays. Eliminates state loss (scroll positions, text field focus) and visual flicker during modal transitions.
+
+### Removed
+
+- **`ModalContent.kt`**: Deleted. Helper functions (`isNodeModal`, `findNonModalBaseIndex`) moved to `StackRenderer.kt`; the `ModalContent` composable replaced by inline overlay logic.
+
 ## [0.5.0] - 2026-03-26
 
 ### ⚠️ Breaking Changes

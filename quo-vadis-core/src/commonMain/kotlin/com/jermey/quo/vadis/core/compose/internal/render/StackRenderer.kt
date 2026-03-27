@@ -6,7 +6,12 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 
 /**
  * Renders a [StackNode] with animated transitions between children.
@@ -48,11 +53,15 @@ import com.jermey.quo.vadis.core.navigation.node.StackNode
  * ## Modal Support
  *
  * When the active child is a modal destination (as determined by
- * [com.jermey.quo.vadis.core.registry.ModalRegistry]), the renderer walks backwards
- * through the stack to find the topmost non-modal child and renders all layers
- * via [ModalContent] — the non-modal base as background with modal nodes stacked
- * on top. If the modal is the only child in the stack, it renders normally
- * without a background layer.
+ * [com.jermey.quo.vadis.core.registry.ModalRegistry]), the renderer determines
+ * a background target (the topmost non-modal child) and keeps it rendered
+ * through [AnimatedNavContent] at a stable composition tree position. Modal
+ * nodes are rendered as sibling overlays after the animated content block.
+ * This ensures the background screen's composition is retained when modals
+ * are pushed or popped, avoiding unnecessary recomposition.
+ *
+ * If the modal is the only child in the stack, it renders normally through
+ * [AnimatedNavContent] without any overlay siblings.
  *
  * ## Example
  *
@@ -86,61 +95,77 @@ internal fun StackRenderer(
     @Suppress("UNUSED_PARAMETER")
     animatedVisibilityScope: AnimatedVisibilityScope? = null,
 ) {
-    // Early return for empty stack - no content to render
     val activeChild = node.activeChild ?: return
     val previousActiveChild = previousNode?.activeChild
 
-    // Check if the active child should be presented modally
     val modalRegistry = scope.modalRegistry
     val isActiveModal = isNodeModal(activeChild, modalRegistry)
+    val hasModalOverlay = isActiveModal && node.children.size > 1
 
-    // Modal rendering: when active child is modal and there are children below,
-    // render with background layer visible beneath the modal
-    if (isActiveModal && node.children.size > 1) {
-        val baseIndex = findNonModalBaseIndex(node.children, modalRegistry)
-        val backgroundNode = node.children[baseIndex]
-        val previousBackgroundNode = previousNode?.children?.getOrNull(baseIndex)
-        val modalNodes = node.children.subList(baseIndex + 1, node.children.size)
+    // When a modal is active, find the topmost non-modal child index once and reuse it.
+    val baseIndex = if (hasModalOverlay) findNonModalBaseIndex(node.children, modalRegistry) else -1
 
-        ModalContent(
-            backgroundNode = backgroundNode,
-            previousBackgroundNode = previousBackgroundNode,
-            modalNodes = modalNodes,
-            scope = scope,
-        )
-        return
+    // Determine the effective background target:
+    // When a modal is active, the background is the topmost non-modal child.
+    // Otherwise, it's simply the active child (normal stack behavior).
+    val backgroundTarget = if (hasModalOverlay) {
+        node.children[baseIndex]
+    } else {
+        activeChild
     }
 
-    // Detect navigation direction by comparing stack sizes
-    // Back navigation occurs when the stack shrinks (pop operation)
+    // Determine previous background target for animation pairing
+    val previousBackgroundTarget = if (hasModalOverlay) {
+        previousNode?.let {
+            val baseIndex = findNonModalBaseIndex(it.children, modalRegistry)
+            it.children.getOrNull(baseIndex)
+        }
+    } else {
+        previousActiveChild
+    }
+
+    // Detect navigation direction based on the non-modal portion of the stack
     val isBackNavigation = detectBackNavigation(current = node, previous = previousNode)
 
-    // Get appropriate transition based on navigation direction
     val transition = scope.animationCoordinator.getTransition(
-        from = previousActiveChild,
-        to = activeChild,
+        from = previousBackgroundTarget,
+        to = backgroundTarget,
         isBack = isBackNavigation
     )
 
-    // Use configurable predictive back mode to determine if this stack
-    // should handle predictive back gestures
     val predictiveBackEnabled = scope.shouldEnablePredictiveBack(node)
 
-    // Animated content switching with transition
+    // ALWAYS render background through AnimatedNavContent.
+    // This keeps the background screen at a stable composition tree position.
+    // When a modal is pushed, backgroundTarget doesn't change → no recomposition.
     AnimatedNavContent(
-        targetState = activeChild,
+        targetState = backgroundTarget,
         transition = transition,
         isBackNavigation = isBackNavigation,
         scope = scope,
         predictiveBackEnabled = predictiveBackEnabled,
-        isTargetModal = isActiveModal,
+        isTargetModal = isActiveModal && !hasModalOverlay,
     ) { child ->
-        // Recurse to render the active child
         NavNodeRenderer(
             node = child,
-            previousNode = previousActiveChild,
+            previousNode = previousBackgroundTarget,
             scope = scope
         )
+    }
+
+    // Overlay modal nodes as siblings when present
+    if (hasModalOverlay) {
+        val modalNodes = node.children.subList(baseIndex + 1, node.children.size)
+        for ((i, modalNode) in modalNodes.withIndex()) {
+            val previousChild = previousNode?.children?.getOrNull(baseIndex + 1 + i)
+            StaticAnimatedVisibilityScope {
+                NavNodeRenderer(
+                    node = modalNode,
+                    previousNode = previousChild,
+                    scope = scope,
+                )
+            }
+        }
     }
 }
 
@@ -159,4 +184,47 @@ internal fun detectBackNavigation(current: StackNode, previous: StackNode?): Boo
     if (previous == null) return false
     // Back navigation: stack shrunk (pop operation)
     return current.children.size < previous.children.size
+}
+
+/**
+ * Determines whether a navigation node should be presented modally.
+ *
+ * For [ScreenNode], checks the destination class against the modal registry.
+ * For container nodes ([StackNode], [TabNode], [PaneNode]), checks the
+ * container key against the modal registry.
+ *
+ * @param node The navigation node to check
+ * @param modalRegistry The registry to consult for modal status
+ * @return `true` if the node should be presented modally
+ */
+internal fun isNodeModal(node: NavNode, modalRegistry: ModalRegistry): Boolean {
+    return when (node) {
+        is ScreenNode -> modalRegistry.isModalDestination(node.destination::class)
+        is StackNode -> modalRegistry.isModalContainer(node.key.value)
+        is TabNode -> modalRegistry.isModalContainer(node.key.value)
+        is PaneNode -> modalRegistry.isModalContainer(node.key.value)
+    }
+}
+
+/**
+ * Finds the index of the topmost non-modal child in a stack's children list.
+ *
+ * Walks backwards through the children from the end (active child) until a
+ * non-modal node is found. If all children are modal, returns 0 as a
+ * fallback to use the first child as the background.
+ *
+ * @param children The stack's children list
+ * @param modalRegistry The registry to consult for modal status
+ * @return The index of the topmost non-modal child, or 0 if all are modal
+ */
+internal fun findNonModalBaseIndex(
+    children: List<NavNode>,
+    modalRegistry: ModalRegistry,
+): Int {
+    for (i in children.lastIndex downTo 0) {
+        if (!isNodeModal(children[i], modalRegistry)) {
+            return i
+        }
+    }
+    return 0
 }

@@ -3,18 +3,23 @@
 package com.jermey.quo.vadis.core.navigation.compose.hierarchical
 
 import com.jermey.quo.vadis.core.compose.internal.AnimationCoordinator
+import com.jermey.quo.vadis.core.compose.internal.render.findNonModalBaseIndex
+import com.jermey.quo.vadis.core.compose.internal.render.isNodeModal
 import com.jermey.quo.vadis.core.navigation.FakeNavRenderScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
-import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.node.NodeKey
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
+import com.jermey.quo.vadis.core.registry.ModalRegistry
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import kotlin.reflect.KClass
 
 /**
  * Tests for stack navigation rendering with animations.
@@ -425,5 +430,167 @@ class StackRendererTest : FunSpec() {
         level2.parentKey shouldBe NodeKey("level1")
         screen.parentKey shouldBe NodeKey("level2")
     }
+
+    // =========================================================================
+    // MODAL HELPER FUNCTION TESTS
+    // =========================================================================
+
+    // Modal-specific test destinations
+    val modalDestinationA = object : NavDestination {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+
+    val modalDestinationB = object : NavDestination {
+        override val data: Any? = null
+        override val transition: NavigationTransition? = null
+    }
+
+    fun createTestModalRegistry(
+        modalDestinations: Set<KClass<*>> = emptySet(),
+        modalContainers: Set<String> = emptySet(),
+    ): ModalRegistry = object : ModalRegistry {
+        override fun isModalDestination(destinationClass: KClass<*>): Boolean =
+            destinationClass in modalDestinations
+
+        override fun isModalContainer(containerKey: String): Boolean =
+            containerKey in modalContainers
+    }
+
+    // ----- isNodeModal: ScreenNode tests -----
+
+    test("isNodeModal returns true for modal screen destination") {
+        val registry = createTestModalRegistry(
+            modalDestinations = setOf(modalDestinationA::class)
+        )
+        val screen = createScreen("s1", "stack", modalDestinationA)
+
+        isNodeModal(screen, registry).shouldBeTrue()
+    }
+
+    test("isNodeModal returns false for non-modal screen destination") {
+        val registry = createTestModalRegistry()
+        val screen = createScreen("s1", "stack", HomeDestination)
+
+        isNodeModal(screen, registry).shouldBeFalse()
+    }
+
+    // ----- isNodeModal: container node tests -----
+
+    test("isNodeModal returns true for modal StackNode container") {
+        val stack = createStack("modal-stack", null, createScreen("s1", "modal-stack"))
+        val registry = createTestModalRegistry(modalContainers = setOf("modal-stack"))
+
+        isNodeModal(stack, registry).shouldBeTrue()
+    }
+
+    test("isNodeModal returns false for non-modal StackNode container") {
+        val stack = createStack("regular-stack", null, createScreen("s1", "regular-stack"))
+        val registry = createTestModalRegistry()
+
+        isNodeModal(stack, registry).shouldBeFalse()
+    }
+
+    test("isNodeModal returns true for modal TabNode container") {
+        val tab = TabNode(
+            key = NodeKey("modal-tabs"),
+            parentKey = null,
+            stacks = listOf(createStack("tab-stack", "modal-tabs", createScreen("s1", "tab-stack")))
+        )
+        val registry = createTestModalRegistry(modalContainers = setOf("modal-tabs"))
+
+        isNodeModal(tab, registry).shouldBeTrue()
+    }
+
+    test("isNodeModal returns false for non-modal TabNode container") {
+        val tab = TabNode(
+            key = NodeKey("regular-tabs"),
+            parentKey = null,
+            stacks = listOf(createStack("tab-stack", "regular-tabs", createScreen("s1", "tab-stack")))
+        )
+        val registry = createTestModalRegistry()
+
+        isNodeModal(tab, registry).shouldBeFalse()
+    }
+
+    // ----- findNonModalBaseIndex tests -----
+
+    test("findNonModalBaseIndex returns last non-modal child index") {
+        // Stack: [Home, Detail, ModalA] → index 1
+        val registry = createTestModalRegistry(
+            modalDestinations = setOf(modalDestinationA::class)
+        )
+        val children = listOf(
+            createScreen("home", "stack", HomeDestination),
+            createScreen("detail", "stack", DetailDestination),
+            createScreen("modal", "stack", modalDestinationA)
+        )
+
+        findNonModalBaseIndex(children, registry) shouldBe 1
+    }
+
+    test("findNonModalBaseIndex returns 0 when all children are modal") {
+        val registry = createTestModalRegistry(
+            modalDestinations = setOf(modalDestinationA::class, modalDestinationB::class)
+        )
+        val children = listOf(
+            createScreen("m1", "stack", modalDestinationA),
+            createScreen("m2", "stack", modalDestinationB)
+        )
+
+        findNonModalBaseIndex(children, registry) shouldBe 0
+    }
+
+    test("findNonModalBaseIndex with single non-modal child returns 0") {
+        val registry = createTestModalRegistry(
+            modalDestinations = setOf(modalDestinationA::class)
+        )
+        val children = listOf(
+            createScreen("home", "stack", HomeDestination),
+            createScreen("modal", "stack", modalDestinationA)
+        )
+
+        findNonModalBaseIndex(children, registry) shouldBe 0
+    }
+
+    test("findNonModalBaseIndex skips multiple trailing modals") {
+        // Stack: [Home, ModalA, ModalB] → index 0
+        val registry = createTestModalRegistry(
+            modalDestinations = setOf(modalDestinationA::class, modalDestinationB::class)
+        )
+        val children = listOf(
+            createScreen("home", "stack", HomeDestination),
+            createScreen("m1", "stack", modalDestinationA),
+            createScreen("m2", "stack", modalDestinationB)
+        )
+
+        findNonModalBaseIndex(children, registry) shouldBe 0
+    }
+
+    test("findNonModalBaseIndex returns last index when no children are modal") {
+        val registry = createTestModalRegistry()
+        val children = listOf(
+            createScreen("home", "stack", HomeDestination),
+            createScreen("detail", "stack", DetailDestination)
+        )
+
+        findNonModalBaseIndex(children, registry) shouldBe 1
+    }
+
+    test("findNonModalBaseIndex with interleaved modals returns topmost non-modal") {
+        // Stack: [Home, ModalA, Detail, ModalB] → index 2 (Detail)
+        val registry = createTestModalRegistry(
+            modalDestinations = setOf(modalDestinationA::class, modalDestinationB::class)
+        )
+        val children = listOf(
+            createScreen("home", "stack", HomeDestination),
+            createScreen("m1", "stack", modalDestinationA),
+            createScreen("detail", "stack", DetailDestination),
+            createScreen("m2", "stack", modalDestinationB)
+        )
+
+        findNonModalBaseIndex(children, registry) shouldBe 2
+    }
+
     } // init
 }

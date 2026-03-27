@@ -1,5 +1,6 @@
 package com.jermey.feature1.explore
 
+import com.jermey.navplayground.navigation.ExploreFilterResult
 import pro.respawn.flowmvi.api.MVIAction
 import pro.respawn.flowmvi.api.MVIIntent
 import pro.respawn.flowmvi.api.MVIState
@@ -31,7 +32,6 @@ sealed interface ExploreState : MVIState {
         val sortOrder: SortOrder,
         val ratingFilter: Float,
         val isSearchFocused: Boolean,
-        val isFilterSheetVisible: Boolean,
         val previewItem: ExploreItem?
     ) : ExploreState {
         /**
@@ -86,9 +86,14 @@ sealed interface ExploreIntent : MVIIntent {
     data class SetSortOrder(val order: SortOrder) : ExploreIntent
 
     /**
-     * Toggle filter bottom sheet visibility.
+     * Open the filters modal screen.
      */
-    data object ToggleFilterSheet : ExploreIntent
+    data object OpenFilters : ExploreIntent
+
+    /**
+     * Apply filter result returned from the filters modal.
+     */
+    data class ApplyFilterResult(val result: ExploreFilterResult) : ExploreIntent
 
     /**
      * Show quick preview for an item.
