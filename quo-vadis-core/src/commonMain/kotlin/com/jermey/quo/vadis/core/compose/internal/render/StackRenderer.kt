@@ -102,11 +102,13 @@ internal fun StackRenderer(
     val isActiveModal = isNodeModal(activeChild, modalRegistry)
     val hasModalOverlay = isActiveModal && node.children.size > 1
 
+    // When a modal is active, find the topmost non-modal child index once and reuse it.
+    val baseIndex = if (hasModalOverlay) findNonModalBaseIndex(node.children, modalRegistry) else -1
+
     // Determine the effective background target:
     // When a modal is active, the background is the topmost non-modal child.
     // Otherwise, it's simply the active child (normal stack behavior).
     val backgroundTarget = if (hasModalOverlay) {
-        val baseIndex = findNonModalBaseIndex(node.children, modalRegistry)
         node.children[baseIndex]
     } else {
         activeChild
@@ -153,7 +155,6 @@ internal fun StackRenderer(
 
     // Overlay modal nodes as siblings when present
     if (hasModalOverlay) {
-        val baseIndex = findNonModalBaseIndex(node.children, modalRegistry)
         val modalNodes = node.children.subList(baseIndex + 1, node.children.size)
         for ((i, modalNode) in modalNodes.withIndex()) {
             val previousChild = previousNode?.children?.getOrNull(baseIndex + 1 + i)
