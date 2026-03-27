@@ -69,7 +69,6 @@ import com.jermey.feature1.explore.components.AnimatedSearchBar
 import com.jermey.feature1.explore.components.CategoryChipsRow
 import com.jermey.feature1.explore.components.ExploreEmptyState
 import com.jermey.feature1.explore.components.ExploreGrid
-import com.jermey.feature1.explore.components.FilterSheet
 import com.jermey.feature1.explore.components.QuickPreviewSheet
 import com.jermey.feature1.explore.components.rememberStaggerAnimationState
 
@@ -407,7 +406,7 @@ private fun ExploreTopBar(
                 }
             },
             actions = {
-                IconButton(onClick = { store.intent(ExploreIntent.ToggleFilterSheet) }) {
+                IconButton(onClick = { store.intent(ExploreIntent.OpenFilters) }) {
                     BadgedBox(
                         badge = {
                             if (state.isFiltered) {
@@ -515,21 +514,4 @@ private fun ExploreBottomSheets(
         },
         hazeState = hazeState
     )
-
-    if (state.isFilterSheetVisible) {
-        FilterSheet(
-            currentSortOrder = state.sortOrder,
-            currentRatingFilter = state.ratingFilter,
-            selectedCategory = state.selectedCategory,
-            categories = state.categories,
-            resultCount = state.filteredItems.size,
-            onSortOrderChange = { store.intent(ExploreIntent.SetSortOrder(it)) },
-            onRatingFilterChange = { store.intent(ExploreIntent.SetRatingFilter(it)) },
-            onCategoryChange = { store.intent(ExploreIntent.SelectCategory(it)) },
-            onApply = { store.intent(ExploreIntent.ToggleFilterSheet) },
-            onReset = { store.intent(ExploreIntent.ClearFilters) },
-            onDismiss = { store.intent(ExploreIntent.ToggleFilterSheet) },
-            hazeState = hazeState
-        )
-    }
 }

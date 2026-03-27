@@ -1,7 +1,7 @@
 ---
 name: Simple-Developer
 description: Focused Kotlin Multiplatform developer agent for implementing well-defined tasks. Specializes in Compose Multiplatform and MVI architecture. Executes delegated tasks without spawning subagents.
-tools: [execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/runInTerminal, read/terminalSelection, read/terminalLastCommand, read/problems, read/readFile, agent, 'gradle-mcp/*', serena/activate_project, serena/delete_memory, serena/find_file, serena/find_referencing_symbols, serena/find_symbol, serena/get_current_config, serena/get_symbols_overview, serena/list_dir, serena/list_memories, serena/read_memory, serena/search_for_pattern, serena/switch_modes, serena/think_about_collected_information, serena/think_about_task_adherence, serena/think_about_whether_you_are_done, serena/write_memory, 'duck/*', edit/createDirectory, edit/createFile, edit/editFiles, edit/rename, search, web, todo]
+tools: [execute/executionSubagent, execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/runInTerminal, read/problems, read/readFile, read/viewImage, read/terminalSelection, read/terminalLastCommand, agent, edit/createDirectory, edit/createFile, edit/editFiles, edit/rename, search, web, 'gradle-mcp/*', serena/activate_project, serena/delete_memory, serena/edit_memory, serena/find_file, serena/find_referencing_symbols, serena/find_symbol, serena/get_current_config, serena/get_symbols_overview, serena/list_dir, serena/list_memories, serena/read_memory, serena/rename_memory, serena/search_for_pattern, serena/write_memory, 'duck/*', todo]
 user-invocable: false
 agents: ["Simple-Developer","Simple-Architect"]
 ---

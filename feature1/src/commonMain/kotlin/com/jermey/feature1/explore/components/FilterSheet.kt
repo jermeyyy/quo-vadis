@@ -116,7 +116,7 @@ fun FilterSheet(
 }
 
 @Composable
-private fun FilterSheetContent(
+internal fun FilterSheetContent(
     currentSortOrder: SortOrder,
     currentRatingFilter: Float,
     selectedCategory: ExploreCategory,
