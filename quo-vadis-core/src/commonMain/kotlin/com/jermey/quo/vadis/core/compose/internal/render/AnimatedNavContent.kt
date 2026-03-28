@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.compose.internal.ComposableCache
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
 import com.jermey.quo.vadis.core.compose.transition.NavTransition
 import com.jermey.quo.vadis.core.navigation.node.NavNode
@@ -53,7 +54,7 @@ import com.jermey.quo.vadis.core.navigation.node.forEachNode
  * ## Cache Locking
  *
  * When the predictive back gesture is active, both the current screen and the back target
- * screen are locked in the [ComposableCache][com.jermey.quo.vadis.core.compose.internal.ComposableCache]
+ * screen are locked in the [ComposableCache][ComposableCache]
  * via `lock`/`unlock`. This prevents cache eviction during the gesture, ensuring both
  * screens remain renderable.
  *
@@ -246,7 +247,7 @@ private fun <T : NavNode> PredictiveBackCacheLock(
     isPredictiveBackActive: Boolean,
     backTarget: T?,
     currentTarget: T,
-    cache: com.jermey.quo.vadis.core.compose.internal.ComposableCache
+    cache: ComposableCache
 ) {
     if (isPredictiveBackActive && backTarget != null) {
         DisposableEffect(backTarget.key) {

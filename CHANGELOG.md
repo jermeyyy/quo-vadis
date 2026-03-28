@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Predictive back composition retention**: Refactored predictive back gesture handling to keep the current screen at a stable `AnimatedContent` composition tree position throughout the gesture lifecycle. Eliminates screen destruction/recreation that caused state loss (scroll positions, text fields, `remember` state). Visual transforms (slide + scale) are applied via `graphicsLayer` (GPU-only, zero recomposition). Previous screen is rendered as a sibling underlay with parallax effect and full `SaveableStateProvider` state restoration.
+- **Predictive back underlay state restoration**: Back target screen during predictive back gesture now displays with correct visual state (scroll position, text fields, etc.) instead of resetting to defaults. Uses `movableContentOf` in `ComposableCache.CachedEntry` to maintain stable `currentCompositeKeyHash` across AnimatedContent and underlay call sites, so Compose moves the composition subtree instead of recreating it.
+- **Predictive back composition retention**: Refactored predictive back gesture handling to keep the current screen at a stable `AnimatedContent` composition tree position throughout the gesture lifecycle. Eliminates screen destruction/recreation that caused state loss (scroll positions, text fields, `remember` state). Visual transforms (slide + scale) are applied via `graphicsLayer` (GPU-only, zero recomposition). Previous screen is rendered as a sibling underlay with parallax effect.
 - **Predictive back completion timing**: Navigation (`onBack()`) now fires AFTER the exit animation completes instead of before, ensuring the correct screen receives slide+scale transforms during the gesture completion animation.
 - **Predictive back container state**: Cache locking now covers all descendant node keys when the back target is a container (e.g., `TabNode`), preventing eviction of individual screen state during the gesture.
 - **Predictive back completion flash**: The exiting screen's off-screen transform is maintained during the completion handoff frame, while the entering screen renders at its natural position, eliminating the one-frame visual flash.
@@ -17,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`ComposableCache` — replaced LRU eviction with `movableContentOf`**: Removed `maxCacheSize` parameter and automatic LRU eviction. `CachedEntry` now wraps content in `movableContentOf` per key, ensuring stable composition identity across call sites. Added `removeEntry()` for explicit lifecycle-driven cleanup via `NavNode` destroy callbacks.
 - **`SinglePaneRenderer` simplified**: Predictive back handling delegated entirely to `AnimatedNavContent` via `predictiveBackEnabled` parameter. Removed duplicated gesture logic and `lastCommittedContent`/`lastCommittedRole` state tracking.
+- **Renderer destroy callbacks**: `ScreenRenderer`, `TabRenderer`, and `PaneRenderer` now register `onDestroy` callbacks on their nodes for explicit cache cleanup when nodes are permanently removed from the navigation tree.
 
 ### Removed
 
