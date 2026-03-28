@@ -146,7 +146,7 @@ internal fun TabRenderer(
 
     // Cache the ENTIRE TabNode (wrapper + content) as a unit
     // This ensures the wrapper maintains state during navigation
-    // Note: During cascade back, the parent StackRenderer's PredictiveBackContent
+    // Note: During cascade back, the parent StackRenderer's AnimatedNavContent
     // handles animating this TabNode - we just render content normally
     scope.cache.CachedEntry(
         key = node.key.value,

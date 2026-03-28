@@ -329,7 +329,7 @@ fun NavigationHost(
                     backAnimationController.startAnimation(event)
 
                     // CRITICAL: Update predictiveBackController so AnimatedNavContent
-                    // switches to PredictiveBackContent for visual animation
+                    // applies gesture-driven graphicsLayer transforms for visual animation
                     // Pass cascade state so renderers know what to animate
                     predictiveBackController.startGestureWithCascade(cascadeState)
                 }
@@ -343,7 +343,7 @@ fun NavigationHost(
             // Cancel animation and reset state
             backAnimationController.cancelAnimation()
 
-            // Animate the cancellation so PredictiveBackContent smoothly returns to start
+            // Animate the cancellation so AnimatedNavContent smoothly returns to start
             coroutineScope.launch {
                 predictiveBackController.animateCancelGesture()
             }
