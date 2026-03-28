@@ -201,7 +201,7 @@ internal fun <T : NavNode> AnimatedNavContent(
  * its standard transition on the completion boundary.
  */
 @Composable
-private fun rememberGestureCompletionFlag(isPredictiveBackActive: Boolean): Boolean {
+internal fun rememberGestureCompletionFlag(isPredictiveBackActive: Boolean): Boolean {
     var recentlyCompleted by remember { mutableStateOf(false) }
     val wasActive = remember { mutableStateOf(false) }
     if (isPredictiveBackActive && !wasActive.value) {
