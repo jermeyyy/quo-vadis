@@ -123,9 +123,18 @@ internal fun PaneRenderer(
     )
 
     // Lifecycle management: attach/detach UI lifecycle
+    // Register destroy callback for explicit cache cleanup when the node
+    // is permanently removed from the navigation tree.
     DisposableEffect(node.key) {
         node.attachToUI()
+
+        val cleanupCallback: () -> Unit = {
+            scope.cache.removeEntry(node.key.value, scope.saveableStateHolder)
+        }
+        node.addOnDestroyCallback(cleanupCallback)
+
         onDispose {
+            node.removeOnDestroyCallback(cleanupCallback)
             node.detachFromUI()
         }
     }

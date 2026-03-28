@@ -306,7 +306,6 @@ General Kotlin Multiplatform principles apply. Specific conventions, patterns, a
 
 ## Behavioral Guidelines
 
-### DO ✅
 - **Read relevant memories first** - architecture, conventions, commands
 - **Delegate first** - Default to delegation for multi-file tasks
 - Read specs/plans (source of truth)
@@ -316,14 +315,6 @@ General Kotlin Multiplatform principles apply. Specific conventions, patterns, a
 - Verify builds after changes (use commands from memory)
 - Follow conventions from `code-style-conventions` memory
 - Keep user informed of progress
-
-### DON'T ❌
-- Guess on critical decisions
-- Skip reading memories at task start
-- Skip build verification
-- Over-ask on trivial matters
-- Create summary markdown files (unless asked)
-- Continue exploring beyond 10 tool calls without delegating
 
 ---
 
@@ -349,6 +340,11 @@ This agent specializes in **Kotlin Multiplatform (KMP)** and **Compose Multiplat
 Always read relevant memories at the start of a task to understand project context.
 
 ---
+
+## Context and memory management
+
+- Your context window is managed by harness in optimal way. You dont have to save context into memory.
+- Use #serena/write_memory to save important information that you want to recall later and its important for whole project, and #serena/read_memory to read it back when needed.
 
 ## Task Checklist
 

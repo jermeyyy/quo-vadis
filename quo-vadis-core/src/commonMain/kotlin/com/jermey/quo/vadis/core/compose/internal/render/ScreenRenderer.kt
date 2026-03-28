@@ -30,7 +30,7 @@ import com.jermey.quo.vadis.core.navigation.node.ScreenNode
  * navigation transitions. The cache ensures that:
  * - Screen state (rememberSaveable) survives navigation
  * - Animations remain smooth during transitions
- * - LRU eviction manages memory efficiently
+ * - Explicit cleanup via destroy callbacks prevents memory leaks
  *
  * ## Composition Locals
  *
@@ -75,9 +75,20 @@ internal fun ScreenRenderer(
         saveableStateHolder = scope.saveableStateHolder
     ) {
         // Lifecycle management: attach/detach UI lifecycle
+        // Register destroy callback for explicit cache cleanup when the node
+        // is permanently removed from the navigation tree. This ensures saved
+        // state for destroyed nodes is cleaned up without affecting nodes that
+        // are merely hidden (e.g., pushed behind another screen).
         DisposableEffect(node) {
             node.attachToUI()
+
+            val cleanupCallback: () -> Unit = {
+                scope.cache.removeEntry(node.key.value, scope.saveableStateHolder)
+            }
+            node.addOnDestroyCallback(cleanupCallback)
+
             onDispose {
+                node.removeOnDestroyCallback(cleanupCallback)
                 node.detachFromUI()
             }
         }
@@ -91,7 +102,7 @@ internal fun ScreenRenderer(
         // Provide composition locals for screen content access
         CompositionLocalProvider(
             LocalScreenNode provides node,
-            LocalAnimatedVisibilityScope provides effectiveScope
+            LocalAnimatedVisibilityScope provides effectiveScope,
         ) {
             // Invoke screen content via registry
             scope.screenRegistry.Content(
