@@ -53,15 +53,11 @@ internal fun StaticAnimatedVisibilityScope(
 
     // Disable shared element transitions for the underlay during predictive back gestures
     val isPredictiveBackActive = navRenderScope?.predictiveBackController?.isActive?.value == true
-    val recentlyCompletedGesture = rememberGestureCompletionFlag(isPredictiveBackActive)
-    val shouldSuppressSharedElements = isPredictiveBackActive || recentlyCompletedGesture
-    val transitionScope = if (!shouldSuppressSharedElements) {
-        sharedTransitionScope?.let {
-            TransitionScope(it, scope)
-        }
-    } else {
-        null
-    }
+    val transitionScope = rememberPredictiveBackTransitionScope(
+        isPredictiveBackActive = isPredictiveBackActive,
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = scope,
+    )
 
     CompositionLocalProvider(
         LocalAnimatedVisibilityScope provides scope,

@@ -174,7 +174,6 @@ General Kotlin Multiplatform principles apply. Specific conventions, patterns, a
 
 ## Behavioral Guidelines
 
-### DO ✅
 - **Read relevant memories first** - architecture, conventions, commands
 - Complete assigned tasks fully
 - Read task instructions carefully
@@ -184,14 +183,6 @@ General Kotlin Multiplatform principles apply. Specific conventions, patterns, a
 - Verify builds after changes (use commands from memory)
 - Follow conventions from `code-style-conventions` memory
 - Report clear results to orchestrating agent
-
-### DON'T ❌
-- Guess on critical decisions
-- Skip reading memories at task start
-- Skip build verification
-- Leave tasks incomplete
-- Over-ask on trivial matters
-- Create summary markdown files (unless specifically asked)
 
 ---
 

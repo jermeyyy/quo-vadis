@@ -8,7 +8,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
 /**
@@ -158,7 +157,8 @@ class TransitionScopePredictiveBackTest : FunSpec({
         val navRenderScope: FakeNavRenderScope? = null
 
         // When — mirrors the StaticAnimatedVisibilityScope null-safe check
-        val isPredictiveBackActive = navRenderScope?.predictiveBackController?.isActive?.value == true
+        val isPredictiveBackActive =
+            navRenderScope?.predictiveBackController?.isActive?.value == true
 
         // Then — should be false (not active), but sharedTransitionScope is unavailable via
         // navRenderScope?.sharedTransitionScope which will also be null
@@ -167,7 +167,8 @@ class TransitionScopePredictiveBackTest : FunSpec({
         // In the real code, sharedTransitionScope comes from navRenderScope?.sharedTransitionScope
         // which is null when navRenderScope is null, so TransitionScope is null regardless
         val sharedTransitionScopeAvailable = navRenderScope?.sharedTransitionScope != null
-        val result = shouldCreateTransitionScope(isPredictiveBackActive, sharedTransitionScopeAvailable)
+        val result =
+            shouldCreateTransitionScope(isPredictiveBackActive, sharedTransitionScopeAvailable)
         result.shouldBeFalse()
     }
 

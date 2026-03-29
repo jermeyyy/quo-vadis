@@ -88,7 +88,6 @@ internal fun ScreenRenderer(
             node.addOnDestroyCallback(cleanupCallback)
 
             onDispose {
-                node.removeOnDestroyCallback(cleanupCallback)
                 node.detachFromUI()
             }
         }

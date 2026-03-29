@@ -18,10 +18,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.internal.ComposableCache
+import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
 import com.jermey.quo.vadis.core.compose.transition.NavTransition
+import com.jermey.quo.vadis.core.compose.transition.TransitionScope
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.forEachNode
 
@@ -218,6 +222,34 @@ internal fun rememberGestureCompletionFlag(isPredictiveBackActive: Boolean): Boo
 }
 
 /**
+ * Computes the [TransitionScope] for shared element transitions, suppressing it
+ * while a predictive back gesture is active or just completed.
+ *
+ * This helper centralizes the suppression policy so that [com.jermey.quo.vadis.core.compose.NavigationHost.WithAnimatedVisibilityScope]
+ * and [StaticAnimatedVisibilityScope] share the exact same logic.
+ *
+ * @param isPredictiveBackActive Whether the predictive back gesture is currently active
+ * @param sharedTransitionScope The shared transition scope (null if shared elements are disabled)
+ * @param animatedVisibilityScope The current animated visibility scope
+ * @return A [TransitionScope] when shared elements are allowed, null when suppressed
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun rememberPredictiveBackTransitionScope(
+    isPredictiveBackActive: Boolean,
+    sharedTransitionScope: SharedTransitionScope?,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+): TransitionScope? {
+    val recentlyCompletedGesture = rememberGestureCompletionFlag(isPredictiveBackActive)
+    val shouldSuppress = isPredictiveBackActive || recentlyCompletedGesture
+    return if (!shouldSuppress) {
+        sharedTransitionScope?.let { TransitionScope(it, animatedVisibilityScope) }
+    } else {
+        null
+    }
+}
+
+/**
  * Resolves the back target node from the predictive back cascade state or the
  * previously committed state.
  */
@@ -250,7 +282,7 @@ private fun <T : NavNode> PredictiveBackCacheLock(
     cache: ComposableCache
 ) {
     if (isPredictiveBackActive && backTarget != null) {
-        DisposableEffect(backTarget.key) {
+        DisposableEffect(backTarget.key, currentTarget.key) {
             val keysToLock = mutableSetOf(currentTarget.key.value)
             backTarget.forEachNode { keysToLock.add(it.key.value) }
             keysToLock.forEach { cache.lock(it) }

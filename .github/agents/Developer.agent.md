@@ -344,7 +344,7 @@ Always read relevant memories at the start of a task to understand project conte
 ## Context and memory management
 
 - Your context window is managed by harness in optimal way. You dont have to save context into memory.
-- Use #serena/write_memory to save important information that you want to recall later and its important for whole project, and #serena/read_memory to read it back when needed.
+- Use `serena/write_memory` to save important information that you want to recall later and which are important for the whole project.
 
 ## Task Checklist
 

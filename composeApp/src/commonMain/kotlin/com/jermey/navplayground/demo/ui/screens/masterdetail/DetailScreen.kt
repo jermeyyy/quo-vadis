@@ -40,7 +40,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,8 +48,6 @@ import com.jermey.navplayground.demo.ui.components.DetailRow
 import com.jermey.navplayground.demo.ui.components.SpecificationRow
 import com.jermey.navplayground.navigation.MasterDetailDestination
 import com.jermey.quo.vadis.annotations.Screen
-import com.jermey.quo.vadis.core.InternalQuoVadisApi
-import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
 import com.jermey.quo.vadis.core.compose.transition.TransitionScope
 import com.jermey.quo.vadis.core.compose.transition.rememberTransitionScope
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator

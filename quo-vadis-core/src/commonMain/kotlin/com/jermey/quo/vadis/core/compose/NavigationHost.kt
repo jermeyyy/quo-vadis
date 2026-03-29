@@ -34,7 +34,7 @@ import com.jermey.quo.vadis.core.compose.internal.navback.calculateCascadeBackSt
 import com.jermey.quo.vadis.core.compose.internal.rememberBackAnimationController
 import com.jermey.quo.vadis.core.compose.internal.rememberComposableCache
 import com.jermey.quo.vadis.core.compose.internal.render.NavNodeRenderer
-import com.jermey.quo.vadis.core.compose.internal.render.rememberGestureCompletionFlag
+import com.jermey.quo.vadis.core.compose.internal.render.rememberPredictiveBackTransitionScope
 import com.jermey.quo.vadis.core.compose.scope.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.compose.scope.LocalNavigator
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
@@ -539,17 +539,11 @@ private class NavRenderScopeImpl(
         animatedVisibilityScope: AnimatedVisibilityScope,
         content: @Composable () -> Unit
     ) {
-        // Create TransitionScope if SharedTransitionScope is available
-        val isPredictiveBackActive = predictiveBackController.isActive.value
-        val recentlyCompletedGesture = rememberGestureCompletionFlag(isPredictiveBackActive)
-        val shouldSuppressSharedElements = isPredictiveBackActive || recentlyCompletedGesture
-        val transitionScope = if (!shouldSuppressSharedElements) {
-            sharedTransitionScope?.let {
-                TransitionScope(it, animatedVisibilityScope)
-            }
-        } else {
-            null
-        }
+        val transitionScope = rememberPredictiveBackTransitionScope(
+            isPredictiveBackActive = predictiveBackController.isActive.value,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedVisibilityScope = animatedVisibilityScope,
+        )
 
         CompositionLocalProvider(
             LocalAnimatedVisibilityScope provides animatedVisibilityScope,

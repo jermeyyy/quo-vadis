@@ -8,6 +8,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
@@ -155,16 +156,21 @@ internal fun TabRenderer(
         // Lifecycle management: attach/detach UI lifecycle
         // Register destroy callback for explicit cache cleanup when the node
         // is permanently removed from the navigation tree.
+        // Guard flag prevents duplicate callback registration when the composable
+        // re-enters composition (e.g., after cache eviction) with the same node.
+        val destroyCallbackRegistered = remember(node) { mutableStateOf(false) }
         DisposableEffect(node) {
             node.attachToUI()
 
-            val cleanupCallback: () -> Unit = {
-                scope.cache.removeEntry(node.key.value, scope.saveableStateHolder)
+            if (!destroyCallbackRegistered.value) {
+                val cleanupCallback: () -> Unit = {
+                    scope.cache.removeEntry(node.key.value, scope.saveableStateHolder)
+                }
+                node.addOnDestroyCallback(cleanupCallback)
+                destroyCallbackRegistered.value = true
             }
-            node.addOnDestroyCallback(cleanupCallback)
 
             onDispose {
-                node.removeOnDestroyCallback(cleanupCallback)
                 node.detachFromUI()
             }
         }
