@@ -1,8 +1,11 @@
+@file:OptIn(InternalQuoVadisApi::class)
+
 package com.jermey.quo.vadis.core.compose.internal.render
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.rememberTransition
@@ -48,10 +51,13 @@ internal fun StaticAnimatedVisibilityScope(
     val navRenderScope = LocalNavRenderScope.current
     val sharedTransitionScope = navRenderScope?.sharedTransitionScope
 
-    // Create TransitionScope if SharedTransitionScope is available
-    val transitionScope = sharedTransitionScope?.let {
-        TransitionScope(it, scope)
-    }
+    // Disable shared element transitions for the underlay during predictive back gestures
+    val isPredictiveBackActive = navRenderScope?.predictiveBackController?.isActive?.value == true
+    val transitionScope = rememberPredictiveBackTransitionScope(
+        isPredictiveBackActive = isPredictiveBackActive,
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = scope,
+    )
 
     CompositionLocalProvider(
         LocalAnimatedVisibilityScope provides scope,

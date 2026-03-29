@@ -34,6 +34,7 @@ import com.jermey.quo.vadis.core.compose.internal.navback.calculateCascadeBackSt
 import com.jermey.quo.vadis.core.compose.internal.rememberBackAnimationController
 import com.jermey.quo.vadis.core.compose.internal.rememberComposableCache
 import com.jermey.quo.vadis.core.compose.internal.render.NavNodeRenderer
+import com.jermey.quo.vadis.core.compose.internal.render.rememberPredictiveBackTransitionScope
 import com.jermey.quo.vadis.core.compose.scope.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.compose.scope.LocalNavigator
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
@@ -329,7 +330,7 @@ fun NavigationHost(
                     backAnimationController.startAnimation(event)
 
                     // CRITICAL: Update predictiveBackController so AnimatedNavContent
-                    // switches to PredictiveBackContent for visual animation
+                    // applies gesture-driven graphicsLayer transforms for visual animation
                     // Pass cascade state so renderers know what to animate
                     predictiveBackController.startGestureWithCascade(cascadeState)
                 }
@@ -343,7 +344,7 @@ fun NavigationHost(
             // Cancel animation and reset state
             backAnimationController.cancelAnimation()
 
-            // Animate the cancellation so PredictiveBackContent smoothly returns to start
+            // Animate the cancellation so AnimatedNavContent smoothly returns to start
             coroutineScope.launch {
                 predictiveBackController.animateCancelGesture()
             }
@@ -538,10 +539,11 @@ private class NavRenderScopeImpl(
         animatedVisibilityScope: AnimatedVisibilityScope,
         content: @Composable () -> Unit
     ) {
-        // Create TransitionScope if SharedTransitionScope is available
-        val transitionScope = sharedTransitionScope?.let {
-            TransitionScope(it, animatedVisibilityScope)
-        }
+        val transitionScope = rememberPredictiveBackTransitionScope(
+            isPredictiveBackActive = predictiveBackController.isActive.value,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedVisibilityScope = animatedVisibilityScope,
+        )
 
         CompositionLocalProvider(
             LocalAnimatedVisibilityScope provides animatedVisibilityScope,

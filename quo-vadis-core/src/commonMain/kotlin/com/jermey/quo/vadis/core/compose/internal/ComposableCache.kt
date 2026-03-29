@@ -3,10 +3,9 @@
 package com.jermey.quo.vadis.core.compose.internal
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateSetOf
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
@@ -24,21 +23,22 @@ import com.jermey.quo.vadis.core.InternalQuoVadisApi
  * Priority entries are intended for screens that contain nested navigators (e.g., tabbed screens).
  * These screens should not be evicted as recreating them causes visual glitches during back navigation.
  *
- * ## Cache Eviction Strategy
- *
- * When the cache exceeds [maxCacheSize], the oldest non-protected entry is evicted.
- * Eviction is LRU-based (Least Recently Used), where access time is updated on each composition.
- *
- * @param maxCacheSize Maximum number of composables to keep in cache (default 5)
+ * Entries are never automatically evicted. Use [removeEntry] to explicitly remove entries
+ * when a node is permanently removed from the navigation tree.
  */
 @InternalQuoVadisApi
 @Stable
-class ComposableCache(
-    private val maxCacheSize: Int = 5
-) {
-    private val accessTimeMap = mutableStateMapOf<String, Long>()
+class ComposableCache {
     private val lockedEntries = mutableStateSetOf<String>()
     private val priorityEntries = mutableStateSetOf<String>()
+
+    /**
+     * Movable content entries per key. Each entry wraps screen content in
+     * [movableContentOf] to ensure stable `currentCompositeKeyHash` across
+     * different call sites (AnimatedContent vs predictive back underlay).
+     */
+    private val movableScreens =
+        mutableMapOf<String, @Composable (content: @Composable () -> Unit) -> Unit>()
 
     // TODO: Replace with AtomicLong when kotlinx-atomicfu is added as a dependency
     private var counter = 0L
@@ -114,6 +114,20 @@ class ComposableCache(
     }
 
     /**
+     * Explicitly remove a cached entry and its saved state.
+     * Called when a node is permanently removed from the navigation tree.
+     *
+     * @param key The key of the entry to remove
+     * @param saveableStateHolder State holder to clear saved state from
+     */
+    fun removeEntry(key: String, saveableStateHolder: SaveableStateHolder) {
+        saveableStateHolder.removeState(key)
+        movableScreens.remove(key)
+        lockedEntries.remove(key)
+        priorityEntries.remove(key)
+    }
+
+    /**
      * Renders cached content for a NavNode key.
      *
      * ## State Preservation
@@ -143,28 +157,21 @@ class ComposableCache(
         saveableStateHolder: SaveableStateHolder,
         content: @Composable () -> Unit
     ) {
-        SideEffect {
-            // Update access time on composition
-            accessTimeMap[key] = ++counter
-
-            // Cleanup old entries if cache is full
-            if (accessTimeMap.size > maxCacheSize) {
-                val oldestEntry = accessTimeMap.entries
-                    .filter { it.key !in lockedEntries && it.key !in priorityEntries }
-                    .minByOrNull { it.value }
-                oldestEntry?.let { (oldId, _) ->
-                    if (oldId != key) {
-                        accessTimeMap.remove(oldId)
-                        saveableStateHolder.removeState(oldId)
-                    }
+        // Use movableContentOf so the composition subtree (including
+        // SaveableStateProvider and all rememberSaveable calls) keeps a
+        // stable currentCompositeKeyHash regardless of where it is called.
+        // This lets the predictive back underlay and AnimatedContent share
+        // the same movable instance — when one stops calling it and the
+        // other starts, Compose *moves* the composition, preserving all
+        // saved state with matching hash keys.
+        val movable = movableScreens.getOrPut(key) {
+            movableContentOf { innerContent: @Composable () -> Unit ->
+                saveableStateHolder.SaveableStateProvider(key) {
+                    innerContent()
                 }
             }
         }
-
-        // Render with state preservation
-        saveableStateHolder.SaveableStateProvider(key) {
-            content()
-        }
+        movable(content)
     }
 }
 
@@ -172,8 +179,8 @@ class ComposableCache(
  * Remember a composable cache across recompositions.
  */
 @Composable
-fun rememberComposableCache(maxCacheSize: Int = 5): ComposableCache {
-    return remember { ComposableCache(maxCacheSize) }
+fun rememberComposableCache(): ComposableCache {
+    return remember { ComposableCache() }
 }
 
 

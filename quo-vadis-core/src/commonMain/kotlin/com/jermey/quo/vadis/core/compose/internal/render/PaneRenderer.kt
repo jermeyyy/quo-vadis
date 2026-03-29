@@ -6,10 +6,6 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.scope.LocalContainerNode
@@ -127,8 +123,16 @@ internal fun PaneRenderer(
     )
 
     // Lifecycle management: attach/detach UI lifecycle
-    DisposableEffect(node.key) {
+    // Register destroy callback for explicit cache cleanup when the node
+    // is permanently removed from the navigation tree.
+    DisposableEffect(node) {
         node.attachToUI()
+
+        val cleanupCallback: () -> Unit = {
+            scope.cache.removeEntry(node.key.value, scope.saveableStateHolder)
+        }
+        node.addOnDestroyCallback(cleanupCallback)
+
         onDispose {
             node.detachFromUI()
         }
@@ -232,95 +236,51 @@ private fun MultiPaneRenderer(
  *
  * ## Predictive Back
  *
- * Predictive back IS enabled for pane switching when on a non-PRIMARY pane.
- * This allows gesture-driven animation showing PRIMARY pane content behind
- * the current SECONDARY pane during back gestures.
+ * Predictive back is delegated to [AnimatedNavContent] via the `predictiveBackEnabled`
+ * parameter. The pane computes whether predictive back should be active based on
+ * whether the cascade state targets this pane node.
  *
  * @param node The pane node being rendered
  * @param previousNode Previous state for animation coordination
  * @param scope The render scope with dependencies
  */
-@Suppress("VariableNeverRead", "AssignedValueIsNeverRead")
 @Composable
 private fun SinglePaneRenderer(
     node: PaneNode,
     previousNode: PaneNode?,
     scope: NavRenderScope
 ) {
-    // Get the active pane content
     val activePaneContent = node.activePaneContent ?: return
     val previousActivePaneContent = previousNode?.activePaneContent
 
-    // Track state for predictive back - must use remembered state to survive recomposition
-    // This mirrors what AnimatedNavContent does internally
-    var lastCommittedContent by remember { mutableStateOf(activePaneContent) }
-    var lastCommittedRole by remember { mutableStateOf(node.activePaneRole) }
-
-    // Get transition for pane switching
     val transition = scope.animationCoordinator.getPaneTransition(
         fromRole = previousNode?.activePaneRole,
         toRole = node.activePaneRole
     )
 
-    // Determine if this is back navigation (switching from non-primary to primary)
     val isBackNavigation = previousNode != null &&
         previousNode.activePaneRole != PaneRole.Primary &&
         node.activePaneRole == PaneRole.Primary
 
-    // Check predictive back state
-    val cascadeState = scope.predictiveBackController.cascadeState.value
-    val isGestureActive = scope.predictiveBackController.isActive.value
+    val predictiveBackEnabled = scope.predictiveBackController.let { ctrl ->
+        val cascadeState = ctrl.cascadeState.value
+        !ctrl.isActive.value ||
+            (cascadeState != null && cascadeState.animatingStackKey == node.key)
+    }
 
-    // This pane handles predictive back if gesture is active AND cascade state targets this pane
-    val isPredictiveBackActive = isGestureActive &&
-        cascadeState != null &&
-        cascadeState.animatingStackKey == node.key
-
-    // Get the PRIMARY pane content for predictive back animation target
-    val primaryPaneContent = node.paneContent(PaneRole.Primary)
-
-    if (isPredictiveBackActive && primaryPaneContent != null) {
-        // Gesture-driven animation - show PRIMARY behind SECONDARY
-        // Use lastCommittedContent (the SECONDARY content before back started)
-        PredictiveBackContent(
-            current = lastCommittedContent,
-            previous = primaryPaneContent,
-            progress = scope.predictiveBackController.progress.value,
+    AnimatedNavContent(
+        targetState = activePaneContent,
+        transition = transition,
+        isBackNavigation = isBackNavigation,
+        scope = scope,
+        predictiveBackEnabled = predictiveBackEnabled,
+        modifier = Modifier
+    ) { paneNavNode ->
+        NavNodeRenderer(
+            node = paneNavNode,
+            previousNode = previousActivePaneContent,
             scope = scope
-        ) { paneNavNode ->
-            // Render each pane content via NavNodeRenderer
-            NavNodeRenderer(
-                node = paneNavNode,
-                previousNode = null,
-                scope = scope,
-            )
-        }
-        // Note: Do NOT update lastCommittedContent during predictive back
-        // We want to keep showing the "old" state (SECONDARY) as current
-    } else {
-        // Standard AnimatedContent transition
-        AnimatedNavContent(
-            targetState = activePaneContent,
-            transition = transition,
-            isBackNavigation = isBackNavigation,
-            scope = scope,
-            predictiveBackEnabled = false, // We handle predictive back above
-            modifier = Modifier
-        ) { paneNavNode ->
-            // Recurse to render the active pane content
-            NavNodeRenderer(
-                node = paneNavNode,
-                previousNode = previousActivePaneContent,
-                scope = scope
-            )
-        }
-
-        // Update state tracking AFTER rendering, only when not in predictive back
-        // This tracks the "committed" state for when predictive back starts
-        if (activePaneContent.key != lastCommittedContent.key) {
-            lastCommittedContent = activePaneContent
-            lastCommittedRole = node.activePaneRole
-        }
+        )
     }
 }
 

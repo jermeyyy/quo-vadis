@@ -9,10 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Shared element transitions during predictive back**: Disabled shared element transitions (`TransitionScope`) during active predictive back gestures and the one-frame completion handoff. Both the current screen (via `WithAnimatedVisibilityScope`) and the underlay/previous screen (via `StaticAnimatedVisibilityScope`) now receive `null` from `LocalTransitionScope`, preventing visual glitches from shared elements conflicting with gesture-driven `graphicsLayer` transforms. Uses `rememberGestureCompletionFlag` to cover the timing gap when `isActive` becomes `false` but `AnimatedContent` still composes both screens.
+- **Predictive back underlay state restoration**: Back target screen during predictive back gesture now displays with correct visual state (scroll position, text fields, etc.) instead of resetting to defaults. Uses `movableContentOf` in `ComposableCache.CachedEntry` to maintain stable `currentCompositeKeyHash` across AnimatedContent and underlay call sites, so Compose moves the composition subtree instead of recreating it.
+- **Predictive back composition retention**: Refactored predictive back gesture handling to keep the current screen at a stable `AnimatedContent` composition tree position throughout the gesture lifecycle. Eliminates screen destruction/recreation that caused state loss (scroll positions, text fields, `remember` state). Visual transforms (slide + scale) are applied via `graphicsLayer` (GPU-only, zero recomposition). Previous screen is rendered as a sibling underlay with parallax effect.
+- **Predictive back completion timing**: Navigation (`onBack()`) now fires AFTER the exit animation completes instead of before, ensuring the correct screen receives slide+scale transforms during the gesture completion animation.
+- **Predictive back container state**: Cache locking now covers all descendant node keys when the back target is a container (e.g., `TabNode`), preventing eviction of individual screen state during the gesture.
+- **Predictive back completion flash**: The exiting screen's off-screen transform is maintained during the completion handoff frame, while the entering screen renders at its natural position, eliminating the one-frame visual flash.
 - **Modal composition retaining (#67)**: Background screen no longer disposes and recreates when a modal is pushed or dismissed. `StackRenderer` now keeps the background at a stable composition tree position via `AnimatedNavContent`, with modals rendered as sibling overlays. Eliminates state loss (scroll positions, text field focus) and visual flicker during modal transitions.
+
+### Changed
+
+- **`ComposableCache` — replaced LRU eviction with `movableContentOf`**: Removed `maxCacheSize` parameter and automatic LRU eviction. `CachedEntry` now wraps content in `movableContentOf` per key, ensuring stable composition identity across call sites. Added `removeEntry()` for explicit lifecycle-driven cleanup via `NavNode` destroy callbacks.
+- **`SinglePaneRenderer` simplified**: Predictive back handling delegated entirely to `AnimatedNavContent` via `predictiveBackEnabled` parameter. Removed duplicated gesture logic and `lastCommittedContent`/`lastCommittedRole` state tracking.
+- **Renderer destroy callbacks**: `ScreenRenderer`, `TabRenderer`, and `PaneRenderer` now register `onDestroy` callbacks on their nodes for explicit cache cleanup when nodes are permanently removed from the navigation tree.
 
 ### Removed
 
+- **`PredictiveBackContent.kt`**: Deleted. All gesture-driven animation logic inlined into `AnimatedNavContent.kt` using the underlay pattern with `graphicsLayer` transforms.
 - **`ModalContent.kt`**: Deleted. Helper functions (`isNodeModal`, `findNonModalBaseIndex`) moved to `StackRenderer.kt`; the `ModalContent` composable replaced by inline overlay logic.
 
 ## [0.5.0] - 2026-03-26

@@ -44,11 +44,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.jermey.navplayground.navigation.MasterDetailDestination
 import com.jermey.navplayground.demo.ui.components.DetailRow
 import com.jermey.navplayground.demo.ui.components.SpecificationRow
+import com.jermey.navplayground.navigation.MasterDetailDestination
 import com.jermey.quo.vadis.annotations.Screen
 import com.jermey.quo.vadis.core.compose.transition.TransitionScope
+import com.jermey.quo.vadis.core.compose.transition.rememberTransitionScope
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import org.koin.compose.koinInject
 
@@ -75,10 +76,10 @@ fun DetailScreen(
 ) {
     val itemId = destination.itemId
     val relatedItems = (1..RELATED_ITEMS_COUNT).map { "Related item $it" }
-    
+
     // Get transition scope - animations are tied to this
     // Use rememberTransitionScope() for proper animation during navigation
-    val transitionScope = com.jermey.quo.vadis.core.compose.transition.rememberTransitionScope()
+    val transitionScope = rememberTransitionScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Animated background - fades with navigation
@@ -116,8 +117,16 @@ fun DetailScreen(
                 ),
                 modifier = Modifier.animateEnterExit(
                     transitionScope,
-                    enter = slideInVertically(tween(ANIMATION_DURATION)) { -it } + fadeIn(tween(ANIMATION_DURATION)),
-                    exit = slideOutVertically(tween(ANIMATION_DURATION)) { -it } + fadeOut(tween(ANIMATION_DURATION))
+                    enter = slideInVertically(tween(ANIMATION_DURATION)) { -it } + fadeIn(
+                        tween(
+                            ANIMATION_DURATION
+                        )
+                    ),
+                    exit = slideOutVertically(tween(ANIMATION_DURATION)) { -it } + fadeOut(
+                        tween(
+                            ANIMATION_DURATION
+                        )
+                    )
                 )
             )
 
@@ -137,8 +146,15 @@ fun DetailScreen(
                     Box(
                         modifier = Modifier.animateEnterExit(
                             transitionScope,
-                            enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = 50)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = 50)),
-                            exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(tween(ANIMATION_DURATION))
+                            enter = slideInVertically(
+                                tween(
+                                    ANIMATION_DURATION,
+                                    delayMillis = 50
+                                )
+                            ) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = 50)),
+                            exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(
+                                tween(ANIMATION_DURATION)
+                            )
                         )
                     ) {
                         SpecificationsCard()
@@ -149,8 +165,15 @@ fun DetailScreen(
                     Box(
                         modifier = Modifier.animateEnterExit(
                             transitionScope,
-                            enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = 100)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = 100)),
-                            exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(tween(ANIMATION_DURATION))
+                            enter = slideInVertically(
+                                tween(
+                                    ANIMATION_DURATION,
+                                    delayMillis = 100
+                                )
+                            ) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = 100)),
+                            exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(
+                                tween(ANIMATION_DURATION)
+                            )
                         )
                     ) {
                         RelatedItemsHeader()
@@ -162,14 +185,27 @@ fun DetailScreen(
                     Box(
                         modifier = Modifier.animateEnterExit(
                             transitionScope,
-                            enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = delay)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = delay)),
-                            exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(tween(ANIMATION_DURATION))
+                            enter = slideInVertically(
+                                tween(
+                                    ANIMATION_DURATION,
+                                    delayMillis = delay
+                                )
+                            ) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = delay)),
+                            exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(
+                                tween(ANIMATION_DURATION)
+                            )
                         )
                     ) {
                         val relatedId = "related_${itemId}_$index"
                         RelatedItemCard(
                             relatedItemName = relatedItems[index],
-                            onNavigateToRelated = { navigator.navigate(MasterDetailDestination.Detail(itemId = relatedId)) }
+                            onNavigateToRelated = {
+                                navigator.navigate(
+                                    MasterDetailDestination.Detail(
+                                        itemId = relatedId
+                                    )
+                                )
+                            }
                         )
                     }
                 }
@@ -179,8 +215,15 @@ fun DetailScreen(
                     Box(
                         modifier = Modifier.animateEnterExit(
                             transitionScope,
-                            enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = delay)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = delay)),
-                            exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(tween(ANIMATION_DURATION))
+                            enter = slideInVertically(
+                                tween(
+                                    ANIMATION_DURATION,
+                                    delayMillis = delay
+                                )
+                            ) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = delay)),
+                            exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(
+                                tween(ANIMATION_DURATION)
+                            )
                         )
                     ) {
                         ActionButtons(onBack = { navigator.navigateBack() })

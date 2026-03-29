@@ -4,17 +4,30 @@ package com.jermey.quo.vadis.core.compose.internal.render
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.compose.internal.ComposableCache
+import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
 import com.jermey.quo.vadis.core.compose.transition.NavTransition
+import com.jermey.quo.vadis.core.compose.transition.TransitionScope
 import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.forEachNode
 
 /**
  * Custom AnimatedContent variant optimized for navigation transitions.
@@ -31,9 +44,23 @@ import com.jermey.quo.vadis.core.navigation.node.NavNode
  *
  * ## Predictive Back Integration
  *
- * When predictive back gestures are enabled and active, this component bypasses
- * `AnimatedContent` entirely and delegates to [PredictiveBackContent], which provides
- * gesture-driven animations with proper state preservation.
+ * When predictive back gestures are enabled and active, the current screen remains at its
+ * stable composition tree position inside `AnimatedContent`. Gesture-driven visual transforms
+ * (slide + scale) are applied via `graphicsLayer` inside the content lambda, which is GPU-only
+ * and causes zero recomposition. The previous screen is rendered as a sibling underlay Box
+ * **before** the main content block, with a parallax `graphicsLayer` effect.
+ *
+ * During the gesture, `AnimatedContent` transitions are suppressed
+ * (`EnterTransition.None togetherWith ExitTransition.None`) so that the framework does not
+ * run its own enter/exit animations. A one-frame `recentlyCompletedGesture` flag ensures
+ * the suppression extends through the completion boundary frame.
+ *
+ * ## Cache Locking
+ *
+ * When the predictive back gesture is active, both the current screen and the back target
+ * screen are locked in the [ComposableCache][ComposableCache]
+ * via `lock`/`unlock`. This prevents cache eviction during the gesture, ensuring both
+ * screens remain renderable.
  *
  * ## State Tracking
  *
@@ -53,10 +80,11 @@ import com.jermey.quo.vadis.core.navigation.node.NavNode
  *
  * ## Modal Support
  *
- * When [isTargetModal] is `true`, this component bypasses `AnimatedContent` and
- * renders the target content directly with [StaticAnimatedVisibilityScope]. This
- * ensures that when navigating to or from a modal destination, the background
- * content beneath the modal is not removed by exit animations.
+ * When [isTargetModal] is `true`, this component renders the target content directly
+ * with [StaticAnimatedVisibilityScope] instead of `AnimatedContent`. This ensures that
+ * when navigating to or from a modal destination, the background content beneath the
+ * modal is not removed by exit animations. When a predictive back gesture is active on
+ * a modal, slide + scale transforms are applied via `graphicsLayer`.
  *
  * Modal transitions with background layers are primarily handled by
  * [StackRenderer], which renders modal nodes as sibling overlays while
@@ -98,7 +126,6 @@ import com.jermey.quo.vadis.core.navigation.node.NavNode
  *
  * @see NavTransition
  * @see NavRenderScope
- * @see PredictiveBackContent
  * @see AnimatedContent
  */
 @Composable
@@ -112,80 +139,204 @@ internal fun <T : NavNode> AnimatedNavContent(
     modifier: Modifier = Modifier,
     content: @Composable AnimatedVisibilityScope.(T) -> Unit
 ) {
-    // Track the last committed state for predictive back gesture handling
-    // Use object reference tracking, not just key, because a node's internal state
-    // can change (e.g., PaneNode content) while keeping the same key
     var lastCommittedState by remember { mutableStateOf(targetState) }
     var stateBeforeLast by remember { mutableStateOf<T?>(null) }
 
-    // Determine if predictive back gesture is currently active
     val isPredictiveBackActive = predictiveBackEnabled &&
-            scope.predictiveBackController.isActive.value
+        scope.predictiveBackController.isActive.value
+    val progress = scope.predictiveBackController.progress.value
 
-    if (isPredictiveBackActive) {
-        // For predictive back, prefer cascadeState.targetNode over local stateBeforeLast
-        // This ensures correct animation target even for deep links or restored state
-        val cascadeState = scope.predictiveBackController.cascadeState.value
+    val recentlyCompletedGesture = rememberGestureCompletionFlag(isPredictiveBackActive)
+    val backTarget = resolveBackTarget<T>(isPredictiveBackActive, scope, stateBeforeLast)
 
-        @Suppress("UNCHECKED_CAST")
-        val backTarget = (cascadeState?.targetNode as? T) ?: stateBeforeLast
+    PredictiveBackCacheLock(isPredictiveBackActive, backTarget, targetState, scope.cache)
+    PredictiveBackUnderlay(isPredictiveBackActive, backTarget, targetState, progress, content)
 
-        // Gesture-driven animation - bypass AnimatedContent
-        PredictiveBackContent(
-            current = lastCommittedState,
-            previous = backTarget,
-            progress = scope.predictiveBackController.progress.value,
-            scope = scope,
-            content = content
-        )
-    } else if (isTargetModal) {
-        // Modal rendering - bypass AnimatedContent to avoid removing background
-        // content with exit animations. The modal content is rendered directly
-        // with a static scope, allowing the background to remain visible beneath.
-        StaticAnimatedVisibilityScope {
-            content(targetState)
-        }
-
-        // Update state tracking for predictive back
-        if (targetState != lastCommittedState) {
-            if (targetState.key != lastCommittedState.key) {
-                stateBeforeLast = lastCommittedState
-            }
-            lastCommittedState = targetState
+    if (isTargetModal) {
+        // Modal has a single content slot — transform only while gesture is active.
+        // On completion, targetState has changed to the new screen, so no transform needed.
+        Box(modifier = gestureSlideScaleModifier(isPredictiveBackActive, progress)) {
+            StaticAnimatedVisibilityScope { content(targetState) }
         }
     } else {
-        // Standard AnimatedContent transition
-        // Use contentKey to compare nodes by their key, not object reference.
-        // This prevents duplicate SaveableStateProvider keys when a node's
-        // internal state changes (e.g., TabNode.activeStackIndex) but its key
-        // stays the same.
         AnimatedContent(
             targetState = targetState,
             contentKey = { it.key },
             transitionSpec = {
-                // Use the isBackNavigation flag passed from caller for proper animation selection
-                transition.createTransitionSpec(isBack = isBackNavigation)
+                if (isPredictiveBackActive || recentlyCompletedGesture) {
+                    EnterTransition.None togetherWith ExitTransition.None
+                } else {
+                    transition.createTransitionSpec(isBack = isBackNavigation)
+                }
             },
             modifier = modifier,
             label = "AnimatedNavContent"
         ) { animatingState ->
-            // Provide AnimatedVisibilityScope to content via NavRenderScope
-            scope.WithAnimatedVisibilityScope(this) {
-                content(animatingState)
+            // During the gesture, animatingState == targetState (same screen) — apply transform.
+            // On the completion frame, AnimatedContent may compose both old + new content.
+            // Only the OLD (exiting) content should stay off-screen; the NEW (entering)
+            // content must be visible at its natural position immediately.
+            val isExitingDuringCompletion = recentlyCompletedGesture &&
+                animatingState.key != targetState.key
+            val applyTransform = isPredictiveBackActive || isExitingDuringCompletion
+            val transformProgress = if (isPredictiveBackActive) progress else 1f
+            Box(modifier = gestureSlideScaleModifier(applyTransform, transformProgress)) {
+                scope.WithAnimatedVisibilityScope(this@AnimatedContent) {
+                    content(animatingState)
+                }
             }
         }
+    }
 
-        // Detect changes by semantic equality, not just key.
-        // A node's internal state can change (e.g., PaneNode with new pane content)
-        // while keeping the same key. We need to track when the actual state of
-        // the node changes for predictive back to show the correct content.
-        if (targetState != lastCommittedState) {
-            // Only update stateBeforeLast when the key actually changes
-            // (real navigation, not just internal state update)
-            if (targetState.key != lastCommittedState.key) {
-                stateBeforeLast = lastCommittedState
+    // State tracking — detect navigation changes for predictive back target resolution
+    if (targetState != lastCommittedState) {
+        if (targetState.key != lastCommittedState.key) {
+            stateBeforeLast = lastCommittedState
+        }
+        lastCommittedState = targetState
+    }
+}
+
+// ── Private helpers ──
+
+/**
+ * Tracks gesture completion across frames. Returns `true` for exactly one composition
+ * frame after the predictive back gesture ends, preventing AnimatedContent from running
+ * its standard transition on the completion boundary.
+ */
+@Composable
+internal fun rememberGestureCompletionFlag(isPredictiveBackActive: Boolean): Boolean {
+    var recentlyCompleted by remember { mutableStateOf(false) }
+    val wasActive = remember { mutableStateOf(false) }
+    if (isPredictiveBackActive && !wasActive.value) {
+        wasActive.value = true
+    }
+    if (!isPredictiveBackActive && wasActive.value) {
+        recentlyCompleted = true
+        wasActive.value = false
+    }
+    SideEffect {
+        if (recentlyCompleted) recentlyCompleted = false
+    }
+    return recentlyCompleted
+}
+
+/**
+ * Computes the [TransitionScope] for shared element transitions, suppressing it
+ * while a predictive back gesture is active or just completed.
+ *
+ * This helper centralizes the suppression policy so that [com.jermey.quo.vadis.core.compose.NavigationHost.WithAnimatedVisibilityScope]
+ * and [StaticAnimatedVisibilityScope] share the exact same logic.
+ *
+ * @param isPredictiveBackActive Whether the predictive back gesture is currently active
+ * @param sharedTransitionScope The shared transition scope (null if shared elements are disabled)
+ * @param animatedVisibilityScope The current animated visibility scope
+ * @return A [TransitionScope] when shared elements are allowed, null when suppressed
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun rememberPredictiveBackTransitionScope(
+    isPredictiveBackActive: Boolean,
+    sharedTransitionScope: SharedTransitionScope?,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+): TransitionScope? {
+    val recentlyCompletedGesture = rememberGestureCompletionFlag(isPredictiveBackActive)
+    val shouldSuppress = isPredictiveBackActive || recentlyCompletedGesture
+    return if (!shouldSuppress) {
+        sharedTransitionScope?.let { TransitionScope(it, animatedVisibilityScope) }
+    } else {
+        null
+    }
+}
+
+/**
+ * Resolves the back target node from the predictive back cascade state or the
+ * previously committed state.
+ */
+private fun <T : NavNode> resolveBackTarget(
+    isPredictiveBackActive: Boolean,
+    scope: NavRenderScope,
+    stateBeforeLast: T?
+): T? {
+    if (!isPredictiveBackActive) return null
+    val cascadeState = scope.predictiveBackController.cascadeState.value
+    @Suppress("UNCHECKED_CAST")
+    return (cascadeState?.targetNode as? T) ?: stateBeforeLast
+}
+
+/**
+ * Locks both the back target (and all its descendant nodes) and the current screen
+ * in the composable cache while the predictive back gesture is active, preventing
+ * eviction during the gesture. This ensures that [SaveableStateProvider][androidx.compose.runtime.saveable.SaveableStateHolder.SaveableStateProvider]
+ * can restore saved state for all screens visible in the underlay.
+ *
+ * When the back target is a container (e.g., [TabNode][com.jermey.quo.vadis.core.navigation.node.TabNode]),
+ * its descendant screen keys are also locked so the individual screens within
+ * the container retain their saved state throughout the gesture.
+ */
+@Composable
+private fun <T : NavNode> PredictiveBackCacheLock(
+    isPredictiveBackActive: Boolean,
+    backTarget: T?,
+    currentTarget: T,
+    cache: ComposableCache
+) {
+    if (isPredictiveBackActive && backTarget != null) {
+        DisposableEffect(backTarget.key, currentTarget.key) {
+            val keysToLock = mutableSetOf(currentTarget.key.value)
+            backTarget.forEachNode { keysToLock.add(it.key.value) }
+            keysToLock.forEach { cache.lock(it) }
+            onDispose {
+                keysToLock.forEach { cache.unlock(it) }
             }
-            lastCommittedState = targetState
         }
     }
 }
+
+/**
+ * Renders the previous screen as an underlay with parallax translation during
+ * the predictive back gesture.
+ */
+@Composable
+private fun <T : NavNode> PredictiveBackUnderlay(
+    isPredictiveBackActive: Boolean,
+    backTarget: T?,
+    currentTarget: T,
+    progress: Float,
+    content: @Composable AnimatedVisibilityScope.(T) -> Unit
+) {
+    if (isPredictiveBackActive && backTarget != null &&
+        backTarget.key != currentTarget.key
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize().graphicsLayer {
+                translationX = -size.width * PARALLAX_FACTOR * (1f - progress)
+            }
+        ) {
+            StaticAnimatedVisibilityScope { content(backTarget) }
+        }
+    }
+}
+
+/**
+ * Creates a gesture-driven slide + scale modifier when predictive back is active,
+ * or returns an empty modifier at rest.
+ */
+private fun gestureSlideScaleModifier(
+    isPredictiveBackActive: Boolean,
+    progress: Float
+): Modifier = if (isPredictiveBackActive) {
+    Modifier.fillMaxSize().graphicsLayer {
+        translationX = size.width * progress
+        val scale = 1f - (progress * SCALE_FACTOR)
+        scaleX = scale
+        scaleY = scale
+    }
+} else {
+    Modifier
+}
+
+// ── Constants ──
+
+private const val PARALLAX_FACTOR = 0.15f
+private const val SCALE_FACTOR = 0.15f

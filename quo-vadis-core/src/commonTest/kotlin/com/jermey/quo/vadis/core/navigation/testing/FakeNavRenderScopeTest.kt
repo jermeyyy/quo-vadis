@@ -119,7 +119,7 @@ class FakeNavRenderScopeTest : FunSpec({
 
     test("FakeNavRenderScope accepts custom cache") {
         // Given
-        val customCache = ComposableCache(maxCacheSize = 10)
+        val customCache = ComposableCache()
 
         // When
         val scope = FakeNavRenderScope(cache = customCache)

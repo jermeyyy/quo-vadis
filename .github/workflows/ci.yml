@@ -93,4 +93,4 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Assemble Android & iOS debug targets
-        run: ./gradlew assembleDebug linkDebugFrameworkIosArm64 linkDebugFrameworkIosSimulatorArm64 --stacktrace
+        run: ./gradlew assembleDebug linkDebugFrameworkIosArm64 --stacktrace

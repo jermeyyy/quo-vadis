@@ -114,11 +114,11 @@ class PredictiveBackController {
      * ## Example
      *
      * ```kotlin
-     * if (predictiveBackController.isActive.value) {
-     *     PredictiveBackContent(progress = predictiveBackController.progress.value)
-     * } else {
-     *     AnimatedNavContent(currentScreen)
-     * }
+     * // AnimatedNavContent handles gestures internally via graphicsLayer transforms
+     * AnimatedNavContent(
+     *     currentScreen,
+     *     predictiveBackController = predictiveBackController
+     * )
      * ```
      */
     val isActive: State<Boolean>
@@ -241,10 +241,12 @@ class PredictiveBackController {
      * Completes a gesture with animation.
      *
      * This animates the progress from current value to 1f, keeping [isActive] true
-     * during the animation so that [PredictiveBackContent] continues rendering.
-     * Call [onNavigate] to trigger navigation before or during the animation.
+     * during the animation so that [AnimatedNavContent] continues rendering.
+     * Navigation is triggered AFTER the animation finishes so that `targetState`
+     * in `AnimatedContent` remains stable and the slide+scale transforms are applied
+     * to the correct (current/exiting) screen.
      *
-     * @param onNavigate Callback invoked at the start of animation to trigger navigation
+     * @param onNavigate Callback invoked after animation completes to trigger navigation
      */
     suspend fun animateCompleteGesture(onNavigate: () -> Unit) {
         animateToCompletion(onNavigate)
@@ -266,7 +268,7 @@ class PredictiveBackController {
      * Cancels a gesture with animation.
      *
      * This animates the progress from current value back to 0f, keeping [isActive] true
-     * during the animation so that [PredictiveBackContent] continues rendering.
+     * during the animation so that [AnimatedNavContent] continues rendering.
      */
     suspend fun animateCancelGesture() {
         animateToCancel()
@@ -331,17 +333,19 @@ class PredictiveBackController {
     /**
      * Animates progress to completion and triggers navigation.
      *
-     * Uses a spring animation for natural feel. Progress animates from current
+     * Uses a tween animation for natural feel. Progress animates from current
      * value to 1f, then [onComplete] is called to perform navigation.
      *
-     * @param onComplete Callback invoked when animation completes
+     * Navigation is triggered AFTER the animation finishes so that
+     * `targetState` in `AnimatedContent` remains stable throughout the gesture.
+     * This ensures the slide+scale transforms are applied to the correct
+     * (current/exiting) screen rather than the revealed (previous) screen.
+     *
+     * @param onComplete Callback invoked when animation completes to trigger navigation
      */
     private suspend fun animateToCompletion(onComplete: () -> Unit) {
-        // Trigger navigation FIRST - this updates the backstack
-        // The renderer will still show PredictiveBackContent because isActive is true
-        onComplete()
-        
-        // Now animate the exit transition
+        // Animate the exit transition FIRST — keeps targetState stable so
+        // AnimatedContent applies gesture transforms to the correct screen
         progressAnimatable.snapTo(_progress)
         progressAnimatable.animateTo(
             targetValue = 1f,
@@ -353,7 +357,15 @@ class PredictiveBackController {
             _progress = value
         }
 
-        // Animation complete - reset state
+        // Animation complete — now trigger navigation to update the backstack.
+        // At this point the exiting screen is fully off-screen (progress = 1.0)
+        // and the underlay shows the destination screen at its natural position.
+        onComplete()
+
+        // Reset state — isPredictiveBackActive becomes false, transforms removed.
+        // AnimatedContent snaps to the new targetState with suppressed transition
+        // (via recentlyCompletedGesture flag), providing a seamless visual handoff
+        // from the underlay to AnimatedContent.
         _isActive = false
         _progress = 0f
         _cascadeState = null
