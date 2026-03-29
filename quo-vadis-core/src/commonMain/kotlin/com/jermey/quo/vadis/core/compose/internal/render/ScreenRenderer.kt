@@ -79,13 +79,22 @@ internal fun ScreenRenderer(
         // is permanently removed from the navigation tree. This ensures saved
         // state for destroyed nodes is cleaned up without affecting nodes that
         // are merely hidden (e.g., pushed behind another screen).
+        val destroyCallbackRegistered = remember(node) { mutableStateOf(false) }
         DisposableEffect(node) {
             node.attachToUI()
 
-            val cleanupCallback: () -> Unit = {
-                scope.cache.removeEntry(node.key.value, scope.saveableStateHolder)
+            if (!destroyCallbackRegistered.value) {
+                val cleanupCallback: () -> Unit = {
+                    scope.cache.removeEntry(node.key.value, scope.saveableStateHolder)
+                }
+                node.addOnDestroyCallback(cleanupCallback)
+                destroyCallbackRegistered.value = true
             }
-            node.addOnDestroyCallback(cleanupCallback)
+
+            onDispose {
+                node.detachFromUI()
+            }
+        }
 
             onDispose {
                 node.detachFromUI()
