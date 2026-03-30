@@ -35,6 +35,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
  * quoVadis {
  *     modulePrefix = "customPrefix"
  *     useLocalKsp = true // for development
+ *     kspValidation = false // disable validation for debugging
  * }
  * ```
  */
@@ -48,6 +49,7 @@ class QuoVadisPlugin : Plugin<Project> {
         extension.modulePrefix.convention(project.name.toCamelCase())
         extension.useLocalKsp.convention(false)
         extension.apiModule.convention(false)
+        extension.kspValidation.convention(true)
 
         // Configure after both KMP and KSP plugins are applied
         project.afterEvaluate {
@@ -83,6 +85,9 @@ class QuoVadisPlugin : Plugin<Project> {
             arg("quoVadis.modulePrefix", extension.modulePrefix.get())
             if (extension.apiModule.get()) {
                 arg("quoVadis.apiModule", "true")
+            }
+            if (!extension.kspValidation.get()) {
+                arg("quoVadis.kspValidation", "false")
             }
         }
 
