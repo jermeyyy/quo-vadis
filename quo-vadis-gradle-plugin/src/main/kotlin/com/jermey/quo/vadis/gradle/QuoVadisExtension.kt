@@ -34,4 +34,11 @@ abstract class QuoVadisExtension {
      * Defaults to false.
      */
     abstract val apiModule: Property<Boolean>
+
+    /**
+     * Whether to run KSP validation on navigation definitions.
+     * When false, all validation is skipped and code is generated regardless of correctness.
+     * Useful for debugging in advanced use cases. Defaults to true.
+     */
+    abstract val kspValidation: Property<Boolean>
 }

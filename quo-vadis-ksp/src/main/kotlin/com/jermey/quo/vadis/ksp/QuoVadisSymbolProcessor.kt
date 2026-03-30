@@ -48,7 +48,7 @@ import com.jermey.quo.vadis.ksp.validation.ValidationEngine
  * - `quoVadis.package` - Target package for generated code
  * - `quoVadis.modulePrefix` - Prefix for generated class names (e.g., "ComposeApp" -> ComposeAppNavigationConfig).
  *   This is required for multi-module projects to avoid class name conflicts.
- * - `quoVadis.strictValidation` - Whether validation errors abort generation (default: true)
+ * - `quoVadis.kspValidation` - Whether to run validation checks (default: true). When false, all validation is skipped.
  */
 class QuoVadisSymbolProcessor(
     private val codeGenerator: CodeGenerator,
@@ -63,7 +63,7 @@ class QuoVadisSymbolProcessor(
     private val targetPackage: String = options["quoVadis.package"]
         ?: "com.jermey.quo.vadis.generated"
     private val modulePrefix: String = options["quoVadis.modulePrefix"] ?: ""
-    private val strictValidation: Boolean = options["quoVadis.strictValidation"]
+    private val kspValidation: Boolean = options["quoVadis.kspValidation"]
         ?.toBooleanStrictOrNull() ?: true
     private val apiModule: Boolean = options["quoVadis.apiModule"]
         ?.toBooleanStrictOrNull() ?: false
@@ -138,17 +138,19 @@ class QuoVadisSymbolProcessor(
         collectAllSymbols(resolver)
 
         // Phase 2: Validation
-        val isValid = validationEngine.validate(
-            stacks = collectedStacks,
-            tabs = collectedTabs,
-            panes = collectedPanes,
-            screens = collectedScreens,
-            allDestinations = collectedDestinations
-        )
+        if (!kspValidation) {
+            logger.warn("QuoVadis: KSP validation is disabled — skipping all validation checks")
+        } else {
+            val isValid = validationEngine.validate(
+                stacks = collectedStacks,
+                tabs = collectedTabs,
+                panes = collectedPanes,
+                screens = collectedScreens,
+                allDestinations = collectedDestinations
+            )
 
-        if (!isValid) {
-            logger.error("QuoVadis: Validation failed - skipping code generation")
-            if (strictValidation) {
+            if (!isValid) {
+                logger.error("QuoVadis: Validation failed - skipping code generation")
                 return emptyList()
             }
         }
