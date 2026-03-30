@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.5.1] - 2026-03-30
+
+### Added
+
 - **`kspValidation` Gradle plugin option (#68)**: Added `quoVadis { kspValidation = false }` to disable KSP validation entirely. When disabled, all validation checks are skipped and code is generated regardless of correctness. Defaults to `true`. Replaces the internal/undocumented `strictValidation` flag, which has been removed.
 
 - **Per-call transition override priority (#66)**: `Navigator.navigate(destination, transition=value)` now correctly applies the specified transition to the animation. The rendering layer reads the per-call override from `TransitionController` and passes it to `AnimationCoordinator`, which resolves transitions with a 3-level priority: per-call override > annotation/DSL registry > type-based default. Added `NavigationTransition.toNavTransition()` bridge extension and `transitionController` property on `NavRenderScope`.

@@ -4,7 +4,7 @@
  * Library version - single source of truth for version strings across documentation
  * Update this when releasing new versions
  */
-export const LIBRARY_VERSION = '0.5.0';
+export const LIBRARY_VERSION = '0.5.1';
 
 /**
  * KSP version compatible with current library version
