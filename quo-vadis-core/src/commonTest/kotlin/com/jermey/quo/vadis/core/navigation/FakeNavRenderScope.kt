@@ -14,6 +14,7 @@ import com.jermey.quo.vadis.core.compose.internal.ComposableCache
 import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
 import com.jermey.quo.vadis.core.compose.scope.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
+import com.jermey.quo.vadis.core.navigation.internal.TransitionController
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import com.jermey.quo.vadis.core.registry.ModalRegistry
 import com.jermey.quo.vadis.core.registry.ScreenRegistry
@@ -144,6 +145,7 @@ class FakeNavRenderScope(
     override val containerRegistry: ContainerRegistry = ContainerRegistry.Empty,
     override val modalRegistry: ModalRegistry = ModalRegistry.Empty,
     override val sharedTransitionScope: SharedTransitionScope? = null,
+    override val transitionController: TransitionController? = null,
 ) : NavRenderScope {
 
     /**

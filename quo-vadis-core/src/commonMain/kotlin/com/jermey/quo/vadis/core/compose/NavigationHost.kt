@@ -44,6 +44,7 @@ import com.jermey.quo.vadis.core.compose.util.WindowSizeClass
 import com.jermey.quo.vadis.core.navigation.config.NavigationConfig
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.destination.route
+import com.jermey.quo.vadis.core.navigation.internal.TransitionController
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeMutator
 import com.jermey.quo.vadis.core.navigation.internal.tree.TreeNavigator
 import com.jermey.quo.vadis.core.navigation.internal.tree.result.BackResult
@@ -370,6 +371,7 @@ fun NavigationHost(
         ) {
             SharedTransitionLayout(modifier = modifier) {
                 // Create the NavRenderScope implementation
+                val transitionController = navigator as? TransitionController
                 val scope = remember(
                     this,
                     navigator,
@@ -380,6 +382,7 @@ fun NavigationHost(
                     screenRegistry,
                     containerRegistry,
                     modalRegistry,
+                    transitionController,
                 ) {
                     NavRenderScopeImpl(
                         navigator = navigator,
@@ -391,6 +394,7 @@ fun NavigationHost(
                         containerRegistry = containerRegistry,
                         modalRegistry = modalRegistry,
                         sharedTransitionScope = this,
+                        transitionController = transitionController,
                     )
                 }
 
@@ -523,6 +527,7 @@ private class NavRenderScopeImpl(
     override val containerRegistry: ContainerRegistry,
     override val modalRegistry: ModalRegistry,
     override val sharedTransitionScope: SharedTransitionScope?,
+    override val transitionController: TransitionController?,
 ) : NavRenderScope {
 
     /**

@@ -11,6 +11,7 @@ import com.jermey.quo.vadis.core.navigation.node.PaneNode
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
 import com.jermey.quo.vadis.core.navigation.node.TabNode
+import com.jermey.quo.vadis.core.compose.transition.toNavTransition
 import com.jermey.quo.vadis.core.registry.ModalRegistry
 
 /**
@@ -127,10 +128,16 @@ internal fun StackRenderer(
     // Detect navigation direction based on the non-modal portion of the stack
     val isBackNavigation = detectBackNavigation(current = node, previous = previousNode)
 
+    // Read per-call transition override from navigator's TransitionController
+    val navigatorTransition = scope.transitionController
+        ?.currentTransition?.value
+        ?.toNavTransition()
+
     val transition = scope.animationCoordinator.getTransition(
         from = previousBackgroundTarget,
         to = backgroundTarget,
-        isBack = isBackNavigation
+        isBack = isBackNavigation,
+        transitionOverride = navigatorTransition,
     )
 
     val predictiveBackEnabled = scope.shouldEnablePredictiveBack(node)

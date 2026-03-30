@@ -13,6 +13,7 @@ import com.jermey.quo.vadis.core.compose.internal.AnimationCoordinator
 import com.jermey.quo.vadis.core.compose.internal.ComposableCache
 import com.jermey.quo.vadis.core.compose.internal.PredictiveBackController
 import com.jermey.quo.vadis.core.compose.internal.navback.CascadeBackState
+import com.jermey.quo.vadis.core.navigation.internal.TransitionController
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.node.StackNode
@@ -167,6 +168,18 @@ interface NavRenderScope {
      * @see PredictiveBackController
      */
     val predictiveBackController: PredictiveBackController
+
+    /**
+     * Controller for accessing navigator-level transition state.
+     *
+     * Used by renderers to check for per-call transition overrides set via
+     * [Navigator.navigate] or [Navigator.navigateAndReplace].
+     *
+     * Returns `null` when the navigator implementation does not support
+     * transition state tracking (i.e., does not implement [TransitionController]).
+     */
+    @InternalQuoVadisApi
+    val transitionController: TransitionController?
 
     /**
      * Registry for looking up screen composables by destination class.

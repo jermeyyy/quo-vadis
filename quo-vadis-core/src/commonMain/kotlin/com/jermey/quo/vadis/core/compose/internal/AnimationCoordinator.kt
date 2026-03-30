@@ -14,16 +14,18 @@ import com.jermey.quo.vadis.core.registry.TransitionRegistry
  * The AnimationCoordinator is responsible for resolving which transition should
  * be used during navigation. It provides a layered resolution strategy:
  *
- * 1. **Annotation-based**: Check [TransitionRegistry] for `@Transition` annotations
- * 2. **Type-based defaults**: Fall back to sensible defaults based on node type
+ * 1. **Per-call override**: Highest priority, from `navigate(transition=value)`
+ * 2. **Annotation-based**: Check [TransitionRegistry] for `@Transition` annotations
+ * 3. **Type-based defaults**: Fall back to sensible defaults based on node type
  *
  * ## Resolution Order
  *
  * When determining a transition for navigation:
  *
  * ```
- * 1. TransitionRegistry lookup (annotation on destination)
- * 2. Default transition based on navigation context
+ * 1. Per-call override via transitionOverride parameter (highest priority)
+ * 2. TransitionRegistry lookup (annotation on destination)
+ * 3. Default transition based on navigation context (lowest priority)
  * ```
  *
  * ## Usage Example
@@ -89,13 +91,13 @@ class AnimationCoordinator(
     /**
      * Gets the appropriate transition for navigation between nodes.
      *
-     * Resolution order for forward navigation:
-     * 1. [TransitionRegistry] lookup for entering destination annotation
-     * 2. Default transition based on node type
+     * Resolution order (highest to lowest priority):
+     * 1. Per-call override via [transitionOverride] parameter (from `navigate(transition=value)`)
+     * 2. [TransitionRegistry] lookup for destination annotation
+     * 3. Default transition based on node type
      *
-     * Resolution order for back navigation:
-     * 1. [TransitionRegistry] lookup for exiting destination annotation
-     * 2. Default transition based on node type
+     * For forward navigation, the registry lookup uses the **entering** destination.
+     * For back navigation, the registry lookup uses the **exiting** destination.
      *
      * ## Direction Handling
      *
@@ -110,6 +112,14 @@ class AnimationCoordinator(
      * ## Example
      *
      * ```kotlin
+     * // Per-call override takes highest priority
+     * val overridden = coordinator.getTransition(
+     *     from = screenA,
+     *     to = screenB,
+     *     isBack = false,
+     *     transitionOverride = NavTransition.Fade
+     * )
+     *
      * // Forward: use transition from entering screen
      * val forwardTransition = coordinator.getTransition(
      *     from = screenA,
@@ -131,24 +141,25 @@ class AnimationCoordinator(
      * @param from Source node (`null` for initial navigation)
      * @param to Target node
      * @param isBack Whether this is back navigation (pop)
+     * @param transitionOverride Per-call transition override (`null` to use registry/defaults)
      * @return [NavTransition] to use for the animation
      *
      * @see NavTransition.createTransitionSpec
      */
-    fun getTransition(from: NavNode?, to: NavNode, isBack: Boolean): NavTransition {
-        // For back navigation, look up the transition from the exiting screen (from)
-        // For forward navigation, look up the transition from the entering screen (to)
+    fun getTransition(
+        from: NavNode?,
+        to: NavNode,
+        isBack: Boolean,
+        transitionOverride: NavTransition? = null,
+    ): NavTransition {
+        // Priority 1: Per-call override from navigate(transition=value)
+        // Priority 2: TransitionRegistry lookup for destination annotation
+        // Priority 3: Default transition based on node type
         val lookupNode = if (isBack) from else to
-
-        val screenNode = lookupNode as? ScreenNode
-        screenNode?.destination?.let { dest ->
-            transitionRegistry.getTransition(dest::class)?.let { transition ->
-                return transition
-            }
+        val registryTransition = (lookupNode as? ScreenNode)?.destination?.let { dest ->
+            transitionRegistry.getTransition(dest::class)
         }
-
-        // Fall back to defaults based on node type
-        return defaultTransition
+        return transitionOverride ?: registryTransition ?: defaultTransition
     }
 
     /**

@@ -4,6 +4,7 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
+import com.jermey.quo.vadis.core.navigation.transition.NavigationTransition
 import com.jermey.quo.vadis.core.navigation.transition.NavigationTransitions
 
 /**
@@ -281,3 +282,17 @@ data class NavTransition(
         )
     }
 }
+
+/**
+ * Converts a [NavigationTransition] to its Compose-level [NavTransition] equivalent.
+ *
+ * This bridges the Navigator API transition definition with the Compose rendering layer,
+ * enabling per-call transition overrides from [Navigator.navigate] to be used in the
+ * animation system.
+ */
+fun NavigationTransition.toNavTransition(): NavTransition = NavTransition(
+    enter = enter,
+    exit = exit,
+    popEnter = popEnter,
+    popExit = popExit,
+)
