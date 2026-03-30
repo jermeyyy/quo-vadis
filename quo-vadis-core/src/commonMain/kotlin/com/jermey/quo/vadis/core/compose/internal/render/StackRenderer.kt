@@ -4,6 +4,7 @@ package com.jermey.quo.vadis.core.compose.internal.render
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
 import com.jermey.quo.vadis.core.navigation.node.NavNode
@@ -128,9 +129,13 @@ internal fun StackRenderer(
     // Detect navigation direction based on the non-modal portion of the stack
     val isBackNavigation = detectBackNavigation(current = node, previous = previousNode)
 
-    // Read per-call transition override from navigator's TransitionController
+    // Collect per-call transition override from navigator's TransitionController.
+    // Must use collectAsState() because currentTransition is a WhileSubscribed StateFlow;
+    // reading .value without an active collector would leave it stuck at null.
     val navigatorTransition = scope.transitionController
-        ?.currentTransition?.value
+        ?.currentTransition
+        ?.collectAsState()
+        ?.value
         ?.toNavTransition()
 
     val transition = scope.animationCoordinator.getTransition(
