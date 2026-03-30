@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Per-call transition override priority (#66)**: `Navigator.navigate(destination, transition=value)` now correctly applies the specified transition to the animation. The rendering layer reads the per-call override from `TransitionController` and passes it to `AnimationCoordinator`, which resolves transitions with a 3-level priority: per-call override > annotation/DSL registry > type-based default. Added `NavigationTransition.toNavTransition()` bridge extension and `transitionController` property on `NavRenderScope`.
+
 ### Fixed
 
 - **Shared element transitions during predictive back**: Disabled shared element transitions (`TransitionScope`) during active predictive back gestures and the one-frame completion handoff. Both the current screen (via `WithAnimatedVisibilityScope`) and the underlay/previous screen (via `StaticAnimatedVisibilityScope`) now receive `null` from `LocalTransitionScope`, preventing visual glitches from shared elements conflicting with gesture-driven `graphicsLayer` transforms. Uses `rememberGestureCompletionFlag` to cover the timing gap when `isActive` becomes `false` but `AnimatedContent` still composes both screens.

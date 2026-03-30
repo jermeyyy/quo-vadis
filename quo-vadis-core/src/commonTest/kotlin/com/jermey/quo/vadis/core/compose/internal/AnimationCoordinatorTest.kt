@@ -188,4 +188,48 @@ class AnimationCoordinatorTest : FunSpec({
         val result = coordinator.getPaneTransition(PaneRole.Supporting, PaneRole.Extra)
         result shouldBe NavTransition.Fade
     }
+
+    // =========================================================================
+    // getTransition - override priority
+    // =========================================================================
+
+    test("getTransition returns transitionOverride when provided, ignoring registry") {
+        val registryTransition = NavTransition.SlideVertical
+        val registry = object : TransitionRegistry {
+            override fun getTransition(destinationClass: KClass<*>): NavTransition? {
+                return if (destinationClass == ACCustomTransitionDest::class) registryTransition else null
+            }
+        }
+        val coordinator = AnimationCoordinator(registry)
+        val from = screen("s1", dest = ACTestDest)
+        val to = screen("s2", dest = ACCustomTransitionDest)
+
+        val overrideTransition = NavTransition.Fade
+        val result = coordinator.getTransition(from, to, isBack = false, transitionOverride = overrideTransition)
+        result shouldBe overrideTransition
+    }
+
+    test("getTransition falls through to registry when override is null") {
+        val registryTransition = NavTransition.SlideVertical
+        val registry = object : TransitionRegistry {
+            override fun getTransition(destinationClass: KClass<*>): NavTransition? {
+                return if (destinationClass == ACCustomTransitionDest::class) registryTransition else null
+            }
+        }
+        val coordinator = AnimationCoordinator(registry)
+        val from = screen("s1", dest = ACTestDest)
+        val to = screen("s2", dest = ACCustomTransitionDest)
+
+        val result = coordinator.getTransition(from, to, isBack = false, transitionOverride = null)
+        result shouldBe registryTransition
+    }
+
+    test("getTransition falls through to default when both override and registry are null") {
+        val coordinator = AnimationCoordinator(TransitionRegistry.Empty)
+        val from = screen("s1")
+        val to = screen("s2")
+
+        val result = coordinator.getTransition(from, to, isBack = false)
+        result shouldBe NavTransition.SlideHorizontal
+    }
 })

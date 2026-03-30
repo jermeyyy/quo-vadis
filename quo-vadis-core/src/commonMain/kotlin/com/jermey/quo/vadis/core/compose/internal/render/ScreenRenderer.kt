@@ -6,6 +6,8 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.scope.LocalAnimatedVisibilityScope
 import com.jermey.quo.vadis.core.compose.scope.LocalScreenNode
@@ -90,11 +92,6 @@ internal fun ScreenRenderer(
                 node.addOnDestroyCallback(cleanupCallback)
                 destroyCallbackRegistered.value = true
             }
-
-            onDispose {
-                node.detachFromUI()
-            }
-        }
 
             onDispose {
                 node.detachFromUI()
