@@ -94,7 +94,6 @@ internal fun StackRenderer(
     node: StackNode,
     previousNode: StackNode?,
     scope: NavRenderScope,
-    @Suppress("UNUSED_PARAMETER")
     animatedVisibilityScope: AnimatedVisibilityScope? = null,
 ) {
     val activeChild = node.activeChild ?: return

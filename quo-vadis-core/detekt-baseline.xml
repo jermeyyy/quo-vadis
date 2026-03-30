@@ -21,6 +21,7 @@
     <ID>LongMethod:CascadeBackState.kt:private fun calculateCascadeFromStack: CascadeBackState</ID>
     <ID>LongMethod:NavigationHost.kt:@Composable fun NavigationHost</ID>
     <ID>LongMethod:PaneOperations.kt:PaneOperations$fun popWithPaneBehavior: PopResult</ID>
+    <ID>LongMethod:StackRenderer.kt:@Composable internal fun StackRenderer</ID>
     <ID>LongMethod:TabRenderer.kt:@Composable internal fun TabRenderer</ID>
     <ID>LoopWithTooManyJumpStatements:PushOperations.kt:PushOperations$for</ID>
     <ID>MagicNumber:ContainerRegistry.kt:ContainerRegistry.Companion.&lt;no name provided>$0.25f</ID>
@@ -84,7 +85,7 @@
     <ID>UnusedParameter:AnimationCoordinator.kt:AnimationCoordinator$toRole: PaneRole</ID>
     <ID>UnusedParameter:CompositeContainerRegistryTest.kt:CompositeContainerRegistryTest$containerClass: KClass&lt;out NavDestination></ID>
     <ID>UnusedParameter:NavigationHost.kt:scopeRegistry: ScopeRegistry = ScopeRegistry.Empty</ID>
-    <ID>UnusedParameter:PredictiveBackContent.kt:scope: NavRenderScope</ID>
+    <ID>UnusedParameter:StackRenderer.kt:animatedVisibilityScope: AnimatedVisibilityScope? = null</ID>
     <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenADestination = object : NavDestination { override val data: Any? = "A" override val transition: NavigationTransition? = null }</ID>
     <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenBDestination = object : NavDestination { override val data: Any? = "B" override val transition: NavigationTransition? = null }</ID>
     <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenCDestination = object : NavDestination { override val data: Any? = "C" override val transition: NavigationTransition? = null }</ID>
@@ -101,8 +102,6 @@
     <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val DetailDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
     <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val ExtraDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
     <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val ListDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:PredictiveBackContentTest.kt:PredictiveBackContentTest$val CurrentDestination = object : NavDestination { override val data: Any? = "current" override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:PredictiveBackContentTest.kt:PredictiveBackContentTest$val PreviousDestination = object : NavDestination { override val data: Any? = "previous" override val transition: NavigationTransition? = null }</ID>
     <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
     <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val ProfileDestination = object : NavDestination { override val data: Any = "profile-data" override val transition: NavigationTransition? = null }</ID>
     <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val SettingsDestination = object : NavDestination { override val data: Any = mapOf("theme" to "dark") override val transition: NavigationTransition? = null }</ID>

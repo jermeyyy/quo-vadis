@@ -31,11 +31,6 @@
     <ID>MagicNumber:SearchResultsScreen.kt:5</ID>
     <ID>MagicNumber:TabContentScreens.kt:20</ID>
     <ID>MatchingDeclarationName:DemoBackStack.kt:BackStackEntry</ID>
-    <ID>MaxLineLength:DetailScreen.kt:enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = 100)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = 100))</ID>
-    <ID>MaxLineLength:DetailScreen.kt:enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = 50)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = 50))</ID>
-    <ID>MaxLineLength:DetailScreen.kt:enter = slideInVertically(tween(ANIMATION_DURATION, delayMillis = delay)) { it / 2 } + fadeIn(tween(ANIMATION_DURATION, delayMillis = delay))</ID>
-    <ID>MaxLineLength:DetailScreen.kt:exit = slideOutVertically(tween(ANIMATION_DURATION)) { it / 4 } + fadeOut(tween(ANIMATION_DURATION))</ID>
-    <ID>MaxLineLength:DetailScreen.kt:onNavigateToRelated = { navigator.navigate(MasterDetailDestination.Detail(itemId = relatedId)) }</ID>
     <ID>MaxLineLength:StateDrivenDemoScreen.kt:val</ID>
     <ID>MaxLineLength:TabContentScreens.kt:tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant</ID>
     <ID>ReturnCount:StateDrivenContainer.kt:StateDrivenContainer$private fun clearActiveStack: NavNode?</ID>
