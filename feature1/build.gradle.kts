@@ -19,6 +19,10 @@ quoVadis {
     useLocalKsp = true
 }
 
+koinCompiler {
+    compileSafety = false
+}
+
 kotlin {
 
     androidLibrary {

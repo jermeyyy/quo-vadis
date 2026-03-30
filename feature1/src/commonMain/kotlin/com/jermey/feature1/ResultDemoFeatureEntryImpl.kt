@@ -6,6 +6,7 @@ import com.jermey.navplayground.navigation.ResultDemoFeatureEntry
 import com.jermey.navplayground.navigation.SelectedItemResult
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.result.navigateForResult
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
 
 /**
@@ -14,7 +15,7 @@ import org.koin.core.annotation.Single
  */
 @Single(binds = [ResultDemoFeatureEntry::class])
 class ResultDemoFeatureEntryImpl(
-    private val navigator: Navigator
+    @Provided private val navigator: Navigator
 ) : ResultDemoFeatureEntry {
     override suspend fun start(): SelectedItemResult? {
         val result: SelectedItem? = navigator.navigateForResult(

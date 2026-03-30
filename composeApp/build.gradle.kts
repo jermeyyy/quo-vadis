@@ -14,6 +14,10 @@ quoVadis {
     useLocalKsp = true
 }
 
+koinCompiler {
+    compileSafety = false
+}
+
 // Configure compose resources for the new Android KMP library plugin
 compose.resources {
     packageOfResClass = "navplayground.composeapp.generated.resources"

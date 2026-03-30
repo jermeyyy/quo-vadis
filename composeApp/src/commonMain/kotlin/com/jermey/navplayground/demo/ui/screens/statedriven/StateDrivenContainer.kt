@@ -17,6 +17,7 @@ import com.jermey.quo.vadis.flowmvi.SharedContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedNavigationContainer
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Qualifier
 import org.koin.core.annotation.Scope
 import org.koin.core.annotation.Scoped
@@ -52,7 +53,7 @@ private typealias Ctx = PipelineContext<StateDrivenState, StateDrivenIntent, Sta
 @Scope(SharedContainerScope::class)
 @Qualifier(StateDrivenContainer::class)
 class StateDrivenContainer(
-    scope: SharedContainerScope,
+    @Provided scope: SharedContainerScope,
 ) : SharedNavigationContainer<StateDrivenState, StateDrivenIntent, StateDrivenAction>(scope) {
 
     private val debuggable: Boolean = false

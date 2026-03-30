@@ -2,6 +2,7 @@ package com.jermey.navplayground.demo.ui.screens.backhandler
 
 import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.NavigationContainerScope
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Qualifier
 import org.koin.core.annotation.Scope
 import org.koin.core.annotation.Scoped
@@ -57,7 +58,7 @@ sealed interface BackHandlerDemoAction : MVIAction
 @Scope(NavigationContainerScope::class)
 @Qualifier(BackHandlerDemoContainer::class)
 class BackHandlerDemoContainer(
-    scope: NavigationContainerScope,
+    @Provided scope: NavigationContainerScope,
 ) : NavigationContainer<BackHandlerDemoState, BackHandlerDemoIntent, BackHandlerDemoAction>(scope) {
 
     override val store = store(initial = BackHandlerDemoState()) {
