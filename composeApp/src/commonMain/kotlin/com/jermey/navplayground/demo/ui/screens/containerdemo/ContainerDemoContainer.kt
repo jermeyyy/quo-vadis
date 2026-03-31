@@ -27,8 +27,9 @@ sealed interface ContainerDemoAction : MVIAction
 /**
  * Shared MVI container scoped to the ContainerDemo tab container.
  *
- * Reads `itemId` from `TabNode.destinationArgs`, proving that tab-wrapper
- * containers can access the triggering destination's arguments.
+ * Reads `itemId` from `SharedContainerScope.containerDestination` (backed by
+ * `TabNode.destination`), proving that tab-wrapper containers can access the
+ * triggering destination's arguments.
  */
 @Scoped
 @Scope(SharedContainerScope::class)
