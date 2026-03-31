@@ -77,7 +77,7 @@ class ValidationEngineTabsDataClassTest : FunSpec({
     // Data class @Tabs with no constructor params → warning
     // =========================================================================
 
-    test("data class Tabs with no constructor params produces warning") {
+    test("data class Tabs with no constructor params produces warning (defensive, unreachable from real Kotlin source)") {
         val tab = TabInfo(
             classDeclaration = dataClassDecl("EmptyDataTabs"),
             name = "EmptyDataTabs",
@@ -199,6 +199,110 @@ class ValidationEngineTabsDataClassTest : FunSpec({
         val result = validate(listOf(tab))
 
         // Only the "empty container" warning expected, no data class errors
+        result.shouldBeTrue()
+        logger.errors.shouldBeEmpty()
+    }
+
+    // =========================================================================
+    // Data class @Tabs with duplicate @Argument keys → error
+    // =========================================================================
+
+    test("data class Tabs with duplicate @Argument keys produces error") {
+        val tab = TabInfo(
+            classDeclaration = dataClassDecl("DupKeyTabs"),
+            name = "DupKeyTabs",
+            className = "DupKeyTabs",
+            packageName = "com.example",
+            tabs = emptyList(),
+            isDataClass = true,
+            isObject = false,
+            constructorParams = listOf(
+                ParamInfo(
+                    name = "first",
+                    type = fakeKSType(),
+                    hasDefault = false,
+                    isArgument = true,
+                    argumentKey = "sharedKey",
+                ),
+                ParamInfo(
+                    name = "second",
+                    type = fakeKSType(),
+                    hasDefault = false,
+                    isArgument = true,
+                    argumentKey = "sharedKey",
+                ),
+            ),
+        )
+
+        val result = validate(listOf(tab))
+
+        result.shouldBeFalse()
+        logger.errors.shouldHaveSize(1)
+        logger.errors[0].shouldContain("Duplicate argument key 'sharedKey'")
+        logger.errors[0].shouldContain("DupKeyTabs")
+    }
+
+    // =========================================================================
+    // Data class @Tabs with optional @Argument without default → error
+    // =========================================================================
+
+    test("data class Tabs with optional Argument without default produces error") {
+        val tab = TabInfo(
+            classDeclaration = dataClassDecl("OptTabs"),
+            name = "OptTabs",
+            className = "OptTabs",
+            packageName = "com.example",
+            tabs = emptyList(),
+            isDataClass = true,
+            isObject = false,
+            constructorParams = listOf(
+                ParamInfo(
+                    name = "optParam",
+                    type = fakeKSType(),
+                    hasDefault = false,
+                    isArgument = true,
+                    argumentKey = "optParam",
+                    isOptionalArgument = true,
+                ),
+            ),
+        )
+
+        val result = validate(listOf(tab))
+
+        result.shouldBeFalse()
+        logger.errors.shouldHaveSize(1)
+        logger.errors[0].shouldContain("@Argument(optional = true)")
+        logger.errors[0].shouldContain("requires a default value")
+        logger.errors[0].shouldContain("OptTabs")
+    }
+
+    // =========================================================================
+    // Data class @Tabs with optional @Argument with default → valid
+    // =========================================================================
+
+    test("data class Tabs with optional Argument with default is valid") {
+        val tab = TabInfo(
+            classDeclaration = dataClassDecl("OptDefaultTabs"),
+            name = "OptDefaultTabs",
+            className = "OptDefaultTabs",
+            packageName = "com.example",
+            tabs = emptyList(),
+            isDataClass = true,
+            isObject = false,
+            constructorParams = listOf(
+                ParamInfo(
+                    name = "optParam",
+                    type = fakeKSType(),
+                    hasDefault = true,
+                    isArgument = true,
+                    argumentKey = "optParam",
+                    isOptionalArgument = true,
+                ),
+            ),
+        )
+
+        val result = validate(listOf(tab))
+
         result.shouldBeTrue()
         logger.errors.shouldBeEmpty()
     }

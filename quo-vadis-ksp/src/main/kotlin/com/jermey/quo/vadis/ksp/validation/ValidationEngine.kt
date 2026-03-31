@@ -721,6 +721,9 @@ class ValidationEngine(
         tabs.filter { it.isDataClass }.forEach { tab ->
             val params = tab.constructorParams
 
+            // Defensive: Kotlin compiler rejects data classes with no constructor
+            // parameters, so this branch is unreachable from real source code.
+            // Kept for safety against synthetic/test inputs.
             if (params.isEmpty()) {
                 reportWarning(
                     tab.classDeclaration,
@@ -748,6 +751,30 @@ class ValidationEngine(
                             "$names missing @Argument annotation",
                     "All constructor parameters of a @Tabs data class must have @Argument"
                 )
+            }
+
+            // Validate argument constraints (duplicate keys, optional-without-default)
+            val seenKeys = mutableSetOf<String>()
+            annotatedParams.forEach { param ->
+                val key = param.argumentKey
+
+                if (key in seenKeys) {
+                    reportError(
+                        tab.classDeclaration,
+                        "Duplicate argument key '$key' in ${tab.className}",
+                        "Use unique keys for each @Argument parameter"
+                    )
+                }
+                seenKeys.add(key)
+
+                if (param.isOptionalArgument && !param.hasDefault) {
+                    reportError(
+                        tab.classDeclaration,
+                        "@Argument(optional = true) on '${param.name}' in ${tab.className} " +
+                                "requires a default value",
+                        "Add a default value: ${param.name}: ${param.type} = defaultValue"
+                    )
+                }
             }
         }
     }

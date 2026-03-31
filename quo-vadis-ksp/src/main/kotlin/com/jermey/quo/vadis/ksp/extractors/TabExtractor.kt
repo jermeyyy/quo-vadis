@@ -180,21 +180,6 @@ class TabExtractor(
             val children = tabItemsByParent[qualifiedName] ?: emptyList()
             val isCrossModule = classDecl.containingFile == null
 
-            if (children.isEmpty()) {
-                logger.info(
-                    "@Tabs '$name' has no @TabItem children in this module — " +
-                        "skipping (children may be in downstream modules)"
-                )
-                return@mapNotNull null
-            }
-
-            val tabs = children
-                .mapNotNull { (childDecl, isDefault) -> extractTabItem(childDecl, isDefault) }
-                .sortedByDescending { it.isDefault }
-
-            logger.info("@Tabs '$name' assembled with ${tabs.size} tab items" +
-                if (isCrossModule) " (cross-module)" else "")
-
             val isDataModifier = classDecl.modifiers.contains(Modifier.DATA)
             val isDataClass = isDataModifier && classDecl.classKind == ClassKind.CLASS
             val isObject = classDecl.classKind == ClassKind.OBJECT
@@ -204,6 +189,34 @@ class TabExtractor(
             } else {
                 emptyList()
             }
+
+            if (children.isEmpty()) {
+                logger.info(
+                    "@Tabs '$name' has no @TabItem children in this module — " +
+                        "skipping generation (children may be in downstream modules)"
+                )
+                // For source-local declarations, still return TabInfo so validation
+                // (e.g. validateTabsDataClassArguments) runs even without children.
+                if (isCrossModule) return@mapNotNull null
+                return@mapNotNull TabInfo(
+                    classDeclaration = classDecl,
+                    name = name,
+                    className = classDecl.simpleName.asString(),
+                    packageName = classDecl.packageName.asString(),
+                    tabs = emptyList(),
+                    isDataClass = isDataClass,
+                    isObject = isObject,
+                    constructorParams = constructorParams,
+                    isCrossModule = false
+                )
+            }
+
+            val tabs = children
+                .mapNotNull { (childDecl, isDefault) -> extractTabItem(childDecl, isDefault) }
+                .sortedByDescending { it.isDefault }
+
+            logger.info("@Tabs '$name' assembled with ${tabs.size} tab items" +
+                if (isCrossModule) " (cross-module)" else "")
 
             TabInfo(
                 classDeclaration = classDecl,

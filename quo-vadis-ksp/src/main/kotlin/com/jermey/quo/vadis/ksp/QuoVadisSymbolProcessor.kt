@@ -442,7 +442,7 @@ class QuoVadisSymbolProcessor(
         val navigationData = NavigationConfigGenerator.NavigationData(
             screens = collectedScreens,
             stacks = collectedStacks,
-            tabs = collectedTabs,
+            tabs = collectedTabs.filter { it.tabs.isNotEmpty() },
             panes = collectedPanes,
             transitions = collectedTransitions,
             modals = collectedModals,
