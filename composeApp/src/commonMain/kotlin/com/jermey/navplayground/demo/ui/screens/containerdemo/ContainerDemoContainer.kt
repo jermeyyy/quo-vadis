@@ -1,8 +1,6 @@
 package com.jermey.navplayground.demo.ui.screens.containerdemo
 
 import com.jermey.navplayground.navigation.ContainerDemoDestination
-import com.jermey.quo.vadis.core.navigation.node.TabNode
-import com.jermey.quo.vadis.flowmvi.NavigationContainer
 import com.jermey.quo.vadis.flowmvi.SharedContainerScope
 import com.jermey.quo.vadis.flowmvi.SharedNavigationContainer
 import org.koin.core.annotation.Provided
