@@ -34,7 +34,6 @@ import io.kotest.matchers.shouldBe
 class NavNodeTypeChecksTest : FunSpec() {
 
     object TestDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 

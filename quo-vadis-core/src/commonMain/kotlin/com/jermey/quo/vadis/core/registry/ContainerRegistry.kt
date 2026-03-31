@@ -51,6 +51,7 @@ sealed interface ContainerInfo {
      *   - `key`: Unique identifier for the container
      *   - `parentKey`: Key of the parent node (nullable)
      *   - `initialTabIndex`: Which tab should be initially active
+     *   - `destination`: Optional container destination instance carrying arguments
      * @property initialTabIndex Which tab should be active based on the destination
      *   being navigated to. Index is 0-based.
      * @property scopeKey The scope key for this container, typically the sealed
@@ -58,7 +59,7 @@ sealed interface ContainerInfo {
      * @property containerClass The destination class that defines this container.
      */
     data class TabContainer(
-        val builder: (key: NodeKey, parentKey: NodeKey?, initialTabIndex: Int) -> TabNode,
+        val builder: (key: NodeKey, parentKey: NodeKey?, initialTabIndex: Int, destination: NavDestination?) -> TabNode,
         val initialTabIndex: Int,
         override val scopeKey: ScopeKey,
         override val containerClass: KClass<out NavDestination>
@@ -74,13 +75,14 @@ sealed interface ContainerInfo {
      * @property builder Function to build the [PaneNode]. Accepts:
      *   - `key`: Unique identifier for the container
      *   - `parentKey`: Key of the parent node (nullable)
+     *   - `destination`: Optional container destination instance carrying arguments
      * @property initialPane Which pane should be initially active
      * @property scopeKey The scope key for this container, typically the sealed
      *   class simple name. Used for scope-aware navigation.
      * @property containerClass The destination class that defines this container.
      */
     data class PaneContainer(
-        val builder: (key: NodeKey, parentKey: NodeKey?) -> PaneNode,
+        val builder: (key: NodeKey, parentKey: NodeKey?, destination: NavDestination?) -> PaneNode,
         val initialPane: PaneRole,
         override val scopeKey: ScopeKey,
         override val containerClass: KClass<out NavDestination>
@@ -107,7 +109,7 @@ sealed interface ContainerInfo {
  * // When navigating to a tab destination
  * val containerInfo = registry.getContainerInfo(DemoTabs.MusicTab.List)
  * if (containerInfo is ContainerInfo.TabContainer) {
- *     val tabNode = containerInfo.builder(key, parentKey, containerInfo.initialTabIndex)
+ *     val tabNode = containerInfo.builder(key, parentKey, containerInfo.initialTabIndex, destination)
  *     // Push tabNode onto the navigation stack
  * }
  * ```

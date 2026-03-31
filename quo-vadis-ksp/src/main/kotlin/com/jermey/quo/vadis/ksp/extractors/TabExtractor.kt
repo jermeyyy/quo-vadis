@@ -2,8 +2,10 @@ package com.jermey.quo.vadis.ksp.extractors
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.Modifier
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
@@ -193,12 +195,25 @@ class TabExtractor(
             logger.info("@Tabs '$name' assembled with ${tabs.size} tab items" +
                 if (isCrossModule) " (cross-module)" else "")
 
+            val isDataModifier = classDecl.modifiers.contains(Modifier.DATA)
+            val isDataClass = isDataModifier && classDecl.classKind == ClassKind.CLASS
+            val isObject = classDecl.classKind == ClassKind.OBJECT
+
+            val constructorParams = if (isDataClass) {
+                destinationExtractor.extractConstructorParams(classDecl)
+            } else {
+                emptyList()
+            }
+
             TabInfo(
                 classDeclaration = classDecl,
                 name = name,
                 className = classDecl.simpleName.asString(),
                 packageName = classDecl.packageName.asString(),
                 tabs = tabs,
+                isDataClass = isDataClass,
+                isObject = isObject,
+                constructorParams = constructorParams,
                 isCrossModule = isCrossModule
             )
         }

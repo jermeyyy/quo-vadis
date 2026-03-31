@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.compose.scope.LocalContainerDestination
 import com.jermey.quo.vadis.core.compose.scope.LocalContainerNode
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
 import com.jermey.quo.vadis.core.compose.scope.createTabsContainerScope
@@ -177,7 +178,8 @@ internal fun TabRenderer(
 
         // Provide container node to children for container-scoped operations
         CompositionLocalProvider(
-            LocalContainerNode provides node
+            LocalContainerNode provides node,
+            LocalContainerDestination provides node.destination
         ) {
             // No additional animation needed here - parent handles cascade animation
             // Invoke the registered tabs container wrapper (KSP-generated or default)

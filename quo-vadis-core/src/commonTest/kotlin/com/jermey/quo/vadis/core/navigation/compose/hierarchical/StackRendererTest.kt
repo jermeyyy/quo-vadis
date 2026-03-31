@@ -39,22 +39,18 @@ class StackRendererTest : FunSpec() {
     // =========================================================================
 
     val HomeDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val ProfileDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val SettingsDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val DetailDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
@@ -437,12 +433,10 @@ class StackRendererTest : FunSpec() {
 
     // Modal-specific test destinations
     val modalDestinationA = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val modalDestinationB = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 

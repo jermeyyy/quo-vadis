@@ -119,6 +119,9 @@ class ValidationEngine(
         // Type validations
         validateContainerTypes(stacks, tabs, panes)
 
+        // Data class @Tabs validations
+        validateTabsDataClassArguments(tabs)
+
         // Mixed tab type validations
         validateTabItemAnnotations(tabs)
         validateDestinationTabs(tabs)
@@ -697,6 +700,53 @@ class ValidationEngine(
                     tab.classDeclaration,
                     "Tab nesting depth exceeds 3 levels at '${tab.className}'",
                     "Deep nesting may cause usability issues"
+                )
+            }
+        }
+    }
+
+    // =========================================================================
+    // Data Class Tabs Validations
+    // =========================================================================
+
+    /**
+     * Validates @Argument annotation usage on @Tabs data class constructor parameters.
+     *
+     * Checks:
+     * - Data class @Tabs with no constructor params → warning (use object instead)
+     * - Data class @Tabs where some params have @Argument and some don't → error
+     * - Data class @Tabs where no params have @Argument → error
+     */
+    private fun validateTabsDataClassArguments(tabs: List<TabInfo>) {
+        tabs.filter { it.isDataClass }.forEach { tab ->
+            val params = tab.constructorParams
+
+            if (params.isEmpty()) {
+                reportWarning(
+                    tab.classDeclaration,
+                    "@Tabs data class '${tab.className}' has no constructor parameters",
+                    "Use 'object ${tab.className}' instead of an empty data class"
+                )
+                return@forEach
+            }
+
+            val annotatedParams = params.filter { it.isArgument }
+            val unannotatedParams = params.filter { !it.isArgument }
+
+            if (annotatedParams.isEmpty()) {
+                reportError(
+                    tab.classDeclaration,
+                    "@Tabs data class '${tab.className}' has constructor parameters " +
+                            "without @Argument annotations",
+                    "Add @Argument to all constructor parameters or use 'object' instead"
+                )
+            } else if (unannotatedParams.isNotEmpty()) {
+                val names = unannotatedParams.joinToString(", ") { "'${it.name}'" }
+                reportError(
+                    tab.classDeclaration,
+                    "@Tabs data class '${tab.className}' has constructor parameters " +
+                            "$names missing @Argument annotation",
+                    "All constructor parameters of a @Tabs data class must have @Argument"
                 )
             }
         }

@@ -19,19 +19,16 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 
 private sealed interface AuthFlow : NavDestination {
     data object Login : AuthFlow {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "Login"
     }
 
     data object Register : AuthFlow {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "Register"
     }
 
     data object ForgotPassword : AuthFlow {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "ForgotPassword"
     }
@@ -39,13 +36,11 @@ private sealed interface AuthFlow : NavDestination {
 
 private sealed interface MainFlow : NavDestination {
     data object Home : MainFlow {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "Home"
     }
 
     data object Profile : MainFlow {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "Profile"
     }
@@ -53,12 +48,10 @@ private sealed interface MainFlow : NavDestination {
 
 private sealed interface HomeTabs : NavDestination {
     data object Feed : HomeTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     data object Explore : HomeTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 }

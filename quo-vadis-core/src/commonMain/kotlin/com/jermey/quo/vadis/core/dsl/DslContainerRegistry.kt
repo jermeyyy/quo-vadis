@@ -169,7 +169,7 @@ internal class DslContainerRegistry(
         initialTabIndex: Int
     ): ContainerInfo.TabContainer {
         return ContainerInfo.TabContainer(
-            builder = { key, parentKey, tabIndex ->
+            builder = { key, parentKey, tabIndex, destination ->
                 val node = navNodeBuilder(containerClass, key.value, parentKey?.value)
                     ?: throw IllegalStateException("Failed to build TabNode for $containerClass")
 
@@ -177,11 +177,16 @@ internal class DslContainerRegistry(
                     throw IllegalStateException("Expected TabNode but got ${node::class}")
                 }
 
-                // Return with correct initial tab index
-                if (tabIndex != node.activeStackIndex) {
-                    node.copy(activeStackIndex = tabIndex.coerceIn(0, node.stacks.size - 1))
+                // Apply destination and correct initial tab index
+                val withDestination = if (destination != null) {
+                    node.copy(destination = destination)
                 } else {
                     node
+                }
+                if (tabIndex != withDestination.activeStackIndex) {
+                    withDestination.copy(activeStackIndex = tabIndex.coerceIn(0, withDestination.stacks.size - 1))
+                } else {
+                    withDestination
                 }
             },
             initialTabIndex = initialTabIndex,
@@ -198,7 +203,7 @@ internal class DslContainerRegistry(
         containerClass: KClass<out NavDestination>
     ): ContainerInfo.PaneContainer {
         return ContainerInfo.PaneContainer(
-            builder = { key, parentKey ->
+            builder = { key, parentKey, destination ->
                 val node = navNodeBuilder(containerClass, key.value, parentKey?.value)
                     ?: throw IllegalStateException("Failed to build PaneNode for $containerClass")
 
@@ -206,7 +211,12 @@ internal class DslContainerRegistry(
                     throw IllegalStateException("Expected PaneNode but got ${node::class}")
                 }
 
-                node
+                // Apply destination if provided
+                if (destination != null) {
+                    node.copy(destination = destination)
+                } else {
+                    node
+                }
             },
             initialPane = builder.config.initialPane,
             scopeKey = builder.scopeKey,

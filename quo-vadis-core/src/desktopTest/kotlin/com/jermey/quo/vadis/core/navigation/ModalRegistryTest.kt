@@ -16,17 +16,14 @@ import io.kotest.matchers.booleans.shouldBeTrue
 // =========================================================================
 
 private data object ModalDestination : NavDestination {
-    override val data: Any? = null
     override val transition: NavigationTransition? = null
 }
 
 private data object RegularDestination : NavDestination {
-    override val data: Any? = null
     override val transition: NavigationTransition? = null
 }
 
 private data object AnotherModalDestination : NavDestination {
-    override val data: Any? = null
     override val transition: NavigationTransition? = null
 }
 

@@ -8,6 +8,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.compose.scope.LocalContainerDestination
 import com.jermey.quo.vadis.core.compose.scope.LocalContainerNode
 import com.jermey.quo.vadis.core.compose.scope.NavRenderScope
 import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
@@ -139,7 +140,10 @@ internal fun PaneRenderer(
     }
 
     // Provide container node to children for container-scoped operations
-    CompositionLocalProvider(LocalContainerNode provides node) {
+    CompositionLocalProvider(
+        LocalContainerNode provides node,
+        LocalContainerDestination provides node.destination
+    ) {
         if (isExpanded) {
             // Expanded mode: render wrapper with multiple pane content slots
             // The wrapper can use paneContainerScope.paneContents to arrange panes

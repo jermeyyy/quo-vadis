@@ -1,6 +1,7 @@
 package com.jermey.quo.vadis.flowmvi
 
 import androidx.compose.runtime.Stable
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.navigator.LifecycleAwareNode
 import com.jermey.quo.vadis.core.navigation.node.NavNode
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
@@ -40,6 +41,7 @@ import org.koin.core.scope.ScopeCallback
 class SharedContainerScope(
     override val scope: Scope,
     val containerNode: LifecycleAwareNode,
+    val containerDestination: NavDestination?,
     val navigator: Navigator,
     val backHandlerRegistry: BackHandlerRegistry,
 ) : KoinScopeComponent {

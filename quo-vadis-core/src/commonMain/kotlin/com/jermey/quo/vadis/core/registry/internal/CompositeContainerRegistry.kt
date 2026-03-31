@@ -2,12 +2,12 @@ package com.jermey.quo.vadis.core.registry.internal
 
 import androidx.compose.runtime.Composable
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
-import com.jermey.quo.vadis.core.navigation.node.NavNode
-import com.jermey.quo.vadis.core.navigation.node.PaneNode
-import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.compose.scope.PaneContainerScope
 import com.jermey.quo.vadis.core.compose.scope.TabsContainerScope
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
+import com.jermey.quo.vadis.core.navigation.node.NavNode
+import com.jermey.quo.vadis.core.navigation.node.PaneNode
+import com.jermey.quo.vadis.core.navigation.node.TabNode
 import com.jermey.quo.vadis.core.registry.ContainerInfo
 import com.jermey.quo.vadis.core.registry.ContainerRegistry
 import kotlin.reflect.KClass
@@ -74,7 +74,7 @@ internal class CompositeContainerRegistry(
     private fun wrapContainerInfo(info: ContainerInfo): ContainerInfo {
         return when (info) {
             is ContainerInfo.TabContainer -> ContainerInfo.TabContainer(
-                builder = { key, parentKey, initialTabIndex ->
+                builder = { key, parentKey, initialTabIndex, destination ->
                     // Use the composite's navNodeBuilder to build the node,
                     // ensuring cross-config resolution
                     val node = navNodeBuilder(info.containerClass, key.value, parentKey?.value)
@@ -86,19 +86,31 @@ internal class CompositeContainerRegistry(
                         throw IllegalStateException("Expected TabNode but got ${node::class}")
                     }
 
-                    // Apply the requested initial tab index
-                    if (initialTabIndex != node.activeStackIndex) {
-                        node.copy(activeStackIndex = initialTabIndex.coerceIn(0, node.stacks.size - 1))
+                    // Apply destination if provided
+                    val withDestination = if (destination != null) {
+                        node.copy(destination = destination)
                     } else {
                         node
+                    }
+                    // Apply the requested initial tab index
+                    if (initialTabIndex != withDestination.activeStackIndex) {
+                        withDestination.copy(
+                            activeStackIndex = initialTabIndex.coerceIn(
+                                0,
+                                withDestination.stacks.size - 1
+                            )
+                        )
+                    } else {
+                        withDestination
                     }
                 },
                 initialTabIndex = info.initialTabIndex,
                 scopeKey = info.scopeKey,
                 containerClass = info.containerClass
             )
+
             is ContainerInfo.PaneContainer -> ContainerInfo.PaneContainer(
-                builder = { key, parentKey ->
+                builder = { key, parentKey, destination ->
                     // Use the composite's navNodeBuilder to build the node
                     val node = navNodeBuilder(info.containerClass, key.value, parentKey?.value)
                         ?: throw IllegalStateException(
@@ -109,7 +121,12 @@ internal class CompositeContainerRegistry(
                         throw IllegalStateException("Expected PaneNode but got ${node::class}")
                     }
 
-                    node
+                    // Apply destination if provided
+                    if (destination != null) {
+                        node.copy(destination = destination)
+                    } else {
+                        node
+                    }
                 },
                 initialPane = info.initialPane,
                 scopeKey = info.scopeKey,
@@ -128,6 +145,7 @@ internal class CompositeContainerRegistry(
         when {
             secondary.hasTabsContainer(tabNodeKey) ->
                 secondary.TabsContainer(tabNodeKey, scope, content)
+
             primary.hasTabsContainer(tabNodeKey) ->
                 primary.TabsContainer(tabNodeKey, scope, content)
             // If neither has it, let primary handle (will use default or throw)
@@ -145,6 +163,7 @@ internal class CompositeContainerRegistry(
         when {
             secondary.hasPaneContainer(paneNodeKey) ->
                 secondary.PaneContainer(paneNodeKey, scope, content)
+
             primary.hasPaneContainer(paneNodeKey) ->
                 primary.PaneContainer(paneNodeKey, scope, content)
             // If neither has it, let primary handle (will use default or throw)

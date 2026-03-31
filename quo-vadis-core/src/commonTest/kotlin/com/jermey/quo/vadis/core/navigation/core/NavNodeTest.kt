@@ -45,32 +45,26 @@ import io.kotest.matchers.shouldBe
 class NavNodeTest : FunSpec() {
 
     object HomeDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     object ProfileDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     object SettingsDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     object FeedDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     object DetailDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     object ListDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 

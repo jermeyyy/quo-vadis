@@ -4,6 +4,7 @@
   <CurrentIssues>
     <ID>ComplexCondition:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor$collectedScreens.isEmpty() &amp;&amp; collectedTabs.isEmpty() &amp;&amp; collectedStacks.isEmpty() &amp;&amp; collectedPanes.isEmpty()</ID>
     <ID>CyclomaticComplexMethod:QuoVadisSymbolProcessor.kt:QuoVadisSymbolProcessor$private fun collectAllDestinations</ID>
+    <ID>CyclomaticComplexMethod:TabExtractor.kt:TabExtractor$private fun extractAllTabs: List&lt;TabInfo></ID>
     <ID>LargeClass:NavigationConfigGenerator.kt:NavigationConfigGenerator : DslCodeGenerator</ID>
     <ID>LongMethod:TabExtractor.kt:TabExtractor$private fun extractAllTabs: List&lt;TabInfo></ID>
     <ID>MaxLineLength:ContainerBlockGenerator.kt:ContainerBlockGenerator$addStatement("// TODO: %T is a data class, not an object. Pane roots must be data objects.", destClass)</ID>

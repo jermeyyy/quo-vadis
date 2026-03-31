@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.flowmvi
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.jermey.quo.vadis.core.compose.scope.LocalContainerDestination
 import com.jermey.quo.vadis.core.compose.scope.LocalContainerNode
 import com.jermey.quo.vadis.core.compose.scope.LocalNavigator
 import com.jermey.quo.vadis.core.compose.scope.LocalScreenNode
@@ -154,6 +155,7 @@ inline fun <reified Container, State, Intent, Action> rememberSharedContainer(
         ?: error("rememberSharedContainer must be called within a Tab/Pane container wrapper")
     val navigator = LocalNavigator.current
         ?: error("rememberSharedContainer must be called within NavigationHost")
+    val containerDestination = LocalContainerDestination.current
     val backHandlerRegistry = LocalBackHandlerRegistry.current
 
     val koin = getKoin()
@@ -173,6 +175,7 @@ inline fun <reified Container, State, Intent, Action> rememberSharedContainer(
         val sharedContainerScope = SharedContainerScope(
             scope = koinScope,
             containerNode = containerNode,
+            containerDestination = containerDestination,
             navigator = navigator,
             backHandlerRegistry = backHandlerRegistry,
         )

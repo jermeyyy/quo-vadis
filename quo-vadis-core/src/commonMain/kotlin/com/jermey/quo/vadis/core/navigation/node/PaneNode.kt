@@ -1,5 +1,6 @@
 package com.jermey.quo.vadis.core.navigation.node
 
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.navigator.LifecycleAwareNode
 import com.jermey.quo.vadis.core.navigation.pane.AdaptStrategy
 import com.jermey.quo.vadis.core.navigation.pane.PaneBackBehavior
@@ -67,6 +68,9 @@ import kotlinx.serialization.Serializable
  * @property scopeKey Identifier for scope-aware navigation. When set, destinations
  *   not in this scope will navigate outside the pane container. Typically the
  *   sealed class simple name. Defaults to null (no scope enforcement).
+ * @property destination Optional destination associated with this pane container.
+ *   When the @Pane class is a data class with @Argument properties, this holds
+ *   the destination instance carrying those arguments. Defaults to null.
  */
 @Serializable
 @SerialName("pane")
@@ -77,7 +81,8 @@ class PaneNode(
     val activePaneRole: PaneRole = PaneRole.Primary,
     val backBehavior: PaneBackBehavior = PaneBackBehavior.PopUntilScaffoldValueChange,
     val wrapperKey: String? = null,
-    val scopeKey: ScopeKey? = null
+    val scopeKey: ScopeKey? = null,
+    val destination: NavDestination? = null
 ) : NavNode, LifecycleAwareNode by LifecycleDelegate() {
 
     init {
@@ -132,7 +137,8 @@ class PaneNode(
         activePaneRole: PaneRole = this.activePaneRole,
         backBehavior: PaneBackBehavior = this.backBehavior,
         wrapperKey: String? = this.wrapperKey,
-        scopeKey: ScopeKey? = this.scopeKey
+        scopeKey: ScopeKey? = this.scopeKey,
+        destination: NavDestination? = this.destination
     ): PaneNode = PaneNode(
         key = key,
         parentKey = parentKey,
@@ -140,7 +146,8 @@ class PaneNode(
         activePaneRole = activePaneRole,
         backBehavior = backBehavior,
         wrapperKey = wrapperKey,
-        scopeKey = scopeKey
+        scopeKey = scopeKey,
+        destination = destination
     )
 
     // --- Equality based on persistent properties ---
@@ -154,7 +161,8 @@ class PaneNode(
             activePaneRole == other.activePaneRole &&
             backBehavior == other.backBehavior &&
             wrapperKey == other.wrapperKey &&
-            scopeKey == other.scopeKey
+            scopeKey == other.scopeKey &&
+            destination == other.destination
     }
 
     override fun hashCode(): Int {
@@ -165,10 +173,12 @@ class PaneNode(
         result = 31 * result + backBehavior.hashCode()
         result = 31 * result + (wrapperKey?.hashCode() ?: 0)
         result = 31 * result + (scopeKey?.hashCode() ?: 0)
+        result = 31 * result + (destination?.hashCode() ?: 0)
         return result
     }
 
     override fun toString(): String =
         "PaneNode(key='$key', parentKey=$parentKey, " +
-            "activePaneRole=$activePaneRole, paneCount=$paneCount)"
+            "activePaneRole=$activePaneRole, paneCount=$paneCount, " +
+            "destination=$destination)"
 }

@@ -36,17 +36,14 @@ class ScreenRendererTest : FunSpec({
     // =========================================================================
 
     val HomeDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val ProfileDestination = object : NavDestination {
-        override val data: Any = "profile-data"
         override val transition: NavigationTransition? = null
     }
 
     val SettingsDestination = object : NavDestination {
-        override val data: Any = mapOf("theme" to "dark")
         override val transition: NavigationTransition? = null
     }
 
@@ -63,34 +60,6 @@ class ScreenRendererTest : FunSpec({
     // =========================================================================
     // SCREEN NODE DESTINATION TESTS
     // =========================================================================
-
-    test("screen node renders destination content correctly") {
-        // Given
-        val destination = ProfileDestination
-        val screenNode = createScreen("profile-screen", destination = destination)
-
-        // Then
-        screenNode.destination shouldBe destination
-        screenNode.destination.data shouldBe "profile-data"
-    }
-
-    test("screen node with null destination data is valid") {
-        // Given
-        val screenNode = createScreen("home-screen", destination = HomeDestination)
-
-        // Then
-        screenNode.destination.data.shouldBeNull()
-    }
-
-    test("screen node with complex destination data is preserved") {
-        // Given
-        val screenNode = createScreen("settings-screen", destination = SettingsDestination)
-
-        // Then
-        val data = screenNode.destination.data
-        data.shouldBeInstanceOf<Map<*, *>>()
-        data["theme"] shouldBe "dark"
-    }
 
     test("screen node key is used for cache identification") {
         // Given
@@ -245,7 +214,6 @@ class ScreenRendererTest : FunSpec({
     test("screen transitions are preserved") {
         // Given
         val transitionDestination = object : NavDestination {
-            override val data: Any? = null
             override val transition: NavigationTransition = NavigationTransitions.SlideHorizontal
         }
         val screen = createScreen("animated-screen", destination = transitionDestination)

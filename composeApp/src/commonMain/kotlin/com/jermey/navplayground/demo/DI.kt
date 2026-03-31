@@ -58,3 +58,7 @@ class TabsDemoModule
 @Module
 @ComponentScan("com.jermey.navplayground.demo.ui.screens.backhandler")
 class BackHandlerDemoModule
+
+@Module
+@ComponentScan("com.jermey.navplayground.demo.ui.screens.containerdemo")
+class ContainerDemoModule

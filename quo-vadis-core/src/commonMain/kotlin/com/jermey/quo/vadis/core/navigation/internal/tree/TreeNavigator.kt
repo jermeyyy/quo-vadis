@@ -256,7 +256,7 @@ class TreeNavigator(
             val currentScopeKey = getCurrentScopeKey(oldState)
             if (currentScopeKey != containerInfo.scopeKey) {
                 // Not inside the required container - create it
-                navigateWithContainer(oldState, containerInfo, effectiveTransition, fromKey)
+                navigateWithContainer(oldState, containerInfo, destination, effectiveTransition, fromKey)
                 return
             }
             // Already inside the container - fall through to normal navigation
@@ -292,11 +292,12 @@ class TreeNavigator(
     private fun navigateWithContainer(
         oldState: NavNode,
         containerInfo: ContainerInfo,
+        destination: NavDestination,
         effectiveTransition: NavigationTransition?,
         fromKey: NodeKey?
     ) {
         try {
-            val newState = pushContainer(oldState, containerInfo)
+            val newState = pushContainer(oldState, containerInfo, destination)
             val toKey = newState.activeLeaf()?.key
 
             _state.update { newState }
@@ -319,12 +320,14 @@ class TreeNavigator(
                 is ContainerInfo.TabContainer -> containerInfo.builder(
                     containerKey,
                     rootKey,
-                    containerInfo.initialTabIndex
+                    containerInfo.initialTabIndex,
+                    destination
                 )
 
                 is ContainerInfo.PaneContainer -> containerInfo.builder(
                     containerKey,
-                    rootKey
+                    rootKey,
+                    destination
                 )
             }
 
@@ -420,7 +423,8 @@ class TreeNavigator(
      */
     private fun pushContainer(
         root: NavNode,
-        containerInfo: ContainerInfo
+        containerInfo: ContainerInfo,
+        destination: NavDestination
     ): NavNode {
         // Find the stack that should receive the new container
         // This is the stack containing the current container, or root if no container
@@ -433,7 +437,8 @@ class TreeNavigator(
                 val tabNode = containerInfo.builder(
                     containerKey,
                     targetStack.key,
-                    containerInfo.initialTabIndex
+                    containerInfo.initialTabIndex,
+                    destination
                 )
                 val newStack = targetStack.copy(
                     children = targetStack.children + tabNode
@@ -443,7 +448,11 @@ class TreeNavigator(
 
             is ContainerInfo.PaneContainer -> {
                 val containerKey = generateKey()
-                val paneNode = containerInfo.builder(containerKey, targetStack.key)
+                val paneNode = containerInfo.builder(
+                    containerKey,
+                    targetStack.key,
+                    destination
+                )
                 val newStack = targetStack.copy(
                     children = targetStack.children + paneNode
                 )

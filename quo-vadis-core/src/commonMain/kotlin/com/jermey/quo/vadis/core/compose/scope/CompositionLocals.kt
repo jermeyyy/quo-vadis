@@ -2,6 +2,7 @@ package com.jermey.quo.vadis.core.compose.scope
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.runtime.compositionLocalOf
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.navigator.LifecycleAwareNode
 import com.jermey.quo.vadis.core.navigation.navigator.Navigator
 import com.jermey.quo.vadis.core.navigation.node.ScreenNode
@@ -147,3 +148,37 @@ val LocalNavigator = compositionLocalOf<Navigator?> { null }
  * @see com.jermey.quo.vadis.core.compose.internal.render.PaneRenderer
  */
 val LocalContainerNode = compositionLocalOf<LifecycleAwareNode?> { null }
+
+/**
+ * Provides access to the [NavDestination] associated with the current container
+ * ([com.jermey.quo.vadis.core.navigation.node.TabNode] or
+ * [com.jermey.quo.vadis.core.navigation.PaneNode]) within the hierarchy.
+ *
+ * This composition local is provided by [com.jermey.quo.vadis.core.compose.internal.render.TabRenderer]
+ * and [com.jermey.quo.vadis.core.compose.internal.render.PaneRenderer] when rendering
+ * container content. It allows content within containers to access the destination
+ * that was used to configure the container, including any arguments it carries.
+ *
+ * ## Usage
+ *
+ * ```kotlin
+ * @Composable
+ * fun TabContent() {
+ *     val containerDestination = LocalContainerDestination.current
+ *     // Access container-level destination arguments
+ * }
+ * ```
+ *
+ * ## Availability
+ *
+ * This local is available within:
+ * - Tab wrapper composables and their children
+ * - Pane wrapper composables and their children
+ *
+ * Returns `null` if not inside a container (e.g., at root stack level).
+ *
+ * @see NavDestination
+ * @see com.jermey.quo.vadis.core.compose.internal.render.TabRenderer
+ * @see com.jermey.quo.vadis.core.compose.internal.render.PaneRenderer
+ */
+val LocalContainerDestination = compositionLocalOf<NavDestination?> { null }
