@@ -718,7 +718,7 @@ class ValidationEngine(
      * - Data class @Tabs where no params have @Argument → error
      */
     private fun validateTabsDataClassArguments(tabs: List<TabInfo>) {
-        tabs.filter { it.isDataClass }.forEach { tab ->
+        tabs.filter { it.isDataClass && !it.isCrossModule }.forEach { tab ->
             val params = tab.constructorParams
 
             // Defensive: Kotlin compiler rejects data classes with no constructor
