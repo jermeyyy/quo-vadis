@@ -12,13 +12,6 @@ import com.jermey.quo.vadis.core.registry.RouteRegistry
  */
 interface NavDestination {
     /**
-     * Optional data passed to this destination.
-     * Should be a serializable type.
-     * Use null for destinations without data.
-     */
-    val data: Any? get() = null
-
-    /**
      * Default transition when navigating TO this destination.
      * If null, uses NavHost's default transition.
      */

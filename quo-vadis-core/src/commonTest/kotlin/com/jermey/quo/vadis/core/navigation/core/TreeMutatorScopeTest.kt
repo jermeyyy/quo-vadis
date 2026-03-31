@@ -18,32 +18,27 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 
 private sealed interface MainTabs : NavDestination {
     data object HomeTab : MainTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "HomeTab"
     }
 
     data object SettingsTab : MainTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "SettingsTab"
     }
 
     data object ProfileTab : MainTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "ProfileTab"
     }
 }
 
 private data object OutOfScopeDestination : NavDestination {
-    override val data: Any? = null
     override val transition: NavigationTransition? = null
     override fun toString(): String = "OutOfScope"
 }
 
 private data object DetailDestination : NavDestination {
-    override val data: Any? = null
     override val transition: NavigationTransition? = null
     override fun toString(): String = "Detail"
 }

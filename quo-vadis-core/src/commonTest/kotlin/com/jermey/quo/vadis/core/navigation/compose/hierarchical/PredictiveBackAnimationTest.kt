@@ -44,12 +44,10 @@ class PredictiveBackAnimationTest : FunSpec({
     // =========================================================================
 
     val currentDestination = object : NavDestination {
-        override val data: Any? = "current"
         override val transition: NavigationTransition? = null
     }
 
     val previousDestination = object : NavDestination {
-        override val data: Any? = "previous"
         override val transition: NavigationTransition? = null
     }
 

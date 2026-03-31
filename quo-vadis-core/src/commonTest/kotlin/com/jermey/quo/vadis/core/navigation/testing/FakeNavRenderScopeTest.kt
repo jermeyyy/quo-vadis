@@ -26,7 +26,6 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 // =========================================================================
 
 private object TestDestination : NavDestination {
-    override val data: Any? = null
     override val transition: NavigationTransition? = null
 }
 
@@ -215,7 +214,6 @@ class FakeNavRenderScopeTest : FunSpec({
     test("EmptyScreenRegistry hasContent returns false for different destinations") {
         // Given
         val anotherDestination = object : NavDestination {
-            override val data: Any? = "test"
             override val transition: NavigationTransition? = null
         }
 

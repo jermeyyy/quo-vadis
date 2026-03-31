@@ -2,8 +2,10 @@ package com.jermey.quo.vadis.ksp.extractors
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.Modifier
 import com.jermey.quo.vadis.ksp.models.DestinationInfo
 import com.jermey.quo.vadis.ksp.models.StackInfo
 import com.jermey.quo.vadis.ksp.models.TabInfo
@@ -178,12 +180,35 @@ class TabExtractor(
             val children = tabItemsByParent[qualifiedName] ?: emptyList()
             val isCrossModule = classDecl.containingFile == null
 
+            val isDataModifier = classDecl.modifiers.contains(Modifier.DATA)
+            val isDataClass = isDataModifier && classDecl.classKind == ClassKind.CLASS
+            val isObject = classDecl.classKind == ClassKind.OBJECT
+
+            val constructorParams = if (isDataClass) {
+                destinationExtractor.extractConstructorParams(classDecl)
+            } else {
+                emptyList()
+            }
+
             if (children.isEmpty()) {
                 logger.info(
                     "@Tabs '$name' has no @TabItem children in this module — " +
-                        "skipping (children may be in downstream modules)"
+                        "skipping generation (children may be in downstream modules)"
                 )
-                return@mapNotNull null
+                // For source-local declarations, still return TabInfo so validation
+                // (e.g. validateTabsDataClassArguments) runs even without children.
+                if (isCrossModule) return@mapNotNull null
+                return@mapNotNull TabInfo(
+                    classDeclaration = classDecl,
+                    name = name,
+                    className = classDecl.simpleName.asString(),
+                    packageName = classDecl.packageName.asString(),
+                    tabs = emptyList(),
+                    isDataClass = isDataClass,
+                    isObject = isObject,
+                    constructorParams = constructorParams,
+                    isCrossModule = false
+                )
             }
 
             val tabs = children
@@ -199,6 +224,9 @@ class TabExtractor(
                 className = classDecl.simpleName.asString(),
                 packageName = classDecl.packageName.asString(),
                 tabs = tabs,
+                isDataClass = isDataClass,
+                isObject = isObject,
+                constructorParams = constructorParams,
                 isCrossModule = isCrossModule
             )
         }

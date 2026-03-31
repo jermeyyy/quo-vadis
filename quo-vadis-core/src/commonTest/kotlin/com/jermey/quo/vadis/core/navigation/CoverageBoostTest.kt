@@ -100,10 +100,6 @@ class CoverageBoostTest : FunSpec({
     // NavDestination default properties
     // =========================================================================
 
-    test("NavDestination default data is null") {
-        SimpleDestination.data.shouldBeNull()
-    }
-
     test("NavDestination default transition is null") {
         SimpleDestination.transition.shouldBeNull()
     }

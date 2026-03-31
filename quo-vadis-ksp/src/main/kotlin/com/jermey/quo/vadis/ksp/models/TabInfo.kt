@@ -75,6 +75,9 @@ enum class TabItemType {
  * @property className Simple class name (e.g., "MainTabs")
  * @property packageName Package containing this class
  * @property tabs List of all tab items in declaration/discovery order
+ * @property isDataClass True if this @Tabs class is a data class with constructor arguments
+ * @property isObject True if this @Tabs class is an object declaration (default)
+ * @property constructorParams Constructor parameters with @Argument metadata (for data classes)
  * @property isCrossModule True if this @Tabs was resolved from a compiled dependency (classpath),
  *   meaning not all tab items may be visible in this compilation unit
  */
@@ -84,6 +87,9 @@ data class TabInfo(
     val className: String,
     val packageName: String,
     val tabs: List<TabItemInfo>,
+    val isDataClass: Boolean = false,
+    val isObject: Boolean = true,
+    val constructorParams: List<ParamInfo> = emptyList(),
     val isCrossModule: Boolean = false,
 )
 

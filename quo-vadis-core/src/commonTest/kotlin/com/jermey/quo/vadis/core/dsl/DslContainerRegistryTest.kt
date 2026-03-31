@@ -226,7 +226,8 @@ class DslContainerRegistryTest : FunSpec({
         val tabNode = info.builder(
             com.jermey.quo.vadis.core.navigation.node.NodeKey("test-key"),
             null,
-            0
+            0,
+            null
         )
         tabNode.stacks.size shouldBe 2
         tabNode.activeStackIndex shouldBe 0
@@ -243,7 +244,8 @@ class DslContainerRegistryTest : FunSpec({
         val tabNode = info.builder(
             com.jermey.quo.vadis.core.navigation.node.NodeKey("test-key"),
             null,
-            1
+            1,
+            null
         )
         tabNode.activeStackIndex shouldBe 1
     }
@@ -259,7 +261,8 @@ class DslContainerRegistryTest : FunSpec({
         val tabNode = info.builder(
             com.jermey.quo.vadis.core.navigation.node.NodeKey("test-key"),
             null,
-            99
+            99,
+            null
         )
         // 99 is coerced to stacks.size - 1 = 1
         tabNode.activeStackIndex shouldBe 1
@@ -279,6 +282,7 @@ class DslContainerRegistryTest : FunSpec({
         val info = config.containerRegistry.getContainerInfo(RegPaneDest) as ContainerInfo.PaneContainer
         val paneNode = info.builder(
             com.jermey.quo.vadis.core.navigation.node.NodeKey("pane-key"),
+            null,
             null
         )
         paneNode.paneConfigurations.size shouldBe 2
@@ -406,5 +410,77 @@ class DslContainerRegistryTest : FunSpec({
         info.shouldNotBeNull()
         info.shouldBeInstanceOf<ContainerInfo.TabContainer>()
         info.initialTabIndex shouldBe 1 // containerTab is the second tab item (index 1)
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // TabContainer builder with destination parameter
+    // ═══════════════════════════════════════════════════════════════════
+
+    test("TabContainer builder passes destination to TabNode") {
+        val config = navigationConfig {
+            tabs<RegTabs.Tab1>("tabs") {
+                tab(RegTabs.Tab1, title = "T1")
+                tab(RegTabs.Tab2, title = "T2")
+            }
+        }
+        val info = config.containerRegistry.getContainerInfo(RegTabs.Tab1) as ContainerInfo.TabContainer
+        val tabNode = info.builder(
+            com.jermey.quo.vadis.core.navigation.node.NodeKey("test-key"),
+            null,
+            0,
+            RegTabs.Tab1,
+        )
+        tabNode.destination shouldBe RegTabs.Tab1
+    }
+
+    test("TabContainer builder with null destination produces TabNode without destination") {
+        val config = navigationConfig {
+            tabs<RegTabs.Tab1>("tabs") {
+                tab(RegTabs.Tab1, title = "T1")
+            }
+        }
+        val info = config.containerRegistry.getContainerInfo(RegTabs.Tab1) as ContainerInfo.TabContainer
+        val tabNode = info.builder(
+            com.jermey.quo.vadis.core.navigation.node.NodeKey("test-key"),
+            null,
+            0,
+            null,
+        )
+        tabNode.destination.shouldBeNull()
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PaneContainer builder with destination parameter
+    // ═══════════════════════════════════════════════════════════════════
+
+    test("PaneContainer builder passes destination to PaneNode") {
+        val config = navigationConfig {
+            panes<RegPaneDest>("panes") {
+                primary { root(RegPrimaryDest) }
+                secondary { root(RegSupportingDest) }
+            }
+        }
+        val info = config.containerRegistry.getContainerInfo(RegPaneDest) as ContainerInfo.PaneContainer
+        val paneNode = info.builder(
+            com.jermey.quo.vadis.core.navigation.node.NodeKey("pane-key"),
+            null,
+            RegPaneDest,
+        )
+        paneNode.destination shouldBe RegPaneDest
+    }
+
+    test("PaneContainer builder with null destination produces PaneNode without destination") {
+        val config = navigationConfig {
+            panes<RegPaneDest>("panes") {
+                primary { root(RegPrimaryDest) }
+            }
+        }
+        val info = config.containerRegistry.getContainerInfo(RegPaneDest) as ContainerInfo.PaneContainer
+        val paneNode = info.builder(
+            com.jermey.quo.vadis.core.navigation.node.NodeKey("pane-key"),
+            null,
+            null,
+        )
+        paneNode.destination.shouldBeNull()
     }
 })

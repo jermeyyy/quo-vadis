@@ -27,13 +27,11 @@ class CascadeBackStateTest : FunSpec({
     // =========================================================================
 
     val HomeDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "home"
     }
 
     val ProfileDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "profile"
     }

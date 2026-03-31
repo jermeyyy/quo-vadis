@@ -38,58 +38,48 @@ class ScopeRegistryTest : FunSpec() {
 
     sealed interface MainTabs : NavDestination {
         data object HomeTab : MainTabs {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
 
         data object SettingsTab : MainTabs {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
     }
 
     data object OutOfScopeDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     sealed interface ProfileTabs : NavDestination {
         data object OverviewTab : ProfileTabs {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
 
         data object HistoryTab : ProfileTabs {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
     }
 
     sealed interface AuthFlow : NavDestination {
         data object Login : AuthFlow {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
 
         data object Register : AuthFlow {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
 
         data object ForgotPassword : AuthFlow {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
     }
 
     sealed interface OnboardingFlow : NavDestination {
         data object Welcome : OnboardingFlow {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
 
         data object Tutorial : OnboardingFlow {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
     }

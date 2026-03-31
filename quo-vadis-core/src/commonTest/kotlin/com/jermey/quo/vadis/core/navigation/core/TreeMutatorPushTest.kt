@@ -30,25 +30,21 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 class TreeMutatorPushTest : FunSpec() {
 
     object HomeDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "home"
     }
 
     object ProfileDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "profile"
     }
 
     object SettingsDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "settings"
     }
 
     object DetailDestination : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
         override fun toString(): String = "detail"
     }

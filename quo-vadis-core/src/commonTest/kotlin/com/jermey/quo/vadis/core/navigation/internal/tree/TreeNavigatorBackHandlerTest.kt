@@ -19,12 +19,10 @@ class TreeNavigatorBackHandlerTest : FunSpec({
 
     // Test destinations
     val HomeDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val DetailDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 

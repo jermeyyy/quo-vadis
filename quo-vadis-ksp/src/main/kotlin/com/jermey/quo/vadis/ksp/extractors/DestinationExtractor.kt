@@ -150,7 +150,7 @@ class DestinationExtractor(
      * @param classDeclaration The class to extract parameters from
      * @return List of ParamInfo for each constructor parameter
      */
-    private fun extractConstructorParams(classDeclaration: KSClassDeclaration): List<ParamInfo> {
+    internal fun extractConstructorParams(classDeclaration: KSClassDeclaration): List<ParamInfo> {
         val primaryConstructor = classDeclaration.primaryConstructor ?: return emptyList()
         return primaryConstructor.parameters.map { param ->
             val argumentAnnotation = param.annotations.find {
@@ -203,7 +203,7 @@ class DestinationExtractor(
      * @param type The KSType to analyze
      * @return The appropriate SerializerType for the type
      */
-    private fun determineSerializerType(type: KSType): SerializerType {
+    internal fun determineSerializerType(type: KSType): SerializerType {
         val declaration = type.declaration
         val qualifiedName = declaration.qualifiedName?.asString()
 

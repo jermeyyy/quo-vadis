@@ -2,7 +2,6 @@
 
 package com.jermey.quo.vadis.core.compose.internal
 
-import com.jermey.quo.vadis.core.InternalQuoVadisApi
 import com.jermey.quo.vadis.core.compose.transition.NavTransition
 import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.NavKeyGenerator
@@ -13,14 +12,11 @@ import com.jermey.quo.vadis.core.navigation.pane.PaneRole
 import com.jermey.quo.vadis.core.registry.TransitionRegistry
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.reflect.KClass
 
 private object ACTestDest : NavDestination
 
-private object ACCustomTransitionDest : NavDestination {
-    override val data: Any? = "custom"
-}
+private object ACCustomTransitionDest : NavDestination
 
 class AnimationCoordinatorTest : FunSpec({
 
@@ -205,7 +201,12 @@ class AnimationCoordinatorTest : FunSpec({
         val to = screen("s2", dest = ACCustomTransitionDest)
 
         val overrideTransition = NavTransition.Fade
-        val result = coordinator.getTransition(from, to, isBack = false, transitionOverride = overrideTransition)
+        val result = coordinator.getTransition(
+            from,
+            to,
+            isBack = false,
+            transitionOverride = overrideTransition
+        )
         result shouldBe overrideTransition
     }
 

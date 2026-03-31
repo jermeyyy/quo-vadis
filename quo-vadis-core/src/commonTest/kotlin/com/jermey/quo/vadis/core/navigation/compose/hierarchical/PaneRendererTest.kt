@@ -44,17 +44,14 @@ class PaneRendererTest : FunSpec({
     // =========================================================================
 
     val ListDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val DetailDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val ExtraDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 

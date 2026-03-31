@@ -29,22 +29,18 @@ class CompositeScreenRegistryTest : FunSpec({
     // =========================================================================
 
     val PrimaryDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val SecondaryDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val SharedDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     val UnknownDestination = object : NavDestination {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
@@ -248,19 +244,15 @@ class CompositeScreenRegistryTest : FunSpec({
 
     test("hasContent works correctly with multiple destinations in each registry") {
         val dest1 = object : NavDestination {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
         val dest2 = object : NavDestination {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
         val dest3 = object : NavDestination {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
         val dest4 = object : NavDestination {
-            override val data: Any? = null
             override val transition: NavigationTransition? = null
         }
 

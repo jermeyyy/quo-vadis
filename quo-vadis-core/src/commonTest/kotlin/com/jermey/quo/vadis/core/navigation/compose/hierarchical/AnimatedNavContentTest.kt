@@ -32,17 +32,14 @@ class AnimatedNavContentTest : FunSpec({
     // =========================================================================
 
     val ScreenADestination = object : NavDestination {
-        override val data: Any? = "A"
         override val transition: NavigationTransition? = null
     }
 
     val ScreenBDestination = object : NavDestination {
-        override val data: Any? = "B"
         override val transition: NavigationTransition? = null
     }
 
     val ScreenCDestination = object : NavDestination {
-        override val data: Any? = "C"
         override val transition: NavigationTransition? = null
     }
 
@@ -294,7 +291,6 @@ class AnimatedNavContentTest : FunSpec({
     test("screen destination can specify custom transition") {
         // Given
         val slideDestination = object : NavDestination {
-            override val data: Any? = null
             override val transition: NavigationTransition? = NavigationTransitions.SlideHorizontal
         }
 

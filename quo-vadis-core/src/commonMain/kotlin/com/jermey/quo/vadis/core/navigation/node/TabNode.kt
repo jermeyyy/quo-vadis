@@ -3,6 +3,7 @@
 package com.jermey.quo.vadis.core.navigation.node
 
 import com.jermey.quo.vadis.core.InternalQuoVadisApi
+import com.jermey.quo.vadis.core.navigation.destination.NavDestination
 import com.jermey.quo.vadis.core.navigation.internal.GeneratedTabMetadata
 import com.jermey.quo.vadis.core.navigation.navigator.LifecycleAwareNode
 import kotlinx.serialization.SerialName
@@ -61,6 +62,9 @@ import kotlin.uuid.Uuid
  * @property scopeKey Identifier for scope-aware navigation. When set, destinations
  *   not in this scope will navigate outside the tab container. Typically the
  *   sealed class simple name (e.g., "MainTabs"). Defaults to null (no scope enforcement).
+ * @property destination Optional destination associated with this tab container.
+ *   When the @Tabs class is a data class with @Argument properties, this holds
+ *   the destination instance carrying those arguments. Defaults to null.
  */
 @OptIn(ExperimentalUuidApi::class)
 @Serializable
@@ -72,7 +76,8 @@ class TabNode(
     val activeStackIndex: Int = 0,
     val wrapperKey: String? = null,
     val tabMetadata: List<GeneratedTabMetadata> = emptyList(),
-    val scopeKey: ScopeKey? = null
+    val scopeKey: ScopeKey? = null,
+    val destination: NavDestination? = null
 ) : NavNode, LifecycleAwareNode by LifecycleDelegate() {
 
     init {
@@ -122,7 +127,8 @@ class TabNode(
         activeStackIndex: Int = this.activeStackIndex,
         wrapperKey: String? = this.wrapperKey,
         tabMetadata: List<GeneratedTabMetadata> = this.tabMetadata,
-        scopeKey: ScopeKey? = this.scopeKey
+        scopeKey: ScopeKey? = this.scopeKey,
+        destination: NavDestination? = this.destination
     ): TabNode = TabNode(
         key = key,
         parentKey = parentKey,
@@ -130,7 +136,8 @@ class TabNode(
         activeStackIndex = activeStackIndex,
         wrapperKey = wrapperKey,
         tabMetadata = tabMetadata,
-        scopeKey = scopeKey
+        scopeKey = scopeKey,
+        destination = destination
     )
 
     // --- Equality based on persistent properties ---
@@ -144,7 +151,8 @@ class TabNode(
             activeStackIndex == other.activeStackIndex &&
             wrapperKey == other.wrapperKey &&
             tabMetadata == other.tabMetadata &&
-            scopeKey == other.scopeKey
+            scopeKey == other.scopeKey &&
+            destination == other.destination
     }
 
     override fun hashCode(): Int {
@@ -155,10 +163,12 @@ class TabNode(
         result = 31 * result + (wrapperKey?.hashCode() ?: 0)
         result = 31 * result + tabMetadata.hashCode()
         result = 31 * result + (scopeKey?.hashCode() ?: 0)
+        result = 31 * result + (destination?.hashCode() ?: 0)
         return result
     }
 
     override fun toString(): String =
         "TabNode(key='$key', parentKey=$parentKey, " +
-            "activeStackIndex=$activeStackIndex, tabCount=$tabCount)"
+            "activeStackIndex=$activeStackIndex, tabCount=$tabCount, " +
+            "destination=$destination)"
 }

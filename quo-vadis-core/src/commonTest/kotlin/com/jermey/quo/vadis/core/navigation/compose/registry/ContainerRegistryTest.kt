@@ -66,30 +66,25 @@ private fun createTestContainerRegistry(
  */
 private sealed interface MainTabs : NavDestination {
     data object HomeTab : MainTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     data object SettingsTab : MainTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 }
 
 private sealed interface DetailPane : NavDestination {
     data object ListItem : DetailPane {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     data object DetailItem : DetailPane {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 }
 
 private data object StandaloneDestination : NavDestination {
-    override val data: Any? = null
     override val transition: NavigationTransition? = null
 }
 
@@ -102,8 +97,8 @@ class ContainerRegistryTest : FunSpec({
     /**
      * Creates a minimal TabNode builder for testing.
      */
-    fun createTabNodeBuilder(): (NodeKey, NodeKey?, Int) -> TabNode =
-        { key, parentKey, initialTabIndex ->
+    fun createTabNodeBuilder(): (NodeKey, NodeKey?, Int, NavDestination?) -> TabNode =
+        { key, parentKey, initialTabIndex, destination ->
             TabNode(
                 key = key,
                 parentKey = parentKey,
@@ -120,14 +115,15 @@ class ContainerRegistryTest : FunSpec({
                     )
                 ),
                 activeStackIndex = initialTabIndex.coerceIn(0, 1),
-                scopeKey = ScopeKey("MainTabs")
+                scopeKey = ScopeKey("MainTabs"),
+                destination = destination
             )
         }
 
     /**
      * Creates a minimal PaneNode builder for testing.
      */
-    fun createPaneNodeBuilder(): (NodeKey, NodeKey?) -> PaneNode = { key, parentKey ->
+    fun createPaneNodeBuilder(): (NodeKey, NodeKey?, NavDestination?) -> PaneNode = { key, parentKey, destination ->
         PaneNode(
             key = key,
             parentKey = parentKey,
@@ -140,7 +136,8 @@ class ContainerRegistryTest : FunSpec({
                 )
             ),
             activePaneRole = PaneRole.Primary,
-            scopeKey = ScopeKey("DetailPane")
+            scopeKey = ScopeKey("DetailPane"),
+            destination = destination
         )
     }
 
@@ -198,7 +195,7 @@ class ContainerRegistryTest : FunSpec({
             containerClass = MainTabs::class
         )
 
-        val tabNode = info.builder(NodeKey("test-tabs"), NodeKey("parent"), 1)
+        val tabNode = info.builder(NodeKey("test-tabs"), NodeKey("parent"), 1, null)
 
         tabNode.key shouldBe NodeKey("test-tabs")
         tabNode.parentKey shouldBe NodeKey("parent")
@@ -215,7 +212,7 @@ class ContainerRegistryTest : FunSpec({
             containerClass = MainTabs::class
         )
 
-        val tabNode = info.builder(NodeKey("tabs"), null, info.initialTabIndex)
+        val tabNode = info.builder(NodeKey("tabs"), null, info.initialTabIndex, null)
 
         tabNode.activeStackIndex shouldBe 0
     }
@@ -300,7 +297,7 @@ class ContainerRegistryTest : FunSpec({
             containerClass = DetailPane::class
         )
 
-        val paneNode = info.builder(NodeKey("test-panes"), NodeKey("parent"))
+        val paneNode = info.builder(NodeKey("test-panes"), NodeKey("parent"), null)
 
         paneNode.key shouldBe NodeKey("test-panes")
         paneNode.parentKey shouldBe NodeKey("parent")

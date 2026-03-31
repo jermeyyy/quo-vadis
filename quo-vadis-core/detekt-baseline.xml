@@ -86,33 +86,33 @@
     <ID>UnusedParameter:CompositeContainerRegistryTest.kt:CompositeContainerRegistryTest$containerClass: KClass&lt;out NavDestination></ID>
     <ID>UnusedParameter:NavigationHost.kt:scopeRegistry: ScopeRegistry = ScopeRegistry.Empty</ID>
     <ID>UnusedParameter:StackRenderer.kt:animatedVisibilityScope: AnimatedVisibilityScope? = null</ID>
-    <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenADestination = object : NavDestination { override val data: Any? = "A" override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenBDestination = object : NavDestination { override val data: Any? = "B" override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenCDestination = object : NavDestination { override val data: Any? = "C" override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:CascadeBackStateTest.kt:CascadeBackStateTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null override fun toString(): String = "home" }</ID>
-    <ID>VariableNaming:CascadeBackStateTest.kt:CascadeBackStateTest$val ProfileDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null override fun toString(): String = "profile" }</ID>
-    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val PrimaryDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val SecondaryDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val SharedDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val UnknownDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val DetailDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val ProfileDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val SettingsDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val DetailDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val ExtraDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val ListDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val ProfileDestination = object : NavDestination { override val data: Any = "profile-data" override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val SettingsDestination = object : NavDestination { override val data: Any = mapOf("theme" to "dark") override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val DetailDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val ProfileDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val SettingsDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:TabRendererTest.kt:TabRendererTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:TabRendererTest.kt:TabRendererTest$val ProfileDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:TabRendererTest.kt:TabRendererTest$val SettingsDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:TreeNavigatorBackHandlerTest.kt:TreeNavigatorBackHandlerTest$val DetailDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
-    <ID>VariableNaming:TreeNavigatorBackHandlerTest.kt:TreeNavigatorBackHandlerTest$val HomeDestination = object : NavDestination { override val data: Any? = null override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenADestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenBDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:AnimatedNavContentTest.kt:AnimatedNavContentTest$val ScreenCDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:CascadeBackStateTest.kt:CascadeBackStateTest$val HomeDestination = object : NavDestination { override val transition: NavigationTransition? = null override fun toString(): String = "home" }</ID>
+    <ID>VariableNaming:CascadeBackStateTest.kt:CascadeBackStateTest$val ProfileDestination = object : NavDestination { override val transition: NavigationTransition? = null override fun toString(): String = "profile" }</ID>
+    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val PrimaryDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val SecondaryDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val SharedDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:CompositeScreenRegistryTest.kt:CompositeScreenRegistryTest$val UnknownDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val DetailDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val HomeDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val ProfileDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:NavTreeRendererTest.kt:NavTreeRendererTest$val SettingsDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val DetailDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val ExtraDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:PaneRendererTest.kt:PaneRendererTest$val ListDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val HomeDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val ProfileDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:ScreenRendererTest.kt:ScreenRendererTest$val SettingsDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val DetailDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val HomeDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val ProfileDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:StackRendererTest.kt:StackRendererTest$val SettingsDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TabRendererTest.kt:TabRendererTest$val HomeDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TabRendererTest.kt:TabRendererTest$val ProfileDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TabRendererTest.kt:TabRendererTest$val SettingsDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TreeNavigatorBackHandlerTest.kt:TreeNavigatorBackHandlerTest$val DetailDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
+    <ID>VariableNaming:TreeNavigatorBackHandlerTest.kt:TreeNavigatorBackHandlerTest$val HomeDestination = object : NavDestination { override val transition: NavigationTransition? = null }</ID>
   </CurrentIssues>
 </SmellBaseline>

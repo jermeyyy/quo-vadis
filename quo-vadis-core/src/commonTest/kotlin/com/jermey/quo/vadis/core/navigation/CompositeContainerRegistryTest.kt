@@ -40,56 +40,47 @@ import io.kotest.matchers.types.shouldBeInstanceOf
  */
 private sealed interface PrimaryTabs : NavDestination {
     data object Tab1 : PrimaryTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     data object Tab2 : PrimaryTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 }
 
 private sealed interface SecondaryTabs : NavDestination {
     data object Tab1 : SecondaryTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     data object Tab2 : SecondaryTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 }
 
 private sealed interface SharedTabs : NavDestination {
     data object Tab1 : SharedTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 
     data object Tab2 : SharedTabs {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 }
 
 private sealed interface PrimaryPane : NavDestination {
     data object Pane1 : PrimaryPane {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 }
 
 private sealed interface SecondaryPane : NavDestination {
     data object Pane1 : SecondaryPane {
-        override val data: Any? = null
         override val transition: NavigationTransition? = null
     }
 }
 
 private data object UnknownDestination : NavDestination {
-    override val data: Any? = null
     override val transition: NavigationTransition? = null
 }
 
@@ -113,7 +104,7 @@ class CompositeContainerRegistryTest : FunSpec({
         containerClass: KClass<out NavDestination>,
         scopeKey: ScopeKey,
         builderTracker: MutableList<String>? = null
-    ): (NodeKey, NodeKey?, Int) -> TabNode = { key, parentKey, initialTabIndex ->
+    ): (NodeKey, NodeKey?, Int, NavDestination?) -> TabNode = { key, parentKey, initialTabIndex, destination ->
         builderTracker?.add("builder-called:$key")
         TabNode(
             key = key,
@@ -131,7 +122,8 @@ class CompositeContainerRegistryTest : FunSpec({
                 )
             ),
             activeStackIndex = initialTabIndex.coerceIn(0, 1),
-            scopeKey = scopeKey
+            scopeKey = scopeKey,
+            destination = destination
         )
     }
 
@@ -139,7 +131,7 @@ class CompositeContainerRegistryTest : FunSpec({
         containerClass: KClass<out NavDestination>,
         scopeKey: ScopeKey,
         builderTracker: MutableList<String>? = null
-    ): (NodeKey, NodeKey?) -> PaneNode = { key, parentKey ->
+    ): (NodeKey, NodeKey?, NavDestination?) -> PaneNode = { key, parentKey, destination ->
         builderTracker?.add("builder-called:$key")
         PaneNode(
             key = key,
@@ -150,7 +142,8 @@ class CompositeContainerRegistryTest : FunSpec({
                 )
             ),
             activePaneRole = PaneRole.Primary,
-            scopeKey = scopeKey
+            scopeKey = scopeKey,
+            destination = destination
         )
     }
 
@@ -420,7 +413,7 @@ class CompositeContainerRegistryTest : FunSpec({
         val tabInfo = info.shouldBeInstanceOf<ContainerInfo.TabContainer>()
 
         // Call the wrapped builder
-        val tabNode = info.builder(NodeKey("test-key"), NodeKey("parent-key"), 0)
+        val tabNode = info.builder(NodeKey("test-key"), NodeKey("parent-key"), 0, null)
 
         // Verify composite builder was called (not the original)
         compositeBuilderTracker.isNotEmpty().shouldBeTrue()
@@ -483,7 +476,7 @@ class CompositeContainerRegistryTest : FunSpec({
         val paneInfo = info.shouldBeInstanceOf<ContainerInfo.PaneContainer>()
 
         // Call the wrapped builder
-        val paneNode = info.builder(NodeKey("test-key"), NodeKey("parent-key"))
+        val paneNode = info.builder(NodeKey("test-key"), NodeKey("parent-key"), null)
 
         // Verify composite builder was called (not the original)
         compositeBuilderTracker.isNotEmpty().shouldBeTrue()
@@ -533,7 +526,7 @@ class CompositeContainerRegistryTest : FunSpec({
 
         // Calling the wrapped builder should throw
         shouldThrow<IllegalStateException> {
-            info.builder(NodeKey("test-key"), null, 0)
+            info.builder(NodeKey("test-key"), null, 0, null)
         }
     }
 
@@ -592,17 +585,17 @@ class CompositeContainerRegistryTest : FunSpec({
         val info = composite.getContainerInfo(PrimaryTabs.Tab1) as ContainerInfo.TabContainer
 
         // Test different initialTabIndex values (builder creates 3 stacks with indices 0, 1, 2)
-        val node0 = info.builder(NodeKey("key"), null, 0)
+        val node0 = info.builder(NodeKey("key"), null, 0, null)
         node0.activeStackIndex shouldBe 0
 
-        val node1 = info.builder(NodeKey("key"), null, 1)
+        val node1 = info.builder(NodeKey("key"), null, 1, null)
         node1.activeStackIndex shouldBe 1
 
-        val node2 = info.builder(NodeKey("key"), null, 2)
+        val node2 = info.builder(NodeKey("key"), null, 2, null)
         node2.activeStackIndex shouldBe 2
 
         // Test out of bounds - should be coerced to max stack index
-        val nodeHigh = info.builder(NodeKey("key"), null, 10)
+        val nodeHigh = info.builder(NodeKey("key"), null, 10, null)
         nodeHigh.activeStackIndex shouldBe 2 // Coerced to max index (2 = stacks.size - 1)
     }
 

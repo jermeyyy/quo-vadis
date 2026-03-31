@@ -20,7 +20,6 @@ private data class TestDestination(
     val id: String,
     val ref: String? = null
 ) : NavDestination {
-    override val data: Any? = null
     override val transition: NavigationTransition? = null
 }
 
