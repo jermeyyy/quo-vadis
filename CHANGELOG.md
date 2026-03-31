@@ -13,6 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.5.2] - 2026-03-31
+
+### Added
+
+- **Container destination arguments for `@Tabs` data classes**: `@Tabs`-annotated data classes now support `@Argument` parameters, enabling container-level arguments passed through navigation. Added `destination` property to `TabNode` and `PaneNode`, `LocalContainerDestination` CompositionLocal, and wired arguments through `TreeNavigator`, `ContainerInfo`, and `SharedContainerScope`.
+- **KSP validation for `@Tabs` data class arguments**: New compile-time checks for duplicate `@Argument` keys and optional `@Argument` parameters without default values on `@Tabs` data classes.
+
+### Changed
+
+- **`kotlinx-serialization-json` promoted to `api` dependency** in `quo-vadis-core`.
+- **Removed deprecated `NavDestination.data` property**.
+
+### Fixed
+
+- **KSP: Skip `@Tabs` data class argument validation for cross-module symbols**: Cross-module `@Tabs` classes loaded from classpath no longer trigger false positive validation errors, since SOURCE-level `@Argument` annotations are not retained in compiled symbols.
+
 ## [0.5.1] - 2026-03-30
 
 ### Added
